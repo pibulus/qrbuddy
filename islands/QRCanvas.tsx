@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { Signal } from "@preact/signals";
 import QRCodeStyling from "qr-code-styling";
 import { QR_STYLES } from "../utils/qr-styles.ts";
@@ -7,13 +7,34 @@ interface QRCanvasProps {
   url: Signal<string>;
   style: Signal<keyof typeof QR_STYLES>;
   triggerDownload: Signal<boolean>;
+  triggerCopy?: Signal<boolean>;
 }
 
 export default function QRCanvas(
-  { url, style, triggerDownload }: QRCanvasProps,
+  { url, style, triggerDownload, triggerCopy }: QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
+  const [showToast, setShowToast] = useState(false);
+
+  const handleCopyToClipboard = async () => {
+    if (!qrCodeRef.current) return;
+
+    try {
+      const blob = await qrCodeRef.current.getRawData("png");
+      if (!blob) return;
+
+      // Convert blob to clipboard item
+      const item = new ClipboardItem({ "image/png": blob });
+      await navigator.clipboard.write([item]);
+
+      // Show toast notification
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy QR code:", err);
+    }
+  };
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -144,13 +165,29 @@ export default function QRCanvas(
     }
   }, [triggerDownload.value]);
 
+  useEffect(() => {
+    if (triggerCopy && triggerCopy.value) {
+      handleCopyToClipboard();
+      triggerCopy.value = false;
+    }
+  }, [triggerCopy?.value]);
+
   return (
     <div class="relative">
       <div
         ref={canvasRef}
-        class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover"
+        onClick={handleCopyToClipboard}
+        class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+        title="Click to copy"
       />
       <div class="absolute -z-10 inset-0 bg-gradient-to-br from-qr-sunset1 via-qr-sunset2 to-qr-sunset3 opacity-20 blur-xl rounded-chunky" />
+      
+      {/* Toast notification */}
+      {showToast && (
+        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pop z-50">
+          QR copied! ✨
+        </div>
+      )}
     </div>
   );
 }

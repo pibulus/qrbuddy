@@ -1,24 +1,26 @@
 import { useSignal } from "@preact/signals";
 import { Head } from "$fresh/runtime.ts";
+import { PageProps } from "$fresh/server.ts";
 import QRCanvas from "../islands/QRCanvas.tsx";
 import ShuffleButton from "../islands/ShuffleButton.tsx";
 import URLInput from "../islands/URLInput.tsx";
 import ActionButtons from "../islands/ActionButtons.tsx";
 import StylePills from "../islands/StylePills.tsx";
-import KeyboardHandler from "../islands/KeyboardHandler.tsx";
-import EasterEggs from "../islands/EasterEggs.tsx";
 
-export default function Home() {
-  const url = useSignal("");
-  const style = useSignal("sunset");
+export default function SharePage(props: PageProps) {
+  const urlParams = new URL(props.url).searchParams;
+  const sharedData = urlParams.get("d") || "";
+  const sharedStyle = urlParams.get("s") || "sunset";
+  
+  const url = useSignal(decodeURIComponent(sharedData));
+  const style = useSignal(sharedStyle);
   const triggerDownload = useSignal(false);
   const isAnimating = useSignal(false);
-  const triggerCopy = useSignal(false);
 
   return (
     <>
       <Head>
-        <title>QRBuddy - Drop a link. Watch it bloom.</title>
+        <title>QRBuddy - {sharedData ? decodeURIComponent(sharedData) : "Drop a link. Watch it bloom."}</title>
         <meta
           name="description"
           content="The Porkbun of QR generators. Beautiful gradient QR codes that make you smile."
@@ -32,14 +34,6 @@ export default function Home() {
       </Head>
 
       <div class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1">
-        <KeyboardHandler
-          url={url}
-          style={style}
-          triggerDownload={triggerDownload}
-          triggerCopy={triggerCopy}
-          isAnimating={isAnimating}
-        />
-        <EasterEggs url={url} style={style} />
         <div class="w-full max-w-md space-y-8">
           {/* Hero Text */}
           <div class="text-center space-y-2">
@@ -58,7 +52,6 @@ export default function Home() {
                 url={url}
                 style={style}
                 triggerDownload={triggerDownload}
-                triggerCopy={triggerCopy}
               />
             </div>
           </div>

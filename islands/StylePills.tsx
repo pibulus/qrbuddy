@@ -6,7 +6,7 @@ interface StylePillsProps {
 
 export default function StylePills({ style }: StylePillsProps) {
   return (
-    <div class="flex flex-wrap gap-2 justify-center">
+    <div class="flex flex-wrap gap-3 justify-center">
       {["sunset", "pool", "terminal", "candy", "vapor", "brutalist"].map((
         s,
       ) => (
@@ -15,12 +15,12 @@ export default function StylePills({ style }: StylePillsProps) {
           key={s}
           onClick={() => style.value = s}
           class={`
-            px-3 py-1 text-sm font-medium capitalize
-            rounded-full border-2 transition-all duration-200
+            px-4 py-2 min-h-[44px] text-sm font-bold capitalize
+            rounded-full border-3 transition-all duration-200
             ${
             style.value === s
-              ? "bg-black text-white border-black scale-110"
-              : "bg-white text-black border-gray-300 hover:border-black hover:scale-105"
+              ? "bg-black text-white border-black scale-110 shadow-glow animate-pulse"
+              : "bg-white text-black border-gray-400 hover:border-black hover:scale-105 hover:shadow-md"
           }
           `}
         >

@@ -5,7 +5,10 @@
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $index from "./routes/index.tsx";
+import * as $q from "./routes/q.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
+import * as $EasterEggs from "./islands/EasterEggs.tsx";
+import * as $KeyboardHandler from "./islands/KeyboardHandler.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
 import * as $StylePills from "./islands/StylePills.tsx";
@@ -17,9 +20,12 @@ const manifest = {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
     "./routes/index.tsx": $index,
+    "./routes/q.tsx": $q,
   },
   islands: {
     "./islands/ActionButtons.tsx": $ActionButtons,
+    "./islands/EasterEggs.tsx": $EasterEggs,
+    "./islands/KeyboardHandler.tsx": $KeyboardHandler,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/ShuffleButton.tsx": $ShuffleButton,
     "./islands/StylePills.tsx": $StylePills,

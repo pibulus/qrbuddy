@@ -15,6 +15,7 @@ export default {
         "float": "float 6s ease-in-out infinite",
         "gradient-flow": "gradient-flow 3s ease infinite",
         "pop": "pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+        "fade-out": "fade-out 0.5s ease-out forwards",
       },
 
       keyframes: {
@@ -41,6 +42,10 @@ export default {
           "0%": { transform: "scale(1)" },
           "50%": { transform: "scale(1.1)" },
           "100%": { transform: "scale(1)" },
+        },
+        "fade-out": {
+          "0%": { opacity: "1", transform: "translateX(-50%) scale(1)" },
+          "100%": { opacity: "0", transform: "translateX(-50%) scale(0.9)" },
         },
       },
 
