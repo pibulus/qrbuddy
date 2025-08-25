@@ -38,7 +38,7 @@ export default function KeyboardHandler({
       // Cmd/Ctrl + C = Copy QR
       if ((e.metaKey || e.ctrlKey) && e.key === "c") {
         // Only trigger if no text is selected
-        const selection = window.getSelection();
+        const selection = globalThis.getSelection();
         if (!selection || selection.toString() === "") {
           e.preventDefault();
           triggerCopy.value = true;

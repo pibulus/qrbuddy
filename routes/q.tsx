@@ -11,7 +11,7 @@ export default function SharePage(props: PageProps) {
   const urlParams = new URL(props.url).searchParams;
   const sharedData = urlParams.get("d") || "";
   const sharedStyle = urlParams.get("s") || "sunset";
-  
+
   const url = useSignal(decodeURIComponent(sharedData));
   const style = useSignal(sharedStyle);
   const triggerDownload = useSignal(false);
@@ -20,7 +20,11 @@ export default function SharePage(props: PageProps) {
   return (
     <>
       <Head>
-        <title>QRBuddy - {sharedData ? decodeURIComponent(sharedData) : "Drop a link. Watch it bloom."}</title>
+        <title>
+          QRBuddy - {sharedData
+            ? decodeURIComponent(sharedData)
+            : "Drop a link. Watch it bloom."}
+        </title>
         <meta
           name="description"
           content="The Porkbun of QR generators. Beautiful gradient QR codes that make you smile."

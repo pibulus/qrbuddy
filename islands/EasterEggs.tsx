@@ -25,7 +25,7 @@ export default function EasterEggs({ url, style }: EasterEggsProps) {
 
   useEffect(() => {
     const text = url.value.toLowerCase();
-    
+
     for (const [trigger, config] of Object.entries(EASTER_EGGS)) {
       if (text.includes(trigger)) {
         style.value = config.style;
@@ -41,7 +41,7 @@ export default function EasterEggs({ url, style }: EasterEggsProps) {
         setTimeout(() => {
           setMessage(null);
         }, 3500);
-        
+
         break;
       }
     }
@@ -50,7 +50,7 @@ export default function EasterEggs({ url, style }: EasterEggsProps) {
   if (!message) return null;
 
   return (
-    <div 
+    <div
       class={`
         fixed top-20 left-1/2 transform -translate-x-1/2 z-50
         px-6 py-3 rounded-full font-black text-xl

@@ -15,8 +15,10 @@ export default function ActionButtons(
   const handleShare = async () => {
     if (!url || !style) return;
 
-    const shareUrl = `${window.location.origin}/q?d=${encodeURIComponent(url.value)}&s=${style.value}`;
-    
+    const shareUrl = `${globalThis.location.origin}/q?d=${
+      encodeURIComponent(url.value)
+    }&s=${style.value}`;
+
     try {
       await navigator.clipboard.writeText(shareUrl);
       setShowShareToast(true);
