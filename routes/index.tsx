@@ -7,6 +7,8 @@ import ActionButtons from "../islands/ActionButtons.tsx";
 import StylePills from "../islands/StylePills.tsx";
 import KeyboardHandler from "../islands/KeyboardHandler.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
+import ErrorBoundary from "../islands/ErrorBoundary.tsx";
+import ToastManager from "../islands/ToastManager.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 
 export default function Home() {
@@ -33,6 +35,7 @@ export default function Home() {
       </Head>
 
       <div class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1">
+        <ToastManager />
         <KeyboardHandler
           url={url}
           style={style}
@@ -55,12 +58,14 @@ export default function Home() {
           {/* QR Code Display */}
           <div class="flex justify-center">
             <div class="shadow-xl rounded-2xl">
-              <QRCanvas
-                url={url}
-                style={style}
-                triggerDownload={triggerDownload}
-                triggerCopy={triggerCopy}
-              />
+              <ErrorBoundary>
+                <QRCanvas
+                  url={url}
+                  style={style}
+                  triggerDownload={triggerDownload}
+                  triggerCopy={triggerCopy}
+                />
+              </ErrorBoundary>
             </div>
           </div>
 

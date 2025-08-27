@@ -8,10 +8,12 @@ import * as $index from "./routes/index.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
+import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $KeyboardHandler from "./islands/KeyboardHandler.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
 import * as $StylePills from "./islands/StylePills.tsx";
+import * as $ToastManager from "./islands/ToastManager.tsx";
 import * as $URLInput from "./islands/URLInput.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -25,10 +27,12 @@ const manifest = {
   islands: {
     "./islands/ActionButtons.tsx": $ActionButtons,
     "./islands/EasterEggs.tsx": $EasterEggs,
+    "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/KeyboardHandler.tsx": $KeyboardHandler,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/ShuffleButton.tsx": $ShuffleButton,
     "./islands/StylePills.tsx": $StylePills,
+    "./islands/ToastManager.tsx": $ToastManager,
     "./islands/URLInput.tsx": $URLInput,
   },
   baseUrl: import.meta.url,

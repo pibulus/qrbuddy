@@ -1,5 +1,5 @@
 import { Signal } from "@preact/signals";
-import { useState } from "preact/hooks";
+import { addToast } from "./ToastManager.tsx";
 
 interface ActionButtonsProps {
   triggerDownload: Signal<boolean>;
@@ -10,8 +10,6 @@ interface ActionButtonsProps {
 export default function ActionButtons(
   { triggerDownload, url, style }: ActionButtonsProps,
 ) {
-  const [showShareToast, setShowShareToast] = useState(false);
-
   const handleShare = async () => {
     if (!url || !style) return;
 
@@ -21,10 +19,10 @@ export default function ActionButtons(
 
     try {
       await navigator.clipboard.writeText(shareUrl);
-      setShowShareToast(true);
-      setTimeout(() => setShowShareToast(false), 2000);
+      addToast("Share link copied! 🔗");
     } catch (err) {
       console.error("Failed to copy share URL:", err);
+      addToast("Failed to copy link 😅", 3000);
     }
   };
 
@@ -60,11 +58,6 @@ export default function ActionButtons(
           "
         >
           Share
-          {showShareToast && (
-            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black text-white px-3 py-1 rounded-full text-xs whitespace-nowrap animate-pop">
-              Link copied! 🔗
-            </div>
-          )}
         </button>
       )}
     </>

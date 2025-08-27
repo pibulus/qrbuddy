@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import { Signal } from "@preact/signals";
 import QRCodeStyling from "qr-code-styling";
 import { QR_STYLES } from "../utils/qr-styles.ts";
+import { addToast } from "./ToastManager.tsx";
 
 interface QRCanvasProps {
   url: Signal<string>;
@@ -15,7 +16,6 @@ export default function QRCanvas(
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
-  const [showToast, setShowToast] = useState(false);
 
   const handleCopyToClipboard = async () => {
     if (!qrCodeRef.current) return;
@@ -29,10 +29,10 @@ export default function QRCanvas(
       await navigator.clipboard.write([item]);
 
       // Show toast notification
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 2000);
+      addToast("QR copied! ✨");
     } catch (err) {
       console.error("Failed to copy QR code:", err);
+      addToast("Failed to copy QR 😅", 3000);
     }
   };
 
@@ -181,13 +181,6 @@ export default function QRCanvas(
         title="Click to copy"
       />
       <div class="absolute -z-10 inset-0 bg-gradient-to-br from-qr-sunset1 via-qr-sunset2 to-qr-sunset3 opacity-20 blur-xl rounded-chunky" />
-
-      {/* Toast notification */}
-      {showToast && (
-        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pop z-50">
-          QR copied! ✨
-        </div>
-      )}
     </div>
   );
 }

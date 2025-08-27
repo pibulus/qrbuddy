@@ -3,6 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with
 code in this repository.
 
+## 🎯 Project: QRBuddy
+
+Beautiful gradient QR code generator with personality - transforms boring QR
+codes into stunning gradient art pieces with soft brutal aesthetic.
+
 ## 🚀 Common Development Commands
 
 ```bash
@@ -114,3 +119,38 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 - Twind configuration is runtime-only - no PostCSS or build-time CSS generation
 - Fresh automatically handles code splitting for islands - keep islands focused
   and minimal
+
+## 🔒 Security & Performance Considerations
+
+### Memory Management
+
+- **Event Listeners**: KeyboardHandler properly cleans up with
+  `removeEventListener` in useEffect return
+- **Timeouts**: All setTimeout calls are short-lived (400ms-3500ms) for UI
+  feedback only
+- **QR Library**: QRCodeStyling instance is properly managed via refs, no memory
+  leaks detected
+
+### Security
+
+- **Input Validation**: URL input accepts any string (by design for flexibility)
+- **Clipboard API**: Uses modern Clipboard API with proper error handling
+- **No External Data**: No API calls or external data fetching
+- **Client-Side Only**: QR generation happens entirely client-side, no data sent
+  to servers
+
+### Performance Optimizations
+
+- **Islands Architecture**: Only interactive components hydrate (7 islands
+  total)
+- **Signal-Based State**: Efficient reactive updates without re-renders
+- **Lazy QR Updates**: QR regenerates only on url/style change via useEffect
+  dependencies
+- **CSS-in-JS**: Twind runtime minimizes CSS payload
+
+## ✅ Recently Fixed
+
+- Added MIT License with trademark protection for QRBuddy/SoftStack branding
+- Implemented ErrorBoundary component for graceful QR generation failure handling
+- Created ToastManager with proper stacking support for multiple notifications
+- Now supports 9 interactive islands total (added ErrorBoundary, ToastManager)
