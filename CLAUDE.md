@@ -150,7 +150,8 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ## ✅ Recently Fixed
 
-- Added MIT License with trademark protection for QRBuddy/SoftStack branding
-- Implemented ErrorBoundary component for graceful QR generation failure handling
+- Added MIT License with trademark protection for QRBuddy branding
+- Implemented ErrorBoundary component for graceful QR generation failure
+  handling
 - Created ToastManager with proper stacking support for multiple notifications
 - Now supports 9 interactive islands total (added ErrorBoundary, ToastManager)

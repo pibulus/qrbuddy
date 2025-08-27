@@ -85,7 +85,7 @@ export default function SharePage(props: PageProps) {
 
         {/* Footer */}
         <footer class="mt-16 text-center text-xs text-gray-500 opacity-60">
-          Made with 🧁 by SoftStack
+          Made with 🧁 by Pablo
         </footer>
       </div>
     </>

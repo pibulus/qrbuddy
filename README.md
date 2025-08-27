@@ -110,9 +110,7 @@ Pull requests are welcome! For major changes, please open an issue first.
 
 ## 💫 Credits
 
-Built with 🧁 by [SoftStack](https://softstack.dev)
-
-Part of the modular $1 app suite - simple tools that spark joy.
+Built with 🧁 by Pablo (@pibulus)
 
 ---
 

@@ -92,7 +92,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer class="mt-16 text-center text-xs text-gray-500 opacity-60">
-          Made with 🧁 by SoftStack
+          Made with 🧁 by Pablo
         </footer>
       </div>
     </>
