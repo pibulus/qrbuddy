@@ -1,5 +1,9 @@
+import { type Config } from "tailwindcss";
+
 export default {
-  selfURL: import.meta.url,
+  content: [
+    "{routes,islands,components}/**/*.{ts,tsx,js,jsx}",
+  ],
   theme: {
     extend: {
       fontFamily: {
@@ -97,11 +101,5 @@ export default {
       },
     },
   },
-  preflight: {
-    body: {
-      "font-family": "Inter, system-ui, sans-serif",
-      "background": "linear-gradient(135deg, #FFF8F0 0%, #FFE5B4 100%)",
-      "min-height": "100vh",
-    },
-  },
-};
+  plugins: [],
+} satisfies Config;
