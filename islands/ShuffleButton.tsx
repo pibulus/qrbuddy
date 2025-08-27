@@ -1,5 +1,7 @@
 import { Signal } from "@preact/signals";
 import { getRandomStyle } from "../utils/qr-styles.ts";
+import { haptics } from "../utils/haptics.ts";
+import { sounds } from "../utils/sounds.ts";
 
 interface ShuffleButtonProps {
   style: Signal<string>;
@@ -9,14 +11,20 @@ interface ShuffleButtonProps {
 export default function ShuffleButton(
   { style, isAnimating }: ShuffleButtonProps,
 ) {
-  const handleShuffle = () => {
+  const handleShuffle = async () => {
     if (isAnimating.value) return;
+
+    // Immediate feedback
+    haptics.shuffle();
+    sounds.shuffle();
 
     isAnimating.value = true;
     style.value = getRandomStyle();
 
     setTimeout(() => {
       isAnimating.value = false;
+      // Success feedback after animation completes
+      haptics.light();
     }, 400);
   };
 

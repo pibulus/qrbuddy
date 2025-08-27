@@ -9,6 +9,7 @@ import * as $q from "./routes/q.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
+import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $KeyboardHandler from "./islands/KeyboardHandler.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
@@ -28,6 +29,7 @@ const manifest = {
     "./islands/ActionButtons.tsx": $ActionButtons,
     "./islands/EasterEggs.tsx": $EasterEggs,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
+    "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/KeyboardHandler.tsx": $KeyboardHandler,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/ShuffleButton.tsx": $ShuffleButton,

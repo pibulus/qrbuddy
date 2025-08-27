@@ -13,7 +13,8 @@ import { QR_STYLES } from "../utils/qr-styles.ts";
 
 export default function Home() {
   const url = useSignal("");
-  const style = useSignal<keyof typeof QR_STYLES>("sunset");
+  const style = useSignal<keyof typeof QR_STYLES | 'custom'>("sunset");
+  const customStyle = useSignal<any>(null);
   const triggerDownload = useSignal(false);
   const isAnimating = useSignal(false);
   const triggerCopy = useSignal(false);
@@ -32,6 +33,12 @@ export default function Home() {
           content="Drop a link. Watch it bloom. Create stunning gradient QR codes in seconds."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#FF69B4" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="QRBuddy" />
       </Head>
 
       <div class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1">
@@ -62,6 +69,7 @@ export default function Home() {
                 <QRCanvas
                   url={url}
                   style={style}
+                  customStyle={customStyle}
                   triggerDownload={triggerDownload}
                   triggerCopy={triggerCopy}
                 />
@@ -87,7 +95,7 @@ export default function Home() {
           </div>
 
           {/* Style Pills */}
-          <StylePills style={style} />
+          <StylePills style={style} customStyle={customStyle} />
         </div>
 
         {/* Footer */}

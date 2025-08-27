@@ -1,5 +1,7 @@
 import { Signal } from "@preact/signals";
 import { addToast } from "./ToastManager.tsx";
+import { haptics } from "../utils/haptics.ts";
+import { sounds } from "../utils/sounds.ts";
 
 interface ActionButtonsProps {
   triggerDownload: Signal<boolean>;
@@ -10,8 +12,18 @@ interface ActionButtonsProps {
 export default function ActionButtons(
   { triggerDownload, url, style }: ActionButtonsProps,
 ) {
+  const handleDownload = () => {
+    haptics.medium();
+    sounds.click();
+    triggerDownload.value = true;
+  };
+
   const handleShare = async () => {
     if (!url || !style) return;
+
+    // Immediate feedback
+    haptics.copy();
+    sounds.copy();
 
     const shareUrl = `${globalThis.location.origin}/q?d=${
       encodeURIComponent(url.value)
@@ -20,9 +32,13 @@ export default function ActionButtons(
     try {
       await navigator.clipboard.writeText(shareUrl);
       addToast("Share link copied! 🔗");
+      haptics.success();
+      sounds.success();
     } catch (err) {
       console.error("Failed to copy share URL:", err);
       addToast("Failed to copy link 😅", 3000);
+      haptics.error();
+      sounds.error();
     }
   };
 
@@ -30,7 +46,7 @@ export default function ActionButtons(
     <>
       <button
         type="button"
-        onClick={() => triggerDownload.value = true}
+        onClick={handleDownload}
         class="
           flex-1 px-6 py-4 text-lg font-chunky
           bg-white text-black
@@ -38,9 +54,13 @@ export default function ActionButtons(
           hover:shadow-chunky-hover hover:scale-105 hover:bg-gray-50
           active:scale-95 active:animate-squish
           transition-all duration-200
+          group
         "
       >
-        Save it
+        <span class="inline-flex items-center gap-2">
+          Save it
+          <span class="group-hover:animate-bounce">💾</span>
+        </span>
       </button>
 
       {url && style && (
@@ -54,10 +74,13 @@ export default function ActionButtons(
             hover:shadow-chunky-hover hover:scale-105 hover:brightness-110
             active:scale-95 active:animate-squish
             transition-all duration-200
-            relative
+            relative group
           "
         >
-          Share
+          <span class="inline-flex items-center gap-2">
+            Share
+            <span class="group-hover:animate-bounce">🚀</span>
+          </span>
         </button>
       )}
     </>
