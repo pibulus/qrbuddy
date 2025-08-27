@@ -56,7 +56,7 @@ export default function URLInput({ url }: URLInputProps) {
   };
 
   const handleFocus = () => {
-    haptics.light();
+    haptics.medium();  // More satisfying haptic
     sounds.click();
   };
 
@@ -65,8 +65,9 @@ export default function URLInput({ url }: URLInputProps) {
       w-full px-4 py-3 text-lg
       bg-white border-3 border-black
       rounded-xl
-      focus:outline-none focus:ring-2 focus:ring-qr-sunset2 focus:ring-opacity-50
-      transition-all duration-200
+      focus:outline-none focus:ring-4 focus:ring-pink-400 focus:border-pink-500
+      focus:scale-[1.02] focus:shadow-xl
+      transition-all duration-300 ease-out
       placeholder:text-gray-500
     `;
 

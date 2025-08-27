@@ -94,7 +94,9 @@ class SoundManager implements SoundEffects {
   }
 
   async click(): Promise<void> {
-    this.createBeep(800, 0.05, 'sine');
+    // Warmer, gooier click - deeper with a tiny reverb tail
+    this.createBeep(320, 0.08, 'sine');
+    setTimeout(() => this.createBeep(480, 0.06, 'sine'), 20);
   }
 
   async shuffle(): Promise<void> {
