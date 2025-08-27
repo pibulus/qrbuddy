@@ -1,5 +1,3 @@
-import { Options } from "twind";
-
 export default {
   selfURL: import.meta.url,
   theme: {
@@ -106,4 +104,4 @@ export default {
       "min-height": "100vh",
     },
   },
-} as Options;
+};

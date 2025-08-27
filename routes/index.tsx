@@ -7,10 +7,11 @@ import ActionButtons from "../islands/ActionButtons.tsx";
 import StylePills from "../islands/StylePills.tsx";
 import KeyboardHandler from "../islands/KeyboardHandler.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
+import { QR_STYLES } from "../utils/qr-styles.ts";
 
 export default function Home() {
   const url = useSignal("");
-  const style = useSignal("sunset");
+  const style = useSignal<keyof typeof QR_STYLES>("sunset");
   const triggerDownload = useSignal(false);
   const isAnimating = useSignal(false);
   const triggerCopy = useSignal(false);

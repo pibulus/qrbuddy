@@ -6,14 +6,16 @@ import ShuffleButton from "../islands/ShuffleButton.tsx";
 import URLInput from "../islands/URLInput.tsx";
 import ActionButtons from "../islands/ActionButtons.tsx";
 import StylePills from "../islands/StylePills.tsx";
+import { QR_STYLES } from "../utils/qr-styles.ts";
 
 export default function SharePage(props: PageProps) {
   const urlParams = new URL(props.url).searchParams;
   const sharedData = urlParams.get("d") || "";
-  const sharedStyle = urlParams.get("s") || "sunset";
+  const sharedStyle =
+    (urlParams.get("s") || "sunset") as keyof typeof QR_STYLES;
 
   const url = useSignal(decodeURIComponent(sharedData));
-  const style = useSignal(sharedStyle);
+  const style = useSignal<keyof typeof QR_STYLES>(sharedStyle);
   const triggerDownload = useSignal(false);
   const isAnimating = useSignal(false);
 

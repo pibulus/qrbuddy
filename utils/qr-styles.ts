@@ -3,7 +3,7 @@ export const QR_STYLES = {
     dots: {
       type: "gradient",
       gradient: {
-        type: "linear",
+        type: "linear" as const,
         rotation: 45,
         colorStops: [
           { offset: 0, color: "#FFE5B4" },
@@ -15,7 +15,7 @@ export const QR_STYLES = {
     background: {
       type: "gradient",
       gradient: {
-        type: "linear",
+        type: "linear" as const,
         rotation: 135,
         colorStops: [
           { offset: 0, color: "#FFF8F0" },
@@ -26,7 +26,7 @@ export const QR_STYLES = {
     cornersSquare: {
       type: "gradient",
       gradient: {
-        type: "linear",
+        type: "linear" as const,
         rotation: 45,
         colorStops: [
           { offset: 0, color: "#FF69B4" },
@@ -37,7 +37,7 @@ export const QR_STYLES = {
     cornersDot: {
       type: "gradient",
       gradient: {
-        type: "linear",
+        type: "linear" as const,
         rotation: 45,
         colorStops: [
           { offset: 0, color: "#9370DB" },
@@ -51,7 +51,7 @@ export const QR_STYLES = {
     dots: {
       type: "gradient",
       gradient: {
-        type: "radial",
+        type: "radial" as const,
         colorStops: [
           { offset: 0, color: "#87CEEB" },
           { offset: 0.5, color: "#4ECDC4" },
@@ -62,7 +62,7 @@ export const QR_STYLES = {
     background: {
       type: "gradient",
       gradient: {
-        type: "linear",
+        type: "linear" as const,
         rotation: 180,
         colorStops: [
           { offset: 0, color: "#E0FFFF" },
@@ -97,7 +97,7 @@ export const QR_STYLES = {
     dots: {
       type: "gradient",
       gradient: {
-        type: "linear",
+        type: "linear" as const,
         rotation: 90,
         colorStops: [
           { offset: 0, color: "#FF69B4" },
@@ -113,7 +113,7 @@ export const QR_STYLES = {
     cornersSquare: {
       type: "gradient",
       gradient: {
-        type: "linear",
+        type: "linear" as const,
         rotation: 45,
         colorStops: [
           { offset: 0, color: "#FFD700" },
@@ -130,7 +130,7 @@ export const QR_STYLES = {
     dots: {
       type: "gradient",
       gradient: {
-        type: "linear",
+        type: "linear" as const,
         rotation: 45,
         colorStops: [
           { offset: 0, color: "#FF00FF" },
@@ -142,7 +142,7 @@ export const QR_STYLES = {
     background: {
       type: "gradient",
       gradient: {
-        type: "radial",
+        type: "radial" as const,
         colorStops: [
           { offset: 0, color: "rgba(255, 0, 255, 0.1)" },
           { offset: 1, color: "rgba(0, 255, 255, 0.1)" },
