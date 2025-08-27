@@ -1,4 +1,5 @@
 import { Signal } from "@preact/signals";
+import { useState } from "preact/hooks";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
@@ -42,47 +43,42 @@ export default function ActionButtons(
     }
   };
 
+  const [showOptions, setShowOptions] = useState(false);
+
   return (
-    <>
+    <div class="flex gap-3">
+      {/* Primary Action - Download */}
       <button
         type="button"
         onClick={handleDownload}
         class="
-          flex-1 px-6 py-4 text-lg font-chunky
-          bg-white text-black
-          rounded-chunky border-4 border-black shadow-chunky
-          hover:shadow-chunky-hover hover:scale-105 hover:bg-gray-50
+          flex-1 px-6 py-3 text-lg font-bold
+          bg-black text-white
+          rounded-xl border-3 border-black
+          hover:bg-gray-800 hover:scale-105
           active:scale-95 active:animate-squish
           transition-all duration-200
-          group
         "
       >
-        <span class="inline-flex items-center gap-2">
-          Save it
-          <span class="group-hover:animate-bounce">💾</span>
-        </span>
+        Download
       </button>
 
+      {/* Share Button */}
       {url && style && (
         <button
           type="button"
           onClick={handleShare}
           class="
-            flex-1 px-6 py-4 text-lg font-chunky
-            bg-gradient-to-r from-qr-pool1 to-qr-pool2 text-white
-            rounded-chunky border-4 border-black shadow-chunky
-            hover:shadow-chunky-hover hover:scale-105 hover:brightness-110
+            flex-1 px-6 py-3 text-lg font-bold
+            bg-white text-black border-3 border-black
+            hover:bg-gray-50 hover:scale-105
             active:scale-95 active:animate-squish
             transition-all duration-200
-            relative group
           "
         >
-          <span class="inline-flex items-center gap-2">
-            Share
-            <span class="group-hover:animate-bounce">🚀</span>
-          </span>
+          Share
         </button>
       )}
-    </>
+    </div>
   );
 }

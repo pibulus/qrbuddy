@@ -62,67 +62,57 @@ export default function URLInput({ url }: URLInputProps) {
 
   const getInputClass = () => {
     const baseClass = `
-      w-10/12 px-6 py-4 text-xl
-      bg-white/90 backdrop-blur
-      rounded-chunky border-4
-      shadow-chunky
-      focus:shadow-glow focus:scale-[1.02]
-      focus:outline-none
+      w-full px-4 py-3 text-lg
+      bg-white border-3 border-black
+      rounded-xl
+      focus:outline-none focus:ring-2 focus:ring-qr-sunset2 focus:ring-opacity-50
       transition-all duration-200
-      placeholder:text-gray-400
-      font-medium
+      placeholder:text-gray-500
     `;
 
     if (!touched || validationState === 'idle') {
-      return `${baseClass} border-black focus:border-qr-sunset2`;
+      return baseClass;
     }
     
     if (validationState === 'valid') {
-      return `${baseClass} border-green-500 focus:border-green-600`;
+      return `${baseClass} border-green-500`;
     }
     
     if (validationState === 'invalid') {
-      return `${baseClass} border-red-500 focus:border-red-600 animate-shake`;
+      return `${baseClass} border-red-500 animate-shake`;
     }
 
     return baseClass;
   };
 
   return (
-    <div class="flex flex-col items-center space-y-2">
-      <div class="relative w-full flex justify-center">
+    <div class="w-full">
+      <div class="relative">
         <input
           type="url"
           value={url.value}
           onInput={handleInput}
           onFocus={handleFocus}
           onBlur={() => setTouched(true)}
-          placeholder="Your link here"
+          placeholder="Enter URL or text here..."
           class={getInputClass()}
         />
         
         {/* Validation indicator */}
         {touched && validationState === 'valid' && (
           <div class="absolute right-4 top-1/2 transform -translate-y-1/2 
-                      text-green-500 text-2xl animate-pop">
+                      text-green-500 text-xl animate-pop">
             ✓
           </div>
         )}
       </div>
 
       {/* Helper text */}
-      <div class="text-center text-sm h-4">
-        {touched && validationState === 'invalid' && url.value.trim() !== '' && (
-          <p class="text-red-500 animate-slide-down">
-            Enter any text or URL to generate a QR code
-          </p>
-        )}
-        {touched && validationState === 'valid' && (
-          <p class="text-green-600 animate-slide-down">
-            Ready to generate QR code!
-          </p>
-        )}
-      </div>
+      {touched && validationState === 'invalid' && url.value.trim() !== '' && (
+        <p class="text-red-500 text-sm mt-2 text-center animate-slide-down">
+          Enter any text or URL
+        </p>
+      )}
     </div>
   );
 }
