@@ -101,6 +101,22 @@ HTML.
 
 - **Primary**: Deno Deploy (zero-config deployment from GitHub)
 - **Alternative**: Any Deno-compatible host via `deno run -A main.ts`
+- **Project ID**: `fff4f21f-dab0-46f0-aa13-ea22dd20be78` (qrbuddy project)
+- **Live URL**: https://qrbuddy.deno.dev
+- **Custom Domain**: qrbuddy.app (pending DNS setup)
+
+#### Deployment Commands
+
+```bash
+# Deploy to production (uses project ID from deno.json)
+deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
+
+# First-time deploy adds a "deploy" section to deno.json with:
+# - project: UUID linking to Deno Deploy project
+# - entrypoint: main.ts (Fresh standard)
+# - exclude/include: deployment file filters
+# This should be committed to track deployment config
+```
 
 ## 🎨 Design System
 
