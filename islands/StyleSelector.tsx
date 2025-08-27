@@ -56,76 +56,81 @@ export default function StyleSelector({ style, customStyle }: StyleSelectorProps
             sounds.click();
           }}
           class="
-            flex items-center gap-2 px-4 py-2
-            bg-white border-2 border-gray-300 rounded-lg
-            hover:border-black
+            flex items-center gap-2 px-4 py-2.5
+            bg-white border-3 border-black rounded-xl
+            hover:bg-gray-50
             transition-all duration-200
             hover:scale-105 active:scale-95
+            shadow-md hover:shadow-lg
           "
         >
           <div 
-            class="w-6 h-6 rounded border border-black"
+            class="w-5 h-5 rounded border-2 border-black"
             style={{ background: getGradientPreview(currentStyleInfo.colors) }}
           />
-          <span class="font-medium">
+          <span class="font-bold text-black">
             {currentStyleInfo.name}
           </span>
-          <span class={`text-xs transition-transform duration-200 ${showAll ? 'rotate-180' : ''}`}>
+          <span class={`text-sm font-bold transition-transform duration-200 ${showAll ? 'rotate-180' : ''}`}>
             ▼
           </span>
         </button>
 
         {/* Expanded Style Grid */}
         {showAll && (
-          <div class="absolute top-full mt-2 left-0 right-0 z-20 animate-slide-down">
-            <div class="grid grid-cols-3 gap-2 p-3 bg-white rounded-lg border-2 border-black shadow-lg">
-              {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
+          <div class="absolute top-full mt-2 right-0 z-20 animate-slide-down">
+            <div class="bg-white rounded-xl border-3 border-black shadow-xl p-2 min-w-[200px]">
+              <div class="space-y-1">
+                {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
+                  <button
+                    key={key}
+                    onClick={() => handleStyleSelect(key)}
+                    class={`
+                      w-full flex items-center gap-3 px-3 py-2 rounded-lg
+                      transition-all duration-200
+                      hover:bg-gray-100
+                      ${style.value === key 
+                        ? 'bg-black text-white' 
+                        : 'text-black hover:translate-x-1'
+                      }
+                    `}
+                  >
+                    <div 
+                      class="w-5 h-5 rounded border-2 border-black flex-shrink-0"
+                      style={{ background: getGradientPreview(info.colors) }}
+                    />
+                    <span class="font-medium text-left">
+                      {info.name}
+                    </span>
+                  </button>
+                ))}
+                
+                {/* Divider */}
+                <div class="border-t-2 border-gray-200 my-1"></div>
+                
+                {/* Custom Style Button */}
                 <button
-                  key={key}
-                  onClick={() => handleStyleSelect(key)}
+                  onClick={() => {
+                    isCreatorOpen.value = true;
+                    haptics.medium();
+                    sounds.click();
+                    setShowAll(false);
+                  }}
                   class={`
-                    flex items-center gap-2 px-3 py-2 rounded-lg
+                    w-full flex items-center gap-3 px-3 py-2 rounded-lg
                     transition-all duration-200
-                    hover:scale-105 hover:shadow-md
-                    ${style.value === key 
-                      ? 'bg-black text-white shadow-md' 
-                      : 'bg-white border border-gray-300 hover:border-black'
+                    ${style.value === 'custom'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                      : 'text-black hover:bg-gray-100 hover:translate-x-1'
                     }
                   `}
                 >
-                  <div 
-                    class="w-4 h-4 rounded-full border border-gray-400"
-                    style={{ background: getGradientPreview(info.colors) }}
-                  />
-                  <span class="text-sm font-medium">
-                    {info.name}
+                  <div class="w-5 h-5 rounded border-2 border-black bg-gradient-to-r from-purple-500 to-pink-500 flex-shrink-0" />
+                  <span class="font-medium text-left">
+                    Custom
                   </span>
                 </button>
-              ))}
-              
-              {/* Custom Style Button */}
-              <button
-                onClick={() => {
-                  isCreatorOpen.value = true;
-                  haptics.medium();
-                  sounds.click();
-                  setShowAll(false);
-                }}
-                class={`
-                  flex items-center gap-2 px-3 py-2 rounded-lg
-                  transition-all duration-200
-                  hover:scale-105 hover:shadow-md
-                  ${style.value === 'custom'
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
-                    : 'bg-gradient-to-r from-gray-100 to-gray-200 border border-gray-300 hover:border-black hover:from-purple-100 hover:to-pink-100'
-                  }
-                `}
-              >
-                <div class="w-4 h-4 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
-                <span class="text-sm font-medium">
-                  Custom
-                </span>
-              </button>
+              </div>
             </div>
           </div>
         )}
