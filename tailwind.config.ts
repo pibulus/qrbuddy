@@ -21,6 +21,7 @@ export default {
         "shake": "shake 0.3s ease-in-out",
         "slide-down": "slide-down 0.2s ease-out",
         "pulse-glow": "pulse-glow 1.5s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 1.5s ease-out forwards",
         "bounce-in": "bounce-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
       },
 
@@ -70,6 +71,20 @@ export default {
           "0%": { opacity: "0", transform: "scale(0.5)" },
           "50%": { opacity: "1", transform: "scale(1.05)" },
           "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "glow-pulse": {
+          "0%": { 
+            boxShadow: "0 0 0px rgba(255, 105, 180, 0), 0 4px 6px rgba(0, 0, 0, 0.1)",
+            transform: "scale(1)"
+          },
+          "20%": { 
+            boxShadow: "0 0 30px rgba(255, 105, 180, 0.8), 0 0 60px rgba(255, 105, 180, 0.4), 0 8px 12px rgba(0, 0, 0, 0.15)",
+            transform: "scale(1.03)"
+          },
+          "100%": { 
+            boxShadow: "0 0 0px rgba(255, 105, 180, 0), 0 10px 20px rgba(0, 0, 0, 0.1)",
+            transform: "scale(1.03)"
+          },
         },
       },
 

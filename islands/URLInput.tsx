@@ -57,18 +57,20 @@ export default function URLInput({ url }: URLInputProps) {
 
   const handleFocus = () => {
     haptics.medium();  // More satisfying haptic
-    sounds.click();
+    // No sound - removed per request
   };
 
   const getInputClass = () => {
     const baseClass = `
-      w-full px-4 py-3 text-lg
+      w-full px-5 py-4 text-lg
       bg-white border-3 border-black
       rounded-xl
-      focus:outline-none focus:ring-4 focus:ring-pink-400 focus:border-pink-500
-      focus:scale-[1.02] focus:shadow-xl
-      transition-all duration-300 ease-out
-      placeholder:text-gray-500
+      focus:outline-none focus:border-pink-500
+      focus:scale-[1.03] focus:shadow-2xl
+      focus:animate-glow-pulse
+      transition-all duration-500 ease-out
+      placeholder:text-gray-400
+      hover:scale-[1.01] hover:shadow-lg
     `;
 
     if (!touched || validationState === 'idle') {
