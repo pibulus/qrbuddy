@@ -3,14 +3,12 @@ import { getRandomStyle } from "../utils/qr-styles.ts";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 
-interface ShuffleButtonProps {
+interface ShuffleActionProps {
   style: Signal<string>;
   isAnimating: Signal<boolean>;
 }
 
-export default function ShuffleButton(
-  { style, isAnimating }: ShuffleButtonProps,
-) {
+export default function ShuffleAction({ style, isAnimating }: ShuffleActionProps) {
   const handleShuffle = async () => {
     if (isAnimating.value) return;
 
@@ -32,17 +30,19 @@ export default function ShuffleButton(
     <button
       type="button"
       onClick={handleShuffle}
-      class={`
-        flex-1 px-8 py-4 text-lg font-chunky text-white
-        bg-gradient-to-r from-qr-sunset1 via-qr-sunset2 to-qr-sunset3
-        rounded-chunky border-4 border-black shadow-chunky
-        hover:shadow-chunky-hover hover:shadow-glow hover:scale-105 hover:brightness-110
-        active:scale-95 active:animate-squish
+      disabled={isAnimating.value}
+      class="
+        text-sm text-gray-600 hover:text-black
         transition-all duration-200
-        ${isAnimating.value ? "animate-rotate-shuffle" : ""}
-      `}
+        flex items-center gap-1
+        disabled:opacity-50
+      "
+      title="Random style"
     >
-      Shuffle
+      <span class={`transition-transform duration-400 ${isAnimating.value ? 'animate-spin' : ''}`}>
+        🎲
+      </span>
+      Surprise me
     </button>
   );
 }

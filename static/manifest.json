@@ -1,0 +1,41 @@
+{
+  "name": "QRBuddy - Beautiful QR Code Generator",
+  "short_name": "QRBuddy",
+  "description": "Drop a link. Watch it bloom. Create stunning gradient QR codes with personality.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8F0",
+  "theme_color": "#FF69B4",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["productivity", "utilities", "graphics"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick QR",
+      "short_name": "Quick",
+      "description": "Generate QR code quickly",
+      "url": "/?quick=true",
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "lang": "en-US",
+  "dir": "ltr"
+}

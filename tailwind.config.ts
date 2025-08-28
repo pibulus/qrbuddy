@@ -18,6 +18,11 @@ export default {
         "gradient-flow": "gradient-flow 3s ease infinite",
         "pop": "pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
         "fade-out": "fade-out 0.5s ease-out forwards",
+        "shake": "shake 0.3s ease-in-out",
+        "slide-down": "slide-down 0.2s ease-out",
+        "pulse-glow": "pulse-glow 1.5s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 1.5s ease-out forwards",
+        "bounce-in": "bounce-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
       },
 
       keyframes: {
@@ -48,6 +53,38 @@ export default {
         "fade-out": {
           "0%": { opacity: "1", transform: "translateX(-50%) scale(1)" },
           "100%": { opacity: "0", transform: "translateX(-50%) scale(0.9)" },
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-4px)" },
+          "20%, 40%, 60%, 80%": { transform: "translateX(4px)" },
+        },
+        "slide-down": {
+          "0%": { opacity: "0", transform: "translateY(-10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(255, 105, 180, 0.3)" },
+          "50%": { boxShadow: "0 0 40px rgba(255, 105, 180, 0.6), 0 0 60px rgba(255, 105, 180, 0.3)" },
+        },
+        "bounce-in": {
+          "0%": { opacity: "0", transform: "scale(0.5)" },
+          "50%": { opacity: "1", transform: "scale(1.05)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "glow-pulse": {
+          "0%": { 
+            boxShadow: "0 0 0px rgba(255, 105, 180, 0), 0 4px 6px rgba(0, 0, 0, 0.1)",
+            transform: "scale(1)"
+          },
+          "20%": { 
+            boxShadow: "0 0 30px rgba(255, 105, 180, 0.8), 0 0 60px rgba(255, 105, 180, 0.4), 0 8px 12px rgba(0, 0, 0, 0.15)",
+            transform: "scale(1.03)"
+          },
+          "100%": { 
+            boxShadow: "0 0 0px rgba(255, 105, 180, 0), 0 10px 20px rgba(0, 0, 0, 0.1)",
+            transform: "scale(1.03)"
+          },
         },
       },
 

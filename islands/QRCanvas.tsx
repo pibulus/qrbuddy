@@ -6,13 +6,14 @@ import { addToast } from "./ToastManager.tsx";
 
 interface QRCanvasProps {
   url: Signal<string>;
-  style: Signal<keyof typeof QR_STYLES>;
+  style: Signal<keyof typeof QR_STYLES | 'custom'>;
+  customStyle?: Signal<any>;
   triggerDownload: Signal<boolean>;
   triggerCopy?: Signal<boolean>;
 }
 
 export default function QRCanvas(
-  { url, style, triggerDownload, triggerCopy }: QRCanvasProps,
+  { url, style, customStyle, triggerDownload, triggerCopy }: QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
@@ -36,10 +37,18 @@ export default function QRCanvas(
     }
   };
 
+  // Helper function to get the current style object
+  const getCurrentStyle = () => {
+    if (style.value === 'custom' && customStyle?.value) {
+      return customStyle.value;
+    }
+    return QR_STYLES[style.value as keyof typeof QR_STYLES];
+  };
+
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    const currentStyle = QR_STYLES[style.value];
+    const currentStyle = getCurrentStyle();
 
     const qrCode = new QRCodeStyling({
       width: 400,
@@ -107,7 +116,7 @@ export default function QRCanvas(
   useEffect(() => {
     if (!qrCodeRef.current) return;
 
-    const currentStyle = QR_STYLES[style.value];
+    const currentStyle = getCurrentStyle();
 
     qrCodeRef.current.update({
       data: url.value || "https://qrbuddy.app",
@@ -153,7 +162,7 @@ export default function QRCanvas(
             : undefined,
       },
     });
-  }, [url.value, style.value]);
+  }, [url.value, style.value, customStyle?.value]);
 
   useEffect(() => {
     if (triggerDownload.value && qrCodeRef.current) {
