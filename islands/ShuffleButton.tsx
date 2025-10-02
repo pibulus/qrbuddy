@@ -11,7 +11,7 @@ interface ShuffleButtonProps {
 export default function ShuffleButton(
   { style, isAnimating }: ShuffleButtonProps,
 ) {
-  const handleShuffle = async () => {
+  const handleShuffle = () => {
     if (isAnimating.value) return;
 
     // Immediate feedback

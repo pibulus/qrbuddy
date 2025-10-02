@@ -3,11 +3,11 @@ import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import GradientCreator from "./GradientCreator.tsx";
-import { QR_STYLES } from "../utils/qr-styles.ts";
+import type { QRStyle } from "../types/qr-types.ts";
 
 interface StyleSelectorProps {
   style: Signal<string>;
-  customStyle?: Signal<any>;
+  customStyle?: Signal<QRStyle | null>;
 }
 
 const STYLE_DISPLAY = {
@@ -19,7 +19,9 @@ const STYLE_DISPLAY = {
   brutalist: { name: "Brutal", colors: ["#000000", "#FFFF00"] },
 };
 
-export default function StyleSelector({ style, customStyle }: StyleSelectorProps) {
+export default function StyleSelector(
+  { style, customStyle }: StyleSelectorProps,
+) {
   const [showAll, setShowAll] = useState(false);
   const isCreatorOpen = useSignal(false);
 
@@ -30,19 +32,19 @@ export default function StyleSelector({ style, customStyle }: StyleSelectorProps
     setShowAll(false);
   };
 
-  const handleCustomGradient = (gradient: any) => {
+  const handleCustomGradient = (gradient: QRStyle) => {
     if (customStyle) {
       customStyle.value = gradient;
-      style.value = 'custom';
+      style.value = "custom";
     }
   };
 
-  const currentStyleInfo = style.value === 'custom' 
+  const currentStyleInfo = style.value === "custom"
     ? { name: "Custom", colors: ["#9370DB", "#FF69B4"] }
     : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY];
 
   const getGradientPreview = (colors: string[]) => {
-    return `linear-gradient(45deg, ${colors.join(', ')})`;
+    return `linear-gradient(45deg, ${colors.join(", ")})`;
   };
 
   return (
@@ -50,6 +52,7 @@ export default function StyleSelector({ style, customStyle }: StyleSelectorProps
       <div class="relative">
         {/* Current Style Display - Compact */}
         <button
+          type="button"
           onClick={() => {
             setShowAll(!showAll);
             haptics.light();
@@ -64,14 +67,18 @@ export default function StyleSelector({ style, customStyle }: StyleSelectorProps
             shadow-md hover:shadow-lg
           "
         >
-          <div 
+          <div
             class="w-5 h-5 rounded border-2 border-black"
             style={{ background: getGradientPreview(currentStyleInfo.colors) }}
           />
           <span class="font-bold text-black">
             {currentStyleInfo.name}
           </span>
-          <span class={`text-sm font-bold transition-transform duration-200 ${showAll ? 'rotate-180' : ''}`}>
+          <span
+            class={`text-sm font-bold transition-transform duration-200 ${
+              showAll ? "rotate-180" : ""
+            }`}
+          >
             ▼
           </span>
         </button>
@@ -83,19 +90,21 @@ export default function StyleSelector({ style, customStyle }: StyleSelectorProps
               <div class="space-y-1">
                 {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
                   <button
+                    type="button"
                     key={key}
                     onClick={() => handleStyleSelect(key)}
                     class={`
                       w-full flex items-center gap-3 px-3 py-2 rounded-lg
                       transition-all duration-200
                       hover:bg-gray-100
-                      ${style.value === key 
-                        ? 'bg-black text-white' 
-                        : 'text-black hover:translate-x-1'
-                      }
+                      ${
+                      style.value === key
+                        ? "bg-black text-white"
+                        : "text-black hover:translate-x-1"
+                    }
                     `}
                   >
-                    <div 
+                    <div
                       class="w-5 h-5 rounded border-2 border-black flex-shrink-0"
                       style={{ background: getGradientPreview(info.colors) }}
                     />
@@ -104,12 +113,13 @@ export default function StyleSelector({ style, customStyle }: StyleSelectorProps
                     </span>
                   </button>
                 ))}
-                
+
                 {/* Divider */}
                 <div class="border-t-2 border-gray-200 my-1"></div>
-                
+
                 {/* Custom Style Button */}
                 <button
+                  type="button"
                   onClick={() => {
                     isCreatorOpen.value = true;
                     haptics.medium();
@@ -119,10 +129,11 @@ export default function StyleSelector({ style, customStyle }: StyleSelectorProps
                   class={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-lg
                     transition-all duration-200
-                    ${style.value === 'custom'
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                      : 'text-black hover:bg-gray-100 hover:translate-x-1'
-                    }
+                    ${
+                    style.value === "custom"
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                      : "text-black hover:bg-gray-100 hover:translate-x-1"
+                  }
                   `}
                 >
                   <div class="w-5 h-5 rounded border-2 border-black bg-gradient-to-r from-purple-500 to-pink-500 flex-shrink-0" />
@@ -137,7 +148,7 @@ export default function StyleSelector({ style, customStyle }: StyleSelectorProps
       </div>
 
       {/* Custom Gradient Creator Modal */}
-      <GradientCreator 
+      <GradientCreator
         isOpen={isCreatorOpen}
         onCustomGradient={handleCustomGradient}
       />

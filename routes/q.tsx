@@ -2,22 +2,29 @@ import { useSignal } from "@preact/signals";
 import { Head } from "$fresh/runtime.ts";
 import { PageProps } from "$fresh/server.ts";
 import QRCanvas from "../islands/QRCanvas.tsx";
-import ShuffleButton from "../islands/ShuffleButton.tsx";
 import URLInput from "../islands/URLInput.tsx";
 import ActionButtons from "../islands/ActionButtons.tsx";
-import StylePills from "../islands/StylePills.tsx";
+import StyleSelector from "../islands/StyleSelector.tsx";
+import KeyboardHandler from "../islands/KeyboardHandler.tsx";
+import EasterEggs from "../islands/EasterEggs.tsx";
+import ErrorBoundary from "../islands/ErrorBoundary.tsx";
+import ToastManager from "../islands/ToastManager.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
+import type { QRStyle } from "../types/qr-types.ts";
 
 export default function SharePage(props: PageProps) {
   const urlParams = new URL(props.url).searchParams;
   const sharedData = urlParams.get("d") || "";
-  const sharedStyle =
-    (urlParams.get("s") || "sunset") as keyof typeof QR_STYLES;
+  const sharedStyle = (urlParams.get("s") || "sunset") as
+    | keyof typeof QR_STYLES
+    | "custom";
 
   const url = useSignal(decodeURIComponent(sharedData));
-  const style = useSignal<keyof typeof QR_STYLES>(sharedStyle);
+  const style = useSignal<keyof typeof QR_STYLES | "custom">(sharedStyle);
+  const customStyle = useSignal<QRStyle | null>(null);
   const triggerDownload = useSignal(false);
   const isAnimating = useSignal(false);
+  const triggerCopy = useSignal(false);
 
   return (
     <>
@@ -39,52 +46,61 @@ export default function SharePage(props: PageProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
-      <div class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1">
+      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
+        <ToastManager />
+        <KeyboardHandler
+          url={url}
+          style={style}
+          triggerDownload={triggerDownload}
+          triggerCopy={triggerCopy}
+          isAnimating={isAnimating}
+        />
+        <EasterEggs url={url} style={style} />
+
+        {/* Style Selector - Top Right Corner */}
+        <div class="absolute top-6 right-6">
+          <StyleSelector style={style} customStyle={customStyle} />
+        </div>
+
         <div class="w-full max-w-md space-y-8">
           {/* Hero Text */}
           <div class="text-center space-y-2">
             <h1 class="text-5xl font-black text-black tracking-tight">
               QRBuddy
             </h1>
-            <p class="text-lg text-gray-600 tracking-wider">
-              Drop a link. Watch it bloom.
+            <p class="text-lg text-gray-600">
+              {sharedData ? "Shared QR Code" : "Generate beautiful QR codes"}
             </p>
           </div>
 
-          {/* QR Code Display */}
+          {/* QR Code Display - FIRST */}
           <div class="flex justify-center">
             <div class="shadow-xl rounded-2xl">
-              <QRCanvas
-                url={url}
-                style={style}
-                triggerDownload={triggerDownload}
-              />
+              <ErrorBoundary>
+                <QRCanvas
+                  url={url}
+                  style={style}
+                  customStyle={customStyle}
+                  triggerDownload={triggerDownload}
+                  triggerCopy={triggerCopy}
+                />
+              </ErrorBoundary>
             </div>
           </div>
 
-          {/* URL Input */}
+          {/* URL Input - BELOW QR */}
           <URLInput url={url} />
 
-          {/* Action Buttons */}
-          <div class="flex gap-4">
-            <ShuffleButton
-              style={style}
-              isAnimating={isAnimating}
-            />
-
-            <ActionButtons
-              triggerDownload={triggerDownload}
-              url={url}
-              style={style}
-            />
-          </div>
-
-          {/* Style Pills */}
-          <StylePills style={style} />
+          {/* Action Buttons - Side by Side */}
+          <ActionButtons
+            triggerDownload={triggerDownload}
+            url={url}
+            style={style}
+          />
         </div>
 
         {/* Footer */}
-        <footer class="mt-16 text-center text-xs text-gray-500 opacity-60">
+        <footer class="mt-16 text-center text-sm text-gray-500 opacity-60">
           Made with 🧁 by Pablo
         </footer>
       </div>

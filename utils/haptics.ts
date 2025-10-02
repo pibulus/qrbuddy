@@ -15,7 +15,7 @@ class HapticManager implements HapticPattern {
   private isSupported: boolean;
 
   constructor() {
-    this.isSupported = 'vibrate' in navigator;
+    this.isSupported = "vibrate" in navigator;
   }
 
   private vibrate(pattern: number | number[]): void {
@@ -71,10 +71,10 @@ export const haptics = new HapticManager();
 
 // Utility function to add haptic feedback to any element
 export function addHapticToElement(
-  element: HTMLElement, 
-  pattern: keyof HapticPattern = 'light'
+  element: HTMLElement,
+  pattern: keyof HapticPattern = "light",
 ): void {
-  element.addEventListener('click', () => {
+  element.addEventListener("click", () => {
     haptics[pattern]();
   });
 }

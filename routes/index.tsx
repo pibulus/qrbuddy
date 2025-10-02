@@ -4,17 +4,17 @@ import QRCanvas from "../islands/QRCanvas.tsx";
 import URLInput from "../islands/URLInput.tsx";
 import ActionButtons from "../islands/ActionButtons.tsx";
 import StyleSelector from "../islands/StyleSelector.tsx";
-import ShuffleAction from "../islands/ShuffleAction.tsx";
 import KeyboardHandler from "../islands/KeyboardHandler.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
+import type { QRStyle } from "../types/qr-types.ts";
 
 export default function Home() {
   const url = useSignal("");
-  const style = useSignal<keyof typeof QR_STYLES | 'custom'>("sunset");
-  const customStyle = useSignal<any>(null);
+  const style = useSignal<keyof typeof QR_STYLES | "custom">("sunset");
+  const customStyle = useSignal<QRStyle | null>(null);
   const triggerDownload = useSignal(false);
   const isAnimating = useSignal(false);
   const triggerCopy = useSignal(false);
@@ -51,12 +51,12 @@ export default function Home() {
           isAnimating={isAnimating}
         />
         <EasterEggs url={url} style={style} />
-        
+
         {/* Style Selector - Top Right Corner */}
         <div class="absolute top-6 right-6">
           <StyleSelector style={style} customStyle={customStyle} />
         </div>
-        
+
         <div class="w-full max-w-md space-y-8">
           {/* Hero Text */}
           <div class="text-center space-y-2">

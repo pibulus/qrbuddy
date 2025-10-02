@@ -65,7 +65,10 @@ export default {
         },
         "pulse-glow": {
           "0%, 100%": { boxShadow: "0 0 20px rgba(255, 105, 180, 0.3)" },
-          "50%": { boxShadow: "0 0 40px rgba(255, 105, 180, 0.6), 0 0 60px rgba(255, 105, 180, 0.3)" },
+          "50%": {
+            boxShadow:
+              "0 0 40px rgba(255, 105, 180, 0.6), 0 0 60px rgba(255, 105, 180, 0.3)",
+          },
         },
         "bounce-in": {
           "0%": { opacity: "0", transform: "scale(0.5)" },
@@ -73,17 +76,20 @@ export default {
           "100%": { opacity: "1", transform: "scale(1)" },
         },
         "glow-pulse": {
-          "0%": { 
-            boxShadow: "0 0 0px rgba(255, 105, 180, 0), 0 4px 6px rgba(0, 0, 0, 0.1)",
-            transform: "scale(1)"
+          "0%": {
+            boxShadow:
+              "0 0 0px rgba(255, 105, 180, 0), 0 4px 6px rgba(0, 0, 0, 0.1)",
+            transform: "scale(1)",
           },
-          "20%": { 
-            boxShadow: "0 0 30px rgba(255, 105, 180, 0.8), 0 0 60px rgba(255, 105, 180, 0.4), 0 8px 12px rgba(0, 0, 0, 0.15)",
-            transform: "scale(1.03)"
+          "20%": {
+            boxShadow:
+              "0 0 30px rgba(255, 105, 180, 0.8), 0 0 60px rgba(255, 105, 180, 0.4), 0 8px 12px rgba(0, 0, 0, 0.15)",
+            transform: "scale(1.03)",
           },
-          "100%": { 
-            boxShadow: "0 0 0px rgba(255, 105, 180, 0), 0 10px 20px rgba(0, 0, 0, 0.1)",
-            transform: "scale(1.03)"
+          "100%": {
+            boxShadow:
+              "0 0 0px rgba(255, 105, 180, 0), 0 10px 20px rgba(0, 0, 0, 0.1)",
+            transform: "scale(1.03)",
           },
         },
       },

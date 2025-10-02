@@ -1,5 +1,4 @@
 import { Signal } from "@preact/signals";
-import { useState } from "preact/hooks";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
@@ -42,8 +41,6 @@ export default function ActionButtons(
       sounds.error();
     }
   };
-
-  const [showOptions, setShowOptions] = useState(false);
 
   return (
     <div class="flex gap-3">

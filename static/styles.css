@@ -61,6 +61,6 @@ html {
 
 /* QRBuddy specific background styles */
 body {
-  background: linear-gradient(135deg, #FFF8F0 0%, #FFE5B4 100%);
+  background: linear-gradient(135deg, #fff8f0 0%, #ffe5b4 100%);
   min-height: 100vh;
 }

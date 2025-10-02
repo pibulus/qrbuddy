@@ -2,11 +2,11 @@
 // Provides subtle audio feedback for interactions
 
 export interface SoundEffects {
-  click: () => Promise<void>;
-  shuffle: () => Promise<void>;
-  success: () => Promise<void>;
-  copy: () => Promise<void>;
-  error: () => Promise<void>;
+  click: () => void;
+  shuffle: () => void;
+  success: () => void;
+  copy: () => void;
+  error: () => void;
 }
 
 class SoundManager implements SoundEffects {
@@ -17,62 +17,70 @@ class SoundManager implements SoundEffects {
   constructor() {
     // Check user preference for reduced motion (applies to audio too)
     // Only check on client side
-    this.isEnabled = typeof globalThis !== 'undefined' && globalThis.matchMedia 
-      ? !globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches 
+    this.isEnabled = typeof globalThis !== "undefined" && globalThis.matchMedia
+      ? !globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches
       : true;
   }
 
-  private async loadSound(name: string, url: string): Promise<HTMLAudioElement> {
+  private loadSound(
+    name: string,
+    url: string,
+  ): Promise<HTMLAudioElement> {
     if (this.audioCache.has(name)) {
-      return this.audioCache.get(name)!;
+      return Promise.resolve(this.audioCache.get(name)!);
     }
 
     const audio = new Audio(url);
     audio.volume = this.volume;
-    audio.preload = 'auto';
-    
+    audio.preload = "auto";
+
     return new Promise((resolve, reject) => {
-      audio.addEventListener('canplaythrough', () => {
+      audio.addEventListener("canplaythrough", () => {
         this.audioCache.set(name, audio);
         resolve(audio);
       }, { once: true });
-      
-      audio.addEventListener('error', reject, { once: true });
+
+      audio.addEventListener("error", reject, { once: true });
       audio.load();
     });
   }
 
-  private async playSound(soundName: string, fallbackUrl?: string): Promise<void> {
+  private async playSound(
+    soundName: string,
+    fallbackUrl?: string,
+  ): Promise<void> {
     if (!this.isEnabled) return;
 
     try {
       let audio = this.audioCache.get(soundName);
-      
+
       if (!audio && fallbackUrl) {
         audio = await this.loadSound(soundName, fallbackUrl);
       }
-      
+
       if (audio) {
         audio.currentTime = 0;
         await audio.play();
       } else {
         // Create simple beep as fallback
-        this.createBeep(200, 0.05, 'sine');
+        this.createBeep(200, 0.05, "sine");
       }
-    } catch (error) {
+    } catch (_error) {
       // Silently fail - audio is enhancement, not critical
-      console.debug('Sound playback failed:', error);
+      console.debug("Sound playback failed:", _error);
     }
   }
 
   // Create synthetic beep using Web Audio API as fallback
   private createBeep(
-    frequency: number, 
-    duration: number, 
-    type: OscillatorType = 'sine'
+    frequency: number,
+    duration: number,
+    type: OscillatorType = "sine",
   ): void {
     try {
-      const audioContext = new (globalThis.AudioContext || (globalThis as any).webkitAudioContext)();
+      const audioContext = new (globalThis.AudioContext ||
+        // @ts-ignore - webkitAudioContext is a non-standard property
+        globalThis.webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
@@ -82,54 +90,60 @@ class SoundManager implements SoundEffects {
       oscillator.frequency.value = frequency;
       oscillator.type = type;
       gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(this.volume, audioContext.currentTime + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+      gainNode.gain.linearRampToValueAtTime(
+        this.volume,
+        audioContext.currentTime + 0.01,
+      );
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.001,
+        audioContext.currentTime + duration,
+      );
 
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + duration);
-    } catch (error) {
+    } catch (_error) {
       // Web Audio API not supported, silently fail
-      console.debug('Web Audio API not supported');
+      console.debug("Web Audio API not supported");
     }
   }
 
-  async click(): Promise<void> {
+  click(): void {
     // Warmer, gooier click - deeper with a tiny reverb tail
-    this.createBeep(320, 0.08, 'sine');
-    setTimeout(() => this.createBeep(480, 0.06, 'sine'), 20);
+    this.createBeep(320, 0.08, "sine");
+    setTimeout(() => this.createBeep(480, 0.06, "sine"), 20);
   }
 
-  async shuffle(): Promise<void> {
+  shuffle(): void {
     // Playful shuffle sound - ascending tones
     const frequencies = [400, 500, 600];
     for (let i = 0; i < frequencies.length; i++) {
       setTimeout(() => {
-        this.createBeep(frequencies[i], 0.08, 'sine');
+        this.createBeep(frequencies[i], 0.08, "sine");
       }, i * 60);
     }
   }
 
-  async success(): Promise<void> {
+  success(): void {
     // Success chime - major chord
     const chord = [523, 659, 784]; // C, E, G
     chord.forEach((freq, i) => {
       setTimeout(() => {
-        this.createBeep(freq, 0.3, 'sine');
+        this.createBeep(freq, 0.3, "sine");
       }, i * 30);
     });
   }
 
-  async copy(): Promise<void> {
+  copy(): void {
     // Quick double beep
-    this.createBeep(600, 0.06, 'sine');
+    this.createBeep(600, 0.06, "sine");
     setTimeout(() => {
-      this.createBeep(600, 0.06, 'sine');
+      this.createBeep(600, 0.06, "sine");
     }, 80);
   }
 
-  async error(): Promise<void> {
+  error(): void {
     // Lower, longer tone for errors
-    this.createBeep(200, 0.2, 'sawtooth');
+    this.createBeep(200, 0.2, "sawtooth");
   }
 
   // Control methods
@@ -150,10 +164,10 @@ export const sounds = new SoundManager();
 
 // Utility to add sound to any clickable element
 export function addSoundToElement(
-  element: HTMLElement, 
-  soundType: keyof SoundEffects = 'click'
+  element: HTMLElement,
+  soundType: keyof SoundEffects = "click",
 ): void {
-  element.addEventListener('click', () => {
+  element.addEventListener("click", () => {
     sounds[soundType]();
   });
 }

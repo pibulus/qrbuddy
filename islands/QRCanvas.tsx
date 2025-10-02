@@ -3,11 +3,12 @@ import { Signal } from "@preact/signals";
 import QRCodeStyling from "qr-code-styling";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import { addToast } from "./ToastManager.tsx";
+import type { QRStyle } from "../types/qr-types.ts";
 
 interface QRCanvasProps {
   url: Signal<string>;
-  style: Signal<keyof typeof QR_STYLES | 'custom'>;
-  customStyle?: Signal<any>;
+  style: Signal<keyof typeof QR_STYLES | "custom">;
+  customStyle?: Signal<QRStyle | null>;
   triggerDownload: Signal<boolean>;
   triggerCopy?: Signal<boolean>;
 }
@@ -39,7 +40,7 @@ export default function QRCanvas(
 
   // Helper function to get the current style object
   const getCurrentStyle = () => {
-    if (style.value === 'custom' && customStyle?.value) {
+    if (style.value === "custom" && customStyle?.value) {
       return customStyle.value;
     }
     return QR_STYLES[style.value as keyof typeof QR_STYLES];

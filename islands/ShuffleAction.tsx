@@ -8,8 +8,10 @@ interface ShuffleActionProps {
   isAnimating: Signal<boolean>;
 }
 
-export default function ShuffleAction({ style, isAnimating }: ShuffleActionProps) {
-  const handleShuffle = async () => {
+export default function ShuffleAction(
+  { style, isAnimating }: ShuffleActionProps,
+) {
+  const handleShuffle = () => {
     if (isAnimating.value) return;
 
     // Immediate feedback
@@ -39,7 +41,11 @@ export default function ShuffleAction({ style, isAnimating }: ShuffleActionProps
       "
       title="Random style"
     >
-      <span class={`transition-transform duration-400 ${isAnimating.value ? 'animate-spin' : ''}`}>
+      <span
+        class={`transition-transform duration-400 ${
+          isAnimating.value ? "animate-spin" : ""
+        }`}
+      >
         🎲
       </span>
       Surprise me
