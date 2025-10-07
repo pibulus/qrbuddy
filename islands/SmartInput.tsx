@@ -5,9 +5,13 @@ import { haptics } from "../utils/haptics.ts";
 interface SmartInputProps {
   url: Signal<string>;
   isDestructible: Signal<boolean>;
+  isDynamic: Signal<boolean>;
+  editUrl: Signal<string>;
 }
 
-export default function SmartInput({ url, isDestructible }: SmartInputProps) {
+export default function SmartInput(
+  { url, isDestructible, isDynamic, editUrl }: SmartInputProps,
+) {
   const [validationState, setValidationState] = useState<
     "idle" | "valid" | "invalid"
   >("idle");
@@ -18,6 +22,11 @@ export default function SmartInput({ url, isDestructible }: SmartInputProps) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [inputType, setInputType] = useState<"text" | "file">("text");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Dynamic QR options
+  const [scanLimit, setScanLimit] = useState<number | null>(null);
+  const [expiryDate, setExpiryDate] = useState<string>("");
+  const [isCreatingDynamic, setIsCreatingDynamic] = useState(false);
 
   // URL validation function
   const validateURL = (urlString: string): boolean => {
@@ -46,6 +55,20 @@ export default function SmartInput({ url, isDestructible }: SmartInputProps) {
     }
   }, [url.value, touched, validationState]);
 
+  // Create dynamic QR when isDynamic is enabled with valid URL
+  useEffect(() => {
+    if (isDynamic.value && url.value && !isCreatingDynamic && !editUrl.value) {
+      // Only create if we have a URL and haven't created yet
+      const timer = setTimeout(() => {
+        if (validateURL(url.value)) {
+          createDynamicQR(url.value);
+        }
+      }, 500); // Debounce for 500ms
+
+      return () => clearTimeout(timer);
+    }
+  }, [isDynamic.value, url.value]);
+
   const handleInput = (e: Event) => {
     const input = e.target as HTMLInputElement;
     url.value = input.value;
@@ -54,6 +77,69 @@ export default function SmartInput({ url, isDestructible }: SmartInputProps) {
 
     if (!touched) {
       setTouched(true);
+    }
+  };
+
+  // Create dynamic QR code
+  const createDynamicQR = async (destinationUrl: string) => {
+    try {
+      setIsCreatingDynamic(true);
+      haptics.medium();
+
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ||
+        "https://rckahvngsukzkmbpaejs.supabase.co";
+
+      const body: Record<string, any> = { destination_url: destinationUrl };
+      if (scanLimit) body.max_scans = scanLimit;
+      if (expiryDate) body.expires_at = new Date(expiryDate).toISOString();
+
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/create-dynamic-qr`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create dynamic QR");
+      }
+
+      const data = await response.json();
+
+      // Update URL to the redirect URL
+      url.value = data.redirect_url;
+      editUrl.value = data.edit_url;
+
+      // Store owner token in localStorage
+      localStorage.setItem(`qr_${data.short_code}`, data.owner_token);
+
+      // Success feedback
+      haptics.success();
+
+      const event = new CustomEvent("show-toast", {
+        detail: {
+          message: `✅ Dynamic QR created! You can edit this anytime 🔗`,
+          type: "success",
+        },
+      });
+      globalThis.dispatchEvent(event);
+
+      setIsCreatingDynamic(false);
+    } catch (error) {
+      console.error("Create dynamic QR error:", error);
+      setIsCreatingDynamic(false);
+      haptics.error();
+
+      const event = new CustomEvent("show-toast", {
+        detail: {
+          message: `❌ Failed to create dynamic QR: ${error.message}`,
+          type: "error",
+        },
+      });
+      globalThis.dispatchEvent(event);
     }
   };
 
@@ -325,6 +411,113 @@ export default function SmartInput({ url, isDestructible }: SmartInputProps) {
         <p class="text-purple-600 text-sm mt-2 text-center animate-pulse">
           Uploading... {uploadProgress}%
         </p>
+      )}
+
+      {/* Dynamic QR Options */}
+      {!isDestructible.value && !isUploading && (
+        <div class="mt-4 space-y-3">
+          {/* Make this editable checkbox */}
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={isDynamic.value}
+              onChange={(e) => {
+                isDynamic.value = (e.target as HTMLInputElement).checked;
+                haptics.light();
+              }}
+              class="w-5 h-5 rounded border-2 border-black cursor-pointer"
+            />
+            <span class="text-sm font-semibold text-gray-700 group-hover:text-pink-600 transition-colors">
+              🔗 Make this editable (dynamic QR)
+            </span>
+          </label>
+
+          {/* Options panel - shown when editable is enabled */}
+          {isDynamic.value && (
+            <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-300 rounded-xl p-4 space-y-3 animate-slide-down">
+              {/* Scan limit selector */}
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+                  Scan Limit
+                </label>
+                <div class="flex gap-2 flex-wrap">
+                  {[1, 5, 10, 100, null].map((limit) => (
+                    <button
+                      key={limit?.toString() || "unlimited"}
+                      onClick={() => {
+                        setScanLimit(limit);
+                        haptics.light();
+                      }}
+                      class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all
+                        ${
+                        scanLimit === limit
+                          ? "bg-pink-500 text-white border-pink-600 scale-105"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-pink-400"
+                      }`}
+                    >
+                      {limit === null ? "∞" : limit}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Expiry date picker */}
+              <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+                  Expiry Date (Optional)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={expiryDate}
+                  onChange={(e) => {
+                    setExpiryDate((e.target as HTMLInputElement).value);
+                    haptics.light();
+                  }}
+                  class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Info text */}
+              <p class="text-xs text-gray-600 leading-relaxed">
+                💡 Dynamic QRs let you edit the destination URL anytime without
+                reprinting. No tracking or analytics - just editable redirects.
+              </p>
+            </div>
+          )}
+
+          {/* Edit link - shown after creation */}
+          {editUrl.value && (
+            <div class="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-400 rounded-xl p-4 space-y-2 animate-slide-down">
+              <p class="text-sm font-semibold text-green-800">
+                ✨ Dynamic QR Created!
+              </p>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  value={editUrl.value}
+                  readOnly
+                  class="flex-1 px-3 py-2 bg-white border-2 border-green-300 rounded-lg text-xs font-mono"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(editUrl.value);
+                    haptics.success();
+                    const event = new CustomEvent("show-toast", {
+                      detail: { message: "Edit link copied! 📋", type: "success" },
+                    });
+                    globalThis.dispatchEvent(event);
+                  }}
+                  class="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold text-sm hover:bg-green-600 transition-colors"
+                >
+                  Copy
+                </button>
+              </div>
+              <p class="text-xs text-green-700">
+                Save this link to edit your QR anytime!
+              </p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

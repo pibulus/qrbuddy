@@ -73,10 +73,11 @@ HTML.
 - Orchestrates component layout
 - Handles SEO meta tags
 
-**Islands (Interactive Components - 12 total)**
+**Islands (Interactive Components - 13 total)**
 
 - `QRCanvas`: Core QR rendering and download/copy functionality
-- `URLInput`: URL entry with validation
+- `SmartInput`: Smart input handling URLs, files, and plain text with dynamic QR
+  options
 - `StylePills`: Style selector UI
 - `StyleSelector`: Style selection logic
 - `ShuffleButton`: Random style selection with spring animation
@@ -88,6 +89,7 @@ HTML.
 - `EasterEggs`: Hidden features and animations
 - `ToastManager`: Notification stacking system
 - `ErrorBoundary`: QR generation error handling
+- `EditQRForm`: Dynamic QR edit interface with destination/settings updates
 
 **Utils (`utils/qr-styles.ts`)**
 
@@ -172,13 +174,33 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ## ✅ Recently Completed
 
+### Dynamic QR Codes Integration (Latest)
+
+- **Anti-Scale Dynamic QRs**: Privacy-first editable redirects with NO
+  tracking/analytics
+- **Database Schema**: Added `dynamic_qr_codes` table with scan limits and expiry
+  tracking
+- **Edge Functions**: 4 new Supabase functions (create-dynamic-qr,
+  update-dynamic-qr, get-dynamic-qr, redirect-qr)
+- **Smart Input Enhancements**: Checkbox + options UI for scan limits
+  (1/5/10/100/∞) and expiry dates
+- **Edit Page**: New `/edit?token={owner_token}` route with EditQRForm island for
+  changing destination/settings
+- **Owner Tokens**: Stored in localStorage for edit access without user accounts
+- **Redirect Route**: `/r?code={short_code}` route forwards to edge function for
+  redirect logic
+- **Visual Indicators**: Purple/pink "editable" badge on dynamic QRs alongside
+  destructible badge
+- **13 Interactive Islands**: Added EditQRForm for dynamic QR management
+
+### Previous Features
+
 - **Base Zero Achievement**: Added GLOSSARY.md, updated README with accurate tech
-  stack and all 12 islands documented
+  stack
 - **Twind→Tailwind Migration**: Migrated from deprecated Twind to stable Tailwind
-  CSS for better reliability
-- **12 Interactive Islands**: Full feature set including GradientCreator, keyboard
-  shortcuts, copy-to-clipboard, error handling, and toast notifications
+  CSS
+- **Destructible Files**: Self-destructing file uploads with KABOOM explosion page
+- **12 Interactive Islands**: GradientCreator, keyboard shortcuts,
+  copy-to-clipboard, error handling, toast notifications
 - **Mobile Dev Config**: Added --host 0.0.0.0 flag for mobile testing on local
   network
-- **Documentation**: Complete GLOSSARY.md with all components, utils, and core
-  concepts documented

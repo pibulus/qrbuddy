@@ -12,10 +12,11 @@ interface QRCanvasProps {
   triggerDownload: Signal<boolean>;
   triggerCopy?: Signal<boolean>;
   isDestructible?: Signal<boolean>;
+  isDynamic?: Signal<boolean>;
 }
 
 export default function QRCanvas(
-  { url, style, customStyle, triggerDownload, triggerCopy, isDestructible }:
+  { url, style, customStyle, triggerDownload, triggerCopy, isDestructible, isDynamic }:
     QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -198,6 +199,13 @@ export default function QRCanvas(
       {isDestructible?.value && (
         <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-pulse z-10">
           💣 1 scan
+        </div>
+      )}
+
+      {/* Dynamic QR badge */}
+      {isDynamic?.value && !isDestructible?.value && (
+        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold z-10">
+          🔗 editable
         </div>
       )}
     </div>

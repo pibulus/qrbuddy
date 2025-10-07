@@ -9,6 +9,11 @@ gradient art pieces with that soft brutal aesthetic.
 
 - **Smart Input** - Paste URLs, type text, or drop files - it just works
 - **Destructible Files** 💣 - Upload files that self-destruct after 1 scan
+- **Dynamic QR Codes** 🔗 - Privacy-first editable redirects (NO
+  tracking/analytics)
+- **Scan Limits** - Set 1, 5, 10, 100, or unlimited scans before self-destruct
+- **Expiry Dates** - Optional time-based QR expiration
+- **Edit Anytime** - Change destination URL without reprinting QR
 - **6 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, and Brutalist
   themes
 - **Custom Gradient Creator** - Build your own gradient QR codes
@@ -41,14 +46,21 @@ deno task start
 
 Visit http://localhost:8004 and start creating beautiful QR codes!
 
-### Destructible Files Setup (Optional)
+### Destructible Files & Dynamic QR Setup (Optional)
 
-To enable self-destructing file QR codes:
+To enable self-destructing files and dynamic QR codes:
 
 1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Run the SQL in `supabase/setup.sql` in your SQL Editor
-3. Deploy edge functions: `supabase functions deploy upload-file` and
-   `supabase functions deploy get-file`
+2. Run the SQL in `supabase/setup.sql` in your SQL Editor (creates both tables)
+3. Deploy edge functions:
+   ```bash
+   supabase functions deploy upload-file
+   supabase functions deploy get-file
+   supabase functions deploy create-dynamic-qr
+   supabase functions deploy update-dynamic-qr
+   supabase functions deploy get-dynamic-qr
+   supabase functions deploy redirect-qr
+   ```
 4. Add your Supabase credentials to `.env`
 
 See `supabase/README.md` for detailed instructions.

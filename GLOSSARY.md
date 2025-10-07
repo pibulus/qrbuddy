@@ -18,6 +18,7 @@
 - `GradientCreator` - Custom gradient builder (islands/GradientCreator.tsx)
 - `ToastManager` - Notification stacking system (islands/ToastManager.tsx)
 - `ErrorBoundary` - QR generation error handling (islands/ErrorBoundary.tsx)
+- `EditQRForm` - Dynamic QR edit interface (islands/EditQRForm.tsx)
 
 ## Utils
 
@@ -31,7 +32,7 @@
 ## Core Concepts
 
 - **Signal-Based State** - Preact signals for reactive updates (url, style,
-  triggerDownload, triggerCopy, isDestructible)
+  triggerDownload, triggerCopy, isDestructible, isDynamic, editUrl)
 - **Gradient QR Codes** - `qr-code-styling` library with 6 pre-defined gradient
   themes
 - **Island Architecture** - Selective client hydration, server-rendered HTML
@@ -41,4 +42,8 @@
 - **Destructible Files** - One-time file sharing via Supabase edge functions
 - **Self-Destructing QRs** - Files uploaded to Supabase self-destruct after 1
   scan
+- **Dynamic QR Codes** - Privacy-first editable redirects with NO
+  tracking/analytics
+- **Anti-Scale Dynamic** - Editable QR destinations with scan limits, expiry,
+  and owner tokens
 - **Keyboard Shortcuts** - s (shuffle), d (download), c (copy)

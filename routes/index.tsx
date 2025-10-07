@@ -19,6 +19,8 @@ export default function Home() {
   const isAnimating = useSignal(false);
   const triggerCopy = useSignal(false);
   const isDestructible = useSignal(false);
+  const isDynamic = useSignal(false);
+  const editUrl = useSignal("");
 
   return (
     <>
@@ -138,13 +140,19 @@ export default function Home() {
                   triggerDownload={triggerDownload}
                   triggerCopy={triggerCopy}
                   isDestructible={isDestructible}
+                  isDynamic={isDynamic}
                 />
               </ErrorBoundary>
             </div>
           </div>
 
           {/* Smart Input - BELOW QR */}
-          <SmartInput url={url} isDestructible={isDestructible} />
+          <SmartInput
+            url={url}
+            isDestructible={isDestructible}
+            isDynamic={isDynamic}
+            editUrl={editUrl}
+          />
 
           {/* Action Buttons - Side by Side */}
           <ActionButtons
