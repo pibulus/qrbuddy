@@ -9,11 +9,14 @@ gradient art pieces with that soft brutal aesthetic.
 
 - **6 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, and Brutalist
   themes
+- **Custom Gradient Creator** - Build your own gradient QR codes
 - **Instant Generation** - <100ms QR generation with no loading states
 - **Shuffle Magic** - One-tap randomization with spring physics animation
-- **Download Ready** - Save high-quality PNGs with a single click
+- **Download & Copy** - Save PNGs or copy to clipboard with one click
+- **Keyboard Shortcuts** - s (shuffle), d (download), c (copy)
 - **Mobile First** - Responsive design that works beautifully on all devices
 - **Soft Brutal Design** - Chunky borders, hard shadows, pastel colors
+- **Error Handling** - Graceful degradation with helpful error messages
 
 ## 🚀 Quick Start
 
@@ -29,14 +32,14 @@ cd qrbuddy
 deno task start
 ```
 
-Visit http://localhost:8000 and start creating beautiful QR codes!
+Visit http://localhost:8004 and start creating beautiful QR codes!
 
 ## 🛠 Tech Stack
 
 - **[Fresh](https://fresh.deno.dev)** - The next-gen web framework
 - **[Deno](https://deno.land)** - Modern runtime for JavaScript and TypeScript
 - **[Preact](https://preactjs.com)** - Fast 3kB alternative to React
-- **[Twind](https://twind.dev)** - Runtime Tailwind CSS
+- **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS framework
 - **[qr-code-styling](https://github.com/kozakdenys/qr-code-styling)** -
   Gradient QR generation
 
@@ -44,18 +47,26 @@ Visit http://localhost:8000 and start creating beautiful QR codes!
 
 ```
 qrbuddy/
-├── islands/          # Interactive Preact components
-│   ├── QRCanvas.tsx      # Main QR display (400x400)
-│   ├── ShuffleButton.tsx # Primary interaction
-│   ├── URLInput.tsx      # Clean input field
-│   ├── ActionButtons.tsx # Save button
-│   └── StylePills.tsx    # Style selector pills
-├── routes/           # Fresh routes
-│   └── index.tsx         # Main page
-├── utils/            # Utilities
-│   └── qr-styles.ts      # Style definitions
-├── static/           # Static assets
-└── twind.config.ts   # Tailwind configuration
+├── islands/              # Interactive Preact components (12 total)
+│   ├── QRCanvas.tsx          # Core QR rendering + download/copy
+│   ├── URLInput.tsx          # URL entry with validation
+│   ├── StylePills.tsx        # Style selector UI
+│   ├── StyleSelector.tsx     # Style selection logic
+│   ├── ShuffleButton.tsx     # Random style animation
+│   ├── ShuffleAction.tsx     # Shuffle handler
+│   ├── ActionButtons.tsx     # Download trigger
+│   ├── KeyboardHandler.tsx   # Global shortcuts (s/d/c)
+│   ├── GradientCreator.tsx   # Custom gradient builder
+│   ├── EasterEggs.tsx        # Hidden features
+│   ├── ToastManager.tsx      # Notification system
+│   └── ErrorBoundary.tsx     # Error handling
+├── routes/               # Fresh routes
+│   ├── index.tsx             # Main page
+│   └── q.tsx                 # QR code route
+├── utils/                # Utilities
+│   └── qr-styles.ts          # 6 gradient style definitions
+├── static/               # Static assets
+└── tailwind.config.ts    # Tailwind configuration
 ```
 
 ## 🎨 Available Styles
