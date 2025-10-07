@@ -11,10 +11,12 @@ interface QRCanvasProps {
   customStyle?: Signal<QRStyle | null>;
   triggerDownload: Signal<boolean>;
   triggerCopy?: Signal<boolean>;
+  isDestructible?: Signal<boolean>;
 }
 
 export default function QRCanvas(
-  { url, style, customStyle, triggerDownload, triggerCopy }: QRCanvasProps,
+  { url, style, customStyle, triggerDownload, triggerCopy, isDestructible }:
+    QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
@@ -191,6 +193,13 @@ export default function QRCanvas(
         title="Click to copy"
       />
       <div class="absolute -z-10 inset-0 bg-gradient-to-br from-qr-sunset1 via-qr-sunset2 to-qr-sunset3 opacity-20 blur-xl rounded-chunky" />
+
+      {/* Destructible badge */}
+      {isDestructible?.value && (
+        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-pulse z-10">
+          💣 1 scan
+        </div>
+      )}
     </div>
   );
 }

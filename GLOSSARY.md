@@ -2,8 +2,10 @@
 
 ## Islands (Interactive Components)
 
-- `QRCanvas` - Core QR rendering + download/copy (islands/QRCanvas.tsx)
-- `URLInput` - URL entry with validation (islands/URLInput.tsx)
+- `QRCanvas` - Core QR rendering + download/copy + destructible badge
+  (islands/QRCanvas.tsx)
+- `SmartInput` - Smart input handling URLs, files, and plain text with
+  drag/drop (islands/SmartInput.tsx)
 - `StylePills` - Style selector UI (islands/StylePills.tsx)
 - `StyleSelector` - Style selection logic (islands/StyleSelector.tsx)
 - `ShuffleButton` - Random style with spring animation
@@ -29,11 +31,14 @@
 ## Core Concepts
 
 - **Signal-Based State** - Preact signals for reactive updates (url, style,
-  triggerDownload, triggerCopy)
+  triggerDownload, triggerCopy, isDestructible)
 - **Gradient QR Codes** - `qr-code-styling` library with 6 pre-defined gradient
   themes
 - **Island Architecture** - Selective client hydration, server-rendered HTML
 - **Soft Brutal Aesthetic** - Chunky 4px borders, warm pastels, spring
   animations
-- **Client-Side Only** - No data sent to servers, all QR generation local
+- **Smart Input Detection** - Automatically detects URLs, files, or plain text
+- **Destructible Files** - One-time file sharing via Supabase edge functions
+- **Self-Destructing QRs** - Files uploaded to Supabase self-destruct after 1
+  scan
 - **Keyboard Shortcuts** - s (shuffle), d (download), c (copy)

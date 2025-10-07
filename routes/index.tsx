@@ -1,7 +1,7 @@
 import { useSignal } from "@preact/signals";
 import { Head } from "$fresh/runtime.ts";
 import QRCanvas from "../islands/QRCanvas.tsx";
-import URLInput from "../islands/URLInput.tsx";
+import SmartInput from "../islands/SmartInput.tsx";
 import ActionButtons from "../islands/ActionButtons.tsx";
 import StyleSelector from "../islands/StyleSelector.tsx";
 import KeyboardHandler from "../islands/KeyboardHandler.tsx";
@@ -18,6 +18,7 @@ export default function Home() {
   const triggerDownload = useSignal(false);
   const isAnimating = useSignal(false);
   const triggerCopy = useSignal(false);
+  const isDestructible = useSignal(false);
 
   return (
     <>
@@ -136,13 +137,14 @@ export default function Home() {
                   customStyle={customStyle}
                   triggerDownload={triggerDownload}
                   triggerCopy={triggerCopy}
+                  isDestructible={isDestructible}
                 />
               </ErrorBoundary>
             </div>
           </div>
 
-          {/* URL Input - BELOW QR */}
-          <URLInput url={url} />
+          {/* Smart Input - BELOW QR */}
+          <SmartInput url={url} isDestructible={isDestructible} />
 
           {/* Action Buttons - Side by Side */}
           <ActionButtons

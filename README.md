@@ -7,6 +7,8 @@ gradient art pieces with that soft brutal aesthetic.
 
 ## ✨ Features
 
+- **Smart Input** - Paste URLs, type text, or drop files - it just works
+- **Destructible Files** 💣 - Upload files that self-destruct after 1 scan
 - **6 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, and Brutalist
   themes
 - **Custom Gradient Creator** - Build your own gradient QR codes
@@ -17,6 +19,7 @@ gradient art pieces with that soft brutal aesthetic.
 - **Mobile First** - Responsive design that works beautifully on all devices
 - **Soft Brutal Design** - Chunky borders, hard shadows, pastel colors
 - **Error Handling** - Graceful degradation with helpful error messages
+- **KABOOM Page** - Spectacular explosion page for already-scanned files
 
 ## 🚀 Quick Start
 
@@ -28,11 +31,27 @@ curl -fsSL https://deno.land/install.sh | sh
 git clone https://github.com/pibulus/qrbuddy.git
 cd qrbuddy
 
+# Set up environment variables (for destructible files)
+cp .env.example .env
+# Edit .env with your Supabase credentials
+
 # Start the development server
 deno task start
 ```
 
 Visit http://localhost:8004 and start creating beautiful QR codes!
+
+### Destructible Files Setup (Optional)
+
+To enable self-destructing file QR codes:
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Run the SQL in `supabase/setup.sql` in your SQL Editor
+3. Deploy edge functions: `supabase functions deploy upload-file` and
+   `supabase functions deploy get-file`
+4. Add your Supabase credentials to `.env`
+
+See `supabase/README.md` for detailed instructions.
 
 ## 🛠 Tech Stack
 
