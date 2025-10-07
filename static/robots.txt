@@ -1,0 +1,6 @@
+# robots.txt for QRBuddy
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://qrbuddy.app/sitemap.xml

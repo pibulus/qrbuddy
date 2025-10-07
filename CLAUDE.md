@@ -59,8 +59,8 @@ HTML.
 
 - **QR Generation**: Uses `qr-code-styling` library for gradient support and
   advanced styling options
-- **Styling**: Twind (runtime Tailwind) with custom theme configuration in
-  `twind.config.ts`
+- **Styling**: Tailwind CSS with custom theme configuration in
+  `tailwind.config.ts`
 - **No Build Step**: Fresh's JIT compilation means no bundler configuration
   needed
 - **Type Safety**: TypeScript throughout with Deno's built-in type checking
@@ -73,16 +73,21 @@ HTML.
 - Orchestrates component layout
 - Handles SEO meta tags
 
-**Islands (Interactive Components)**
+**Islands (Interactive Components - 12 total)**
 
 - `QRCanvas`: Core QR rendering and download/copy functionality
-- `ShuffleButton`: Random style selection with spring animation
 - `URLInput`: URL entry with validation
 - `StylePills`: Style selector UI
-- `ActionButtons`: Download trigger
+- `StyleSelector`: Style selection logic
+- `ShuffleButton`: Random style selection with spring animation
+- `ShuffleAction`: Shuffle action handler
+- `ActionButtons`: Download trigger buttons
 - `KeyboardHandler`: Global keyboard shortcuts (s for shuffle, d for download, c
   for copy)
+- `GradientCreator`: Custom gradient builder
 - `EasterEggs`: Hidden features and animations
+- `ToastManager`: Notification stacking system
+- `ErrorBoundary`: QR generation error handling
 
 **Utils (`utils/qr-styles.ts`)**
 
@@ -132,9 +137,10 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 - Always run `deno fmt && deno lint` after making changes
 - The QR library expects specific gradient object structures - maintain type
   compatibility
-- Twind configuration is runtime-only - no PostCSS or build-time CSS generation
+- Tailwind CSS is configured in `tailwind.config.ts` with custom theme colors
 - Fresh automatically handles code splitting for islands - keep islands focused
   and minimal
+- See GLOSSARY.md for complete component reference
 
 ## 🔒 Security & Performance Considerations
 
@@ -157,17 +163,22 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Performance Optimizations
 
-- **Islands Architecture**: Only interactive components hydrate (7 islands
+- **Islands Architecture**: Only interactive components hydrate (12 islands
   total)
 - **Signal-Based State**: Efficient reactive updates without re-renders
 - **Lazy QR Updates**: QR regenerates only on url/style change via useEffect
   dependencies
-- **CSS-in-JS**: Twind runtime minimizes CSS payload
+- **Tailwind CSS**: Utility-first CSS with minimal runtime overhead
 
-## ✅ Recently Fixed
+## ✅ Recently Completed
 
-- Added MIT License with trademark protection for QRBuddy branding
-- Implemented ErrorBoundary component for graceful QR generation failure
-  handling
-- Created ToastManager with proper stacking support for multiple notifications
-- Now supports 9 interactive islands total (added ErrorBoundary, ToastManager)
+- **Base Zero Achievement**: Added GLOSSARY.md, updated README with accurate tech
+  stack and all 12 islands documented
+- **Twind→Tailwind Migration**: Migrated from deprecated Twind to stable Tailwind
+  CSS for better reliability
+- **12 Interactive Islands**: Full feature set including GradientCreator, keyboard
+  shortcuts, copy-to-clipboard, error handling, and toast notifications
+- **Mobile Dev Config**: Added --host 0.0.0.0 flag for mobile testing on local
+  network
+- **Documentation**: Complete GLOSSARY.md with all components, utils, and core
+  concepts documented
