@@ -8,25 +8,23 @@ gradient art pieces with that soft brutal aesthetic.
 ## ✨ Features
 
 - **Smart Input** - Paste URLs, type text, or drop files - it just works
-- **Destructible Files** 💣 - Upload files that self-destruct after 1 scan
-- **Dynamic QR Codes** 🔗 - Privacy-first editable redirects (NO
-  tracking/analytics)
+- **Destructible QRs** 💣 - One-time QR codes (URLs or files) that self-destruct after 1 scan → KABOOM!
+- **Dynamic QR Codes** 🔗 - Privacy-first editable redirects with scan limits (NO tracking/analytics)
 - **Scan Limits** - Set 1, 5, 10, 100, or unlimited scans before self-destruct
 - **Expiry Dates** - Optional time-based QR expiration
-- **Edit Anytime** - Change destination URL without reprinting QR
+- **Edit Anytime** - Change destination URL without reprinting QR (works for both URLs and files)
 - **6 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, and Brutalist
   themes
 - **Custom Gradient Creator** - Build your own gradient QR codes
 - **Instant Generation** - <100ms QR generation with no loading states
 - **Shuffle Magic** - One-tap randomization with spring physics animation
 - **Download & Copy** - Save PNGs or copy to clipboard with one click
-- **Keyboard Shortcuts** - s (shuffle), d (download), c (copy)
 - **Mobile First** - Responsive design that works beautifully on all devices
 - **Soft Brutal Design** - Chunky borders, hard shadows, pastel colors
 - **Error Handling** - Graceful degradation with helpful error messages
 - **KABOOM Page** - Spectacular explosion page for already-scanned files
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Development)
 
 ```bash
 # Install Deno (if not already installed)
@@ -36,34 +34,34 @@ curl -fsSL https://deno.land/install.sh | sh
 git clone https://github.com/pibulus/qrbuddy.git
 cd qrbuddy
 
-# Set up environment variables (for destructible files)
-cp .env.example .env
-# Edit .env with your Supabase credentials
+# Start the local mock API server (for destructible files + dynamic QRs)
+deno task api
 
-# Start the development server
+# In another terminal, start the Fresh dev server
 deno task start
 ```
 
-Visit http://localhost:8004 and start creating beautiful QR codes!
+Visit **http://localhost:8004** and start creating beautiful QR codes!
 
-### Destructible Files & Dynamic QR Setup (Optional)
+The local API server runs on port 8005 and stores files in `local-api/files/` (gitignored).
 
-To enable self-destructing files and dynamic QR codes:
+### 🎯 What Works Locally
 
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Run the SQL in `supabase/setup.sql` in your SQL Editor (creates both tables)
-3. Deploy edge functions:
-   ```bash
-   supabase functions deploy upload-file
-   supabase functions deploy get-file
-   supabase functions deploy create-dynamic-qr
-   supabase functions deploy update-dynamic-qr
-   supabase functions deploy get-dynamic-qr
-   supabase functions deploy redirect-qr
-   ```
-4. Add your Supabase credentials to `.env`
+- ✅ **Basic QR Codes** - All 6 gradient styles + custom gradients
+- ✅ **Destructible QRs** - URLs or files that self-destruct after 1 scan
+- ✅ **Dynamic QR Codes** - Editable redirects with scan limits & expiry (works for both URLs and files)
+- ✅ **KABOOM Page** - Epic explosion when already accessed
 
-See `supabase/README.md` for detailed instructions.
+### 🚀 Production Deployment (Supabase)
+
+For production deployment with Supabase backend, see **[SUPABASE-TODO.md](./SUPABASE-TODO.md)** for complete migration guide.
+
+**TL;DR:**
+1. Create Supabase project
+2. Run `supabase/setup.sql` in SQL Editor
+3. Deploy 6 edge functions
+4. Set `API_URL` env var
+5. Deploy Fresh app to Deno Deploy
 
 ## 🛠 Tech Stack
 
@@ -78,22 +76,30 @@ See `supabase/README.md` for detailed instructions.
 
 ```
 qrbuddy/
-├── islands/              # Interactive Preact components (12 total)
+├── islands/              # Interactive Preact components (13 total)
 │   ├── QRCanvas.tsx          # Core QR rendering + download/copy
-│   ├── URLInput.tsx          # URL entry with validation
+│   ├── SmartInput.tsx        # Smart input (URLs, files, text) with drag/drop
 │   ├── StylePills.tsx        # Style selector UI
 │   ├── StyleSelector.tsx     # Style selection logic
 │   ├── ShuffleButton.tsx     # Random style animation
 │   ├── ShuffleAction.tsx     # Shuffle handler
-│   ├── ActionButtons.tsx     # Download trigger
-│   ├── KeyboardHandler.tsx   # Global shortcuts (s/d/c)
+│   ├── ActionButtons.tsx     # Download trigger buttons
 │   ├── GradientCreator.tsx   # Custom gradient builder
 │   ├── EasterEggs.tsx        # Hidden features
 │   ├── ToastManager.tsx      # Notification system
-│   └── ErrorBoundary.tsx     # Error handling
+│   ├── ErrorBoundary.tsx     # Error handling
+│   └── EditQRForm.tsx        # Dynamic QR edit interface
 ├── routes/               # Fresh routes
 │   ├── index.tsx             # Main page
-│   └── q.tsx                 # QR code route
+│   ├── q.tsx                 # Share page
+│   ├── edit.tsx              # Edit dynamic QR
+│   ├── r.tsx                 # Redirect handler
+│   └── boom.tsx              # KABOOM explosion page
+├── local-api/            # Local mock API server
+│   └── server.ts             # Handles files + dynamic QRs locally
+├── supabase/             # Supabase backend (for production)
+│   ├── setup.sql             # Database schema
+│   └── functions/            # 6 edge functions
 ├── utils/                # Utilities
 │   └── qr-styles.ts          # 6 gradient style definitions
 ├── static/               # Static assets

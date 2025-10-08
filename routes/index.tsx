@@ -4,7 +4,6 @@ import QRCanvas from "../islands/QRCanvas.tsx";
 import SmartInput from "../islands/SmartInput.tsx";
 import ActionButtons from "../islands/ActionButtons.tsx";
 import StyleSelector from "../islands/StyleSelector.tsx";
-import KeyboardHandler from "../islands/KeyboardHandler.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
@@ -104,13 +103,6 @@ export default function Home() {
 
       <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
         <ToastManager />
-        <KeyboardHandler
-          url={url}
-          style={style}
-          triggerDownload={triggerDownload}
-          triggerCopy={triggerCopy}
-          isAnimating={isAnimating}
-        />
         <EasterEggs url={url} style={style} />
 
         {/* Style Selector - Top Right Corner */}
@@ -160,12 +152,6 @@ export default function Home() {
             url={url}
             style={style}
           />
-
-          {/* Keyboard Shortcuts Info */}
-          <div class="text-center text-sm text-gray-500 space-y-1" role="complementary" aria-label="Keyboard shortcuts">
-            <p class="font-medium">Keyboard shortcuts:</p>
-            <p><kbd class="px-2 py-1 bg-gray-100 rounded text-xs">S</kbd> Shuffle • <kbd class="px-2 py-1 bg-gray-100 rounded text-xs">D</kbd> Download • <kbd class="px-2 py-1 bg-gray-100 rounded text-xs">C</kbd> Copy</p>
-          </div>
         </main>
 
         {/* Footer */}

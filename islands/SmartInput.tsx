@@ -24,7 +24,7 @@ export default function SmartInput(
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Dynamic QR options
-  const [scanLimit, setScanLimit] = useState<number | null>(null);
+  const [scanLimit, setScanLimit] = useState<number | null>(1); // Default to 1 (destructible)
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [isCreatingDynamic, setIsCreatingDynamic] = useState(false);
 
@@ -86,15 +86,15 @@ export default function SmartInput(
       setIsCreatingDynamic(true);
       haptics.medium();
 
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") ||
-        "https://rckahvngsukzkmbpaejs.supabase.co";
+      // Use local API for dev, Supabase for production
+      const apiUrl = Deno.env.get("API_URL") || "http://localhost:8005";
 
       const body: Record<string, any> = { destination_url: destinationUrl };
       if (scanLimit) body.max_scans = scanLimit;
       if (expiryDate) body.expires_at = new Date(expiryDate).toISOString();
 
       const response = await fetch(
-        `${supabaseUrl}/functions/v1/create-dynamic-qr`,
+        `${apiUrl}/create-dynamic-qr`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -168,12 +168,11 @@ export default function SmartInput(
         setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      // Get Supabase URL from environment
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") ||
-        "https://rckahvngsukzkmbpaejs.supabase.co";
+      // Use local API for dev, Supabase for production
+      const apiUrl = Deno.env.get("API_URL") || "http://localhost:8005";
 
       const response = await fetch(
-        `${supabaseUrl}/functions/v1/upload-file`,
+        `${apiUrl}/upload-file`,
         {
           method: "POST",
           body: formData,
@@ -416,7 +415,7 @@ export default function SmartInput(
       {/* Dynamic QR Options */}
       {!isDestructible.value && !isUploading && (
         <div class="mt-4 space-y-3">
-          {/* Make this editable checkbox */}
+          {/* Make this destructible/editable checkbox */}
           <label class="flex items-center gap-2 cursor-pointer group">
             <input
               type="checkbox"
@@ -428,7 +427,7 @@ export default function SmartInput(
               class="w-5 h-5 rounded border-2 border-black cursor-pointer"
             />
             <span class="text-sm font-semibold text-gray-700 group-hover:text-pink-600 transition-colors">
-              🔗 Make this editable (dynamic QR)
+              💣 Make this destructible/editable
             </span>
           </label>
 
@@ -479,8 +478,9 @@ export default function SmartInput(
 
               {/* Info text */}
               <p class="text-xs text-gray-600 leading-relaxed">
-                💡 Dynamic QRs let you edit the destination URL anytime without
-                reprinting. No tracking or analytics - just editable redirects.
+                💡 <strong>Scan limit = 1</strong> makes this a destructible QR (one scan, then KABOOM 💥).<br/>
+                Set higher limits or unlimited for editable QRs you can update anytime.<br/>
+                Works for both URLs and files. No tracking or analytics.
               </p>
             </div>
           )}

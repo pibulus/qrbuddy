@@ -7,6 +7,7 @@
     "manifest": "deno task cli manifest $(pwd)",
     "start": "PORT=8004 deno run -A --watch=static/,routes/ dev.ts",
     "dev": "PORT=8004 deno run -A --watch=static/,routes/ dev.ts",
+    "api": "deno run -A --watch local-api/server.ts",
     "build": "deno run -A dev.ts build",
     "preview": "deno run -A main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update ."

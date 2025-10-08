@@ -1,19 +1,17 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components)
+## Islands (Interactive Components - 13 total)
 
-- `QRCanvas` - Core QR rendering + download/copy + destructible badge
+- `QRCanvas` - Core QR rendering + download/copy + destructible/dynamic badges
   (islands/QRCanvas.tsx)
 - `SmartInput` - Smart input handling URLs, files, and plain text with
-  drag/drop (islands/SmartInput.tsx)
+  drag/drop + dynamic QR options (islands/SmartInput.tsx)
 - `StylePills` - Style selector UI (islands/StylePills.tsx)
 - `StyleSelector` - Style selection logic (islands/StyleSelector.tsx)
 - `ShuffleButton` - Random style with spring animation
   (islands/ShuffleButton.tsx)
 - `ShuffleAction` - Shuffle action handler (islands/ShuffleAction.tsx)
 - `ActionButtons` - Download trigger buttons (islands/ActionButtons.tsx)
-- `KeyboardHandler` - Global shortcuts (s=shuffle, d=download, c=copy)
-  (islands/KeyboardHandler.tsx)
 - `EasterEggs` - Hidden features and animations (islands/EasterEggs.tsx)
 - `GradientCreator` - Custom gradient builder (islands/GradientCreator.tsx)
 - `ToastManager` - Notification stacking system (islands/ToastManager.tsx)
@@ -39,11 +37,14 @@
 - **Soft Brutal Aesthetic** - Chunky 4px borders, warm pastels, spring
   animations
 - **Smart Input Detection** - Automatically detects URLs, files, or plain text
-- **Destructible Files** - One-time file sharing via Supabase edge functions
-- **Self-Destructing QRs** - Files uploaded to Supabase self-destruct after 1
-  scan
-- **Dynamic QR Codes** - Privacy-first editable redirects with NO
-  tracking/analytics
+  with drag/drop
+- **Destructible QRs** - One-time QR codes (URLs OR files) that self-destruct
+  after 1 scan → KABOOM page
+- **Dynamic QR Codes** - Privacy-first editable redirects with scan limits (1, 5,
+  10, 100, ∞) and expiry dates
 - **Anti-Scale Dynamic** - Editable QR destinations with scan limits, expiry,
-  and owner tokens
-- **Keyboard Shortcuts** - s (shuffle), d (download), c (copy)
+  and owner tokens (NO tracking/analytics)
+- **Local Development** - Mock API server (local-api/server.ts) for testing
+  without Supabase
+- **KABOOM Page** - Epic explosion page shown when destructible file already
+  accessed

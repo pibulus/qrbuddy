@@ -2,10 +2,9 @@ import { useSignal } from "@preact/signals";
 import { Head } from "$fresh/runtime.ts";
 import { PageProps } from "$fresh/server.ts";
 import QRCanvas from "../islands/QRCanvas.tsx";
-import URLInput from "../islands/URLInput.tsx";
+import SmartInput from "../islands/SmartInput.tsx";
 import ActionButtons from "../islands/ActionButtons.tsx";
 import StyleSelector from "../islands/StyleSelector.tsx";
-import KeyboardHandler from "../islands/KeyboardHandler.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
@@ -25,6 +24,9 @@ export default function SharePage(props: PageProps) {
   const triggerDownload = useSignal(false);
   const isAnimating = useSignal(false);
   const triggerCopy = useSignal(false);
+  const isDestructible = useSignal(false);
+  const isDynamic = useSignal(false);
+  const editUrl = useSignal("");
 
   return (
     <>
@@ -48,13 +50,6 @@ export default function SharePage(props: PageProps) {
 
       <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
         <ToastManager />
-        <KeyboardHandler
-          url={url}
-          style={style}
-          triggerDownload={triggerDownload}
-          triggerCopy={triggerCopy}
-          isAnimating={isAnimating}
-        />
         <EasterEggs url={url} style={style} />
 
         {/* Style Selector - Top Right Corner */}
@@ -83,13 +78,20 @@ export default function SharePage(props: PageProps) {
                   customStyle={customStyle}
                   triggerDownload={triggerDownload}
                   triggerCopy={triggerCopy}
+                  isDestructible={isDestructible}
+                  isDynamic={isDynamic}
                 />
               </ErrorBoundary>
             </div>
           </div>
 
-          {/* URL Input - BELOW QR */}
-          <URLInput url={url} />
+          {/* Smart Input - BELOW QR */}
+          <SmartInput
+            url={url}
+            isDestructible={isDestructible}
+            isDynamic={isDynamic}
+            editUrl={editUrl}
+          />
 
           {/* Action Buttons - Side by Side */}
           <ActionButtons

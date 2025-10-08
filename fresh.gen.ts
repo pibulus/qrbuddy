@@ -4,16 +4,21 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
+import * as $boom from "./routes/boom.tsx";
+import * as $edit from "./routes/edit.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $q from "./routes/q.tsx";
+import * as $r from "./routes/r.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
+import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $KeyboardHandler from "./islands/KeyboardHandler.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $ShuffleAction from "./islands/ShuffleAction.tsx";
 import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
+import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StylePills from "./islands/StylePills.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
@@ -24,18 +29,23 @@ const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
+    "./routes/boom.tsx": $boom,
+    "./routes/edit.tsx": $edit,
     "./routes/index.tsx": $index,
     "./routes/q.tsx": $q,
+    "./routes/r.tsx": $r,
   },
   islands: {
     "./islands/ActionButtons.tsx": $ActionButtons,
     "./islands/EasterEggs.tsx": $EasterEggs,
+    "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/KeyboardHandler.tsx": $KeyboardHandler,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/ShuffleAction.tsx": $ShuffleAction,
     "./islands/ShuffleButton.tsx": $ShuffleButton,
+    "./islands/SmartInput.tsx": $SmartInput,
     "./islands/StylePills.tsx": $StylePills,
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/ToastManager.tsx": $ToastManager,
