@@ -1,7 +1,5 @@
-import { useState, useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
-import QRCodeStyling from "qr-code-styling";
-import { QR_STYLES } from "../utils/qr-styles.ts";
 
 interface QRData {
   short_code: string;
@@ -29,7 +27,7 @@ export default function EditQRForm() {
 
   // Get token from URL on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     const token = params.get("token");
 
     if (!token) {
@@ -72,7 +70,7 @@ export default function EditQRForm() {
       setLoading(false);
     } catch (err) {
       console.error("Load QR error:", err);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }
   };
@@ -117,7 +115,11 @@ export default function EditQRForm() {
       setIsSaving(false);
     } catch (err) {
       console.error("Update QR error:", err);
-      alert(`❌ Failed to update: ${err.message}`);
+      alert(
+        `❌ Failed to update: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
       haptics.error();
       setIsSaving(false);
     }
@@ -197,6 +199,7 @@ export default function EditQRForm() {
               class="flex-1 px-3 py-2 bg-white border-2 border-purple-300 rounded-lg text-xs font-mono"
             />
             <button
+              type="button"
               onClick={() => {
                 navigator.clipboard.writeText(redirectUrl);
                 haptics.success();
@@ -237,6 +240,7 @@ export default function EditQRForm() {
           <div class="flex gap-2 flex-wrap">
             {[1, 5, 10, 100, null].map((limit) => (
               <button
+                type="button"
                 key={limit?.toString() || "unlimited"}
                 onClick={() => {
                   setMaxScans(limit);
@@ -292,6 +296,7 @@ export default function EditQRForm() {
 
         {/* Save Button */}
         <button
+          type="button"
           onClick={handleSave}
           disabled={isSaving || !destinationUrl.trim()}
           class="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-black text-lg rounded-xl border-2 border-black shadow-chunky hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
@@ -303,8 +308,8 @@ export default function EditQRForm() {
       {/* Privacy Note */}
       <div class="bg-green-50 border-2 border-green-300 rounded-xl p-4 text-center">
         <p class="text-sm text-green-800">
-          🔒 <strong>Privacy First:</strong> No tracking, no analytics. Just
-          editable redirects.
+          🔒 <strong>Privacy First:</strong>{" "}
+          No tracking, no analytics. Just editable redirects.
         </p>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { Signal } from "@preact/signals";
-import { useEffect, useState, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 
 interface SmartInputProps {
@@ -20,7 +20,7 @@ export default function SmartInput(
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [inputType, setInputType] = useState<"text" | "file">("text");
+  const [_inputType, setInputType] = useState<"text" | "file">("text");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Dynamic QR options
@@ -89,7 +89,9 @@ export default function SmartInput(
       // Use local API for dev, Supabase for production
       const apiUrl = Deno.env.get("API_URL") || "http://localhost:8005";
 
-      const body: Record<string, any> = { destination_url: destinationUrl };
+      const body: Record<string, string | number> = {
+        destination_url: destinationUrl,
+      };
       if (scanLimit) body.max_scans = scanLimit;
       if (expiryDate) body.expires_at = new Date(expiryDate).toISOString();
 
@@ -135,7 +137,9 @@ export default function SmartInput(
 
       const event = new CustomEvent("show-toast", {
         detail: {
-          message: `❌ Failed to create dynamic QR: ${error.message}`,
+          message: `❌ Failed to create dynamic QR: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
           type: "error",
         },
       });
@@ -202,7 +206,8 @@ export default function SmartInput(
       // Show success toast
       const event = new CustomEvent("show-toast", {
         detail: {
-          message: `✅ ${file.name} uploaded! Will self-destruct after 1 scan 💣`,
+          message:
+            `✅ ${file.name} uploaded! Will self-destruct after 1 scan 💣`,
           type: "success",
         },
       });
@@ -215,7 +220,10 @@ export default function SmartInput(
       }, 1000);
     } catch (error) {
       console.error("Upload error:", error);
-      setUploadError(error.message);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : String(error);
+      setUploadError(errorMessage);
       setIsUploading(false);
       setUploadProgress(0);
       haptics.error();
@@ -223,7 +231,7 @@ export default function SmartInput(
       // Show error toast
       const event = new CustomEvent("show-toast", {
         detail: {
-          message: `❌ Upload failed: ${error.message}`,
+          message: `❌ Upload failed: ${errorMessage}`,
           type: "error",
         },
       });
@@ -346,6 +354,7 @@ export default function SmartInput(
         {/* File upload button */}
         {!isUploading && !isDestructible.value && (
           <button
+            type="button"
             onClick={handleFileInputClick}
             class="absolute right-4 top-1/2 transform -translate-y-1/2
                    text-2xl hover:scale-110 transition-transform"
@@ -358,10 +367,8 @@ export default function SmartInput(
 
         {/* Validation indicator */}
         {touched && validationState === "valid" && !isUploading && (
-          <div
-            class="absolute right-14 top-1/2 transform -translate-y-1/2
-                      text-xl animate-pop"
-          >
+          <div class="absolute right-14 top-1/2 transform -translate-y-1/2
+                      text-xl animate-pop">
             {isDestructible.value ? "💣" : "✓"}
           </div>
         )}
@@ -442,6 +449,7 @@ export default function SmartInput(
                 <div class="flex gap-2 flex-wrap">
                   {[1, 5, 10, 100, null].map((limit) => (
                     <button
+                      type="button"
                       key={limit?.toString() || "unlimited"}
                       onClick={() => {
                         setScanLimit(limit);
@@ -478,8 +486,10 @@ export default function SmartInput(
 
               {/* Info text */}
               <p class="text-xs text-gray-600 leading-relaxed">
-                💡 <strong>Scan limit = 1</strong> makes this a destructible QR (one scan, then KABOOM 💥).<br/>
-                Set higher limits or unlimited for editable QRs you can update anytime.<br/>
+                💡 <strong>Scan limit = 1</strong>{" "}
+                makes this a destructible QR (one scan, then KABOOM 💥).<br />
+                Set higher limits or unlimited for editable QRs you can update
+                anytime.<br />
                 Works for both URLs and files. No tracking or analytics.
               </p>
             </div>
@@ -499,11 +509,15 @@ export default function SmartInput(
                   class="flex-1 px-3 py-2 bg-white border-2 border-green-300 rounded-lg text-xs font-mono"
                 />
                 <button
+                  type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(editUrl.value);
                     haptics.success();
                     const event = new CustomEvent("show-toast", {
-                      detail: { message: "Edit link copied! 📋", type: "success" },
+                      detail: {
+                        message: "Edit link copied! 📋",
+                        type: "success",
+                      },
                     });
                     globalThis.dispatchEvent(event);
                   }}

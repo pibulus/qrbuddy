@@ -3,12 +3,15 @@
 ## Quick Start
 
 ### 1. Database Setup (2 minutes)
+
 Go to your Supabase SQL Editor and run `setup.sql`:
+
 ```sql
 -- Copy/paste the contents of setup.sql
 ```
 
 ### 2. Deploy Edge Functions (5 minutes)
+
 ```bash
 # Install Supabase CLI if needed
 brew install supabase/tap/supabase
@@ -22,6 +25,7 @@ supabase functions deploy get-file
 ```
 
 ### 3. Set Environment Variables
+
 ```bash
 # In your edge functions settings, add:
 SUPABASE_URL=https://your-project.supabase.co
@@ -29,7 +33,9 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 ### 4. Update QRBuddy Config
+
 Create `.env` file in project root:
+
 ```bash
 cp .env.example .env
 # Edit .env with your actual keys
@@ -37,8 +43,9 @@ cp .env.example .env
 
 ## How It Works
 
-**upload-file**: Receives file → uploads to private storage → returns destructible URL
-**get-file**: Serves file ONCE → deletes from storage → redirects to KABOOM page for subsequent requests
+**upload-file**: Receives file → uploads to private storage → returns
+destructible URL **get-file**: Serves file ONCE → deletes from storage →
+redirects to KABOOM page for subsequent requests
 
 ## Testing Locally
 
@@ -60,6 +67,7 @@ curl http://localhost:54321/functions/v1/get-file?id=UUID_HERE
 ## Cost
 
 Free tier covers:
+
 - 1GB storage = ~1000 files @ 1MB each
 - 2GB bandwidth = ~2000 downloads
 - Unlimited function invocations

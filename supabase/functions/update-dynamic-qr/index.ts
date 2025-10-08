@@ -59,8 +59,10 @@ serve(async (req) => {
     }
 
     // Build update object (only update provided fields)
-    const updates: Record<string, any> = {};
-    if (destination_url !== undefined) updates.destination_url = destination_url;
+    const updates: Record<string, string | number | null> = {};
+    if (destination_url !== undefined) {
+      updates.destination_url = destination_url;
+    }
     if (max_scans !== undefined) updates.max_scans = max_scans;
     if (expires_at !== undefined) updates.expires_at = expires_at;
     if (is_active !== undefined) updates.is_active = is_active;
@@ -95,7 +97,9 @@ serve(async (req) => {
   } catch (error) {
     console.error("Update dynamic QR failed:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

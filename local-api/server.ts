@@ -20,7 +20,8 @@ try {
 // CORS headers for local dev
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
@@ -80,7 +81,10 @@ async function handleUploadFile(req: Request): Promise<Response> {
     if (!file) {
       return new Response(
         JSON.stringify({ error: "No file provided" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
       );
     }
 
@@ -88,7 +92,10 @@ async function handleUploadFile(req: Request): Promise<Response> {
     if (file.size > 25 * 1024 * 1024) {
       return new Response(
         JSON.stringify({ error: "File too large (max 25MB)" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
       );
     }
 
@@ -126,12 +133,17 @@ async function handleUploadFile(req: Request): Promise<Response> {
         size: file.size,
         message: "File uploaded! It will self-destruct after one download.",
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
     );
   }
 }
@@ -177,7 +189,8 @@ async function handleGetFile(req: Request): Promise<Response> {
     return new Response(fileBytes, {
       headers: {
         "Content-Type": fileRecord.mime_type || "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${fileRecord.original_name}"`,
+        "Content-Disposition":
+          `attachment; filename="${fileRecord.original_name}"`,
         "X-Destructible": "true",
         "Cache-Control": "no-store",
       },
@@ -200,7 +213,10 @@ async function handleCreateDynamicQR(req: Request): Promise<Response> {
     if (!destination_url) {
       return new Response(
         JSON.stringify({ error: "destination_url is required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
       );
     }
 
@@ -225,7 +241,8 @@ async function handleCreateDynamicQR(req: Request): Promise<Response> {
     await saveDB(db);
 
     // Return URLs
-    const redirectUrl = `http://localhost:${PORT}/redirect-qr?code=${shortCode}`;
+    const redirectUrl =
+      `http://localhost:${PORT}/redirect-qr?code=${shortCode}`;
     const editUrl = `http://localhost:8004/edit?token=${ownerToken}`;
 
     return new Response(
@@ -236,12 +253,17 @@ async function handleCreateDynamicQR(req: Request): Promise<Response> {
         edit_url: editUrl,
         owner_token: ownerToken,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
     );
   }
 }
@@ -295,17 +317,25 @@ async function handleUpdateDynamicQR(req: Request): Promise<Response> {
     if (!owner_token) {
       return new Response(
         JSON.stringify({ error: "owner_token is required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
       );
     }
 
     const db = await loadDB();
-    const qrRecord = db.dynamic_qr_codes.find((q) => q.owner_token === owner_token);
+    const qrRecord = db.dynamic_qr_codes.find((q) =>
+      q.owner_token === owner_token
+    );
 
     if (!qrRecord) {
       return new Response(
         JSON.stringify({ error: "QR code not found" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 404,
+        },
       );
     }
 
@@ -324,12 +354,17 @@ async function handleUpdateDynamicQR(req: Request): Promise<Response> {
         scan_count: qrRecord.scan_count,
         max_scans: qrRecord.max_scans,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
     );
   }
 }
@@ -345,17 +380,25 @@ async function handleGetDynamicQR(req: Request): Promise<Response> {
   if (!ownerToken) {
     return new Response(
       JSON.stringify({ error: "owner_token is required" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      },
     );
   }
 
   const db = await loadDB();
-  const qrRecord = db.dynamic_qr_codes.find((q) => q.owner_token === ownerToken);
+  const qrRecord = db.dynamic_qr_codes.find((q) =>
+    q.owner_token === ownerToken
+  );
 
   if (!qrRecord) {
     return new Response(
       JSON.stringify({ error: "QR code not found" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      },
     );
   }
 
@@ -368,7 +411,7 @@ async function handleGetDynamicQR(req: Request): Promise<Response> {
       expires_at: qrRecord.expires_at,
       created_at: qrRecord.created_at,
     }),
-    { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 }
 
@@ -438,10 +481,10 @@ function serveBoomPage(): Response {
 // MAIN SERVER
 // ===================================================================
 
-async function handler(req: Request): Promise<Response> {
+function handler(req: Request): Promise<Response> {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return Promise.resolve(new Response("ok", { headers: corsHeaders }));
   }
 
   const url = new URL(req.url);
@@ -471,7 +514,9 @@ async function handler(req: Request): Promise<Response> {
     return handleGetDynamicQR(req);
   }
 
-  return new Response("QRBuddy Local API Server - Not Found", { status: 404 });
+  return Promise.resolve(
+    new Response("QRBuddy Local API Server - Not Found", { status: 404 }),
+  );
 }
 
 console.log(`🚀 QRBuddy Local API running on http://localhost:${PORT}`);

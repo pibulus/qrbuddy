@@ -75,7 +75,7 @@ serve(async (req) => {
     const ownerToken = generateOwnerToken();
 
     // Create dynamic QR record
-    const { data, error: insertError } = await supabase
+    const { error: insertError } = await supabase
       .from("dynamic_qr_codes")
       .insert({
         short_code: shortCode,
@@ -114,7 +114,9 @@ serve(async (req) => {
   } catch (error) {
     console.error("Create dynamic QR failed:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

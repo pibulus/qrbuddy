@@ -1,10 +1,13 @@
 # 🚀 Supabase Integration TODO
 
-This document outlines the steps needed to migrate from local development API to Supabase production deployment.
+This document outlines the steps needed to migrate from local development API to
+Supabase production deployment.
 
 ## Current State (Local Development)
 
-QRBuddy currently runs with a **local mock API server** (`local-api/server.ts`) that handles:
+QRBuddy currently runs with a **local mock API server** (`local-api/server.ts`)
+that handles:
+
 - Destructible file uploads/downloads
 - Dynamic QR code creation/editing/redirects
 - File storage in `local-api/files/`
@@ -44,6 +47,7 @@ QRBuddy currently runs with a **local mock API server** (`local-api/server.ts`) 
 Run the SQL in `supabase/setup.sql` via Supabase SQL Editor:
 
 **Creates:**
+
 - `destructible_files` table
 - `dynamic_qr_codes` table
 - `qr-files` storage bucket (private)
@@ -71,7 +75,9 @@ supabase functions deploy get-dynamic-qr
 supabase functions deploy redirect-qr
 ```
 
-**Set Edge Function Environment Variables** (via Supabase Dashboard → Edge Functions → Settings):
+**Set Edge Function Environment Variables** (via Supabase Dashboard → Edge
+Functions → Settings):
+
 ```
 SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
@@ -82,6 +88,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 **Option A: Environment Variable (Recommended)**
 
 Create `.env.production`:
+
 ```bash
 API_URL=https://YOUR-PROJECT.supabase.co/functions/v1
 ```
@@ -91,17 +98,20 @@ Update `fresh.config.ts` to load env vars for production.
 **Option B: Hardcode URL**
 
 Update `islands/SmartInput.tsx`:
+
 ```typescript
 // Change from:
 const apiUrl = Deno.env.get("API_URL") || "http://localhost:8005";
 
 // To:
-const apiUrl = Deno.env.get("API_URL") || "https://YOUR-PROJECT.supabase.co/functions/v1";
+const apiUrl = Deno.env.get("API_URL") ||
+  "https://YOUR-PROJECT.supabase.co/functions/v1";
 ```
 
 ### Phase 5: Deploy Frontend (5 min)
 
 **Deno Deploy** (Recommended for Fresh):
+
 ```bash
 # First time setup
 deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
@@ -114,6 +124,7 @@ git push origin main
 ```
 
 **Vercel** (Alternative):
+
 ```bash
 vercel --prod
 
@@ -127,30 +138,36 @@ vercel env add API_URL production
 The edge functions expect slightly different paths:
 
 **Local API:**
+
 - `http://localhost:8005/upload-file`
 - `http://localhost:8005/get-file?id=xxx`
 - `http://localhost:8005/create-dynamic-qr`
 - etc.
 
 **Supabase:**
+
 - `https://YOUR-PROJECT.supabase.co/functions/v1/upload-file`
 - `https://YOUR-PROJECT.supabase.co/functions/v1/get-file?id=xxx`
 - `https://YOUR-PROJECT.supabase.co/functions/v1/create-dynamic-qr`
 - etc.
 
-Update `islands/SmartInput.tsx` to append `/functions/v1` when using Supabase URL.
+Update `islands/SmartInput.tsx` to append `/functions/v1` when using Supabase
+URL.
 
 ### Phase 7: Update Edit Page Route
 
 `routes/edit.tsx` needs to be updated to call:
+
 - `GET /get-dynamic-qr?token=xxx` - Fetch QR details
 - `POST /update-dynamic-qr` - Update destination
 
-Currently this route may not be fully implemented. Check `islands/EditQRForm.tsx`.
+Currently this route may not be fully implemented. Check
+`islands/EditQRForm.tsx`.
 
 ### Phase 8: Update Redirect Route
 
 `routes/r.tsx` should redirect to:
+
 ```
 https://YOUR-PROJECT.supabase.co/functions/v1/redirect-qr?code=xxx
 ```
@@ -160,6 +177,7 @@ This handles scan counting and redirect logic.
 ## Testing Checklist
 
 ### Destructible Files
+
 - [ ] Upload file via drag/drop
 - [ ] Generate QR code
 - [ ] Scan QR with phone → downloads file
@@ -168,6 +186,7 @@ This handles scan counting and redirect logic.
 - [ ] Database shows `accessed: true`
 
 ### Dynamic QR Codes
+
 - [ ] Check "Make this editable" box
 - [ ] Set scan limit (e.g., 5)
 - [ ] Set expiry date (optional)
@@ -183,17 +202,20 @@ This handles scan counting and redirect logic.
 ## Cost Estimates (Supabase Free Tier)
 
 **Free Tier Limits:**
+
 - Storage: 1GB
 - Bandwidth: 2GB/month
 - Edge Function Invocations: 500K/month
 - Database: 500MB
 
 **Expected Usage (1000 users/month):**
+
 - Destructible files self-destruct → minimal storage (~100MB average)
 - Dynamic QRs are just DB rows → minimal space
 - Edge function calls: ~3000/month (well under limit)
 
-**Conclusion:** Should stay on free tier indefinitely due to "can't scale" nature 💣
+**Conclusion:** Should stay on free tier indefinitely due to "can't scale"
+nature 💣
 
 ## Rollback Plan
 
@@ -221,10 +243,12 @@ If Supabase deployment fails, revert to local API:
 ## Questions?
 
 Check out:
+
 - Supabase Docs: https://supabase.com/docs
 - Fresh Deployment: https://fresh.deno.dev/docs/concepts/deployment
 - Deno Deploy: https://deno.com/deploy/docs
 
 ---
 
-*"Can't scale is the feature"* - This architecture is intentionally simple and self-limiting 💣
+_"Can't scale is the feature"_ - This architecture is intentionally simple and
+self-limiting 💣

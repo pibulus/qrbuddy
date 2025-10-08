@@ -40,8 +40,8 @@
   with drag/drop
 - **Destructible QRs** - One-time QR codes (URLs OR files) that self-destruct
   after 1 scan → KABOOM page
-- **Dynamic QR Codes** - Privacy-first editable redirects with scan limits (1, 5,
-  10, 100, ∞) and expiry dates
+- **Dynamic QR Codes** - Privacy-first editable redirects with scan limits (1,
+  5, 10, 100, ∞) and expiry dates
 - **Anti-Scale Dynamic** - Editable QR destinations with scan limits, expiry,
   and owner tokens (NO tracking/analytics)
 - **Local Development** - Mock API server (local-api/server.ts) for testing

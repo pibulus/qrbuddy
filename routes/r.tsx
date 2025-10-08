@@ -4,7 +4,7 @@ import { Handlers } from "$fresh/server.ts";
 // It forwards to the Supabase edge function which manages the actual redirect logic
 
 export const handler: Handlers = {
-  async GET(req, ctx) {
+  async GET(req, _ctx) {
     const url = new URL(req.url);
     const shortCode = url.searchParams.get("code");
 
@@ -20,7 +20,8 @@ export const handler: Handlers = {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ||
       "https://rckahvngsukzkmbpaejs.supabase.co";
 
-    const redirectUrl = `${supabaseUrl}/functions/v1/redirect-qr?code=${shortCode}`;
+    const redirectUrl =
+      `${supabaseUrl}/functions/v1/redirect-qr?code=${shortCode}`;
 
     try {
       // Fetch from edge function to get the actual redirect

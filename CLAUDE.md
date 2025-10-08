@@ -178,14 +178,14 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 - **Anti-Scale Dynamic QRs**: Privacy-first editable redirects with NO
   tracking/analytics
-- **Database Schema**: Added `dynamic_qr_codes` table with scan limits and expiry
-  tracking
+- **Database Schema**: Added `dynamic_qr_codes` table with scan limits and
+  expiry tracking
 - **Edge Functions**: 4 new Supabase functions (create-dynamic-qr,
   update-dynamic-qr, get-dynamic-qr, redirect-qr)
 - **Smart Input Enhancements**: Checkbox + options UI for scan limits
   (1/5/10/100/∞) and expiry dates
-- **Edit Page**: New `/edit?token={owner_token}` route with EditQRForm island for
-  changing destination/settings
+- **Edit Page**: New `/edit?token={owner_token}` route with EditQRForm island
+  for changing destination/settings
 - **Owner Tokens**: Stored in localStorage for edit access without user accounts
 - **Redirect Route**: `/r?code={short_code}` route forwards to edge function for
   redirect logic
@@ -195,11 +195,12 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Previous Features
 
-- **Base Zero Achievement**: Added GLOSSARY.md, updated README with accurate tech
-  stack
-- **Twind→Tailwind Migration**: Migrated from deprecated Twind to stable Tailwind
-  CSS
-- **Destructible Files**: Self-destructing file uploads with KABOOM explosion page
+- **Base Zero Achievement**: Added GLOSSARY.md, updated README with accurate
+  tech stack
+- **Twind→Tailwind Migration**: Migrated from deprecated Twind to stable
+  Tailwind CSS
+- **Destructible Files**: Self-destructing file uploads with KABOOM explosion
+  page
 - **12 Interactive Islands**: GradientCreator, keyboard shortcuts,
   copy-to-clipboard, error handling, toast notifications
 - **Mobile Dev Config**: Added --host 0.0.0.0 flag for mobile testing on local

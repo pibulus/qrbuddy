@@ -14,7 +14,6 @@ import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
-import * as $KeyboardHandler from "./islands/KeyboardHandler.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $ShuffleAction from "./islands/ShuffleAction.tsx";
 import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
@@ -41,7 +40,6 @@ const manifest = {
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/GradientCreator.tsx": $GradientCreator,
-    "./islands/KeyboardHandler.tsx": $KeyboardHandler,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/ShuffleAction.tsx": $ShuffleAction,
     "./islands/ShuffleButton.tsx": $ShuffleButton,

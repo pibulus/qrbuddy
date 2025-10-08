@@ -16,8 +16,15 @@ interface QRCanvasProps {
 }
 
 export default function QRCanvas(
-  { url, style, customStyle, triggerDownload, triggerCopy, isDestructible, isDynamic }:
-    QRCanvasProps,
+  {
+    url,
+    style,
+    customStyle,
+    triggerDownload,
+    triggerCopy,
+    isDestructible,
+    isDynamic,
+  }: QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);

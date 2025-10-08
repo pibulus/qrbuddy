@@ -8,11 +8,14 @@ gradient art pieces with that soft brutal aesthetic.
 ## ✨ Features
 
 - **Smart Input** - Paste URLs, type text, or drop files - it just works
-- **Destructible QRs** 💣 - One-time QR codes (URLs or files) that self-destruct after 1 scan → KABOOM!
-- **Dynamic QR Codes** 🔗 - Privacy-first editable redirects with scan limits (NO tracking/analytics)
+- **Destructible QRs** 💣 - One-time QR codes (URLs or files) that self-destruct
+  after 1 scan → KABOOM!
+- **Dynamic QR Codes** 🔗 - Privacy-first editable redirects with scan limits
+  (NO tracking/analytics)
 - **Scan Limits** - Set 1, 5, 10, 100, or unlimited scans before self-destruct
 - **Expiry Dates** - Optional time-based QR expiration
-- **Edit Anytime** - Change destination URL without reprinting QR (works for both URLs and files)
+- **Edit Anytime** - Change destination URL without reprinting QR (works for
+  both URLs and files)
 - **6 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, and Brutalist
   themes
 - **Custom Gradient Creator** - Build your own gradient QR codes
@@ -43,20 +46,24 @@ deno task start
 
 Visit **http://localhost:8004** and start creating beautiful QR codes!
 
-The local API server runs on port 8005 and stores files in `local-api/files/` (gitignored).
+The local API server runs on port 8005 and stores files in `local-api/files/`
+(gitignored).
 
 ### 🎯 What Works Locally
 
 - ✅ **Basic QR Codes** - All 6 gradient styles + custom gradients
 - ✅ **Destructible QRs** - URLs or files that self-destruct after 1 scan
-- ✅ **Dynamic QR Codes** - Editable redirects with scan limits & expiry (works for both URLs and files)
+- ✅ **Dynamic QR Codes** - Editable redirects with scan limits & expiry (works
+  for both URLs and files)
 - ✅ **KABOOM Page** - Epic explosion when already accessed
 
 ### 🚀 Production Deployment (Supabase)
 
-For production deployment with Supabase backend, see **[SUPABASE-TODO.md](./SUPABASE-TODO.md)** for complete migration guide.
+For production deployment with Supabase backend, see
+**[SUPABASE-TODO.md](./SUPABASE-TODO.md)** for complete migration guide.
 
 **TL;DR:**
+
 1. Create Supabase project
 2. Run `supabase/setup.sql` in SQL Editor
 3. Deploy 6 edge functions

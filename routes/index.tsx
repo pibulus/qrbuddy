@@ -15,7 +15,6 @@ export default function Home() {
   const style = useSignal<keyof typeof QR_STYLES | "custom">("sunset");
   const customStyle = useSignal<QRStyle | null>(null);
   const triggerDownload = useSignal(false);
-  const isAnimating = useSignal(false);
   const triggerCopy = useSignal(false);
   const isDestructible = useSignal(false);
   const isDynamic = useSignal(false);
@@ -43,7 +42,10 @@ export default function Home() {
         <meta property="og:image" content="https://qrbuddy.app/og-image.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="QRBuddy - Beautiful gradient QR code generator" />
+        <meta
+          property="og:image:alt"
+          content="QRBuddy - Beautiful gradient QR code generator"
+        />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -70,16 +72,17 @@ export default function Home() {
             "@type": "WebApplication",
             "name": "QRBuddy",
             "url": "https://qrbuddy.app",
-            "description": "Beautiful gradient QR code generator with personality. Transform boring QR codes into stunning gradient art pieces.",
+            "description":
+              "Beautiful gradient QR code generator with personality. Transform boring QR codes into stunning gradient art pieces.",
             "applicationCategory": "UtilityApplication",
             "offers": {
               "@type": "Offer",
               "price": "0",
-              "priceCurrency": "USD"
+              "priceCurrency": "USD",
             },
             "creator": {
               "@type": "Person",
-              "name": "Pablo"
+              "name": "Pablo",
             },
             "featureList": [
               "6 gradient presets",
@@ -87,8 +90,8 @@ export default function Home() {
               "Keyboard shortcuts",
               "Copy to clipboard",
               "Download PNG",
-              "Mobile-first responsive design"
-            ]
+              "Mobile-first responsive design",
+            ],
           })}
         </script>
       </Head>
