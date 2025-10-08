@@ -4,7 +4,10 @@
 /// <reference lib="dom.asynciterable" />
 /// <reference lib="deno.ns" />
 
-import "$std/dotenv/load.ts";
+import { load } from "$std/dotenv/mod.ts";
+
+// Load env vars but make them optional (Supabase not required for basic QR generation)
+await load({ export: true, allowEmptyValues: true, examplePath: null });
 
 import { start } from "$fresh/server.ts";
 import manifest from "./fresh.gen.ts";

@@ -5,7 +5,7 @@ import config from "./fresh.config.ts";
 
 import { load } from "$std/dotenv/mod.ts";
 
-// Load env vars but allow empty values for local dev without Supabase
-await load({ export: true, allowEmptyValues: true });
+// Load env vars but make them optional (Supabase not required for basic QR generation)
+await load({ export: true, allowEmptyValues: true, examplePath: null });
 
 await dev(import.meta.url, "./main.ts", config);
