@@ -87,10 +87,12 @@ export default function Home() {
             "featureList": [
               "6 gradient presets",
               "Custom gradient creator",
-              "Keyboard shortcuts",
+              "Destructible QR codes (one-time use)",
+              "Dynamic QR codes (editable redirects)",
               "Copy to clipboard",
               "Download PNG",
               "Mobile-first responsive design",
+              "Privacy-first (no tracking)",
             ],
           })}
         </script>
