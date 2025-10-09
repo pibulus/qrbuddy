@@ -9,11 +9,13 @@ import * as $edit from "./routes/edit.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
+import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
+import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $ShuffleAction from "./islands/ShuffleAction.tsx";
 import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
@@ -35,11 +37,13 @@ const manifest = {
     "./routes/r.tsx": $r,
   },
   islands: {
+    "./islands/AboutModal.tsx": $AboutModal,
     "./islands/ActionButtons.tsx": $ActionButtons,
     "./islands/EasterEggs.tsx": $EasterEggs,
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/GradientCreator.tsx": $GradientCreator,
+    "./islands/KofiModal.tsx": $KofiModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/ShuffleAction.tsx": $ShuffleAction,
     "./islands/ShuffleButton.tsx": $ShuffleButton,

@@ -7,6 +7,8 @@ import StyleSelector from "../islands/StyleSelector.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
+import { AboutModal, AboutLink } from "../islands/AboutModal.tsx";
+import { KofiModal, KofiButton } from "../islands/KofiModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 
@@ -160,10 +162,25 @@ export default function Home() {
         </main>
 
         {/* Footer */}
-        <footer class="mt-16 text-center text-sm text-gray-500 opacity-60">
-          Made with 🧁 by Pablo
+        <footer class="mt-16 py-8 border-t-4 border-black">
+          <div class="max-w-md mx-auto px-4">
+            <div class="flex items-center justify-center gap-4 flex-wrap">
+              <AboutLink />
+              <KofiButton size="sm" />
+            </div>
+            <p class="text-center text-xs text-gray-500 mt-4 opacity-60">
+              <span class="hidden sm:inline">
+                Pablo • Melbourne • Drop a link. Watch it bloom.
+              </span>
+              <span class="sm:hidden">Made with 🧁 by Pablo</span>
+            </p>
+          </div>
         </footer>
       </div>
+
+      {/* Modals */}
+      <AboutModal />
+      <KofiModal kofiUsername="pabloandres" />
     </>
   );
 }
