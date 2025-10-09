@@ -101,18 +101,15 @@ export function AboutModal() {
 
             {/* Links */}
             <div class="pt-2">
-              <p class="text-sm font-semibold mb-3 text-center text-gray-700">
-                Check out more of my work:
-              </p>
               <div class="flex flex-wrap gap-3 justify-center">
-                <a
+                {/* <a
                   href="https://pibul.us"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold transition-all hover:scale-105 shadow-chunky"
                 >
                   🌐 Portfolio
-                </a>
+                </a> */}
                 <a
                   href="https://github.com/pibulus/qrbuddy"
                   target="_blank"
