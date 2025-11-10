@@ -1,6 +1,11 @@
 import { Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
+import { QR_TEMPLATES, type QRTemplateType } from "../types/qr-templates.ts";
+import WiFiForm from "./templates/WiFiForm.tsx";
+import VCardForm from "./templates/VCardForm.tsx";
+import SMSForm from "./templates/SMSForm.tsx";
+import EmailForm from "./templates/EmailForm.tsx";
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -22,6 +27,9 @@ export default function SmartInput(
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [_inputType, setInputType] = useState<"text" | "file">("text");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Template selector state
+  const [selectedTemplate, setSelectedTemplate] = useState<QRTemplateType>("url");
 
   // Dynamic QR options
   const [scanLimit, setScanLimit] = useState<number | null>(1); // Default to 1 (destructible)
@@ -316,14 +324,76 @@ export default function SmartInput(
   };
 
   return (
-    <div class="w-full">
-      <div
-        class="relative"
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
+    <div class="w-full space-y-4">
+      {/* Template Selector */}
+      <div class="flex gap-2 flex-wrap">
+        {(Object.keys(QR_TEMPLATES) as QRTemplateType[]).map((templateType) => {
+          const template = QR_TEMPLATES[templateType];
+          return (
+            <button
+              key={templateType}
+              type="button"
+              onClick={() => {
+                setSelectedTemplate(templateType);
+                haptics.light();
+                // Reset state when switching templates
+                url.value = "";
+                isDestructible.value = false;
+                setTouched(false);
+                setValidationState("idle");
+              }}
+              class={`px-4 py-2 rounded-xl border-2 font-semibold text-sm transition-all
+                ${
+                selectedTemplate === templateType
+                  ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-pink-600 scale-105 shadow-lg"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-pink-400 hover:scale-105"
+              }`}
+              title={template.description}
+            >
+              <span class="mr-1">{template.icon}</span>
+              {template.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Template Forms */}
+      {selectedTemplate === "wifi" && <WiFiForm url={url} />}
+      {selectedTemplate === "vcard" && <VCardForm url={url} />}
+      {selectedTemplate === "sms" && <SMSForm url={url} />}
+      {selectedTemplate === "email" && <EmailForm url={url} />}
+      {selectedTemplate === "text" && (
+        <div class="space-y-4">
+          <div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-2xl">📝</span>
+              <h3 class="font-black text-gray-900">Plain Text QR</h3>
+            </div>
+            <p class="text-sm text-gray-700">
+              Any text content - perfect for notes, codes, or short messages.
+            </p>
+          </div>
+          <textarea
+            value={url.value}
+            onInput={handleInput}
+            onFocus={handleFocus}
+            onBlur={() => setTouched(true)}
+            placeholder="Enter any text..."
+            rows={4}
+            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-gray-500 focus:outline-none resize-none"
+          />
+        </div>
+      )}
+
+      {/* URL/File Input - only shown for URL template */}
+      {selectedTemplate === "url" && (
+        <div
+          class="relative"
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
         <input
           type="text"
           value={url.value}
@@ -533,6 +603,7 @@ export default function SmartInput(
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
