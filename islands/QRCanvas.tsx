@@ -13,6 +13,7 @@ interface QRCanvasProps {
   triggerCopy?: Signal<boolean>;
   isDestructible?: Signal<boolean>;
   isDynamic?: Signal<boolean>;
+  logoUrl?: Signal<string>;
 }
 
 export default function QRCanvas(
@@ -24,6 +25,7 @@ export default function QRCanvas(
     triggerCopy,
     isDestructible,
     isDynamic,
+    logoUrl,
   }: QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -66,6 +68,7 @@ export default function QRCanvas(
       height: 400,
       data: url.value || "https://qrbuddy.app",
       margin: 20,
+      image: logoUrl?.value || undefined,
       qrOptions: {
         typeNumber: 0,
         mode: "Byte",
@@ -131,6 +134,7 @@ export default function QRCanvas(
 
     qrCodeRef.current.update({
       data: url.value || "https://qrbuddy.app",
+      image: logoUrl?.value || undefined,
       dotsOptions: {
         type:
           ("type" in currentStyle.dots && currentStyle.dots.type === "gradient")
@@ -173,7 +177,7 @@ export default function QRCanvas(
             : undefined,
       },
     });
-  }, [url.value, style.value, customStyle?.value]);
+  }, [url.value, style.value, customStyle?.value, logoUrl?.value]);
 
   useEffect(() => {
     if (triggerDownload.value && qrCodeRef.current) {

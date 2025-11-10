@@ -7,6 +7,7 @@ import StyleSelector from "../islands/StyleSelector.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
+import LogoUploader from "../islands/LogoUploader.tsx";
 import { AboutModal, AboutLink } from "../islands/AboutModal.tsx";
 import { KofiModal, KofiButton } from "../islands/KofiModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
@@ -21,6 +22,7 @@ export default function Home() {
   const isDestructible = useSignal(false);
   const isDynamic = useSignal(false);
   const editUrl = useSignal("");
+  const logoUrl = useSignal("");
 
   return (
     <>
@@ -140,6 +142,7 @@ export default function Home() {
                   triggerCopy={triggerCopy}
                   isDestructible={isDestructible}
                   isDynamic={isDynamic}
+                  logoUrl={logoUrl}
                 />
               </ErrorBoundary>
             </div>
@@ -152,6 +155,11 @@ export default function Home() {
             isDynamic={isDynamic}
             editUrl={editUrl}
           />
+
+          {/* Logo Uploader */}
+          <div class="bg-white border-3 border-black rounded-xl p-4 shadow-chunky">
+            <LogoUploader logoUrl={logoUrl} />
+          </div>
 
           {/* Action Buttons - Side by Side */}
           <ActionButtons
