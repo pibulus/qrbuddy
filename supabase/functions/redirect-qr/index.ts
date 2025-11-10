@@ -3,6 +3,11 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  getClientIP,
+} from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +21,18 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting: 100 redirects per minute per IP
+    const clientIP = getClientIP(req);
+    const rateLimitResult = checkRateLimit(clientIP, {
+      windowMs: 60 * 1000, // 1 minute
+      maxRequests: 100,
+    });
+
+    if (rateLimitResult.isLimited) {
+      // For redirects, we return JSON rather than redirecting
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
+
     const url = new URL(req.url);
     const shortCode = url.searchParams.get("code");
 

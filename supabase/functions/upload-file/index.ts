@@ -4,6 +4,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { v4 as uuidv4 } from "https://esm.sh/uuid@9";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  getClientIP,
+} from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +23,16 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting: 10 uploads per hour per IP
+    const clientIP = getClientIP(req);
+    const rateLimitResult = checkRateLimit(clientIP, {
+      windowMs: 60 * 60 * 1000, // 1 hour
+      maxRequests: 10,
+    });
+
+    if (rateLimitResult.isLimited) {
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -48,9 +63,54 @@ serve(async (req) => {
       );
     }
 
-    // Generate unique ID
+    // Validate file type - block dangerous executables
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+    const blockedExtensions = [
+      "exe", "bat", "cmd", "sh", "app", "dmg", "pkg", "deb", "rpm",
+      "msi", "scr", "vbs", "js", "jar", "apk", "ipa", "com", "pif",
+      "application", "gadget", "msp", "cpl", "hta", "inf", "ins",
+      "isp", "jse", "lnk", "msc", "psc1", "reg", "scf", "vb", "vbe",
+      "wsf", "wsh", "ps1", "ps1xml", "ps2", "ps2xml", "psc2", "msh",
+      "msh1", "msh2", "mshxml", "msh1xml", "msh2xml",
+    ];
+
+    if (blockedExtensions.includes(fileExt)) {
+      return new Response(
+        JSON.stringify({
+          error: `File type '.${fileExt}' is not allowed for security reasons. Executable files are blocked.`,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+
+    // Also validate MIME type if available
+    const blockedMimeTypes = [
+      "application/x-msdownload",
+      "application/x-msdos-program",
+      "application/x-executable",
+      "application/x-sh",
+      "application/x-bat",
+      "application/x-ms-application",
+      "application/vnd.microsoft.portable-executable",
+    ];
+
+    if (file.type && blockedMimeTypes.includes(file.type)) {
+      return new Response(
+        JSON.stringify({
+          error: "This file type is not allowed for security reasons.",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+
+    // Generate unique ID (fileExt already extracted above for validation)
     const fileId = uuidv4();
-    const fileExt = file.name.split(".").pop();
     const fileName = `${fileId}.${fileExt}`;
 
     // Upload to Supabase Storage
