@@ -36,14 +36,14 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
   pro: {
     id: "pro",
     name: "Pro",
-    price: 49, // One-time payment, lifetime access
+    price: 20, // One-time payment, lifetime access
     billingPeriod: "lifetime",
-    // Set via PAYMENT_URL env var (Lemon Squeezy, Ko-fi, or Gumroad link)
+    // Set via PAYMENT_URL_PRO env var (Ko-fi Shop, Gumroad, or Paddle link)
     paymentUrl: "",
     features: [
       "Everything in Free, plus:",
       "Lifetime access (pay once, own forever)",
-      "Bulk QR export (up to 1000 at once)",
+      "Bulk QR export (up to 100 at once)",
       "Scan analytics (views, devices, locations)",
       "SVG & EPS export (vector formats)",
       "Remove QRBuddy branding",

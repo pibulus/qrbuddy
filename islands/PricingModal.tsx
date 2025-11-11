@@ -175,7 +175,7 @@ export function PricingModal() {
                   onClick={handleUpgrade}
                   class="w-full mt-6 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95"
                 >
-                  Get Pro for $49 →
+                  Get Pro for $20 →
                 </button>
 
                 <p class="text-xs text-center text-gray-600 mt-3">
