@@ -1,0 +1,87 @@
+// Edge Function: Get File Metadata
+// Returns file info without downloading (for landing page)
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey",
+};
+
+serve(async (req) => {
+  // Handle CORS
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const url = new URL(req.url);
+    const fileId = url.searchParams.get("id");
+
+    if (!fileId) {
+      return new Response(
+        JSON.stringify({ error: "File ID required" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
+    // Get file metadata
+    const { data: file, error: fetchError } = await supabase
+      .from("destructible_files")
+      .select("*")
+      .eq("id", fileId)
+      .single();
+
+    if (fetchError || !file) {
+      return new Response(
+        JSON.stringify({ error: "File not found or already destroyed" }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    // Check if file is expired
+    const isExpired = file.accessed ||
+      (file.max_downloads && file.download_count >= file.max_downloads);
+
+    const remainingDownloads = file.max_downloads
+      ? file.max_downloads - file.download_count
+      : 999999; // "unlimited"
+
+    return new Response(
+      JSON.stringify({
+        fileId: file.id,
+        fileName: file.original_name,
+        fileSize: file.size,
+        mimeType: file.mime_type,
+        maxDownloads: file.max_downloads || 1,
+        downloadCount: file.download_count || 0,
+        remainingDownloads,
+        isExpired,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  } catch (error) {
+    console.error("Metadata fetch error:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  }
+});

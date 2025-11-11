@@ -38,9 +38,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Get file from request
+    // Get file and options from request
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const maxDownloads = parseInt(formData.get("maxDownloads") as string || "1", 10);
 
     if (!file) {
       return new Response(
@@ -135,13 +136,21 @@ serve(async (req) => {
         mime_type: file.type,
         created_at: new Date().toISOString(),
         accessed: false,
+        max_downloads: maxDownloads,
+        download_count: 0,
       });
 
     if (dbError) throw dbError;
 
-    // Generate retrieval URL
-    const baseUrl = Deno.env.get("SUPABASE_URL")!;
-    const retrievalUrl = `${baseUrl}/functions/v1/get-file?id=${fileId}`;
+    // Generate retrieval URL (prettier format)
+    const baseUrl = Deno.env.get("DENO_DEPLOYMENT_ID")
+      ? `https://qrbuddy.app`
+      : `http://localhost:8000`;
+    const retrievalUrl = `${baseUrl}/f/${fileId}`;
+
+    const message = maxDownloads === 1
+      ? "File uploaded! It will self-destruct after 1 download."
+      : `File uploaded! It will self-destruct after ${maxDownloads} downloads.`;
 
     return new Response(
       JSON.stringify({
@@ -150,7 +159,8 @@ serve(async (req) => {
         url: retrievalUrl,
         fileName: file.name,
         size: file.size,
-        message: "File uploaded! It will self-destruct after one download.",
+        maxDownloads,
+        message,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
