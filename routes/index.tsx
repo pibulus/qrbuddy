@@ -1,5 +1,6 @@
 import { useSignal } from "@preact/signals";
 import { Head } from "$fresh/runtime.ts";
+import { PageProps } from "$fresh/server.ts";
 import QRCanvas from "../islands/QRCanvas.tsx";
 import SmartInput from "../islands/SmartInput.tsx";
 import ActionButtons from "../islands/ActionButtons.tsx";
@@ -8,12 +9,24 @@ import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
 import LogoUploader from "../islands/LogoUploader.tsx";
+import Analytics from "../islands/Analytics.tsx";
 import { AboutModal, AboutLink } from "../islands/AboutModal.tsx";
 import { KofiModal, KofiButton } from "../islands/KofiModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 
-export default function Home() {
+interface HomeProps {
+  posthogKey?: string;
+}
+
+export const handler = {
+  GET(_req: Request, ctx: any) {
+    const posthogKey = Deno.env.get("POSTHOG_KEY");
+    return ctx.render({ posthogKey });
+  },
+};
+
+export default function Home({ data }: PageProps<HomeProps>) {
   const url = useSignal("");
   const style = useSignal<keyof typeof QR_STYLES | "custom">("sunset");
   const customStyle = useSignal<QRStyle | null>(null);
@@ -30,7 +43,7 @@ export default function Home() {
         <title>QRBuddy - Drop a link. Watch it bloom.</title>
         <meta
           name="description"
-          content="Beautiful QR code generator with 6 gradients, WiFi/vCard/SMS/Email templates, custom logos, and editable QR codes. Free, privacy-first, no tracking."
+          content="Beautiful QR code generator with 6 gradients, WiFi/vCard/SMS/Email templates, custom logos, and editable QR codes. Free, privacy-first, minimal analytics."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="canonical" href="https://qrbuddy.app" />
@@ -45,7 +58,7 @@ export default function Home() {
         <meta property="og:title" content="QRBuddy - Beautiful QR Codes with Templates & Logos" />
         <meta
           property="og:description"
-          content="Free QR code generator with WiFi/vCard/SMS templates, custom logos, 6 gradient styles, and editable QR codes. Privacy-first, no tracking."
+          content="Free QR code generator with WiFi/vCard/SMS templates, custom logos, 6 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
         />
         <meta property="og:image" content="https://qrbuddy.app/og-image.png" />
         <meta property="og:image:width" content="1200" />
@@ -61,7 +74,7 @@ export default function Home() {
         <meta name="twitter:title" content="QRBuddy - Beautiful QR Codes with Templates & Logos" />
         <meta
           name="twitter:description"
-          content="Free QR code generator with WiFi/vCard/SMS templates, custom logos, 6 gradient styles, and editable QR codes. Privacy-first, no tracking."
+          content="Free QR code generator with WiFi/vCard/SMS templates, custom logos, 6 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
         />
         <meta name="twitter:image" content="https://qrbuddy.app/og-image.png" />
 
@@ -103,7 +116,7 @@ export default function Home() {
               "Copy to clipboard",
               "Download PNG",
               "Mobile-first responsive design",
-              "Privacy-first (no tracking, no analytics)",
+              "Privacy-first (minimal analytics, respects Do Not Track)",
             ],
             "operatingSystem": "Any (Web-based)",
             "browserRequirements": "Requires JavaScript, Modern browser with Clipboard API support",
@@ -121,6 +134,14 @@ export default function Home() {
 
       <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
         <ToastManager />
+        <Analytics
+          posthogKey={data?.posthogKey}
+          url={url}
+          style={style}
+          isDynamic={isDynamic}
+          isDestructible={isDestructible}
+          logoUrl={logoUrl}
+        />
         <EasterEggs url={url} style={style} />
 
         {/* Style Selector - Top Right Corner */}

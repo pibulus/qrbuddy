@@ -117,6 +117,9 @@ Updated **all 4 template forms** (WiFi, vCard, SMS, Email):
 ```bash
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Optional - for ethical analytics (respects Do Not Track)
+POSTHOG_KEY=phc_your-posthog-key
 ```
 
 These are **REQUIRED** for production (validated in main.ts).
@@ -148,6 +151,9 @@ These are **REQUIRED** for production (validated in main.ts).
 ```bash
 SUPABASE_URL=https://rckahvngsukzkmbpaejs.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<your-key>
+
+# Optional - for ethical analytics (respects Do Not Track)
+POSTHOG_KEY=<your-posthog-key>  # Get from PostHog project settings
 ```
 
 ### 2. Deploy
