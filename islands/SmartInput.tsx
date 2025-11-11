@@ -94,8 +94,11 @@ export default function SmartInput(
       setIsCreatingDynamic(true);
       haptics.medium();
 
-      // Use local API for dev, Supabase for production
-      const apiUrl = Deno.env.get("API_URL") || "http://localhost:8005";
+      // Construct API URL from SUPABASE_URL or use local dev API
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const apiUrl = supabaseUrl
+        ? `${supabaseUrl}/functions/v1`
+        : "http://localhost:8005";
 
       const body: Record<string, string | number> = {
         destination_url: destinationUrl,
@@ -180,8 +183,11 @@ export default function SmartInput(
         setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      // Use local API for dev, Supabase for production
-      const apiUrl = Deno.env.get("API_URL") || "http://localhost:8005";
+      // Construct API URL from SUPABASE_URL or use local dev API
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const apiUrl = supabaseUrl
+        ? `${supabaseUrl}/functions/v1`
+        : "http://localhost:8005";
 
       const response = await fetch(
         `${apiUrl}/upload-file`,

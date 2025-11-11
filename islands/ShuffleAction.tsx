@@ -1,4 +1,5 @@
 import { Signal } from "@preact/signals";
+import { useRef } from "preact/hooks";
 import { getRandomStyle } from "../utils/qr-styles.ts";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
@@ -11,8 +12,15 @@ interface ShuffleActionProps {
 export default function ShuffleAction(
   { style, isAnimating }: ShuffleActionProps,
 ) {
+  const timeoutRef = useRef<number | null>(null);
+
   const handleShuffle = () => {
     if (isAnimating.value) return;
+
+    // Clear any existing timeout
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+    }
 
     // Immediate feedback
     haptics.shuffle();
@@ -21,10 +29,11 @@ export default function ShuffleAction(
     isAnimating.value = true;
     style.value = getRandomStyle();
 
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       isAnimating.value = false;
       // Success feedback after animation completes
       haptics.light();
+      timeoutRef.current = null;
     }, 400);
   };
 

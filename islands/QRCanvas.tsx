@@ -197,11 +197,11 @@ export default function QRCanvas(
   }, [triggerCopy?.value]);
 
   return (
-    <div class="relative">
+    <div class="relative max-w-full">
       <div
         ref={canvasRef}
         onClick={handleCopyToClipboard}
-        class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+        class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-transform duration-200 max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto"
         title="Click to copy"
       />
       <div class="absolute -z-10 inset-0 bg-gradient-to-br from-qr-sunset1 via-qr-sunset2 to-qr-sunset3 opacity-20 blur-xl rounded-chunky" />
