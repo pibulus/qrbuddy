@@ -12,17 +12,30 @@ import LogoUploader from "../islands/LogoUploader.tsx";
 import Analytics from "../islands/Analytics.tsx";
 import { AboutModal, AboutLink } from "../islands/AboutModal.tsx";
 import { KofiModal, KofiButton } from "../islands/KofiModal.tsx";
+import { PricingModal, PricingLink } from "../islands/PricingModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 
 interface HomeProps {
   posthogKey?: string;
+  stripePriceIdPro?: string;
+  stripePriceIdProAnnual?: string;
+  supabaseUrl?: string;
 }
 
 export const handler = {
   GET(_req: Request, ctx: any) {
     const posthogKey = Deno.env.get("POSTHOG_KEY");
-    return ctx.render({ posthogKey });
+    const stripePriceIdPro = Deno.env.get("STRIPE_PRICE_ID_PRO");
+    const stripePriceIdProAnnual = Deno.env.get("STRIPE_PRICE_ID_PRO_ANNUAL");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+
+    return ctx.render({
+      posthogKey,
+      stripePriceIdPro,
+      stripePriceIdProAnnual,
+      supabaseUrl,
+    });
   },
 };
 
@@ -85,6 +98,15 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="QRBuddy" />
+
+        {/* Inject env vars for client-side */}
+        <script>
+          {`
+            window.__STRIPE_PRICE_ID_PRO__ = '${data?.stripePriceIdPro || ""}';
+            window.__STRIPE_PRICE_ID_PRO_ANNUAL__ = '${data?.stripePriceIdProAnnual || ""}';
+            window.__SUPABASE_URL__ = '${data?.supabaseUrl || ""}';
+          `}
+        </script>
 
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json">
@@ -203,6 +225,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <footer class="mt-16 py-8 border-t-4 border-black">
           <div class="max-w-md mx-auto px-4">
             <div class="flex items-center justify-center gap-4 flex-wrap">
+              <PricingLink label="Upgrade to Pro ✨" />
               <AboutLink />
               <KofiButton size="sm" />
             </div>
@@ -217,6 +240,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
       </div>
 
       {/* Modals */}
+      <PricingModal />
       <AboutModal />
       <KofiModal kofiUsername="pabloandres" />
     </>

@@ -33,6 +33,13 @@ export default function Analytics({
       return;
     }
 
+    // Extract UTM parameters and referrer for campaign tracking
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmSource = urlParams.get("utm_source");
+    const utmMedium = urlParams.get("utm_medium");
+    const utmCampaign = urlParams.get("utm_campaign");
+    const referrer = document.referrer;
+
     // Load PostHog script
     const script = document.createElement("script");
     script.innerHTML = `
@@ -40,7 +47,7 @@ export default function Analytics({
       posthog.init('${posthogKey}', {
         api_host: 'https://us.i.posthog.com',
         autocapture: false,
-        capture_pageview: true,
+        capture_pageview: false,
         capture_pageleave: false,
         disable_session_recording: true,
         disable_persistence: false,
@@ -49,6 +56,17 @@ export default function Analytics({
         ip: false,
         loaded: function(ph) {
           console.log('📊 PostHog loaded (privacy-first mode)');
+
+          // Track pageview with campaign data
+          const pageviewProps = {
+            referrer: '${referrer}' || 'direct'
+          };
+
+          if ('${utmSource}') pageviewProps.utm_source = '${utmSource}';
+          if ('${utmMedium}') pageviewProps.utm_medium = '${utmMedium}';
+          if ('${utmCampaign}') pageviewProps.utm_campaign = '${utmCampaign}';
+
+          ph.capture('pageview', pageviewProps);
         }
       });
     `;
@@ -84,6 +102,34 @@ export default function Analytics({
       is_destructible: isDestructible.value,
     });
   }, [url.value]);
+
+  // Track conversion events (upgrade success/cancel)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const upgradeStatus = urlParams.get("upgrade");
+
+    if (upgradeStatus && (window as any).posthog) {
+      const ph = (window as any).posthog;
+
+      if (upgradeStatus === "success") {
+        ph.capture("upgrade_completed", {
+          plan: "pro",
+        });
+        console.log("🎉 Upgrade successful!");
+
+        // Clean URL
+        window.history.replaceState({}, "", window.location.pathname);
+      } else if (upgradeStatus === "cancelled") {
+        ph.capture("upgrade_cancelled", {
+          plan: "pro",
+        });
+        console.log("❌ Upgrade cancelled");
+
+        // Clean URL
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, []);
 
   return null; // This component doesn't render anything
 }
