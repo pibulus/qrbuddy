@@ -30,18 +30,22 @@ export default function Home() {
         <title>QRBuddy - Drop a link. Watch it bloom.</title>
         <meta
           name="description"
-          content="The Porkbun of QR generators. Beautiful gradient QR codes that make you smile."
+          content="Beautiful QR code generator with 6 gradients, WiFi/vCard/SMS/Email templates, custom logos, and editable QR codes. Free, privacy-first, no tracking."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="canonical" href="https://qrbuddy.app" />
 
+        {/* Performance hints */}
+        <link rel="dns-prefetch" href="https://rckahvngsukzkmbpaejs.supabase.co" />
+        <link rel="preconnect" href="https://rckahvngsukzkmbpaejs.supabase.co" />
+
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://qrbuddy.app" />
-        <meta property="og:title" content="QRBuddy - Beautiful QR Codes" />
+        <meta property="og:title" content="QRBuddy - Beautiful QR Codes with Templates & Logos" />
         <meta
           property="og:description"
-          content="Drop a link. Watch it bloom. Create stunning gradient QR codes in seconds."
+          content="Free QR code generator with WiFi/vCard/SMS templates, custom logos, 6 gradient styles, and editable QR codes. Privacy-first, no tracking."
         />
         <meta property="og:image" content="https://qrbuddy.app/og-image.png" />
         <meta property="og:image:width" content="1200" />
@@ -54,10 +58,10 @@ export default function Home() {
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content="https://qrbuddy.app" />
-        <meta name="twitter:title" content="QRBuddy - Beautiful QR Codes" />
+        <meta name="twitter:title" content="QRBuddy - Beautiful QR Codes with Templates & Logos" />
         <meta
           name="twitter:description"
-          content="Drop a link. Watch it bloom. Create stunning gradient QR codes in seconds."
+          content="Free QR code generator with WiFi/vCard/SMS templates, custom logos, 6 gradient styles, and editable QR codes. Privacy-first, no tracking."
         />
         <meta name="twitter:image" content="https://qrbuddy.app/og-image.png" />
 
@@ -77,7 +81,7 @@ export default function Home() {
             "name": "QRBuddy",
             "url": "https://qrbuddy.app",
             "description":
-              "Beautiful gradient QR code generator with personality. Transform boring QR codes into stunning gradient art pieces.",
+              "Beautiful gradient QR code generator with personality. Create stunning QR codes with WiFi/vCard/SMS/Email templates, custom logos, and editable redirects.",
             "applicationCategory": "UtilityApplication",
             "offers": {
               "@type": "Offer",
@@ -89,15 +93,20 @@ export default function Home() {
               "name": "Pablo",
             },
             "featureList": [
-              "6 gradient presets",
+              "6 gradient presets (Sunset, Pool, Terminal, Candy, Vapor, Brutalist)",
               "Custom gradient creator",
+              "5 QR templates: WiFi, vCard, SMS, Email, Plain Text",
+              "Custom logo in QR center",
               "Destructible QR codes (one-time use)",
               "Dynamic QR codes (editable redirects)",
+              "Drag & drop file upload",
               "Copy to clipboard",
               "Download PNG",
               "Mobile-first responsive design",
-              "Privacy-first (no tracking)",
+              "Privacy-first (no tracking, no analytics)",
             ],
+            "operatingSystem": "Any (Web-based)",
+            "browserRequirements": "Requires JavaScript, Modern browser with Clipboard API support",
           })}
         </script>
       </Head>
