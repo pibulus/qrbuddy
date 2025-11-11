@@ -4,8 +4,8 @@ export interface PricingTier {
   id: "free" | "pro";
   name: string;
   price: number;
-  billingPeriod: "month" | "year";
-  stripePriceId?: string; // Set in env vars
+  billingPeriod: "lifetime" | "month" | "year";
+  paymentUrl?: string; // Lemon Squeezy checkout URL or Ko-fi link
   features: string[];
   limitations?: string[];
 }
@@ -15,7 +15,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     id: "free",
     name: "Free",
     price: 0,
-    billingPeriod: "month",
+    billingPeriod: "lifetime",
     features: [
       "Unlimited QR codes",
       "6 gradient presets + custom creator",
@@ -36,22 +36,22 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
   pro: {
     id: "pro",
     name: "Pro",
-    price: 9,
-    billingPeriod: "month",
-    stripePriceId: "price_xxx", // Set via STRIPE_PRICE_ID_PRO env var
+    price: 49, // One-time payment, lifetime access
+    billingPeriod: "lifetime",
+    // Set via PAYMENT_URL env var (Lemon Squeezy, Ko-fi, or Gumroad link)
+    paymentUrl: "",
     features: [
       "Everything in Free, plus:",
+      "Lifetime access (pay once, own forever)",
       "Bulk QR export (up to 1000 at once)",
       "Scan analytics (views, devices, locations)",
       "SVG & EPS export (vector formats)",
       "Remove QRBuddy branding",
-      "Priority support",
-      "API access (coming soon)",
+      "Priority email support",
+      "Future Pro features included",
     ],
   },
 };
-
-export const PRICING_ANNUAL_DISCOUNT = 0.2; // 20% off annual
 
 // Feature flags - what requires Pro
 export const PRO_FEATURES = {

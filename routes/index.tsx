@@ -18,22 +18,19 @@ import type { QRStyle } from "../types/qr-types.ts";
 
 interface HomeProps {
   posthogKey?: string;
-  stripePriceIdPro?: string;
-  stripePriceIdProAnnual?: string;
+  paymentUrlPro?: string;
   supabaseUrl?: string;
 }
 
 export const handler = {
   GET(_req: Request, ctx: any) {
     const posthogKey = Deno.env.get("POSTHOG_KEY");
-    const stripePriceIdPro = Deno.env.get("STRIPE_PRICE_ID_PRO");
-    const stripePriceIdProAnnual = Deno.env.get("STRIPE_PRICE_ID_PRO_ANNUAL");
+    const paymentUrlPro = Deno.env.get("PAYMENT_URL_PRO");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
 
     return ctx.render({
       posthogKey,
-      stripePriceIdPro,
-      stripePriceIdProAnnual,
+      paymentUrlPro,
       supabaseUrl,
     });
   },
@@ -102,8 +99,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         {/* Inject env vars for client-side */}
         <script>
           {`
-            window.__STRIPE_PRICE_ID_PRO__ = '${data?.stripePriceIdPro || ""}';
-            window.__STRIPE_PRICE_ID_PRO_ANNUAL__ = '${data?.stripePriceIdProAnnual || ""}';
+            window.__PAYMENT_URL_PRO__ = '${data?.paymentUrlPro || ""}';
             window.__SUPABASE_URL__ = '${data?.supabaseUrl || ""}';
           `}
         </script>
