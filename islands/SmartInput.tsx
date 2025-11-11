@@ -510,13 +510,13 @@ export default function SmartInput(
               class="w-5 h-5 rounded border-2 border-black cursor-pointer"
             />
             <span class="text-sm font-semibold text-gray-700 group-hover:text-pink-600 transition-colors">
-              💣 Make this destructible/editable
+              🔗 Make this editable (change URL later)
             </span>
           </label>
 
           {/* Options panel - shown when editable is enabled */}
           {isDynamic.value && (
-            <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-2 border-pink-300 rounded-xl p-4 space-y-3 animate-slide-down">
+            <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-3 border-pink-300 rounded-xl p-4 space-y-3 animate-slide-down shadow-chunky">
               {/* Scan limit selector */}
               <div class="space-y-2">
                 <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
@@ -573,7 +573,7 @@ export default function SmartInput(
 
           {/* Edit link - shown after creation */}
           {editUrl.value && (
-            <div class="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-400 rounded-xl p-4 space-y-2 animate-slide-down">
+            <div class="bg-gradient-to-r from-green-50 to-teal-50 border-3 border-green-400 rounded-xl p-4 space-y-2 animate-slide-down shadow-chunky">
               <p class="text-sm font-semibold text-green-800">
                 ✨ Dynamic QR Created!
               </p>

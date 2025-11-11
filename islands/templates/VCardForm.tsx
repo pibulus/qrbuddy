@@ -50,7 +50,7 @@ export default function VCardForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4">
+      <div class="bg-purple-50 border-3 border-purple-200 rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">👤</span>
           <h3 class="font-black text-purple-900">Contact Card QR</h3>
@@ -61,7 +61,7 @@ export default function VCardForm({ url }: Props) {
       </div>
 
       {/* Name */}
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="space-y-2">
           <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
             First Name *
@@ -95,7 +95,7 @@ export default function VCardForm({ url }: Props) {
       </div>
 
       {/* Organization & Title */}
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="space-y-2">
           <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
             Organization
@@ -215,14 +215,14 @@ export default function VCardForm({ url }: Props) {
 
       {/* Error */}
       {error && (
-        <div class="bg-red-50 border-2 border-red-300 rounded-lg p-3 text-sm text-red-800">
+        <div class="bg-red-50 border-3 border-red-300 rounded-lg p-3 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {/* Success indicator */}
       {!error && firstName && lastName && (
-        <div class="bg-green-50 border-2 border-green-300 rounded-lg p-3 text-sm text-green-800">
+        <div class="bg-green-50 border-3 border-green-300 rounded-lg p-3 text-sm text-green-800">
           ✅ Contact card ready for <strong>{firstName} {lastName}</strong>
         </div>
       )}

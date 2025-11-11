@@ -33,7 +33,7 @@ export default function SMSForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-pink-50 border-2 border-pink-200 rounded-xl p-4">
+      <div class="bg-pink-50 border-3 border-pink-200 rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">💬</span>
           <h3 class="font-black text-pink-900">SMS Message QR</h3>
@@ -85,14 +85,14 @@ export default function SMSForm({ url }: Props) {
 
       {/* Error */}
       {error && (
-        <div class="bg-red-50 border-2 border-red-300 rounded-lg p-3 text-sm text-red-800">
+        <div class="bg-red-50 border-3 border-red-300 rounded-lg p-3 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {/* Success indicator */}
       {!error && phone && message && (
-        <div class="bg-green-50 border-2 border-green-300 rounded-lg p-3 text-sm text-green-800">
+        <div class="bg-green-50 border-3 border-green-300 rounded-lg p-3 text-sm text-green-800">
           ✅ SMS QR ready! Will send to <strong>{phone}</strong>
         </div>
       )}

@@ -35,7 +35,7 @@ export default function WiFiForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+      <div class="bg-blue-50 border-3 border-blue-200 rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">📶</span>
           <h3 class="font-black text-blue-900">WiFi Network QR</h3>
@@ -132,14 +132,14 @@ export default function WiFiForm({ url }: Props) {
 
       {/* Error */}
       {error && (
-        <div class="bg-red-50 border-2 border-red-300 rounded-lg p-3 text-sm text-red-800">
+        <div class="bg-red-50 border-3 border-red-300 rounded-lg p-3 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {/* Success indicator */}
       {!error && ssid && (
-        <div class="bg-green-50 border-2 border-green-300 rounded-lg p-3 text-sm text-green-800">
+        <div class="bg-green-50 border-3 border-green-300 rounded-lg p-3 text-sm text-green-800">
           ✅ WiFi QR ready! Scan to connect to <strong>{ssid}</strong>
         </div>
       )}

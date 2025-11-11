@@ -34,7 +34,7 @@ export default function EmailForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+      <div class="bg-yellow-50 border-3 border-yellow-200 rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">📧</span>
           <h3 class="font-black text-yellow-900">Email QR</h3>
@@ -97,14 +97,14 @@ export default function EmailForm({ url }: Props) {
 
       {/* Error */}
       {error && (
-        <div class="bg-red-50 border-2 border-red-300 rounded-lg p-3 text-sm text-red-800">
+        <div class="bg-red-50 border-3 border-red-300 rounded-lg p-3 text-sm text-red-800">
           {error}
         </div>
       )}
 
       {/* Success indicator */}
       {!error && to && (
-        <div class="bg-green-50 border-2 border-green-300 rounded-lg p-3 text-sm text-green-800">
+        <div class="bg-green-50 border-3 border-green-300 rounded-lg p-3 text-sm text-green-800">
           ✅ Email QR ready! Will send to <strong>{to}</strong>
         </div>
       )}
