@@ -47,6 +47,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
   const editUrl = useSignal("");
   const logoUrl = useSignal("");
   const maxDownloads = useSignal(1);
+  const isBucket = useSignal(false);
+  const bucketUrl = useSignal("");
 
   return (
     <>
@@ -205,6 +207,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
             isDynamic={isDynamic}
             editUrl={editUrl}
             maxDownloads={maxDownloads}
+            isBucket={isBucket}
+            bucketUrl={bucketUrl}
           />
 
           {/* Logo Uploader */}

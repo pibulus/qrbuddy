@@ -1,0 +1,151 @@
+// Edge Function: Create File Bucket
+// Creates a persistent QR bucket for file/text/link storage
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  getClientIP,
+} from "../_shared/rate-limit.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+// Generate short code (6 chars, URL-safe)
+function generateShortCode(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+// Generate owner token (32 chars, secure)
+function generateOwnerToken(): string {
+  return crypto.randomUUID().replace(/-/g, "");
+}
+
+serve(async (req) => {
+  // Handle CORS
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    // Rate limiting: 20 bucket creations per hour per IP
+    const clientIP = getClientIP(req);
+    const rateLimitResult = checkRateLimit(clientIP, {
+      windowMs: 60 * 60 * 1000, // 1 hour
+      maxRequests: 20,
+    });
+
+    if (rateLimitResult.isLimited) {
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
+    const body = await req.json();
+    const {
+      bucket_type = "file", // 'file', 'text', 'link'
+      style = "sunset",
+      password,
+      is_reusable = true,
+    } = body;
+
+    // Validate bucket type
+    if (!["file", "text", "link"].includes(bucket_type)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid bucket_type" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+
+    // Generate unique short code
+    let bucketCode = generateShortCode();
+    let attempts = 0;
+
+    // Ensure uniqueness (max 10 attempts)
+    while (attempts < 10) {
+      const { data: existing } = await supabase
+        .from("file_buckets")
+        .select("bucket_code")
+        .eq("bucket_code", bucketCode)
+        .single();
+
+      if (!existing) break;
+      bucketCode = generateShortCode();
+      attempts++;
+    }
+
+    const ownerToken = generateOwnerToken();
+
+    // Hash password if provided
+    let passwordHash = null;
+    if (password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      passwordHash = hashArray.map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    // Create bucket record
+    const { error: insertError } = await supabase
+      .from("file_buckets")
+      .insert({
+        bucket_code: bucketCode,
+        owner_token: ownerToken,
+        bucket_type,
+        style,
+        is_password_protected: !!password,
+        password_hash: passwordHash,
+        is_reusable,
+        is_empty: true,
+      });
+
+    if (insertError) throw insertError;
+
+    const baseUrl = Deno.env.get("DENO_DEPLOYMENT_ID")
+      ? "https://qrbuddy.app"
+      : "http://localhost:8000";
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        bucket_code: bucketCode,
+        bucket_url: `${baseUrl}/bucket/${bucketCode}`,
+        owner_token: ownerToken,
+        bucket_type,
+        style,
+        is_empty: true,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  } catch (error) {
+    console.error("Create bucket failed:", error);
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
+    );
+  }
+});

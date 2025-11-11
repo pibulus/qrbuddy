@@ -13,10 +13,12 @@ interface SmartInputProps {
   isDynamic: Signal<boolean>;
   editUrl: Signal<string>;
   maxDownloads: Signal<number>;
+  isBucket: Signal<boolean>;
+  bucketUrl: Signal<string>;
 }
 
 export default function SmartInput(
-  { url, isDestructible, isDynamic, editUrl, maxDownloads }: SmartInputProps,
+  { url, isDestructible, isDynamic, editUrl, maxDownloads, isBucket, bucketUrl }: SmartInputProps,
 ) {
   const [validationState, setValidationState] = useState<
     "idle" | "valid" | "invalid"
@@ -36,6 +38,9 @@ export default function SmartInput(
   const [scanLimit, setScanLimit] = useState<number | null>(1); // Default to 1 (destructible)
   const [expiryDate, setExpiryDate] = useState<string>("");
   const [isCreatingDynamic, setIsCreatingDynamic] = useState(false);
+
+  // Bucket options
+  const [isCreatingBucket, setIsCreatingBucket] = useState(false);
 
   // URL validation function
   const validateURL = (urlString: string): boolean => {
@@ -66,7 +71,7 @@ export default function SmartInput(
 
   // Create dynamic QR when isDynamic is enabled with valid URL
   useEffect(() => {
-    if (isDynamic.value && url.value && !isCreatingDynamic && !editUrl.value) {
+    if (isDynamic.value && url.value && !isCreatingDynamic && !editUrl.value && !isBucket.value) {
       // Only create if we have a URL and haven't created yet
       const timer = setTimeout(() => {
         if (validateURL(url.value)) {
@@ -77,6 +82,13 @@ export default function SmartInput(
       return () => clearTimeout(timer);
     }
   }, [isDynamic.value, url.value]);
+
+  // Create bucket when isBucket is enabled
+  useEffect(() => {
+    if (isBucket.value && !isCreatingBucket && !bucketUrl.value) {
+      createBucket();
+    }
+  }, [isBucket.value]);
 
   const handleInput = (e: Event) => {
     const input = e.target as HTMLInputElement;
@@ -150,6 +162,74 @@ export default function SmartInput(
       const event = new CustomEvent("show-toast", {
         detail: {
           message: `❌ Failed to create dynamic QR: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+          type: "error",
+        },
+      });
+      globalThis.dispatchEvent(event);
+    }
+  };
+
+  // Create file bucket
+  const createBucket = async () => {
+    try {
+      setIsCreatingBucket(true);
+      haptics.medium();
+
+      // Construct API URL from SUPABASE_URL or use local dev API
+      const supabaseUrl = (globalThis as any).__SUPABASE_URL__;
+      const apiUrl = supabaseUrl
+        ? `${supabaseUrl}/functions/v1`
+        : "http://localhost:8005";
+
+      const response = await fetch(
+        `${apiUrl}/create-bucket`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bucket_type: "file",
+            style: "sunset", // Use current style
+            is_reusable: true,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create bucket");
+      }
+
+      const data = await response.json();
+
+      // Update URL to the bucket URL
+      url.value = data.bucket_url;
+      bucketUrl.value = data.bucket_url;
+
+      // Store owner token in localStorage
+      localStorage.setItem(`bucket_${data.bucket_code}`, data.owner_token);
+
+      // Success feedback
+      haptics.success();
+
+      const event = new CustomEvent("show-toast", {
+        detail: {
+          message: `✅ File Bucket created! Scan to upload/download files 🪣`,
+          type: "success",
+        },
+      });
+      globalThis.dispatchEvent(event);
+
+      setIsCreatingBucket(false);
+    } catch (error) {
+      console.error("Create bucket error:", error);
+      setIsCreatingBucket(false);
+      haptics.error();
+
+      const event = new CustomEvent("show-toast", {
+        detail: {
+          message: `❌ Failed to create bucket: ${
             error instanceof Error ? error.message : String(error)
           }`,
           type: "error",
@@ -550,12 +630,34 @@ export default function SmartInput(
               checked={isDynamic.value}
               onChange={(e) => {
                 isDynamic.value = (e.target as HTMLInputElement).checked;
+                if ((e.target as HTMLInputElement).checked) {
+                  isBucket.value = false; // Exclusive with bucket
+                }
                 haptics.light();
               }}
               class="w-5 h-5 rounded border-2 border-black cursor-pointer"
             />
             <span class="text-sm font-semibold text-gray-700 group-hover:text-pink-600 transition-colors">
               🔗 Make this editable (change URL later)
+            </span>
+          </label>
+
+          {/* File Bucket checkbox */}
+          <label class="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={isBucket.value}
+              onChange={(e) => {
+                isBucket.value = (e.target as HTMLInputElement).checked;
+                if ((e.target as HTMLInputElement).checked) {
+                  isDynamic.value = false; // Exclusive with dynamic
+                }
+                haptics.light();
+              }}
+              class="w-5 h-5 rounded border-2 border-black cursor-pointer"
+            />
+            <span class="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">
+              🪣 Make this a File Bucket (persistent QR for quick transfers)
             </span>
           </label>
 
@@ -649,6 +751,43 @@ export default function SmartInput(
               </div>
               <p class="text-xs text-green-700">
                 Save this link to edit your QR anytime!
+              </p>
+            </div>
+          )}
+
+          {/* Bucket link - shown after creation */}
+          {bucketUrl.value && (
+            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border-3 border-blue-400 rounded-xl p-4 space-y-2 animate-slide-down shadow-chunky">
+              <p class="text-sm font-semibold text-blue-800">
+                🪣 File Bucket Created!
+              </p>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  value={bucketUrl.value}
+                  readOnly
+                  class="flex-1 px-3 py-2 bg-white border-2 border-blue-300 rounded-lg text-xs font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(bucketUrl.value);
+                    haptics.success();
+                    const event = new CustomEvent("show-toast", {
+                      detail: {
+                        message: "Bucket URL copied! 📋",
+                        type: "success",
+                      },
+                    });
+                    globalThis.dispatchEvent(event);
+                  }}
+                  class="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold text-sm hover:bg-blue-600 transition-colors"
+                >
+                  Copy
+                </button>
+              </div>
+              <p class="text-xs text-blue-700">
+                Visit this bucket URL to upload/download files. Print the QR as a sticker!
               </p>
             </div>
           )}
