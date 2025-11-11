@@ -46,6 +46,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
   const isDynamic = useSignal(false);
   const editUrl = useSignal("");
   const logoUrl = useSignal("");
+  const maxDownloads = useSignal(1);
 
   return (
     <>
@@ -191,6 +192,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
                   isDestructible={isDestructible}
                   isDynamic={isDynamic}
                   logoUrl={logoUrl}
+                  maxDownloads={maxDownloads}
                 />
               </ErrorBoundary>
             </div>
@@ -202,6 +204,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
             isDestructible={isDestructible}
             isDynamic={isDynamic}
             editUrl={editUrl}
+            maxDownloads={maxDownloads}
           />
 
           {/* Logo Uploader */}

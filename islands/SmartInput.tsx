@@ -12,10 +12,11 @@ interface SmartInputProps {
   isDestructible: Signal<boolean>;
   isDynamic: Signal<boolean>;
   editUrl: Signal<string>;
+  maxDownloads: Signal<number>;
 }
 
 export default function SmartInput(
-  { url, isDestructible, isDynamic, editUrl }: SmartInputProps,
+  { url, isDestructible, isDynamic, editUrl, maxDownloads }: SmartInputProps,
 ) {
   const [validationState, setValidationState] = useState<
     "idle" | "valid" | "invalid"
@@ -177,6 +178,7 @@ export default function SmartInput(
 
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("maxDownloads", maxDownloads.value.toString());
 
       // Simulate progress (real progress needs XHR)
       const progressInterval = setInterval(() => {
@@ -218,10 +220,15 @@ export default function SmartInput(
       haptics.success();
 
       // Show success toast
+      const scanText = maxDownloads.value === 999999
+        ? "unlimited scans ∞"
+        : maxDownloads.value === 1
+        ? "1 scan"
+        : `${maxDownloads.value} scans`;
       const event = new CustomEvent("show-toast", {
         detail: {
           message:
-            `✅ ${file.name} uploaded! Will self-destruct after 1 scan 💣`,
+            `✅ ${file.name} uploaded! Will self-destruct after ${scanText} 💣`,
           type: "success",
         },
       });
@@ -481,10 +488,48 @@ export default function SmartInput(
         </p>
       )}
 
+      {/* File Upload Options - shown when URL template is active and not dynamic */}
+      {selectedTemplate === "url" && !isDynamic.value && !isDestructible.value && !isUploading && (
+        <div class="mt-4 bg-gradient-to-r from-orange-50 to-red-50 border-3 border-orange-300 rounded-xl p-4 space-y-3 animate-slide-down shadow-chunky">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-2xl">💣</span>
+            <h4 class="text-sm font-bold text-gray-700">File Upload Options</h4>
+          </div>
+          <p class="text-xs text-gray-600">
+            Choose how many times your file can be downloaded before self-destructing
+          </p>
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+              Download Limit
+            </label>
+            <div class="flex gap-2 flex-wrap">
+              {[1, 3, 5, 10, null].map((limit) => (
+                <button
+                  type="button"
+                  key={limit?.toString() || "unlimited"}
+                  onClick={() => {
+                    maxDownloads.value = limit || 999999;
+                    haptics.light();
+                  }}
+                  class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all
+                    ${
+                    maxDownloads.value === (limit || 999999)
+                      ? "bg-orange-500 text-white border-orange-600 scale-105"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                  }`}
+                >
+                  {limit === null ? "∞" : limit}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Destructible indicator */}
       {isDestructible.value && !isUploading && (
         <p class="text-orange-600 text-sm mt-2 text-center font-semibold animate-slide-down">
-          ⚠️ This file will self-destruct after 1 scan
+          ⚠️ This file will self-destruct after {maxDownloads.value === 999999 ? "unlimited" : maxDownloads.value} {maxDownloads.value === 1 ? "scan" : "scans"}
         </p>
       )}
 

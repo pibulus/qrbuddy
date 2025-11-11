@@ -14,6 +14,7 @@ interface QRCanvasProps {
   isDestructible?: Signal<boolean>;
   isDynamic?: Signal<boolean>;
   logoUrl?: Signal<string>;
+  maxDownloads?: Signal<number>;
 }
 
 export default function QRCanvas(
@@ -26,6 +27,7 @@ export default function QRCanvas(
     isDestructible,
     isDynamic,
     logoUrl,
+    maxDownloads,
   }: QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -209,7 +211,7 @@ export default function QRCanvas(
       {/* Destructible badge */}
       {isDestructible?.value && (
         <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-pulse z-10">
-          💣 1 scan
+          💣 {maxDownloads?.value === 999999 ? "∞" : maxDownloads?.value || 1} {maxDownloads?.value === 1 ? "scan" : "scans"}
         </div>
       )}
 
