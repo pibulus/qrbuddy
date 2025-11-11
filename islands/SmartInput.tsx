@@ -488,8 +488,8 @@ export default function SmartInput(
         </p>
       )}
 
-      {/* File Upload Options - shown when URL template is active and not dynamic */}
-      {selectedTemplate === "url" && !isDynamic.value && !isDestructible.value && !isUploading && (
+      {/* File Upload Options - shown when dragging file */}
+      {selectedTemplate === "url" && !isDynamic.value && !isDestructible.value && !isUploading && isDragging && (
         <div class="mt-4 bg-gradient-to-r from-orange-50 to-red-50 border-3 border-orange-300 rounded-xl p-4 space-y-3 animate-slide-down shadow-chunky">
           <div class="flex items-center gap-2 mb-2">
             <span class="text-2xl">💣</span>
