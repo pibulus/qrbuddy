@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
+import { addToast } from "./ToastManager.tsx";
 
 interface QRData {
   short_code: string;
@@ -43,8 +44,11 @@ export default function EditQRForm() {
   const loadQRData = async (token: string) => {
     try {
       setLoading(true);
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") ||
-        "https://rckahvngsukzkmbpaejs.supabase.co";
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+
+      if (!supabaseUrl) {
+        throw new Error("Supabase is not configured. Please set SUPABASE_URL environment variable.");
+      }
 
       const response = await fetch(
         `${supabaseUrl}/functions/v1/get-dynamic-qr?token=${token}`,
@@ -80,8 +84,11 @@ export default function EditQRForm() {
       setIsSaving(true);
       haptics.medium();
 
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") ||
-        "https://rckahvngsukzkmbpaejs.supabase.co";
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+
+      if (!supabaseUrl) {
+        throw new Error("Supabase is not configured. Please set SUPABASE_URL environment variable.");
+      }
 
       const body = {
         owner_token: ownerToken,
@@ -110,15 +117,16 @@ export default function EditQRForm() {
 
       // Success feedback
       haptics.success();
-      alert("✅ QR updated successfully!");
+      addToast("✅ QR updated successfully!", 3000);
 
       setIsSaving(false);
     } catch (err) {
       console.error("Update QR error:", err);
-      alert(
+      addToast(
         `❌ Failed to update: ${
           err instanceof Error ? err.message : String(err)
         }`,
+        3500,
       );
       haptics.error();
       setIsSaving(false);
@@ -203,7 +211,7 @@ export default function EditQRForm() {
               onClick={() => {
                 navigator.clipboard.writeText(redirectUrl);
                 haptics.success();
-                alert("Copied!");
+                addToast("Copied! ✨", 2000);
               }}
               class="px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold text-sm hover:bg-purple-600"
             >

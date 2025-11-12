@@ -17,8 +17,16 @@ export const handler: Handlers = {
     }
 
     // Forward to Supabase edge function for redirect logic
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ||
-      "https://rckahvngsukzkmbpaejs.supabase.co";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+
+    if (!supabaseUrl) {
+      console.error("SUPABASE_URL not configured");
+      // Redirect to home if Supabase not configured
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/" },
+      });
+    }
 
     const redirectUrl =
       `${supabaseUrl}/functions/v1/redirect-qr?code=${shortCode}`;

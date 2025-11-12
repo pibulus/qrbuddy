@@ -13,6 +13,8 @@ interface QRCanvasProps {
   triggerCopy?: Signal<boolean>;
   isDestructible?: Signal<boolean>;
   isDynamic?: Signal<boolean>;
+  logoUrl?: Signal<string>;
+  maxDownloads?: Signal<number>;
 }
 
 export default function QRCanvas(
@@ -24,6 +26,8 @@ export default function QRCanvas(
     triggerCopy,
     isDestructible,
     isDynamic,
+    logoUrl,
+    maxDownloads,
   }: QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -66,6 +70,7 @@ export default function QRCanvas(
       height: 400,
       data: url.value || "https://qrbuddy.app",
       margin: 20,
+      image: logoUrl?.value || undefined,
       qrOptions: {
         typeNumber: 0,
         mode: "Byte",
@@ -131,6 +136,7 @@ export default function QRCanvas(
 
     qrCodeRef.current.update({
       data: url.value || "https://qrbuddy.app",
+      image: logoUrl?.value || undefined,
       dotsOptions: {
         type:
           ("type" in currentStyle.dots && currentStyle.dots.type === "gradient")
@@ -173,7 +179,7 @@ export default function QRCanvas(
             : undefined,
       },
     });
-  }, [url.value, style.value, customStyle?.value]);
+  }, [url.value, style.value, customStyle?.value, logoUrl?.value]);
 
   useEffect(() => {
     if (triggerDownload.value && qrCodeRef.current) {
@@ -193,11 +199,11 @@ export default function QRCanvas(
   }, [triggerCopy?.value]);
 
   return (
-    <div class="relative">
+    <div class="relative max-w-full">
       <div
         ref={canvasRef}
         onClick={handleCopyToClipboard}
-        class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+        class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-transform duration-200 max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto"
         title="Click to copy"
       />
       <div class="absolute -z-10 inset-0 bg-gradient-to-br from-qr-sunset1 via-qr-sunset2 to-qr-sunset3 opacity-20 blur-xl rounded-chunky" />
@@ -205,7 +211,7 @@ export default function QRCanvas(
       {/* Destructible badge */}
       {isDestructible?.value && (
         <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-pulse z-10">
-          💣 1 scan
+          💣 {maxDownloads?.value === 999999 ? "∞" : maxDownloads?.value || 1} {maxDownloads?.value === 1 ? "scan" : "scans"}
         </div>
       )}
 

@@ -81,8 +81,8 @@ export function AboutModal() {
               QRBuddy is The Porkbun of QR generators. I got tired of boring
               black-and-white squares, so I built this. Beautiful gradient QR
               codes with personality, privacy-first dynamic redirects, and
-              destructible one-time links. No tracking. No analytics. Just QR
-              codes that make you smile.
+              destructible one-time links. Minimal ethical analytics (respects Do
+              Not Track). Just QR codes that make you smile.
             </p>
 
             {/* Features */}
@@ -92,9 +92,11 @@ export function AboutModal() {
               </p>
               <ul class="text-sm space-y-1 text-gray-700">
                 <li>• 6 gorgeous gradient presets + custom creator</li>
+                <li>• 5 QR templates (WiFi, vCard, SMS, Email, Text)</li>
+                <li>• Custom logo support in QR center</li>
                 <li>• Dynamic QR codes you can edit anytime</li>
                 <li>• Destructible links that self-destruct after 1 scan</li>
-                <li>• Privacy-first (zero tracking or analytics)</li>
+                <li>• Privacy-first (minimal analytics, respects DNT)</li>
                 <li>• Works offline as a PWA</li>
               </ul>
             </div>

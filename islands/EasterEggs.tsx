@@ -25,6 +25,7 @@ export default function EasterEggs({ url, style }: EasterEggsProps) {
 
   useEffect(() => {
     const text = url.value.toLowerCase();
+    const timeouts: number[] = [];
 
     for (const [trigger, config] of Object.entries(EASTER_EGGS)) {
       if (text.includes(trigger)) {
@@ -34,17 +35,24 @@ export default function EasterEggs({ url, style }: EasterEggsProps) {
         setShowEffect(true);
 
         // Clear message after animation
-        setTimeout(() => {
+        const timeout1 = setTimeout(() => {
           setShowEffect(false);
         }, 3000);
+        timeouts.push(timeout1);
 
-        setTimeout(() => {
+        const timeout2 = setTimeout(() => {
           setMessage(null);
         }, 3500);
+        timeouts.push(timeout2);
 
         break;
       }
     }
+
+    // Cleanup timeouts if component unmounts
+    return () => {
+      timeouts.forEach((timeout) => clearTimeout(timeout));
+    };
   }, [url.value]);
 
   if (!message) return null;

@@ -10,7 +10,8 @@
     "api": "deno run -A --watch local-api/server.ts",
     "build": "deno run -A dev.ts build",
     "preview": "deno run -A main.ts",
-    "update": "deno run -A -r https://fresh.deno.dev/update ."
+    "update": "deno run -A -r https://fresh.deno.dev/update .",
+    "test": "deno test --allow-net --allow-env --allow-read"
   },
   "lint": {
     "rules": {

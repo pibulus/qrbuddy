@@ -1,5 +1,5 @@
-// Edge Function: Create Dynamic QR
-// Generates editable QR redirect with owner token
+// Edge Function: Create File Bucket
+// Creates a persistent QR bucket for file/text/link storage
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -37,7 +37,7 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting: 20 QR creations per hour per IP
+    // Rate limiting: 20 bucket creations per hour per IP
     const clientIP = getClientIP(req);
     const rateLimitResult = checkRateLimit(clientIP, {
       windowMs: 60 * 60 * 1000, // 1 hour
@@ -55,15 +55,16 @@ serve(async (req) => {
 
     const body = await req.json();
     const {
-      destination_url,
-      max_scans,
-      expires_at,
-      password_hash,
+      bucket_type = "file", // 'file', 'text', 'link'
+      style = "sunset",
+      password,
+      is_reusable = true,
     } = body;
 
-    if (!destination_url) {
+    // Validate bucket type
+    if (!["file", "text", "link"].includes(bucket_type)) {
       return new Response(
-        JSON.stringify({ error: "destination_url is required" }),
+        JSON.stringify({ error: "Invalid bucket_type" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -72,63 +73,71 @@ serve(async (req) => {
     }
 
     // Generate unique short code
-    let shortCode = generateShortCode();
+    let bucketCode = generateShortCode();
     let attempts = 0;
 
     // Ensure uniqueness (max 10 attempts)
     while (attempts < 10) {
       const { data: existing } = await supabase
-        .from("dynamic_qr_codes")
-        .select("short_code")
-        .eq("short_code", shortCode)
+        .from("file_buckets")
+        .select("bucket_code")
+        .eq("bucket_code", bucketCode)
         .single();
 
       if (!existing) break;
-      shortCode = generateShortCode();
+      bucketCode = generateShortCode();
       attempts++;
     }
 
     const ownerToken = generateOwnerToken();
 
-    // Create dynamic QR record
+    // Hash password if provided
+    let passwordHash = null;
+    if (password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      passwordHash = hashArray.map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    // Create bucket record
     const { error: insertError } = await supabase
-      .from("dynamic_qr_codes")
+      .from("file_buckets")
       .insert({
-        short_code: shortCode,
-        destination_url,
-        max_scans: max_scans || null,
-        expires_at: expires_at || null,
-        password_hash: password_hash || null,
+        bucket_code: bucketCode,
         owner_token: ownerToken,
-        is_active: true,
-      })
-      .select()
-      .single();
+        bucket_type,
+        style,
+        is_password_protected: !!password,
+        password_hash: passwordHash,
+        is_reusable,
+        is_empty: true,
+      });
 
     if (insertError) throw insertError;
 
-    const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(
-      "https://",
-      "https://qrbuddy.app",
-    ) || "https://qrbuddy.app";
+    const baseUrl = Deno.env.get("DENO_DEPLOYMENT_ID")
+      ? "https://qrbuddy.app"
+      : "http://localhost:8000";
 
     return new Response(
       JSON.stringify({
         success: true,
-        short_code: shortCode,
-        redirect_url: `${baseUrl}/r?code=${shortCode}`,
-        edit_url: `${baseUrl}/edit?token=${ownerToken}`,
+        bucket_code: bucketCode,
+        bucket_url: `${baseUrl}/bucket/${bucketCode}`,
         owner_token: ownerToken,
-        scan_count: 0,
-        max_scans: max_scans || null,
-        expires_at: expires_at || null,
+        bucket_type,
+        style,
+        is_empty: true,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
   } catch (error) {
-    console.error("Create dynamic QR failed:", error);
+    console.error("Create bucket failed:", error);
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : String(error),
