@@ -91,43 +91,45 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
       </div>
 
       {/* Logo preview or upload button */}
-      {logoUrl.value ? (
-        <div class="flex items-center gap-3 p-3 bg-white border-3 border-green-400 rounded-xl shadow-chunky">
-          <img
-            src={logoUrl.value}
-            alt="Logo preview"
-            class="w-16 h-16 object-contain rounded-lg border-3 border-gray-200"
-          />
-          <div class="flex-1">
-            <p class="text-sm font-semibold text-green-800">
-              ✅ Logo added to QR
-            </p>
-            <p class="text-xs text-green-600">
-              Your logo will appear in the center of the QR code
-            </p>
+      {logoUrl.value
+        ? (
+          <div class="flex items-center gap-3 p-3 bg-white border-3 border-green-400 rounded-xl shadow-chunky">
+            <img
+              src={logoUrl.value}
+              alt="Logo preview"
+              class="w-16 h-16 object-contain rounded-lg border-3 border-gray-200"
+            />
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-green-800">
+                ✅ Logo added to QR
+              </p>
+              <p class="text-xs text-green-600">
+                Your logo will appear in the center of the QR code
+              </p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={handleFileInputClick}
-          disabled={isUploading}
-          class="w-full px-4 py-3 border-4 border-dashed border-gray-400 rounded-xl
+        )
+        : (
+          <button
+            type="button"
+            onClick={handleFileInputClick}
+            disabled={isUploading}
+            class="w-full px-4 py-3 border-4 border-dashed border-gray-400 rounded-xl
                  text-gray-600 hover:border-pink-500 hover:text-pink-600
-                 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed
-                 bg-white hover:bg-pink-50 shadow-chunky hover:shadow-chunky-hover"
-        >
-          <div class="flex flex-col items-center gap-2">
-            <span class="text-3xl">{isUploading ? "⏳" : "🖼️"}</span>
-            <span class="text-sm font-semibold">
-              {isUploading ? "Uploading..." : "Click to upload logo"}
-            </span>
-            <span class="text-xs text-gray-500">
-              PNG, JPG, SVG • Max 2MB
-            </span>
-          </div>
-        </button>
-      )}
+                  transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                  bg-white hover:bg-pink-50 shadow-chunky hover:shadow-chunky-hover"
+          >
+            <div class="flex flex-col items-center gap-2">
+              <span class="text-3xl">{isUploading ? "⏳" : "🖼️"}</span>
+              <span class="text-sm font-semibold">
+                {isUploading ? "Uploading..." : "Click to upload logo"}
+              </span>
+              <span class="text-xs text-gray-500">
+                PNG, JPG, SVG • Max 2MB
+              </span>
+            </div>
+          </button>
+        )}
 
       {/* Hidden file input */}
       <input
@@ -147,9 +149,9 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
 
       {/* Info text */}
       <p class="text-xs text-gray-500 leading-relaxed">
-        💡 <strong>Pro tip:</strong> Use a square logo with transparent
-        background for best results. The logo will be automatically resized and
-        centered.
+        💡 <strong>Pro tip:</strong>{" "}
+        Use a square logo with transparent background for best results. The logo
+        will be automatically resized and centered.
       </p>
     </div>
   );

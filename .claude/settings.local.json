@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(git worktree:*)",
-      "Bash(fd:*)"
+      "Bash(fd:*)",
+      "WebFetch(domain:www.convex.dev)",
+      "WebFetch(domain:docs.convex.dev)"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { Signal } from "@preact/signals";
 import QRCodeStyling from "qr-code-styling";
 import { QR_STYLES } from "../utils/qr-styles.ts";
@@ -32,6 +32,7 @@ export default function QRCanvas(
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
+  const [isDragHover, setIsDragHover] = useState(false);
 
   const handleCopyToClipboard = async () => {
     if (!qrCodeRef.current) return;
@@ -198,12 +199,44 @@ export default function QRCanvas(
     }
   }, [triggerCopy?.value]);
 
+  const handleDragOver = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragHover(true);
+  };
+
+  const handleDragLeave = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragHover(false);
+  };
+
+  const handleDrop = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragHover(false);
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const uploadEvent = new CustomEvent("smart-input-upload", {
+        detail: { file: files[0] },
+      });
+      globalThis.dispatchEvent(uploadEvent);
+    }
+  };
+
   return (
     <div class="relative max-w-full">
       <div
         ref={canvasRef}
         onClick={handleCopyToClipboard}
-        class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-transform duration-200 max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto"
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        class={`bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-transform duration-200 max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto ${
+          isDragHover ? "ring-4 ring-pink-300" : ""
+        }`}
         title="Click to copy"
       />
       <div class="absolute -z-10 inset-0 bg-gradient-to-br from-qr-sunset1 via-qr-sunset2 to-qr-sunset3 opacity-20 blur-xl rounded-chunky" />
@@ -211,7 +244,9 @@ export default function QRCanvas(
       {/* Destructible badge */}
       {isDestructible?.value && (
         <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-pulse z-10">
-          💣 {maxDownloads?.value === 999999 ? "∞" : maxDownloads?.value || 1} {maxDownloads?.value === 1 ? "scan" : "scans"}
+          💣 {maxDownloads?.value === 999999 ? "∞" : maxDownloads?.value || 1}
+          {" "}
+          {maxDownloads?.value === 1 ? "scan" : "scans"}
         </div>
       )}
 

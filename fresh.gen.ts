@@ -4,18 +4,27 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
+import * as $api_download_file from "./routes/api/download-file.ts";
 import * as $boom from "./routes/boom.tsx";
+import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $edit from "./routes/edit.tsx";
+import * as $f_code_ from "./routes/f/[code].tsx";
+import * as $go from "./routes/go.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
+import * as $r_code_ from "./routes/r/[code].tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
+import * as $Analytics from "./islands/Analytics.tsx";
+import * as $BucketQR from "./islands/BucketQR.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
+import * as $LogoUploader from "./islands/LogoUploader.tsx";
+import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $ShuffleAction from "./islands/ShuffleAction.tsx";
 import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
@@ -24,26 +33,39 @@ import * as $StylePills from "./islands/StylePills.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
 import * as $URLInput from "./islands/URLInput.tsx";
+import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
+import * as $templates_SMSForm from "./islands/templates/SMSForm.tsx";
+import * as $templates_VCardForm from "./islands/templates/VCardForm.tsx";
+import * as $templates_WiFiForm from "./islands/templates/WiFiForm.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
+    "./routes/api/download-file.ts": $api_download_file,
     "./routes/boom.tsx": $boom,
+    "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/edit.tsx": $edit,
+    "./routes/f/[code].tsx": $f_code_,
+    "./routes/go.tsx": $go,
     "./routes/index.tsx": $index,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
+    "./routes/r/[code].tsx": $r_code_,
   },
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
     "./islands/ActionButtons.tsx": $ActionButtons,
+    "./islands/Analytics.tsx": $Analytics,
+    "./islands/BucketQR.tsx": $BucketQR,
     "./islands/EasterEggs.tsx": $EasterEggs,
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/KofiModal.tsx": $KofiModal,
+    "./islands/LogoUploader.tsx": $LogoUploader,
+    "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/ShuffleAction.tsx": $ShuffleAction,
     "./islands/ShuffleButton.tsx": $ShuffleButton,
@@ -52,6 +74,10 @@ const manifest = {
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/ToastManager.tsx": $ToastManager,
     "./islands/URLInput.tsx": $URLInput,
+    "./islands/templates/EmailForm.tsx": $templates_EmailForm,
+    "./islands/templates/SMSForm.tsx": $templates_SMSForm,
+    "./islands/templates/VCardForm.tsx": $templates_VCardForm,
+    "./islands/templates/WiFiForm.tsx": $templates_WiFiForm,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

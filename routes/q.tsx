@@ -26,6 +26,10 @@ export default function SharePage(props: PageProps) {
   const isDestructible = useSignal(false);
   const isDynamic = useSignal(false);
   const editUrl = useSignal("");
+  const maxDownloads = useSignal(1);
+  const isBucket = useSignal(false);
+  const bucketUrl = useSignal("");
+  const logoUrl = useSignal("");
 
   return (
     <>
@@ -79,6 +83,8 @@ export default function SharePage(props: PageProps) {
                   triggerCopy={triggerCopy}
                   isDestructible={isDestructible}
                   isDynamic={isDynamic}
+                  logoUrl={logoUrl}
+                  maxDownloads={maxDownloads}
                 />
               </ErrorBoundary>
             </div>
@@ -90,6 +96,10 @@ export default function SharePage(props: PageProps) {
             isDestructible={isDestructible}
             isDynamic={isDynamic}
             editUrl={editUrl}
+            maxDownloads={maxDownloads}
+            isBucket={isBucket}
+            bucketUrl={bucketUrl}
+            logoUrl={logoUrl}
           />
 
           {/* Action Buttons - Side by Side */}

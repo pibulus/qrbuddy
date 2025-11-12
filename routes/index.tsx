@@ -8,11 +8,10 @@ import StyleSelector from "../islands/StyleSelector.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
-import LogoUploader from "../islands/LogoUploader.tsx";
 import Analytics from "../islands/Analytics.tsx";
-import { AboutModal, AboutLink } from "../islands/AboutModal.tsx";
-import { KofiModal, KofiButton } from "../islands/KofiModal.tsx";
-import { PricingModal, PricingLink } from "../islands/PricingModal.tsx";
+import { AboutLink, AboutModal } from "../islands/AboutModal.tsx";
+import { KofiButton, KofiModal } from "../islands/KofiModal.tsx";
+import { PricingLink, PricingModal } from "../islands/PricingModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 
@@ -62,13 +61,22 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <link rel="canonical" href="https://qrbuddy.app" />
 
         {/* Performance hints */}
-        <link rel="dns-prefetch" href="https://rckahvngsukzkmbpaejs.supabase.co" />
-        <link rel="preconnect" href="https://rckahvngsukzkmbpaejs.supabase.co" />
+        <link
+          rel="dns-prefetch"
+          href="https://rckahvngsukzkmbpaejs.supabase.co"
+        />
+        <link
+          rel="preconnect"
+          href="https://rckahvngsukzkmbpaejs.supabase.co"
+        />
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://qrbuddy.app" />
-        <meta property="og:title" content="QRBuddy - Beautiful QR Codes with Templates & Logos" />
+        <meta
+          property="og:title"
+          content="QRBuddy - Beautiful QR Codes with Templates & Logos"
+        />
         <meta
           property="og:description"
           content="Free QR code generator with WiFi/vCard/SMS templates, custom logos, 6 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
@@ -84,7 +92,10 @@ export default function Home({ data }: PageProps<HomeProps>) {
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content="https://qrbuddy.app" />
-        <meta name="twitter:title" content="QRBuddy - Beautiful QR Codes with Templates & Logos" />
+        <meta
+          name="twitter:title"
+          content="QRBuddy - Beautiful QR Codes with Templates & Logos"
+        />
         <meta
           name="twitter:description"
           content="Free QR code generator with WiFi/vCard/SMS templates, custom logos, 6 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
@@ -140,7 +151,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
               "Privacy-first (minimal analytics, respects Do Not Track)",
             ],
             "operatingSystem": "Any (Web-based)",
-            "browserRequirements": "Requires JavaScript, Modern browser with Clipboard API support",
+            "browserRequirements":
+              "Requires JavaScript, Modern browser with Clipboard API support",
           })}
         </script>
       </Head>
@@ -209,12 +221,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
             maxDownloads={maxDownloads}
             isBucket={isBucket}
             bucketUrl={bucketUrl}
+            logoUrl={logoUrl}
           />
-
-          {/* Logo Uploader */}
-          <div class="bg-white border-3 border-black rounded-xl p-4 shadow-chunky">
-            <LogoUploader logoUrl={logoUrl} />
-          </div>
 
           {/* Action Buttons - Side by Side */}
           <ActionButtons
