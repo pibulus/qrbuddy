@@ -28,7 +28,8 @@ export const handler: Handlers<BucketPageData> = {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
 
     // Fetch bucket status
-    const statusUrl = `${supabaseUrl}/functions/v1/get-bucket-status?bucket_code=${code}`;
+    const statusUrl =
+      `${supabaseUrl}/functions/v1/get-bucket-status?bucket_code=${code}`;
     const response = await fetch(statusUrl);
 
     if (!response.ok) {
@@ -64,7 +65,8 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
     <>
       <Head>
         <title>
-          {stateEmoji} File Bucket {bucket.is_empty ? "(Empty)" : "(Full)"} | QRBuddy
+          {stateEmoji} File Bucket {bucket.is_empty ? "(Empty)" : "(Full)"}{" "}
+          | QRBuddy
         </title>
         <meta
           name="description"
@@ -74,7 +76,10 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
 
         {/* PWA-ready */}
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content={bucket.is_empty ? "#FFFBF5" : "#FF6B9D"} />
+        <meta
+          name="theme-color"
+          content={bucket.is_empty ? "#FFFBF5" : "#FF6B9D"}
+        />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta

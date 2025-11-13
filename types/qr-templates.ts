@@ -1,7 +1,13 @@
 // QR Code Template Types
 // Supports various QR code data formats beyond simple URLs
 
-export type QRTemplateType = "url" | "wifi" | "vcard" | "sms" | "email" | "text";
+export type QRTemplateType =
+  | "url"
+  | "wifi"
+  | "vcard"
+  | "sms"
+  | "email"
+  | "text";
 
 export interface QRTemplate {
   type: QRTemplateType;

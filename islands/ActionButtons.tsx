@@ -18,62 +18,71 @@ export default function ActionButtons(
     triggerDownload.value = true;
   };
 
-  const handleShare = async () => {
-    if (!url || !style) return;
+  const handleCopyUrl = async () => {
+    if (!url?.value) return;
 
     // Immediate feedback
     haptics.copy();
     sounds.copy();
 
-    const shareUrl = `${globalThis.location.origin}/q?d=${
-      encodeURIComponent(url.value)
-    }&s=${style.value}`;
-
     try {
-      await navigator.clipboard.writeText(shareUrl);
-      addToast("Share link copied! 🔗");
+      await navigator.clipboard.writeText(url.value);
+      addToast("URL copied! 📋");
       haptics.success();
       sounds.success();
     } catch (err) {
-      console.error("Failed to copy share URL:", err);
-      addToast("Failed to copy link 😅", 3000);
+      console.error("Failed to copy URL:", err);
+      addToast("Failed to copy URL 😅", 3000);
       haptics.error();
       sounds.error();
     }
   };
 
   return (
-    <div class="flex gap-3">
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
       {/* Primary Action - Download */}
       <button
         type="button"
         onClick={handleDownload}
         class="
-          flex-1 px-6 py-3 text-lg font-bold
-          bg-black text-white
-          rounded-xl border-3 border-black
-          hover:bg-gray-800 hover:scale-105
-          active:scale-95 active:animate-squish
-          transition-all duration-200
+          group flex-1 px-6 py-4 text-lg font-black
+          bg-gradient-to-br from-gray-900 to-black text-white
+          rounded-2xl border-3 border-black
+          shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
+          hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,1)]
+          hover:translate-x-[-2px] hover:translate-y-[-2px]
+          hover:from-pink-600 hover:to-purple-600
+          active:translate-x-[2px] active:translate-y-[2px]
+          active:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+          transition-all duration-150
+          flex items-center justify-center gap-2
         "
       >
+        <span class="group-hover:scale-110 transition-transform">⬇</span>
         Download
       </button>
 
-      {/* Share Button */}
-      {url && style && (
+      {/* Copy URL Button */}
+      {url && (
         <button
           type="button"
-          onClick={handleShare}
+          onClick={handleCopyUrl}
           class="
-            flex-1 px-6 py-3 text-lg font-bold
-            bg-white text-black border-3 border-black
-            hover:bg-gray-50 hover:scale-105
-            active:scale-95 active:animate-squish
-            transition-all duration-200
+            group flex-1 px-6 py-4 text-lg font-black
+            bg-gradient-to-br from-blue-400 to-purple-400 text-white
+            rounded-2xl border-3 border-black
+            shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
+            hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,1)]
+            hover:translate-x-[-2px] hover:translate-y-[-2px]
+            hover:from-blue-500 hover:to-purple-500
+            active:translate-x-[2px] active:translate-y-[2px]
+            active:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+            transition-all duration-150
+            flex items-center justify-center gap-2
           "
         >
-          Share
+          <span class="group-hover:scale-110 transition-transform">📋</span>
+          Copy URL
         </button>
       )}
     </div>

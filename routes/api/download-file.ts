@@ -42,7 +42,8 @@ export const handler: Handlers = {
         "application/octet-stream";
       const contentDisposition = response.headers.get("Content-Disposition") ||
         "attachment";
-      const downloadsRemaining = response.headers.get("X-Downloads-Remaining") ||
+      const downloadsRemaining =
+        response.headers.get("X-Downloads-Remaining") ||
         "0";
 
       // Serve the file

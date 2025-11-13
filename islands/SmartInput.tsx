@@ -501,18 +501,20 @@ export default function SmartInput(
   return (
     <div class="w-full space-y-4">
       {/* minimal toolbar */}
-      <div class="grid grid-cols-2 gap-2 text-sm w-full">
+      <div class="grid grid-cols-2 gap-3 text-sm w-full">
         <button
           type="button"
           onClick={() => {
             setIsTemplateModalOpen(true);
             haptics.light();
           }}
-          class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-full border-2 border-gray-900 bg-white shadow-chunky hover:bg-gray-900 hover:text-white transition-colors"
-          title="Pick WiFi cards, SMS, contact cards, and more"
+          class="group w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-3 border-black bg-gradient-to-br from-blue-50 to-cyan-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:from-blue-100 hover:to-cyan-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 font-bold"
+          title="URLs, WiFi, contacts, SMS, email templates"
         >
-          <span>{templateMeta.icon}</span>
-          {templateMeta.label}
+          <span class="text-lg group-hover:scale-110 transition-transform">
+            {templateMeta.icon}
+          </span>
+          <span class="group-hover:text-blue-700">{templateMeta.label}</span>
         </button>
         <button
           type="button"
@@ -521,12 +523,15 @@ export default function SmartInput(
             setExtrasHasUpdates(false);
             haptics.light();
           }}
-          class={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-full border-2 border-gray-900 bg-white shadow-chunky hover:bg-gray-900 hover:text-white transition-colors ${
+          class={`group w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-3 border-black bg-gradient-to-br from-pink-50 to-purple-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:from-pink-100 hover:to-purple-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 font-bold ${
             extrasHasUpdates ? "animate-bounce" : ""
           }`}
-          title="Editable links, File Buckets, logos, and more"
+          title="Dynamic links, File Buckets, logos, scan limits"
         >
-          ✨ Magic Toolkit
+          <span class="text-lg group-hover:scale-110 transition-transform">
+            ✨
+          </span>
+          <span class="group-hover:text-pink-700">Power Ups</span>
           {extrasHasUpdates && (
             <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
           )}
@@ -683,21 +688,21 @@ export default function SmartInput(
 
       {/* Template Modal */}
       {isTemplateModalOpen && (
-        <div class="fixed inset-0 z-40 flex items-center justify-center px-4">
+        <div class="fixed inset-0 z-40 flex items-center justify-center px-4 py-4">
           <div
-            class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsTemplateModalOpen(false)}
           />
-          <div class="relative z-10 w-full max-w-lg bg-white border-4 border-black rounded-3xl shadow-2xl p-6 space-y-6 animate-slide-up">
-            <div class="flex items-start justify-between gap-4">
+          <div class="relative z-10 w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
+            <div class="flex items-start justify-between gap-3">
               <div>
                 <p class="text-xs uppercase tracking-wide text-gray-500 font-bold">
                   Choose a template
                 </p>
-                <p class="text-2xl font-black text-gray-900 leading-tight">
+                <p class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
                   Make your QR do more
                 </p>
-                <p class="text-sm text-gray-600">
+                <p class="text-xs sm:text-sm text-gray-600">
                   Pick a format to auto-fill fancy WiFi cards, contact cards, or
                   just plain URLs.
                 </p>
@@ -705,7 +710,7 @@ export default function SmartInput(
               <button
                 type="button"
                 onClick={() => setIsTemplateModalOpen(false)}
-                class="text-2xl font-black text-gray-500 hover:text-gray-900 transition-colors"
+                class="text-2xl font-black text-gray-500 hover:text-gray-900 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
                 aria-label="Close template modal"
               >
                 ×
@@ -727,7 +732,7 @@ export default function SmartInput(
                         isDestructible.value = false;
                         setTouched(false);
                         setValidationState("idle");
-                        setIsTemplateModalOpen(false);
+                        // DON'T close modal - keep it open!
                       }}
                       class={`px-4 py-2 rounded-xl border-2 font-semibold text-sm transition-all flex items-center gap-2
                       ${
@@ -745,7 +750,8 @@ export default function SmartInput(
               )}
             </div>
 
-            <div>
+            {/* Template form reveals IN the modal after selection */}
+            <div class={selectedTemplate !== "url" ? "animate-slide-down" : ""}>
               {renderTemplateForm() ?? (
                 <p class="text-sm text-gray-600">
                   Paste any link in the main input to keep things simple.
@@ -768,73 +774,94 @@ export default function SmartInput(
       )}
       {/* Magic Toolkit Modal */}
       {isExtrasModalOpen && (
-        <div class="fixed inset-0 z-40 flex items-center justify-center px-4">
+        <div class="fixed inset-0 z-40 flex items-center justify-center px-4 py-4">
           <div
-            class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsExtrasModalOpen(false)}
           />
-          <div class="relative z-10 w-full max-w-lg bg-white border-4 border-black rounded-3xl shadow-2xl p-6 space-y-5 animate-slide-up">
-            <div class="flex items-start justify-between gap-4">
+          <div class="relative z-10 w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
+            <div class="flex items-start justify-between gap-3">
               <div>
-                <p class="text-xs uppercase tracking-wide text-gray-500 font-bold">
-                  ✨ Magic Toolkit
+                <p class="text-xs uppercase tracking-wide text-pink-500 font-bold">
+                  ✨ Power Ups
                 </p>
-                <p class="text-2xl font-black text-gray-900 leading-tight">
-                  Power up this QR
+                <p class="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
+                  Make it yours
                 </p>
-                <p class="text-sm text-gray-600">
-                  Editable links, file buckets, self-destruct timers, and custom
-                  logos— all without cluttering the home screen.
+                <p class="text-xs sm:text-sm text-gray-600">
+                  Pick your powers. Tap to activate.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsExtrasModalOpen(false)}
-                class="text-2xl font-black text-gray-500 hover:text-gray-900 transition-colors"
-                aria-label="Close extras modal"
+                class="text-3xl font-black text-gray-400 hover:text-gray-900 hover:rotate-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+                aria-label="Close power ups modal"
               >
                 ×
               </button>
             </div>
 
             <div class="space-y-4">
-              <div class="space-y-3">
-                <label class="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={isDynamic.value}
-                    onChange={(e) => {
-                      isDynamic.value = (e.target as HTMLInputElement).checked;
-                      if ((e.target as HTMLInputElement).checked) {
-                        isBucket.value = false;
-                      }
-                      haptics.light();
-                    }}
-                    class="w-5 h-5 rounded border-2 border-black cursor-pointer"
-                  />
-                  <span class="text-sm font-semibold text-gray-700 group-hover:text-pink-600 transition-colors">
-                    🔗 Make this editable (change URL later)
-                  </span>
-                </label>
+              {/* Main Power-Up Cards */}
+              <div class="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    isDynamic.value = !isDynamic.value;
+                    if (isDynamic.value) isBucket.value = false;
+                    haptics.light();
+                  }}
+                  class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
+                    isDynamic.value
+                      ? "bg-gradient-to-br from-pink-200 to-purple-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                      : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                  }`}
+                >
+                  <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                    🔗
+                  </div>
+                  <div class="font-black text-sm text-gray-900">Editable</div>
+                  <div class="text-xs text-gray-600 leading-snug mt-1">
+                    Change the URL anytime
+                  </div>
+                  {isDynamic.value && (
+                    <div class="mt-2 flex items-center gap-1 text-xs font-bold text-pink-700">
+                      <span>✓</span>
+                      Active
+                    </div>
+                  )}
+                </button>
 
-                <label class="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={isBucket.value}
-                    onChange={(e) => {
-                      isBucket.value = (e.target as HTMLInputElement).checked;
-                      if ((e.target as HTMLInputElement).checked) {
-                        isDynamic.value = false;
-                      }
-                      haptics.light();
-                    }}
-                    class="w-5 h-5 rounded border-2 border-black cursor-pointer"
-                  />
-                  <span class="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">
-                    🪣 Make this a File Bucket (persistent QR for quick
-                    transfers)
-                  </span>
-                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    isBucket.value = !isBucket.value;
+                    if (isBucket.value) isDynamic.value = false;
+                    haptics.light();
+                  }}
+                  class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
+                    isBucket.value
+                      ? "bg-gradient-to-br from-blue-200 to-cyan-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                      : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                  }`}
+                >
+                  <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                    🪣
+                  </div>
+                  <div class="font-black text-sm text-gray-900">
+                    File Bucket
+                  </div>
+                  <div class="text-xs text-gray-600 leading-snug mt-1">
+                    Upload & download files
+                  </div>
+                  {isBucket.value && (
+                    <div class="mt-2 flex items-center gap-1 text-xs font-bold text-blue-700">
+                      <span>✓</span>
+                      Active
+                    </div>
+                  )}
+                </button>
               </div>
 
               {isDynamic.value && (
@@ -879,14 +906,11 @@ export default function SmartInput(
                     />
                   </div>
 
-                  <p class="text-xs text-gray-600 leading-relaxed">
-                    💡 <strong>Scan limit = 1</strong>{" "}
-                    makes this a destructible QR (one scan, then KABOOM
-                    💥).<br />
-                    Set higher limits or unlimited for editable QRs you can
-                    update anytime.<br />
-                    Works for both URLs and files. No tracking or analytics.
-                  </p>
+                  <div class="bg-pink-100 border-2 border-pink-300 rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
+                    💡 <strong>Scan limit = 1?</strong>{" "}
+                    That's a destructible QR (KABOOM 💥 after one scan).<br />
+                    Higher limits let you reuse and edit anytime. No tracking.
+                  </div>
                 </div>
               )}
 
@@ -963,29 +987,44 @@ export default function SmartInput(
                 </div>
               )}
 
-              <div class="bg-white border-3 border-black rounded-xl p-4 shadow-chunky space-y-3">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs uppercase tracking-wide text-gray-500 font-bold">
-                      Logo in center
-                    </p>
-                    <p class="text-sm text-gray-600">
-                      Drop a square PNG/JPG/SVG and we’ll tuck it into the
-                      middle of your QR.
-                    </p>
+              {/* Logo Section - Always visible as a toggleable card */}
+              <details class="group">
+                <summary class="cursor-pointer list-none">
+                  <div class="p-4 rounded-2xl border-3 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="text-2xl">🎨</div>
+                        <div>
+                          <div class="font-black text-sm text-gray-900">
+                            Custom Logo
+                          </div>
+                          <div class="text-xs text-gray-600">
+                            Add your brand to the QR center
+                          </div>
+                        </div>
+                      </div>
+                      <div class="text-xl text-gray-400 group-open:rotate-180 transition-transform">
+                        ▼
+                      </div>
+                    </div>
                   </div>
+                </summary>
+                <div class="mt-3 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-3 border-yellow-300 rounded-xl shadow-chunky animate-slide-down">
+                  <LogoUploader logoUrl={logoUrl} />
+                  <p class="text-xs text-gray-600 mt-3">
+                    Square images work best. We'll center it for you.
+                  </p>
                 </div>
-                <LogoUploader logoUrl={logoUrl} />
-              </div>
+              </details>
             </div>
 
-            <div class="flex justify-end">
+            <div class="flex justify-center">
               <button
                 type="button"
                 onClick={() => setIsExtrasModalOpen(false)}
-                class="px-4 py-2 rounded-xl border-2 border-gray-900 font-semibold hover:bg-gray-900 hover:text-white transition-colors"
+                class="px-8 py-3 rounded-2xl border-3 border-black bg-gradient-to-br from-gray-900 to-black text-white font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-150"
               >
-                Done
+                Done ✓
               </button>
             </div>
           </div>

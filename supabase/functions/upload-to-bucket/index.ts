@@ -73,7 +73,9 @@ serve(async (req) => {
     // Check if bucket is already full
     if (!bucket.is_empty) {
       return new Response(
-        JSON.stringify({ error: "Bucket is full. Download current content first." }),
+        JSON.stringify({
+          error: "Bucket is full. Download current content first.",
+        }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,

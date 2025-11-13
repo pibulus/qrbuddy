@@ -34,15 +34,17 @@ Deno.test({
   ignore: skipTests,
   async fn() {
     // Make 21 requests rapidly to trigger rate limit (limit is 20/hour)
-    const requests = Array.from({ length: 21 }, (_, i) =>
-      callEdgeFunction("create-dynamic-qr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          destination_url: `https://example.com/test-${i}`,
-          max_scans: 1,
+    const requests = Array.from(
+      { length: 21 },
+      (_, i) =>
+        callEdgeFunction("create-dynamic-qr", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            destination_url: `https://example.com/test-${i}`,
+            max_scans: 1,
+          }),
         }),
-      })
     );
 
     const responses = await Promise.all(requests);

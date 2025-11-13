@@ -2,8 +2,8 @@ import { useEffect, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import {
   formatSMS,
-  validateSMS,
   type SMSData,
+  validateSMS,
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
 
@@ -39,7 +39,8 @@ export default function SMSForm({ url }: Props) {
           <h3 class="font-black text-pink-900">SMS Message QR</h3>
         </div>
         <p class="text-sm text-pink-700">
-          Scan to open a pre-filled text message - perfect for feedback, contests, or quick replies!
+          Scan to open a pre-filled text message - perfect for feedback,
+          contests, or quick replies!
         </p>
       </div>
 

@@ -40,7 +40,6 @@ export default function Home({ data }: PageProps<HomeProps>) {
   const style = useSignal<keyof typeof QR_STYLES | "custom">("sunset");
   const customStyle = useSignal<QRStyle | null>(null);
   const triggerDownload = useSignal(false);
-  const triggerCopy = useSignal(false);
   const isDestructible = useSignal(false);
   const isDynamic = useSignal(false);
   const editUrl = useSignal("");
@@ -178,17 +177,20 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <EasterEggs url={url} style={style} />
 
         {/* Style Selector - Top Right Corner */}
-        <div class="absolute top-6 right-6" aria-label="Style selector">
+        <div
+          class="absolute top-4 right-4 sm:top-6 sm:right-6"
+          aria-label="Style selector"
+        >
           <StyleSelector style={style} customStyle={customStyle} />
         </div>
 
         <main id="main-content" class="w-full max-w-md space-y-8">
           {/* Hero Text */}
           <header class="text-center space-y-2">
-            <h1 class="text-5xl font-black text-black tracking-tight">
+            <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
               QRBuddy
             </h1>
-            <p class="text-lg text-gray-600">
+            <p class="text-base sm:text-lg text-gray-600">
               Generate beautiful QR codes
             </p>
           </header>
@@ -202,7 +204,6 @@ export default function Home({ data }: PageProps<HomeProps>) {
                   style={style}
                   customStyle={customStyle}
                   triggerDownload={triggerDownload}
-                  triggerCopy={triggerCopy}
                   isDestructible={isDestructible}
                   isDynamic={isDynamic}
                   logoUrl={logoUrl}

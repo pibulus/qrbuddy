@@ -47,7 +47,9 @@ export default function EditQRForm() {
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
 
       if (!supabaseUrl) {
-        throw new Error("Supabase is not configured. Please set SUPABASE_URL environment variable.");
+        throw new Error(
+          "Supabase is not configured. Please set SUPABASE_URL environment variable.",
+        );
       }
 
       const response = await fetch(
@@ -87,7 +89,9 @@ export default function EditQRForm() {
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
 
       if (!supabaseUrl) {
-        throw new Error("Supabase is not configured. Please set SUPABASE_URL environment variable.");
+        throw new Error(
+          "Supabase is not configured. Please set SUPABASE_URL environment variable.",
+        );
       }
 
       const body = {

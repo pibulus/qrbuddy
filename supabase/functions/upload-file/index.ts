@@ -41,7 +41,10 @@ serve(async (req) => {
     // Get file and options from request
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const maxDownloads = parseInt(formData.get("maxDownloads") as string || "1", 10);
+    const maxDownloads = parseInt(
+      formData.get("maxDownloads") as string || "1",
+      10,
+    );
 
     if (!file) {
       return new Response(
@@ -67,18 +70,60 @@ serve(async (req) => {
     // Validate file type - block dangerous executables
     const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
     const blockedExtensions = [
-      "exe", "bat", "cmd", "sh", "app", "dmg", "pkg", "deb", "rpm",
-      "msi", "scr", "vbs", "js", "jar", "apk", "ipa", "com", "pif",
-      "application", "gadget", "msp", "cpl", "hta", "inf", "ins",
-      "isp", "jse", "lnk", "msc", "psc1", "reg", "scf", "vb", "vbe",
-      "wsf", "wsh", "ps1", "ps1xml", "ps2", "ps2xml", "psc2", "msh",
-      "msh1", "msh2", "mshxml", "msh1xml", "msh2xml",
+      "exe",
+      "bat",
+      "cmd",
+      "sh",
+      "app",
+      "dmg",
+      "pkg",
+      "deb",
+      "rpm",
+      "msi",
+      "scr",
+      "vbs",
+      "js",
+      "jar",
+      "apk",
+      "ipa",
+      "com",
+      "pif",
+      "application",
+      "gadget",
+      "msp",
+      "cpl",
+      "hta",
+      "inf",
+      "ins",
+      "isp",
+      "jse",
+      "lnk",
+      "msc",
+      "psc1",
+      "reg",
+      "scf",
+      "vb",
+      "vbe",
+      "wsf",
+      "wsh",
+      "ps1",
+      "ps1xml",
+      "ps2",
+      "ps2xml",
+      "psc2",
+      "msh",
+      "msh1",
+      "msh2",
+      "mshxml",
+      "msh1xml",
+      "msh2xml",
     ];
 
     if (blockedExtensions.includes(fileExt)) {
       return new Response(
         JSON.stringify({
-          error: `File type '.${fileExt}' is not allowed for security reasons. Executable files are blocked.`,
+          error:
+            `File type '.${fileExt}' is not allowed for security reasons. Executable files are blocked.`,
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

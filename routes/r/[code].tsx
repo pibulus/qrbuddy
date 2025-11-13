@@ -24,8 +24,7 @@ export const handler: Handlers = {
     }
 
     // Call Supabase edge function to get destination + tier info
-    const redirectUrl =
-      `${supabaseUrl}/functions/v1/redirect-qr?code=${code}`;
+    const redirectUrl = `${supabaseUrl}/functions/v1/redirect-qr?code=${code}`;
 
     try {
       const response = await fetch(redirectUrl);
@@ -39,8 +38,7 @@ export const handler: Handlers = {
         return new Response(null, {
           status: 302,
           headers: {
-            Location:
-              `/go?url=${encodeURIComponent(destination)}&tier=free`,
+            Location: `/go?url=${encodeURIComponent(destination)}&tier=free`,
           },
         });
       }

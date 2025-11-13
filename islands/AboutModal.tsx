@@ -39,8 +39,7 @@ export function AboutModal() {
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in"
         onClick={closeAboutModal}
         role="dialog"
         aria-modal="true"
@@ -48,42 +47,50 @@ export function AboutModal() {
       >
         {/* Modal */}
         <div
-          class="relative w-full max-w-2xl animate-modal-in"
+          class="relative w-full max-w-md sm:max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-up"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div class="p-6 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 border-4 border-black border-b-0 rounded-t-3xl">
+          <div class="p-4 sm:p-6 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 border-4 border-black border-b-0 rounded-t-3xl">
             <div class="flex items-start justify-between mb-2">
               <h2
                 id="about-modal-title"
-                class="text-3xl font-black text-black"
+                class="text-2xl sm:text-3xl font-black text-black"
               >
                 About QRBuddy
               </h2>
               <button
                 type="button"
                 onClick={closeAboutModal}
-                class="text-3xl leading-none font-bold text-black transition-transform hover:scale-110"
+                class="text-3xl leading-none font-bold text-black transition-transform hover:scale-110 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Close about dialog"
               >
                 ×
               </button>
             </div>
-            <p class="text-lg font-bold text-purple-900">
-              Drop a link. Watch it bloom. 🌈
+            <p class="text-base sm:text-lg font-bold text-purple-900">
+              QR codes that spark joy. Drop a link, watch it bloom. 🌈
             </p>
           </div>
 
           {/* Content */}
-          <div class="p-8 bg-qr-cream border-4 border-black rounded-b-3xl shadow-chunky space-y-6">
+          <div class="p-4 sm:p-8 bg-qr-cream border-4 border-black rounded-b-3xl shadow-chunky space-y-6">
             {/* Story */}
-            <p class="text-lg leading-relaxed text-gray-800">
-              QRBuddy is The Porkbun of QR generators. I got tired of boring
-              black-and-white squares, so I built this. Beautiful gradient QR
-              codes with personality, privacy-first dynamic redirects, and
-              destructible one-time links. Minimal ethical analytics (respects Do
-              Not Track). Just QR codes that make you smile.
-            </p>
+            <div class="space-y-3">
+              <p class="text-lg leading-relaxed text-gray-800">
+                I got tired of boring black-and-white QR codes. So I built this.
+              </p>
+              <p class="text-base leading-relaxed text-gray-700">
+                QRBuddy makes beautiful gradient QR codes with personality.
+                Think of it like choosing a fun domain name for your site— same
+                idea, but for QR codes. Your codes should match your vibe.
+              </p>
+              <p class="text-base leading-relaxed text-gray-700">
+                Privacy-first dynamic redirects. Destructible one-time links.
+                Minimal ethical analytics that respects Do Not Track. Just QR
+                codes that make you smile.
+              </p>
+            </div>
 
             {/* Features */}
             <div class="py-4 px-4 bg-gradient-to-r from-pink-100 to-purple-100 border-3 border-black rounded-xl">
@@ -104,14 +111,16 @@ export function AboutModal() {
             {/* Links */}
             <div class="pt-2">
               <div class="flex flex-wrap gap-3 justify-center">
-                {/* <a
+                {
+                  /* <a
                   href="https://pibul.us"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold transition-all hover:scale-105 shadow-chunky"
                 >
                   🌐 Portfolio
-                </a> */}
+                </a> */
+                }
                 <a
                   href="https://github.com/pibulus/qrbuddy"
                   target="_blank"

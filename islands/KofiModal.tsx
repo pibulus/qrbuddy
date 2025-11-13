@@ -49,13 +49,12 @@ export function KofiModal({
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in"
         onClick={closeKofiModal}
       >
         {/* Modal */}
         <div
-          class="relative w-full max-w-2xl animate-modal-in"
+          class="relative w-full max-w-2xl animate-slide-up"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -95,25 +94,6 @@ export function KofiModal({
           </div>
         </div>
       </div>
-
-      <style>
-        {`
-          @keyframes modal-in {
-            0% {
-              opacity: 0;
-              transform: scale(0.95) translateY(20px);
-            }
-            100% {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-          }
-
-          .animate-modal-in {
-            animation: modal-in 0.3s ease-out forwards;
-          }
-        `}
-      </style>
     </>
   );
 }
@@ -138,7 +118,9 @@ export function KofiButton({
     <button
       type="button"
       onClick={openKofiModal}
-      class={`inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95 ${sizeClasses[size]}`}
+      class={`inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95 ${
+        sizeClasses[size]
+      }`}
     >
       <span>{label}</span>
     </button>

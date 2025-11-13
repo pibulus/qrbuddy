@@ -7,6 +7,7 @@ Basic integration tests for QRBuddy edge functions.
 ### Prerequisites
 
 1. Configure your `.env` file with Supabase credentials:
+
 ```bash
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
@@ -35,6 +36,7 @@ deno test --allow-net --allow-env --allow-read --watch
 Current test coverage includes:
 
 ### Edge Functions
+
 - ✅ **create-dynamic-qr**
   - Rate limiting enforcement
   - Required field validation

@@ -112,7 +112,12 @@ export function getClientIP(req: Request): string {
  * @returns Response object
  */
 export function createRateLimitResponse(
-  result: { isLimited: boolean; remaining: number; resetTime: number; retryAfter?: number },
+  result: {
+    isLimited: boolean;
+    remaining: number;
+    resetTime: number;
+    retryAfter?: number;
+  },
   corsHeaders: Record<string, string>,
 ): Response {
   const headers = {

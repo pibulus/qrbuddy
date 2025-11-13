@@ -32,7 +32,9 @@ export default function BucketQR({
 
   const [isEmpty, setIsEmpty] = useState(initialIsEmpty);
   const [contentType, setContentType] = useState(initialContentType);
-  const [contentMetadata, setContentMetadata] = useState(initialContentMetadata);
+  const [contentMetadata, setContentMetadata] = useState(
+    initialContentMetadata,
+  );
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [password, setPassword] = useState("");
@@ -101,30 +103,41 @@ export default function BucketQR({
       },
       dotsOptions: {
         type: "rounded",
-        color: "color" in currentStyle.dots ? currentStyle.dots.color : undefined,
-        gradient: "gradient" in currentStyle.dots ? currentStyle.dots.gradient : undefined,
+        color: "color" in currentStyle.dots
+          ? currentStyle.dots.color
+          : undefined,
+        gradient: "gradient" in currentStyle.dots
+          ? currentStyle.dots.gradient
+          : undefined,
       },
       backgroundOptions: {
-        color: "color" in currentStyle.background ? currentStyle.background.color : undefined,
-        gradient: "gradient" in currentStyle.background ? currentStyle.background.gradient : undefined,
+        color: "color" in currentStyle.background
+          ? currentStyle.background.color
+          : undefined,
+        gradient: "gradient" in currentStyle.background
+          ? currentStyle.background.gradient
+          : undefined,
       },
       cornersSquareOptions: {
         type: "extra-rounded",
-        color: currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
-          ? currentStyle.cornersSquare.color
-          : undefined,
-        gradient: currentStyle.cornersSquare && "gradient" in currentStyle.cornersSquare
-          ? currentStyle.cornersSquare.gradient
-          : undefined,
+        color:
+          currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
+            ? currentStyle.cornersSquare.color
+            : undefined,
+        gradient:
+          currentStyle.cornersSquare && "gradient" in currentStyle.cornersSquare
+            ? currentStyle.cornersSquare.gradient
+            : undefined,
       },
       cornersDotOptions: {
         type: "dot",
         color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
           ? currentStyle.cornersDot.color
           : undefined,
-        gradient: currentStyle.cornersDot && "gradient" in currentStyle.cornersDot
-          ? currentStyle.cornersDot.gradient
-          : undefined,
+        gradient:
+          currentStyle.cornersDot && "gradient" in currentStyle.cornersDot
+            ? currentStyle.cornersDot.gradient
+            : undefined,
       },
     });
 
@@ -143,10 +156,13 @@ export default function BucketQR({
       // Get owner token from localStorage
       const ownerToken = localStorage.getItem(`bucket_${bucketCode}`);
       if (!ownerToken) {
-        throw new Error("Owner token not found. You may not have permission to upload.");
+        throw new Error(
+          "Owner token not found. You may not have permission to upload.",
+        );
       }
 
-      const uploadUrl = `${supabaseUrl}/functions/v1/upload-to-bucket?bucket_code=${bucketCode}&owner_token=${ownerToken}`;
+      const uploadUrl =
+        `${supabaseUrl}/functions/v1/upload-to-bucket?bucket_code=${bucketCode}&owner_token=${ownerToken}`;
 
       let response;
 
@@ -211,9 +227,10 @@ export default function BucketQR({
       setError("");
       haptics.medium();
 
-      const downloadUrl = `${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
-        password ? `&password=${encodeURIComponent(password)}` : ""
-      }`;
+      const downloadUrl =
+        `${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
+          password ? `&password=${encodeURIComponent(password)}` : ""
+        }`;
 
       const response = await fetch(downloadUrl);
 
@@ -280,81 +297,89 @@ export default function BucketQR({
               : "bg-gradient-to-r from-orange-500 to-red-500 text-white animate-pulse"
           }`}
         >
-          {isEmpty ? "🪣 Empty - Ready for Upload" : "💥 Full - Ready to Download"}
+          {isEmpty
+            ? "🪣 Empty - Ready for Upload"
+            : "💥 Full - Ready to Download"}
         </span>
       </div>
 
       {/* Content Display (if text and full) */}
       {!isEmpty && contentType === "text" && contentMetadata && (
         <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-3 border-pink-300 rounded-xl p-6 shadow-chunky">
-          <p class="text-2xl font-bold text-center break-words">{contentMetadata.content}</p>
+          <p class="text-2xl font-bold text-center break-words">
+            {contentMetadata.content}
+          </p>
         </div>
       )}
 
       {/* Action Button */}
-      {isEmpty ? (
-        <div class="space-y-3">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-          >
-            {isUploading ? "Uploading..." : "📤 Upload File"}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            class="hidden"
-            onChange={handleFileInput}
-          />
-        </div>
-      ) : (
-        <div class="space-y-3">
-          {isPasswordProtected && !showPasswordInput && (
+      {isEmpty
+        ? (
+          <div class="space-y-3">
             <button
-              onClick={() => setShowPasswordInput(true)}
-              class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
             >
-              🔒 Unlock & Download
+              {isUploading ? "Uploading..." : "📤 Upload File"}
             </button>
-          )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              class="hidden"
+              onChange={handleFileInput}
+            />
+          </div>
+        )
+        : (
+          <div class="space-y-3">
+            {isPasswordProtected && !showPasswordInput && (
+              <button
+                onClick={() => setShowPasswordInput(true)}
+                class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                🔒 Unlock & Download
+              </button>
+            )}
 
-          {isPasswordProtected && showPasswordInput && (
-            <div class="space-y-3">
-              <input
-                type="password"
-                value={password}
-                onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
-                placeholder="Enter password"
-                class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
-              />
+            {isPasswordProtected && showPasswordInput && (
+              <div class="space-y-3">
+                <input
+                  type="password"
+                  value={password}
+                  onInput={(e) =>
+                    setPassword((e.target as HTMLInputElement).value)}
+                  placeholder="Enter password"
+                  class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
+                />
+                <button
+                  onClick={handleDownload}
+                  disabled={isDownloading || !password}
+                  class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                >
+                  {isDownloading ? "Downloading..." : "💥 Download & Empty"}
+                </button>
+              </div>
+            )}
+
+            {!isPasswordProtected && (
               <button
                 onClick={handleDownload}
-                disabled={isDownloading || !password}
-                class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                disabled={isDownloading}
+                class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 animate-pulse-glow"
               >
                 {isDownloading ? "Downloading..." : "💥 Download & Empty"}
               </button>
-            </div>
-          )}
+            )}
 
-          {!isPasswordProtected && (
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 animate-pulse-glow"
-            >
-              {isDownloading ? "Downloading..." : "💥 Download & Empty"}
-            </button>
-          )}
-
-          {contentMetadata && contentType === "file" && (
-            <p class="text-center text-sm text-gray-600">
-              📄 {contentMetadata.filename} ({(contentMetadata.size / 1024 / 1024).toFixed(2)} MB)
-            </p>
-          )}
-        </div>
-      )}
+            {contentMetadata && contentType === "file" && (
+              <p class="text-center text-sm text-gray-600">
+                📄 {contentMetadata.filename}{" "}
+                ({(contentMetadata.size / 1024 / 1024).toFixed(2)} MB)
+              </p>
+            )}
+          </div>
+        )}
 
       {/* Error Message */}
       {error && (

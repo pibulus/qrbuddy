@@ -64,8 +64,7 @@ export function PricingModal() {
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in"
         onClick={closePricingModal}
         role="dialog"
         aria-modal="true"
@@ -73,27 +72,28 @@ export function PricingModal() {
       >
         {/* Modal */}
         <div
-          class="relative w-full max-w-5xl animate-modal-in"
+          class="relative w-full max-w-md sm:max-w-2xl lg:max-w-5xl max-h-[90vh] overflow-y-auto animate-slide-up"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div class="p-6 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 border-4 border-black border-b-0 rounded-t-3xl">
-            <div class="flex items-start justify-between mb-2">
+          <div class="p-4 sm:p-6 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 border-4 border-black border-b-0 rounded-t-3xl">
+            <div class="flex items-start justify-between gap-3 mb-2">
               <div>
                 <h2
                   id="pricing-modal-title"
-                  class="text-3xl font-black text-black"
+                  class="text-2xl sm:text-3xl font-black text-black"
                 >
                   Choose Your Plan
                 </h2>
-                <p class="text-sm text-purple-900 mt-1">
-                  Start free. Upgrade when you need analytics and advanced features.
+                <p class="text-xs sm:text-sm text-purple-900 mt-1">
+                  Start free. Upgrade when you need analytics and advanced
+                  features.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closePricingModal}
-                class="text-3xl leading-none font-bold text-black transition-transform hover:scale-110"
+                class="text-3xl leading-none font-bold text-black transition-transform hover:scale-110 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
                 aria-label="Close pricing dialog"
               >
                 ×
@@ -102,7 +102,7 @@ export function PricingModal() {
           </div>
 
           {/* Content */}
-          <div class="p-8 bg-qr-cream border-4 border-black rounded-b-3xl shadow-chunky space-y-6">
+          <div class="p-4 sm:p-8 bg-qr-cream border-4 border-black rounded-b-3xl shadow-chunky space-y-6">
             {/* Pricing Cards */}
             <div class="grid md:grid-cols-2 gap-6">
               {/* Free Tier */}
@@ -123,7 +123,9 @@ export function PricingModal() {
                 </ul>
 
                 <div class="mt-4 pt-4 border-t-2 border-gray-200">
-                  <p class="text-xs text-gray-500 font-bold mb-2">Limitations:</p>
+                  <p class="text-xs text-gray-500 font-bold mb-2">
+                    Limitations:
+                  </p>
                   <ul class="space-y-1 text-xs text-gray-500">
                     {PRICING_TIERS.free.limitations?.map((limit) => (
                       <li key={limit} class="flex items-start gap-2">
@@ -163,7 +165,12 @@ export function PricingModal() {
                   {PRICING_TIERS.pro.features.map((feature) => (
                     <li key={feature} class="flex items-start gap-2">
                       <span class="text-purple-600 font-bold">✓</span>
-                      <span class={feature.startsWith("Everything") || feature.includes("Lifetime") ? "font-bold" : ""}>
+                      <span
+                        class={feature.startsWith("Everything") ||
+                            feature.includes("Lifetime")
+                          ? "font-bold"
+                          : ""}
+                      >
                         {feature}
                       </span>
                     </li>
@@ -193,8 +200,8 @@ export function PricingModal() {
                     Why one-time payment instead of subscription?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    No recurring anxiety. Pay once, own it forever. We believe in fair,
-                    transparent pricing - not rent-seeking.
+                    No recurring anxiety. Pay once, own it forever. We believe
+                    in fair, transparent pricing - not rent-seeking.
                   </p>
                 </details>
                 <details class="group">
@@ -202,7 +209,8 @@ export function PricingModal() {
                     What payment methods do you accept?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    All major credit cards via our payment processor. Safe and secure.
+                    All major credit cards via our payment processor. Safe and
+                    secure.
                   </p>
                 </details>
                 <details class="group">
@@ -210,7 +218,8 @@ export function PricingModal() {
                     Do I get future Pro features included?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    Yep! Any new Pro features we add are yours too. One payment, lifetime updates.
+                    Yep! Any new Pro features we add are yours too. One payment,
+                    lifetime updates.
                   </p>
                 </details>
                 <details class="group">
@@ -218,7 +227,8 @@ export function PricingModal() {
                     Can I get a refund?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    Absolutely. 30-day no-questions-asked refund policy. Email pablo@qrbuddy.app
+                    Absolutely. 30-day no-questions-asked refund policy. Email
+                    pablo@qrbuddy.app
                   </p>
                 </details>
               </div>
@@ -233,25 +243,6 @@ export function PricingModal() {
           </div>
         </div>
       </div>
-
-      <style>
-        {`
-          @keyframes modal-in {
-            0% {
-              opacity: 0;
-              transform: scale(0.95) translateY(20px);
-            }
-            100% {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-          }
-
-          .animate-modal-in {
-            animation: modal-in 0.3s ease-out forwards;
-          }
-        `}
-      </style>
     </>
   );
 }

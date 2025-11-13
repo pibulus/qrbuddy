@@ -150,7 +150,9 @@ serve(async (req) => {
       responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
 
       return new Response(fileData, { headers: responseHeaders });
-    } else if (bucket.content_type === "text" || bucket.content_type === "link") {
+    } else if (
+      bucket.content_type === "text" || bucket.content_type === "link"
+    ) {
       // Return text or link as JSON
       responseData = {
         success: true,

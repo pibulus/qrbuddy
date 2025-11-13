@@ -8,46 +8,58 @@
 
 ## 🎯 Overview
 
-QRBuddy has been audited and all critical security issues have been resolved. The application is now production-ready with proper security measures, error handling, and basic test coverage.
+QRBuddy has been audited and all critical security issues have been resolved.
+The application is now production-ready with proper security measures, error
+handling, and basic test coverage.
 
 ---
 
 ## ✅ Critical Issues Fixed
 
 ### 1. **Hardcoded Supabase URLs Removed** ✓
+
 **Priority**: HIGH | **Status**: FIXED
 
-**Issue**: Production Supabase URL was hardcoded as fallback in client-side code.
+**Issue**: Production Supabase URL was hardcoded as fallback in client-side
+code.
 
 **Files Changed**:
+
 - `islands/EditQRForm.tsx` (lines 46-47, 83-84)
 - `routes/r.tsx` (lines 20-21)
 
-**Fix**: Removed hardcoded fallbacks and added proper error handling when `SUPABASE_URL` is not configured.
+**Fix**: Removed hardcoded fallbacks and added proper error handling when
+`SUPABASE_URL` is not configured.
 
 **Impact**: Prevents project enumeration and reduces attack surface.
 
 ---
 
 ### 2. **Rate Limiting Implemented** ✓
+
 **Priority**: HIGH | **Status**: FIXED
 
-**Issue**: No rate limiting on edge functions, vulnerable to abuse and cost explosion.
+**Issue**: No rate limiting on edge functions, vulnerable to abuse and cost
+explosion.
 
 **Files Created/Changed**:
+
 - `supabase/functions/_shared/rate-limit.ts` (NEW - 138 lines)
 - `supabase/functions/upload-file/index.ts`
 - `supabase/functions/create-dynamic-qr/index.ts`
 - `supabase/functions/redirect-qr/index.ts`
 
 **Rate Limits Implemented**:
+
 - **File uploads**: 10 per hour per IP
 - **Dynamic QR creation**: 20 per hour per IP
 - **Redirects**: 100 per minute per IP
 
 **Features**:
+
 - In-memory rate limiting with automatic cleanup
-- IP-based tracking via `x-forwarded-for`, `cf-connecting-ip`, `x-real-ip` headers
+- IP-based tracking via `x-forwarded-for`, `cf-connecting-ip`, `x-real-ip`
+  headers
 - Proper HTTP 429 responses with `Retry-After` headers
 - Rate limit info in response headers (`X-RateLimit-*`)
 
@@ -56,14 +68,18 @@ QRBuddy has been audited and all critical security issues have been resolved. Th
 ---
 
 ### 3. **File Type Validation Added** ✓
+
 **Priority**: MEDIUM-HIGH | **Status**: FIXED
 
-**Issue**: No file type validation, risk of malware distribution and legal liability.
+**Issue**: No file type validation, risk of malware distribution and legal
+liability.
 
 **Files Changed**:
+
 - `supabase/functions/upload-file/index.ts`
 
 **Validation Implemented**:
+
 - **Blocked extensions** (40+ dangerous types):
   - Executables: `.exe`, `.bat`, `.cmd`, `.sh`, `.app`, `.msi`, `.dmg`
   - Scripts: `.vbs`, `.js`, `.ps1`, `.jar`, `.apk`
@@ -76,19 +92,23 @@ QRBuddy has been audited and all critical security issues have been resolved. Th
   - `application/x-sh`
   - And more...
 
-**Impact**: Prevents malware distribution, reduces legal liability, protects users.
+**Impact**: Prevents malware distribution, reduces legal liability, protects
+users.
 
 ---
 
 ### 4. **Alert() Replaced with Toast Notifications** ✓
+
 **Priority**: LOW-MEDIUM | **Status**: FIXED
 
 **Issue**: `alert()` calls break UX consistency and feel dated.
 
 **Files Changed**:
+
 - `islands/EditQRForm.tsx`
 
 **Changes**:
+
 - Imported `addToast` from `ToastManager.tsx`
 - Replaced 3 `alert()` calls with toast notifications
 - Consistent timing (2-3.5 seconds)
@@ -99,14 +119,18 @@ QRBuddy has been audited and all critical security issues have been resolved. Th
 ---
 
 ### 5. **Environment Variable Validation** ✓
+
 **Priority**: MEDIUM | **Status**: FIXED
 
-**Issue**: No validation of required env vars in production, could fail silently.
+**Issue**: No validation of required env vars in production, could fail
+silently.
 
 **Files Changed**:
+
 - `main.ts`
 
 **Validation Implemented**:
+
 - Detects production environment via `DENO_DEPLOYMENT_ID` or `ENV=production`
 - Validates required variables:
   - `SUPABASE_URL`
@@ -119,15 +143,18 @@ QRBuddy has been audited and all critical security issues have been resolved. Th
 ---
 
 ### 6. **Basic Integration Tests** ✓
+
 **Priority**: HIGH | **Status**: IMPLEMENTED
 
 **Issue**: Zero test coverage, risky for production launch.
 
 **Files Created**:
+
 - `tests/edge-functions_test.ts` (NEW - 194 lines)
 - `tests/README.md` (NEW - documentation)
 
 **Test Coverage**:
+
 - ✅ Rate limiting enforcement (create-dynamic-qr)
 - ✅ File type validation (upload-file)
 - ✅ File size limits (upload-file)
@@ -136,6 +163,7 @@ QRBuddy has been audited and all critical security issues have been resolved. Th
 - ✅ Missing parameter handling (redirect-qr, get-dynamic-qr)
 
 **Running Tests**:
+
 ```bash
 deno task test
 # or
@@ -149,11 +177,13 @@ deno test --allow-net --allow-env --allow-read
 ## 📊 Summary Statistics
 
 ### Files Changed
+
 - **Modified**: 7 files
 - **Created**: 4 files
 - **Total lines added**: ~450 lines
 
 ### Code Quality
+
 - ✅ All code formatted with `deno fmt`
 - ✅ All code passes `deno lint`
 - ✅ Type-safe TypeScript throughout
@@ -161,6 +191,7 @@ deno test --allow-net --allow-env --allow-read
 - ✅ No console.log spam
 
 ### Security Posture
+
 - **Before**: 3 critical vulnerabilities
 - **After**: 0 critical vulnerabilities
 - **Risk Level**: LOW (acceptable for production)
@@ -184,27 +215,29 @@ deno test --allow-net --allow-env --allow-read
 
 ## 🚦 Launch Readiness Score
 
-| Category | Score | Status |
-|----------|-------|--------|
-| Security | 9/10 | ✅ Excellent |
-| Performance | 9/10 | ✅ Excellent |
-| Code Quality | 9/10 | ✅ Excellent |
-| Documentation | 9/10 | ✅ Excellent |
-| Test Coverage | 6/10 | ⚠️ Basic (improvable) |
-| UX | 9/10 | ✅ Excellent |
-| **OVERALL** | **8.5/10** | **✅ READY** |
+| Category      | Score      | Status                |
+| ------------- | ---------- | --------------------- |
+| Security      | 9/10       | ✅ Excellent          |
+| Performance   | 9/10       | ✅ Excellent          |
+| Code Quality  | 9/10       | ✅ Excellent          |
+| Documentation | 9/10       | ✅ Excellent          |
+| Test Coverage | 6/10       | ⚠️ Basic (improvable) |
+| UX            | 9/10       | ✅ Excellent          |
+| **OVERALL**   | **8.5/10** | **✅ READY**          |
 
 ---
 
 ## 💰 Cost Estimation
 
 **Supabase Free Tier Limits**:
+
 - Storage: 1GB
 - Bandwidth: 2GB/month
 - Edge Functions: 500K invocations/month
 - Database: 500MB
 
 **Expected Usage** (1000 users/month):
+
 - Storage: ~100MB (destructible files self-delete)
 - Bandwidth: ~200MB/month
 - Edge Functions: ~5,000/month
@@ -217,6 +250,7 @@ deno test --allow-net --allow-env --allow-read
 ## 🎯 Recommended Next Steps
 
 ### Before Launch (Optional)
+
 - [ ] Add Privacy Policy & Terms of Service
 - [ ] Set up error tracking (Sentry or similar)
 - [ ] Configure custom domain (qrbuddy.app)
@@ -224,6 +258,7 @@ deno test --allow-net --allow-env --allow-read
 - [ ] Test on staging environment
 
 ### After Launch
+
 - [ ] Monitor error logs
 - [ ] Track rate limit hits
 - [ ] Monitor Supabase usage
@@ -231,6 +266,7 @@ deno test --allow-net --allow-env --allow-read
 - [ ] Plan pricing tiers
 
 ### Future Enhancements
+
 - [ ] Add E2E tests with Playwright
 - [ ] Implement URL scanning (phishing detection)
 - [ ] Add service worker for offline support
@@ -252,13 +288,16 @@ deno test --allow-net --allow-env --allow-read
 
 **Green light to launch!** 🚀
 
-The codebase is clean, well-architected, and secure. The "can't scale" philosophy will keep costs near zero while providing real value. Your privacy-first approach is a competitive advantage.
+The codebase is clean, well-architected, and secure. The "can't scale"
+philosophy will keep costs near zero while providing real value. Your
+privacy-first approach is a competitive advantage.
 
 ---
 
 ## 📞 Support
 
 For questions about these changes, see:
+
 - `tests/README.md` - Test documentation
 - `CLAUDE.md` - Architecture guide
 - `README.md` - Quick start guide

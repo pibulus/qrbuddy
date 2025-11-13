@@ -115,18 +115,18 @@ export default function GradientCreator(
   if (!isOpen.value) return null;
 
   return (
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-4">
+      <div class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover p-4 sm:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-chunky">Custom Gradient</h2>
+        <div class="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 class="text-xl sm:text-2xl font-chunky">Custom Gradient</h2>
           <button
             type="button"
             onClick={() => {
               isOpen.value = false;
               haptics.light();
             }}
-            class="text-2xl hover:scale-110 transition-transform"
+            class="text-2xl hover:scale-110 active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             ×
           </button>

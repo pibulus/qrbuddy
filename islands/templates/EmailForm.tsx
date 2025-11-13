@@ -1,9 +1,9 @@
 import { useEffect, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import {
+  type EmailData,
   formatEmail,
   validateEmail,
-  type EmailData,
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
 
@@ -40,7 +40,8 @@ export default function EmailForm({ url }: Props) {
           <h3 class="font-black text-yellow-900">Email QR</h3>
         </div>
         <p class="text-sm text-yellow-700">
-          Scan to open email app with pre-filled recipient, subject, and message!
+          Scan to open email app with pre-filled recipient, subject, and
+          message!
         </p>
       </div>
 

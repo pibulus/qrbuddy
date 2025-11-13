@@ -46,7 +46,17 @@ export default function VCardForm({ url }: Props) {
     setError(null);
     const formatted = formatVCard(data);
     url.value = formatted;
-  }, [firstName, lastName, organization, title, phone, email, website, address, note]);
+  }, [
+    firstName,
+    lastName,
+    organization,
+    title,
+    phone,
+    email,
+    website,
+    address,
+    note,
+  ]);
 
   return (
     <div class="space-y-4">

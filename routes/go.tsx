@@ -78,9 +78,21 @@ export default function GoPage({ data }: PageProps<GoPageData>) {
 
             {/* Loading animation */}
             <div class="flex justify-center gap-2">
-              <div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-              <div class="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-              <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+              <div
+                class="w-3 h-3 bg-pink-500 rounded-full animate-bounce"
+                style="animation-delay: 0ms"
+              >
+              </div>
+              <div
+                class="w-3 h-3 bg-purple-500 rounded-full animate-bounce"
+                style="animation-delay: 150ms"
+              >
+              </div>
+              <div
+                class="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                style="animation-delay: 300ms"
+              >
+              </div>
             </div>
 
             {/* Skip button */}

@@ -10,7 +10,6 @@ interface QRCanvasProps {
   style: Signal<keyof typeof QR_STYLES | "custom">;
   customStyle?: Signal<QRStyle | null>;
   triggerDownload: Signal<boolean>;
-  triggerCopy?: Signal<boolean>;
   isDestructible?: Signal<boolean>;
   isDynamic?: Signal<boolean>;
   logoUrl?: Signal<string>;
@@ -23,7 +22,6 @@ export default function QRCanvas(
     style,
     customStyle,
     triggerDownload,
-    triggerCopy,
     isDestructible,
     isDynamic,
     logoUrl,
@@ -33,24 +31,28 @@ export default function QRCanvas(
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
   const [isDragHover, setIsDragHover] = useState(false);
+  const [isClicking, setIsClicking] = useState(false);
+  const [showSuccessFlash, setShowSuccessFlash] = useState(false);
 
-  const handleCopyToClipboard = async () => {
+  const handleDownloadClick = () => {
     if (!qrCodeRef.current) return;
 
-    try {
-      const blob = await qrCodeRef.current.getRawData("png");
-      if (!blob) return;
+    // Squish animation on click
+    setIsClicking(true);
+    setTimeout(() => setIsClicking(false), 150);
 
-      // Convert blob to clipboard item
-      const item = new ClipboardItem({ "image/png": blob });
-      await navigator.clipboard.write([item]);
+    // Trigger download
+    qrCodeRef.current.download({
+      name: `qrbuddy-${style.value}-${Date.now()}`,
+      extension: "png",
+    });
 
-      // Show toast notification
-      addToast("QR copied! ✨");
-    } catch (err) {
-      console.error("Failed to copy QR code:", err);
-      addToast("Failed to copy QR 😅", 3000);
-    }
+    // Show success flash
+    setShowSuccessFlash(true);
+    setTimeout(() => setShowSuccessFlash(false), 600);
+
+    // Show toast notification
+    addToast("QR downloaded! 📥");
   };
 
   // Helper function to get the current style object
@@ -192,12 +194,7 @@ export default function QRCanvas(
     }
   }, [triggerDownload.value]);
 
-  useEffect(() => {
-    if (triggerCopy && triggerCopy.value) {
-      handleCopyToClipboard();
-      triggerCopy.value = false;
-    }
-  }, [triggerCopy?.value]);
+  // Remove triggerCopy effect - no longer needed
 
   const handleDragOver = (event: DragEvent) => {
     event.preventDefault();
@@ -229,21 +226,36 @@ export default function QRCanvas(
     <div class="relative max-w-full">
       <div
         ref={canvasRef}
-        onClick={handleCopyToClipboard}
+        onClick={handleDownloadClick}
         onDragOver={handleDragOver}
         onDragEnter={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        class={`bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-transform duration-200 max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto ${
-          isDragHover ? "ring-4 ring-pink-300" : ""
-        }`}
-        title="Click to copy"
+        class={`
+          bg-white rounded-chunky border-4
+          ${showSuccessFlash ? "border-green-500" : "border-black"}
+          shadow-chunky-hover cursor-pointer
+          transition-all duration-200
+          max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto
+          ${isClicking ? "scale-95" : "hover:scale-105"}
+          ${
+          isDragHover
+            ? "ring-8 ring-pink-400 ring-opacity-60 animate-pulse"
+            : ""
+        }
+          ${
+          !isClicking && !isDragHover
+            ? "hover:shadow-[0_0_30px_rgba(255,105,180,0.4)]"
+            : ""
+        }
+        `}
+        title="Click to download"
       />
       <div class="absolute -z-10 inset-0 bg-gradient-to-br from-qr-sunset1 via-qr-sunset2 to-qr-sunset3 opacity-20 blur-xl rounded-chunky" />
 
       {/* Destructible badge */}
       {isDestructible?.value && (
-        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-pulse z-10">
+        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float z-10">
           💣 {maxDownloads?.value === 999999 ? "∞" : maxDownloads?.value || 1}
           {" "}
           {maxDownloads?.value === 1 ? "scan" : "scans"}
@@ -252,7 +264,7 @@ export default function QRCanvas(
 
       {/* Dynamic QR badge */}
       {isDynamic?.value && !isDestructible?.value && (
-        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold z-10">
+        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float z-10">
           🔗 editable
         </div>
       )}

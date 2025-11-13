@@ -74,13 +74,11 @@ export const handler: Handlers = {
 };
 
 export default function FilePage({ data }: PageProps<FileData>) {
-  const { fileId, fileName, fileSize, remainingDownloads, maxDownloads } =
-    data;
+  const { fileId, fileName, fileSize, remainingDownloads, maxDownloads } = data;
 
   const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
   const isOneTime = maxDownloads === 1;
-  const downloadUrl =
-    `/api/download-file?id=${fileId}`;
+  const downloadUrl = `/api/download-file?id=${fileId}`;
 
   return (
     <>
