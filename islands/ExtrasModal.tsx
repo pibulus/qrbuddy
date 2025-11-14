@@ -66,7 +66,7 @@ export default function ExtrasModal({
         <div class="space-y-4">
           {/* Mutual Exclusion Notice */}
           {(isDynamic.value || isBucket.value) && (
-            <div class="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-3 text-xs text-gray-700 leading-relaxed animate-slide-down">
+            <div class="bg-[#FFF8F0] border-2 border-[#FFE5B4] rounded-xl p-3 text-xs text-gray-700 leading-relaxed animate-slide-down">
               💡 <strong>Note:</strong>{" "}
               Editable link and file bucket are mutually exclusive—pick one per
               QR.
@@ -84,7 +84,7 @@ export default function ExtrasModal({
               }}
               class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
                 isDynamic.value
-                  ? "bg-gradient-to-br from-pink-200 to-purple-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                  ? "bg-gradient-to-br from-[#FFB3D9] to-[#C9A0DC] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                   : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
               }`}
             >
@@ -96,7 +96,7 @@ export default function ExtrasModal({
                 Print once, update forever. Perfect for menus, events, or merch.
               </div>
               {isDynamic.value && (
-                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-pink-700">
+                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#9370DB]">
                   <span>✓</span>
                   Active
                 </div>
@@ -112,7 +112,7 @@ export default function ExtrasModal({
               }}
               class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
                 isBucket.value
-                  ? "bg-gradient-to-br from-blue-200 to-cyan-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                  ? "bg-gradient-to-br from-[#B0E5E8] to-[#A3E4E1] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                   : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
               }`}
             >
@@ -127,7 +127,7 @@ export default function ExtrasModal({
                 or shared folders.
               </div>
               {isBucket.value && (
-                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-blue-700">
+                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#3AA8A4]">
                   <span>✓</span>
                   Active
                 </div>
@@ -142,7 +142,7 @@ export default function ExtrasModal({
               }}
               class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
                 showLogoUploader
-                  ? "bg-gradient-to-br from-yellow-200 to-orange-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                  ? "bg-gradient-to-br from-[#FFE5B4] to-[#FFDAB3] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                   : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
               }`}
             >
@@ -154,7 +154,7 @@ export default function ExtrasModal({
                 Add your brand to the QR center.
               </div>
               {showLogoUploader && (
-                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-orange-700">
+                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#CC9966]">
                   <span>✓</span>
                   Active
                 </div>
@@ -163,13 +163,13 @@ export default function ExtrasModal({
           </div>
 
           {showLogoUploader && (
-            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-3 border-orange-300 rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
+            <div class="bg-gradient-to-r from-[#FFF8F0] to-[#FFE5B4] border-3 border-[#FFE5B4] rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
               <LogoUploader logoUrl={logoUrl} />
             </div>
           )}
 
           {isDynamic.value && (
-            <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-3 border-pink-300 rounded-xl p-4 space-y-3 shadow-chunky">
+            <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky">
               <div class="space-y-2">
                 <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
                   Scan limit
@@ -188,8 +188,8 @@ export default function ExtrasModal({
                       }}
                       class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all ${
                         scanLimit === limit
-                          ? "bg-pink-500 text-white border-pink-600 scale-105"
-                          : "bg-white text-gray-700 border-gray-300 hover:border-pink-400"
+                          ? "bg-[#FF69B4] text-white border-[#D84A94] scale-105"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-[#FF69B4]"
                       }`}
                     >
                       {limit === null ? "∞" : limit}
@@ -212,11 +212,11 @@ export default function ExtrasModal({
                     setExpiryDate((e.target as HTMLInputElement).value);
                     haptics.light();
                   }}
-                  class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
+                  class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#FF69B4] focus:outline-none"
                 />
               </div>
 
-              <div class="bg-pink-100 border-2 border-pink-300 rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
+              <div class="bg-[#FFE5F0] border-2 border-[#FF69B4] rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
                 💡 <strong>Set to 1 for a self-destruct QR.</strong>{" "}
                 Higher limits let you reuse and edit anytime. No tracking, ever.
               </div>
@@ -224,10 +224,10 @@ export default function ExtrasModal({
           )}
 
           {editUrl.value && (
-            <div class="bg-gradient-to-r from-green-50 to-teal-50 border-3 border-green-400 rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
+            <div class="bg-gradient-to-r from-[#F5E6FF] to-[#FFE5F0] border-3 border-[#9370DB] rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
               <div class="flex items-center gap-2">
                 <span class="text-xl">✨</span>
-                <p class="text-sm font-black text-green-900">
+                <p class="text-sm font-black text-[#6B46A8]">
                   Editable QR created!
                 </p>
               </div>
@@ -236,7 +236,7 @@ export default function ExtrasModal({
                   type="text"
                   value={editUrl.value}
                   readOnly
-                  class="flex-1 px-3 py-2 bg-white border-2 border-green-300 rounded-lg text-xs font-mono"
+                  class="flex-1 px-3 py-2 bg-white border-2 border-[#9370DB] rounded-lg text-xs font-mono"
                 />
                 <button
                   type="button"
@@ -251,22 +251,22 @@ export default function ExtrasModal({
                     });
                     globalThis.dispatchEvent(event);
                   }}
-                  class="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold text-sm hover:bg-green-600 transition-colors"
+                  class="px-4 py-2 bg-[#9370DB] text-white rounded-lg font-semibold text-sm hover:bg-[#6B46A8] transition-colors"
                 >
                   Copy
                 </button>
               </div>
-              <p class="text-xs text-green-700">
+              <p class="text-xs text-[#6B46A8]">
                 Bookmark this link—you'll need it to edit your QR later.
               </p>
             </div>
           )}
 
           {bucketUrl.value && (
-            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border-3 border-blue-400 rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
+            <div class="bg-gradient-to-r from-[#E0FFFF] to-[#B0E5E8] border-3 border-[#4ECDC4] rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
               <div class="flex items-center gap-2">
                 <span class="text-xl">🪣</span>
-                <p class="text-sm font-black text-blue-900">
+                <p class="text-sm font-black text-[#3AA8A4]">
                   File bucket ready!
                 </p>
               </div>
@@ -275,7 +275,7 @@ export default function ExtrasModal({
                   type="text"
                   value={bucketUrl.value}
                   readOnly
-                  class="flex-1 px-3 py-2 bg-white border-2 border-blue-300 rounded-lg text-xs font-mono"
+                  class="flex-1 px-3 py-2 bg-white border-2 border-[#4ECDC4] rounded-lg text-xs font-mono"
                 />
                 <button
                   type="button"
@@ -290,12 +290,12 @@ export default function ExtrasModal({
                     });
                     globalThis.dispatchEvent(event);
                   }}
-                  class="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold text-sm hover:bg-blue-600 transition-colors"
+                  class="px-4 py-2 bg-[#4ECDC4] text-white rounded-lg font-semibold text-sm hover:bg-[#3AA8A4] transition-colors"
                 >
                   Copy
                 </button>
               </div>
-              <p class="text-xs text-blue-700">
+              <p class="text-xs text-[#3AA8A4]">
                 Scan to upload/download files. Perfect for stickers or signs.
               </p>
             </div>
