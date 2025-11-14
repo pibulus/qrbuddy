@@ -46,7 +46,7 @@ export default function ExtrasModal({
             <p class="text-xs uppercase tracking-wide text-pink-500 font-bold">
               Power-Ups
             </p>
-            <p class="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
+            <p class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
               Make it dynamic
             </p>
             <p class="text-xs sm:text-sm text-gray-600">
@@ -74,7 +74,7 @@ export default function ExtrasModal({
           )}
 
           {/* Main Power-Up Cards */}
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               type="button"
               onClick={() => {
@@ -306,7 +306,7 @@ export default function ExtrasModal({
           <button
             type="button"
             onClick={onClose}
-            class="px-8 py-3 rounded-2xl border-3 border-black bg-gradient-to-br from-gray-900 to-black text-white font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-150"
+            class="px-6 sm:px-8 py-2.5 sm:py-3 rounded-2xl border-3 border-black bg-gradient-to-br from-gray-900 to-black text-white font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-150"
           >
             Done ✓
           </button>
