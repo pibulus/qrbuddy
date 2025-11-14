@@ -75,11 +75,11 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
 
   return (
     <div class="space-y-3">
-      <div class="flex items-center justify-between">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Logo in Center
-        </label>
-        {logoUrl.value && (
+      {logoUrl.value && (
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+            Current Logo
+          </span>
           <button
             type="button"
             onClick={handleRemoveLogo}
@@ -87,8 +87,8 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
           >
             Remove
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Logo preview or upload button */}
       {logoUrl.value
@@ -148,10 +148,8 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
       )}
 
       {/* Info text */}
-      <p class="text-xs text-gray-500 leading-relaxed">
-        💡 <strong>Pro tip:</strong>{" "}
-        Use a square logo with transparent background for best results. The logo
-        will be automatically resized and centered.
+      <p class="text-xs text-gray-500">
+        Square images work best. We'll center it for you.
       </p>
     </div>
   );

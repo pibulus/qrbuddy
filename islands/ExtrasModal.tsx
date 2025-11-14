@@ -1,4 +1,5 @@
 import { Signal } from "@preact/signals";
+import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import LogoUploader from "./LogoUploader.tsx";
 
@@ -29,6 +30,8 @@ export default function ExtrasModal({
   expiryDate,
   setExpiryDate,
 }: ExtrasModalProps) {
+  const [showLogoUploader, setShowLogoUploader] = useState(false);
+
   if (!isOpen) return null;
 
   return (
@@ -37,18 +40,17 @@ export default function ExtrasModal({
         class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
-      <div class="relative z-10 w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
+      <div class="relative z-10 w-full max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
         <div class="flex items-start justify-between gap-3">
           <div>
             <p class="text-xs uppercase tracking-wide text-pink-500 font-bold">
-              Advanced features
+              Power-Ups
             </p>
             <p class="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
-              Give your QR superpowers
+              Make it dynamic
             </p>
             <p class="text-xs sm:text-sm text-gray-600">
-              Editable links, file drops, custom logos—pick what this QR should
-              do.
+              Editable links, file buckets, custom logos.
             </p>
           </div>
           <button
@@ -132,34 +134,39 @@ export default function ExtrasModal({
               )}
             </button>
 
-            <details class="group">
-              <summary class="cursor-pointer list-none">
-                <div class="p-4 rounded-2xl border-3 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
-                  <div class="flex items-start justify-between">
-                    <div>
-                      <div class="text-3xl mb-2 inline-block">🎨</div>
-                      <div class="font-black text-sm text-gray-900">
-                        Custom logo
-                      </div>
-                      <div class="text-xs text-gray-600 leading-snug mt-1">
-                        Add your brand to the QR center. Great for business
-                        cards, stickers, and branded merch.
-                      </div>
-                    </div>
-                    <div class="text-xl text-gray-400 group-open:rotate-180 transition-transform ml-2">
-                      ▼
-                    </div>
-                  </div>
-                </div>
-              </summary>
-              <div class="mt-3 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-3 border-yellow-300 rounded-xl shadow-chunky animate-slide-down">
-                <LogoUploader logoUrl={logoUrl} />
-                <p class="text-xs text-gray-600 mt-3">
-                  Square images work best. We'll center it for you.
-                </p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowLogoUploader(!showLogoUploader);
+                haptics.light();
+              }}
+              class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
+                showLogoUploader
+                  ? "bg-gradient-to-br from-yellow-200 to-orange-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                  : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              }`}
+            >
+              <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                🎨
               </div>
-            </details>
+              <div class="font-black text-sm text-gray-900">Custom logo</div>
+              <div class="text-xs text-gray-600 leading-snug mt-1">
+                Add your brand to the QR center.
+              </div>
+              {showLogoUploader && (
+                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-orange-700">
+                  <span>✓</span>
+                  Active
+                </div>
+              )}
+            </button>
           </div>
+
+          {showLogoUploader && (
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-3 border-orange-300 rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
+              <LogoUploader logoUrl={logoUrl} />
+            </div>
+          )}
 
           {isDynamic.value && (
             <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-3 border-pink-300 rounded-xl p-4 space-y-3 shadow-chunky">

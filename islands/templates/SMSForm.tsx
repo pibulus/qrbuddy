@@ -84,19 +84,6 @@ export default function SMSForm({ url }: Props) {
         </p>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div class="bg-red-50 border-3 border-red-300 rounded-lg p-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-
-      {/* Success indicator */}
-      {!error && phone && message && (
-        <div class="bg-green-50 border-3 border-green-300 rounded-lg p-3 text-sm text-green-800">
-          ✅ SMS QR ready! Will send to <strong>{phone}</strong>
-        </div>
-      )}
     </div>
   );
 }

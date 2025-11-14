@@ -79,23 +79,23 @@ export default function TemplateModal({
         class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
-      <div class="relative z-10 w-full max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
+      <div class="relative z-10 w-full max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <p class="text-xs uppercase tracking-wide text-gray-500 font-bold">
-              Quick templates
+            <p class="text-xs uppercase tracking-wide text-blue-500 font-bold">
+              Quick Templates
             </p>
             <p class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
-              One tap, done
+              Pick a format
             </p>
             <p class="text-xs sm:text-sm text-gray-600">
-              WiFi networks, contacts, emails—packaged and ready to scan.
+              WiFi, contacts, messages—click and fill.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            class="text-2xl font-black text-gray-500 hover:text-gray-900 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+            class="text-3xl font-black text-gray-400 hover:text-gray-900 hover:rotate-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
             aria-label="Close template modal"
           >
             ×
@@ -134,12 +134,11 @@ export default function TemplateModal({
               <div class="flex items-center gap-2">
                 <span class="text-2xl">🔗</span>
                 <h3 class="font-black text-gray-900">
-                  Just using a plain link or text?
+                  Plain link or text?
                 </h3>
               </div>
               <p class="text-sm text-gray-700">
-                Paste it in the main input. Templates are for WiFi, contacts,
-                messages, and other special QR tricks.
+                Use the main input up top. Templates handle the fancy stuff.
               </p>
             </div>
           )}

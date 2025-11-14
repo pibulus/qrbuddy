@@ -223,19 +223,6 @@ export default function VCardForm({ url }: Props) {
         />
       </div>
 
-      {/* Error */}
-      {error && (
-        <div class="bg-red-50 border-3 border-red-300 rounded-lg p-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-
-      {/* Success indicator */}
-      {!error && firstName && lastName && (
-        <div class="bg-green-50 border-3 border-green-300 rounded-lg p-3 text-sm text-green-800">
-          ✅ Contact card ready for <strong>{firstName} {lastName}</strong>
-        </div>
-      )}
     </div>
   );
 }
