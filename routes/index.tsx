@@ -3,7 +3,6 @@ import { Head } from "$fresh/runtime.ts";
 import { PageProps } from "$fresh/server.ts";
 import QRCanvas from "../islands/QRCanvas.tsx";
 import SmartInput from "../islands/SmartInput.tsx";
-import ActionButtons from "../islands/ActionButtons.tsx";
 import StyleSelector from "../islands/StyleSelector.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
@@ -223,13 +222,6 @@ export default function Home({ data }: PageProps<HomeProps>) {
             isBucket={isBucket}
             bucketUrl={bucketUrl}
             logoUrl={logoUrl}
-          />
-
-          {/* Action Buttons - Side by Side */}
-          <ActionButtons
-            triggerDownload={triggerDownload}
-            url={url}
-            style={style}
           />
         </main>
 

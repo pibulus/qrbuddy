@@ -467,6 +467,30 @@ export default function SmartInput(
   const templateMeta = QR_TEMPLATES[selectedTemplate];
 
   const renderTemplateForm = () => {
+    if (selectedTemplate === "url") {
+      return (
+        <div class="space-y-4">
+          <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-2xl">🔗</span>
+              <h3 class="font-black text-gray-900">URL / Link</h3>
+            </div>
+            <p class="text-sm text-gray-700">
+              Paste any link - websites, social media, videos, anything!
+            </p>
+          </div>
+          <input
+            type="text"
+            value={url.value}
+            onInput={handleInput}
+            onFocus={handleFocus}
+            onBlur={() => setTouched(true)}
+            placeholder="https://example.com"
+            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-blue-500 focus:outline-none"
+          />
+        </div>
+      );
+    }
     if (selectedTemplate === "wifi") return <WiFiForm url={url} />;
     if (selectedTemplate === "vcard") return <VCardForm url={url} />;
     if (selectedTemplate === "sms") return <SMSForm url={url} />;
@@ -512,9 +536,9 @@ export default function SmartInput(
           title="URLs, WiFi, contacts, SMS, email templates"
         >
           <span class="text-lg group-hover:scale-110 transition-transform">
-            {templateMeta.icon}
+            📝
           </span>
-          <span class="group-hover:text-blue-700">{templateMeta.label}</span>
+          <span class="group-hover:text-blue-700">Templates</span>
         </button>
         <button
           type="button"
@@ -728,10 +752,13 @@ export default function SmartInput(
                       onClick={() => {
                         setSelectedTemplate(templateType);
                         haptics.light();
-                        url.value = "";
-                        isDestructible.value = false;
-                        setTouched(false);
-                        setValidationState("idle");
+                        // Only clear URL if switching templates
+                        if (selectedTemplate !== templateType) {
+                          url.value = "";
+                          isDestructible.value = false;
+                          setTouched(false);
+                          setValidationState("idle");
+                        }
                         // DON'T close modal - keep it open!
                       }}
                       class={`px-4 py-2 rounded-xl border-2 font-semibold text-sm transition-all flex items-center gap-2
@@ -751,14 +778,11 @@ export default function SmartInput(
             </div>
 
             {/* Template form reveals IN the modal after selection */}
-            <div class={selectedTemplate !== "url" ? "animate-slide-down" : ""}>
-              {renderTemplateForm() ?? (
-                <p class="text-sm text-gray-600">
-                  Paste any link in the main input to keep things simple.
-                  Templates just package it for you.
-                </p>
-              )}
-            </div>
+            {selectedTemplate && (
+              <div class="animate-slide-down">
+                {renderTemplateForm()}
+              </div>
+            )}
 
             <div class="flex justify-end gap-3">
               <button

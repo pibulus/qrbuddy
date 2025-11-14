@@ -34,7 +34,7 @@ export default function QRCanvas(
   const [isClicking, setIsClicking] = useState(false);
   const [showSuccessFlash, setShowSuccessFlash] = useState(false);
 
-  const handleDownloadClick = () => {
+  const handleDownloadClick = async () => {
     if (!qrCodeRef.current) return;
 
     // Squish animation on click
@@ -47,12 +47,21 @@ export default function QRCanvas(
       extension: "png",
     });
 
+    // Copy URL to clipboard
+    if (url.value) {
+      try {
+        await navigator.clipboard.writeText(url.value);
+      } catch (err) {
+        console.error("Failed to copy URL:", err);
+      }
+    }
+
     // Show success flash
     setShowSuccessFlash(true);
     setTimeout(() => setShowSuccessFlash(false), 600);
 
     // Show toast notification
-    addToast("QR downloaded! 📥");
+    addToast("QR downloaded! URL copied! 📥📋");
   };
 
   // Helper function to get the current style object
