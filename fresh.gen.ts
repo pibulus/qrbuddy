@@ -21,6 +21,7 @@ import * as $BucketQR from "./islands/BucketQR.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
+import * as $ExtrasModal from "./islands/ExtrasModal.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
@@ -31,6 +32,7 @@ import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StylePills from "./islands/StylePills.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
+import * as $TemplateModal from "./islands/TemplateModal.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
 import * as $URLInput from "./islands/URLInput.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
@@ -62,6 +64,7 @@ const manifest = {
     "./islands/EasterEggs.tsx": $EasterEggs,
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
+    "./islands/ExtrasModal.tsx": $ExtrasModal,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/KofiModal.tsx": $KofiModal,
     "./islands/LogoUploader.tsx": $LogoUploader,
@@ -72,6 +75,7 @@ const manifest = {
     "./islands/SmartInput.tsx": $SmartInput,
     "./islands/StylePills.tsx": $StylePills,
     "./islands/StyleSelector.tsx": $StyleSelector,
+    "./islands/TemplateModal.tsx": $TemplateModal,
     "./islands/ToastManager.tsx": $ToastManager,
     "./islands/URLInput.tsx": $URLInput,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
