@@ -697,14 +697,13 @@ export default function SmartInput(
             <div class="flex items-start justify-between gap-3">
               <div>
                 <p class="text-xs uppercase tracking-wide text-gray-500 font-bold">
-                  Choose a template
+                  Quick templates
                 </p>
                 <p class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
-                  Make your QR do more
+                  One tap, done
                 </p>
                 <p class="text-xs sm:text-sm text-gray-600">
-                  Pick a format to auto-fill fancy WiFi cards, contact cards, or
-                  just plain URLs.
+                  WiFi networks, contacts, emails—packaged and ready to scan.
                 </p>
               </div>
               <button
@@ -753,10 +752,15 @@ export default function SmartInput(
             {/* Template form reveals IN the modal after selection */}
             <div class={selectedTemplate !== "url" ? "animate-slide-down" : ""}>
               {renderTemplateForm() ?? (
-                <p class="text-sm text-gray-600">
-                  Paste any link in the main input to keep things simple.
-                  Templates just package it for you.
-                </p>
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-2xl">🔗</span>
+                    <h3 class="font-black text-gray-900">Just using a plain link or text?</h3>
+                  </div>
+                  <p class="text-sm text-gray-700">
+                    Paste it in the main input. Templates are for WiFi, contacts, messages, and other special QR tricks.
+                  </p>
+                </div>
               )}
             </div>
 
@@ -783,13 +787,13 @@ export default function SmartInput(
             <div class="flex items-start justify-between gap-3">
               <div>
                 <p class="text-xs uppercase tracking-wide text-pink-500 font-bold">
-                  ✨ Power Ups
+                  Advanced features
                 </p>
                 <p class="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
-                  Make it yours
+                  Give your QR superpowers
                 </p>
                 <p class="text-xs sm:text-sm text-gray-600">
-                  Pick your powers. Tap to activate.
+                  Editable links, file drops, custom logos—pick what this QR should do.
                 </p>
               </div>
               <button
@@ -803,8 +807,15 @@ export default function SmartInput(
             </div>
 
             <div class="space-y-4">
+              {/* Mutual Exclusion Notice */}
+              {(isDynamic.value || isBucket.value) && (
+                <div class="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-3 text-xs text-gray-700 leading-relaxed animate-slide-down">
+                  💡 <strong>Note:</strong> Editable link and file bucket are mutually exclusive—pick one per QR.
+                </div>
+              )}
+
               {/* Main Power-Up Cards */}
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -821,9 +832,9 @@ export default function SmartInput(
                   <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
                     🔗
                   </div>
-                  <div class="font-black text-sm text-gray-900">Editable</div>
+                  <div class="font-black text-sm text-gray-900">Editable link</div>
                   <div class="text-xs text-gray-600 leading-snug mt-1">
-                    Change the URL anytime
+                    Print once, update forever. Perfect for menus, events, or merch.
                   </div>
                   {isDynamic.value && (
                     <div class="mt-2 flex items-center gap-1 text-xs font-bold text-pink-700">
@@ -850,10 +861,10 @@ export default function SmartInput(
                     🪣
                   </div>
                   <div class="font-black text-sm text-gray-900">
-                    File Bucket
+                    File drop zone
                   </div>
                   <div class="text-xs text-gray-600 leading-snug mt-1">
-                    Upload & download files
+                    Reusable QR for file transfers. Great for photo booths, offices, or shared folders.
                   </div>
                   {isBucket.value && (
                     <div class="mt-2 flex items-center gap-1 text-xs font-bold text-blue-700">
@@ -862,14 +873,42 @@ export default function SmartInput(
                     </div>
                   )}
                 </button>
+
+                <details class="group">
+                  <summary class="cursor-pointer list-none">
+                    <div class="p-4 rounded-2xl border-3 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
+                      <div class="flex items-start justify-between">
+                        <div>
+                          <div class="text-3xl mb-2 inline-block">🎨</div>
+                          <div class="font-black text-sm text-gray-900">Custom logo</div>
+                          <div class="text-xs text-gray-600 leading-snug mt-1">
+                            Add your brand to the QR center. Great for business cards, stickers, and branded merch.
+                          </div>
+                        </div>
+                        <div class="text-xl text-gray-400 group-open:rotate-180 transition-transform ml-2">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+                  </summary>
+                  <div class="mt-3 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-3 border-yellow-300 rounded-xl shadow-chunky animate-slide-down">
+                    <LogoUploader logoUrl={logoUrl} />
+                    <p class="text-xs text-gray-600 mt-3">
+                      Square images work best. We'll center it for you.
+                    </p>
+                  </div>
+                </details>
               </div>
 
               {isDynamic.value && (
                 <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-3 border-pink-300 rounded-xl p-4 space-y-3 shadow-chunky">
                   <div class="space-y-2">
                     <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
-                      Scan Limit
+                      Scan limit
                     </label>
+                    <p class="text-xs text-gray-600">
+                      How many scans before this link stops responding.
+                    </p>
                     <div class="flex gap-2 flex-wrap">
                       {[1, 5, 10, 100, null].map((limit) => (
                         <button
@@ -893,8 +932,11 @@ export default function SmartInput(
 
                   <div class="space-y-2">
                     <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
-                      Expiry Date (Optional)
+                      Expiry date (optional)
                     </label>
+                    <p class="text-xs text-gray-600">
+                      Leave blank to keep this link alive.
+                    </p>
                     <input
                       type="datetime-local"
                       value={expiryDate}
@@ -907,18 +949,20 @@ export default function SmartInput(
                   </div>
 
                   <div class="bg-pink-100 border-2 border-pink-300 rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
-                    💡 <strong>Scan limit = 1?</strong>{" "}
-                    That's a destructible QR (KABOOM 💥 after one scan).<br />
-                    Higher limits let you reuse and edit anytime. No tracking.
+                    💡 <strong>Set to 1 for a self-destruct QR.</strong>{" "}
+                    Higher limits let you reuse and edit anytime. No tracking, ever.
                   </div>
                 </div>
               )}
 
               {editUrl.value && (
-                <div class="bg-gradient-to-r from-green-50 to-teal-50 border-3 border-green-400 rounded-xl p-4 space-y-2 shadow-chunky">
-                  <p class="text-sm font-semibold text-green-800">
-                    ✨ Dynamic QR Created!
-                  </p>
+                <div class="bg-gradient-to-r from-green-50 to-teal-50 border-3 border-green-400 rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xl">✨</span>
+                    <p class="text-sm font-black text-green-900">
+                      Editable QR created!
+                    </p>
+                  </div>
                   <div class="flex gap-2">
                     <input
                       type="text"
@@ -945,16 +989,19 @@ export default function SmartInput(
                     </button>
                   </div>
                   <p class="text-xs text-green-700">
-                    Save this link to edit your QR anytime!
+                    Bookmark this link—you'll need it to edit your QR later.
                   </p>
                 </div>
               )}
 
               {bucketUrl.value && (
-                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border-3 border-blue-400 rounded-xl p-4 space-y-2 shadow-chunky">
-                  <p class="text-sm font-semibold text-blue-800">
-                    🪣 File Bucket Created!
-                  </p>
+                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border-3 border-blue-400 rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xl">🪣</span>
+                    <p class="text-sm font-black text-blue-900">
+                      File bucket ready!
+                    </p>
+                  </div>
                   <div class="flex gap-2">
                     <input
                       type="text"
@@ -981,41 +1028,10 @@ export default function SmartInput(
                     </button>
                   </div>
                   <p class="text-xs text-blue-700">
-                    Visit this bucket URL to upload/download files. Print the QR
-                    as a sticker!
+                    Scan to upload/download files. Perfect for stickers or signs.
                   </p>
                 </div>
               )}
-
-              {/* Logo Section - Always visible as a toggleable card */}
-              <details class="group">
-                <summary class="cursor-pointer list-none">
-                  <div class="p-4 rounded-2xl border-3 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-200">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-3">
-                        <div class="text-2xl">🎨</div>
-                        <div>
-                          <div class="font-black text-sm text-gray-900">
-                            Custom Logo
-                          </div>
-                          <div class="text-xs text-gray-600">
-                            Add your brand to the QR center
-                          </div>
-                        </div>
-                      </div>
-                      <div class="text-xl text-gray-400 group-open:rotate-180 transition-transform">
-                        ▼
-                      </div>
-                    </div>
-                  </div>
-                </summary>
-                <div class="mt-3 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-3 border-yellow-300 rounded-xl shadow-chunky animate-slide-down">
-                  <LogoUploader logoUrl={logoUrl} />
-                  <p class="text-xs text-gray-600 mt-3">
-                    Square images work best. We'll center it for you.
-                  </p>
-                </div>
-              </details>
             </div>
 
             <div class="flex justify-center">
