@@ -34,14 +34,13 @@ export default function EmailForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-yellow-50 border-3 border-yellow-200 rounded-xl p-4 shadow-chunky">
+      <div class="bg-[#FFF8F0] border-3 border-[#FFE5B4] rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">📧</span>
-          <h3 class="font-black text-yellow-900">Email QR</h3>
+          <h3 class="font-black text-[#CC9966]">Email QR</h3>
         </div>
-        <p class="text-sm text-yellow-700">
-          Scan to open email app with pre-filled recipient, subject, and
-          message!
+        <p class="text-sm text-[#CC9966]">
+          Scan to open pre-filled email.
         </p>
       </div>
 
@@ -58,7 +57,7 @@ export default function EmailForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="contact@example.com"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-yellow-500 focus:outline-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FFE5B4] focus:outline-none"
         />
       </div>
 
@@ -75,7 +74,7 @@ export default function EmailForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="Inquiry about..."
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-yellow-500 focus:outline-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FFE5B4] focus:outline-none"
         />
       </div>
 
@@ -92,7 +91,7 @@ export default function EmailForm({ url }: Props) {
           }}
           placeholder="Enter your pre-filled message here..."
           rows={4}
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-yellow-500 focus:outline-none resize-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FFE5B4] focus:outline-none resize-none"
         />
       </div>
 

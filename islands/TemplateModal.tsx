@@ -102,7 +102,7 @@ export default function TemplateModal({
           </button>
         </div>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="grid grid-cols-3 gap-2">
           {(Object.keys(QR_TEMPLATES) as QRTemplateType[]).map(
             (templateType) => {
               const template = QR_TEMPLATES[templateType];
