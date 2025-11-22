@@ -3,8 +3,10 @@
 ## Islands (Interactive Components - 17 total)
 
 **Core QR Components:**
+
 - `QRCanvas` - Core QR rendering + download/copy + destructible/dynamic badges
-- `SmartInput` - Smart input handling URLs, files, and plain text with drag/drop + dynamic QR options
+- `SmartInput` - Smart input handling URLs, files, and plain text with
+  drag/drop + dynamic QR options
 - `URLInput` - Dedicated URL input field with validation
 - `StylePills` - Style selector UI
 - `StyleSelector` - Style selection logic
@@ -15,6 +17,7 @@
 - `LogoUploader` - Custom logo upload with drag-drop UI
 
 **Modals & Overlays:**
+
 - `AboutModal` - About info and feature discovery
 - `ExtrasModal` - Additional features and options
 - `KofiModal` - Ko-fi support modal
@@ -22,10 +25,12 @@
 - `TemplateModal` - WiFi/vCard/SMS/Email templates
 
 **Dynamic Features:**
+
 - `EditQRForm` - Dynamic QR edit interface
 - `BucketQR` - File bucket QR display and management
 
 **System Components:**
+
 - `ToastManager` - Notification stacking system
 - `ErrorBoundary` - QR generation error handling
 - `EasterEggs` - Hidden features and animations

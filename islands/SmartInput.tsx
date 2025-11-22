@@ -4,6 +4,8 @@ import { haptics } from "../utils/haptics.ts";
 import { QR_TEMPLATES, type QRTemplateType } from "../types/qr-templates.ts";
 import TemplateModal from "./TemplateModal.tsx";
 import ExtrasModal from "./ExtrasModal.tsx";
+import { useDynamicQR } from "../hooks/useDynamicQR.ts";
+import { useFileUpload } from "../hooks/useFileUpload.ts";
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -33,9 +35,6 @@ export default function SmartInput(
   >("idle");
   const [touched, setTouched] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [_inputType, setInputType] = useState<"text" | "file">("text");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,10 +49,27 @@ export default function SmartInput(
   // Dynamic QR options
   const [scanLimit, setScanLimit] = useState<number | null>(1); // Default to 1 (destructible)
   const [expiryDate, setExpiryDate] = useState<string>("");
-  const [isCreatingDynamic, setIsCreatingDynamic] = useState(false);
 
   // Bucket options
   const [isCreatingBucket, setIsCreatingBucket] = useState(false);
+
+  // Custom hooks for complex operations
+  const { isCreating: isCreatingDynamic, createDynamicQR } = useDynamicQR({
+    url,
+    editUrl,
+    scanLimit,
+    expiryDate,
+  });
+
+  const { isUploading, uploadProgress, uploadError, uploadFile } =
+    useFileUpload({
+      url,
+      isDestructible,
+      maxDownloads,
+      setInputType,
+      setValidationState,
+      setTouched,
+    });
 
   // URL validation function
   const validateURL = (urlString: string): boolean => {
@@ -121,76 +137,6 @@ export default function SmartInput(
 
     if (!touched) {
       setTouched(true);
-    }
-  };
-
-  // Create dynamic QR code
-  const createDynamicQR = async (destinationUrl: string) => {
-    try {
-      setIsCreatingDynamic(true);
-      haptics.medium();
-
-      // Construct API URL from SUPABASE_URL or use local dev API
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const apiUrl = supabaseUrl
-        ? `${supabaseUrl}/functions/v1`
-        : "http://localhost:8005";
-
-      const body: Record<string, string | number> = {
-        destination_url: destinationUrl,
-      };
-      if (scanLimit) body.max_scans = scanLimit;
-      if (expiryDate) body.expires_at = new Date(expiryDate).toISOString();
-
-      const response = await fetch(
-        `${apiUrl}/create-dynamic-qr`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create dynamic QR");
-      }
-
-      const data = await response.json();
-
-      // Update URL to the redirect URL
-      url.value = data.redirect_url;
-      editUrl.value = data.edit_url;
-
-      // Store owner token in localStorage
-      localStorage.setItem(`qr_${data.short_code}`, data.owner_token);
-
-      // Success feedback
-      haptics.success();
-
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `✅ Dynamic QR created! You can edit this anytime 🔗`,
-          type: "success",
-        },
-      });
-      globalThis.dispatchEvent(event);
-
-      setIsCreatingDynamic(false);
-    } catch (error) {
-      console.error("Create dynamic QR error:", error);
-      setIsCreatingDynamic(false);
-      haptics.error();
-
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `❌ Failed to create dynamic QR: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-          type: "error",
-        },
-      });
-      globalThis.dispatchEvent(event);
     }
   };
 
@@ -265,125 +211,6 @@ export default function SmartInput(
   const handleFocus = () => {
     haptics.medium();
   };
-
-  // File upload to Supabase
-  const uploadFile = async (file: File) => {
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      setUploadError(null);
-      haptics.medium();
-
-      // Check file size (25MB limit)
-      if (file.size > 25 * 1024 * 1024) {
-        throw new Error("File too large (max 25MB)");
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("maxDownloads", maxDownloads.value.toString());
-
-      // Simulate progress (real progress needs XHR)
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
-
-      // Construct API URL from SUPABASE_URL or use local dev API
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const apiUrl = supabaseUrl
-        ? `${supabaseUrl}/functions/v1`
-        : "http://localhost:8005";
-
-      const response = await fetch(
-        `${apiUrl}/upload-file`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      const data = await response.json();
-
-      // Set the destructible URL
-      url.value = data.url;
-      isDestructible.value = true;
-      setInputType("file");
-      setValidationState("valid");
-      setTouched(true);
-
-      // Success haptic
-      haptics.success();
-
-      // Show success toast
-      const scanText = maxDownloads.value === 999999
-        ? "unlimited scans ∞"
-        : maxDownloads.value === 1
-        ? "1 scan"
-        : `${maxDownloads.value} scans`;
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message:
-            `✅ ${file.name} uploaded! Will self-destruct after ${scanText} 💣`,
-          type: "success",
-        },
-      });
-      globalThis.dispatchEvent(event);
-
-      // Reset progress after a moment
-      setTimeout(() => {
-        setIsUploading(false);
-        setUploadProgress(0);
-      }, 1000);
-    } catch (error) {
-      console.error("Upload error:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : String(error);
-      setUploadError(errorMessage);
-      setIsUploading(false);
-      setUploadProgress(0);
-      haptics.error();
-
-      // Show error toast
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `❌ Upload failed: ${errorMessage}`,
-          type: "error",
-        },
-      });
-      globalThis.dispatchEvent(event);
-    }
-  };
-
-  // Allow other components (like QR canvas) to trigger uploads via custom events
-  useEffect(() => {
-    const handleSmartInputUpload = (event: Event) => {
-      const detail = (event as CustomEvent<{ file?: File }>).detail;
-      if (detail?.file) {
-        uploadFile(detail.file);
-      }
-    };
-
-    globalThis.addEventListener(
-      "smart-input-upload",
-      handleSmartInputUpload as EventListener,
-    );
-
-    return () => {
-      globalThis.removeEventListener(
-        "smart-input-upload",
-        handleSmartInputUpload as EventListener,
-      );
-    };
-  }, []);
 
   // Drag & drop handlers
   const handleDragEnter = (e: DragEvent) => {

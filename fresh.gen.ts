@@ -9,7 +9,6 @@ import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $edit from "./routes/edit.tsx";
 import * as $f_code_ from "./routes/f/[code].tsx";
-import * as $go from "./routes/go.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
@@ -27,14 +26,10 @@ import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
-import * as $ShuffleAction from "./islands/ShuffleAction.tsx";
-import * as $ShuffleButton from "./islands/ShuffleButton.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
-import * as $StylePills from "./islands/StylePills.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $TemplateModal from "./islands/TemplateModal.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
-import * as $URLInput from "./islands/URLInput.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
 import * as $templates_SMSForm from "./islands/templates/SMSForm.tsx";
 import * as $templates_VCardForm from "./islands/templates/VCardForm.tsx";
@@ -50,7 +45,6 @@ const manifest = {
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/edit.tsx": $edit,
     "./routes/f/[code].tsx": $f_code_,
-    "./routes/go.tsx": $go,
     "./routes/index.tsx": $index,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
@@ -70,14 +64,10 @@ const manifest = {
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
-    "./islands/ShuffleAction.tsx": $ShuffleAction,
-    "./islands/ShuffleButton.tsx": $ShuffleButton,
     "./islands/SmartInput.tsx": $SmartInput,
-    "./islands/StylePills.tsx": $StylePills,
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/TemplateModal.tsx": $TemplateModal,
     "./islands/ToastManager.tsx": $ToastManager,
-    "./islands/URLInput.tsx": $URLInput,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
     "./islands/templates/SMSForm.tsx": $templates_SMSForm,
     "./islands/templates/VCardForm.tsx": $templates_VCardForm,

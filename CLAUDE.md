@@ -76,15 +76,18 @@ HTML.
 **Islands (Interactive Components - 17 total)**
 
 See GLOSSARY.md for complete list organized by category. Key islands:
+
 - `QRCanvas`: Core QR rendering and download/copy functionality
-- `SmartInput`: Smart input handling URLs, files, and plain text with dynamic QR options
+- `SmartInput`: Smart input handling URLs, files, and plain text with dynamic QR
+  options
 - `StyleSelector`/`StylePills`: Style selection UI and logic
 - `GradientCreator`: Custom gradient builder
 - `LogoUploader`: Custom logo upload with drag-drop
 - `EditQRForm`: Dynamic QR edit interface
 - `BucketQR`: File bucket display and management
 - `ToastManager`: Notification stacking system
-- `AboutModal`/`KofiModal`/`PricingModal`/`TemplateModal`/`ExtrasModal`: Feature discovery
+- `AboutModal`/`KofiModal`/`PricingModal`/`TemplateModal`/`ExtrasModal`: Feature
+  discovery
 - `ErrorBoundary`: Error handling
 - `Analytics`: PostHog integration
 
@@ -178,9 +181,11 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 - **Database Schema**: Added `dynamic_qr_codes` table with scan limits and
   expiry tracking
 - **Edge Functions**: 11 total Supabase functions:
-  - Dynamic QRs: create-dynamic-qr, update-dynamic-qr, get-dynamic-qr, redirect-qr
+  - Dynamic QRs: create-dynamic-qr, update-dynamic-qr, get-dynamic-qr,
+    redirect-qr
   - Destructible files: upload-file, get-file, get-file-metadata
-  - File buckets: create-bucket, get-bucket-status, upload-to-bucket, download-from-bucket
+  - File buckets: create-bucket, get-bucket-status, upload-to-bucket,
+    download-from-bucket
 - **Smart Input Enhancements**: Checkbox + options UI for scan limits
   (1/5/10/100/∞) and expiry dates
 - **Edit Page**: New `/edit?token={owner_token}` route with EditQRForm island
@@ -190,7 +195,8 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   redirect logic
 - **Visual Indicators**: Purple/pink "editable" badge on dynamic QRs alongside
   destructible badge
-- **17 Interactive Islands**: Complete island architecture with modals, templates, and feature discovery
+- **17 Interactive Islands**: Complete island architecture with modals,
+  templates, and feature discovery
 
 ### Previous Features
 
