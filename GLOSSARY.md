@@ -1,22 +1,35 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components - 13 total)
+## Islands (Interactive Components - 17 total)
 
+**Core QR Components:**
 - `QRCanvas` - Core QR rendering + download/copy + destructible/dynamic badges
-  (islands/QRCanvas.tsx)
-- `SmartInput` - Smart input handling URLs, files, and plain text with
-  drag/drop + dynamic QR options (islands/SmartInput.tsx)
-- `StylePills` - Style selector UI (islands/StylePills.tsx)
-- `StyleSelector` - Style selection logic (islands/StyleSelector.tsx)
+- `SmartInput` - Smart input handling URLs, files, and plain text with drag/drop + dynamic QR options
+- `URLInput` - Dedicated URL input field with validation
+- `StylePills` - Style selector UI
+- `StyleSelector` - Style selection logic
 - `ShuffleButton` - Random style with spring animation
-  (islands/ShuffleButton.tsx)
-- `ShuffleAction` - Shuffle action handler (islands/ShuffleAction.tsx)
-- `ActionButtons` - Download trigger buttons (islands/ActionButtons.tsx)
-- `EasterEggs` - Hidden features and animations (islands/EasterEggs.tsx)
-- `GradientCreator` - Custom gradient builder (islands/GradientCreator.tsx)
-- `ToastManager` - Notification stacking system (islands/ToastManager.tsx)
-- `ErrorBoundary` - QR generation error handling (islands/ErrorBoundary.tsx)
-- `EditQRForm` - Dynamic QR edit interface (islands/EditQRForm.tsx)
+- `ShuffleAction` - Shuffle action handler
+- `ActionButtons` - Download trigger buttons
+- `GradientCreator` - Custom gradient builder
+- `LogoUploader` - Custom logo upload with drag-drop UI
+
+**Modals & Overlays:**
+- `AboutModal` - About info and feature discovery
+- `ExtrasModal` - Additional features and options
+- `KofiModal` - Ko-fi support modal
+- `PricingModal` - Pro tier pricing
+- `TemplateModal` - WiFi/vCard/SMS/Email templates
+
+**Dynamic Features:**
+- `EditQRForm` - Dynamic QR edit interface
+- `BucketQR` - File bucket QR display and management
+
+**System Components:**
+- `ToastManager` - Notification stacking system
+- `ErrorBoundary` - QR generation error handling
+- `EasterEggs` - Hidden features and animations
+- `Analytics` - PostHog analytics integration
 
 ## Utils
 

@@ -66,8 +66,8 @@ For production deployment with Supabase backend, see
 
 1. Create Supabase project
 2. Run `supabase/setup.sql` in SQL Editor
-3. Deploy 6 edge functions
-4. Set `API_URL` env var
+3. Deploy 11 edge functions
+4. Set environment variables
 5. Deploy Fresh app to Deno Deploy
 
 ## 🛠 Tech Stack
@@ -83,7 +83,7 @@ For production deployment with Supabase backend, see
 
 ```
 qrbuddy/
-├── islands/              # Interactive Preact components (13 total)
+├── islands/              # Interactive Preact components (17 total)
 │   ├── QRCanvas.tsx          # Core QR rendering + download/copy
 │   ├── SmartInput.tsx        # Smart input (URLs, files, text) with drag/drop
 │   ├── StylePills.tsx        # Style selector UI
@@ -106,7 +106,7 @@ qrbuddy/
 │   └── server.ts             # Handles files + dynamic QRs locally
 ├── supabase/             # Supabase backend (for production)
 │   ├── setup.sql             # Database schema
-│   └── functions/            # 6 edge functions
+│   └── functions/            # 11 edge functions
 ├── utils/                # Utilities
 │   └── qr-styles.ts          # 6 gradient style definitions
 ├── static/               # Static assets
