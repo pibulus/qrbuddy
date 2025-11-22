@@ -8,12 +8,7 @@ import {
   createRateLimitResponse,
   getClientIP,
 } from "../_shared/rate-limit.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 // Generate short code (6 chars, URL-safe)
 function generateShortCode(): string {
