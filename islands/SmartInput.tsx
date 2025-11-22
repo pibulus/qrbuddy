@@ -7,6 +7,7 @@ import ExtrasModal from "./ExtrasModal.tsx";
 import { useDynamicQR } from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
 import { getApiUrl } from "../utils/api.ts";
+import { saveOwnerToken } from "../utils/token-vault.ts";
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -173,8 +174,8 @@ export default function SmartInput(
       url.value = data.bucket_url;
       bucketUrl.value = data.bucket_url;
 
-      // Store owner token in localStorage
-      localStorage.setItem(`bucket_${data.bucket_code}`, data.owner_token);
+      // Store owner token securely for future uploads
+      await saveOwnerToken("bucket", data.bucket_code, data.owner_token);
 
       // Success feedback
       haptics.success();

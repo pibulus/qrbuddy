@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import QRCodeStyling from "qr-code-styling";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import { haptics } from "../utils/haptics.ts";
+import { getOwnerToken } from "../utils/token-vault.ts";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -163,8 +164,8 @@ export default function BucketQR({
       setError("");
       haptics.medium();
 
-      // Get owner token from localStorage
-      const ownerToken = localStorage.getItem(`bucket_${bucketCode}`);
+      // Get owner token from secure storage
+      const ownerToken = await getOwnerToken("bucket", bucketCode);
       if (!ownerToken) {
         throw new Error(
           "Owner token not found. You may not have permission to upload.",

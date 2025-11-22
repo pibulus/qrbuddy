@@ -2,6 +2,7 @@ import { Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
+import { saveOwnerToken } from "../utils/token-vault.ts";
 
 interface UseDynamicQRProps {
   url: Signal<string>;
@@ -48,8 +49,8 @@ export function useDynamicQR(
       url.value = data.redirect_url;
       editUrl.value = data.edit_url;
 
-      // Store owner token in localStorage
-      localStorage.setItem(`qr_${data.short_code}`, data.owner_token);
+      // Store owner token securely for future edits
+      await saveOwnerToken("qr", data.short_code, data.owner_token);
 
       // Success feedback
       haptics.success();
