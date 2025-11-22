@@ -18,6 +18,9 @@ export default function SharePage(props: PageProps) {
     | keyof typeof QR_STYLES
     | "custom";
 
+  const decodedShared = sharedData ? decodeURIComponent(sharedData) : "";
+  const pageUrl = props.url;
+
   const url = useSignal(decodeURIComponent(sharedData));
   const style = useSignal<keyof typeof QR_STYLES | "custom">(sharedStyle);
   const customStyle = useSignal<QRStyle | null>(null);
@@ -34,20 +37,51 @@ export default function SharePage(props: PageProps) {
     <>
       <Head>
         <title>
-          QRBuddy - {sharedData
-            ? decodeURIComponent(sharedData)
-            : "Drop a link. Watch it bloom."}
+          QRBuddy - {decodedShared || "Drop a link. Watch it bloom."}
         </title>
         <meta
           name="description"
-          content="The Porkbun of QR generators. Beautiful gradient QR codes that make you smile."
-        />
-        <meta property="og:title" content="QRBuddy - Beautiful QR Codes" />
-        <meta
-          property="og:description"
-          content="Drop a link. Watch it bloom. Create stunning gradient QR codes in seconds."
+          content={decodedShared
+            ? `Shared QR code pointing to ${decodedShared}`
+            : "The Porkbun of QR generators. Beautiful gradient QR codes that make you smile."}
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="canonical" href={pageUrl.href} />
+
+        {/* Social sharing */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl.href} />
+        <meta
+          property="og:title"
+          content={decodedShared
+            ? `QRBuddy QR for ${decodedShared}`
+            : "QRBuddy - Beautiful QR Codes"}
+        />
+        <meta
+          property="og:description"
+          content={decodedShared
+            ? "Scan to open this shared QR instantly."
+            : "Drop a link. Watch it bloom. Create stunning gradient QR codes in seconds."}
+        />
+        <meta property="og:image" content="https://qrbuddy.app/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={pageUrl.href} />
+        <meta
+          name="twitter:title"
+          content={decodedShared
+            ? `QRBuddy QR for ${decodedShared}`
+            : "QRBuddy - Beautiful QR Codes"}
+        />
+        <meta
+          name="twitter:description"
+          content={decodedShared
+            ? "Scan this shared QR in a single tap."
+            : "Drop a link. Watch it bloom. Create stunning gradient QR codes in seconds."}
+        />
+        <meta name="twitter:image" content="https://qrbuddy.app/og-image.png" />
       </Head>
 
       <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">

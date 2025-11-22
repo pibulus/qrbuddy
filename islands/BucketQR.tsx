@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import QRCodeStyling from "qr-code-styling";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import { haptics } from "../utils/haptics.ts";
-import { getOwnerToken } from "../utils/token-vault.ts";
+import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -270,6 +270,8 @@ export default function BucketQR({
         setIsEmpty(true);
         setContentType(null);
         setContentMetadata(null);
+      } else {
+        removeOwnerToken("bucket", bucketCode);
       }
 
       haptics.success();
