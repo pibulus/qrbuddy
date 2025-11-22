@@ -8,6 +8,7 @@ import StyleSelector from "../islands/StyleSelector.tsx";
 import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
+import ShareActions from "../islands/ShareActions.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 
@@ -104,6 +105,20 @@ export default function SharePage(props: PageProps) {
             </p>
           </div>
 
+          {decodedShared && (
+            <div class="bg-white border-3 border-black rounded-2xl p-4 shadow-chunky space-y-1">
+              <p class="text-xs uppercase text-gray-500 tracking-wide font-bold">
+                Destination
+              </p>
+              <p class="text-base font-semibold text-gray-900 break-all">
+                {decodedShared}
+              </p>
+              <p class="text-xs text-gray-500">
+                Scan or share this QR to open the link instantly.
+              </p>
+            </div>
+          )}
+
           {/* QR Code Display - FIRST */}
           <div class="flex justify-center">
             <div class="shadow-xl rounded-2xl">
@@ -139,6 +154,20 @@ export default function SharePage(props: PageProps) {
             triggerDownload={triggerDownload}
             url={url}
           />
+
+          {/* Share Controls */}
+          <ShareActions
+            shareUrl={pageUrl.href}
+            sharedTarget={decodedShared}
+          />
+
+          {/* CTA */}
+          <a
+            href="/\?utm_source=share_page&utm_medium=cta"
+            class="block text-center px-4 py-3 bg-black text-white rounded-xl border-3 border-black font-bold shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
+          >
+            Make your own QR →
+          </a>
         </div>
 
         {/* Footer */}
