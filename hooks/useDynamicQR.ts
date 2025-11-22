@@ -1,6 +1,7 @@
 import { Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
+import { getApiUrl } from "../utils/api.ts";
 
 interface UseDynamicQRProps {
   url: Signal<string>;
@@ -19,11 +20,7 @@ export function useDynamicQR(
       setIsCreating(true);
       haptics.medium();
 
-      // Construct API URL from SUPABASE_URL or use local dev API
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const apiUrl = supabaseUrl
-        ? `${supabaseUrl}/functions/v1`
-        : "http://localhost:8005";
+      const apiUrl = getApiUrl();
 
       const body: Record<string, string | number> = {
         destination_url: destinationUrl,

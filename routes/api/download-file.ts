@@ -1,4 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
+import { getSupabaseUrl } from "../../utils/api.ts";
 
 // API route to download file and redirect to boom page
 export const handler: Handlers = {
@@ -13,7 +14,7 @@ export const handler: Handlers = {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseUrl = getSupabaseUrl();
 
     if (!supabaseUrl) {
       return new Response(null, {

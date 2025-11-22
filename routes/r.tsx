@@ -1,4 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
+import { getSupabaseUrl } from "../utils/api.ts";
 
 // This route handles QR code redirects
 // It forwards to the Supabase edge function which manages the actual redirect logic
@@ -17,7 +18,7 @@ export const handler: Handlers = {
     }
 
     // Forward to Supabase edge function for redirect logic
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseUrl = getSupabaseUrl();
 
     if (!supabaseUrl) {
       console.error("SUPABASE_URL not configured");

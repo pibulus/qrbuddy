@@ -1,5 +1,6 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
+import { getSupabaseUrl } from "../../utils/api.ts";
 
 interface FileData {
   fileId: string;
@@ -22,7 +23,7 @@ export const handler: Handlers = {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseUrl = getSupabaseUrl();
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY");
 
     if (!supabaseUrl || !supabaseKey) {

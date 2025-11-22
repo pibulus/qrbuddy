@@ -6,6 +6,7 @@ import TemplateModal from "./TemplateModal.tsx";
 import ExtrasModal from "./ExtrasModal.tsx";
 import { useDynamicQR } from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
+import { getApiUrl } from "../utils/api.ts";
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -146,11 +147,7 @@ export default function SmartInput(
       setIsCreatingBucket(true);
       haptics.medium();
 
-      // Construct API URL from SUPABASE_URL or use local dev API
-      const supabaseUrl = (globalThis as any).__SUPABASE_URL__;
-      const apiUrl = supabaseUrl
-        ? `${supabaseUrl}/functions/v1`
-        : "http://localhost:8005";
+      const apiUrl = getApiUrl();
 
       const response = await fetch(
         `${apiUrl}/create-bucket`,

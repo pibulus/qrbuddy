@@ -1,4 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
+import { getSupabaseUrl } from "../../utils/api.ts";
 
 // Prettier dynamic QR redirect: /r/abc123 instead of /r?code=abc123
 
@@ -13,7 +14,7 @@ export const handler: Handlers = {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseUrl = getSupabaseUrl();
 
     if (!supabaseUrl) {
       console.error("SUPABASE_URL not configured");

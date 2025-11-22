@@ -13,6 +13,7 @@ import { KofiButton, KofiModal } from "../islands/KofiModal.tsx";
 import { PricingLink, PricingModal } from "../islands/PricingModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
+import { getSupabaseUrl } from "../utils/api.ts";
 
 interface HomeProps {
   posthogKey?: string;
@@ -24,7 +25,7 @@ export const handler = {
   GET(_req: Request, ctx: any) {
     const posthogKey = Deno.env.get("POSTHOG_KEY");
     const paymentUrlPro = Deno.env.get("PAYMENT_URL_PRO");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseUrl = getSupabaseUrl();
 
     return ctx.render({
       posthogKey,

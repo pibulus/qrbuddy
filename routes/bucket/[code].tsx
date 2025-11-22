@@ -1,6 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import BucketQR from "../../islands/BucketQR.tsx";
+import { getSupabaseUrl } from "../../utils/api.ts";
 
 interface BucketData {
   bucket_code: string;
@@ -25,7 +26,7 @@ interface BucketPageData {
 export const handler: Handlers<BucketPageData> = {
   async GET(req, ctx) {
     const { code } = ctx.params;
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseUrl = getSupabaseUrl();
 
     // Fetch bucket status
     const statusUrl =

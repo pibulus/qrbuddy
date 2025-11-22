@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
+import { getSupabaseUrl } from "../utils/api.ts";
 
 interface QRData {
   short_code: string;
@@ -44,7 +45,7 @@ export default function EditQRForm() {
   const loadQRData = async (token: string) => {
     try {
       setLoading(true);
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const supabaseUrl = getSupabaseUrl();
 
       if (!supabaseUrl) {
         throw new Error(
@@ -86,7 +87,7 @@ export default function EditQRForm() {
       setIsSaving(true);
       haptics.medium();
 
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const supabaseUrl = getSupabaseUrl();
 
       if (!supabaseUrl) {
         throw new Error(

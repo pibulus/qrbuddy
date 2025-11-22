@@ -1,6 +1,7 @@
 import { Signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
+import { getApiUrl } from "../utils/api.ts";
 
 interface UseFileUploadProps {
   url: Signal<string>;
@@ -46,11 +47,7 @@ export function useFileUpload(
         setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      // Construct API URL from SUPABASE_URL or use local dev API
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const apiUrl = supabaseUrl
-        ? `${supabaseUrl}/functions/v1`
-        : "http://localhost:8005";
+      const apiUrl = getApiUrl();
 
       const response = await fetch(
         `${apiUrl}/upload-file`,
