@@ -1,6 +1,6 @@
 import { useSignal } from "@preact/signals";
 import { Head } from "$fresh/runtime.ts";
-import { PageProps } from "$fresh/server.ts";
+import { Handlers, PageProps } from "$fresh/server.ts";
 import QRCanvas from "../islands/QRCanvas.tsx";
 import SmartInput from "../islands/SmartInput.tsx";
 import StyleSelector from "../islands/StyleSelector.tsx";
@@ -21,8 +21,8 @@ interface HomeProps {
   supabaseUrl?: string;
 }
 
-export const handler = {
-  GET(_req: Request, ctx: any) {
+export const handler: Handlers<HomeProps> = {
+  GET(_req, ctx) {
     const posthogKey = Deno.env.get("POSTHOG_KEY");
     const paymentUrlPro = Deno.env.get("PAYMENT_URL_PRO");
     const supabaseUrl = getSupabaseUrl();
@@ -30,7 +30,7 @@ export const handler = {
     return ctx.render({
       posthogKey,
       paymentUrlPro,
-      supabaseUrl,
+      supabaseUrl: supabaseUrl ?? undefined,
     });
   },
 };

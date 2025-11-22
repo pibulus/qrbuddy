@@ -1,10 +1,10 @@
-import { Handlers, PageProps } from "$fresh/server.ts";
+import { Handlers } from "$fresh/server.ts";
 import { getSupabaseUrl } from "../../utils/api.ts";
 
 // Prettier dynamic QR redirect: /r/abc123 instead of /r?code=abc123
 
 export const handler: Handlers = {
-  async GET(req, ctx) {
+  async GET(_req, ctx) {
     const { code } = ctx.params;
 
     if (!code) {

@@ -22,7 +22,6 @@ export default function SharePage(props: PageProps) {
   const style = useSignal<keyof typeof QR_STYLES | "custom">(sharedStyle);
   const customStyle = useSignal<QRStyle | null>(null);
   const triggerDownload = useSignal(false);
-  const triggerCopy = useSignal(false);
   const isDestructible = useSignal(false);
   const isDynamic = useSignal(false);
   const editUrl = useSignal("");
@@ -80,7 +79,6 @@ export default function SharePage(props: PageProps) {
                   style={style}
                   customStyle={customStyle}
                   triggerDownload={triggerDownload}
-                  triggerCopy={triggerCopy}
                   isDestructible={isDestructible}
                   isDynamic={isDynamic}
                   logoUrl={logoUrl}
@@ -106,7 +104,6 @@ export default function SharePage(props: PageProps) {
           <ActionButtons
             triggerDownload={triggerDownload}
             url={url}
-            style={style}
           />
         </div>
 

@@ -66,10 +66,14 @@ export type ProFeature = (typeof PRO_FEATURES)[keyof typeof PRO_FEATURES];
 
 // Check if user has Pro (from localStorage token or API)
 export function hasProAccess(): boolean {
-  if (typeof window === "undefined") return false;
+  const globalScope = globalThis as typeof globalThis & {
+    localStorage?: Storage;
+  };
 
-  const proToken = localStorage.getItem("qrbuddy_pro_token");
-  const proExpiry = localStorage.getItem("qrbuddy_pro_expiry");
+  if (!globalScope.localStorage) return false;
+
+  const proToken = globalScope.localStorage.getItem("qrbuddy_pro_token");
+  const proExpiry = globalScope.localStorage.getItem("qrbuddy_pro_expiry");
 
   if (!proToken || !proExpiry) return false;
 
@@ -80,7 +84,7 @@ export function hasProAccess(): boolean {
 }
 
 // Check if user can use specific feature
-export function canUseFeature(feature: ProFeature): boolean {
+export function canUseFeature(_feature: ProFeature): boolean {
   // All features free for now, or check Pro status
   return hasProAccess();
 }

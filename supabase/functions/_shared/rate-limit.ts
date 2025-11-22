@@ -120,7 +120,7 @@ export function createRateLimitResponse(
   },
   corsHeaders: Record<string, string>,
 ): Response {
-  const headers = {
+  const headers: Record<string, string> = {
     ...corsHeaders,
     "Content-Type": "application/json",
     "X-RateLimit-Limit": String(result.remaining + (result.isLimited ? 0 : 1)),

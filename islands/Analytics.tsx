@@ -1,6 +1,18 @@
 import { useEffect } from "preact/hooks";
 import { Signal } from "@preact/signals";
 
+type PostHogClient = {
+  capture: (event: string, props?: Record<string, unknown>) => void;
+};
+
+type AnalyticsGlobal = typeof globalThis & {
+  posthog?: PostHogClient;
+  __PAYMENT_URL_PRO__?: string;
+  doNotTrack?: string;
+};
+
+const getAnalyticsGlobal = (): AnalyticsGlobal => globalThis as AnalyticsGlobal;
+
 interface AnalyticsProps {
   posthogKey: string | undefined;
   url: Signal<string>;
@@ -26,15 +38,19 @@ export default function Analytics({
     }
 
     // Check if Do Not Track is enabled
-    const dnt = navigator.doNotTrack || (window as any).doNotTrack ||
-      (navigator as any).msDoNotTrack;
+    const globalScope = getAnalyticsGlobal();
+    const navigatorWithMsDnt = navigator as Navigator & {
+      msDoNotTrack?: string;
+    };
+    const dnt = navigator.doNotTrack || globalScope.doNotTrack ||
+      navigatorWithMsDnt.msDoNotTrack;
     if (dnt === "1" || dnt === "yes") {
       console.log("🔒 PostHog disabled: respecting Do Not Track");
       return;
     }
 
     // Extract UTM parameters and referrer for campaign tracking
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(globalScope.location?.search ?? "");
     const utmSource = urlParams.get("utm_source");
     const utmMedium = urlParams.get("utm_medium");
     const utmCampaign = urlParams.get("utm_campaign");
@@ -79,9 +95,10 @@ export default function Analytics({
 
   // Track QR generation with minimal, non-identifying data
   useEffect(() => {
-    if (!url.value || !(window as any).posthog) return;
+    const globalScope = getAnalyticsGlobal();
+    if (!url.value || !globalScope.posthog) return;
 
-    const ph = (window as any).posthog;
+    const ph = globalScope.posthog;
     if (!ph || typeof ph.capture !== "function") return;
 
     // Determine QR type without revealing actual content
@@ -105,11 +122,12 @@ export default function Analytics({
 
   // Track conversion events (upgrade success/cancel)
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const globalScope = getAnalyticsGlobal();
+    const urlParams = new URLSearchParams(globalScope.location?.search ?? "");
     const upgradeStatus = urlParams.get("upgrade");
 
-    if (upgradeStatus && (window as any).posthog) {
-      const ph = (window as any).posthog;
+    if (upgradeStatus && globalScope.posthog) {
+      const ph = globalScope.posthog;
 
       if (upgradeStatus === "success") {
         ph.capture("upgrade_completed", {
@@ -118,7 +136,11 @@ export default function Analytics({
         console.log("🎉 Upgrade successful!");
 
         // Clean URL
-        window.history.replaceState({}, "", window.location.pathname);
+        globalScope.history?.replaceState(
+          {},
+          "",
+          globalScope.location?.pathname ?? "/",
+        );
       } else if (upgradeStatus === "cancelled") {
         ph.capture("upgrade_cancelled", {
           plan: "pro",
@@ -126,7 +148,11 @@ export default function Analytics({
         console.log("❌ Upgrade cancelled");
 
         // Clean URL
-        window.history.replaceState({}, "", window.location.pathname);
+        globalScope.history?.replaceState(
+          {},
+          "",
+          globalScope.location?.pathname ?? "/",
+        );
       }
     }
   }, []);

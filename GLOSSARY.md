@@ -4,36 +4,32 @@
 
 **Core QR Components:**
 
-- `QRCanvas` - Core QR rendering + download/copy + destructible/dynamic badges
-- `SmartInput` - Smart input handling URLs, files, and plain text with
-  drag/drop + dynamic QR options
-- `URLInput` - Dedicated URL input field with validation
-- `StylePills` - Style selector UI
-- `StyleSelector` - Style selection logic
-- `ShuffleButton` - Random style with spring animation
-- `ShuffleAction` - Shuffle action handler
-- `ActionButtons` - Download trigger buttons
-- `GradientCreator` - Custom gradient builder
-- `LogoUploader` - Custom logo upload with drag-drop UI
+- `SmartInput` - Handles URLs, files, templates, destructible/dynamic toggles
+  with drag & drop
+- `QRCanvas` - Renders QR codes, manages download/copy, shows dynamic badges
+- `StyleSelector` - Gradient picker with quick menu + custom entry point
+- `GradientCreator` - Full modal for custom gradients
+- `TemplateModal` - WiFi/vCard/SMS/Email/Text helpers that write into SmartInput
+- `LogoUploader` - Custom center-logo uploader with previews
+- `ActionButtons` - Download/copy/share triggers tied to signals
 
 **Modals & Overlays:**
 
-- `AboutModal` - About info and feature discovery
-- `ExtrasModal` - Additional features and options
+- `ExtrasModal` - File buckets, destructible goodies, logo uploader access
+- `AboutModal` - Feature overview + release notes
 - `KofiModal` - Ko-fi support modal
-- `PricingModal` - Pro tier pricing
-- `TemplateModal` - WiFi/vCard/SMS/Email templates
+- `PricingModal` - Pro tier upsell modal
 
-**Dynamic Features:**
+**Dynamic + Bucket Features:**
 
-- `EditQRForm` - Dynamic QR edit interface
-- `BucketQR` - File bucket QR display and management
+- `EditQRForm` - Dynamic QR edit interface (scan limits + redirects)
+- `BucketQR` - File bucket QR display/manage view
 
 **System Components:**
 
 - `ToastManager` - Notification stacking system
 - `ErrorBoundary` - QR generation error handling
-- `EasterEggs` - Hidden features and animations
+- `EasterEggs` - Hidden features and playful interactions
 - `Analytics` - PostHog analytics integration
 
 ## Utils

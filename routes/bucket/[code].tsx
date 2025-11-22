@@ -3,6 +3,15 @@ import { Head } from "$fresh/runtime.ts";
 import BucketQR from "../../islands/BucketQR.tsx";
 import { getSupabaseUrl } from "../../utils/api.ts";
 
+interface BucketContentMetadata {
+  filename?: string;
+  size?: number;
+  mimetype?: string;
+  storage_path?: string;
+  content?: string;
+  [key: string]: unknown;
+}
+
 interface BucketData {
   bucket_code: string;
   bucket_type: string;
@@ -11,7 +20,7 @@ interface BucketData {
   is_reusable: boolean;
   is_empty: boolean;
   content_type: string | null;
-  content_metadata: any;
+  content_metadata: BucketContentMetadata | null;
   last_filled_at: string | null;
   last_emptied_at: string | null;
   created_at: string;
@@ -24,9 +33,13 @@ interface BucketPageData {
 }
 
 export const handler: Handlers<BucketPageData> = {
-  async GET(req, ctx) {
+  async GET(_req, ctx) {
     const { code } = ctx.params;
     const supabaseUrl = getSupabaseUrl();
+
+    if (!supabaseUrl) {
+      return ctx.renderNotFound();
+    }
 
     // Fetch bucket status
     const statusUrl =

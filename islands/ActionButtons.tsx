@@ -6,11 +6,10 @@ import { sounds } from "../utils/sounds.ts";
 interface ActionButtonsProps {
   triggerDownload: Signal<boolean>;
   url?: Signal<string>;
-  style?: Signal<string>;
 }
 
 export default function ActionButtons(
-  { triggerDownload, url, style }: ActionButtonsProps,
+  { triggerDownload, url }: ActionButtonsProps,
 ) {
   const handleDownload = () => {
     haptics.medium();

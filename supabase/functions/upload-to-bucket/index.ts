@@ -10,6 +10,9 @@ import {
 } from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
+type BucketContentMetadata = Record<string, unknown>;
+type UploadContentType = "file" | "text" | "link";
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -79,9 +82,9 @@ serve(async (req) => {
     }
 
     const contentType = req.headers.get("content-type") || "";
-    let contentData = null;
-    let contentMetadata: any = {};
-    let uploadedContentType = "";
+    let contentData: string | null = null;
+    let contentMetadata: BucketContentMetadata = {};
+    let uploadedContentType: UploadContentType = "text";
 
     // Handle file upload (multipart/form-data)
     if (contentType.includes("multipart/form-data")) {

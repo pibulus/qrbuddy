@@ -31,8 +31,6 @@ export default function TemplateModal({
 }: TemplateModalProps) {
   if (!isOpen) return null;
 
-  const templateMeta = QR_TEMPLATES[selectedTemplate];
-
   const handleTemplateClick = (templateType: QRTemplateType) => {
     onTemplateSelect(templateType);
     haptics.light();

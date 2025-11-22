@@ -106,8 +106,7 @@ serve(async (req) => {
       }
     }
 
-    let responseData: any = null;
-    let responseHeaders: any = { ...corsHeaders };
+    const responseHeaders: Record<string, string> = { ...corsHeaders };
 
     // Handle different content types
     if (bucket.content_type === "file") {
@@ -149,7 +148,7 @@ serve(async (req) => {
       bucket.content_type === "text" || bucket.content_type === "link"
     ) {
       // Return text or link as JSON
-      responseData = {
+      const payload = {
         success: true,
         content_type: bucket.content_type,
         content: bucket.content_data,
@@ -174,7 +173,7 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify(responseData),
+        JSON.stringify(payload),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         },

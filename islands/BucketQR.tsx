@@ -3,13 +3,22 @@ import QRCodeStyling from "qr-code-styling";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import { haptics } from "../utils/haptics.ts";
 
+interface BucketContentMetadata {
+  filename?: string;
+  size?: number;
+  mimetype?: string;
+  storage_path?: string;
+  content?: string;
+  [key: string]: unknown;
+}
+
 interface BucketQRProps {
   bucketUrl: string;
   bucketCode: string;
   style: string;
   isEmpty: boolean;
   contentType: string | null;
-  contentMetadata: any;
+  contentMetadata: BucketContentMetadata | null;
   isPasswordProtected: boolean;
   isReusable: boolean;
   supabaseUrl: string;
@@ -32,9 +41,9 @@ export default function BucketQR({
 
   const [isEmpty, setIsEmpty] = useState(initialIsEmpty);
   const [contentType, setContentType] = useState(initialContentType);
-  const [contentMetadata, setContentMetadata] = useState(
-    initialContentMetadata,
-  );
+  const [contentMetadata, setContentMetadata] = useState<
+    BucketContentMetadata | null
+  >(initialContentMetadata);
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [password, setPassword] = useState("");
@@ -50,8 +59,9 @@ export default function BucketQR({
       // Full: Orange to red gradient (urgent, action needed)
       return {
         dots: {
+          type: "gradient",
           gradient: {
-            type: "linear",
+            type: "linear" as const,
             rotation: 0.785,
             colorStops: [
               { offset: 0, color: "#FF6B35" },
@@ -63,7 +73,7 @@ export default function BucketQR({
         background: { color: "#FFF5F0" },
         cornersSquare: {
           gradient: {
-            type: "linear",
+            type: "linear" as const,
             rotation: 0.785,
             colorStops: [
               { offset: 0, color: "#FF6B35" },
@@ -73,7 +83,7 @@ export default function BucketQR({
         },
         cornersDot: {
           gradient: {
-            type: "linear",
+            type: "linear" as const,
             rotation: 0.785,
             colorStops: [
               { offset: 0, color: "#FF6B35" },
@@ -317,6 +327,7 @@ export default function BucketQR({
         ? (
           <div class="space-y-3">
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
               class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
@@ -335,6 +346,7 @@ export default function BucketQR({
           <div class="space-y-3">
             {isPasswordProtected && !showPasswordInput && (
               <button
+                type="button"
                 onClick={() => setShowPasswordInput(true)}
                 class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
@@ -353,6 +365,7 @@ export default function BucketQR({
                   class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
                 />
                 <button
+                  type="button"
                   onClick={handleDownload}
                   disabled={isDownloading || !password}
                   class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
@@ -364,6 +377,7 @@ export default function BucketQR({
 
             {!isPasswordProtected && (
               <button
+                type="button"
                 onClick={handleDownload}
                 disabled={isDownloading}
                 class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 animate-pulse-glow"
@@ -374,8 +388,10 @@ export default function BucketQR({
 
             {contentMetadata && contentType === "file" && (
               <p class="text-center text-sm text-gray-600">
-                📄 {contentMetadata.filename}{" "}
-                ({(contentMetadata.size / 1024 / 1024).toFixed(2)} MB)
+                📄 {contentMetadata.filename ?? "File"}
+                {typeof contentMetadata.size === "number"
+                  ? ` ${(contentMetadata.size / 1024 / 1024).toFixed(2)} MB`
+                  : ""}
               </p>
             )}
           </div>

@@ -12,7 +12,7 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = (file: File) => {
     try {
       setIsUploading(true);
       setError(null);

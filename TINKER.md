@@ -37,18 +37,31 @@ deno task check    # Format, lint, type check
 ```
 qrbuddy/
 ├── routes/
-│   ├── index.tsx           # Main QR generator page
-│   ├── q.tsx              # Quick QR shortlink route
-│   └── _app.tsx           # App wrapper
+│   ├── index.tsx           # Main QR generator page + SEO/meta
+│   ├── q.tsx               # Shared QR showcase
+│   ├── edit.tsx            # Dynamic QR editor shell
+│   ├── boom.tsx            # KABOOM landing
+│   ├── r.tsx / r/[code].tsx# Redirect helpers
+│   ├── f/[code].tsx        # Destructible file gate
+│   └── bucket/[code].tsx   # File bucket viewer
 ├── islands/
-│   ├── QRCanvas.tsx       # THE MAGIC - renders QR codes
-│   ├── URLInput.tsx       # URL input field
-│   ├── StyleSelector.tsx  # Gradient style picker
-│   ├── ActionButtons.tsx  # Download/Copy buttons
-│   └── ShuffleAction.tsx  # Random style shuffle
+│   ├── SmartInput.tsx      # Smart input (URL/text/file) + dynamic controls
+│   ├── QRCanvas.tsx        # Renders QR + download/copy
+│   ├── StyleSelector.tsx   # Gradient picker + custom entry
+│   ├── GradientCreator.tsx # Custom gradient modal
+│   ├── TemplateModal.tsx   # WiFi/vCard/SMS/Email/Text helpers
+│   ├── ExtrasModal.tsx     # Buckets, logos, destructible goodies
+│   ├── LogoUploader.tsx    # Center logo uploader
+│   ├── ActionButtons.tsx   # Download/copy triggers
+│   ├── BucketQR.tsx        # File bucket QR display
+│   ├── EditQRForm.tsx      # Dynamic QR editing
+│   ├── ToastManager.tsx    # Notifications
+│   └── Analytics.tsx       # PostHog wiring
 ├── utils/
-│   └── qr-styles.ts       # All gradient presets
-└── static/               # Images, CSS, manifest
+│   ├── api.ts              # SUPABASE_URL helpers
+│   └── qr-styles.ts        # Gradient presets
+├── local-api/              # Mock Supabase edge functions for dev
+└── static/                 # Images, CSS, manifest, robots, sitemap
 ```
 
 ### The Files You'll Actually Touch:

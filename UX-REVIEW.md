@@ -127,7 +127,7 @@ routes/q.tsx - modal overlay + content card
 
 - QR code rendered on canvas element
 - Download and Copy buttons nearby
-- Shuffle button for random styles
+- Style selector dropdown for gradient swaps
 
 **Review Focus:**
 
@@ -231,7 +231,7 @@ routes/q.tsx - modal overlay + content card
 2. `islands/EditQRForm.tsx` - Edit QR form component ⭐ HIGH PRIORITY
 3. `islands/QRCanvas.tsx` - Main QR display + hover effects ⭐ HIGH PRIORITY
 4. `islands/ActionButtons.tsx` - Download/share buttons ⭐ HIGH PRIORITY
-5. `islands/ShuffleButton.tsx` - Shuffle animation reference (GOOD EXAMPLE)
+5. `islands/StyleSelector.tsx` - Gradient selector interactions (GOOD EXAMPLE)
 
 **Routes (Modal Containers):**
 

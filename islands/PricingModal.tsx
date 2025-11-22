@@ -2,6 +2,17 @@ import { useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { PRICING_TIERS } from "../types/pricing.ts";
 
+type PostHogClient = {
+  capture: (event: string, props?: Record<string, unknown>) => void;
+};
+
+type PricingGlobal = typeof globalThis & {
+  posthog?: PostHogClient;
+  __PAYMENT_URL_PRO__?: string;
+};
+
+const getPricingGlobal = (): PricingGlobal => globalThis as PricingGlobal;
+
 // Global signal for modal state
 export const pricingModalOpen = signal(false);
 
@@ -38,8 +49,10 @@ export function PricingModal() {
 
   const handleUpgrade = () => {
     // Track conversion intent
-    if ((window as any).posthog) {
-      (window as any).posthog.capture("upgrade_clicked", {
+    const globalScope = getPricingGlobal();
+
+    if (globalScope.posthog) {
+      globalScope.posthog.capture("upgrade_clicked", {
         plan: "pro",
         billing: "lifetime",
       });
@@ -47,7 +60,7 @@ export function PricingModal() {
 
     // Get payment URL from env (injected by server)
     // This can be Lemon Squeezy, Ko-fi, Gumroad, or any payment link
-    const paymentUrl = (window as any).__PAYMENT_URL_PRO__;
+    const paymentUrl = globalScope.__PAYMENT_URL_PRO__;
 
     if (!paymentUrl) {
       alert(
@@ -57,7 +70,7 @@ export function PricingModal() {
     }
 
     // Redirect to payment page (Lemon Squeezy, Ko-fi, etc.)
-    window.location.href = paymentUrl;
+    globalScope.location.href = paymentUrl;
   };
 
   return (

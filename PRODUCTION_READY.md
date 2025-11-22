@@ -24,9 +24,9 @@ work in production
 ### 2. **Memory Leaks** 🧠
 
 **EasterEggs.tsx**: Timeout cleanup wasn't happening if component unmounted
-**ShuffleAction.tsx**: Timeout could persist after unmount **Fixed**: Both now
-properly clean up timeouts in useEffect cleanup **Impact**: No more memory
-leaks, cleaner app lifecycle
+**SmartInput.tsx**: Debounced dynamic QR creation timeout could persist after
+unmount **Fixed**: Both now properly clean up timeouts in useEffect cleanup
+**Impact**: No more memory leaks, cleaner app lifecycle
 
 ### 3. **Mobile QR Overflow** 📱
 

@@ -13,7 +13,7 @@ interface FileData {
 }
 
 export const handler: Handlers = {
-  async GET(req, ctx) {
+  async GET(_req, ctx) {
     const { code } = ctx.params;
 
     if (!code) {

@@ -80,7 +80,7 @@ See GLOSSARY.md for complete list organized by category. Key islands:
 - `QRCanvas`: Core QR rendering and download/copy functionality
 - `SmartInput`: Smart input handling URLs, files, and plain text with dynamic QR
   options
-- `StyleSelector`/`StylePills`: Style selection UI and logic
+- `StyleSelector`/`GradientCreator`: Gradient selection + custom builder entry
 - `GradientCreator`: Custom gradient builder
 - `LogoUploader`: Custom logo upload with drag-drop
 - `EditQRForm`: Dynamic QR edit interface

@@ -20,7 +20,6 @@ gradient art pieces with that soft brutal aesthetic.
   themes
 - **Custom Gradient Creator** - Build your own gradient QR codes
 - **Instant Generation** - <100ms QR generation with no loading states
-- **Shuffle Magic** - One-tap randomization with spring physics animation
 - **Download & Copy** - Save PNGs or copy to clipboard with one click
 - **Mobile First** - Responsive design that works beautifully on all devices
 - **Soft Brutal Design** - Chunky borders, hard shadows, pastel colors
@@ -83,34 +82,44 @@ For production deployment with Supabase backend, see
 
 ```
 qrbuddy/
-├── islands/              # Interactive Preact components (17 total)
-│   ├── QRCanvas.tsx          # Core QR rendering + download/copy
-│   ├── SmartInput.tsx        # Smart input (URLs, files, text) with drag/drop
-│   ├── StylePills.tsx        # Style selector UI
-│   ├── StyleSelector.tsx     # Style selection logic
-│   ├── ShuffleButton.tsx     # Random style animation
-│   ├── ShuffleAction.tsx     # Shuffle handler
-│   ├── ActionButtons.tsx     # Download trigger buttons
-│   ├── GradientCreator.tsx   # Custom gradient builder
-│   ├── EasterEggs.tsx        # Hidden features
-│   ├── ToastManager.tsx      # Notification system
-│   ├── ErrorBoundary.tsx     # Error handling
-│   └── EditQRForm.tsx        # Dynamic QR edit interface
-├── routes/               # Fresh routes
-│   ├── index.tsx             # Main page
-│   ├── q.tsx                 # Share page
-│   ├── edit.tsx              # Edit dynamic QR
-│   ├── r.tsx                 # Redirect handler
-│   └── boom.tsx              # KABOOM explosion page
-├── local-api/            # Local mock API server
-│   └── server.ts             # Handles files + dynamic QRs locally
-├── supabase/             # Supabase backend (for production)
-│   ├── setup.sql             # Database schema
+├── routes/               # Fresh routes + API handlers
+│   ├── index.tsx             # Main generator page + SEO/meta
+│   ├── q.tsx                 # Shared QR showcase
+│   ├── edit.tsx              # Dynamic QR editor
+│   ├── boom.tsx              # Self-destruct landing page
+│   ├── r.tsx / r/[code].tsx  # Redirect helpers
+│   ├── f/[code].tsx          # Destructible file download gate
+│   ├── bucket/[code].tsx     # File bucket viewer
+│   └── api/download-file.ts  # Server-side file proxy
+├── islands/              # Interactive Preact islands (17 total)
+│   ├── QRCanvas.tsx          # Core QR rendering + download/copy logic
+│   ├── SmartInput.tsx        # Smart input (URLs/files/text + dynamic settings)
+│   ├── StyleSelector.tsx     # Gradient selector + custom creator entry
+│   ├── GradientCreator.tsx   # Custom gradient builder modal
+│   ├── TemplateModal.tsx     # WiFi/vCard/SMS/Email/Text helpers
+│   ├── ExtrasModal.tsx       # File buckets, destructible goodies, logos
+│   ├── LogoUploader.tsx      # Center logo uploader UI
+│   ├── ActionButtons.tsx     # Download + copy triggers
+│   ├── EditQRForm.tsx        # Dynamic QR edit experience
+│   ├── BucketQR.tsx          # File bucket status + QR display
+│   ├── About/Kofi/Pricing modals
+│   ├── EasterEggs.tsx        # Hidden interactions
+│   ├── ToastManager.tsx      # Notification stack
+│   ├── ErrorBoundary.tsx     # QR error guard
+│   └── Analytics.tsx         # PostHog wiring
+├── local-api/            # Local mock Supabase edge function server
+│   └── server.ts             # Upload + dynamic QR emulator for dev
+├── supabase/             # Production schema + edge functions
+│   ├── setup.sql             # Core tables
 │   └── functions/            # 11 edge functions
-├── utils/                # Utilities
-│   └── qr-styles.ts          # 6 gradient style definitions
-├── static/               # Static assets
-└── tailwind.config.ts    # Tailwind configuration
+├── utils/                # Shared utilities
+│   ├── api.ts                # SUPABASE_URL + API helpers
+│   ├── haptics.ts            # Haptic wrappers
+│   ├── qr-styles.ts          # Gradient style definitions
+│   └── sounds.ts             # UI soundboard
+├── static/               # Icons, manifest, robots, sitemap, CSS
+├── tests/                # Edge function integration tests
+└── tailwind.config.ts    # Tailwind design tokens/theme
 ```
 
 ## 🎨 Available Styles
