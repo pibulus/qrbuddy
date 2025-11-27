@@ -14,15 +14,27 @@ const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined ||
   Deno.env.get("ENV") === "production";
 
 if (isProduction) {
-  // Hardcoded fallback for deployment stability
-  if (!Deno.env.get("SUPABASE_URL")) {
-    Deno.env.set("SUPABASE_URL", "https://xrsbhcaiicqiblhhuzzu.supabase.co");
+  const requiredEnvVars = [
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+  ];
+
+  const missing = requiredEnvVars.filter((varName) => !Deno.env.get(varName));
+
+  if (missing.length > 0) {
+    console.error(
+      `❌ Missing required environment variables in production: ${
+        missing.join(", ")
+      }`,
+    );
+    console.error(
+      "Please configure these in your Deno Deploy dashboard or environment settings.",
+    );
+    // We don't exit here to allow the app to start, but features will be broken.
+    console.warn("⚠️ App starting with missing secrets. Some features may fail.");
+  } else {
+    console.log("✅ All required environment variables are configured");
   }
-  if (!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
-    Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhyc2JoY2FpaWNxaWJsaGh1enp1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDIyNDYzNSwiZXhwIjoyMDc5ODAwNjM1fQ.c5GDx5l6FE537M56U7eQNCyOBnmLgmqjNkyQfU0_oG0");
-  }
-  
-  console.log("✅ Environment variables configured (using fallbacks if needed)");
 }
 
 import { start } from "$fresh/server.ts";
