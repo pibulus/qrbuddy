@@ -183,9 +183,10 @@ serve(async (req) => {
     if (dbError) throw dbError;
 
     // Generate retrieval URL (prettier format)
-    const baseUrl = Deno.env.get("DENO_DEPLOYMENT_ID")
-      ? `https://qrbuddy.app`
-      : `http://localhost:8000`;
+    const baseUrl = Deno.env.get("APP_URL") ||
+      (Deno.env.get("DENO_DEPLOYMENT_ID")
+        ? `https://qrbuddy.app`
+        : `http://localhost:8000`);
     const retrievalUrl = `${baseUrl}/f/${fileId}`;
 
     const message = maxDownloads === 1
