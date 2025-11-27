@@ -4,10 +4,13 @@ import { haptics } from "../utils/haptics.ts";
 import { QR_TEMPLATES, type QRTemplateType } from "../types/qr-templates.ts";
 import TemplateModal from "./TemplateModal.tsx";
 import ExtrasModal from "./ExtrasModal.tsx";
+import { addToast } from "./ToastManager.tsx";
 import { useDynamicQR } from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
+import JSZip from "jszip";
+import QRCodeStyling from "qr-code-styling";
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -59,6 +62,12 @@ export default function SmartInput(
   const [isSequential, setIsSequential] = useState(false);
   const [sequentialUrls, setSequentialUrls] = useState<string[]>(["", ""]);
   const [loopSequence, setLoopSequence] = useState(false);
+
+  // Batch Mode options
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [batchUrls, setBatchUrls] = useState("");
+  const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
+  const [batchProgress, setBatchProgress] = useState(0);
 
   // Custom hooks for complex operations
   const { isCreating: isCreatingDynamic, createDynamicQR } = useDynamicQR({
@@ -295,6 +304,93 @@ export default function SmartInput(
     return baseClass;
   };
 
+  const generateBatchZIP = async () => {
+    try {
+      const urls = batchUrls.split("\n").map((u) => u.trim()).filter((u) =>
+        u.length > 0
+      );
+
+      if (urls.length === 0) {
+        addToast("❌ No URLs provided!", 3000);
+        return;
+      }
+
+      setIsGeneratingBatch(true);
+      setBatchProgress(0);
+      haptics.medium();
+
+      const zip = new JSZip();
+      const qrCode = new QRCodeStyling({
+        width: 1000,
+        height: 1000,
+        type: "canvas",
+        image: logoUrl.value || undefined,
+        dotsOptions: {
+          color: "#000000",
+          type: "rounded",
+        },
+        backgroundOptions: {
+          color: "#ffffff",
+        },
+        imageOptions: {
+          crossOrigin: "anonymous",
+          margin: 10,
+        },
+      });
+
+      // Process each URL
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        qrCode.update({ data: url });
+        const blob = await qrCode.getRawData("png");
+        if (blob) {
+          // Create safe filename
+          const safeName = url.replace(/[^a-z0-9]/gi, "_").substring(0, 30);
+          zip.file(`qr_${i + 1}_${safeName}.png`, blob);
+        }
+
+        // Update progress
+        setBatchProgress(Math.round(((i + 1) / urls.length) * 100));
+        // Small delay to allow UI updates
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      // Generate ZIP
+      const content = await zip.generateAsync({ type: "blob" });
+      
+      // Trigger download
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(content);
+      link.download = "qrbuddy_batch.zip";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      haptics.success();
+      setIsGeneratingBatch(false);
+      
+      const event = new CustomEvent("show-toast", {
+        detail: {
+          message: `📦 Batch complete! Downloaded ${urls.length} QR codes.`,
+          type: "success",
+        },
+      });
+      globalThis.dispatchEvent(event);
+
+    } catch (error) {
+      console.error("Batch generation failed:", error);
+      setIsGeneratingBatch(false);
+      haptics.error();
+      const event = new CustomEvent("show-toast", {
+        detail: {
+          message: `❌ Batch failed: ${error instanceof Error ? error.message : String(error)}`,
+          type: "error",
+        },
+      });
+      globalThis.dispatchEvent(event);
+    }
+  };
+
   const templateMeta = QR_TEMPLATES[selectedTemplate];
 
   return (
@@ -408,7 +504,7 @@ export default function SmartInput(
       )}
 
       {/* Sequential QR Options */}
-      {selectedTemplate === "url" && isDynamic.value && !isDestructible.value && !isBucket.value && (
+      {selectedTemplate === "url" && isDynamic.value && !isDestructible.value && !isBucket.value && !isBatchMode && (
         <div class="space-y-3 animate-slide-down">
           {/* Toggle Sequential Mode */}
           <div class="flex items-center justify-between bg-white border-2 border-gray-200 rounded-xl p-3">
@@ -494,6 +590,84 @@ export default function SmartInput(
               >
                 + Add Step
               </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Batch Mode Options */}
+      {selectedTemplate === "url" && !isDynamic.value && !isDestructible.value && !isBucket.value && !isSequential && (
+        <div class="space-y-3 animate-slide-down">
+          {/* Toggle Batch Mode */}
+          <div class="flex items-center justify-between bg-white border-2 border-gray-200 rounded-xl p-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">📦</span>
+              <div>
+                <h4 class="font-bold text-sm text-gray-800">Batch Mode</h4>
+                <p class="text-xs text-gray-500">Generate multiple QRs at once</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsBatchMode(!isBatchMode);
+                haptics.light();
+              }}
+              class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isBatchMode ? "bg-blue-500" : "bg-gray-200"
+              }`}
+            >
+              <span
+                class={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isBatchMode ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Batch Input */}
+          {isBatchMode && (
+            <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-3 animate-slide-down">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-bold text-blue-700 uppercase tracking-wide">
+                  Paste URLs (One per line)
+                </label>
+                <span class="text-xs font-bold text-blue-500">
+                  {batchUrls.split("\n").filter(u => u.trim()).length} URLs
+                </span>
+              </div>
+              
+              <textarea
+                value={batchUrls}
+                onInput={(e) => setBatchUrls(e.currentTarget.value)}
+                placeholder={`https://example.com\nhttps://google.com\nhttps://bing.com`}
+                rows={5}
+                class="w-full px-3 py-2 text-sm border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                disabled={isGeneratingBatch}
+              />
+
+              {isGeneratingBatch ? (
+                <div class="space-y-2">
+                  <div class="h-2 bg-blue-200 rounded-full overflow-hidden">
+                    <div 
+                      class="h-full bg-blue-500 transition-all duration-300"
+                      style={{ width: `${batchProgress}%` }}
+                    />
+                  </div>
+                  <p class="text-center text-xs font-bold text-blue-600 animate-pulse">
+                    Generating... {batchProgress}%
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={generateBatchZIP}
+                  disabled={!batchUrls.trim()}
+                  class="w-full py-3 text-sm font-black text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  📦 Generate ZIP
+                </button>
+              )}
             </div>
           )}
         </div>

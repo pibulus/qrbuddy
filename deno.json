@@ -33,6 +33,7 @@
     "tailwindcss": "npm:tailwindcss@3.4.1",
     "tailwindcss/": "npm:/tailwindcss@3.4.1/",
     "qr-code-styling": "https://esm.sh/qr-code-styling@1.6.0-rc.1",
+    "jszip": "https://esm.sh/jszip@3.10.1",
     "$std/": "https://deno.land/std@0.216.0/"
   },
   "compilerOptions": {
