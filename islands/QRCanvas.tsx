@@ -34,6 +34,32 @@ export default function QRCanvas(
   const [isClicking, setIsClicking] = useState(false);
   const [showSuccessFlash, setShowSuccessFlash] = useState(false);
 
+  const handleDragOver = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragHover(true);
+  };
+
+  const handleDragLeave = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragHover(false);
+  };
+
+  const handleDrop = (event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragHover(false);
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const uploadEvent = new CustomEvent("smart-input-upload", {
+        detail: { file: files[0] },
+      });
+      globalThis.dispatchEvent(uploadEvent);
+    }
+  };
+
   const handleDownloadClick = async () => {
     if (!qrCodeRef.current) return;
 
@@ -77,8 +103,8 @@ export default function QRCanvas(
     const currentStyle = getCurrentStyle();
 
     const qrCode = new QRCodeStyling({
-      width: 400,
-      height: 400,
+      width: 1000,
+      height: 1000,
       data: url.value || "https://qrbuddy.app",
       margin: 20,
       image: logoUrl?.value || undefined,
@@ -202,36 +228,10 @@ export default function QRCanvas(
     }
   }, [triggerDownload.value]);
 
-  // Remove triggerCopy effect - no longer needed
-
-  const handleDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragHover(true);
-  };
-
-  const handleDragLeave = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragHover(false);
-  };
-
-  const handleDrop = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragHover(false);
-
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      const uploadEvent = new CustomEvent("smart-input-upload", {
-        detail: { file: files[0] },
-      });
-      globalThis.dispatchEvent(uploadEvent);
-    }
-  };
+// ... (lines 143-233 omitted)
 
   return (
-    <div class="relative max-w-full">
+    <div class="relative max-w-full w-full">
       <div
         ref={canvasRef}
         onClick={handleDownloadClick}
@@ -244,7 +244,8 @@ export default function QRCanvas(
           ${showSuccessFlash ? "border-green-500" : "border-black"}
           shadow-chunky-hover cursor-pointer
           transition-all duration-200
-          max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto
+          w-full flex justify-center items-center
+          [&>canvas]:w-full [&>canvas]:h-auto
           ${isClicking ? "scale-95" : "hover:scale-105"}
           ${
           isDragHover
