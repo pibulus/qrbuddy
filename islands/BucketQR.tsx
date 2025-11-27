@@ -325,6 +325,74 @@ export default function BucketQR({
         </div>
       )}
 
+      {/* Media Preview */}
+      {!isEmpty && contentType === "file" && contentMetadata?.mimetype && (
+        <div class="space-y-4">
+          {/* Image Preview */}
+          {contentMetadata.mimetype.startsWith("image/") && (
+            <div class="relative rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-white">
+              {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                <img
+                  src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
+                    password ? `&password=${encodeURIComponent(password)}` : ""
+                  }`}
+                  alt="Bucket content"
+                  class="w-full h-auto object-cover"
+                />
+              ) : (
+                <div class="h-48 flex items-center justify-center bg-gray-100 text-gray-400">
+                  <span class="text-4xl">🔒</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Audio Preview */}
+          {contentMetadata.mimetype.startsWith("audio/") && (
+            <div class="bg-white border-4 border-black rounded-xl p-4 shadow-chunky">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-2xl animate-bounce">🎵</span>
+                <span class="font-bold text-sm truncate">
+                  {contentMetadata.filename}
+                </span>
+              </div>
+              {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                <audio
+                  controls
+                  src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
+                    password ? `&password=${encodeURIComponent(password)}` : ""
+                  }`}
+                  class="w-full"
+                />
+              ) : (
+                <div class="text-center text-sm text-gray-500 py-2">
+                  Unlock to listen 🔒
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Video Preview */}
+          {contentMetadata.mimetype.startsWith("video/") && (
+            <div class="rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-black">
+              {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                <video
+                  controls
+                  src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
+                    password ? `&password=${encodeURIComponent(password)}` : ""
+                  }`}
+                  class="w-full"
+                />
+              ) : (
+                <div class="h-48 flex items-center justify-center text-gray-500">
+                  <span class="text-4xl">🔒</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Action Button */}
       {isEmpty
         ? (
@@ -353,7 +421,7 @@ export default function BucketQR({
                 onClick={() => setShowPasswordInput(true)}
                 class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                🔒 Unlock & Download
+                🔒 Unlock to View & Download
               </button>
             )}
 

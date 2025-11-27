@@ -673,6 +673,63 @@ export default function SmartInput(
         </div>
       )}
 
+      {/* File Bucket Options */}
+      {selectedTemplate === "url" && !isDynamic.value && !isDestructible.value && !isSequential && !isBatchMode && (
+        <div class="space-y-3 animate-slide-down">
+          {/* Toggle File Bucket */}
+          <div class="flex items-center justify-between bg-white border-2 border-gray-200 rounded-xl p-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🪣</span>
+              <div>
+                <h4 class="font-bold text-sm text-gray-800">File Bucket</h4>
+                <p class="text-xs text-gray-500">Scan to upload & transfer files</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                isBucket.value = !isBucket.value;
+                haptics.light();
+              }}
+              class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isBucket.value ? "bg-orange-500" : "bg-gray-200"
+              }`}
+            >
+              <span
+                class={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isBucket.value ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Bucket Info */}
+          {isBucket.value && (
+            <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 space-y-3 animate-slide-down">
+              <div class="flex items-center gap-3">
+                <div class="text-3xl">📲 ➔ 💻</div>
+                <div>
+                  <h4 class="font-bold text-orange-800">How it works</h4>
+                  <p class="text-xs text-orange-700">
+                    1. Create a bucket QR.<br/>
+                    2. Scan with your phone to upload a file.<br/>
+                    3. The QR on your screen updates to let you download it.
+                  </p>
+                </div>
+              </div>
+              
+              {isCreatingBucket && (
+                <div class="text-center py-2">
+                  <p class="text-orange-600 font-bold animate-pulse">
+                    Creating your bucket... 🔨
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Helper text */}
       {touched && validationState === "invalid" && url.value.trim() !== "" && (
         <p
