@@ -82,16 +82,68 @@ serve(async (req) => {
       return Response.redirect("/boom", 302);
     }
 
-    // Increment scan count (no other tracking!)
-    await supabase
+    // --------------------------------------------------------------------------
+    // 1. ANALYTICS LOGGING (Fire and Forget)
+    // --------------------------------------------------------------------------
+    const userAgent = req.headers.get("user-agent") || "";
+    const country = req.headers.get("cf-ipcountry") || "Unknown"; // Cloudflare header
+    const city = req.headers.get("cf-ipcity") || "Unknown";
+
+    // Simple UA Parsing
+    let deviceType = "desktop";
+    let os = "other";
+    let browser = "other";
+
+    const ua = userAgent.toLowerCase();
+    
+    // OS Detection
+    if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) os = "ios";
+    else if (ua.includes("android")) os = "android";
+    else if (ua.includes("mac os")) os = "macos";
+    else if (ua.includes("windows")) os = "windows";
+    else if (ua.includes("linux")) os = "linux";
+
+    // Device Type Detection
+    if (ua.includes("mobile")) deviceType = "mobile";
+    if (ua.includes("tablet") || ua.includes("ipad")) deviceType = "tablet";
+    if (ua.includes("bot") || ua.includes("crawler") || ua.includes("spider")) deviceType = "bot";
+
+    // Browser Detection
+    if (ua.includes("chrome")) browser = "chrome";
+    else if (ua.includes("safari")) browser = "safari";
+    else if (ua.includes("firefox")) browser = "firefox";
+    else if (ua.includes("edge")) browser = "edge";
+
+    // Log to DB (Async - don't await to keep redirect fast?)
+    // Actually, for Edge Functions, we should await or use EdgeRuntime.waitUntil if available.
+    // Deno Deploy doesn't support waitUntil yet in standard serve, so we await but keep it fast.
+    const logPromise = supabase
+      .from("scan_logs")
+      .insert({
+        qr_id: qr.id,
+        device_type: deviceType,
+        os: os,
+        browser: browser,
+        country: country,
+        city: city,
+      });
+
+    // Increment scan count (Legacy counter)
+    const countPromise = supabase
       .from("dynamic_qr_codes")
       .update({ scan_count: qr.scan_count + 1 })
       .eq("short_code", shortCode);
 
-    // Determine destination URL
+    // Run DB updates in parallel
+    await Promise.all([logPromise, countPromise]);
+
+    // --------------------------------------------------------------------------
+    // 2. SMART ROUTING ENGINE
+    // --------------------------------------------------------------------------
     let destinationUrl = qr.destination_url;
 
     if (qr.routing_mode === "sequential" && qr.routing_config) {
+      // ... (Existing Sequential Logic) ...
       try {
         const config = typeof qr.routing_config === "string"
           ? JSON.parse(qr.routing_config)
@@ -110,8 +162,52 @@ serve(async (req) => {
           destinationUrl = urls[index];
         }
       } catch (e) {
-        console.error("Error parsing routing config:", e);
-        // Fallback to default destination_url
+        console.error("Error parsing sequential config:", e);
+      }
+    } else if (qr.routing_mode === "device" && qr.routing_config) {
+      // DEVICE ROUTING
+      try {
+        const config = typeof qr.routing_config === "string"
+          ? JSON.parse(qr.routing_config)
+          : qr.routing_config;
+        
+        if (os === "ios" && config.ios) destinationUrl = config.ios;
+        else if (os === "android" && config.android) destinationUrl = config.android;
+        else if (config.fallback) destinationUrl = config.fallback;
+      } catch (e) {
+        console.error("Error parsing device config:", e);
+      }
+    } else if (qr.routing_mode === "time" && qr.routing_config) {
+      // TIME ROUTING
+      try {
+        const config = typeof qr.routing_config === "string"
+          ? JSON.parse(qr.routing_config)
+          : qr.routing_config;
+        
+        // Config format: { startTime: "09:00", endTime: "17:00", activeUrl: "...", inactiveUrl: "..." }
+        // We assume the time is in the user's target timezone or UTC? 
+        // For MVP, let's assume UTC or server time, or simple hour check.
+        // Better: Store timezone in config, or just use simple HH:MM comparison against UTC?
+        // Let's stick to simple UTC for now or allow user to specify offset.
+        // Actually, let's keep it simple: "Work Hours" (9-5) usually implies local time.
+        // But we don't know the user's local time easily without complex UI.
+        // Let's implement a simple "Current Hour" check based on a provided timezone offset in config.
+        
+        const now = new Date();
+        const utcHour = now.getUTCHours();
+        const offset = config.timezoneOffset || 0; // Hours offset from UTC
+        const localHour = (utcHour + offset + 24) % 24;
+
+        const startHour = parseInt(config.startHour || "9");
+        const endHour = parseInt(config.endHour || "17");
+
+        if (localHour >= startHour && localHour < endHour) {
+          destinationUrl = config.activeUrl;
+        } else {
+          destinationUrl = config.inactiveUrl;
+        }
+      } catch (e) {
+        console.error("Error parsing time config:", e);
       }
     }
 

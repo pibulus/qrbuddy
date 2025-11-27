@@ -47,7 +47,43 @@ serve(async (req) => {
       );
     }
 
-    // Return QR details (excluding sensitive fields)
+    // Fetch analytics (Last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const { data: logs, error: _logsError } = await supabase
+      .from("scan_logs")
+      .select("scanned_at, device_type, os")
+      .eq("qr_id", data.id)
+      .gte("scanned_at", sevenDaysAgo.toISOString())
+      .order("scanned_at", { ascending: true });
+
+    // Process logs for sparkline
+    const sparklineData = new Array(7).fill(0);
+    const today = new Date();
+    
+    logs?.forEach((log: { scanned_at: string }) => {
+      const logDate = new Date(log.scanned_at);
+      const diffTime = Math.abs(today.getTime() - logDate.getTime());
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < 7) {
+        sparklineData[6 - diffDays]++;
+      }
+    });
+
+    // Get last scan time
+    const lastScan = logs && logs.length > 0 ? logs[logs.length - 1].scanned_at : null;
+
+    // Device stats
+    const deviceStats = { ios: 0, android: 0, desktop: 0, other: 0 };
+    logs?.forEach((log: { os: string; device_type: string }) => {
+      if (log.os === "ios") deviceStats.ios++;
+      else if (log.os === "android") deviceStats.android++;
+      else if (log.device_type === "desktop") deviceStats.desktop++;
+      else deviceStats.other++;
+    });
+
+    // Return QR details + Analytics
     return new Response(
       JSON.stringify({
         success: true,
@@ -60,6 +96,12 @@ serve(async (req) => {
           scan_count: data.scan_count,
           is_active: data.is_active,
           routing_mode: data.routing_mode,
+          routing_config: data.routing_config,
+          analytics: {
+            sparkline: sparklineData,
+            last_scan: lastScan,
+            devices: deviceStats,
+          }
         },
       }),
       {
