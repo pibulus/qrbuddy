@@ -187,13 +187,16 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
         <main id="main-content" class="w-full max-w-md space-y-8 sm:space-y-10">
           {/* Hero Text */}
-          <header class="text-center space-y-4 px-4">
+          <header class="text-center space-y-2 px-4">
+            <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
+              QRBuddy
+            </h1>
             <RotatingTitle />
           </header>
 
           {/* QR Code Display - FIRST */}
           <div class="flex justify-center">
-            <div class="shadow-xl rounded-2xl w-full max-w-[280px] sm:max-w-full transition-all duration-300">
+            <div class="shadow-xl rounded-2xl w-full max-w-[320px] sm:max-w-md transition-all duration-300 overflow-hidden">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}

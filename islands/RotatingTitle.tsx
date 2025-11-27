@@ -26,19 +26,18 @@ export default function RotatingTitle() {
   }, []);
 
   return (
-    <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight leading-tight">
+    <div class="text-lg sm:text-xl text-gray-600 font-medium">
       The{" "}
       <span
         class={`inline-block transition-all duration-500 transform ${
           isVisible
             ? "opacity-100 translate-y-0 scale-100"
             : "opacity-0 translate-y-2 scale-95"
-        } bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent`}
+        } font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent`}
       >
         {ADJECTIVES[index]}
       </span>
-      <br />
-      QR code generator.
-    </h1>
+      {" "}QR code generator.
+    </div>
   );
 }
