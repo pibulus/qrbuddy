@@ -99,8 +99,7 @@ export function PricingModal() {
                   Choose Your Plan
                 </h2>
                 <p class="text-xs sm:text-sm text-purple-900 mt-1">
-                  Start free. Upgrade when you need analytics and advanced
-                  features.
+                  Start free. Upgrade for power tools and zero branding.
                 </p>
               </div>
               <button
