@@ -15,6 +15,8 @@ interface ExtrasModalProps {
   setScanLimit: (limit: number | null) => void;
   expiryDate: string;
   setExpiryDate: (date: string) => void;
+  isBatchMode: boolean;
+  setIsBatchMode: (isBatch: boolean) => void;
 }
 
 export default function ExtrasModal({
@@ -29,6 +31,8 @@ export default function ExtrasModal({
   setScanLimit,
   expiryDate,
   setExpiryDate,
+  isBatchMode,
+  setIsBatchMode,
 }: ExtrasModalProps) {
   const [showLogoUploader, setShowLogoUploader] = useState(false);
 
@@ -79,7 +83,10 @@ export default function ExtrasModal({
               type="button"
               onClick={() => {
                 isDynamic.value = !isDynamic.value;
-                if (isDynamic.value) isBucket.value = false;
+                if (isDynamic.value) {
+                  isBucket.value = false;
+                  setIsBatchMode(false);
+                }
                 haptics.light();
               }}
               class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
@@ -107,7 +114,10 @@ export default function ExtrasModal({
               type="button"
               onClick={() => {
                 isBucket.value = !isBucket.value;
-                if (isBucket.value) isDynamic.value = false;
+                if (isBucket.value) {
+                  isDynamic.value = false;
+                  setIsBatchMode(false);
+                }
                 haptics.light();
               }}
               class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
@@ -128,6 +138,37 @@ export default function ExtrasModal({
               </div>
               {isBucket.value && (
                 <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#3AA8A4]">
+                  <span>✓</span>
+                  Active
+                </div>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsBatchMode(!isBatchMode);
+                if (!isBatchMode) {
+                  isDynamic.value = false;
+                  isBucket.value = false;
+                }
+                haptics.light();
+              }}
+              class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
+                isBatchMode
+                  ? "bg-gradient-to-br from-blue-100 to-cyan-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                  : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              }`}
+            >
+              <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                📦
+              </div>
+              <div class="font-black text-sm text-gray-900">Batch Mode</div>
+              <div class="text-xs text-gray-600 leading-snug mt-1">
+                Generate multiple QRs at once from a list.
+              </div>
+              {isBatchMode && (
+                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-blue-600">
                   <span>✓</span>
                   Active
                 </div>

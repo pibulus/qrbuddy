@@ -662,136 +662,74 @@ export default function SmartInput(
         </div>
       )}
 
-      {/* Batch Mode Options */}
-      {selectedTemplate === "url" && !isDynamic.value && !isDestructible.value && !isBucket.value && !isSequential && (
-        <div class="space-y-3 animate-slide-down">
-          {/* Toggle Batch Mode */}
-          <div class="flex items-center justify-between bg-white border-2 border-gray-200 rounded-xl p-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">📦</span>
-              <div>
-                <h4 class="font-bold text-sm text-gray-800">Batch Mode</h4>
-                <p class="text-xs text-gray-500">Generate multiple QRs at once</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setIsBatchMode(!isBatchMode);
-                haptics.light();
-              }}
-              class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isBatchMode ? "bg-blue-500" : "bg-gray-200"
-              }`}
-            >
-              <span
-                class={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isBatchMode ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
+      {/* Batch Mode Input */}
+      {isBatchMode && (
+        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-3 animate-slide-down mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-bold text-blue-700 uppercase tracking-wide">
+              Paste URLs (One per line)
+            </label>
+            <span class="text-xs font-bold text-blue-500">
+              {batchUrls.split("\n").filter((u) => u.trim()).length} URLs
+            </span>
           </div>
 
-          {/* Batch Input */}
-          {isBatchMode && (
-            <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-3 animate-slide-down">
-              <div class="flex items-center justify-between mb-2">
-                <label class="text-xs font-bold text-blue-700 uppercase tracking-wide">
-                  Paste URLs (One per line)
-                </label>
-                <span class="text-xs font-bold text-blue-500">
-                  {batchUrls.split("\n").filter(u => u.trim()).length} URLs
-                </span>
-              </div>
-              
-              <textarea
-                value={batchUrls}
-                onInput={(e) => setBatchUrls(e.currentTarget.value)}
-                placeholder={`https://example.com\nhttps://google.com\nhttps://bing.com`}
-                rows={5}
-                class="w-full px-3 py-2 text-sm border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
-                disabled={isGeneratingBatch}
-              />
+          <textarea
+            value={batchUrls}
+            onInput={(e) => setBatchUrls(e.currentTarget.value)}
+            placeholder={`https://example.com\nhttps://google.com\nhttps://bing.com`}
+            rows={5}
+            class="w-full px-3 py-2 text-sm border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+            disabled={isGeneratingBatch}
+          />
 
-              {isGeneratingBatch ? (
-                <div class="space-y-2">
-                  <div class="h-2 bg-blue-200 rounded-full overflow-hidden">
-                    <div 
-                      class="h-full bg-blue-500 transition-all duration-300"
-                      style={{ width: `${batchProgress}%` }}
-                    />
-                  </div>
-                  <p class="text-center text-xs font-bold text-blue-600 animate-pulse">
-                    Generating... {batchProgress}%
-                  </p>
+          {isGeneratingBatch
+            ? (
+              <div class="space-y-2">
+                <div class="h-2 bg-blue-200 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-blue-500 transition-all duration-300"
+                    style={{ width: `${batchProgress}%` }}
+                  />
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={generateBatchZIP}
-                  disabled={!batchUrls.trim()}
-                  class="w-full py-3 text-sm font-black text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  📦 Generate ZIP
-                </button>
-              )}
-            </div>
-          )}
+                <p class="text-center text-xs font-bold text-blue-600 animate-pulse">
+                  Generating... {batchProgress}%
+                </p>
+              </div>
+            )
+            : (
+              <button
+                type="button"
+                onClick={generateBatchZIP}
+                disabled={!batchUrls.trim()}
+                class="w-full py-3 text-sm font-black text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                📦 Generate ZIP
+              </button>
+            )}
         </div>
       )}
 
-      {/* File Bucket Options */}
-      {selectedTemplate === "url" && !isDynamic.value && !isDestructible.value && !isSequential && !isBatchMode && (
-        <div class="space-y-3 animate-slide-down">
-          {/* Toggle File Bucket */}
-          <div class="flex items-center justify-between bg-white border-2 border-gray-200 rounded-xl p-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">🪣</span>
-              <div>
-                <h4 class="font-bold text-sm text-gray-800">File Bucket</h4>
-                <p class="text-xs text-gray-500">Scan to upload & transfer files</p>
-              </div>
+      {/* Bucket Info */}
+      {isBucket.value && (
+        <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 space-y-3 animate-slide-down mt-4">
+          <div class="flex items-center gap-3">
+            <div class="text-3xl">📲 ➔ 💻</div>
+            <div>
+              <h4 class="font-bold text-orange-800">How it works</h4>
+              <p class="text-xs text-orange-700">
+                1. Create a bucket QR.<br />
+                2. Scan with your phone to upload a file.<br />
+                3. The QR on your screen updates to let you download it.
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                isBucket.value = !isBucket.value;
-                haptics.light();
-              }}
-              class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isBucket.value ? "bg-orange-500" : "bg-gray-200"
-              }`}
-            >
-              <span
-                class={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isBucket.value ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
           </div>
 
-          {/* Bucket Info */}
-          {isBucket.value && (
-            <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 space-y-3 animate-slide-down">
-              <div class="flex items-center gap-3">
-                <div class="text-3xl">📲 ➔ 💻</div>
-                <div>
-                  <h4 class="font-bold text-orange-800">How it works</h4>
-                  <p class="text-xs text-orange-700">
-                    1. Create a bucket QR.<br/>
-                    2. Scan with your phone to upload a file.<br/>
-                    3. The QR on your screen updates to let you download it.
-                  </p>
-                </div>
-              </div>
-              
-              {isCreatingBucket && (
-                <div class="text-center py-2">
-                  <p class="text-orange-600 font-bold animate-pulse">
-                    Creating your bucket... 🔨
-                  </p>
-                </div>
-              )}
+          {isCreatingBucket && (
+            <div class="text-center py-2">
+              <p class="text-orange-600 font-bold animate-pulse">
+                Creating your bucket... 🔨
+              </p>
             </div>
           )}
         </div>
@@ -908,6 +846,8 @@ export default function SmartInput(
         setScanLimit={setScanLimit}
         expiryDate={expiryDate}
         setExpiryDate={setExpiryDate}
+        isBatchMode={isBatchMode}
+        setIsBatchMode={setIsBatchMode}
       />
     </div>
   );
