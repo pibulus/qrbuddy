@@ -69,3 +69,45 @@ ALTER TABLE dynamic_qr_codes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role can do everything on dynamic_qr_codes" ON dynamic_qr_codes
   FOR ALL
   USING (auth.role() = 'service_role');
+
+-- ==============================================================================
+-- FILE BUCKETS - PERSISTENT STORAGE
+-- ==============================================================================
+
+CREATE TABLE IF NOT EXISTS file_buckets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bucket_code TEXT UNIQUE NOT NULL,
+  owner_token TEXT NOT NULL,
+
+  -- Bucket configuration
+  bucket_type TEXT NOT NULL DEFAULT 'file', -- 'file', 'text', 'link'
+  style TEXT NOT NULL DEFAULT 'sunset', -- QR style chosen by creator
+  is_password_protected BOOLEAN DEFAULT FALSE,
+  password_hash TEXT,
+  is_reusable BOOLEAN DEFAULT TRUE, -- persistent vs one-time
+
+  -- Current content
+  content_type TEXT, -- 'file', 'text', 'link'
+  content_data TEXT, -- file_id, text content, or URL
+  content_metadata JSONB, -- filename, size, etc.
+
+  -- State
+  is_empty BOOLEAN DEFAULT TRUE,
+  last_filled_at TIMESTAMPTZ,
+  last_emptied_at TIMESTAMPTZ,
+
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_file_buckets_bucket_code ON file_buckets(bucket_code);
+CREATE INDEX IF NOT EXISTS idx_file_buckets_owner_token ON file_buckets(owner_token);
+
+-- RLS Policies
+ALTER TABLE file_buckets ENABLE ROW LEVEL SECURITY;
+
+-- Only service role can access buckets (all access via edge functions)
+CREATE POLICY "Service role can do everything on file_buckets" ON file_buckets
+  FOR ALL
+  USING (auth.role() = 'service_role');
