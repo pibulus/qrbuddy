@@ -14,6 +14,7 @@ import { PricingLink, PricingModal } from "../islands/PricingModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { getSupabaseUrl } from "../utils/api.ts";
+import RotatingTitle from "../islands/RotatingTitle.tsx";
 
 interface HomeProps {
   posthogKey?: string;
@@ -164,7 +165,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         Skip to main content
       </a>
 
-      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
+      <div class="min-h-screen flex flex-col items-center justify-start sm:justify-center pt-12 sm:pt-6 p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
         <ToastManager />
         <Analytics
           posthogKey={data?.posthogKey}
@@ -178,26 +179,21 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
         {/* Style Selector - Top Right Corner */}
         <div
-          class="absolute top-4 right-4 sm:top-6 sm:right-6"
+          class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50"
           aria-label="Style selector"
         >
           <StyleSelector style={style} customStyle={customStyle} />
         </div>
 
-        <main id="main-content" class="w-full max-w-md space-y-8">
+        <main id="main-content" class="w-full max-w-md space-y-8 sm:space-y-10">
           {/* Hero Text */}
-          <header class="text-center space-y-2">
-            <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
-              QRBuddy
-            </h1>
-            <p class="text-base sm:text-lg text-gray-600">
-              Generate beautiful QR codes
-            </p>
+          <header class="text-center space-y-4 px-4">
+            <RotatingTitle />
           </header>
 
           {/* QR Code Display - FIRST */}
           <div class="flex justify-center">
-            <div class="shadow-xl rounded-2xl">
+            <div class="shadow-xl rounded-2xl w-full max-w-[280px] sm:max-w-full transition-all duration-300">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}
