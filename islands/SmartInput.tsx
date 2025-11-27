@@ -617,51 +617,18 @@ export default function SmartInput(
         </div>
       )}
 
-      {/* Batch Mode Input */}
+      {/* Batch Mode Active Badge */}
       {isBatchMode && (
-        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-3 animate-slide-down mt-4">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-bold text-blue-700 uppercase tracking-wide">
-              Paste URLs (One per line)
-            </label>
-            <span class="text-xs font-bold text-blue-500">
-              {batchUrls.split("\n").filter((u) => u.trim()).length} URLs
+        <div class="text-center animate-slide-down py-4">
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-full shadow-sm">
+            <span class="text-xl animate-pulse">📦</span>
+            <span class="text-sm font-bold text-blue-700 uppercase tracking-wide">
+              Batch Mode Active
             </span>
           </div>
-
-          <textarea
-            value={batchUrls}
-            onInput={(e) => setBatchUrls(e.currentTarget.value)}
-            placeholder={`https://example.com\nhttps://google.com\nhttps://bing.com`}
-            rows={5}
-            class="w-full px-3 py-2 text-sm border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
-            disabled={isGeneratingBatch}
-          />
-
-          {isGeneratingBatch
-            ? (
-              <div class="space-y-2">
-                <div class="h-2 bg-blue-200 rounded-full overflow-hidden">
-                  <div
-                    class="h-full bg-blue-500 transition-all duration-300"
-                    style={{ width: `${batchProgress}%` }}
-                  />
-                </div>
-                <p class="text-center text-xs font-bold text-blue-600 animate-pulse">
-                  Generating... {batchProgress}%
-                </p>
-              </div>
-            )
-            : (
-              <button
-                type="button"
-                onClick={generateBatchZIP}
-                disabled={!batchUrls.trim()}
-                class="w-full py-3 text-sm font-black text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                📦 Generate ZIP
-              </button>
-            )}
+          <p class="text-xs text-gray-400 mt-2 font-medium">
+            {batchUrls.split("\n").filter((u) => u.trim()).length} URLs queued • Manage in Power-Ups
+          </p>
         </div>
       )}
 
@@ -799,6 +766,11 @@ export default function SmartInput(
         setSequentialUrls={setSequentialUrls}
         loopSequence={loopSequence}
         setLoopSequence={setLoopSequence}
+        batchUrls={batchUrls}
+        setBatchUrls={setBatchUrls}
+        isGeneratingBatch={isGeneratingBatch}
+        batchProgress={batchProgress}
+        onGenerateBatch={generateBatchZIP}
       />
     </div>
   );
