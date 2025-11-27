@@ -81,13 +81,13 @@ export default function TemplateModal({
         <div class="flex items-start justify-between gap-3">
           <div>
             <p class="text-xs uppercase tracking-wide text-blue-500 font-bold">
-              Quick Templates
+              Templates
             </p>
             <p class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
-              Pick a format
+              Choose Format
             </p>
             <p class="text-xs sm:text-sm text-gray-600">
-              WiFi, contacts, messages—click and fill.
+              Smart forms for smart codes.
             </p>
           </div>
           <button
@@ -100,7 +100,25 @@ export default function TemplateModal({
           </button>
         </div>
 
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              onTemplateSelect("url");
+              haptics.light();
+              onClose();
+            }}
+            class={`px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex flex-col items-center justify-center gap-1
+              ${
+              selectedTemplate === "url"
+                ? "bg-gray-900 text-white border-black scale-105 shadow-lg"
+                : "bg-white text-gray-700 border-gray-300 hover:border-gray-900 hover:scale-105"
+            }`}
+          >
+            <span class="text-2xl">🔗</span>
+            <span>Standard</span>
+          </button>
+
           {(Object.keys(QR_TEMPLATES) as QRTemplateType[]).map(
             (templateType) => {
               const template = QR_TEMPLATES[templateType];
@@ -109,7 +127,7 @@ export default function TemplateModal({
                   key={templateType}
                   type="button"
                   onClick={() => handleTemplateClick(templateType)}
-                  class={`px-4 py-2 rounded-xl border-2 font-semibold text-sm transition-all flex items-center gap-2
+                  class={`px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex flex-col items-center justify-center gap-1
                     ${
                     selectedTemplate === templateType
                       ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-pink-600 scale-105 shadow-lg"
@@ -117,8 +135,8 @@ export default function TemplateModal({
                   }`}
                   title={template.description}
                 >
-                  <span>{template.icon}</span>
-                  {template.label}
+                  <span class="text-2xl">{template.icon}</span>
+                  <span>{template.label}</span>
                 </button>
               );
             },
@@ -127,19 +145,7 @@ export default function TemplateModal({
 
         {/* Template form reveals IN the modal after selection */}
         <div class={selectedTemplate !== "url" ? "animate-slide-down" : ""}>
-          {renderTemplateForm() ?? (
-            <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-2">
-              <div class="flex items-center gap-2">
-                <span class="text-2xl">🔗</span>
-                <h3 class="font-black text-gray-900">
-                  Plain link or text?
-                </h3>
-              </div>
-              <p class="text-sm text-gray-700">
-                Use the main input up top. Templates handle the fancy stuff.
-              </p>
-            </div>
-          )}
+          {renderTemplateForm()}
         </div>
 
         <div class="flex justify-end gap-3">

@@ -53,7 +53,7 @@ export default function ShareActions(
         class="w-full px-4 py-3 bg-white border-3 border-black rounded-xl font-bold flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
       >
         <span>📋</span>
-        Copy share link
+        Copy Link
       </button>
 
       <button
@@ -62,7 +62,7 @@ export default function ShareActions(
         class="w-full px-4 py-3 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 text-black border-3 border-black rounded-xl font-bold flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
       >
         <span>{canWebShare ? "📲" : "↗"}</span>
-        {canWebShare ? "Share via apps" : "Open share sheet"}
+        {canWebShare ? "Share Sheet" : "Open Share Sheet"}
       </button>
     </div>
   );

@@ -157,6 +157,20 @@ export const QR_STYLES = {
     },
   },
 
+  noir: {
+    dots: {
+      color: "#1A1A1A",
+    },
+    background: {
+      color: "#FAFAFA",
+    },
+    cornersSquare: {
+      color: "#1A1A1A",
+    },
+    cornersDot: {
+      color: "#1A1A1A",
+    },
+  },
   brutalist: {
     dots: {
       color: "#000000",

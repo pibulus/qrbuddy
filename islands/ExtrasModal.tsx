@@ -17,6 +17,12 @@ interface ExtrasModalProps {
   setExpiryDate: (date: string) => void;
   isBatchMode: boolean;
   setIsBatchMode: (isBatch: boolean) => void;
+  isSequential: boolean;
+  setIsSequential: (isSeq: boolean) => void;
+  sequentialUrls: string[];
+  setSequentialUrls: (urls: string[]) => void;
+  loopSequence: boolean;
+  setLoopSequence: (loop: boolean) => void;
 }
 
 export default function ExtrasModal({
@@ -33,6 +39,12 @@ export default function ExtrasModal({
   setExpiryDate,
   isBatchMode,
   setIsBatchMode,
+  isSequential,
+  setIsSequential,
+  sequentialUrls,
+  setSequentialUrls,
+  loopSequence,
+  setLoopSequence,
 }: ExtrasModalProps) {
   const [showLogoUploader, setShowLogoUploader] = useState(false);
 
@@ -86,6 +98,9 @@ export default function ExtrasModal({
                 if (isDynamic.value) {
                   isBucket.value = false;
                   setIsBatchMode(false);
+                } else {
+                  // Disable sequential if dynamic is disabled
+                  setIsSequential(false);
                 }
                 haptics.light();
               }}
@@ -117,6 +132,7 @@ export default function ExtrasModal({
                 if (isBucket.value) {
                   isDynamic.value = false;
                   setIsBatchMode(false);
+                  setIsSequential(false);
                 }
                 haptics.light();
               }}
@@ -150,6 +166,7 @@ export default function ExtrasModal({
                 if (!isBatchMode) {
                   isDynamic.value = false;
                   isBucket.value = false;
+                  setIsSequential(false);
                 }
                 haptics.light();
               }}
@@ -200,6 +217,40 @@ export default function ExtrasModal({
                 </div>
               )}
             </button>
+            
+            {/* Multi-Link (Sequential) Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const newState = !isSequential;
+                setIsSequential(newState);
+                if (newState) {
+                  isDynamic.value = true; // Must be dynamic
+                  isBucket.value = false;
+                  setIsBatchMode(false);
+                }
+                haptics.light();
+              }}
+              class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
+                isSequential
+                  ? "bg-gradient-to-br from-purple-100 to-indigo-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                  : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              }`}
+            >
+              <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                ⛓️
+              </div>
+              <div class="font-black text-sm text-gray-900">Multi-Link</div>
+              <div class="text-xs text-gray-600 leading-snug mt-1">
+                Rotate through different URLs with each scan.
+              </div>
+              {isSequential && (
+                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-indigo-600">
+                  <span>✓</span>
+                  Active
+                </div>
+              )}
+            </button>
           </div>
 
           {showLogoUploader && (
@@ -210,6 +261,70 @@ export default function ExtrasModal({
 
           {isDynamic.value && (
             <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky">
+              {/* Multi-Link Settings */}
+              {isSequential && (
+                <div class="bg-white/60 rounded-xl p-3 mb-4 border-2 border-indigo-200">
+                   <div class="flex items-center justify-between mb-2">
+                     <h4 class="font-bold text-sm text-indigo-900">Link Chain</h4>
+                     <button
+                       type="button"
+                       onClick={() => {
+                         setLoopSequence(!loopSequence);
+                         haptics.light();
+                       }}
+                       class={`text-xs font-bold px-2 py-1 rounded border-2 transition-colors ${
+                         loopSequence 
+                           ? "bg-indigo-500 text-white border-indigo-600" 
+                           : "bg-white text-gray-500 border-gray-300"
+                       }`}
+                     >
+                       {loopSequence ? "Looping 🔄" : "Loop: Off"}
+                     </button>
+                   </div>
+                   
+                   <div class="space-y-2">
+                     {sequentialUrls.map((url, index) => (
+                       <div key={index} class="flex items-center gap-2">
+                         <span class="text-xs font-bold text-gray-400 w-4">{index + 1}.</span>
+                         <input
+                           type="url"
+                           value={url}
+                           placeholder={`https://site-${index + 1}.com`}
+                           onInput={(e) => {
+                             const newUrls = [...sequentialUrls];
+                             newUrls[index] = (e.target as HTMLInputElement).value;
+                             setSequentialUrls(newUrls);
+                           }}
+                           class="flex-1 px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:outline-none"
+                         />
+                         {sequentialUrls.length > 2 && (
+                           <button
+                             type="button"
+                             onClick={() => {
+                               setSequentialUrls(sequentialUrls.filter((_, i) => i !== index));
+                               haptics.medium();
+                             }}
+                             class="text-red-400 hover:text-red-600 px-1"
+                           >
+                             ×
+                           </button>
+                         )}
+                       </div>
+                     ))}
+                     <button
+                       type="button"
+                       onClick={() => {
+                         setSequentialUrls([...sequentialUrls, ""]);
+                         haptics.light();
+                       }}
+                       class="w-full py-1.5 text-xs font-bold text-indigo-600 border-2 border-dashed border-indigo-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 transition-colors"
+                     >
+                       + Add Link
+                     </button>
+                   </div>
+                </div>
+              )}
+
               <div class="space-y-2">
                 <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
                   Scan limit
@@ -302,42 +417,74 @@ export default function ExtrasModal({
             </div>
           )}
 
-          {bucketUrl.value && (
-            <div class="bg-gradient-to-r from-[#E0FFFF] to-[#B0E5E8] border-3 border-[#4ECDC4] rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">🪣</span>
-                <p class="text-sm font-black text-[#3AA8A4]">
-                  File Locker ready!
-                </p>
+          {isBucket.value && (
+            <div class="bg-gradient-to-r from-[#E0FFFF] to-[#B0E5E8] border-3 border-[#4ECDC4] rounded-xl p-4 space-y-4 shadow-chunky animate-slide-down">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl">🪣</span>
+                  <h3 class="font-black text-gray-900">
+                    Locker Settings
+                  </h3>
+                </div>
+                {bucketUrl.value && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      bucketUrl.value = "";
+                      // Trigger creation happens in SmartInput effect
+                      haptics.medium();
+                    }}
+                    class="text-xs font-bold text-[#3AA8A4] hover:text-teal-700 underline decoration-2 underline-offset-2"
+                  >
+                    ↻ Reset
+                  </button>
+                )}
               </div>
-              <div class="flex gap-2">
-                <input
-                  type="text"
-                  value={bucketUrl.value}
-                  readOnly
-                  class="flex-1 px-3 py-2 bg-white border-2 border-[#4ECDC4] rounded-lg text-xs font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(bucketUrl.value);
-                    haptics.success();
-                    const event = new CustomEvent("show-toast", {
-                      detail: {
-                        message: "Bucket URL copied! 📋",
-                        type: "success",
-                      },
-                    });
-                    globalThis.dispatchEvent(event);
-                  }}
-                  class="px-4 py-2 bg-[#4ECDC4] text-white rounded-lg font-semibold text-sm hover:bg-[#3AA8A4] transition-colors"
-                >
-                  Copy
-                </button>
-              </div>
-              <p class="text-xs text-[#3AA8A4]">
-                Scan to upload/download files. Perfect for stickers or signs.
-              </p>
+
+              {bucketUrl.value ? (
+                <div class="space-y-3">
+                  <div class="bg-white/50 rounded-lg p-3 text-sm text-gray-800 leading-relaxed">
+                    <strong>Your locker is active.</strong><br/>
+                    Scan the QR to upload files. Scan it again to download them.
+                  </div>
+                  
+                  <div class="space-y-1">
+                    <label class="text-xs font-bold text-[#3AA8A4] uppercase tracking-wide">
+                      Locker URL
+                    </label>
+                    <div class="flex gap-2">
+                      <input
+                        type="text"
+                        value={bucketUrl.value}
+                        readOnly
+                        class="flex-1 px-3 py-2 bg-white border-2 border-[#4ECDC4] rounded-lg text-xs font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(bucketUrl.value);
+                          haptics.success();
+                          const event = new CustomEvent("show-toast", {
+                            detail: {
+                              message: "Locker URL copied! 📋",
+                              type: "success",
+                            },
+                          });
+                          globalThis.dispatchEvent(event);
+                        }}
+                        class="px-4 py-2 bg-[#4ECDC4] text-white rounded-lg font-semibold text-sm hover:bg-[#3AA8A4] transition-colors"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div class="flex items-center gap-3 py-2">
+                  <div class="animate-spin text-2xl">⚙️</div>
+                  <p class="font-bold text-[#3AA8A4]">Building your locker...</p>
+                </div>
+              )}
             </div>
           )}
         </div>

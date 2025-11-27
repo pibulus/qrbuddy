@@ -16,20 +16,21 @@ const STYLE_DISPLAY = {
   terminal: { name: "Matrix", colors: ["#00FF41", "#0A0A0A"] },
   candy: { name: "Candy", colors: ["#FF69B4", "#FFD700", "#4ECDC4"] },
   vapor: { name: "Vapor", colors: ["#FF00FF", "#00FFFF"] },
+  noir: { name: "Classic", colors: ["#1A1A1A", "#FAFAFA"] },
   brutalist: { name: "Brutal", colors: ["#000000", "#FFFF00"] },
 };
 
 export default function StyleSelector(
   { style, customStyle }: StyleSelectorProps,
 ) {
-  const [showAll, setShowAll] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const isCreatorOpen = useSignal(false);
 
   const handleStyleSelect = (s: string) => {
     style.value = s;
     haptics.light();
     sounds.click();
-    setShowAll(false);
+    setIsGalleryOpen(false);
   };
 
   const handleCustomGradient = (gradient: QRStyle) => {
@@ -50,11 +51,11 @@ export default function StyleSelector(
   return (
     <>
       <div class="relative">
-        {/* Current Style Display - Compact */}
+        {/* Main Trigger Button */}
         <button
           type="button"
           onClick={() => {
-            setShowAll(!showAll);
+            setIsGalleryOpen(true);
             haptics.light();
             sounds.click();
           }}
@@ -74,78 +75,109 @@ export default function StyleSelector(
           <span class="font-bold text-black">
             {currentStyleInfo.name}
           </span>
-          <span
-            class={`text-sm font-bold transition-transform duration-200 ${
-              showAll ? "rotate-180" : ""
-            }`}
-          >
+          <span class="text-sm font-bold">
             ▼
           </span>
         </button>
+      </div>
 
-        {/* Expanded Style Grid */}
-        {showAll && (
-          <div class="absolute top-full mt-2 right-0 z-20 animate-slide-down">
-            <div class="bg-white rounded-xl border-3 border-black shadow-xl p-2 min-w-[200px]">
-              <div class="space-y-1">
-                {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
-                  <button
-                    type="button"
-                    key={key}
-                    onClick={() => handleStyleSelect(key)}
-                    class={`
-                      w-full flex items-center gap-3 px-3 py-2 rounded-lg
-                      transition-all duration-200
-                      hover:bg-gray-100
-                      ${
-                      style.value === key
-                        ? "bg-black text-white"
-                        : "text-black hover:translate-x-1"
-                    }
-                    `}
-                  >
-                    <div
-                      class="w-5 h-5 rounded border-2 border-black flex-shrink-0"
-                      style={{ background: getGradientPreview(info.colors) }}
-                    />
-                    <span class="font-medium text-left">
-                      {info.name}
-                    </span>
-                  </button>
-                ))}
+      {/* Style Gallery Modal */}
+      {isGalleryOpen && (
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-4">
+          <div
+            class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setIsGalleryOpen(false)}
+          />
+          <div class="relative z-10 w-full max-w-lg bg-white border-4 border-black rounded-3xl shadow-2xl p-6 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+            
+            {/* Header */}
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="text-xs uppercase tracking-wide text-pink-500 font-bold">
+                  Style Gallery
+                </p>
+                <p class="text-2xl font-black text-gray-900 leading-tight">
+                  Pick your Vibe
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsGalleryOpen(false)}
+                class="text-3xl font-black text-gray-400 hover:text-gray-900 hover:rotate-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
 
-                {/* Divider */}
-                <div class="border-t-2 border-gray-200 my-1"></div>
-
-                {/* Custom Style Button */}
+            {/* Grid */}
+            <div class="grid grid-cols-2 gap-3">
+              {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
                 <button
                   type="button"
-                  onClick={() => {
-                    isCreatorOpen.value = true;
-                    haptics.medium();
-                    sounds.click();
-                    setShowAll(false);
-                  }}
+                  key={key}
+                  onClick={() => handleStyleSelect(key)}
                   class={`
-                    w-full flex items-center gap-3 px-3 py-2 rounded-lg
-                    transition-all duration-200
+                    relative group overflow-hidden rounded-2xl border-3 transition-all duration-200
                     ${
-                    style.value === "custom"
-                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                      : "text-black hover:bg-gray-100 hover:translate-x-1"
+                    style.value === key
+                      ? "border-black scale-[1.02] shadow-chunky"
+                      : "border-transparent hover:border-black hover:scale-[1.02] hover:shadow-lg"
                   }
                   `}
                 >
-                  <div class="w-5 h-5 rounded border-2 border-black bg-gradient-to-r from-purple-500 to-pink-500 flex-shrink-0" />
-                  <span class="font-medium text-left">
-                    Custom
-                  </span>
+                  {/* Preview Background */}
+                  <div 
+                    class="absolute inset-0 z-0"
+                    style={{ background: getGradientPreview(info.colors) }}
+                  />
+                  
+                  {/* Content Overlay */}
+                  <div class="relative z-10 p-4 h-24 flex flex-col justify-end">
+                    <span class="font-black text-white text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+                      {info.name}
+                    </span>
+                    {style.value === key && (
+                       <span class="absolute top-3 right-3 bg-white text-black text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                         Selected
+                       </span>
+                    )}
+                  </div>
                 </button>
-              </div>
+              ))}
+
+              {/* Custom Style Card */}
+              <button
+                type="button"
+                onClick={() => {
+                  isCreatorOpen.value = true;
+                  haptics.medium();
+                  sounds.click();
+                  setIsGalleryOpen(false);
+                }}
+                class={`
+                  relative group overflow-hidden rounded-2xl border-3 border-dashed border-gray-300 
+                  hover:border-black hover:border-solid hover:scale-[1.02] hover:shadow-lg transition-all duration-200
+                  bg-gray-50 flex flex-col items-center justify-center h-24 gap-1
+                  ${style.value === "custom" ? "border-black border-solid shadow-chunky bg-white" : ""}
+                `}
+              >
+                <span class="text-2xl">🎨</span>
+                <span class="font-bold text-gray-900">Custom</span>
+              </button>
+            </div>
+
+            <div class="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setIsGalleryOpen(false)}
+                class="px-8 py-3 rounded-xl bg-black text-white font-bold hover:scale-105 transition-transform"
+              >
+                Done
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Custom Gradient Creator Modal */}
       <GradientCreator

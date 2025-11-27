@@ -600,65 +600,20 @@ export default function SmartInput(
             </button>
           </div>
 
-          {/* Sequential URL Inputs */}
-          {isSequential && (
-            <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 space-y-3">
-              <div class="flex items-center justify-between mb-2">
-                <label class="text-xs font-bold text-purple-700 uppercase tracking-wide">
-                  URL Sequence
-                </label>
-                <label class="flex items-center gap-2 text-xs font-bold text-purple-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={loopSequence}
-                    onChange={(e) => setLoopSequence(e.currentTarget.checked)}
-                    class="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
-                  />
-                  Loop Sequence 🔄
-                </label>
-              </div>
-              
-              {sequentialUrls.map((seqUrl, index) => (
-                <div key={index} class="flex gap-2 items-center animate-slide-in-right" style={{ animationDelay: `${index * 50}ms` }}>
-                  <span class="text-xs font-bold text-purple-400 w-4">{index + 1}.</span>
-                  <input
-                    type="url"
-                    value={seqUrl}
-                    onInput={(e) => {
-                      const newUrls = [...sequentialUrls];
-                      newUrls[index] = e.currentTarget.value;
-                      setSequentialUrls(newUrls);
-                      // Update main URL to first item for preview
-                      if (index === 0) url.value = e.currentTarget.value;
-                    }}
-                    placeholder={`URL #${index + 1}`}
-                    class="flex-1 px-3 py-2 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                  />
-                  {sequentialUrls.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newUrls = sequentialUrls.filter((_, i) => i !== index);
-                        setSequentialUrls(newUrls);
-                        if (index === 0 && newUrls.length > 0) url.value = newUrls[0];
-                      }}
-                      class="text-red-400 hover:text-red-600 px-2"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={() => setSequentialUrls([...sequentialUrls, ""])}
-                class="w-full py-2 text-sm font-bold text-purple-600 border-2 border-dashed border-purple-300 rounded-lg hover:bg-purple-100 hover:border-purple-400 transition-colors"
-              >
-                + Add Step
-              </button>
-            </div>
-          )}
+          {/* Multi-Link Active Badge */}
+      {isSequential && (
+        <div class="text-center animate-slide-down py-4">
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-full shadow-sm">
+            <span class="text-xl animate-pulse">⛓️</span>
+            <span class="text-sm font-bold text-indigo-700 uppercase tracking-wide">
+              Multi-Link Active
+            </span>
+          </div>
+          <p class="text-xs text-gray-400 mt-2 font-medium">
+            {sequentialUrls.filter((u) => u).length} links in chain • Manage in Power-Ups
+          </p>
+        </div>
+      )}
         </div>
       )}
 
@@ -710,41 +665,18 @@ export default function SmartInput(
         </div>
       )}
 
-      {/* File Locker Mode UI */}
+      {/* File Locker Active Badge */}
       {isBucket.value && (
-        <div class="bg-gradient-to-br from-orange-50 to-amber-50 border-4 border-orange-200 rounded-2xl p-6 text-center space-y-4 animate-slide-down shadow-chunky">
-          <div class="text-6xl mb-2">🗄️</div>
-          <h3 class="text-2xl font-black text-orange-900">
-            Create a File Locker
-          </h3>
-          <p class="text-sm text-orange-800 font-medium max-w-xs mx-auto leading-relaxed">
-            A permanent QR code for your files.
-            <br />
-            <span class="opacity-75 text-xs mt-2 block">
-              Scan to upload 📲 • Scan again to download 💻
+        <div class="text-center animate-slide-down py-4">
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-full shadow-sm">
+            <span class="text-xl animate-pulse">🪣</span>
+            <span class="text-sm font-bold text-teal-700 uppercase tracking-wide">
+              Locker Active
             </span>
+          </div>
+          <p class="text-xs text-gray-400 mt-2 font-medium">
+            Manage settings in Power-Ups
           </p>
-
-          {bucketUrl.value && (
-            <div class="pt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  bucketUrl.value = "";
-                  createBucket();
-                }}
-                class="text-xs font-bold text-orange-600 hover:text-orange-800 underline decoration-2 underline-offset-2"
-              >
-                ↻ Create a fresh locker
-              </button>
-            </div>
-          )}
-          
-          {isCreatingBucket && (
-             <div class="text-orange-600 font-bold animate-pulse text-sm">
-               Building your locker... 🔨
-             </div>
-          )}
         </div>
       )}
 
@@ -861,6 +793,12 @@ export default function SmartInput(
         setExpiryDate={setExpiryDate}
         isBatchMode={isBatchMode}
         setIsBatchMode={setIsBatchMode}
+        isSequential={isSequential}
+        setIsSequential={setIsSequential}
+        sequentialUrls={sequentialUrls}
+        setSequentialUrls={setSequentialUrls}
+        loopSequence={loopSequence}
+        setLoopSequence={setLoopSequence}
       />
     </div>
   );
