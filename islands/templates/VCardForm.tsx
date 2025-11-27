@@ -60,13 +60,13 @@ export default function VCardForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-purple-50 border-3 border-purple-200 rounded-xl p-4 shadow-chunky">
+      <div class="bg-[#F5E6FF] border-3 border-[#9370DB] rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">👤</span>
-          <h3 class="font-black text-purple-900">Contact Card QR</h3>
+          <h3 class="font-black text-[#6B46A8]">Contact Card QR</h3>
         </div>
-        <p class="text-sm text-purple-700">
-          Share your contact information - saves to phone contacts instantly!
+        <p class="text-sm text-[#6B46A8]">
+          Scan to save contact instantly.
         </p>
       </div>
 
@@ -84,7 +84,7 @@ export default function VCardForm({ url }: Props) {
               haptics.light();
             }}
             placeholder="John"
-            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none"
           />
         </div>
         <div class="space-y-2">
@@ -99,7 +99,7 @@ export default function VCardForm({ url }: Props) {
               haptics.light();
             }}
             placeholder="Doe"
-            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none"
           />
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function VCardForm({ url }: Props) {
               haptics.light();
             }}
             placeholder="Acme Corp"
-            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none"
           />
         </div>
         <div class="space-y-2">
@@ -133,7 +133,7 @@ export default function VCardForm({ url }: Props) {
               haptics.light();
             }}
             placeholder="CEO"
-            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none"
           />
         </div>
       </div>
@@ -151,7 +151,7 @@ export default function VCardForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="+1 (555) 123-4567"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none"
         />
       </div>
 
@@ -168,7 +168,7 @@ export default function VCardForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="john@example.com"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none"
         />
       </div>
 
@@ -185,7 +185,7 @@ export default function VCardForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="https://example.com"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none"
         />
       </div>
 
@@ -202,7 +202,7 @@ export default function VCardForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="123 Main St, City, State 12345"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none"
         />
       </div>
 
@@ -219,23 +219,10 @@ export default function VCardForm({ url }: Props) {
           }}
           placeholder="Additional information..."
           rows={2}
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none resize-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#9370DB] focus:outline-none resize-none"
         />
       </div>
 
-      {/* Error */}
-      {error && (
-        <div class="bg-red-50 border-3 border-red-300 rounded-lg p-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-
-      {/* Success indicator */}
-      {!error && firstName && lastName && (
-        <div class="bg-green-50 border-3 border-green-300 rounded-lg p-3 text-sm text-green-800">
-          ✅ Contact card ready for <strong>{firstName} {lastName}</strong>
-        </div>
-      )}
     </div>
   );
 }

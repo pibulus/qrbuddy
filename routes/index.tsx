@@ -247,7 +247,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
       {/* Modals */}
       <PricingModal />
       <AboutModal />
-      <KofiModal kofiUsername="pabloandres" />
+      <KofiModal kofiUsername="madebypablo" />
     </>
   );
 }
