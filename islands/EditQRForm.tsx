@@ -12,6 +12,7 @@ interface QRData {
   scan_count: number;
   is_active: boolean;
   routing_mode: string;
+  routing_config: any;
 }
 
 export default function EditQRForm() {
@@ -26,6 +27,11 @@ export default function EditQRForm() {
   const [expiryDate, setExpiryDate] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Sequential state
+  const [isSequential, setIsSequential] = useState(false);
+  const [sequentialUrls, setSequentialUrls] = useState<string[]>(["", ""]);
+  const [loopSequence, setLoopSequence] = useState(false);
 
   // Get token from URL on mount
   useEffect(() => {
@@ -74,6 +80,22 @@ export default function EditQRForm() {
       );
       setIsActive(data.is_active);
 
+      // Handle sequential data
+      if (data.routing_mode === "sequential") {
+        setIsSequential(true);
+        try {
+          const config = typeof data.routing_config === "string"
+            ? JSON.parse(data.routing_config)
+            : data.routing_config;
+          setSequentialUrls(config.urls || ["", ""]);
+          setLoopSequence(config.loop || false);
+        } catch (e) {
+          console.error("Error parsing routing config:", e);
+        }
+      } else {
+        setIsSequential(false);
+      }
+
       setLoading(false);
     } catch (err) {
       console.error("Load QR error:", err);
@@ -101,6 +123,10 @@ export default function EditQRForm() {
         max_scans: maxScans,
         expires_at: expiryDate ? new Date(expiryDate).toISOString() : null,
         is_active: isActive,
+        routing_mode: isSequential ? "sequential" : "simple",
+        routing_config: isSequential
+          ? { urls: sequentialUrls.filter((u) => u.trim() !== ""), loop: loopSequence }
+          : null,
       };
 
       const response = await fetch(
@@ -305,6 +331,91 @@ export default function EditQRForm() {
           <p class="text-xs text-gray-500 ml-8">
             Uncheck to deactivate this QR (scans will show KABOOM page)
           </p>
+        </div>
+
+        {/* Sequential QR Options */}
+        <div class="space-y-3 pt-4 border-t-2 border-gray-100">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">⛓️</span>
+              <div>
+                <h4 class="font-bold text-sm text-gray-800">Sequential Mode</h4>
+                <p class="text-xs text-gray-500">Redirect to different URLs in order</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsSequential(!isSequential);
+                haptics.light();
+              }}
+              class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isSequential ? "bg-purple-500" : "bg-gray-200"
+              }`}
+            >
+              <span
+                class={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isSequential ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {isSequential && (
+            <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 space-y-3 animate-slide-down">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-bold text-purple-700 uppercase tracking-wide">
+                  URL Sequence
+                </label>
+                <label class="flex items-center gap-2 text-xs font-bold text-purple-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={loopSequence}
+                    onChange={(e) => setLoopSequence(e.currentTarget.checked)}
+                    class="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+                  />
+                  Loop Sequence 🔄
+                </label>
+              </div>
+              
+              {sequentialUrls.map((seqUrl, index) => (
+                <div key={index} class="flex gap-2 items-center">
+                  <span class="text-xs font-bold text-purple-400 w-4">{index + 1}.</span>
+                  <input
+                    type="url"
+                    value={seqUrl}
+                    onInput={(e) => {
+                      const newUrls = [...sequentialUrls];
+                      newUrls[index] = e.currentTarget.value;
+                      setSequentialUrls(newUrls);
+                    }}
+                    placeholder={`URL #${index + 1}`}
+                    class="flex-1 px-3 py-2 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                  />
+                  {sequentialUrls.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newUrls = sequentialUrls.filter((_, i) => i !== index);
+                        setSequentialUrls(newUrls);
+                      }}
+                      class="text-red-400 hover:text-red-600 px-2"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => setSequentialUrls([...sequentialUrls, ""])}
+                class="w-full py-2 text-sm font-bold text-purple-600 border-2 border-dashed border-purple-300 rounded-lg hover:bg-purple-100 hover:border-purple-400 transition-colors"
+              >
+                + Add Step
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Save Button */}

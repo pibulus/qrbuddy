@@ -55,12 +55,21 @@ export default function SmartInput(
   // Bucket options
   const [isCreatingBucket, setIsCreatingBucket] = useState(false);
 
+  // Sequential QR options
+  const [isSequential, setIsSequential] = useState(false);
+  const [sequentialUrls, setSequentialUrls] = useState<string[]>(["", ""]);
+  const [loopSequence, setLoopSequence] = useState(false);
+
   // Custom hooks for complex operations
   const { isCreating: isCreatingDynamic, createDynamicQR } = useDynamicQR({
     url,
     editUrl,
     scanLimit,
     expiryDate,
+    routingMode: isSequential ? "sequential" : "simple",
+    routingConfig: isSequential
+      ? { urls: sequentialUrls.filter((u) => u.trim() !== ""), loop: loopSequence }
+      : undefined,
   });
 
   const { isUploading, uploadProgress, uploadError, uploadFile } =
@@ -393,6 +402,98 @@ export default function SmartInput(
                 class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sequential QR Options */}
+      {selectedTemplate === "url" && isDynamic.value && !isDestructible.value && !isBucket.value && (
+        <div class="space-y-3 animate-slide-down">
+          {/* Toggle Sequential Mode */}
+          <div class="flex items-center justify-between bg-white border-2 border-gray-200 rounded-xl p-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">⛓️</span>
+              <div>
+                <h4 class="font-bold text-sm text-gray-800">Sequential Mode</h4>
+                <p class="text-xs text-gray-500">Redirect to different URLs in order</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsSequential(!isSequential);
+                haptics.light();
+              }}
+              class={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isSequential ? "bg-purple-500" : "bg-gray-200"
+              }`}
+            >
+              <span
+                class={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  isSequential ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Sequential URL Inputs */}
+          {isSequential && (
+            <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 space-y-3">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-bold text-purple-700 uppercase tracking-wide">
+                  URL Sequence
+                </label>
+                <label class="flex items-center gap-2 text-xs font-bold text-purple-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={loopSequence}
+                    onChange={(e) => setLoopSequence(e.currentTarget.checked)}
+                    class="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+                  />
+                  Loop Sequence 🔄
+                </label>
+              </div>
+              
+              {sequentialUrls.map((seqUrl, index) => (
+                <div key={index} class="flex gap-2 items-center animate-slide-in-right" style={{ animationDelay: `${index * 50}ms` }}>
+                  <span class="text-xs font-bold text-purple-400 w-4">{index + 1}.</span>
+                  <input
+                    type="url"
+                    value={seqUrl}
+                    onInput={(e) => {
+                      const newUrls = [...sequentialUrls];
+                      newUrls[index] = e.currentTarget.value;
+                      setSequentialUrls(newUrls);
+                      // Update main URL to first item for preview
+                      if (index === 0) url.value = e.currentTarget.value;
+                    }}
+                    placeholder={`URL #${index + 1}`}
+                    class="flex-1 px-3 py-2 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                  />
+                  {sequentialUrls.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newUrls = sequentialUrls.filter((_, i) => i !== index);
+                        setSequentialUrls(newUrls);
+                        if (index === 0 && newUrls.length > 0) url.value = newUrls[0];
+                      }}
+                      class="text-red-400 hover:text-red-600 px-2"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => setSequentialUrls([...sequentialUrls, ""])}
+                class="w-full py-2 text-sm font-bold text-purple-600 border-2 border-dashed border-purple-300 rounded-lg hover:bg-purple-100 hover:border-purple-400 transition-colors"
+              >
+                + Add Step
+              </button>
             </div>
           )}
         </div>

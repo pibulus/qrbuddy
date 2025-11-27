@@ -54,6 +54,8 @@ serve(async (req) => {
       max_scans,
       expires_at,
       password_hash,
+      routing_mode,
+      routing_config,
     } = body;
 
     if (!destination_url) {
@@ -94,6 +96,8 @@ serve(async (req) => {
         max_scans: max_scans || null,
         expires_at: expires_at || null,
         password_hash: password_hash || null,
+        routing_mode: routing_mode || "simple",
+        routing_config: routing_config || null,
         owner_token: ownerToken,
         is_active: true,
       })

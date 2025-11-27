@@ -24,6 +24,8 @@ serve(async (req) => {
       max_scans,
       expires_at,
       is_active,
+      routing_mode,
+      routing_config,
     } = body;
 
     if (!owner_token) {
@@ -61,6 +63,8 @@ serve(async (req) => {
     if (max_scans !== undefined) updates.max_scans = max_scans;
     if (expires_at !== undefined) updates.expires_at = expires_at;
     if (is_active !== undefined) updates.is_active = is_active;
+    if (routing_mode !== undefined) updates.routing_mode = routing_mode;
+    if (routing_config !== undefined) updates.routing_config = routing_config;
 
     // Update the record
     const { data, error: updateError } = await supabase

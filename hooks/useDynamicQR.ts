@@ -9,10 +9,13 @@ interface UseDynamicQRProps {
   editUrl: Signal<string>;
   scanLimit: number | null;
   expiryDate: string;
+  routingMode?: "simple" | "sequential";
+  routingConfig?: any;
 }
 
 export function useDynamicQR(
-  { url, editUrl, scanLimit, expiryDate }: UseDynamicQRProps,
+  { url, editUrl, scanLimit, expiryDate, routingMode, routingConfig }:
+    UseDynamicQRProps,
 ) {
   const [isCreating, setIsCreating] = useState(false);
 
@@ -23,11 +26,13 @@ export function useDynamicQR(
 
       const apiUrl = getApiUrl();
 
-      const body: Record<string, string | number> = {
+      const body: Record<string, any> = {
         destination_url: destinationUrl,
       };
       if (scanLimit) body.max_scans = scanLimit;
       if (expiryDate) body.expires_at = new Date(expiryDate).toISOString();
+      if (routingMode) body.routing_mode = routingMode;
+      if (routingConfig) body.routing_config = routingConfig;
 
       const response = await fetch(
         `${apiUrl}/create-dynamic-qr`,

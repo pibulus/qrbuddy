@@ -88,8 +88,35 @@ serve(async (req) => {
       .update({ scan_count: qr.scan_count + 1 })
       .eq("short_code", shortCode);
 
+    // Determine destination URL
+    let destinationUrl = qr.destination_url;
+
+    if (qr.routing_mode === "sequential" && qr.routing_config) {
+      try {
+        const config = typeof qr.routing_config === "string"
+          ? JSON.parse(qr.routing_config)
+          : qr.routing_config;
+        
+        const urls = config.urls || [];
+        const loop = config.loop || false;
+
+        if (urls.length > 0) {
+          let index = 0;
+          if (loop) {
+            index = qr.scan_count % urls.length;
+          } else {
+            index = Math.min(qr.scan_count, urls.length - 1);
+          }
+          destinationUrl = urls[index];
+        }
+      } catch (e) {
+        console.error("Error parsing routing config:", e);
+        // Fallback to default destination_url
+      }
+    }
+
     // Redirect to destination
-    return Response.redirect(qr.destination_url, 302);
+    return Response.redirect(destinationUrl, 302);
   } catch (error) {
     console.error("Redirect failed:", error);
     return Response.redirect("/", 302);
