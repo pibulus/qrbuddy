@@ -15,15 +15,10 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "fresh",
-        "recommended"
-      ]
+      "tags": ["fresh", "recommended"]
     }
   },
-  "exclude": [
-    "**/_fresh/*"
-  ],
+  "exclude": ["**/_fresh/*"],
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
     "preact": "https://esm.sh/preact@10.22.0",
@@ -32,8 +27,8 @@
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
     "tailwindcss": "npm:tailwindcss@3.4.1",
     "tailwindcss/": "npm:/tailwindcss@3.4.1/",
-    "qr-code-styling": "https://esm.sh/qr-code-styling@1.6.0-rc.1",
-    "jszip": "https://esm.sh/jszip@3.10.1",
+    "qr-code-styling": "https://esm.sh/qr-code-styling@1.6.0-rc.1?target=es2022",
+    "jszip": "https://esm.sh/jszip@3.10.1?target=es2022",
     "$std/": "https://deno.land/std@0.216.0/"
   },
   "compilerOptions": {
@@ -42,9 +37,7 @@
   },
   "deploy": {
     "project": "fff4f21f-dab0-46f0-aa13-ea22dd20be78",
-    "exclude": [
-      "**/node_modules"
-    ],
+    "exclude": ["**/node_modules"],
     "include": [],
     "entrypoint": "main.ts"
   }
