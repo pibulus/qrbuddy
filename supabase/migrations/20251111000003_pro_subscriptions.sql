@@ -31,12 +31,14 @@ CREATE INDEX IF NOT EXISTS idx_pro_subscriptions_status ON pro_subscriptions(sta
 ALTER TABLE pro_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Users can only read their own subscription by token
+DROP POLICY IF EXISTS "Users can read own subscription" ON pro_subscriptions;
 CREATE POLICY "Users can read own subscription"
   ON pro_subscriptions
   FOR SELECT
   USING (true); -- Public read by token (checked in application)
 
 -- Only service role can insert/update
+DROP POLICY IF EXISTS "Service role can manage subscriptions" ON pro_subscriptions;
 CREATE POLICY "Service role can manage subscriptions"
   ON pro_subscriptions
   FOR ALL

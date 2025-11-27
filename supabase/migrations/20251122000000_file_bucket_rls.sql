@@ -23,10 +23,12 @@ BEGIN
   END IF;
 END $$;
 
+DROP POLICY IF EXISTS "Service role can read bucket status" ON file_buckets;
 CREATE POLICY "Service role can read bucket status"
   ON file_buckets FOR SELECT
   USING (auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Service role can mutate bucket" ON file_buckets;
 CREATE POLICY "Service role can mutate bucket"
   ON file_buckets FOR ALL
   USING (auth.role() = 'service_role')

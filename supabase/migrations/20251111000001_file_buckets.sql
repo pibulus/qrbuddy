@@ -35,11 +35,13 @@ CREATE INDEX IF NOT EXISTS idx_file_buckets_owner_token ON file_buckets(owner_to
 ALTER TABLE file_buckets ENABLE ROW LEVEL SECURITY;
 
 -- Anyone can read bucket status (needed to view bucket page)
+DROP POLICY IF EXISTS "Anyone can read bucket status" ON file_buckets;
 CREATE POLICY "Anyone can read bucket status"
   ON file_buckets FOR SELECT
   USING (true);
 
 -- Anyone with owner_token can insert/update
+DROP POLICY IF EXISTS "Owner can update bucket" ON file_buckets;
 CREATE POLICY "Owner can update bucket"
   ON file_buckets FOR ALL
   USING (true);
