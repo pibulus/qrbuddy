@@ -72,7 +72,7 @@ export default function ExtrasModal({
           {(isDynamic.value || isBucket.value) && (
             <div class="bg-[#FFF8F0] border-2 border-[#FFE5B4] rounded-xl p-3 text-xs text-gray-700 leading-relaxed animate-slide-down">
               💡 <strong>Note:</strong>{" "}
-              Editable link and file bucket are mutually exclusive—pick one per
+              Editable link and file locker are mutually exclusive—pick one per
               QR.
             </div>
           )}
@@ -130,11 +130,10 @@ export default function ExtrasModal({
                 🪣
               </div>
               <div class="font-black text-sm text-gray-900">
-                File drop zone
+                File Locker
               </div>
               <div class="text-xs text-gray-600 leading-snug mt-1">
-                Reusable QR for file transfers. Great for photo booths, offices,
-                or shared folders.
+                Secure digital drop box. Scan to upload, scan again to download.
               </div>
               {isBucket.value && (
                 <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#3AA8A4]">
@@ -308,7 +307,7 @@ export default function ExtrasModal({
               <div class="flex items-center gap-2">
                 <span class="text-xl">🪣</span>
                 <p class="text-sm font-black text-[#3AA8A4]">
-                  File bucket ready!
+                  File Locker ready!
                 </p>
               </div>
               <div class="flex gap-2">

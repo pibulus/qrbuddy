@@ -710,27 +710,40 @@ export default function SmartInput(
         </div>
       )}
 
-      {/* Bucket Info */}
+      {/* File Locker Mode UI */}
       {isBucket.value && (
-        <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 space-y-3 animate-slide-down mt-4">
-          <div class="flex items-center gap-3">
-            <div class="text-3xl">📲 ➔ 💻</div>
-            <div>
-              <h4 class="font-bold text-orange-800">How it works</h4>
-              <p class="text-xs text-orange-700">
-                1. Create a bucket QR.<br />
-                2. Scan with your phone to upload a file.<br />
-                3. The QR on your screen updates to let you download it.
-              </p>
-            </div>
-          </div>
+        <div class="bg-gradient-to-br from-orange-50 to-amber-50 border-4 border-orange-200 rounded-2xl p-6 text-center space-y-4 animate-slide-down shadow-chunky">
+          <div class="text-6xl mb-2">🗄️</div>
+          <h3 class="text-2xl font-black text-orange-900">
+            Create a File Locker
+          </h3>
+          <p class="text-sm text-orange-800 font-medium max-w-xs mx-auto leading-relaxed">
+            A permanent QR code for your files.
+            <br />
+            <span class="opacity-75 text-xs mt-2 block">
+              Scan to upload 📲 • Scan again to download 💻
+            </span>
+          </p>
 
-          {isCreatingBucket && (
-            <div class="text-center py-2">
-              <p class="text-orange-600 font-bold animate-pulse">
-                Creating your bucket... 🔨
-              </p>
+          {bucketUrl.value && (
+            <div class="pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  bucketUrl.value = "";
+                  createBucket();
+                }}
+                class="text-xs font-bold text-orange-600 hover:text-orange-800 underline decoration-2 underline-offset-2"
+              >
+                ↻ Create a fresh locker
+              </button>
             </div>
+          )}
+          
+          {isCreatingBucket && (
+             <div class="text-orange-600 font-bold animate-pulse text-sm">
+               Building your locker... 🔨
+             </div>
           )}
         </div>
       )}
