@@ -51,17 +51,16 @@ export default function QRCanvas(
     if (url.value) {
       try {
         await navigator.clipboard.writeText(url.value);
+        addToast("URL copied to clipboard! 📋");
       } catch (err) {
         console.error("Failed to copy URL:", err);
+        addToast("Failed to copy URL ❌");
       }
     }
 
     // Show success flash
     setShowSuccessFlash(true);
     setTimeout(() => setShowSuccessFlash(false), 600);
-
-    // Show toast notification
-    addToast("QR downloaded! URL copied! 📥📋");
   };
 
   // Helper function to get the current style object

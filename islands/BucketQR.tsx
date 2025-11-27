@@ -326,66 +326,105 @@ export default function BucketQR({
       )}
 
       {/* Media Preview */}
-      {!isEmpty && contentType === "file" && contentMetadata?.mimetype && (
+      {!isEmpty && (
         <div class="space-y-4">
-          {/* Image Preview */}
-          {contentMetadata.mimetype.startsWith("image/") && (
-            <div class="relative rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-white">
-              {(!isPasswordProtected || (isPasswordProtected && password)) ? (
-                <img
-                  src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
-                    password ? `&password=${encodeURIComponent(password)}` : ""
-                  }`}
-                  alt="Bucket content"
-                  class="w-full h-auto object-cover"
-                />
-              ) : (
-                <div class="h-48 flex items-center justify-center bg-gray-100 text-gray-400">
-                  <span class="text-4xl">🔒</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Audio Preview */}
-          {contentMetadata.mimetype.startsWith("audio/") && (
-            <div class="bg-white border-4 border-black rounded-xl p-4 shadow-chunky">
-              <div class="flex items-center gap-3 mb-2">
-                <span class="text-2xl animate-bounce">🎵</span>
-                <span class="font-bold text-sm truncate">
-                  {contentMetadata.filename}
-                </span>
+          {/* Text Preview */}
+          {contentType === "text" && contentMetadata?.content && (
+            <div class={`
+              border-4 border-black rounded-xl p-6 shadow-chunky relative overflow-hidden
+              ${style === "sunset" ? "bg-gradient-to-br from-orange-50 to-pink-50" : ""}
+              ${style === "ocean" ? "bg-gradient-to-br from-blue-50 to-cyan-50" : ""}
+              ${style === "neon" ? "bg-gray-900 text-white" : ""}
+              ${style === "forest" ? "bg-gradient-to-br from-green-50 to-emerald-50" : ""}
+              ${!["sunset", "ocean", "neon", "forest"].includes(style) ? "bg-white" : ""}
+            `}>
+              <div class={`
+                absolute top-0 left-0 w-full h-2
+                ${style === "sunset" ? "bg-gradient-to-r from-yellow-400 to-orange-500" : ""}
+                ${style === "ocean" ? "bg-gradient-to-r from-blue-400 to-cyan-500" : ""}
+                ${style === "neon" ? "bg-gradient-to-r from-pink-500 to-purple-500" : ""}
+                ${style === "forest" ? "bg-gradient-to-r from-green-400 to-emerald-500" : ""}
+                ${!["sunset", "ocean", "neon", "forest"].includes(style) ? "bg-gray-200" : ""}
+              `} />
+              <div class={`
+                font-mono text-lg md:text-xl whitespace-pre-wrap break-words leading-relaxed
+                ${style === "neon" ? "text-green-400" : "text-gray-800"}
+              `}>
+                {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                  contentMetadata.content
+                ) : (
+                  <div class="text-center py-8 opacity-50">
+                    <span class="text-4xl block mb-2">🔒</span>
+                    Hidden Message
+                  </div>
+                )}
               </div>
-              {(!isPasswordProtected || (isPasswordProtected && password)) ? (
-                <audio
-                  controls
-                  src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
-                    password ? `&password=${encodeURIComponent(password)}` : ""
-                  }`}
-                  class="w-full"
-                />
-              ) : (
-                <div class="text-center text-sm text-gray-500 py-2">
-                  Unlock to listen 🔒
-                </div>
-              )}
             </div>
           )}
 
-          {/* Video Preview */}
-          {contentMetadata.mimetype.startsWith("video/") && (
-            <div class="rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-black">
-              {(!isPasswordProtected || (isPasswordProtected && password)) ? (
-                <video
-                  controls
-                  src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
-                    password ? `&password=${encodeURIComponent(password)}` : ""
-                  }`}
-                  class="w-full"
-                />
-              ) : (
-                <div class="h-48 flex items-center justify-center text-gray-500">
-                  <span class="text-4xl">🔒</span>
+          {/* File Preview (Image/Audio/Video) */}
+          {contentType === "file" && contentMetadata?.mimetype && (
+            <div class="space-y-4">
+              {/* Image Preview */}
+              {contentMetadata.mimetype.startsWith("image/") && (
+                <div class="relative rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-white">
+                  {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                    <img
+                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
+                        password ? `&password=${encodeURIComponent(password)}` : ""
+                      }`}
+                      alt="Bucket content"
+                      class="w-full h-auto object-cover"
+                    />
+                  ) : (
+                    <div class="h-48 flex items-center justify-center bg-gray-100 text-gray-400">
+                      <span class="text-4xl">🔒</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Audio Preview */}
+              {contentMetadata.mimetype.startsWith("audio/") && (
+                <div class="bg-white border-4 border-black rounded-xl p-4 shadow-chunky">
+                  <div class="flex items-center gap-3 mb-2">
+                    <span class="text-2xl animate-bounce">🎵</span>
+                    <span class="font-bold text-sm truncate">
+                      {contentMetadata.filename}
+                    </span>
+                  </div>
+                  {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                    <audio
+                      controls
+                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
+                        password ? `&password=${encodeURIComponent(password)}` : ""
+                      }`}
+                      class="w-full"
+                    />
+                  ) : (
+                    <div class="text-center text-sm text-gray-500 py-2">
+                      Unlock to listen 🔒
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Video Preview */}
+              {contentMetadata.mimetype.startsWith("video/") && (
+                <div class="rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-black">
+                  {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                    <video
+                      controls
+                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
+                        password ? `&password=${encodeURIComponent(password)}` : ""
+                      }`}
+                      class="w-full"
+                    />
+                  ) : (
+                    <div class="h-48 flex items-center justify-center text-gray-500">
+                      <span class="text-4xl">🔒</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

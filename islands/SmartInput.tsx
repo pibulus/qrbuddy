@@ -118,18 +118,21 @@ export default function SmartInput(
     }
   }, [url.value, touched, validationState]);
 
-  // Create dynamic QR when isDynamic is enabled with valid URL
+  // Create dynamic QR (Redirect) or Text Bucket (Smart Text)
   useEffect(() => {
     if (
       isDynamic.value && url.value && !isCreatingDynamic && !editUrl.value &&
-      !isBucket.value
+      !isBucket.value && !isCreatingBucket
     ) {
-      // Only create if we have a URL and haven't created yet
       const timer = setTimeout(() => {
-        if (validateURL(url.value)) {
+        if (isValidUrl(url.value)) {
+          // It's a URL -> Create Redirect
           createDynamicQR(url.value);
+        } else {
+          // It's Text -> Create Text Bucket
+          createTextBucket(url.value);
         }
-      }, 500); // Debounce for 500ms
+      }, 800); // Increased debounce for text typing
 
       return () => clearTimeout(timer);
     }
@@ -157,6 +160,70 @@ export default function SmartInput(
 
     if (!touched) {
       setTouched(true);
+    }
+  };
+
+  // Helper to check if string is likely a URL
+  const isValidUrl = (s: string) => {
+    try {
+      const url = new URL(s.startsWith("http") ? s : `https://${s}`);
+      return url.hostname.includes(".");
+    } catch {
+      return false;
+    }
+  };
+
+  // Create text bucket (Smart Dynamic for text)
+  const createTextBucket = async (text: string) => {
+    try {
+      setIsCreatingBucket(true);
+      // haptics.medium(); // reduce noise
+
+      const apiUrl = getApiUrl();
+
+      // 1. Create Bucket
+      const createRes = await fetch(`${apiUrl}/create-bucket`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bucket_type: "text",
+          style: "sunset",
+          is_reusable: true,
+        }),
+      });
+
+      if (!createRes.ok) throw new Error("Failed to create text bucket");
+      const bucketData = await createRes.json();
+
+      // 2. Upload Text
+      const uploadRes = await fetch(
+        `${apiUrl}/upload-to-bucket?bucket_code=${bucketData.bucket_code}&owner_token=${bucketData.owner_token}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "text",
+            content: text,
+          }),
+        }
+      );
+
+      if (!uploadRes.ok) throw new Error("Failed to save text");
+
+      // 3. Update UI
+      url.value = bucketData.bucket_url;
+      bucketUrl.value = bucketData.bucket_url;
+      
+      // Save token
+      await saveOwnerToken("bucket", bucketData.bucket_code, bucketData.owner_token);
+
+      setIsCreatingBucket(false);
+      haptics.success();
+
+    } catch (error) {
+      console.error("Text bucket error:", error);
+      setIsCreatingBucket(false);
+      // Don't show toast/error for every keystroke, just log
     }
   };
 
