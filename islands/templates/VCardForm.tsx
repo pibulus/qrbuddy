@@ -21,7 +21,7 @@ export default function VCardForm({ url }: Props) {
   const [website, setWebsite] = useState("");
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
   useEffect(() => {

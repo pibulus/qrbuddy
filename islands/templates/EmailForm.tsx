@@ -15,7 +15,7 @@ export default function EmailForm({ url }: Props) {
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
   useEffect(() => {

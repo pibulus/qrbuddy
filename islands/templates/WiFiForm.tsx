@@ -16,7 +16,7 @@ export default function WiFiForm({ url }: Props) {
   const [password, setPassword] = useState("");
   const [encryption, setEncryption] = useState<"WPA" | "WEP" | "nopass">("WPA");
   const [hidden, setHidden] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
   useEffect(() => {

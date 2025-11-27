@@ -12,7 +12,7 @@ interface QRData {
   scan_count: number;
   is_active: boolean;
   routing_mode: string;
-  routing_config: any;
+  routing_config: { urls: string[]; loop: boolean } | null;
 }
 
 export default function EditQRForm() {

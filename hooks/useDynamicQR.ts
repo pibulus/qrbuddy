@@ -10,7 +10,7 @@ interface UseDynamicQRProps {
   scanLimit: number | null;
   expiryDate: string;
   routingMode?: "simple" | "sequential";
-  routingConfig?: any;
+  routingConfig?: { urls: string[]; loop: boolean };
 }
 
 export function useDynamicQR(
@@ -26,7 +26,7 @@ export function useDynamicQR(
 
       const apiUrl = getApiUrl();
 
-      const body: Record<string, any> = {
+      const body: Record<string, unknown> = {
         destination_url: destinationUrl,
       };
       if (scanLimit) body.max_scans = scanLimit;

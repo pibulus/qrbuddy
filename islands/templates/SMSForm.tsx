@@ -14,7 +14,7 @@ interface Props {
 export default function SMSForm({ url }: Props) {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
   useEffect(() => {
