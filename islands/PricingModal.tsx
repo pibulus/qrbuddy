@@ -1,6 +1,7 @@
 import { useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { PRICING_TIERS } from "../types/pricing.ts";
+import { addToast } from "./ToastManager.tsx";
 
 type PostHogClient = {
   capture: (event: string, props?: Record<string, unknown>) => void;
@@ -63,8 +64,9 @@ export function PricingModal() {
     const paymentUrl = globalScope.__PAYMENT_URL_PRO__;
 
     if (!paymentUrl) {
-      alert(
-        "Pro tier coming soon! For now, email pablo@qrbuddy.app to get early access.",
+      addToast(
+        "✨ Pro tier coming soon! Email pablo@qrbuddy.app for early access.",
+        4000,
       );
       return;
     }

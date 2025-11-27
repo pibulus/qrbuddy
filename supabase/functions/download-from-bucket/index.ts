@@ -34,8 +34,18 @@ serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const bucketCode = url.searchParams.get("bucket_code");
-    const password = url.searchParams.get("password");
+    let bucketCode: string | null = null;
+    let password: string | null = null;
+
+    // Support both GET (for non-password) and POST (for password security)
+    if (req.method === "POST") {
+      const body = await req.json();
+      bucketCode = body.bucket_code || null;
+      password = body.password || null; // Password from body (secure)
+    } else {
+      bucketCode = url.searchParams.get("bucket_code");
+      password = url.searchParams.get("password"); // Legacy: password in URL (insecure, deprecated)
+    }
 
     if (!bucketCode) {
       return new Response(

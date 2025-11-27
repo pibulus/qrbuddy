@@ -424,14 +424,18 @@ export default function SmartInput(
 
       // Generate ZIP
       const content = await zip.generateAsync({ type: "blob" });
-      
+
       // Trigger download
       const link = document.createElement("a");
-      link.href = URL.createObjectURL(content);
+      const blobUrl = URL.createObjectURL(content);
+      link.href = blobUrl;
       link.download = "qrbuddy_batch.zip";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // Clean up blob URL to prevent memory leak
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
 
       haptics.success();
       setIsGeneratingBatch(false);

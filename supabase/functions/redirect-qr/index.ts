@@ -214,7 +214,27 @@ serve(async (req) => {
     // Redirect to destination
     return Response.redirect(destinationUrl, 302);
   } catch (error) {
-    console.error("Redirect failed:", error);
+    // Log detailed error information for security monitoring
+    console.error("[SECURITY] Redirect failed:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+
+    // For database/auth errors, show error page instead of silently redirecting
+    if (
+      error instanceof Error &&
+      (error.message.includes("auth") ||
+        error.message.includes("permission") ||
+        error.message.includes("security"))
+    ) {
+      return new Response("Security error occurred", {
+        status: 403,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+
+    // For all other errors, redirect to home as fallback
     return Response.redirect("/", 302);
   }
 });

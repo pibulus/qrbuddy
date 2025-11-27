@@ -10,13 +10,28 @@ interface Toast {
 // Global signal for managing toasts
 export const toastQueue = signal<Toast[]>([]);
 
+// Store timeout IDs to allow cleanup
+const toastTimeouts = new Map<string, number>();
+
 export function addToast(message: string, duration = 2000) {
   const id = `${Date.now()}-${Math.random()}`;
   toastQueue.value = [...toastQueue.value, { id, message, duration }];
 
-  setTimeout(() => {
+  const timeoutId = setTimeout(() => {
     toastQueue.value = toastQueue.value.filter((t) => t.id !== id);
+    toastTimeouts.delete(id);
   }, duration);
+
+  toastTimeouts.set(id, timeoutId);
+}
+
+export function removeToast(id: string) {
+  const timeoutId = toastTimeouts.get(id);
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    toastTimeouts.delete(id);
+  }
+  toastQueue.value = toastQueue.value.filter((t) => t.id !== id);
 }
 
 export default function ToastManager() {

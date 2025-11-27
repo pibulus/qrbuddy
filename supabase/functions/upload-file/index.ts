@@ -63,7 +63,8 @@ serve(async (req) => {
     }
 
     // Validate file type - block dangerous executables
-    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+    // Check entire filename (not just last extension) to prevent bypasses like "innocent.txt.exe"
+    const fileName = file.name.toLowerCase();
     const blockedExtensions = [
       "exe",
       "bat",
@@ -114,11 +115,19 @@ serve(async (req) => {
       "msh2xml",
     ];
 
-    if (blockedExtensions.includes(fileExt)) {
+    // Check if filename ends with any blocked extension
+    const hasBlockedExt = blockedExtensions.some((ext) =>
+      fileName.endsWith(`.${ext}`)
+    );
+
+    if (hasBlockedExt) {
+      const matchedExt = blockedExtensions.find((ext) =>
+        fileName.endsWith(`.${ext}`)
+      );
       return new Response(
         JSON.stringify({
           error:
-            `File type '.${fileExt}' is not allowed for security reasons. Executable files are blocked.`,
+            `File type '.${matchedExt}' is not allowed for security reasons. Executable files are blocked.`,
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -126,6 +135,9 @@ serve(async (req) => {
         },
       );
     }
+
+    // Extract actual file extension for storage
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
 
     // Also validate MIME type if available
     const blockedMimeTypes = [

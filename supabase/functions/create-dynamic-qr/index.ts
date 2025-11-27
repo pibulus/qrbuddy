@@ -68,6 +68,36 @@ serve(async (req) => {
       );
     }
 
+    // Validate URL format and protocol to prevent XSS via javascript: or data: URLs
+    try {
+      const url = new URL(destination_url);
+      const allowedProtocols = ["http:", "https:"];
+      if (!allowedProtocols.includes(url.protocol)) {
+        return new Response(
+          JSON.stringify({
+            error:
+              `Invalid URL protocol. Only HTTP and HTTPS are allowed. Received: ${url.protocol}`,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
+    } catch (urlError) {
+      return new Response(
+        JSON.stringify({
+          error: `Invalid URL format: ${
+            urlError instanceof Error ? urlError.message : String(urlError)
+          }`,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+
     // Generate unique short code
     let shortCode = generateShortCode();
     let attempts = 0;
@@ -106,10 +136,11 @@ serve(async (req) => {
 
     if (insertError) throw insertError;
 
-    const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(
-      "https://",
-      "https://qrbuddy.app",
-    ) || "https://qrbuddy.app";
+    // Use APP_URL from environment, fallback to localhost for dev
+    const baseUrl = Deno.env.get("APP_URL") ||
+      (Deno.env.get("DENO_DEPLOYMENT_ID")
+        ? "https://qrbuddy.app"
+        : "http://localhost:8000");
 
     return new Response(
       JSON.stringify({
