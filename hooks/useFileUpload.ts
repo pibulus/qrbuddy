@@ -2,6 +2,16 @@ import { Signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
+import { apiRequestFormData, ApiError } from "../utils/api-request.ts";
+import { validateFile } from "../utils/file-validation.ts";
+import {
+  UPLOAD_PROGRESS_INTERVAL_MS,
+  UPLOAD_PROGRESS_INCREMENT,
+  UPLOAD_PROGRESS_MAX,
+  UPLOAD_RESET_DELAY_MS,
+  UNLIMITED_SCANS,
+  UNLIMITED_SCANS_TEXT,
+} from "../utils/constants.ts";
 
 interface UseFileUploadProps {
   url: Signal<string>;
@@ -33,9 +43,10 @@ export function useFileUpload(
       setUploadError(null);
       haptics.medium();
 
-      // Check file size (25MB limit)
-      if (file.size > 25 * 1024 * 1024) {
-        throw new Error("File too large (max 25MB)");
+      // Validate file (size and type) before upload
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        throw new Error(validation.error);
       }
 
       const formData = new FormData();
@@ -44,28 +55,28 @@ export function useFileUpload(
 
       // Simulate progress (real progress needs XHR)
       const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
+        setUploadProgress((prev) =>
+          Math.min(prev + UPLOAD_PROGRESS_INCREMENT, UPLOAD_PROGRESS_MAX)
+        );
+      }, UPLOAD_PROGRESS_INTERVAL_MS);
 
       const apiUrl = getApiUrl();
 
-      const response = await fetch(
+      // Use shared API helper (automatically includes auth headers)
+      const data = await apiRequestFormData<{
+        success: boolean;
+        url: string;
+        fileName: string;
+        size: number;
+        maxDownloads: number;
+      }>(
         `${apiUrl}/upload-file`,
-        {
-          method: "POST",
-          body: formData,
-        },
+        formData,
+        "Upload failed",
       );
 
       clearInterval(progressInterval);
       setUploadProgress(100);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      const data = await response.json();
 
       // Set the destructible URL
       url.value = data.url;
@@ -78,8 +89,8 @@ export function useFileUpload(
       haptics.success();
 
       // Show success toast
-      const scanText = maxDownloads.value === 999999
-        ? "unlimited scans ∞"
+      const scanText = maxDownloads.value === UNLIMITED_SCANS
+        ? UNLIMITED_SCANS_TEXT
         : maxDownloads.value === 1
         ? "1 scan"
         : `${maxDownloads.value} scans`;
@@ -96,9 +107,14 @@ export function useFileUpload(
       setTimeout(() => {
         setIsUploading(false);
         setUploadProgress(0);
-      }, 1000);
+      }, UPLOAD_RESET_DELAY_MS);
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("[HOOK:useFileUpload] Upload failed:", {
+        error: error instanceof Error ? error.message : String(error),
+        statusCode: error instanceof ApiError ? error.statusCode : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
       const errorMessage = error instanceof Error
         ? error.message
         : String(error);

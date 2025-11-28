@@ -68,15 +68,71 @@ serve(async (req) => {
       );
     }
 
-    // Validate URL format and protocol to prevent XSS via javascript: or data: URLs
-    try {
-      const url = new URL(destination_url);
-      const allowedProtocols = ["http:", "https:"];
-      if (!allowedProtocols.includes(url.protocol)) {
+    // Helper function to validate URLs
+    const isValidUrl = (url: string): boolean => {
+      try {
+        const parsed = new URL(url);
+        return ["http:", "https:"].includes(parsed.protocol);
+      } catch {
+        return false;
+      }
+    };
+
+    // Validate destination_url format and protocol to prevent XSS via javascript: or data: URLs
+    if (!isValidUrl(destination_url)) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid URL format or protocol. Only HTTP and HTTPS are allowed.",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        },
+      );
+    }
+
+    // Validate routing_config URLs if provided
+    if (routing_config) {
+      try {
+        const config = typeof routing_config === "string"
+          ? JSON.parse(routing_config)
+          : routing_config;
+
+        const urlsToValidate: string[] = [];
+
+        // Sequential mode: validate all URLs in array
+        if (config.urls && Array.isArray(config.urls)) {
+          urlsToValidate.push(...config.urls);
+        }
+
+        // Device mode: validate ios, android, fallback
+        if (config.ios) urlsToValidate.push(config.ios);
+        if (config.android) urlsToValidate.push(config.android);
+        if (config.fallback) urlsToValidate.push(config.fallback);
+
+        // Time mode: validate activeUrl, inactiveUrl
+        if (config.activeUrl) urlsToValidate.push(config.activeUrl);
+        if (config.inactiveUrl) urlsToValidate.push(config.inactiveUrl);
+
+        // Check all URLs
+        for (const url of urlsToValidate) {
+          if (url && !isValidUrl(url)) {
+            return new Response(
+              JSON.stringify({
+                error:
+                  `Invalid URL in routing config: ${url}. Only HTTP and HTTPS are allowed.`,
+              }),
+              {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 400,
+              },
+            );
+          }
+        }
+      } catch (parseError) {
         return new Response(
           JSON.stringify({
-            error:
-              `Invalid URL protocol. Only HTTP and HTTPS are allowed. Received: ${url.protocol}`,
+            error: "Invalid routing_config format",
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -84,18 +140,6 @@ serve(async (req) => {
           },
         );
       }
-    } catch (urlError) {
-      return new Response(
-        JSON.stringify({
-          error: `Invalid URL format: ${
-            urlError instanceof Error ? urlError.message : String(urlError)
-          }`,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        },
-      );
     }
 
     // Generate unique short code

@@ -20,6 +20,7 @@ interface HomeProps {
   posthogKey?: string;
   paymentUrlPro?: string;
   supabaseUrl?: string;
+  supabaseAnonKey?: string;
 }
 
 export const handler: Handlers<HomeProps> = {
@@ -27,11 +28,13 @@ export const handler: Handlers<HomeProps> = {
     const posthogKey = Deno.env.get("POSTHOG_KEY");
     const paymentUrlPro = Deno.env.get("PAYMENT_URL_PRO");
     const supabaseUrl = getSupabaseUrl();
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
     return ctx.render({
       posthogKey,
       paymentUrlPro,
       supabaseUrl: supabaseUrl ?? undefined,
+      supabaseAnonKey: supabaseAnonKey ?? undefined,
     });
   },
 };
@@ -115,6 +118,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
           {`
             window.__PAYMENT_URL_PRO__ = '${data?.paymentUrlPro || ""}';
             window.__SUPABASE_URL__ = '${data?.supabaseUrl || ""}';
+            window.__SUPABASE_ANON_KEY__ = '${data?.supabaseAnonKey || ""}';
           `}
         </script>
 

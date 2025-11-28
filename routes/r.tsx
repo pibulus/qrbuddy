@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { getSupabaseUrl } from "../utils/api.ts";
+import { getSupabaseUrl, getAuthHeaders } from "../utils/api.ts";
 
 // This route handles QR code redirects
 // It forwards to the Supabase edge function which manages the actual redirect logic
@@ -31,10 +31,13 @@ export const handler: Handlers = {
 
     const redirectUrl =
       `${supabaseUrl}/functions/v1/redirect-qr?code=${shortCode}`;
+    const authHeaders = getAuthHeaders();
 
     try {
       // Fetch from edge function to get the actual redirect
-      const response = await fetch(redirectUrl);
+      const response = await fetch(redirectUrl, {
+        headers: authHeaders,
+      });
 
       if (response.redirected) {
         // If edge function redirected, follow it

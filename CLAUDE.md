@@ -91,10 +91,77 @@ See GLOSSARY.md for complete list organized by category. Key islands:
 - `ErrorBoundary`: Error handling
 - `Analytics`: PostHog integration
 
-**Utils (`utils/qr-styles.ts`)**
+**Utils**
 
-- Style definitions with gradient configurations
-- Each style defines dots, background, cornersSquare, and cornersDot properties
+- **`utils/qr-styles.ts`**: Style definitions with gradient configurations - each
+  style defines dots, background, cornersSquare, and cornersDot properties
+- **`utils/api-request.ts`**: Shared API request helpers with automatic auth
+  header injection and consistent error handling (eliminates duplicate code
+  across hooks)
+- **`utils/file-validation.ts`**: Client-side file validation utilities for size
+  and type checking (validates before upload for better UX)
+- **`utils/constants.ts`**: Application-wide constants including upload progress
+  intervals, scan limits, and timing values (eliminates magic numbers)
+- **`utils/api.ts`**: API configuration and authentication header helpers
+
+### Common Patterns
+
+**API Requests to Supabase Edge Functions**
+
+Always use the shared `apiRequest` or `apiRequestFormData` helpers from
+`utils/api-request.ts`. These automatically include authentication headers and
+provide consistent error handling.
+
+```typescript
+// GET/POST with JSON
+const data = await apiRequest<ResponseType>(
+  `${apiUrl}/endpoint`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ foo: "bar" }),
+  },
+  "Friendly error message",
+);
+
+// File upload with FormData
+const result = await apiRequestFormData<UploadResponse>(
+  `${apiUrl}/upload-file`,
+  formData,
+  "Upload failed",
+);
+```
+
+**File Upload Validation**
+
+Always validate files client-side before upload using `validateFile()` from
+`utils/file-validation.ts`:
+
+```typescript
+const validation = validateFile(file);
+if (!validation.valid) {
+  throw new Error(validation.error);
+}
+// Safe to proceed with upload
+```
+
+**Using Constants**
+
+Import constants from `utils/constants.ts` instead of hardcoding values:
+
+```typescript
+import { UNLIMITED_SCANS, UPLOAD_PROGRESS_MAX } from "../utils/constants.ts";
+
+// Good: Named constant
+if (maxDownloads === UNLIMITED_SCANS) {
+  // handle unlimited case
+}
+
+// Bad: Magic number
+if (maxDownloads === 999999) {
+  // unclear what this number means
+}
+```
 
 ### State Flow Pattern
 
@@ -157,11 +224,17 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Security
 
-- **Input Validation**: URL input accepts any string (by design for flexibility)
+- **File Upload Security**: Client-side validation blocks executable files and
+  enforces 25MB size limit using `utils/file-validation.ts`
+- **URL Validation**: All redirect URLs validated to prevent open redirect
+  vulnerabilities (blocks javascript:, data:, file: protocols)
+- **CORS Policy**: Environment-specific origins (qrbuddy.app in prod, localhost in
+  dev) - no wildcard access
+- **Authentication**: All Supabase edge function calls include required
+  Authorization and apikey headers via `utils/api-request.ts`
 - **Clipboard API**: Uses modern Clipboard API with proper error handling
-- **No External Data**: No API calls or external data fetching
-- **Client-Side Only**: QR generation happens entirely client-side, no data sent
-  to servers
+- **Hybrid Architecture**: Static QR generation is client-side only; dynamic QRs
+  and file uploads use Supabase edge functions
 
 ### Performance Optimizations
 

@@ -1,7 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import BucketQR from "../../islands/BucketQR.tsx";
-import { getSupabaseUrl } from "../../utils/api.ts";
+import { getSupabaseUrl, getAuthHeaders } from "../../utils/api.ts";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -44,7 +44,10 @@ export const handler: Handlers<BucketPageData> = {
     // Fetch bucket status
     const statusUrl =
       `${supabaseUrl}/functions/v1/get-bucket-status?bucket_code=${code}`;
-    const response = await fetch(statusUrl);
+    const authHeaders = getAuthHeaders();
+    const response = await fetch(statusUrl, {
+      headers: authHeaders,
+    });
 
     if (!response.ok) {
       return ctx.renderNotFound();
