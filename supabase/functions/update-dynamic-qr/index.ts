@@ -5,6 +5,19 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
+/**
+ * Validate URL to prevent open redirect attacks
+ * Only allows http: and https: protocols
+ */
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return ["http:", "https:"].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -57,27 +70,62 @@ serve(async (req) => {
 
     // Validate destination_url if provided
     if (destination_url !== undefined) {
-      try {
-        const url = new URL(destination_url);
-        const allowedProtocols = ["http:", "https:"];
-        if (!allowedProtocols.includes(url.protocol)) {
-          return new Response(
-            JSON.stringify({
-              error:
-                `Invalid URL protocol. Only HTTP and HTTPS are allowed. Received: ${url.protocol}`,
-            }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-              status: 400,
-            },
-          );
-        }
-      } catch (urlError) {
+      if (!isValidUrl(destination_url)) {
         return new Response(
           JSON.stringify({
-            error: `Invalid URL format: ${
-              urlError instanceof Error ? urlError.message : String(urlError)
-            }`,
+            error: "Invalid URL format or protocol. Only HTTP and HTTPS are allowed.",
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
+    }
+
+    // Validate routing_config URLs if provided
+    if (routing_config !== undefined) {
+      try {
+        const config = typeof routing_config === "string"
+          ? JSON.parse(routing_config)
+          : routing_config;
+
+        // Validate all URLs in routing config
+        const urlsToValidate: string[] = [];
+
+        // Sequential mode: validate all URLs in array
+        if (config.urls && Array.isArray(config.urls)) {
+          urlsToValidate.push(...config.urls);
+        }
+
+        // Device mode: validate ios, android, fallback
+        if (config.ios) urlsToValidate.push(config.ios);
+        if (config.android) urlsToValidate.push(config.android);
+        if (config.fallback) urlsToValidate.push(config.fallback);
+
+        // Time mode: validate activeUrl, inactiveUrl
+        if (config.activeUrl) urlsToValidate.push(config.activeUrl);
+        if (config.inactiveUrl) urlsToValidate.push(config.inactiveUrl);
+
+        // Check all URLs
+        for (const url of urlsToValidate) {
+          if (url && !isValidUrl(url)) {
+            return new Response(
+              JSON.stringify({
+                error:
+                  `Invalid URL in routing config: ${url}. Only HTTP and HTTPS are allowed.`,
+              }),
+              {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 400,
+              },
+            );
+          }
+        }
+      } catch (parseError) {
+        return new Response(
+          JSON.stringify({
+            error: "Invalid routing_config format",
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },

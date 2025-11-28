@@ -10,6 +10,19 @@ import {
 } from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
+/**
+ * Validate URL for redirect to prevent open redirect attacks
+ * Only allows http: and https: protocols
+ */
+function isValidRedirectUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return ["http:", "https:"].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -209,6 +222,17 @@ serve(async (req) => {
       } catch (e) {
         console.error("Error parsing time config:", e);
       }
+    }
+
+    // Validate URL before redirecting to prevent open redirect attacks
+    if (!isValidRedirectUrl(destinationUrl)) {
+      console.error("[SECURITY] Invalid redirect URL blocked:", {
+        url: destinationUrl,
+        shortCode: shortCode,
+        timestamp: new Date().toISOString(),
+      });
+      // Redirect to home instead of malicious URL
+      return Response.redirect("/", 302);
     }
 
     // Redirect to destination
