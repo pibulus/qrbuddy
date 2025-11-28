@@ -55,6 +55,38 @@ serve(async (req) => {
       );
     }
 
+    // Validate destination_url if provided
+    if (destination_url !== undefined) {
+      try {
+        const url = new URL(destination_url);
+        const allowedProtocols = ["http:", "https:"];
+        if (!allowedProtocols.includes(url.protocol)) {
+          return new Response(
+            JSON.stringify({
+              error:
+                `Invalid URL protocol. Only HTTP and HTTPS are allowed. Received: ${url.protocol}`,
+            }),
+            {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 400,
+            },
+          );
+        }
+      } catch (urlError) {
+        return new Response(
+          JSON.stringify({
+            error: `Invalid URL format: ${
+              urlError instanceof Error ? urlError.message : String(urlError)
+            }`,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
+    }
+
     // Build update object (only update provided fields)
     const updates: Record<string, string | number | null> = {};
     if (destination_url !== undefined) {

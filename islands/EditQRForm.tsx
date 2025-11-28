@@ -241,7 +241,12 @@ export default function EditQRForm() {
     );
   }
 
-  const redirectUrl = `https://qrbuddy.app/r?code=${qrData.short_code}`;
+  // Use APP_URL from window location or fallback to production URL
+  const baseUrl = typeof globalThis !== "undefined" &&
+      globalThis.location
+    ? `${globalThis.location.protocol}//${globalThis.location.host}`
+    : "https://qrbuddy.app";
+  const redirectUrl = `${baseUrl}/r?code=${qrData.short_code}`;
   const scansRemaining = qrData.max_scans
     ? qrData.max_scans - qrData.scan_count
     : "∞";

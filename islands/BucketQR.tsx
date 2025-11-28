@@ -238,12 +238,17 @@ export default function BucketQR({
       setError("");
       haptics.medium();
 
-      const downloadUrl =
-        `${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
-          password ? `&password=${encodeURIComponent(password)}` : ""
-        }`;
+      const downloadUrl = `${supabaseUrl}/functions/v1/download-from-bucket`;
 
-      const response = await fetch(downloadUrl);
+      // Use POST with password in body for security (not in URL)
+      const response = await fetch(downloadUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bucket_code: bucketCode,
+          password: password || undefined,
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -262,7 +267,28 @@ export default function BucketQR({
       } else {
         // Show text/link content
         const data = await response.json();
-        alert(`Content: ${data.content}`);
+        // Copy content to clipboard instead of using alert
+        try {
+          await navigator.clipboard.writeText(data.content);
+          haptics.success();
+          const event = new CustomEvent("show-toast", {
+            detail: {
+              message: "✅ Content copied to clipboard!",
+              type: "success",
+            },
+          });
+          globalThis.dispatchEvent(event);
+        } catch {
+          // Fallback: show in console if clipboard fails
+          console.log("Content:", data.content);
+          const event = new CustomEvent("show-toast", {
+            detail: {
+              message: "Content: " + data.content.substring(0, 50) + (data.content.length > 50 ? "..." : ""),
+              type: "info",
+            },
+          });
+          globalThis.dispatchEvent(event);
+        }
       }
 
       // Update state
@@ -292,11 +318,28 @@ export default function BucketQR({
       <div
         ref={canvasRef}
         class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-all duration-300 mx-auto max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto"
-        onClick={() => {
+        onClick={async () => {
           haptics.light();
           // Copy URL on click
-          navigator.clipboard.writeText(bucketUrl);
-          alert("Bucket URL copied! 📋");
+          try {
+            await navigator.clipboard.writeText(bucketUrl);
+            const event = new CustomEvent("show-toast", {
+              detail: {
+                message: "Bucket URL copied! 📋",
+                type: "success",
+              },
+            });
+            globalThis.dispatchEvent(event);
+          } catch (err) {
+            console.error("Failed to copy URL:", err);
+            const event = new CustomEvent("show-toast", {
+              detail: {
+                message: "Failed to copy URL ❌",
+                type: "error",
+              },
+            });
+            globalThis.dispatchEvent(event);
+          }
         }}
         title="Click to copy URL"
       />
@@ -368,18 +411,17 @@ export default function BucketQR({
               {/* Image Preview */}
               {contentMetadata.mimetype.startsWith("image/") && (
                 <div class="relative rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-white">
-                  {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                  {isPasswordProtected ? (
+                    <div class="h-48 flex items-center justify-center bg-gray-100 text-gray-400">
+                      <span class="text-4xl">🔒</span>
+                      <p class="text-sm ml-2">Download to view</p>
+                    </div>
+                  ) : (
                     <img
-                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
-                        password ? `&password=${encodeURIComponent(password)}` : ""
-                      }`}
+                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
                       alt="Bucket content"
                       class="w-full h-auto object-cover"
                     />
-                  ) : (
-                    <div class="h-48 flex items-center justify-center bg-gray-100 text-gray-400">
-                      <span class="text-4xl">🔒</span>
-                    </div>
                   )}
                 </div>
               )}
@@ -393,18 +435,16 @@ export default function BucketQR({
                       {contentMetadata.filename}
                     </span>
                   </div>
-                  {(!isPasswordProtected || (isPasswordProtected && password)) ? (
+                  {isPasswordProtected ? (
+                    <div class="text-center text-sm text-gray-500 py-2">
+                      Download to listen 🔒
+                    </div>
+                  ) : (
                     <audio
                       controls
-                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
-                        password ? `&password=${encodeURIComponent(password)}` : ""
-                      }`}
+                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
                       class="w-full"
                     />
-                  ) : (
-                    <div class="text-center text-sm text-gray-500 py-2">
-                      Unlock to listen 🔒
-                    </div>
                   )}
                 </div>
               )}
@@ -412,18 +452,17 @@ export default function BucketQR({
               {/* Video Preview */}
               {contentMetadata.mimetype.startsWith("video/") && (
                 <div class="rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-black">
-                  {(!isPasswordProtected || (isPasswordProtected && password)) ? (
-                    <video
-                      controls
-                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}${
-                        password ? `&password=${encodeURIComponent(password)}` : ""
-                      }`}
-                      class="w-full"
-                    />
-                  ) : (
+                  {isPasswordProtected ? (
                     <div class="h-48 flex items-center justify-center text-gray-500">
                       <span class="text-4xl">🔒</span>
+                      <p class="text-sm ml-2">Download to view</p>
                     </div>
+                  ) : (
+                    <video
+                      controls
+                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
+                      class="w-full"
+                    />
                   )}
                 </div>
               )}

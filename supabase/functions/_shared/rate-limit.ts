@@ -14,15 +14,18 @@ interface RateLimitRecord {
 // In-memory store (resets on function cold start, which is acceptable for basic protection)
 const rateLimitStore = new Map<string, RateLimitRecord>();
 
-// Cleanup old entries every 5 minutes to prevent memory leak
-setInterval(() => {
+// Cleanup old entries on-demand instead of using setInterval to prevent memory leaks
+function cleanupExpiredEntries() {
   const now = Date.now();
   for (const [key, record] of rateLimitStore.entries()) {
     if (now > record.resetTime) {
       rateLimitStore.delete(key);
     }
   }
-}, 5 * 60 * 1000);
+}
+
+// Track last cleanup time
+let lastCleanup = Date.now();
 
 /**
  * Check if a request should be rate limited
@@ -40,6 +43,13 @@ export function checkRateLimit(
   retryAfter?: number;
 } {
   const now = Date.now();
+
+  // Periodically cleanup expired entries (every 5 minutes)
+  if (now - lastCleanup > 5 * 60 * 1000) {
+    cleanupExpiredEntries();
+    lastCleanup = now;
+  }
+
   const record = rateLimitStore.get(identifier);
 
   // No record or window expired - create new record
