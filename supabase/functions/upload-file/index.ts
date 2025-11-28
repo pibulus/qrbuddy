@@ -164,13 +164,13 @@ serve(async (req) => {
 
     // Generate unique ID (fileExt already extracted above for validation)
     const fileId = uuidv4();
-    const fileName = `${fileId}.${fileExt}`;
+    const storageFileName = `${fileId}.${fileExt}`;
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase
       .storage
       .from("qr-files")
-      .upload(fileName, file, {
+      .upload(storageFileName, file, {
         cacheControl: "3600",
         upsert: false,
       });
@@ -182,7 +182,7 @@ serve(async (req) => {
       .from("destructible_files")
       .insert({
         id: fileId,
-        file_name: fileName,
+        file_name: storageFileName,
         original_name: file.name,
         size: file.size,
         mime_type: file.type,

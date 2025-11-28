@@ -26,11 +26,20 @@ import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
+import * as $RotatingTitle from "./islands/RotatingTitle.tsx";
 import * as $ShareActions from "./islands/ShareActions.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $TemplateModal from "./islands/TemplateModal.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
+import * as $edit_qr_AnalyticsDashboard from "./islands/edit-qr/AnalyticsDashboard.tsx";
+import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
+import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
+import * as $edit_qr_RoutingModeSelector from "./islands/edit-qr/RoutingModeSelector.tsx";
+import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
+import * as $smart_input_SequentialOptions from "./islands/smart-input/SequentialOptions.tsx";
+import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
+import * as $smart_input_StatusBadge from "./islands/smart-input/StatusBadge.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
 import * as $templates_SMSForm from "./islands/templates/SMSForm.tsx";
 import * as $templates_VCardForm from "./islands/templates/VCardForm.tsx";
@@ -65,11 +74,23 @@ const manifest = {
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
+    "./islands/RotatingTitle.tsx": $RotatingTitle,
     "./islands/ShareActions.tsx": $ShareActions,
     "./islands/SmartInput.tsx": $SmartInput,
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/TemplateModal.tsx": $TemplateModal,
     "./islands/ToastManager.tsx": $ToastManager,
+    "./islands/edit-qr/AnalyticsDashboard.tsx": $edit_qr_AnalyticsDashboard,
+    "./islands/edit-qr/QRStatusCard.tsx": $edit_qr_QRStatusCard,
+    "./islands/edit-qr/RoutingConfigForm.tsx": $edit_qr_RoutingConfigForm,
+    "./islands/edit-qr/RoutingModeSelector.tsx": $edit_qr_RoutingModeSelector,
+    "./islands/smart-input/FileUploadOptions.tsx":
+      $smart_input_FileUploadOptions,
+    "./islands/smart-input/SequentialOptions.tsx":
+      $smart_input_SequentialOptions,
+    "./islands/smart-input/SmartInputToolbar.tsx":
+      $smart_input_SmartInputToolbar,
+    "./islands/smart-input/StatusBadge.tsx": $smart_input_StatusBadge,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
     "./islands/templates/SMSForm.tsx": $templates_SMSForm,
     "./islands/templates/VCardForm.tsx": $templates_VCardForm,
