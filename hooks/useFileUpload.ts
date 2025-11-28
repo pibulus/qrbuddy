@@ -4,6 +4,14 @@ import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { apiRequestFormData, ApiError } from "../utils/api-request.ts";
 import { validateFile } from "../utils/file-validation.ts";
+import {
+  UPLOAD_PROGRESS_INTERVAL_MS,
+  UPLOAD_PROGRESS_INCREMENT,
+  UPLOAD_PROGRESS_MAX,
+  UPLOAD_RESET_DELAY_MS,
+  UNLIMITED_SCANS,
+  UNLIMITED_SCANS_TEXT,
+} from "../utils/constants.ts";
 
 interface UseFileUploadProps {
   url: Signal<string>;
@@ -47,8 +55,10 @@ export function useFileUpload(
 
       // Simulate progress (real progress needs XHR)
       const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
+        setUploadProgress((prev) =>
+          Math.min(prev + UPLOAD_PROGRESS_INCREMENT, UPLOAD_PROGRESS_MAX)
+        );
+      }, UPLOAD_PROGRESS_INTERVAL_MS);
 
       const apiUrl = getApiUrl();
 
@@ -79,8 +89,8 @@ export function useFileUpload(
       haptics.success();
 
       // Show success toast
-      const scanText = maxDownloads.value === 999999
-        ? "unlimited scans ∞"
+      const scanText = maxDownloads.value === UNLIMITED_SCANS
+        ? UNLIMITED_SCANS_TEXT
         : maxDownloads.value === 1
         ? "1 scan"
         : `${maxDownloads.value} scans`;
@@ -97,7 +107,7 @@ export function useFileUpload(
       setTimeout(() => {
         setIsUploading(false);
         setUploadProgress(0);
-      }, 1000);
+      }, UPLOAD_RESET_DELAY_MS);
     } catch (error) {
       console.error("[HOOK:useFileUpload] Upload failed:", {
         error: error instanceof Error ? error.message : String(error),

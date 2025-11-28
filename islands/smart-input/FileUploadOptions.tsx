@@ -1,5 +1,6 @@
 import { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
+import { UNLIMITED_SCANS } from "../../utils/constants.ts";
 
 interface FileUploadOptionsProps {
   maxDownloads: Signal<number>;
@@ -26,12 +27,12 @@ export default function FileUploadOptions({ maxDownloads }: FileUploadOptionsPro
               type="button"
               key={limit?.toString() || "unlimited"}
               onClick={() => {
-                maxDownloads.value = limit || 999999;
+                maxDownloads.value = limit || UNLIMITED_SCANS;
                 haptics.light();
               }}
               class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all
                 ${
-                maxDownloads.value === (limit || 999999)
+                maxDownloads.value === (limit || UNLIMITED_SCANS)
                   ? "bg-orange-500 text-white border-orange-600 scale-105"
                   : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
               }`}

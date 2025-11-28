@@ -1,5 +1,66 @@
-// Shared API request utility
-// Eliminates duplicate error handling and automatically includes auth headers
+/**
+ * Shared API Request Utility
+ * ===========================
+ *
+ * Centralized API request helpers that eliminate duplicate code and ensure
+ * consistent error handling across all Supabase edge function calls.
+ *
+ * Key Features:
+ * - Automatically includes Supabase authentication headers (Authorization + apikey)
+ * - Consistent error handling with structured ApiError class
+ * - Automatic JSON response parsing with error handling
+ * - Type-safe responses with generic type parameter
+ *
+ * Usage Examples:
+ *
+ * 1. Simple GET request:
+ * ```typescript
+ * const data = await apiRequest<{ user: User }>(
+ *   `${apiUrl}/get-user?id=123`,
+ *   {},
+ *   "Failed to fetch user"
+ * );
+ * ```
+ *
+ * 2. POST request with JSON body:
+ * ```typescript
+ * const result = await apiRequest<{ success: boolean }>(
+ *   `${apiUrl}/create-qr`,
+ *   {
+ *     method: "POST",
+ *     headers: { "Content-Type": "application/json" },
+ *     body: JSON.stringify({ url: "https://example.com" })
+ *   },
+ *   "Failed to create QR"
+ * );
+ * ```
+ *
+ * 3. File upload with FormData:
+ * ```typescript
+ * const formData = new FormData();
+ * formData.append("file", file);
+ * const data = await apiRequestFormData<{ url: string }>(
+ *   `${apiUrl}/upload`,
+ *   formData,
+ *   "Upload failed"
+ * );
+ * ```
+ *
+ * Error Handling:
+ * ```typescript
+ * try {
+ *   const data = await apiRequest(url, options, "Failed");
+ * } catch (error) {
+ *   if (error instanceof ApiError) {
+ *     console.error("API Error:", {
+ *       message: error.message,
+ *       statusCode: error.statusCode, // HTTP status or 0 for network errors
+ *       timestamp: new Date().toISOString()
+ *     });
+ *   }
+ * }
+ * ```
+ */
 
 import { getAuthHeaders } from "./api.ts";
 
@@ -8,6 +69,15 @@ export interface ApiRequestOptions extends RequestInit {
   headers?: HeadersInit;
 }
 
+/**
+ * Custom error class for API request failures
+ *
+ * Provides structured error information with HTTP status codes
+ * and optional access to the raw Response object.
+ *
+ * @property statusCode - HTTP status code (or 0 for network errors)
+ * @property response - Optional raw Response object for advanced error handling
+ */
 export class ApiError extends Error {
   constructor(
     message: string,

@@ -1,11 +1,47 @@
-// File validation utilities
-// Centralizes file type and size validation logic
+/**
+ * File Validation Utilities
+ * ==========================
+ *
+ * Client-side file validation for secure uploads to Supabase Storage.
+ * Validates files BEFORE upload for better UX and security.
+ *
+ * Key Features:
+ * - File size validation (25MB limit)
+ * - File extension blocking (prevents executable files)
+ * - MIME type validation (additional security layer)
+ * - User-friendly error messages
+ *
+ * Usage Example:
+ * ```typescript
+ * const validation = validateFile(file);
+ * if (!validation.valid) {
+ *   throw new Error(validation.error);
+ * }
+ * // Proceed with upload...
+ * ```
+ *
+ * Security Notes:
+ * - This is CLIENT-SIDE validation only - always validate on server too
+ * - Blocks executable files, scripts, and installers
+ * - Uses both extension and MIME type checks for defense in depth
+ */
 
-// Maximum file size: 25MB
+/**
+ * Maximum allowed file size: 25MB
+ * Matches Supabase edge function limit
+ */
 export const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
-// Blocked file extensions for security
-// Prevents executable files and scripts from being uploaded
+/**
+ * Blocked file extensions for security
+ * Prevents executable files, scripts, and installers from being uploaded
+ *
+ * Includes:
+ * - Windows executables (.exe, .bat, .cmd, .msi, .scr)
+ * - Scripts (.js, .vbs, .ps1, .sh)
+ * - Mobile apps (.apk, .ipa)
+ * - System files (.sys, .dll via other patterns)
+ */
 export const BLOCKED_EXTENSIONS = [
   "exe",
   "bat",
@@ -56,7 +92,13 @@ export const BLOCKED_EXTENSIONS = [
   "msh2xml",
 ];
 
-// Blocked MIME types for additional security
+/**
+ * Blocked MIME types for additional security
+ * Provides a second layer of validation beyond file extensions
+ *
+ * Note: Attackers can spoof MIME types, so this is used in combination
+ * with extension checking for defense in depth
+ */
 export const BLOCKED_MIME_TYPES = [
   "application/x-msdownload",
   "application/x-msdos-program",
@@ -74,7 +116,24 @@ export interface FileValidationResult {
 
 /**
  * Validate file for upload
- * Checks file size and type for security
+ *
+ * Performs comprehensive client-side validation:
+ * 1. Checks file size against MAX_FILE_SIZE (25MB)
+ * 2. Checks file extension against BLOCKED_EXTENSIONS
+ * 3. Checks MIME type against BLOCKED_MIME_TYPES
+ *
+ * @param file - File object from input or drop event
+ * @returns FileValidationResult with valid flag and optional error message
+ *
+ * @example
+ * ```typescript
+ * const validation = validateFile(selectedFile);
+ * if (!validation.valid) {
+ *   alert(validation.error);
+ *   return;
+ * }
+ * // Safe to upload
+ * ```
  */
 export function validateFile(file: File): FileValidationResult {
   // Check file size
@@ -111,7 +170,20 @@ export function validateFile(file: File): FileValidationResult {
 }
 
 /**
- * Format file size for display
+ * Format file size for human-readable display
+ *
+ * Converts bytes to appropriate unit (Bytes, KB, MB, GB)
+ * with proper rounding for readability.
+ *
+ * @param bytes - File size in bytes
+ * @returns Formatted string like "1.5 MB" or "250 KB"
+ *
+ * @example
+ * ```typescript
+ * formatFileSize(1500000) // "1.43 MB"
+ * formatFileSize(2500)    // "2.44 KB"
+ * formatFileSize(0)       // "0 Bytes"
+ * ```
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";

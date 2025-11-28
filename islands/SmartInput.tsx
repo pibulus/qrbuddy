@@ -8,6 +8,7 @@ import { useDynamicQR } from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
 import { useBatchGenerator } from "../hooks/useBatchGenerator.ts";
 import { useBucketCreator } from "../hooks/useBucketCreator.ts";
+import { UNLIMITED_SCANS } from "../utils/constants.ts";
 
 // Sub-components
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
@@ -402,7 +403,7 @@ export default function SmartInput(
       {isDestructible.value && !isUploading && (
         <p class="text-orange-600 text-sm mt-2 text-center font-semibold animate-slide-down">
           ⚠️ This file will self-destruct after{" "}
-          {maxDownloads.value === 999999 ? "unlimited" : maxDownloads.value}
+          {maxDownloads.value === UNLIMITED_SCANS ? "unlimited" : maxDownloads.value}
           {" "}
           {maxDownloads.value === 1 ? "scan" : "scans"}
         </p>
