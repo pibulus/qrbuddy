@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
 import { Signal } from "@preact/signals";
 import { haptics } from "../utils/haptics.ts";
-import { getApiUrl } from "../utils/api.ts";
+import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
 
 interface UseBucketCreatorProps {
@@ -19,11 +19,15 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       // haptics.medium(); // reduce noise
 
       const apiUrl = getApiUrl();
+      const authHeaders = getAuthHeaders();
 
       // 1. Create Bucket
       const createRes = await fetch(`${apiUrl}/create-bucket`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
         body: JSON.stringify({
           bucket_type: "text",
           style: "sunset",
@@ -39,7 +43,10 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
         `${apiUrl}/upload-to-bucket?bucket_code=${bucketData.bucket_code}&owner_token=${bucketData.owner_token}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
           body: JSON.stringify({
             type: "text",
             content: text,
@@ -73,12 +80,16 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       haptics.medium();
 
       const apiUrl = getApiUrl();
+      const authHeaders = getAuthHeaders();
 
       const response = await fetch(
         `${apiUrl}/create-bucket`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
           body: JSON.stringify({
             bucket_type: "file",
             style: "sunset", // Use current style

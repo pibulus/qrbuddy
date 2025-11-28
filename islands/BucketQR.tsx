@@ -3,6 +3,7 @@ import QRCodeStyling from "qr-code-styling";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import { haptics } from "../utils/haptics.ts";
 import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
+import { getAuthHeaders } from "../utils/api.ts";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -175,6 +176,7 @@ export default function BucketQR({
       const uploadUrl =
         `${supabaseUrl}/functions/v1/upload-to-bucket?bucket_code=${bucketCode}&owner_token=${ownerToken}`;
 
+      const authHeaders = getAuthHeaders();
       let response;
 
       if (file) {
@@ -183,13 +185,19 @@ export default function BucketQR({
         formData.append("file", file);
         response = await fetch(uploadUrl, {
           method: "POST",
+          headers: {
+            ...authHeaders,
+          },
           body: formData,
         });
       } else if (text || link) {
         // Upload text or link
         response = await fetch(uploadUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
           body: JSON.stringify({
             type: text ? "text" : "link",
             content: text || link,
@@ -240,10 +248,15 @@ export default function BucketQR({
 
       const downloadUrl = `${supabaseUrl}/functions/v1/download-from-bucket`;
 
+      const authHeaders = getAuthHeaders();
+
       // Use POST with password in body for security (not in URL)
       const response = await fetch(downloadUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
         body: JSON.stringify({
           bucket_code: bucketCode,
           password: password || undefined,

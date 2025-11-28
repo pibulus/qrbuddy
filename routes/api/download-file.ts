@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { getSupabaseUrl } from "../../utils/api.ts";
+import { getSupabaseUrl, getAuthHeaders } from "../../utils/api.ts";
 
 // API route to download file and redirect to boom page
 export const handler: Handlers = {
@@ -25,9 +25,12 @@ export const handler: Handlers = {
 
     // Download from edge function
     const downloadUrl = `${supabaseUrl}/functions/v1/get-file?id=${fileId}`;
+    const authHeaders = getAuthHeaders();
 
     try {
-      const response = await fetch(downloadUrl);
+      const response = await fetch(downloadUrl, {
+        headers: authHeaders,
+      });
 
       if (!response.ok) {
         // File doesn't exist or already exploded

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { getSupabaseUrl } from "../utils/api.ts";
+import { getSupabaseUrl, getAuthHeaders } from "../utils/api.ts";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 
@@ -64,8 +64,13 @@ export function useQRData() {
         );
       }
 
+      const authHeaders = getAuthHeaders();
+
       const response = await fetch(
         `${supabaseUrl}/functions/v1/get-dynamic-qr?token=${token}`,
+        {
+          headers: authHeaders,
+        },
       );
 
       if (!response.ok) {
@@ -100,11 +105,16 @@ export function useQRData() {
         ...updateData
       };
 
+      const authHeaders = getAuthHeaders();
+
       const response = await fetch(
         `${supabaseUrl}/functions/v1/update-dynamic-qr`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
           body: JSON.stringify(body),
         },
       );

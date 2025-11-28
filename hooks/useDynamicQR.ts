@@ -1,7 +1,7 @@
 import { Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
-import { getApiUrl } from "../utils/api.ts";
+import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
 
 interface UseDynamicQRProps {
@@ -25,6 +25,7 @@ export function useDynamicQR(
       haptics.medium();
 
       const apiUrl = getApiUrl();
+      const authHeaders = getAuthHeaders();
 
       const body: Record<string, unknown> = {
         destination_url: destinationUrl,
@@ -38,7 +39,10 @@ export function useDynamicQR(
         `${apiUrl}/create-dynamic-qr`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
           body: JSON.stringify(body),
         },
       );

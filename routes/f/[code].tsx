@@ -1,6 +1,6 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
-import { getSupabaseUrl } from "../../utils/api.ts";
+import { getSupabaseUrl, getAuthHeaders } from "../../utils/api.ts";
 
 interface FileData {
   fileId: string;
@@ -24,9 +24,8 @@ export const handler: Handlers = {
     }
 
     const supabaseUrl = getSupabaseUrl();
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY");
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl) {
       console.error("Supabase not configured");
       return new Response(null, {
         status: 302,
@@ -38,11 +37,10 @@ export const handler: Handlers = {
     try {
       const metadataUrl =
         `${supabaseUrl}/functions/v1/get-file-metadata?id=${code}`;
+      const authHeaders = getAuthHeaders();
 
       const response = await fetch(metadataUrl, {
-        headers: {
-          "apikey": supabaseKey,
-        },
+        headers: authHeaders,
       });
 
       if (!response.ok) {

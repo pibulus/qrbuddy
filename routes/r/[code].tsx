@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { getSupabaseUrl } from "../../utils/api.ts";
+import { getSupabaseUrl, getAuthHeaders } from "../../utils/api.ts";
 
 // Prettier dynamic QR redirect: /r/abc123 instead of /r?code=abc123
 
@@ -26,9 +26,12 @@ export const handler: Handlers = {
 
     // Call Supabase edge function to get destination + tier info
     const redirectUrl = `${supabaseUrl}/functions/v1/redirect-qr?code=${code}`;
+    const authHeaders = getAuthHeaders();
 
     try {
-      const response = await fetch(redirectUrl);
+      const response = await fetch(redirectUrl, {
+        headers: authHeaders,
+      });
 
       // Check if this is a free tier QR (would have X-QRBuddy-Tier header)
       const tier = response.headers.get("X-QRBuddy-Tier") || "pro";

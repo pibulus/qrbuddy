@@ -4,6 +4,7 @@
 declare global {
   interface Window {
     __SUPABASE_URL__?: string;
+    __SUPABASE_ANON_KEY__?: string;
   }
 }
 
@@ -63,4 +64,47 @@ export function getApiUrl(): string {
  */
 export function getSupabaseUrl(): string | null {
   return resolveSupabaseUrl();
+}
+
+function resolveSupabaseAnonKey(): string | null {
+  // Prefer env vars when running on the server (Deno/Fresh)
+  if (typeof Deno !== "undefined" && typeof Deno.env?.get === "function") {
+    const fromEnv = Deno.env.get("SUPABASE_ANON_KEY");
+    if (fromEnv) {
+      return fromEnv;
+    }
+  }
+
+  // Fall back to window-injected global when running in the browser
+  if (typeof globalThis !== "undefined") {
+    const fromWindow = (globalThis as Window & typeof globalThis)
+      .__SUPABASE_ANON_KEY__;
+    if (fromWindow) {
+      return fromWindow;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get the Supabase anon key for authorization
+ * Works in both islands/hooks (client) and routes (server)
+ */
+export function getSupabaseAnonKey(): string | null {
+  return resolveSupabaseAnonKey();
+}
+
+/**
+ * Get authorization headers for Supabase edge function requests
+ */
+export function getAuthHeaders(): Record<string, string> {
+  const anonKey = getSupabaseAnonKey();
+  if (anonKey) {
+    return {
+      "Authorization": `Bearer ${anonKey}`,
+      "apikey": anonKey,
+    };
+  }
+  return {};
 }

@@ -1,7 +1,7 @@
 import { Signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
-import { getApiUrl } from "../utils/api.ts";
+import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
 
 interface UseFileUploadProps {
   url: Signal<string>;
@@ -48,11 +48,15 @@ export function useFileUpload(
       }, 200);
 
       const apiUrl = getApiUrl();
+      const authHeaders = getAuthHeaders();
 
       const response = await fetch(
         `${apiUrl}/upload-file`,
         {
           method: "POST",
+          headers: {
+            ...authHeaders,
+          },
           body: formData,
         },
       );
