@@ -113,9 +113,10 @@ serve(async (req) => {
 
     if (insertError) throw insertError;
 
-    const baseUrl = Deno.env.get("DENO_DEPLOYMENT_ID")
-      ? "https://qrbuddy.app"
-      : "http://localhost:8000";
+    const baseUrl = Deno.env.get("APP_URL") ||
+      (Deno.env.get("DENO_DEPLOYMENT_ID")
+        ? "https://qrbuddy.app"
+        : "http://localhost:8000");
 
     return new Response(
       JSON.stringify({
@@ -132,7 +133,12 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error("Create bucket failed:", error);
+    console.error("[SECURITY] Create bucket failed:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : String(error),

@@ -158,7 +158,11 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error("Create dynamic QR failed:", error);
+    console.error("[SECURITY] Create dynamic QR failed:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : String(error),
