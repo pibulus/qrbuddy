@@ -32,3 +32,5 @@ jobs:
           project: "qrbuddy"
           entrypoint: "main.ts"
           root: "."
+          
+          
