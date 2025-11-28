@@ -1,7 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
-import { getSupabaseUrl, getAuthHeaders } from "../utils/api.ts";
+import { getSupabaseUrl } from "../utils/api.ts";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "../islands/ToastManager.tsx";
+import { apiRequest, ApiError } from "../utils/api-request.ts";
 
 export interface QRData {
   short_code: string;
@@ -64,24 +65,22 @@ export function useQRData() {
         );
       }
 
-      const authHeaders = getAuthHeaders();
-
-      const response = await fetch(
+      // Use shared API helper (automatically includes auth headers)
+      const result = await apiRequest<{ data: QRData }>(
         `${supabaseUrl}/functions/v1/get-dynamic-qr?token=${token}`,
-        {
-          headers: authHeaders,
-        },
+        {},
+        "Failed to load QR data",
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to load QR data");
-      }
-
-      const result = await response.json();
       setQrData(result.data);
       setLoading(false);
     } catch (err) {
-      console.error("Load QR error:", err);
+      console.error("[HOOK:useQRData] Load failed:", {
+        error: err instanceof Error ? err.message : String(err),
+        statusCode: err instanceof ApiError ? err.statusCode : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
       setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     }
@@ -105,26 +104,17 @@ export function useQRData() {
         ...updateData
       };
 
-      const authHeaders = getAuthHeaders();
-
-      const response = await fetch(
+      // Use shared API helper (automatically includes auth headers)
+      const result = await apiRequest<{ data: QRData }>(
         `${supabaseUrl}/functions/v1/update-dynamic-qr`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...authHeaders,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         },
+        "Failed to update QR",
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update QR");
-      }
-
-      const result = await response.json();
       setQrData(result.data);
 
       // Success feedback
@@ -134,7 +124,12 @@ export function useQRData() {
       setIsSaving(false);
       return true;
     } catch (err) {
-      console.error("Update QR error:", err);
+      console.error("[HOOK:useQRData] Update failed:", {
+        error: err instanceof Error ? err.message : String(err),
+        statusCode: err instanceof ApiError ? err.statusCode : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
       addToast(
         `❌ Failed to update: ${
           err instanceof Error ? err.message : String(err)

@@ -1,8 +1,9 @@
 import { useState } from "preact/hooks";
 import { Signal } from "@preact/signals";
 import { haptics } from "../utils/haptics.ts";
-import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
+import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
+import { apiRequest, ApiError } from "../utils/api-request.ts";
 
 interface UseBucketCreatorProps {
   url: Signal<string>;
@@ -19,42 +20,39 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       // haptics.medium(); // reduce noise
 
       const apiUrl = getApiUrl();
-      const authHeaders = getAuthHeaders();
 
-      // 1. Create Bucket
-      const createRes = await fetch(`${apiUrl}/create-bucket`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeaders,
+      // 1. Create Bucket (use shared API helper)
+      const bucketData = await apiRequest<{
+        bucket_code: string;
+        bucket_url: string;
+        owner_token: string;
+      }>(
+        `${apiUrl}/create-bucket`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bucket_type: "text",
+            style: "sunset",
+            is_reusable: true,
+          }),
         },
-        body: JSON.stringify({
-          bucket_type: "text",
-          style: "sunset",
-          is_reusable: true,
-        }),
-      });
-
-      if (!createRes.ok) throw new Error("Failed to create text bucket");
-      const bucketData = await createRes.json();
+        "Failed to create text bucket",
+      );
 
       // 2. Upload Text
-      const uploadRes = await fetch(
+      await apiRequest(
         `${apiUrl}/upload-to-bucket?bucket_code=${bucketData.bucket_code}&owner_token=${bucketData.owner_token}`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...authHeaders,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "text",
             content: text,
           }),
-        }
+        },
+        "Failed to save text",
       );
-
-      if (!uploadRes.ok) throw new Error("Failed to save text");
 
       // 3. Update UI
       url.value = bucketData.bucket_url;
@@ -67,7 +65,11 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       haptics.success();
 
     } catch (error) {
-      console.error("Text bucket error:", error);
+      console.error("[HOOK:useBucketCreator] Text bucket failed:", {
+        error: error instanceof Error ? error.message : String(error),
+        statusCode: error instanceof ApiError ? error.statusCode : undefined,
+        timestamp: new Date().toISOString(),
+      });
       setIsCreatingBucket(false);
       // Don't show toast/error for every keystroke, just log
     }
@@ -80,30 +82,25 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       haptics.medium();
 
       const apiUrl = getApiUrl();
-      const authHeaders = getAuthHeaders();
 
-      const response = await fetch(
+      // Use shared API helper (automatically includes auth headers)
+      const data = await apiRequest<{
+        bucket_code: string;
+        bucket_url: string;
+        owner_token: string;
+      }>(
         `${apiUrl}/create-bucket`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...authHeaders,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             bucket_type: "file",
             style: "sunset", // Use current style
             is_reusable: true,
           }),
         },
+        "Failed to create bucket",
       );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create bucket");
-      }
-
-      const data = await response.json();
 
       // Update URL to the bucket URL
       url.value = data.bucket_url;
@@ -125,7 +122,12 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
 
       setIsCreatingBucket(false);
     } catch (error) {
-      console.error("Create bucket error:", error);
+      console.error("[HOOK:useBucketCreator] Create bucket failed:", {
+        error: error instanceof Error ? error.message : String(error),
+        statusCode: error instanceof ApiError ? error.statusCode : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
       setIsCreatingBucket(false);
       haptics.error();
 

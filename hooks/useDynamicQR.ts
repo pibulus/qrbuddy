@@ -1,8 +1,9 @@
 import { Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
-import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
+import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
+import { apiRequest, ApiError } from "../utils/api-request.ts";
 
 interface UseDynamicQRProps {
   url: Signal<string>;
@@ -25,7 +26,6 @@ export function useDynamicQR(
       haptics.medium();
 
       const apiUrl = getApiUrl();
-      const authHeaders = getAuthHeaders();
 
       const body: Record<string, unknown> = {
         destination_url: destinationUrl,
@@ -35,24 +35,22 @@ export function useDynamicQR(
       if (routingMode) body.routing_mode = routingMode;
       if (routingConfig) body.routing_config = routingConfig;
 
-      const response = await fetch(
+      // Use shared API helper (automatically includes auth headers)
+      const data = await apiRequest<{
+        success: boolean;
+        short_code: string;
+        redirect_url: string;
+        edit_url: string;
+        owner_token: string;
+      }>(
         `${apiUrl}/create-dynamic-qr`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...authHeaders,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         },
+        "Failed to create dynamic QR",
       );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create dynamic QR");
-      }
-
-      const data = await response.json();
 
       // Update URL to the redirect URL
       url.value = data.redirect_url;
@@ -74,7 +72,12 @@ export function useDynamicQR(
 
       setIsCreating(false);
     } catch (error) {
-      console.error("Create dynamic QR error:", error);
+      console.error("[HOOK:useDynamicQR] Create failed:", {
+        error: error instanceof Error ? error.message : String(error),
+        statusCode: error instanceof ApiError ? error.statusCode : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
       setIsCreating(false);
       haptics.error();
 
