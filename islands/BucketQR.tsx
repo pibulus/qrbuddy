@@ -48,9 +48,16 @@ export default function BucketQR({
   >(initialContentMetadata);
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [password, setPassword] = useState("");
   const [showPasswordInput, setShowPasswordInput] = useState(false);
+  const [useManualPassword, setUseManualPassword] = useState(false);
+  const [manualPassword, setManualPassword] = useState("");
+  const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
+
+  const pinValue = pinDigits.join("");
+  const hasUnlockInput = useManualPassword
+    ? manualPassword.trim().length > 0
+    : pinValue.length === 4;
 
   // Get QR style based on empty/full state
   const getQRStyle = () => {
@@ -239,12 +246,60 @@ export default function BucketQR({
     }
   };
 
+  const resetPinDigits = () => setPinDigits(["", "", "", ""]);
+
+  const handleKeypadPress = (value: string) => {
+    haptics.light();
+    if (value === "clear") {
+      resetPinDigits();
+      return;
+    }
+    if (value === "back") {
+      const next = [...pinDigits];
+      for (let i = next.length - 1; i >= 0; i--) {
+        if (next[i] !== "") {
+          next[i] = "";
+          setPinDigits(next);
+          break;
+        }
+      }
+      return;
+    }
+
+    if (pinDigits.every((digit) => digit !== "")) {
+      return;
+    }
+
+    const next = [...pinDigits];
+    const firstEmpty = next.findIndex((digit) => digit === "");
+    if (firstEmpty !== -1) {
+      next[firstEmpty] = value;
+      setPinDigits(next);
+    }
+  };
+
   // Handle download
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
       setError("");
       haptics.medium();
+
+      if (isPasswordProtected) {
+        if (useManualPassword) {
+          if (!manualPassword.trim()) {
+            setError("Enter the password to unlock this bucket.");
+            setIsDownloading(false);
+            haptics.error();
+            return;
+          }
+        } else if (pinValue.length !== 4) {
+          setError("Enter the 4-digit PIN.");
+          setIsDownloading(false);
+          haptics.error();
+          return;
+        }
+      }
 
       const downloadUrl = `${supabaseUrl}/functions/v1/download-from-bucket`;
 
@@ -259,7 +314,9 @@ export default function BucketQR({
         },
         body: JSON.stringify({
           bucket_code: bucketCode,
-          password: password || undefined,
+          password: isPasswordProtected
+            ? (useManualPassword ? manualPassword.trim() : pinValue)
+            : undefined,
         }),
       });
 
@@ -317,7 +374,9 @@ export default function BucketQR({
       haptics.success();
       setIsDownloading(false);
       setShowPasswordInput(false);
-      setPassword("");
+      setUseManualPassword(false);
+      setManualPassword("");
+      resetPinDigits();
     } catch (err) {
       console.error("Download error:", err);
       setError(err instanceof Error ? err.message : String(err));
@@ -449,7 +508,8 @@ export default function BucketQR({
                 ${style === "neon" ? "text-green-400" : "text-gray-800"}
               `}
               >
-                {(!isPasswordProtected || (isPasswordProtected && password))
+                {(!isPasswordProtected ||
+                    (isPasswordProtected && hasUnlockInput))
                   ? (
                     contentMetadata.content
                   )
@@ -568,19 +628,108 @@ export default function BucketQR({
             )}
 
             {isPasswordProtected && showPasswordInput && (
-              <div class="space-y-3">
-                <input
-                  type="password"
-                  value={password}
-                  onInput={(e) =>
-                    setPassword((e.target as HTMLInputElement).value)}
-                  placeholder="Enter password"
-                  class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
-                />
+              <div class="space-y-4">
+                {!useManualPassword && (
+                  <div class="space-y-3">
+                    <div class="flex justify-center gap-4">
+                      {pinDigits.map((digit, index) => (
+                        <div
+                          key={`pin-${index}`}
+                          class="w-12 h-14 bg-white border-3 border-black rounded-2xl flex items-center justify-center text-3xl font-black"
+                        >
+                          {digit ? "•" : ""}
+                        </div>
+                      ))}
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                      {[
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "clear",
+                        "0",
+                        "back",
+                      ].map(
+                        (key) => (
+                          <button
+                            key={`keypad-${key}`}
+                            type="button"
+                            class={`py-3 rounded-2xl text-lg font-black border-3 border-black bg-white hover:-translate-y-0.5 transition ${
+                              key === "clear" || key === "back"
+                                ? "text-gray-600"
+                                : "text-gray-900"
+                            }`}
+                            onClick={() => handleKeypadPress(String(key))}
+                          >
+                            {key === "clear"
+                              ? "Clear"
+                              : key === "back"
+                              ? "⌫"
+                              : key}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {useManualPassword && (
+                  <input
+                    type="password"
+                    value={manualPassword}
+                    onInput={(e) =>
+                      setManualPassword((e.target as HTMLInputElement).value)}
+                    placeholder="Enter password"
+                    class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
+                  />
+                )}
+
+                <div class="flex items-center justify-between text-[11px] text-gray-500">
+                  <button
+                    type="button"
+                    class="underline"
+                    onClick={() => {
+                      setUseManualPassword((prev) => {
+                        const next = !prev;
+                        if (next) {
+                          resetPinDigits();
+                        } else {
+                          setManualPassword("");
+                        }
+                        return next;
+                      });
+                      haptics.light();
+                    }}
+                  >
+                    {useManualPassword ? "Use keypad" : "Use keyboard"}
+                  </button>
+                  <button
+                    type="button"
+                    class="underline"
+                    onClick={() => {
+                      setShowPasswordInput(false);
+                      setUseManualPassword(false);
+                      setManualPassword("");
+                      resetPinDigits();
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={handleDownload}
-                  disabled={isDownloading || !password}
+                  disabled={isDownloading ||
+                    (useManualPassword
+                      ? !manualPassword.trim()
+                      : pinValue.length !== 4)}
                   class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                 >
                   {isDownloading ? "Downloading..." : "💥 Download & Empty"}
