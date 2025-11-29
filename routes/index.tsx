@@ -14,6 +14,7 @@ import { PricingLink, PricingModal } from "../islands/PricingModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { getSupabaseUrl } from "../utils/api.ts";
+import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import RotatingTitle from "../islands/RotatingTitle.tsx";
 
 interface HomeProps {
@@ -48,7 +49,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
   const isDynamic = useSignal(false);
   const editUrl = useSignal("");
   const logoUrl = useSignal("");
-  const maxDownloads = useSignal(1);
+  const maxDownloads = useSignal(UNLIMITED_SCANS);
   const isBucket = useSignal(false);
   const bucketUrl = useSignal("");
 

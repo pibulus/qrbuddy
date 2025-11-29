@@ -11,6 +11,10 @@ import {
 } from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
+const UNLIMITED_DOWNLOADS = 999999;
+const MAX_DOWNLOADS_LIMIT = UNLIMITED_DOWNLOADS;
+const DEFAULT_MAX_DOWNLOADS = UNLIMITED_DOWNLOADS;
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -36,10 +40,13 @@ serve(async (req) => {
     // Get file and options from request
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const maxDownloads = parseInt(
-      formData.get("maxDownloads") as string || "1",
+    const parsedMaxDownloads = parseInt(
+      formData.get("maxDownloads") as string || String(DEFAULT_MAX_DOWNLOADS),
       10,
     );
+    const maxDownloads = Number.isFinite(parsedMaxDownloads) && parsedMaxDownloads > 0
+      ? Math.min(parsedMaxDownloads, MAX_DOWNLOADS_LIMIT)
+      : DEFAULT_MAX_DOWNLOADS;
 
     if (!file) {
       return new Response(
@@ -201,7 +208,9 @@ serve(async (req) => {
         : `http://localhost:8000`);
     const retrievalUrl = `${baseUrl}/f/${fileId}`;
 
-    const message = maxDownloads === 1
+    const message = maxDownloads === UNLIMITED_DOWNLOADS
+      ? "File uploaded! Ready to share — unlimited downloads."
+      : maxDownloads === 1
       ? "File uploaded! It will self-destruct after 1 download."
       : `File uploaded! It will self-destruct after ${maxDownloads} downloads.`;
 

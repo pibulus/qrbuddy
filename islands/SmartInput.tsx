@@ -400,10 +400,10 @@ export default function SmartInput(
       )}
 
       {/* Destructible indicator */}
-      {isDestructible.value && !isUploading && (
+      {isDestructible.value && !isUploading && maxDownloads.value !== UNLIMITED_SCANS && (
         <p class="text-orange-600 text-sm mt-2 text-center font-semibold animate-slide-down">
           ⚠️ This file will self-destruct after{" "}
-          {maxDownloads.value === UNLIMITED_SCANS ? "unlimited" : maxDownloads.value}
+          {maxDownloads.value}
           {" "}
           {maxDownloads.value === 1 ? "scan" : "scans"}
         </p>

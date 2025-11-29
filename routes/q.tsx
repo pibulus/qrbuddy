@@ -11,6 +11,7 @@ import ToastManager from "../islands/ToastManager.tsx";
 import ShareActions from "../islands/ShareActions.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
+import { UNLIMITED_SCANS } from "../utils/constants.ts";
 
 export default function SharePage(props: PageProps) {
   const urlParams = new URL(props.url).searchParams;
@@ -29,7 +30,7 @@ export default function SharePage(props: PageProps) {
   const isDestructible = useSignal(false);
   const isDynamic = useSignal(false);
   const editUrl = useSignal("");
-  const maxDownloads = useSignal(1);
+  const maxDownloads = useSignal(UNLIMITED_SCANS);
   const isBucket = useSignal(false);
   const bucketUrl = useSignal("");
   const logoUrl = useSignal("");

@@ -94,10 +94,13 @@ export function useFileUpload(
         : maxDownloads.value === 1
         ? "1 scan"
         : `${maxDownloads.value} scans`;
+      const limitedDownloads = maxDownloads.value !== UNLIMITED_SCANS;
+      const successMessage = limitedDownloads
+        ? `✅ ${file.name} uploaded! Will self-destruct after ${scanText} 💣`
+        : `✅ ${file.name} uploaded! Ready to share ✨`;
       const event = new CustomEvent("show-toast", {
         detail: {
-          message:
-            `✅ ${file.name} uploaded! Will self-destruct after ${scanText} 💣`,
+          message: successMessage,
           type: "success",
         },
       });
