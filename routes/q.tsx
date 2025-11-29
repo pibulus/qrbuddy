@@ -148,6 +148,7 @@ export default function SharePage(props: PageProps) {
             isBucket={isBucket}
             bucketUrl={bucketUrl}
             logoUrl={logoUrl}
+            qrStyle={style}
           />
 
           {/* Action Buttons - Side by Side */}

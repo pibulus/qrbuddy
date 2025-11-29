@@ -3,7 +3,7 @@ import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
-import { apiRequest, ApiError } from "../utils/api-request.ts";
+import { ApiError, apiRequest } from "../utils/api-request.ts";
 
 interface UseDynamicQRProps {
   url: Signal<string>;

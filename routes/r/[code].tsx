@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { getSupabaseUrl, getAuthHeaders } from "../../utils/api.ts";
+import { getAuthHeaders, getSupabaseUrl } from "../../utils/api.ts";
 
 // Prettier dynamic QR redirect: /r/abc123 instead of /r?code=abc123
 

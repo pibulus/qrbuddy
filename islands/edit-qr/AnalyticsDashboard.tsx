@@ -4,7 +4,9 @@ interface AnalyticsDashboardProps {
   analytics: QRData["analytics"];
 }
 
-export default function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
+export default function AnalyticsDashboard(
+  { analytics }: AnalyticsDashboardProps,
+) {
   if (!analytics) return null;
 
   return (
@@ -25,7 +27,10 @@ export default function AnalyticsDashboard({ analytics }: AnalyticsDashboardProp
               <div
                 key={i}
                 class="flex-1 bg-blue-500 rounded-t-sm min-h-[4px]"
-                style={{ height: `${Math.max(count * 10, 4)}px`, opacity: 0.5 + (i/14) }}
+                style={{
+                  height: `${Math.max(count * 10, 4)}px`,
+                  opacity: 0.5 + (i / 14),
+                }}
               />
             ))}
           </div>
@@ -34,7 +39,10 @@ export default function AnalyticsDashboard({ analytics }: AnalyticsDashboardProp
           <p class="text-xs text-gray-500 font-bold uppercase">Last Scan</p>
           <p class="text-lg font-black text-gray-800 mt-1">
             {analytics.last_scan
-              ? new Date(analytics.last_scan).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              ? new Date(analytics.last_scan).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
               : "Never"}
           </p>
           {analytics.last_scan && (
@@ -47,9 +55,15 @@ export default function AnalyticsDashboard({ analytics }: AnalyticsDashboardProp
 
       {/* Device Stats */}
       <div class="flex gap-2 text-xs font-bold text-gray-600">
-         <span class="bg-gray-100 px-2 py-1 rounded">📱 iOS: {analytics.devices.ios}</span>
-         <span class="bg-gray-100 px-2 py-1 rounded">🤖 Android: {analytics.devices.android}</span>
-         <span class="bg-gray-100 px-2 py-1 rounded">💻 Desktop: {analytics.devices.desktop}</span>
+        <span class="bg-gray-100 px-2 py-1 rounded">
+          📱 iOS: {analytics.devices.ios}
+        </span>
+        <span class="bg-gray-100 px-2 py-1 rounded">
+          🤖 Android: {analytics.devices.android}
+        </span>
+        <span class="bg-gray-100 px-2 py-1 rounded">
+          💻 Desktop: {analytics.devices.desktop}
+        </span>
       </div>
     </div>
   );

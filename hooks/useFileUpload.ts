@@ -2,15 +2,15 @@ import { Signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
-import { apiRequestFormData, ApiError } from "../utils/api-request.ts";
+import { ApiError, apiRequestFormData } from "../utils/api-request.ts";
 import { validateFile } from "../utils/file-validation.ts";
 import {
-  UPLOAD_PROGRESS_INTERVAL_MS,
-  UPLOAD_PROGRESS_INCREMENT,
-  UPLOAD_PROGRESS_MAX,
-  UPLOAD_RESET_DELAY_MS,
   UNLIMITED_SCANS,
   UNLIMITED_SCANS_TEXT,
+  UPLOAD_PROGRESS_INCREMENT,
+  UPLOAD_PROGRESS_INTERVAL_MS,
+  UPLOAD_PROGRESS_MAX,
+  UPLOAD_RESET_DELAY_MS,
 } from "../utils/constants.ts";
 
 interface UseFileUploadProps {

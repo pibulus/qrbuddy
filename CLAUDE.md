@@ -93,8 +93,8 @@ See GLOSSARY.md for complete list organized by category. Key islands:
 
 **Utils**
 
-- **`utils/qr-styles.ts`**: Style definitions with gradient configurations - each
-  style defines dots, background, cornersSquare, and cornersDot properties
+- **`utils/qr-styles.ts`**: Style definitions with gradient configurations -
+  each style defines dots, background, cornersSquare, and cornersDot properties
 - **`utils/api-request.ts`**: Shared API request helpers with automatic auth
   header injection and consistent error handling (eliminates duplicate code
   across hooks)
@@ -228,8 +228,8 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   enforces 25MB size limit using `utils/file-validation.ts`
 - **URL Validation**: All redirect URLs validated to prevent open redirect
   vulnerabilities (blocks javascript:, data:, file: protocols)
-- **CORS Policy**: Environment-specific origins (qrbuddy.app in prod, localhost in
-  dev) - no wildcard access
+- **CORS Policy**: Environment-specific origins (qrbuddy.app in prod, localhost
+  in dev) - no wildcard access
 - **Authentication**: All Supabase edge function calls include required
   Authorization and apikey headers via `utils/api-request.ts`
 - **Clipboard API**: Uses modern Clipboard API with proper error handling

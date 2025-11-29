@@ -227,6 +227,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
             isBucket={isBucket}
             bucketUrl={bucketUrl}
             logoUrl={logoUrl}
+            qrStyle={style}
           />
         </main>
 

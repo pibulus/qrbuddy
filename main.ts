@@ -31,7 +31,9 @@ if (isProduction) {
       "Please configure these in your Deno Deploy dashboard or environment settings.",
     );
     // We don't exit here to allow the app to start, but features will be broken.
-    console.warn("⚠️ App starting with missing secrets. Some features may fail.");
+    console.warn(
+      "⚠️ App starting with missing secrets. Some features may fail.",
+    );
   } else {
     console.log("✅ All required environment variables are configured");
   }

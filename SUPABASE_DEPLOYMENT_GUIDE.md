@@ -4,7 +4,9 @@ A simple, reusable guide for connecting any project to Supabase Edge Functions.
 
 ## 🎯 Quick Overview
 
-Supabase Edge Functions are serverless functions that run on Deno. This guide covers:
+Supabase Edge Functions are serverless functions that run on Deno. This guide
+covers:
+
 - Setting up Supabase CLI
 - Creating and deploying edge functions
 - Client-side authentication
@@ -27,17 +29,20 @@ Supabase Edge Functions are serverless functions that run on Deno. This guide co
 ## 🛠 Step 1: Install Supabase CLI
 
 ### macOS
+
 ```bash
 brew install supabase/tap/supabase
 ```
 
 ### Windows (via Scoop)
+
 ```bash
 scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
 scoop install supabase
 ```
 
 ### Linux
+
 ```bash
 brew install supabase/tap/supabase
 # OR via npm
@@ -45,6 +50,7 @@ npm install -g supabase
 ```
 
 ### Verify Installation
+
 ```bash
 supabase --version
 ```
@@ -68,11 +74,13 @@ supabase link --project-ref YOUR_PROJECT_REF
 ## 📝 Step 3: Create Edge Functions
 
 ### Create Function Directory Structure
+
 ```bash
 mkdir -p supabase/functions
 ```
 
 ### Create a Sample Function
+
 ```bash
 # Create your first function
 supabase functions new hello-world
@@ -81,13 +89,15 @@ supabase functions new hello-world
 This creates: `supabase/functions/hello-world/index.ts`
 
 ### Example Function Code
+
 ```typescript
 // supabase/functions/hello-world/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
@@ -104,9 +114,9 @@ serve(async (req) => {
       {
         headers: {
           ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      }
+          "Content-Type": "application/json",
+        },
+      },
     );
   } catch (error) {
     return new Response(
@@ -115,9 +125,9 @@ serve(async (req) => {
         status: 400,
         headers: {
           ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      }
+          "Content-Type": "application/json",
+        },
+      },
     );
   }
 });
@@ -128,11 +138,13 @@ serve(async (req) => {
 ## 🚀 Step 4: Deploy Functions
 
 ### Deploy Single Function
+
 ```bash
 supabase functions deploy hello-world
 ```
 
 ### Deploy All Functions
+
 ```bash
 # List all function directories
 cd supabase/functions
@@ -142,6 +154,7 @@ done
 ```
 
 ### Verify Deployment
+
 ```bash
 supabase functions list
 ```
@@ -167,6 +180,7 @@ supabase secrets unset MY_SECRET_KEY
 ```
 
 ### Access Secrets in Functions
+
 ```typescript
 // In your edge function
 const apiKey = Deno.env.get("API_KEY");
@@ -178,6 +192,7 @@ const dbUrl = Deno.env.get("DATABASE_URL");
 ## 🌐 Step 6: Configure CORS (Production)
 
 ### Shared CORS Configuration
+
 Create `supabase/functions/_shared/cors.ts`:
 
 ```typescript
@@ -191,20 +206,22 @@ function getAllowedOrigin(): string {
   const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID");
 
   if (isProduction) {
-    return "https://yourdomain.com";  // Your production domain
+    return "https://yourdomain.com"; // Your production domain
   }
 
-  return "http://localhost:8000";  // Development
+  return "http://localhost:8000"; // Development
 }
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": getAllowedOrigin(),
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Credentials": "true",
 };
 ```
 
 ### Use in Functions
+
 ```typescript
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -218,7 +235,7 @@ serve(async (req) => {
 
   return new Response(
     JSON.stringify({ data: "..." }),
-    { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
 ```
@@ -230,12 +247,14 @@ serve(async (req) => {
 ### Setup Environment Variables
 
 **`.env` (local development)**
+
 ```bash
 SUPABASE_URL=https://xyzabc.supabase.co
 SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 **`.env.example` (commit to git)**
+
 ```bash
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -244,6 +263,7 @@ SUPABASE_ANON_KEY=your_supabase_anon_key
 ### Inject Keys into Client
 
 **For Deno Fresh / Server-Rendered Apps:**
+
 ```typescript
 // routes/index.tsx (or your main route)
 export const handler: Handlers = {
@@ -275,6 +295,7 @@ export default function Home({ data }: PageProps) {
 ```
 
 **For React/Next.js/Vite:**
+
 ```typescript
 // Access via process.env or import.meta.env
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -284,6 +305,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 ### Create Auth Headers Helper
 
 **`utils/api.ts`**
+
 ```typescript
 // Type declarations
 declare global {
@@ -326,6 +348,7 @@ export function getAuthHeaders(): Record<string, string> {
 ### Create Request Helper (Recommended)
 
 **`utils/api-request.ts`**
+
 ```typescript
 import { getAuthHeaders } from "./api.ts";
 
@@ -372,7 +395,7 @@ export async function apiRequest<T = unknown>(
     if (error instanceof ApiError) throw error;
     throw new ApiError(
       error instanceof Error ? error.message : String(error),
-      0
+      0,
     );
   }
 }
@@ -392,7 +415,7 @@ const data = await apiRequest<{ message: string }>(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: "World" }),
   },
-  "Failed to call hello-world"
+  "Failed to call hello-world",
 );
 
 console.log(data.message); // "Hello, World!"
@@ -403,6 +426,7 @@ console.log(data.message); // "Hello, World!"
 ## 🧪 Step 8: Test Your Functions
 
 ### Test Locally
+
 ```bash
 # Start Supabase locally (optional)
 supabase start
@@ -418,6 +442,7 @@ curl -X POST http://localhost:54321/functions/v1/hello-world \
 ```
 
 ### Test Production
+
 ```bash
 curl -X POST https://xyzabc.supabase.co/functions/v1/hello-world \
   -H "Content-Type: application/json" \
@@ -430,6 +455,7 @@ curl -X POST https://xyzabc.supabase.co/functions/v1/hello-world \
 ## 📊 Step 9: View Logs
 
 ### Real-time Logs
+
 ```bash
 supabase functions logs hello-world
 
@@ -438,6 +464,7 @@ supabase functions logs hello-world --follow
 ```
 
 ### In Dashboard
+
 1. Go to Supabase Dashboard
 2. Click **Edge Functions** in sidebar
 3. Select your function
@@ -448,6 +475,7 @@ supabase functions logs hello-world --follow
 ## 🔄 Common Patterns
 
 ### Pattern 1: Accessing Supabase Database
+
 ```typescript
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -475,6 +503,7 @@ serve(async (req) => {
 ```
 
 ### Pattern 2: File Upload to Storage
+
 ```typescript
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -484,7 +513,7 @@ serve(async (req) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
   const fileName = `${crypto.randomUUID()}-${file.name}`;
@@ -499,12 +528,13 @@ serve(async (req) => {
 
   return new Response(
     JSON.stringify({ fileName, path: data.path }),
-    { headers: { "Content-Type": "application/json" } }
+    { headers: { "Content-Type": "application/json" } },
   );
 });
 ```
 
 ### Pattern 3: Authenticated Requests
+
 ```typescript
 serve(async (req) => {
   // Get auth token from header
@@ -517,7 +547,7 @@ serve(async (req) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!
+    Deno.env.get("SUPABASE_ANON_KEY")!,
   );
 
   // Verify user
@@ -530,7 +560,7 @@ serve(async (req) => {
   // User is authenticated!
   return new Response(
     JSON.stringify({ userId: user.id }),
-    { headers: { "Content-Type": "application/json" } }
+    { headers: { "Content-Type": "application/json" } },
   );
 });
 ```
@@ -540,21 +570,25 @@ serve(async (req) => {
 ## 🐛 Troubleshooting
 
 ### 401 Unauthorized
+
 - ✅ Check that client sends `Authorization` and `apikey` headers
 - ✅ Verify anon key is correct in `.env`
 - ✅ Make sure headers are injected into window object
 
 ### CORS Errors
+
 - ✅ Update `getAllowedOrigin()` in `cors.ts`
 - ✅ Deploy functions after changing CORS config
 - ✅ Check browser console for specific CORS error
 
 ### Function Not Found (404)
+
 - ✅ Run `supabase functions list` to verify deployment
 - ✅ Check URL: `https://PROJECT.supabase.co/functions/v1/FUNCTION_NAME`
 - ✅ Redeploy: `supabase functions deploy FUNCTION_NAME`
 
 ### Function Timeout
+
 - ✅ Edge functions have 150s timeout (default)
 - ✅ For long operations, consider using Supabase Database Functions instead
 - ✅ Check logs: `supabase functions logs FUNCTION_NAME`
@@ -619,4 +653,5 @@ supabase functions serve
 
 ---
 
-**That's it!** You're now ready to use Supabase Edge Functions in any project. Bookmark this guide for future reference.
+**That's it!** You're now ready to use Supabase Edge Functions in any project.
+Bookmark this guide for future reference.

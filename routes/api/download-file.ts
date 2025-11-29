@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { getSupabaseUrl, getAuthHeaders } from "../../utils/api.ts";
+import { getAuthHeaders, getSupabaseUrl } from "../../utils/api.ts";
 
 // API route to download file and redirect to boom page
 export const handler: Handlers = {

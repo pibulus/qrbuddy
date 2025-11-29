@@ -82,7 +82,8 @@ serve(async (req) => {
     if (!isValidUrl(destination_url)) {
       return new Response(
         JSON.stringify({
-          error: "Invalid URL format or protocol. Only HTTP and HTTPS are allowed.",
+          error:
+            "Invalid URL format or protocol. Only HTTP and HTTPS are allowed.",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -129,7 +130,7 @@ serve(async (req) => {
             );
           }
         }
-      } catch (parseError) {
+      } catch (_parseError) {
         return new Response(
           JSON.stringify({
             error: "Invalid routing_config format",

@@ -1,7 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import BucketQR from "../../islands/BucketQR.tsx";
-import { getSupabaseUrl, getAuthHeaders } from "../../utils/api.ts";
+import { getAuthHeaders, getSupabaseUrl } from "../../utils/api.ts";
 
 interface BucketContentMetadata {
   filename?: string;

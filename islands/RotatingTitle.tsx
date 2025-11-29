@@ -36,8 +36,8 @@ export default function RotatingTitle() {
         } font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent`}
       >
         {ADJECTIVES[index]}
-      </span>
-      {" "}QR code generator.
+      </span>{" "}
+      QR code generator.
     </div>
   );
 }

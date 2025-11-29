@@ -108,10 +108,11 @@ serve(async (req) => {
     let browser = "other";
 
     const ua = userAgent.toLowerCase();
-    
+
     // OS Detection
-    if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) os = "ios";
-    else if (ua.includes("android")) os = "android";
+    if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) {
+      os = "ios";
+    } else if (ua.includes("android")) os = "android";
     else if (ua.includes("mac os")) os = "macos";
     else if (ua.includes("windows")) os = "windows";
     else if (ua.includes("linux")) os = "linux";
@@ -119,7 +120,9 @@ serve(async (req) => {
     // Device Type Detection
     if (ua.includes("mobile")) deviceType = "mobile";
     if (ua.includes("tablet") || ua.includes("ipad")) deviceType = "tablet";
-    if (ua.includes("bot") || ua.includes("crawler") || ua.includes("spider")) deviceType = "bot";
+    if (ua.includes("bot") || ua.includes("crawler") || ua.includes("spider")) {
+      deviceType = "bot";
+    }
 
     // Browser Detection
     if (ua.includes("chrome")) browser = "chrome";
@@ -161,7 +164,7 @@ serve(async (req) => {
         const config = typeof qr.routing_config === "string"
           ? JSON.parse(qr.routing_config)
           : qr.routing_config;
-        
+
         const urls = config.urls || [];
         const loop = config.loop || false;
 
@@ -183,10 +186,11 @@ serve(async (req) => {
         const config = typeof qr.routing_config === "string"
           ? JSON.parse(qr.routing_config)
           : qr.routing_config;
-        
+
         if (os === "ios" && config.ios) destinationUrl = config.ios;
-        else if (os === "android" && config.android) destinationUrl = config.android;
-        else if (config.fallback) destinationUrl = config.fallback;
+        else if (os === "android" && config.android) {
+          destinationUrl = config.android;
+        } else if (config.fallback) destinationUrl = config.fallback;
       } catch (e) {
         console.error("Error parsing device config:", e);
       }
@@ -196,16 +200,16 @@ serve(async (req) => {
         const config = typeof qr.routing_config === "string"
           ? JSON.parse(qr.routing_config)
           : qr.routing_config;
-        
+
         // Config format: { startTime: "09:00", endTime: "17:00", activeUrl: "...", inactiveUrl: "..." }
-        // We assume the time is in the user's target timezone or UTC? 
+        // We assume the time is in the user's target timezone or UTC?
         // For MVP, let's assume UTC or server time, or simple hour check.
         // Better: Store timezone in config, or just use simple HH:MM comparison against UTC?
         // Let's stick to simple UTC for now or allow user to specify offset.
         // Actually, let's keep it simple: "Work Hours" (9-5) usually implies local time.
         // But we don't know the user's local time easily without complex UI.
         // Let's implement a simple "Current Hour" check based on a provided timezone offset in config.
-        
+
         const now = new Date();
         const utcHour = now.getUTCHours();
         const offset = config.timezoneOffset || 0; // Hours offset from UTC

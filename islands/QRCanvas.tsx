@@ -229,7 +229,7 @@ export default function QRCanvas(
     }
   }, [triggerDownload.value]);
 
-// ... (lines 143-233 omitted)
+  // ... (lines 143-233 omitted)
 
   return (
     <div class="relative max-w-full w-full">
@@ -266,8 +266,9 @@ export default function QRCanvas(
       {/* Destructible badge */}
       {isDestructible?.value && (
         <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float z-10">
-          💣 {maxDownloads?.value === UNLIMITED_SCANS ? "∞" : maxDownloads?.value || 1}
-          {" "}
+          💣 {maxDownloads?.value === UNLIMITED_SCANS
+            ? "∞"
+            : maxDownloads?.value || 1}{" "}
           {maxDownloads?.value === 1 ? "scan" : "scans"}
         </div>
       )}

@@ -44,9 +44,10 @@ serve(async (req) => {
       formData.get("maxDownloads") as string || String(DEFAULT_MAX_DOWNLOADS),
       10,
     );
-    const maxDownloads = Number.isFinite(parsedMaxDownloads) && parsedMaxDownloads > 0
-      ? Math.min(parsedMaxDownloads, MAX_DOWNLOADS_LIMIT)
-      : DEFAULT_MAX_DOWNLOADS;
+    const maxDownloads =
+      Number.isFinite(parsedMaxDownloads) && parsedMaxDownloads > 0
+        ? Math.min(parsedMaxDownloads, MAX_DOWNLOADS_LIMIT)
+        : DEFAULT_MAX_DOWNLOADS;
 
     if (!file) {
       return new Response(

@@ -19,7 +19,9 @@ export default function SequentialOptions({
           <span class="text-xl">⛓️</span>
           <div>
             <h4 class="font-bold text-sm text-gray-800">Sequential Mode</h4>
-            <p class="text-xs text-gray-500">Redirect to different URLs in order</p>
+            <p class="text-xs text-gray-500">
+              Redirect to different URLs in order
+            </p>
           </div>
         </div>
         <button
@@ -50,7 +52,8 @@ export default function SequentialOptions({
             </span>
           </div>
           <p class="text-xs text-gray-400 mt-2 font-medium">
-            {sequentialUrls.filter((u) => u).length} links in chain • Manage in Power-Ups
+            {sequentialUrls.filter((u) => u).length}{" "}
+            links in chain • Manage in Power-Ups
           </p>
         </div>
       )}

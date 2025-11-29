@@ -94,7 +94,6 @@ export default function EmailForm({ url }: Props) {
           class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FFE5B4] focus:outline-none resize-none"
         />
       </div>
-
     </div>
   );
 }

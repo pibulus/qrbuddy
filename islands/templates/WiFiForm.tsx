@@ -129,7 +129,6 @@ export default function WiFiForm({ url }: Props) {
           </span>
         </label>
       </div>
-
     </div>
   );
 }

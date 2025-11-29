@@ -9,7 +9,9 @@ interface UseBatchGeneratorProps {
   logoUrl: Signal<string>;
 }
 
-export function useBatchGenerator({ batchUrls, logoUrl }: UseBatchGeneratorProps) {
+export function useBatchGenerator(
+  { batchUrls, logoUrl }: UseBatchGeneratorProps,
+) {
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
 
@@ -87,7 +89,7 @@ export function useBatchGenerator({ batchUrls, logoUrl }: UseBatchGeneratorProps
 
       haptics.success();
       setIsGeneratingBatch(false);
-      
+
       const event = new CustomEvent("show-toast", {
         detail: {
           message: `📦 Batch complete! Downloaded ${urls.length} QR codes.`,
@@ -95,14 +97,15 @@ export function useBatchGenerator({ batchUrls, logoUrl }: UseBatchGeneratorProps
         },
       });
       globalThis.dispatchEvent(event);
-
     } catch (error) {
       console.error("Batch generation failed:", error);
       setIsGeneratingBatch(false);
       haptics.error();
       const event = new CustomEvent("show-toast", {
         detail: {
-          message: `❌ Batch failed: ${error instanceof Error ? error.message : String(error)}`,
+          message: `❌ Batch failed: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
           type: "error",
         },
       });
@@ -113,6 +116,6 @@ export function useBatchGenerator({ batchUrls, logoUrl }: UseBatchGeneratorProps
   return {
     isGeneratingBatch,
     batchProgress,
-    generateBatchZIP
+    generateBatchZIP,
   };
 }

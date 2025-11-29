@@ -80,10 +80,12 @@ export default function RoutingConfigForm({
               Loop Sequence 🔄
             </label>
           </div>
-          
+
           {sequentialUrls.map((seqUrl, index) => (
             <div key={index} class="flex gap-2 items-center">
-              <span class="text-xs font-bold text-purple-400 w-4">{index + 1}.</span>
+              <span class="text-xs font-bold text-purple-400 w-4">
+                {index + 1}.
+              </span>
               <input
                 type="url"
                 value={seqUrl}
@@ -99,7 +101,9 @@ export default function RoutingConfigForm({
                 <button
                   type="button"
                   onClick={() => {
-                    const newUrls = sequentialUrls.filter((_, i) => i !== index);
+                    const newUrls = sequentialUrls.filter((_, i) =>
+                      i !== index
+                    );
                     setSequentialUrls(newUrls);
                   }}
                   class="text-red-400 hover:text-red-600 px-2"
@@ -125,9 +129,11 @@ export default function RoutingConfigForm({
           <p class="text-xs text-blue-600 mb-2">
             Route users based on their device. Leave blank to use fallback.
           </p>
-          
+
           <div class="space-y-1">
-            <label class="text-xs font-bold text-blue-700">iOS (iPhone/iPad)</label>
+            <label class="text-xs font-bold text-blue-700">
+              iOS (iPhone/iPad)
+            </label>
             <input
               type="url"
               value={iosUrl}
@@ -149,7 +155,9 @@ export default function RoutingConfigForm({
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-bold text-blue-700">Fallback (Desktop/Other)</label>
+            <label class="text-xs font-bold text-blue-700">
+              Fallback (Desktop/Other)
+            </label>
             <input
               type="url"
               value={fallbackUrl}
@@ -166,41 +174,51 @@ export default function RoutingConfigForm({
           <p class="text-xs text-orange-600 mb-2">
             Route based on time of day (UTC).
           </p>
-          
+
           <div class="flex gap-2 items-center">
             <div class="flex-1">
-              <label class="text-xs font-bold text-orange-700">Start Hour</label>
-              <select 
+              <label class="text-xs font-bold text-orange-700">
+                Start Hour
+              </label>
+              <select
                 value={startHour}
                 onChange={(e) => setStartHour(e.currentTarget.value)}
                 class="w-full px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
               >
-                {Array.from({length: 24}, (_, i) => (
-                  <option key={i} value={i.toString().padStart(2, '0')}>
-                    {i.toString().padStart(2, '0')}:00
-                  </option>
-                ))}
+                {Array.from(
+                  { length: 24 },
+                  (_, i) => (
+                    <option key={i} value={i.toString().padStart(2, "0")}>
+                      {i.toString().padStart(2, "0")}:00
+                    </option>
+                  ),
+                )}
               </select>
             </div>
             <span class="text-orange-400 font-bold">to</span>
             <div class="flex-1">
               <label class="text-xs font-bold text-orange-700">End Hour</label>
-              <select 
+              <select
                 value={endHour}
                 onChange={(e) => setEndHour(e.currentTarget.value)}
                 class="w-full px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
               >
-                {Array.from({length: 24}, (_, i) => (
-                  <option key={i} value={i.toString().padStart(2, '0')}>
-                    {i.toString().padStart(2, '0')}:00
-                  </option>
-                ))}
+                {Array.from(
+                  { length: 24 },
+                  (_, i) => (
+                    <option key={i} value={i.toString().padStart(2, "0")}>
+                      {i.toString().padStart(2, "0")}:00
+                    </option>
+                  ),
+                )}
               </select>
             </div>
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-bold text-orange-700">Active URL (During Hours)</label>
+            <label class="text-xs font-bold text-orange-700">
+              Active URL (During Hours)
+            </label>
             <input
               type="url"
               value={timeActiveUrl}
@@ -211,7 +229,9 @@ export default function RoutingConfigForm({
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-bold text-orange-700">Inactive URL (After Hours)</label>
+            <label class="text-xs font-bold text-orange-700">
+              Inactive URL (After Hours)
+            </label>
             <input
               type="url"
               value={timeInactiveUrl}

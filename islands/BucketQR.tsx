@@ -296,7 +296,8 @@ export default function BucketQR({
           console.log("Content:", data.content);
           const event = new CustomEvent("show-toast", {
             detail: {
-              message: "Content: " + data.content.substring(0, 50) + (data.content.length > 50 ? "..." : ""),
+              message: "Content: " + data.content.substring(0, 50) +
+                (data.content.length > 50 ? "..." : ""),
               type: "info",
             },
           });
@@ -386,34 +387,78 @@ export default function BucketQR({
         <div class="space-y-4">
           {/* Text Preview */}
           {contentType === "text" && contentMetadata?.content && (
-            <div class={`
+            <div
+              class={`
               border-4 border-black rounded-xl p-6 shadow-chunky relative overflow-hidden
-              ${style === "sunset" ? "bg-gradient-to-br from-orange-50 to-pink-50" : ""}
-              ${style === "ocean" ? "bg-gradient-to-br from-blue-50 to-cyan-50" : ""}
+              ${
+                style === "sunset"
+                  ? "bg-gradient-to-br from-orange-50 to-pink-50"
+                  : ""
+              }
+              ${
+                style === "ocean"
+                  ? "bg-gradient-to-br from-blue-50 to-cyan-50"
+                  : ""
+              }
               ${style === "neon" ? "bg-gray-900 text-white" : ""}
-              ${style === "forest" ? "bg-gradient-to-br from-green-50 to-emerald-50" : ""}
-              ${!["sunset", "ocean", "neon", "forest"].includes(style) ? "bg-white" : ""}
-            `}>
-              <div class={`
+              ${
+                style === "forest"
+                  ? "bg-gradient-to-br from-green-50 to-emerald-50"
+                  : ""
+              }
+              ${
+                !["sunset", "ocean", "neon", "forest"].includes(style)
+                  ? "bg-white"
+                  : ""
+              }
+            `}
+            >
+              <div
+                class={`
                 absolute top-0 left-0 w-full h-2
-                ${style === "sunset" ? "bg-gradient-to-r from-yellow-400 to-orange-500" : ""}
-                ${style === "ocean" ? "bg-gradient-to-r from-blue-400 to-cyan-500" : ""}
-                ${style === "neon" ? "bg-gradient-to-r from-pink-500 to-purple-500" : ""}
-                ${style === "forest" ? "bg-gradient-to-r from-green-400 to-emerald-500" : ""}
-                ${!["sunset", "ocean", "neon", "forest"].includes(style) ? "bg-gray-200" : ""}
-              `} />
-              <div class={`
+                ${
+                  style === "sunset"
+                    ? "bg-gradient-to-r from-yellow-400 to-orange-500"
+                    : ""
+                }
+                ${
+                  style === "ocean"
+                    ? "bg-gradient-to-r from-blue-400 to-cyan-500"
+                    : ""
+                }
+                ${
+                  style === "neon"
+                    ? "bg-gradient-to-r from-pink-500 to-purple-500"
+                    : ""
+                }
+                ${
+                  style === "forest"
+                    ? "bg-gradient-to-r from-green-400 to-emerald-500"
+                    : ""
+                }
+                ${
+                  !["sunset", "ocean", "neon", "forest"].includes(style)
+                    ? "bg-gray-200"
+                    : ""
+                }
+              `}
+              />
+              <div
+                class={`
                 font-mono text-lg md:text-xl whitespace-pre-wrap break-words leading-relaxed
                 ${style === "neon" ? "text-green-400" : "text-gray-800"}
-              `}>
-                {(!isPasswordProtected || (isPasswordProtected && password)) ? (
-                  contentMetadata.content
-                ) : (
-                  <div class="text-center py-8 opacity-50">
-                    <span class="text-4xl block mb-2">🔒</span>
-                    Hidden Message
-                  </div>
-                )}
+              `}
+              >
+                {(!isPasswordProtected || (isPasswordProtected && password))
+                  ? (
+                    contentMetadata.content
+                  )
+                  : (
+                    <div class="text-center py-8 opacity-50">
+                      <span class="text-4xl block mb-2">🔒</span>
+                      Hidden Message
+                    </div>
+                  )}
               </div>
             </div>
           )}
@@ -424,18 +469,20 @@ export default function BucketQR({
               {/* Image Preview */}
               {contentMetadata.mimetype.startsWith("image/") && (
                 <div class="relative rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-white">
-                  {isPasswordProtected ? (
-                    <div class="h-48 flex items-center justify-center bg-gray-100 text-gray-400">
-                      <span class="text-4xl">🔒</span>
-                      <p class="text-sm ml-2">Download to view</p>
-                    </div>
-                  ) : (
-                    <img
-                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
-                      alt="Bucket content"
-                      class="w-full h-auto object-cover"
-                    />
-                  )}
+                  {isPasswordProtected
+                    ? (
+                      <div class="h-48 flex items-center justify-center bg-gray-100 text-gray-400">
+                        <span class="text-4xl">🔒</span>
+                        <p class="text-sm ml-2">Download to view</p>
+                      </div>
+                    )
+                    : (
+                      <img
+                        src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
+                        alt="Bucket content"
+                        class="w-full h-auto object-cover"
+                      />
+                    )}
                 </div>
               )}
 
@@ -448,35 +495,39 @@ export default function BucketQR({
                       {contentMetadata.filename}
                     </span>
                   </div>
-                  {isPasswordProtected ? (
-                    <div class="text-center text-sm text-gray-500 py-2">
-                      Download to listen 🔒
-                    </div>
-                  ) : (
-                    <audio
-                      controls
-                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
-                      class="w-full"
-                    />
-                  )}
+                  {isPasswordProtected
+                    ? (
+                      <div class="text-center text-sm text-gray-500 py-2">
+                        Download to listen 🔒
+                      </div>
+                    )
+                    : (
+                      <audio
+                        controls
+                        src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
+                        class="w-full"
+                      />
+                    )}
                 </div>
               )}
 
               {/* Video Preview */}
               {contentMetadata.mimetype.startsWith("video/") && (
                 <div class="rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-black">
-                  {isPasswordProtected ? (
-                    <div class="h-48 flex items-center justify-center text-gray-500">
-                      <span class="text-4xl">🔒</span>
-                      <p class="text-sm ml-2">Download to view</p>
-                    </div>
-                  ) : (
-                    <video
-                      controls
-                      src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
-                      class="w-full"
-                    />
-                  )}
+                  {isPasswordProtected
+                    ? (
+                      <div class="h-48 flex items-center justify-center text-gray-500">
+                        <span class="text-4xl">🔒</span>
+                        <p class="text-sm ml-2">Download to view</p>
+                      </div>
+                    )
+                    : (
+                      <video
+                        controls
+                        src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
+                        class="w-full"
+                      />
+                    )}
                 </div>
               )}
             </div>

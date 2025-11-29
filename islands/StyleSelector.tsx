@@ -89,7 +89,6 @@ export default function StyleSelector(
             onClick={() => setIsGalleryOpen(false)}
           />
           <div class="relative z-10 w-full max-w-lg bg-white border-4 border-black rounded-3xl shadow-2xl p-6 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto">
-            
             {/* Header */}
             <div class="flex items-start justify-between gap-3">
               <div>
@@ -126,20 +125,20 @@ export default function StyleSelector(
                   `}
                 >
                   {/* Preview Background */}
-                  <div 
+                  <div
                     class="absolute inset-0 z-0"
                     style={{ background: getGradientPreview(info.colors) }}
                   />
-                  
+
                   {/* Content Overlay */}
                   <div class="relative z-10 p-4 h-24 flex flex-col justify-end">
                     <span class="font-black text-white text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
                       {info.name}
                     </span>
                     {style.value === key && (
-                       <span class="absolute top-3 right-3 bg-white text-black text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                         Selected
-                       </span>
+                      <span class="absolute top-3 right-3 bg-white text-black text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                        Selected
+                      </span>
                     )}
                   </div>
                 </button>
@@ -158,7 +157,11 @@ export default function StyleSelector(
                   relative group overflow-hidden rounded-2xl border-3 border-dashed border-gray-300 
                   hover:border-black hover:border-solid hover:scale-[1.02] hover:shadow-lg transition-all duration-200
                   bg-gray-50 flex flex-col items-center justify-center h-24 gap-1
-                  ${style.value === "custom" ? "border-black border-solid shadow-chunky bg-white" : ""}
+                  ${
+                  style.value === "custom"
+                    ? "border-black border-solid shadow-chunky bg-white"
+                    : ""
+                }
                 `}
               >
                 <span class="text-2xl">🎨</span>

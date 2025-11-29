@@ -1,5 +1,5 @@
 import { Handlers } from "$fresh/server.ts";
-import { getSupabaseUrl, getAuthHeaders } from "../utils/api.ts";
+import { getAuthHeaders, getSupabaseUrl } from "../utils/api.ts";
 
 // This route handles QR code redirects
 // It forwards to the Supabase edge function which manages the actual redirect logic

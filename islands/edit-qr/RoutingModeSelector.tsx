@@ -5,7 +5,9 @@ interface RoutingModeSelectorProps {
   setRoutingMode: (mode: string) => void;
 }
 
-export default function RoutingModeSelector({ routingMode, setRoutingMode }: RoutingModeSelectorProps) {
+export default function RoutingModeSelector(
+  { routingMode, setRoutingMode }: RoutingModeSelectorProps,
+) {
   return (
     <div class="space-y-2">
       <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">

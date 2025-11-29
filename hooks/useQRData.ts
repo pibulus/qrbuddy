@@ -2,7 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import { getSupabaseUrl } from "../utils/api.ts";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "../islands/ToastManager.tsx";
-import { apiRequest, ApiError } from "../utils/api-request.ts";
+import { ApiError, apiRequest } from "../utils/api-request.ts";
 
 export interface QRData {
   short_code: string;
@@ -101,7 +101,7 @@ export function useQRData() {
 
       const body = {
         owner_token: ownerToken,
-        ...updateData
+        ...updateData,
       };
 
       // Use shared API helper (automatically includes auth headers)
@@ -148,6 +148,6 @@ export function useQRData() {
     qrData,
     isSaving,
     saveQRData,
-    ownerToken
+    ownerToken,
   };
 }

@@ -82,7 +82,6 @@ export default function SMSForm({ url }: Props) {
           {message.length} characters
         </p>
       </div>
-
     </div>
   );
 }

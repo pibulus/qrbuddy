@@ -19,7 +19,7 @@ export default function EditQRForm() {
 
   // Routing Mode state
   const [routingMode, setRoutingMode] = useState<string>("simple");
-  
+
   // Sequential state
   const [sequentialUrls, setSequentialUrls] = useState<string[]>(["", ""]);
   const [loopSequence, setLoopSequence] = useState(false);
@@ -78,16 +78,23 @@ export default function EditQRForm() {
   const handleSave = async () => {
     let routingConfig = null;
     if (routingMode === "sequential") {
-      routingConfig = { urls: sequentialUrls.filter((u) => u.trim() !== ""), loop: loopSequence };
+      routingConfig = {
+        urls: sequentialUrls.filter((u) => u.trim() !== ""),
+        loop: loopSequence,
+      };
     } else if (routingMode === "device") {
-      routingConfig = { ios: iosUrl, android: androidUrl, fallback: fallbackUrl };
+      routingConfig = {
+        ios: iosUrl,
+        android: androidUrl,
+        fallback: fallbackUrl,
+      };
     } else if (routingMode === "time") {
-      routingConfig = { 
-        startHour, 
-        endHour, 
-        activeUrl: timeActiveUrl, 
+      routingConfig = {
+        startHour,
+        endHour,
+        activeUrl: timeActiveUrl,
         inactiveUrl: timeInactiveUrl,
-        timezoneOffset: 0 // Default to UTC for now, or browser offset?
+        timezoneOffset: 0, // Default to UTC for now, or browser offset?
       };
     }
 
@@ -139,9 +146,9 @@ export default function EditQRForm() {
         <h2 class="text-2xl font-black text-black">Edit QR Settings</h2>
 
         {/* Routing Mode Selector */}
-        <RoutingModeSelector 
-          routingMode={routingMode} 
-          setRoutingMode={setRoutingMode} 
+        <RoutingModeSelector
+          routingMode={routingMode}
+          setRoutingMode={setRoutingMode}
         />
 
         {/* Dynamic Routing Config UI */}
@@ -188,7 +195,7 @@ export default function EditQRForm() {
                   maxScans === limit
                     ? "bg-pink-500 text-white border-pink-600 scale-105"
                     : "bg-white text-gray-700 border-gray-300 hover:border-pink-400"
-                  }`}
+                }`}
               >
                 {limit === null ? "∞" : limit}
               </button>

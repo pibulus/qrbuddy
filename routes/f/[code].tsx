@@ -1,6 +1,6 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
-import { getSupabaseUrl, getAuthHeaders } from "../../utils/api.ts";
+import { getAuthHeaders, getSupabaseUrl } from "../../utils/api.ts";
 
 interface FileData {
   fileId: string;

@@ -135,7 +135,7 @@ export async function apiRequest<T = unknown>(
     // Parse successful response
     try {
       return await response.json();
-    } catch (parseError) {
+    } catch (_parseError) {
       throw new ApiError(
         "Failed to parse server response",
         response.status,
@@ -196,7 +196,7 @@ export async function apiRequestFormData<T = unknown>(
 
     try {
       return await response.json();
-    } catch (parseError) {
+    } catch (_parseError) {
       throw new ApiError(
         "Failed to parse server response",
         response.status,

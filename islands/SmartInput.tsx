@@ -7,7 +7,10 @@ import ExtrasModal from "./ExtrasModal.tsx";
 import { useDynamicQR } from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
 import { useBatchGenerator } from "../hooks/useBatchGenerator.ts";
-import { useBucketCreator } from "../hooks/useBucketCreator.ts";
+import {
+  type CreateBucketOptions,
+  useBucketCreator,
+} from "../hooks/useBucketCreator.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
 
 // Sub-components
@@ -25,6 +28,7 @@ interface SmartInputProps {
   isBucket: Signal<boolean>;
   bucketUrl: Signal<string>;
   logoUrl: Signal<string>;
+  qrStyle: Signal<string>;
 }
 
 export default function SmartInput(
@@ -37,6 +41,7 @@ export default function SmartInput(
     isBucket,
     bucketUrl,
     logoUrl,
+    qrStyle,
   }: SmartInputProps,
 ) {
   const [validationState, setValidationState] = useState<
@@ -76,7 +81,10 @@ export default function SmartInput(
     expiryDate,
     routingMode: isSequential ? "sequential" : "simple",
     routingConfig: isSequential
-      ? { urls: sequentialUrls.filter((u) => u.trim() !== ""), loop: loopSequence }
+      ? {
+        urls: sequentialUrls.filter((u) => u.trim() !== ""),
+        loop: loopSequence,
+      }
       : undefined,
   });
 
@@ -90,15 +98,52 @@ export default function SmartInput(
       setTouched,
     });
 
-  const { isGeneratingBatch, batchProgress, generateBatchZIP } = useBatchGenerator({
-    batchUrls,
-    logoUrl
-  });
+  const { isGeneratingBatch, batchProgress, generateBatchZIP } =
+    useBatchGenerator({
+      batchUrls,
+      logoUrl,
+    });
 
-  const { isCreatingBucket, createTextBucket, createBucket } = useBucketCreator({
-    url,
-    bucketUrl
-  });
+  const { isCreatingBucket, createTextBucket, createBucket } = useBucketCreator(
+    {
+      url,
+      bucketUrl,
+    },
+  );
+
+  const handleLockerConfirm = async (
+    options: CreateBucketOptions,
+  ): Promise<boolean> => {
+    isDynamic.value = false;
+    setIsBatchMode(false);
+    setIsSequential(false);
+
+    const success = await createBucket({
+      ...options,
+      style: options.style ?? (qrStyle.value || "sunset"),
+    });
+
+    if (success) {
+      isBucket.value = true;
+      setExtrasHasUpdates(true);
+    }
+
+    return success;
+  };
+
+  const handleLockerDisable = () => {
+    isBucket.value = false;
+    bucketUrl.value = "";
+    url.value = "";
+
+    const event = new CustomEvent("show-toast", {
+      detail: {
+        message: "Locker disconnected. Drop a new link to continue.",
+        type: "info",
+      },
+    });
+    globalThis.dispatchEvent(event);
+  };
 
   // URL validation function
   const validateURL = (urlString: string): boolean => {
@@ -156,13 +201,6 @@ export default function SmartInput(
       return () => clearTimeout(timer);
     }
   }, [isDynamic.value, url.value]);
-
-  // Create bucket when isBucket is enabled
-  useEffect(() => {
-    if (isBucket.value && !isCreatingBucket && !bucketUrl.value) {
-      createBucket();
-    }
-  }, [isBucket.value]);
 
   // Flag extras button when new goodies exist
   useEffect(() => {
@@ -344,7 +382,8 @@ export default function SmartInput(
       )}
 
       {/* Sequential QR Options */}
-      {selectedTemplate === "url" && isDynamic.value && !isDestructible.value && !isBucket.value && !isBatchMode && (
+      {selectedTemplate === "url" && isDynamic.value && !isDestructible.value &&
+        !isBucket.value && !isBatchMode && (
         <SequentialOptions
           isSequential={isSequential}
           setIsSequential={setIsSequential}
@@ -357,7 +396,9 @@ export default function SmartInput(
         <StatusBadge
           icon="📦"
           label="Batch Mode Active"
-          subtext={`${batchUrls.split("\n").filter((u) => u.trim()).length} URLs queued • Manage in Power-Ups`}
+          subtext={`${
+            batchUrls.split("\n").filter((u) => u.trim()).length
+          } URLs queued • Manage in Power-Ups`}
           colorClass="blue"
         />
       )}
@@ -400,11 +441,10 @@ export default function SmartInput(
       )}
 
       {/* Destructible indicator */}
-      {isDestructible.value && !isUploading && maxDownloads.value !== UNLIMITED_SCANS && (
+      {isDestructible.value && !isUploading &&
+        maxDownloads.value !== UNLIMITED_SCANS && (
         <p class="text-orange-600 text-sm mt-2 text-center font-semibold animate-slide-down">
-          ⚠️ This file will self-destruct after{" "}
-          {maxDownloads.value}
-          {" "}
+          ⚠️ This file will self-destruct after {maxDownloads.value}{" "}
           {maxDownloads.value === 1 ? "scan" : "scans"}
         </p>
       )}
@@ -445,6 +485,7 @@ export default function SmartInput(
         editUrl={editUrl}
         bucketUrl={bucketUrl}
         logoUrl={logoUrl}
+        qrStyle={qrStyle}
         scanLimit={scanLimit}
         setScanLimit={setScanLimit}
         expiryDate={expiryDate}
@@ -462,6 +503,9 @@ export default function SmartInput(
         isGeneratingBatch={isGeneratingBatch}
         batchProgress={batchProgress}
         onGenerateBatch={generateBatchZIP}
+        onLockerConfirm={handleLockerConfirm}
+        onLockerDisable={handleLockerDisable}
+        isCreatingLocker={isCreatingBucket}
       />
     </div>
   );

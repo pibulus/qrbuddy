@@ -61,7 +61,7 @@ serve(async (req) => {
     // Process logs for sparkline
     const sparklineData = new Array(7).fill(0);
     const today = new Date();
-    
+
     logs?.forEach((log: { scanned_at: string }) => {
       const logDate = new Date(log.scanned_at);
       const diffTime = Math.abs(today.getTime() - logDate.getTime());
@@ -72,7 +72,9 @@ serve(async (req) => {
     });
 
     // Get last scan time
-    const lastScan = logs && logs.length > 0 ? logs[logs.length - 1].scanned_at : null;
+    const lastScan = logs && logs.length > 0
+      ? logs[logs.length - 1].scanned_at
+      : null;
 
     // Device stats
     const deviceStats = { ios: 0, android: 0, desktop: 0, other: 0 };
@@ -101,7 +103,7 @@ serve(async (req) => {
             sparkline: sparklineData,
             last_scan: lastScan,
             devices: deviceStats,
-          }
+          },
         },
       }),
       {

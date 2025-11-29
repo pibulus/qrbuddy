@@ -3,7 +3,14 @@ import { Signal } from "@preact/signals";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
-import { apiRequest, ApiError } from "../utils/api-request.ts";
+import { ApiError, apiRequest } from "../utils/api-request.ts";
+
+export interface CreateBucketOptions {
+  bucketType?: "file" | "text" | "link";
+  style?: string;
+  isReusable?: boolean;
+  password?: string;
+}
 
 interface UseBucketCreatorProps {
   url: Signal<string>;
@@ -57,13 +64,16 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       // 3. Update UI
       url.value = bucketData.bucket_url;
       bucketUrl.value = bucketData.bucket_url;
-      
+
       // Save token
-      await saveOwnerToken("bucket", bucketData.bucket_code, bucketData.owner_token);
+      await saveOwnerToken(
+        "bucket",
+        bucketData.bucket_code,
+        bucketData.owner_token,
+      );
 
       setIsCreatingBucket(false);
       haptics.success();
-
     } catch (error) {
       console.error("[HOOK:useBucketCreator] Text bucket failed:", {
         error: error instanceof Error ? error.message : String(error),
@@ -76,12 +86,20 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
   };
 
   // Create file bucket
-  const createBucket = async () => {
+  const createBucket = async (
+    options: CreateBucketOptions = {},
+  ): Promise<boolean> => {
     try {
       setIsCreatingBucket(true);
       haptics.medium();
 
       const apiUrl = getApiUrl();
+      const {
+        bucketType = "file",
+        style = "sunset",
+        isReusable = true,
+        password,
+      } = options;
 
       // Use shared API helper (automatically includes auth headers)
       const data = await apiRequest<{
@@ -94,9 +112,10 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            bucket_type: "file",
-            style: "sunset", // Use current style
-            is_reusable: true,
+            bucket_type: bucketType,
+            style,
+            is_reusable: isReusable,
+            ...(password ? { password } : {}),
           }),
         },
         "Failed to create bucket",
@@ -121,6 +140,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       globalThis.dispatchEvent(event);
 
       setIsCreatingBucket(false);
+      return true;
     } catch (error) {
       console.error("[HOOK:useBucketCreator] Create bucket failed:", {
         error: error instanceof Error ? error.message : String(error),
@@ -140,12 +160,13 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
         },
       });
       globalThis.dispatchEvent(event);
+      return false;
     }
   };
 
   return {
     isCreatingBucket,
     createTextBucket,
-    createBucket
+    createBucket,
   };
 }
