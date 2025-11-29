@@ -69,7 +69,13 @@ export default function ExtrasModal({
   const [showLogoUploader, setShowLogoUploader] = useState(false);
   const [lockerExpanded, setLockerExpanded] = useState(false);
   const [lockerMode, setLockerMode] = useState<"open" | "single">("open");
-  const [lockerPassword, setLockerPassword] = useState("");
+  const [lockerRequirePin, setLockerRequirePin] = useState(false);
+  const [lockerPinDigits, setLockerPinDigits] = useState([
+    "",
+    "",
+    "",
+    "",
+  ]);
   const [lockerStyle, setLockerStyle] = useState(qrStyle.value || "sunset");
   const [lockerError, setLockerError] = useState<string | null>(null);
   const lockerStyleOptions = [
@@ -84,8 +90,9 @@ export default function ExtrasModal({
   useEffect(() => {
     if (!isOpen) {
       setLockerExpanded(false);
-      setLockerPassword("");
       setLockerMode("open");
+      setLockerRequirePin(false);
+      setLockerPinDigits(["", "", "", ""]);
       setLockerError(null);
       setLockerStyle(qrStyle.value || "sunset");
     }
@@ -93,24 +100,75 @@ export default function ExtrasModal({
 
   const lockerActive = isBucket.value && bucketUrl.value !== "";
 
+  useEffect(() => {
+    if (!lockerActive) {
+      setLockerStyle(qrStyle.value || "sunset");
+    }
+  }, [qrStyle.value, lockerActive]);
+  const lockerPinValue = lockerPinDigits.join("");
+
+  const resetLockerPin = () => setLockerPinDigits(["", "", "", ""]);
+
   const handleLockerCardClick = () => {
     setLockerExpanded((prev) => !prev);
     haptics.light();
   };
 
+  const handleKeypadPress = (value: string) => {
+    haptics.light();
+    if (value === "clear") {
+      resetLockerPin();
+      return;
+    }
+    if (value === "back") {
+      const next = [...lockerPinDigits];
+      let lastIndex = -1;
+      for (let i = next.length - 1; i >= 0; i--) {
+        if (next[i] !== "") {
+          lastIndex = i;
+          break;
+        }
+      }
+      if (lastIndex !== -1) {
+        next[lastIndex] = "";
+        setLockerPinDigits(next);
+      }
+      return;
+    }
+
+    if (lockerPinDigits.every((digit) => digit !== "")) {
+      return;
+    }
+
+    const next = [...lockerPinDigits];
+    const firstEmpty = next.findIndex((digit) => digit === "");
+    if (firstEmpty !== -1) {
+      next[firstEmpty] = value;
+      setLockerPinDigits(next);
+    }
+  };
+
   const handleLockerConfirmClick = async () => {
     setLockerError(null);
+
+    if (lockerRequirePin && lockerPinValue.length !== 4) {
+      setLockerError("Enter a 4-digit PIN to lock the bucket.");
+      haptics.error();
+      return;
+    }
+
     const success = await onLockerConfirm({
       bucketType: "file",
       isReusable: lockerMode === "open",
       style: lockerStyle,
-      password: lockerPassword.trim() || undefined,
+      password: lockerRequirePin ? lockerPinValue : undefined,
     });
 
     if (success) {
       setLockerExpanded(false);
-      setLockerPassword("");
       setLockerMode("open");
+      setLockerRequirePin(false);
+      resetLockerPin();
     } else {
       setLockerError("Couldn't create locker. Try again in a moment.");
     }
@@ -119,8 +177,10 @@ export default function ExtrasModal({
   const handleLockerDisableClick = () => {
     onLockerDisable();
     setLockerExpanded(false);
-    setLockerPassword("");
     setLockerMode("open");
+    setLockerRequirePin(false);
+    resetLockerPin();
+    setLockerError(null);
   };
 
   if (!isOpen) return null;
@@ -395,22 +455,83 @@ export default function ExtrasModal({
                       </div>
                     </div>
 
-                    <div class="space-y-2">
-                      <label class="text-xs font-bold uppercase tracking-wide text-gray-600">
-                        Access PIN (optional)
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={10}
-                        placeholder="Leave blank for open access"
-                        value={lockerPassword}
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl text-sm focus:border-black focus:outline-none"
-                        onInput={(e) =>
-                          setLockerPassword(
-                            (e.target as HTMLInputElement).value,
-                          )}
-                      />
+                    <div class="space-y-3">
+                      <div class="flex items-center justify-between gap-4">
+                        <div>
+                          <p class="text-xs font-bold uppercase tracking-wide text-gray-600">
+                            Require 4-digit PIN?
+                          </p>
+                          <p class="text-[11px] text-gray-500">
+                            Keep the locker invite-only.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = !lockerRequirePin;
+                            setLockerRequirePin(next);
+                            if (!next) resetLockerPin();
+                            haptics.light();
+                          }}
+                          class={`px-4 py-1 rounded-full border-2 text-xs font-bold transition ${
+                            lockerRequirePin
+                              ? "bg-teal-500 text-white border-teal-600"
+                              : "bg-white text-gray-700 border-gray-300"
+                          }`}
+                        >
+                          {lockerRequirePin ? "On" : "Off"}
+                        </button>
+                      </div>
+
+                      {lockerRequirePin && (
+                        <div class="space-y-3">
+                          <div class="flex justify-center gap-4">
+                            {lockerPinDigits.map((digit, index) => (
+                              <div
+                                key={`locker-pin-${index}`}
+                                class="w-10 h-12 bg-white border-2 border-gray-300 rounded-xl flex items-center justify-center text-2xl font-bold text-gray-800"
+                              >
+                                {digit ? "•" : ""}
+                              </div>
+                            ))}
+                          </div>
+                          <div class="grid grid-cols-3 gap-2">
+                            {[
+                              "1",
+                              "2",
+                              "3",
+                              "4",
+                              "5",
+                              "6",
+                              "7",
+                              "8",
+                              "9",
+                              "clear",
+                              "0",
+                              "back",
+                            ].map(
+                              (key) => (
+                                <button
+                                  key={`locker-pad-${key}`}
+                                  type="button"
+                                  class={`py-3 rounded-xl text-sm font-semibold border-2 bg-white transition ${
+                                    key === "clear" || key === "back"
+                                      ? "border-gray-300 text-gray-600"
+                                      : "border-teal-200 text-gray-900"
+                                  } hover:border-teal-400`}
+                                  onClick={() => handleKeypadPress(String(key))}
+                                >
+                                  {key === "clear"
+                                    ? "Clear"
+                                    : key === "back"
+                                    ? "⌫"
+                                    : key}
+                                </button>
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div class="space-y-2">
@@ -452,6 +573,8 @@ export default function ExtrasModal({
                         onClick={() => {
                           setLockerExpanded(false);
                           setLockerError(null);
+                          setLockerRequirePin(false);
+                          resetLockerPin();
                         }}
                       >
                         Cancel
