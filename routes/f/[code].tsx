@@ -76,6 +76,7 @@ export default function FilePage({ data }: PageProps<FileData>) {
   const { fileId, fileName, fileSize, remainingDownloads, maxDownloads } = data;
 
   const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+  const isUnlimited = maxDownloads >= 999999;
   const isOneTime = maxDownloads === 1;
   const downloadUrl = `/api/download-file?id=${fileId}`;
 
@@ -86,20 +87,24 @@ export default function FilePage({ data }: PageProps<FileData>) {
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
-      <div class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50">
+      <div class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
         <div class="w-full max-w-md">
           {/* Main card */}
           <div class="bg-white border-4 border-black rounded-2xl p-8 shadow-chunky text-center space-y-6 animate-slide-in">
-            {/* Bomb icon with animation */}
-            <div class="text-7xl animate-pulse-slow">💣</div>
+            {/* Icon with animation */}
+            <div class="text-7xl animate-pulse-slow">
+              {isUnlimited ? "📦" : "💣"}
+            </div>
 
             {/* Title */}
             <div>
               <h1 class="text-3xl font-black text-black mb-2">
-                Self-Destructing File
+                {isUnlimited ? "Shared File" : "Self-Destructing File"}
               </h1>
               <p class="text-sm text-gray-600">
-                This message will self-destruct...
+                {isUnlimited
+                  ? "Ready to download anytime"
+                  : "This message will self-destruct..."}
               </p>
             </div>
 
@@ -125,22 +130,39 @@ export default function FilePage({ data }: PageProps<FileData>) {
               </div>
             </div>
 
-            {/* Warning message */}
-            <div class="py-4 px-4 bg-yellow-100 border-3 border-yellow-400 rounded-xl">
-              <p class="text-sm font-bold text-yellow-900 flex items-center justify-center gap-2">
-                <span>⚠️</span>
-                {isOneTime
-                  ? "This file will self-destruct after download!"
-                  : `This file will self-destruct after ${maxDownloads} downloads!`}
-              </p>
-            </div>
+            {/* Warning/Info message */}
+            {!isUnlimited && (
+              <div class="py-4 px-4 bg-yellow-100 border-3 border-yellow-400 rounded-xl">
+                <p class="text-sm font-bold text-yellow-900 flex items-center justify-center gap-2">
+                  <span>⚠️</span>
+                  {isOneTime
+                    ? "This file will self-destruct after download!"
+                    : `This file will self-destruct after ${maxDownloads} downloads!`}
+                </p>
+              </div>
+            )}
+
+            {isUnlimited && (
+              <div class="py-4 px-4 bg-blue-100 border-3 border-blue-400 rounded-xl">
+                <p class="text-sm font-bold text-blue-900 flex items-center justify-center gap-2">
+                  <span>♾️</span>
+                  This file can be downloaded unlimited times!
+                </p>
+              </div>
+            )}
 
             {/* Download button */}
             <a
               href={downloadUrl}
-              class="inline-block w-full px-6 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white border-4 border-black rounded-xl font-black text-lg shadow-chunky transition-all hover:scale-105 active:scale-95 animate-pulse-glow"
+              class={`inline-block w-full px-6 py-4 ${
+                isUnlimited
+                  ? "bg-gradient-to-r from-blue-500 to-purple-500"
+                  : "bg-gradient-to-r from-red-500 to-orange-500"
+              } text-white border-4 border-black rounded-xl font-black text-lg shadow-chunky transition-all hover:scale-105 active:scale-95 ${
+                isUnlimited ? "" : "animate-pulse-glow"
+              }`}
             >
-              💥 Download & Destroy →
+              {isUnlimited ? "📥 Download File →" : "💥 Download & Destroy →"}
             </a>
 
             {/* Countdown */}

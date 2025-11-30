@@ -47,13 +47,15 @@ serve(async (req) => {
       );
     }
 
+    // Treat null/undefined as unlimited (999999)
+    const maxDownloads = file.max_downloads || 999999;
+    const downloadCount = file.download_count || 0;
+
     // Check if file is expired
     const isExpired = file.accessed ||
-      (file.max_downloads && file.download_count >= file.max_downloads);
+      (maxDownloads < 999999 && downloadCount >= maxDownloads);
 
-    const remainingDownloads = file.max_downloads
-      ? file.max_downloads - file.download_count
-      : 999999; // "unlimited"
+    const remainingDownloads = maxDownloads - downloadCount;
 
     return new Response(
       JSON.stringify({
@@ -61,8 +63,8 @@ serve(async (req) => {
         fileName: file.original_name,
         fileSize: file.size,
         mimeType: file.mime_type,
-        maxDownloads: file.max_downloads || 1,
-        downloadCount: file.download_count || 0,
+        maxDownloads,
+        downloadCount,
         remainingDownloads,
         isExpired,
       }),
