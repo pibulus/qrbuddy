@@ -163,7 +163,7 @@ export default function BucketQR({
     canvasRef.current.innerHTML = "";
     qrCode.append(canvasRef.current);
     qrCodeRef.current = qrCode;
-  }, [isEmpty]);
+  }, [isEmpty, bucketUrl, style]);
 
   // Handle file upload
   const handleUpload = async (file?: File, text?: string, link?: string) => {
