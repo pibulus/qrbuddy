@@ -3,6 +3,11 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  getClientIP,
+} from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 /**
@@ -25,6 +30,18 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting: 30 updates per hour per IP
+    // Owner token required, but rate limit prevents token brute-force
+    const clientIP = getClientIP(req);
+    const rateLimitResult = checkRateLimit(clientIP, {
+      windowMs: 60 * 60 * 1000, // 1 hour
+      maxRequests: 30,
+    });
+
+    if (rateLimitResult.isLimited) {
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",

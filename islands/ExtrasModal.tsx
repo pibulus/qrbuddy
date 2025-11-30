@@ -3,6 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import LogoUploader from "./LogoUploader.tsx";
 import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
+import { useKeypad } from "../hooks/useKeypad.ts";
 
 interface ExtrasModalProps {
   isOpen: boolean;
@@ -70,14 +71,16 @@ export default function ExtrasModal({
   const [lockerExpanded, setLockerExpanded] = useState(false);
   const [lockerMode, setLockerMode] = useState<"open" | "single">("open");
   const [lockerRequirePin, setLockerRequirePin] = useState(false);
-  const [lockerPinDigits, setLockerPinDigits] = useState([
-    "",
-    "",
-    "",
-    "",
-  ]);
   const [lockerStyle, setLockerStyle] = useState(qrStyle.value || "sunset");
   const [lockerError, setLockerError] = useState<string | null>(null);
+
+  // Use shared keypad hook for PIN entry
+  const {
+    digits: lockerPinDigits,
+    handlePress: handleKeypadPress,
+    reset: resetLockerPin,
+    value: lockerPinValue,
+  } = useKeypad(4);
   const lockerStyleOptions = [
     { value: "sunset", label: "Sunset" },
     { value: "pool", label: "Pool" },
@@ -92,11 +95,11 @@ export default function ExtrasModal({
       setLockerExpanded(false);
       setLockerMode("open");
       setLockerRequirePin(false);
-      setLockerPinDigits(["", "", "", ""]);
+      resetLockerPin();
       setLockerError(null);
       setLockerStyle(qrStyle.value || "sunset");
     }
-  }, [isOpen]);
+  }, [isOpen, resetLockerPin]);
 
   const lockerActive = isBucket.value && bucketUrl.value !== "";
 
@@ -105,47 +108,10 @@ export default function ExtrasModal({
       setLockerStyle(qrStyle.value || "sunset");
     }
   }, [qrStyle.value, lockerActive]);
-  const lockerPinValue = lockerPinDigits.join("");
-
-  const resetLockerPin = () => setLockerPinDigits(["", "", "", ""]);
 
   const handleLockerCardClick = () => {
     setLockerExpanded((prev) => !prev);
     haptics.light();
-  };
-
-  const handleKeypadPress = (value: string) => {
-    haptics.light();
-    if (value === "clear") {
-      resetLockerPin();
-      return;
-    }
-    if (value === "back") {
-      const next = [...lockerPinDigits];
-      let lastIndex = -1;
-      for (let i = next.length - 1; i >= 0; i--) {
-        if (next[i] !== "") {
-          lastIndex = i;
-          break;
-        }
-      }
-      if (lastIndex !== -1) {
-        next[lastIndex] = "";
-        setLockerPinDigits(next);
-      }
-      return;
-    }
-
-    if (lockerPinDigits.every((digit) => digit !== "")) {
-      return;
-    }
-
-    const next = [...lockerPinDigits];
-    const firstEmpty = next.findIndex((digit) => digit === "");
-    if (firstEmpty !== -1) {
-      next[firstEmpty] = value;
-      setLockerPinDigits(next);
-    }
   };
 
   const handleLockerConfirmClick = async () => {

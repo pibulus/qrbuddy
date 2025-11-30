@@ -4,6 +4,7 @@ import { QR_STYLES } from "../utils/qr-styles.ts";
 import { haptics } from "../utils/haptics.ts";
 import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
 import { getAuthHeaders } from "../utils/api.ts";
+import { useKeypad } from "../hooks/useKeypad.ts";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -51,10 +52,16 @@ export default function BucketQR({
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [useManualPassword, setUseManualPassword] = useState(false);
   const [manualPassword, setManualPassword] = useState("");
-  const [pinDigits, setPinDigits] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
 
-  const pinValue = pinDigits.join("");
+  // Use shared keypad hook for PIN entry
+  const {
+    digits: pinDigits,
+    handlePress: handleKeypadPress,
+    reset: resetPinDigits,
+    value: pinValue,
+  } = useKeypad(4);
+
   const hasUnlockInput = useManualPassword
     ? manualPassword.trim().length > 0
     : pinValue.length === 4;
@@ -243,38 +250,6 @@ export default function BucketQR({
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       handleUpload(input.files[0]);
-    }
-  };
-
-  const resetPinDigits = () => setPinDigits(["", "", "", ""]);
-
-  const handleKeypadPress = (value: string) => {
-    haptics.light();
-    if (value === "clear") {
-      resetPinDigits();
-      return;
-    }
-    if (value === "back") {
-      const next = [...pinDigits];
-      for (let i = next.length - 1; i >= 0; i--) {
-        if (next[i] !== "") {
-          next[i] = "";
-          setPinDigits(next);
-          break;
-        }
-      }
-      return;
-    }
-
-    if (pinDigits.every((digit) => digit !== "")) {
-      return;
-    }
-
-    const next = [...pinDigits];
-    const firstEmpty = next.findIndex((digit) => digit === "");
-    if (firstEmpty !== -1) {
-      next[firstEmpty] = value;
-      setPinDigits(next);
     }
   };
 
