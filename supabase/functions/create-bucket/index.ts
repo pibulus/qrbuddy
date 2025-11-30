@@ -86,10 +86,17 @@ serve(async (req) => {
 
     const ownerToken = generateOwnerToken();
 
+    // Hash owner token for storage (SHA-256)
+    const encoder = new TextEncoder();
+    const tokenData = encoder.encode(ownerToken);
+    const tokenHashBuffer = await crypto.subtle.digest("SHA-256", tokenData);
+    const tokenHashArray = Array.from(new Uint8Array(tokenHashBuffer));
+    const ownerTokenHash = tokenHashArray.map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
     // Hash password if provided
     let passwordHash = null;
     if (password) {
-      const encoder = new TextEncoder();
       const data = encoder.encode(password);
       const hashBuffer = await crypto.subtle.digest("SHA-256", data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -98,11 +105,12 @@ serve(async (req) => {
     }
 
     // Create bucket record
+    // Store HASHED token in owner_token column
     const { error: insertError } = await supabase
       .from("file_buckets")
       .insert({
         bucket_code: bucketCode,
-        owner_token: ownerToken,
+        owner_token: ownerTokenHash, // Store hash, return raw token to user
         bucket_type,
         style,
         is_password_protected: !!password,

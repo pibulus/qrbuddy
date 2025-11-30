@@ -42,10 +42,16 @@ export const handler: Handlers<BucketPageData> = {
     }
 
     // Fetch bucket status
-    const statusUrl =
-      `${supabaseUrl}/functions/v1/get-bucket-status?bucket_code=${code}`;
+    const ownerToken = ctx.url.searchParams.get("owner_token");
+    const statusUrl = new URL(
+      `${supabaseUrl}/functions/v1/get-bucket-status?bucket_code=${code}`,
+    );
+    if (ownerToken) {
+      statusUrl.searchParams.set("owner_token", ownerToken);
+    }
+
     const authHeaders = getAuthHeaders();
-    const response = await fetch(statusUrl, {
+    const response = await fetch(statusUrl.toString(), {
       headers: authHeaders,
     });
 

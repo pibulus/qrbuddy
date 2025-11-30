@@ -499,10 +499,19 @@ export default function BucketQR({
           )}
 
           {/* File Preview (Image/Audio/Video) */}
-          {contentType === "file" && contentMetadata?.mimetype && (
+          {contentType === "file" && (
             <div class="space-y-4">
+              {/* If metadata is redacted (null), show generic locked state */}
+              {!contentMetadata && (
+                <div class="bg-gray-100 border-4 border-black rounded-xl p-8 text-center shadow-chunky">
+                   <span class="text-5xl block mb-4">🔒</span>
+                   <h3 class="text-xl font-bold text-gray-800 mb-2">Secure File</h3>
+                   <p class="text-gray-600">Enter password to view details and download</p>
+                </div>
+              )}
+
               {/* Image Preview */}
-              {contentMetadata.mimetype.startsWith("image/") && (
+              {contentMetadata?.mimetype?.startsWith("image/") && (
                 <div class="relative rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-white">
                   {isPasswordProtected
                     ? (
@@ -522,7 +531,7 @@ export default function BucketQR({
               )}
 
               {/* Audio Preview */}
-              {contentMetadata.mimetype.startsWith("audio/") && (
+              {contentMetadata?.mimetype?.startsWith("audio/") && (
                 <div class="bg-white border-4 border-black rounded-xl p-4 shadow-chunky">
                   <div class="flex items-center gap-3 mb-2">
                     <span class="text-2xl animate-bounce">🎵</span>
@@ -547,7 +556,7 @@ export default function BucketQR({
               )}
 
               {/* Video Preview */}
-              {contentMetadata.mimetype.startsWith("video/") && (
+              {contentMetadata?.mimetype?.startsWith("video/") && (
                 <div class="rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-black">
                   {isPasswordProtected
                     ? (
@@ -565,6 +574,15 @@ export default function BucketQR({
                     )}
                 </div>
               )}
+
+               {/* Generic File Preview (if mimetype not handled above but metadata exists) */}
+               {contentMetadata && !contentMetadata.mimetype?.startsWith("image/") && !contentMetadata.mimetype?.startsWith("audio/") && !contentMetadata.mimetype?.startsWith("video/") && (
+                  <div class="bg-white border-4 border-black rounded-xl p-6 shadow-chunky text-center">
+                    <span class="text-4xl block mb-2">📄</span>
+                    <p class="font-bold text-lg">{contentMetadata.filename}</p>
+                    <p class="text-sm text-gray-500">{contentMetadata.mimetype}</p>
+                  </div>
+               )}
             </div>
           )}
         </div>

@@ -44,7 +44,8 @@ serve(async (req) => {
       password = body.password || null; // Password from body (secure)
     } else {
       bucketCode = url.searchParams.get("bucket_code");
-      password = url.searchParams.get("password"); // Legacy: password in URL (insecure, deprecated)
+      // REMOVED: password from URL query params
+      // password = url.searchParams.get("password"); 
     }
 
     if (!bucketCode) {
@@ -87,6 +88,17 @@ serve(async (req) => {
 
     // Check password if protected
     if (bucket.is_password_protected) {
+      // Require POST for password protected buckets
+      if (req.method !== "POST") {
+         return new Response(
+          JSON.stringify({ error: "Password protected buckets require POST request" }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 405,
+          },
+        );
+      }
+
       if (!password) {
         return new Response(
           JSON.stringify({ error: "Password required" }),

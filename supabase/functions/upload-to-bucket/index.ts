@@ -9,6 +9,7 @@ import {
   getClientIP,
 } from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { validateFile } from "../_shared/file-validation.ts";
 
 type BucketContentMetadata = Record<string, unknown>;
 type UploadContentType = "file" | "text" | "link";
@@ -55,15 +56,45 @@ serve(async (req) => {
       .from("file_buckets")
       .select("*")
       .eq("bucket_code", bucketCode)
-      .eq("owner_token", ownerToken)
       .single();
 
     if (bucketError || !bucket) {
       return new Response(
-        JSON.stringify({ error: "Invalid bucket or token" }),
+        JSON.stringify({ error: "Invalid bucket" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 404,
+        },
+      );
+    }
+
+    // Verify owner token
+    // We support both legacy (plain text) and new (hashed) tokens
+    // If bucket.owner_token is 32 chars (hex), it might be a legacy token or a hash?
+    // Actually, legacy tokens were UUIDs without hyphens (32 chars hex).
+    // SHA-256 hash is 64 chars hex.
+    
+    let isTokenValid = false;
+    
+    if (bucket.owner_token.length === 64) {
+      // It's a hash, verify incoming token
+      const encoder = new TextEncoder();
+      const data = encoder.encode(ownerToken);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      isTokenValid = hashHex === bucket.owner_token;
+    } else {
+      // Legacy plain text token
+      isTokenValid = bucket.owner_token === ownerToken;
+    }
+
+    if (!isTokenValid) {
+       return new Response(
+        JSON.stringify({ error: "Invalid owner token" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
         },
       );
     }
@@ -94,6 +125,18 @@ serve(async (req) => {
       if (!file) {
         return new Response(
           JSON.stringify({ error: "No file provided" }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
+
+      // Validate file
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        return new Response(
+          JSON.stringify({ error: validation.error }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 400,
