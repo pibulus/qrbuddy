@@ -20,8 +20,9 @@ CREATE TABLE IF NOT EXISTS scan_logs (
 );
 
 -- Indexes for fast analytics
-CREATE INDEX idx_scan_logs_qr_id ON scan_logs(qr_id);
-CREATE INDEX idx_scan_logs_scanned_at ON scan_logs(scanned_at);
+-- Indexes for fast analytics
+CREATE INDEX IF NOT EXISTS idx_scan_logs_qr_id ON scan_logs(qr_id);
+CREATE INDEX IF NOT EXISTS idx_scan_logs_scanned_at ON scan_logs(scanned_at);
 
 -- RLS Policies
 ALTER TABLE scan_logs ENABLE ROW LEVEL SECURITY;

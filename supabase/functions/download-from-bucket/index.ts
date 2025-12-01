@@ -162,15 +162,11 @@ serve(async (req) => {
         await supabase.storage.from("qr-files").remove([storagePath]);
         await supabase.from("file_buckets").delete().eq("id", bucket.id);
       } else {
+        // For reusable buckets, keep content and update access time
         await supabase
           .from("file_buckets")
           .update({
-            content_type: null,
-            content_data: null,
-            content_metadata: null,
-            is_empty: true,
-            last_emptied_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            last_accessed_at: new Date().toISOString(),
           })
           .eq("id", bucket.id);
       }
@@ -179,7 +175,7 @@ serve(async (req) => {
       responseHeaders["Content-Type"] = bucket.content_metadata.mimetype;
       responseHeaders["Content-Disposition"] =
         `attachment; filename="${bucket.content_metadata.filename}"`;
-      responseHeaders["X-Bucket-Emptied"] = "true";
+      responseHeaders["X-Bucket-Emptied"] = (!bucket.is_reusable).toString();
       responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
 
       return new Response(fileData, { headers: responseHeaders });
@@ -198,15 +194,11 @@ serve(async (req) => {
       if (!bucket.is_reusable) {
         await supabase.from("file_buckets").delete().eq("id", bucket.id);
       } else {
+        // For reusable buckets, keep content and update access time
         await supabase
           .from("file_buckets")
           .update({
-            content_type: null,
-            content_data: null,
-            content_metadata: null,
-            is_empty: true,
-            last_emptied_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            last_accessed_at: new Date().toISOString(),
           })
           .eq("id", bucket.id);
       }

@@ -6,8 +6,8 @@ import { assertEquals, assertExists } from "https://deno.land/std@0.168.0/testin
 // Or we can mock the fetch calls if we want unit tests.
 // Given the environment, let's try to write an integration test that hits the functions.
 
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "ey...";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "http://localhost:54321";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhyc2JoY2FpaWNxaWJsaGh1enp1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDI0MTg3MCwiZXhwIjoyMDc5NjAxODcwfQ.yoYq4piK7AvH4poClt2EB0HMn9UeGQjT_Psgy366z34";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://xrsbhcaiicqiblhhuzzu.supabase.co";
 const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
 // We'll use a simple fetch wrapper
@@ -85,6 +85,7 @@ Deno.test("Security Remediation Verification", async (t) => {
     }, { bucket_code: bucketCode, owner_token: "wrongtoken" });
     
     assertEquals(res.status, 403); // Should be forbidden
+    await res.text(); // Consume body
   });
 
   await t.step("4. Upload Invalid File (Blocked Extension)", async () => {
@@ -110,6 +111,7 @@ Deno.test("Security Remediation Verification", async (t) => {
     // Should fail with 405 Method Not Allowed or 401 if it ignores password in URL
     // Our implementation returns 405 if method is not POST for protected buckets
     assertEquals(res.status, 405);
+    await res.text(); // Consume body to prevent leak
   });
 
   await t.step("6. Download (Password - POST) - Should Succeed", async () => {

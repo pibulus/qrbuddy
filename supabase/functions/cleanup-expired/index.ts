@@ -33,15 +33,30 @@ serve(async (req) => {
     // One-time buckets are deleted upon download, but maybe we should clean up abandoned ones too?
     // Let's say ALL buckets expire after 24 hours for now, based on the proposal.
     
-    const retentionHours = 24;
-    const cutoffTime = new Date(Date.now() - retentionHours * 60 * 60 * 1000).toISOString();
+    // 1. Find expired buckets (older than 30 days if unused)
+    // "Free can only have a limited amount of saved files and they die after 30 days if unused"
+    
+    const retentionDays = 30;
+    const cutoffTime = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000).toISOString();
 
+    // Logic:
+    // If last_accessed_at is set, use that.
+    // If last_accessed_at is null, use last_filled_at (creation of content).
+    // If both are older than 30 days, expire it.
+    
+    // We can't easily do complex OR logic in one Supabase query without raw SQL or RPC.
+    // But we can fetch candidates and filter, or use "or" filter.
+    // Let's use a simplified approach:
+    // Fetch buckets where (last_accessed_at < cutoff) OR (last_accessed_at IS NULL AND last_filled_at < cutoff)
+    // Supabase .or() syntax: .or(`last_accessed_at.lt.${cutoffTime},and(last_accessed_at.is.null,last_filled_at.lt.${cutoffTime})`)
+    
     // Get expired buckets that are NOT empty (have files to delete)
     const { data: expiredBuckets, error: fetchError } = await supabase
       .from("file_buckets")
       .select("id, bucket_code, content_metadata, content_type")
-      .lt("created_at", cutoffTime)
-      .eq("is_empty", false);
+      .or(`last_accessed_at.lt.${cutoffTime},and(last_accessed_at.is.null,last_filled_at.lt.${cutoffTime})`)
+      .eq("is_empty", false)
+      .eq("is_reusable", true); // Only applies to persistent buckets
 
     if (fetchError) throw fetchError;
 
@@ -66,38 +81,31 @@ serve(async (req) => {
         if (storageError) console.error("Storage delete error:", storageError);
         else deletedFiles = filesToDelete.length;
       }
+      
+      // Empty these buckets
+      const expiredIds = expiredBuckets.map(b => b.id);
+      const { error: updateError } = await supabase
+        .from("file_buckets")
+        .update({
+          is_empty: true,
+          content_type: null,
+          content_data: null,
+          content_metadata: null,
+          last_emptied_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .in("id", expiredIds);
+        
+      if (updateError) throw updateError;
     }
 
-    // Now delete the bucket records (or mark them as expired/empty?)
-    // The proposal says "Files auto-delete". It doesn't explicitly say the *bucket* (the QR code) dies.
-    // But if the bucket is "Persistent", maybe the user wants to keep the QR code but the content expires?
-    // "All files in 'Persistent' buckets are automatically deleted 24 hours after upload."
-    // So we should EMPTY the bucket, not delete the bucket record itself, unless it's a one-time bucket that was abandoned.
-    
-    // Let's EMPTY persistent buckets and DELETE abandoned one-time buckets.
-    
-    // 1. Empty persistent buckets
-    const { error: updateError } = await supabase
-      .from("file_buckets")
-      .update({
-        is_empty: true,
-        content_type: null,
-        content_data: null,
-        content_metadata: null,
-        last_emptied_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .lt("last_filled_at", cutoffTime) // Use last_filled_at for expiration of CONTENT
-      .eq("is_reusable", true)
-      .eq("is_empty", false);
-      
-    if (updateError) throw updateError;
-
-    // 2. Delete abandoned one-time buckets (older than 24h)
+    // 2. Delete abandoned one-time buckets (older than 24h - keep this short for one-time)
+    // One-time buckets are meant to be used immediately. 24h is fine.
+    const oneTimeCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { error: deleteError, count } = await supabase
       .from("file_buckets")
       .delete({ count: "exact" })
-      .lt("created_at", cutoffTime)
+      .lt("created_at", oneTimeCutoff)
       .eq("is_reusable", false);
 
     if (deleteError) throw deleteError;
