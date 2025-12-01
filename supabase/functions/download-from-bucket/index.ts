@@ -58,30 +58,32 @@ serve(async (req) => {
       );
     }
 
-    // Get bucket
+    // Atomic Claim (Fixes Race Condition)
     const { data: bucket, error: bucketError } = await supabase
-      .from("file_buckets")
-      .select("*")
-      .eq("bucket_code", bucketCode)
-      .single();
+      .rpc("claim_bucket_download", { p_bucket_code: bucketCode })
+      .maybeSingle<any>(); // Cast to any or specific interface to fix TS errors
 
-    if (bucketError || !bucket) {
+    if (bucketError) {
+      console.error("RPC Error:", bucketError);
       return new Response(
-        JSON.stringify({ error: "Bucket not found" }),
+        JSON.stringify({ error: "Database error" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 404,
+          status: 500,
         },
       );
     }
 
-    // Check if bucket is empty
-    if (bucket.is_empty) {
+    if (!bucket) {
+      // Could be not found, locked, or empty
+      // We can do a secondary check to see WHICH it is, but for security/speed, generic 404/400 is fine.
+      // But let's check if it exists but is empty for better error message?
+      // For now, "Bucket not found or unavailable"
       return new Response(
-        JSON.stringify({ error: "Bucket is empty" }),
+        JSON.stringify({ error: "Bucket not found, empty, or busy" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
+          status: 404,
         },
       );
     }

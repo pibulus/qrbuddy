@@ -143,7 +143,7 @@ serve(async (req) => {
         success: true,
         bucket_code: bucketCode,
         bucket_url: `${baseUrl}/bucket/${bucketCode}`,
-        owner_token: ownerToken,
+        owner_token: ownerToken, // ⚠️ KEEP SECURE: This token allows full control (edit/delete) of the bucket. Do not expose to public.
         bucket_type,
         style,
         is_empty: true,
