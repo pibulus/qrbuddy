@@ -8,11 +8,12 @@ import { load } from "$std/dotenv/mod.ts";
 await load({ export: true, allowEmptyValues: true, examplePath: null });
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const skipTests = !SUPABASE_URL;
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+const skipTests = !SUPABASE_URL || !SUPABASE_ANON_KEY;
 
 if (skipTests) {
   console.warn(
-    "⚠️  Skipping edge function tests - SUPABASE_URL not configured",
+    "⚠️  Skipping edge function tests - SUPABASE_URL or SUPABASE_ANON_KEY not configured",
   );
 }
 
@@ -21,11 +22,21 @@ async function callEdgeFunction(
   functionName: string,
   options: RequestInit = {},
 ): Promise<Response> {
-  if (!SUPABASE_URL) {
-    throw new Error("SUPABASE_URL not configured");
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error("SUPABASE_URL or SUPABASE_ANON_KEY not configured");
   }
   const url = `${SUPABASE_URL}/functions/v1/${functionName}`;
-  return await fetch(url, options);
+  
+  // Merge headers
+  const headers = new Headers(options.headers);
+  if (!headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
+  }
+
+  return await fetch(url, {
+    ...options,
+    headers,
+  });
 }
 
 // Test: Rate Limiting on create-dynamic-qr

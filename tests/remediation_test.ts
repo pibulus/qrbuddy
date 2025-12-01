@@ -7,7 +7,8 @@ import { assertEquals, assertExists } from "https://deno.land/std@0.168.0/testin
 // Given the environment, let's try to write an integration test that hits the functions.
 
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "ey...";
-const FUNCTIONS_URL = "http://localhost:54321/functions/v1";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "http://localhost:54321";
+const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
 // We'll use a simple fetch wrapper
 async function callFunction(name: string, options: RequestInit = {}, params: Record<string, string> = {}) {

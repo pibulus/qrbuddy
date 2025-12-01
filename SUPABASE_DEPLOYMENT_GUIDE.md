@@ -655,3 +655,45 @@ supabase functions serve
 
 **That's it!** You're now ready to use Supabase Edge Functions in any project.
 Bookmark this guide for future reference.
+
+---
+
+## 🛡️ Release 2025-12-01: Security Hardening
+
+This release introduces critical security improvements for File Buckets and automated cleanup.
+
+### Deployment Steps
+
+1. **Deploy Database Migration:**
+   Apply the new RLS policies to lock down bucket access.
+   ```bash
+   supabase db push
+   # Or manually run contents of: supabase/migrations/20251201000000_remediate_rls.sql
+   ```
+
+2. **Deploy Edge Functions:**
+   Update all functions to include new validation and security logic.
+   ```bash
+   supabase functions deploy upload-to-bucket
+   supabase functions deploy create-bucket
+   supabase functions deploy get-bucket-status
+   supabase functions deploy download-from-bucket
+   supabase functions deploy cleanup-expired
+   ```
+
+3. **Schedule Cleanup Job:**
+   The `cleanup-expired` function needs to run periodically.
+   
+   **Option A: Via SQL (Recommended)**
+   1. Open `supabase/cron.sql`.
+   2. Replace `<PROJECT_REF>` and `<SERVICE_ROLE_KEY>` with your actual values.
+   3. Run the SQL in the Supabase Dashboard (SQL Editor).
+
+   **Option B: Via Dashboard**
+   1. Go to **Integrations** -> **Cron**.
+   2. Create a new job "cleanup-expired".
+   3. Set schedule to `0 * * * *` (Hourly).
+   4. Set Type to HTTP Request.
+   5. URL: `https://<PROJECT_REF>.supabase.co/functions/v1/cleanup-expired`
+   6. Method: POST
+   7. Header: `Authorization: Bearer <SERVICE_ROLE_KEY>`
