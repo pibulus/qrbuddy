@@ -86,11 +86,23 @@ serve(async (req) => {
     // Check password (if provided and bucket is protected)
     if (!isAuthorized && password && bucket.is_password_protected && bucket.password_hash) {
        const encoder = new TextEncoder();
-       const data = encoder.encode(password);
-       const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-       const hashArray = Array.from(new Uint8Array(hashBuffer));
-       const passwordHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-       if (passwordHash === bucket.password_hash) isAuthorized = true;
+       
+       if (bucket.password_hash.includes(":")) {
+          // New Salted Hash
+          const [saltHex, storedHash] = bucket.password_hash.split(":");
+          const data = encoder.encode(saltHex + password);
+          const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const computedHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+          if (computedHash === storedHash) isAuthorized = true;
+       } else {
+          // Legacy Unsalted Hash
+          const data = encoder.encode(password);
+          const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const passwordHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+          if (passwordHash === bucket.password_hash) isAuthorized = true;
+       }
     }
 
     // Redact metadata if not authorized and bucket is password protected

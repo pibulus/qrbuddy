@@ -172,6 +172,17 @@ export default function BucketQR({
     qrCodeRef.current = qrCode;
   }, [isEmpty, bucketUrl, style]);
 
+  // Hide owner_token from URL if present
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("owner_token")) {
+        url.searchParams.delete("owner_token");
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+  }, []);
+
   // Handle file upload
   const handleUpload = async (file?: File, text?: string, link?: string) => {
     try {

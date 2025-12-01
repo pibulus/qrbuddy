@@ -21,11 +21,11 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting: 50 uploads per hour per IP
+    // Rate limiting: 15 uploads per hour per IP
     const clientIP = getClientIP(req);
     const rateLimitResult = checkRateLimit(clientIP, {
       windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 50,
+      maxRequests: 15,
     });
 
     if (rateLimitResult.isLimited) {

@@ -32,11 +32,11 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting: 20 bucket creations per hour per IP
+    // Rate limiting: 10 bucket creations per hour per IP
     const clientIP = getClientIP(req);
     const rateLimitResult = checkRateLimit(clientIP, {
       windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 20,
+      maxRequests: 10,
     });
 
     if (rateLimitResult.isLimited) {
@@ -94,14 +94,24 @@ serve(async (req) => {
     const ownerTokenHash = tokenHashArray.map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    // Hash password if provided
+    // Hash password if provided (Salted SHA-256)
     let passwordHash = null;
     if (password) {
-      const data = encoder.encode(password);
+      // Generate random salt
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const saltHex = Array.from(salt).map((b) =>
+        b.toString(16).padStart(2, "0")
+      ).join("");
+
+      const encoder = new TextEncoder();
+      const data = encoder.encode(saltHex + password);
       const hashBuffer = await crypto.subtle.digest("SHA-256", data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      passwordHash = hashArray.map((b) => b.toString(16).padStart(2, "0"))
+      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0"))
         .join("");
+
+      // Store as salt:hash
+      passwordHash = `${saltHex}:${hashHex}`;
     }
 
     // Create bucket record

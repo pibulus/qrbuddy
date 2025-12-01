@@ -17,11 +17,11 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting: 100 downloads per hour per IP
+    // Rate limiting: 50 downloads per hour per IP
     const clientIP = getClientIP(req);
     const rateLimitResult = checkRateLimit(clientIP, {
       windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 100,
+      maxRequests: 50,
     });
 
     if (rateLimitResult.isLimited) {
@@ -111,13 +111,30 @@ serve(async (req) => {
 
       // Hash provided password and compare
       const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const passwordHash = hashArray.map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
+      let isValid = false;
 
-      if (passwordHash !== bucket.password_hash) {
+      if (bucket.password_hash.includes(":")) {
+        // New Salted Hash (salt:hash)
+        const [saltHex, storedHash] = bucket.password_hash.split(":");
+        const data = encoder.encode(saltHex + password);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const computedHash = hashArray.map((b) =>
+          b.toString(16).padStart(2, "0")
+        ).join("");
+        isValid = computedHash === storedHash;
+      } else {
+        // Legacy Unsalted Hash
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const computedHash = hashArray.map((b) =>
+          b.toString(16).padStart(2, "0")
+        ).join("");
+        isValid = computedHash === bucket.password_hash;
+      }
+
+      if (!isValid) {
         return new Response(
           JSON.stringify({ error: "Invalid password" }),
           {

@@ -40,8 +40,7 @@ export const handler: Handlers = {
         });
       }
 
-      // Get file data
-      const fileData = await response.blob();
+      // Stream the file
       const contentType = response.headers.get("Content-Type") ||
         "application/octet-stream";
       const contentDisposition = response.headers.get("Content-Disposition") ||
@@ -50,7 +49,6 @@ export const handler: Handlers = {
         response.headers.get("X-Downloads-Remaining") ||
         "0";
 
-      // Serve the file
       const headers = new Headers();
       headers.set("Content-Type", contentType);
       headers.set("Content-Disposition", contentDisposition);
@@ -63,7 +61,7 @@ export const handler: Handlers = {
         headers.set("Refresh", "1; url=/boom");
       }
 
-      return new Response(fileData, { headers });
+      return new Response(response.body, { headers });
     } catch (error) {
       console.error("Download error:", error);
       return new Response(null, {
