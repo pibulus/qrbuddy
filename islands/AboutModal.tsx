@@ -77,7 +77,7 @@ export function AboutModal() {
           <div class="p-4 sm:p-8 bg-qr-cream border-4 border-black rounded-b-3xl shadow-chunky space-y-6">
             {/* Intro */}
             <div class="space-y-3">
-              <p class="text-lg leading-relaxed text-gray-800 font-bold">
+              <p class="text-lg leading-relaxed text-gray-800">
                 Hi, I'm Pablo. 👋
               </p>
               <p class="text-base leading-relaxed text-gray-800">
@@ -122,17 +122,18 @@ export function AboutModal() {
             {/* Footer / Made by */}
             <div class="pt-6 border-t-3 border-black space-y-4">
               <p class="text-base font-medium text-gray-800 text-center">
-                Made with ❤️ in Melbourne. No VC funding. No corporate BS. Just nice tools for nice people.
+                Made with ❤️ in Melbourne. No VC funding. No corporate BS.<br />
+                Just nice tools for nice people.
               </p>
               
-              <div class="bg-white/50 p-4 rounded-xl border-2 border-black/10 text-sm">
+              <div class="flex justify-center">
                 <a
-                  href="https://madebypablo.com" 
+                  href="https://github.com/pibulus/qrbuddy"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="block w-full text-center px-4 py-2 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-white text-black border-3 border-black rounded-xl font-bold transition-all hover:scale-105 shadow-chunky"
                 >
-                  Check out my other tools →
+                  💻 GitHub
                 </a>
               </div>
             </div>

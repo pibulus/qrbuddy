@@ -23,16 +23,11 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       "3 Active One-Time Files",
       "Sequential Redirection",
       "Batch Creation (Unlimited)",
-      "Basic Analytics (Last 20 scans)",
       "Custom Colors & Logos",
       "PNG Download",
     ],
-    limitations: [
-      "Max 50MB per file",
-      "QRBuddy Branding on Redirects",
-      "No Vector (SVG/EPS) Export",
-      "Limited Analytics History",
-    ],
+    // Limitations removed from UI as per request
+    limitations: [],
   },
   pro: {
     id: "pro",
