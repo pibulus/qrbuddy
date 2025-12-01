@@ -5,6 +5,9 @@ import WiFiForm from "./templates/WiFiForm.tsx";
 import VCardForm from "./templates/VCardForm.tsx";
 import SMSForm from "./templates/SMSForm.tsx";
 import EmailForm from "./templates/EmailForm.tsx";
+import SocialForm from "./templates/SocialForm.tsx";
+import WebsiteForm from "./templates/WebsiteForm.tsx";
+import MediaForm from "./templates/MediaForm.tsx";
 
 interface TemplateModalProps {
   isOpen: boolean;
@@ -34,41 +37,61 @@ export default function TemplateModal({
   const handleTemplateClick = (templateType: QRTemplateType) => {
     onTemplateSelect(templateType);
     haptics.light();
+    // Don't clear URL if switching to website, might want to keep it?
+    // Actually, safer to clear to avoid confusion between types
     url.value = "";
     isDestructible.value = false;
   };
 
   const renderTemplateForm = () => {
-    if (selectedTemplate === "wifi") return <WiFiForm url={url} />;
-    if (selectedTemplate === "vcard") return <VCardForm url={url} />;
-    if (selectedTemplate === "sms") return <SMSForm url={url} />;
-    if (selectedTemplate === "email") return <EmailForm url={url} />;
-    if (selectedTemplate === "text") {
-      return (
-        <div class="space-y-4">
-          <div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-2xl">📝</span>
-              <h3 class="font-black text-gray-900">Plain Text QR</h3>
+    switch (selectedTemplate) {
+      case "url":
+        return <WebsiteForm url={url} />;
+      case "wifi":
+        return <WiFiForm url={url} />;
+      case "vcard":
+        return <VCardForm url={url} />;
+      case "sms":
+        return <SMSForm url={url} />;
+      case "email":
+        return <EmailForm url={url} />;
+      case "instagram":
+      case "facebook":
+      case "twitter":
+      case "whatsapp":
+        return <SocialForm url={url} type={selectedTemplate} />;
+      case "images":
+      case "video":
+      case "mp3":
+      case "pdf":
+        return <MediaForm url={url} type={selectedTemplate} />;
+      case "text":
+        return (
+          <div class="space-y-4">
+            <div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">📝</span>
+                <h3 class="font-black text-gray-900">Plain Text QR</h3>
+              </div>
+              <p class="text-sm text-gray-700">
+                Any text content - perfect for notes, codes, or short messages.
+              </p>
             </div>
-            <p class="text-sm text-gray-700">
-              Any text content - perfect for notes, codes, or short messages.
-            </p>
+            <textarea
+              value={url.value}
+              onInput={(e) =>
+                onInputChange((e.target as HTMLTextAreaElement).value)}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              placeholder="Enter any text..."
+              rows={4}
+              class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-gray-500 focus:outline-none resize-none"
+            />
           </div>
-          <textarea
-            value={url.value}
-            onInput={(e) =>
-              onInputChange((e.target as HTMLTextAreaElement).value)}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            placeholder="Enter any text..."
-            rows={4}
-            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-gray-500 focus:outline-none resize-none"
-          />
-        </div>
-      );
+        );
+      default:
+        return null;
     }
-    return null;
   };
 
   return (
@@ -100,25 +123,7 @@ export default function TemplateModal({
           </button>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              onTemplateSelect("url");
-              haptics.light();
-              onClose();
-            }}
-            class={`px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex flex-col items-center justify-center gap-1
-              ${
-              selectedTemplate === "url"
-                ? "bg-gray-900 text-white border-black scale-105 shadow-lg"
-                : "bg-white text-gray-700 border-gray-300 hover:border-gray-900 hover:scale-105"
-            }`}
-          >
-            <span class="text-2xl">🔗</span>
-            <span>Standard</span>
-          </button>
-
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
           {(Object.keys(QR_TEMPLATES) as QRTemplateType[]).map(
             (templateType) => {
               const template = QR_TEMPLATES[templateType];
@@ -127,7 +132,7 @@ export default function TemplateModal({
                   key={templateType}
                   type="button"
                   onClick={() => handleTemplateClick(templateType)}
-                  class={`px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex flex-col items-center justify-center gap-1
+                  class={`px-2 py-3 rounded-xl border-2 font-semibold text-xs sm:text-sm transition-all flex flex-col items-center justify-center gap-1
                     ${
                     selectedTemplate === templateType
                       ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-pink-600 scale-105 shadow-lg"
@@ -136,7 +141,7 @@ export default function TemplateModal({
                   title={template.description}
                 >
                   <span class="text-2xl">{template.icon}</span>
-                  <span>{template.label}</span>
+                  <span class="text-center leading-tight">{template.label}</span>
                 </button>
               );
             },
@@ -144,7 +149,7 @@ export default function TemplateModal({
         </div>
 
         {/* Template form reveals IN the modal after selection */}
-        <div class={selectedTemplate !== "url" ? "animate-slide-down" : ""}>
+        <div class="animate-slide-down">
           {renderTemplateForm()}
         </div>
 
@@ -152,7 +157,7 @@ export default function TemplateModal({
           <button
             type="button"
             onClick={onClose}
-            class="px-4 py-2 rounded-xl border-2 border-gray-900 font-semibold hover:bg-gray-900 hover:text-white transition-colors"
+            class="px-6 py-3 rounded-xl border-2 border-gray-900 font-bold text-lg hover:bg-gray-900 hover:text-white transition-colors w-full sm:w-auto"
           >
             Done
           </button>

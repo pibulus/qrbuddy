@@ -3,11 +3,19 @@
 
 export type QRTemplateType =
   | "url"
+  | "instagram"
+  | "facebook"
+  | "whatsapp"
+  | "twitter"
   | "wifi"
   | "vcard"
   | "sms"
   | "email"
-  | "text";
+  | "text"
+  | "images"
+  | "video"
+  | "mp3"
+  | "pdf";
 
 export interface QRTemplate {
   type: QRTemplateType;
@@ -19,39 +27,87 @@ export interface QRTemplate {
 export const QR_TEMPLATES: Record<QRTemplateType, QRTemplate> = {
   url: {
     type: "url",
-    label: "URL / Link",
+    label: "Website",
     icon: "🔗",
-    description: "Website, social media, or any link",
+    description: "Link to any website URL",
+  },
+  instagram: {
+    type: "instagram",
+    label: "Instagram",
+    icon: "📸",
+    description: "Share your Instagram profile",
+  },
+  facebook: {
+    type: "facebook",
+    label: "Facebook",
+    icon: "👍",
+    description: "Share your Facebook page",
+  },
+  whatsapp: {
+    type: "whatsapp",
+    label: "WhatsApp",
+    icon: "💬",
+    description: "Start a WhatsApp chat",
+  },
+  twitter: {
+    type: "twitter",
+    label: "X / Twitter",
+    icon: "🐦",
+    description: "Share your X profile",
   },
   wifi: {
     type: "wifi",
-    label: "WiFi Network",
+    label: "WiFi",
     icon: "📶",
     description: "Connect to WiFi instantly",
   },
   vcard: {
     type: "vcard",
-    label: "Contact Card",
+    label: "vCard",
     icon: "👤",
-    description: "Share your contact information",
+    description: "Share contact details",
   },
   sms: {
     type: "sms",
-    label: "SMS Message",
-    icon: "💬",
-    description: "Pre-filled text message",
+    label: "SMS",
+    icon: "📱",
+    description: "Send a text message",
   },
   email: {
     type: "email",
     label: "Email",
     icon: "📧",
-    description: "Send an email with subject",
+    description: "Send an email",
   },
   text: {
     type: "text",
-    label: "Plain Text",
+    label: "Text",
     icon: "📝",
-    description: "Any text content",
+    description: "Show plain text",
+  },
+  images: {
+    type: "images",
+    label: "Images",
+    icon: "🖼️",
+    description: "Share multiple images",
+  },
+  video: {
+    type: "video",
+    label: "Video",
+    icon: "🎥",
+    description: "Show a video",
+  },
+  mp3: {
+    type: "mp3",
+    label: "MP3",
+    icon: "🎵",
+    description: "Share an audio file",
+  },
+  pdf: {
+    type: "pdf",
+    label: "PDF",
+    icon: "📄",
+    description: "Share a PDF document",
   },
 };
 

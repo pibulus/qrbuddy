@@ -42,8 +42,11 @@ import * as $smart_input_SequentialOptions from "./islands/smart-input/Sequentia
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
 import * as $smart_input_StatusBadge from "./islands/smart-input/StatusBadge.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
+import * as $templates_MediaForm from "./islands/templates/MediaForm.tsx";
 import * as $templates_SMSForm from "./islands/templates/SMSForm.tsx";
+import * as $templates_SocialForm from "./islands/templates/SocialForm.tsx";
 import * as $templates_VCardForm from "./islands/templates/VCardForm.tsx";
+import * as $templates_WebsiteForm from "./islands/templates/WebsiteForm.tsx";
 import * as $templates_WiFiForm from "./islands/templates/WiFiForm.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -94,8 +97,11 @@ const manifest = {
       $smart_input_SmartInputToolbar,
     "./islands/smart-input/StatusBadge.tsx": $smart_input_StatusBadge,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
+    "./islands/templates/MediaForm.tsx": $templates_MediaForm,
     "./islands/templates/SMSForm.tsx": $templates_SMSForm,
+    "./islands/templates/SocialForm.tsx": $templates_SocialForm,
     "./islands/templates/VCardForm.tsx": $templates_VCardForm,
+    "./islands/templates/WebsiteForm.tsx": $templates_WebsiteForm,
     "./islands/templates/WiFiForm.tsx": $templates_WiFiForm,
   },
   baseUrl: import.meta.url,
