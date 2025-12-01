@@ -80,7 +80,7 @@ export function useFileUpload(
 
       // Set the destructible URL
       url.value = data.url;
-      isDestructible.value = true;
+      isDestructible.value = maxDownloads.value !== UNLIMITED_SCANS;
       setInputType("file");
       setValidationState("valid");
       setTouched(true);
@@ -96,7 +96,7 @@ export function useFileUpload(
         : `${maxDownloads.value} scans`;
       const limitedDownloads = maxDownloads.value !== UNLIMITED_SCANS;
       const successMessage = limitedDownloads
-        ? `✅ ${file.name} uploaded! Will self-destruct after ${scanText} 💣`
+        ? `✅ ${file.name} uploaded! Limit: ${scanText}`
         : `✅ ${file.name} uploaded! Ready to share ✨`;
       const event = new CustomEvent("show-toast", {
         detail: {

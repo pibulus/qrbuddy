@@ -114,6 +114,38 @@ serve(async (req) => {
     if (deleteError) throw deleteError;
     deletedBuckets = count || 0;
 
+    // 3. Delete expired destructible_files (older than 30 days)
+    // These are single-use files that were never downloaded.
+    const { data: expiredFiles, error: fetchFilesError } = await supabase
+      .from("destructible_files")
+      .select("id, file_name")
+      .lt("created_at", abandonedCutoff)
+      .eq("accessed", false);
+
+    if (fetchFilesError) throw fetchFilesError;
+
+    if (expiredFiles && expiredFiles.length > 0) {
+      const paths = expiredFiles.map(f => f.file_name);
+      
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from("qr-files")
+        .remove(paths);
+
+      if (storageError) console.error("Storage delete error (destructible):", storageError);
+
+      // Delete from DB
+      const ids = expiredFiles.map(f => f.id);
+      const { error: dbDeleteError } = await supabase
+        .from("destructible_files")
+        .delete()
+        .in("id", ids);
+
+      if (dbDeleteError) throw dbDeleteError;
+      
+      deletedFiles += expiredFiles.length;
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
