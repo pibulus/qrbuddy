@@ -4,6 +4,8 @@ import { haptics } from "../utils/haptics.ts";
 import { QRTemplateType } from "../types/qr-templates.ts";
 import TemplateModal from "./TemplateModal.tsx";
 import ExtrasModal from "./ExtrasModal.tsx";
+import HistoryDrawer from "./HistoryDrawer.tsx";
+import { addToHistory, HistoryItem } from "../utils/history.ts";
 import { useDynamicQR } from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
 import { useBatchGenerator } from "../hooks/useBatchGenerator.ts";
@@ -48,8 +50,8 @@ export default function SmartInput(
     "idle" | "valid" | "invalid"
   >("idle");
   const [touched, setTouched] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [_inputType, setInputType] = useState<"text" | "file">("text");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Template selector state
@@ -93,7 +95,7 @@ export default function SmartInput(
       url,
       isDestructible,
       maxDownloads,
-      setInputType,
+      setInputType: () => {}, // SmartInput doesn't directly manage inputType state for file uploads
       setValidationState,
       setTouched,
     });
@@ -213,8 +215,7 @@ export default function SmartInput(
     const input = e.target as HTMLInputElement;
     url.value = input.value;
     isDestructible.value = false; // Regular text/URL, not destructible
-    setInputType("text");
-
+    
     if (!touched) {
       setTouched(true);
     }
@@ -300,8 +301,66 @@ export default function SmartInput(
     return baseClass;
   };
 
+  const handleHistorySelect = (item: HistoryItem) => {
+    // Restore state based on item type
+    if (item.type === "file" && item.metadata?.bucketCode) {
+      // For files, we might need to trigger the bucket view directly
+      // But SmartInput doesn't handle the bucket view, it just creates them.
+      // Ideally, we'd redirect to /bucket/[code]?owner_token=...
+      // But we are client-side.
+      // Let's redirect!
+      const historyUrl = `/bucket/${item.metadata.bucketCode}${item.metadata.ownerToken ? `?owner_token=${item.metadata.ownerToken}` : ""}`;
+      globalThis.location.href = historyUrl;
+      return;
+    }
+
+    // For static types
+    if (item.type === "url" || item.type === "text" || item.type === "wifi") {
+      setSelectedTemplate(item.type); // Set the template type
+      url.value = item.content; // Set the input value
+      setTouched(true); // Mark as touched to trigger validation
+      // No direct QR generation here, just setting the input for user to generate/edit.
+    }
+    setShowHistory(false); // Close history drawer after selection
+  };
+
+  // Effect to save to history when a QR is successfully generated/updated
+  useEffect(() => {
+    // This effect should ideally trigger when a QR is *finalized* and ready to be displayed/used.
+    // For SmartInput, this means when `editUrl.value` (dynamic QR) or `bucketUrl.value` (bucket) is set,
+    // or when a static QR is generated (which happens in the parent component that consumes `url.value`).
+    // For now, let's focus on dynamic and bucket QRs as they are managed within SmartInput.
+
+    if (editUrl.value && url.value && !isCreatingDynamic) {
+      addToHistory({
+        type: selectedTemplate,
+        content: url.value,
+        metadata: {
+          title: url.value.length > 30 ? url.value.substring(0, 30) + "..." : url.value,
+          dynamicUrl: editUrl.value,
+        }
+      });
+    } else if (isBucket.value && bucketUrl.value && url.value && !isCreatingBucket) {
+      addToHistory({
+        type: "file", // Assuming bucket is primarily for files or smart text
+        content: url.value,
+        metadata: {
+          title: url.value.length > 30 ? url.value.substring(0, 30) + "..." : url.value,
+          bucketCode: bucketUrl.value.split('/').pop(), // Extract code from URL
+          // ownerToken might be needed here if available
+        }
+      });
+    }
+  }, [editUrl.value, bucketUrl.value, url.value, isCreatingDynamic, isCreatingBucket, isBucket.value, selectedTemplate]);
+
   return (
     <div class="w-full space-y-4">
+      <HistoryDrawer
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        onSelect={handleHistorySelect}
+      />
+
       {/* Toolbar */}
       <SmartInputToolbar
         selectedTemplate={selectedTemplate}
@@ -309,6 +368,7 @@ export default function SmartInput(
         setIsExtrasModalOpen={setIsExtrasModalOpen}
         setExtrasHasUpdates={setExtrasHasUpdates}
         extrasHasUpdates={extrasHasUpdates}
+        onShowHistory={() => setShowHistory(true)} // Pass handler to toolbar
       />
 
       {/* URL/File Input - only shown for URL template */}
