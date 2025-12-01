@@ -40,6 +40,30 @@ serve(async (req) => {
     // Get file and options from request
     const formData = await req.formData();
     const file = formData.get("file") as File;
+
+    // Strict Limit: Max 3 active files per IP
+    const { count: activeFiles, error: countError } = await supabase
+      .from("destructible_files")
+      .select("*", { count: "exact", head: true })
+      .eq("creator_ip", clientIP)
+      .eq("accessed", false); // Only count active (unaccessed) files
+
+    if (countError) {
+      console.error("Failed to check file limit:", countError);
+      throw new Error("System busy, please try again.");
+    }
+
+    if (activeFiles !== null && activeFiles >= 3) {
+      return new Response(
+        JSON.stringify({
+          error: "Limit reached. You can only have 3 active files at a time. Wait for them to be downloaded or expire.",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        },
+      );
+    }
     const parsedMaxDownloads = parseInt(
       formData.get("maxDownloads") as string || String(DEFAULT_MAX_DOWNLOADS),
       10,
@@ -198,6 +222,7 @@ serve(async (req) => {
         accessed: false,
         max_downloads: maxDownloads,
         download_count: 0,
+        creator_ip: clientIP,
       });
 
     if (dbError) throw dbError;

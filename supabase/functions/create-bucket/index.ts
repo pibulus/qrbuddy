@@ -48,6 +48,31 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
+    // Strict Limit: Max 3 active lockers per IP
+    const { count: activeLockers, error: countError } = await supabase
+      .from("file_buckets")
+      .select("*", { count: "exact", head: true })
+      .eq("creator_ip", clientIP);
+
+    if (countError) {
+      console.error("Failed to check locker limit:", countError);
+      // Fail open or closed? Let's fail open but log it, or fail closed for security.
+      // Let's fail closed to be safe against abuse.
+      throw new Error("System busy, please try again.");
+    }
+
+    if (activeLockers !== null && activeLockers >= 3) {
+      return new Response(
+        JSON.stringify({
+          error: "Limit reached. You can only have 3 active lockers at a time. Delete an old one to create a new one.",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        },
+      );
+    }
+
     const body = await req.json();
     const {
       bucket_type = "file", // 'file', 'text', 'link'
@@ -129,6 +154,7 @@ serve(async (req) => {
         is_reusable,
         delete_on_download,
         is_empty: true,
+        creator_ip: clientIP,
       });
 
     if (insertError) throw insertError;
