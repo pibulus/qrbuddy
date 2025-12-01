@@ -7,6 +7,7 @@ export interface PricingTier {
   billingPeriod: "lifetime" | "month" | "year";
   paymentUrl?: string; // Lemon Squeezy checkout URL or Ko-fi link
   features: string[];
+  upcomingFeatures?: string[];
   limitations?: string[];
 }
 
@@ -38,12 +39,14 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     paymentUrl: "",
     features: [
       "Everything in Free, plus:",
-      "Coming Soon: Unlimited Lockers",
-      "Coming Soon: Unlimited Active Files",
-      "Coming Soon: Larger File Uploads",
-      "Coming Soon: Vector Export",
-      "Coming Soon: Remove Branding",
       "Lifetime Access (Pay once, own forever)",
+    ],
+    upcomingFeatures: [
+      "Unlimited Lockers",
+      "Unlimited Active Files",
+      "Larger File Uploads",
+      "Vector Export",
+      "Remove Branding",
     ],
   },
 };

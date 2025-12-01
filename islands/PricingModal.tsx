@@ -175,6 +175,20 @@ export function PricingModal() {
                       </span>
                     </li>
                   ))}
+                  
+                  {PRICING_TIERS.pro.upcomingFeatures && (
+                    <>
+                      <li class="pt-2 pb-1">
+                        <span class="text-xs font-bold text-purple-800 uppercase tracking-wide">Coming Soon:</span>
+                      </li>
+                      {PRICING_TIERS.pro.upcomingFeatures.map((feature) => (
+                        <li key={feature} class="flex items-start gap-2">
+                          <span class="text-purple-400 flex-shrink-0">✨</span>
+                          <span class="text-gray-600">{feature}</span>
+                        </li>
+                      ))}
+                    </>
+                  )}
                 </ul>
 
                 <button

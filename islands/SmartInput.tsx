@@ -304,13 +304,14 @@ export default function SmartInput(
   const handleHistorySelect = (item: HistoryItem) => {
     // Restore state based on item type
     if (item.type === "file" && item.metadata?.bucketCode) {
-      // For files, we might need to trigger the bucket view directly
-      // But SmartInput doesn't handle the bucket view, it just creates them.
-      // Ideally, we'd redirect to /bucket/[code]?owner_token=...
-      // But we are client-side.
-      // Let's redirect!
       const historyUrl = `/bucket/${item.metadata.bucketCode}${item.metadata.ownerToken ? `?owner_token=${item.metadata.ownerToken}` : ""}`;
       globalThis.location.href = historyUrl;
+      return;
+    }
+
+    // For dynamic QRs (Redirect to Edit Page)
+    if (item.metadata?.dynamicUrl) {
+      globalThis.location.href = item.metadata.dynamicUrl;
       return;
     }
 
