@@ -75,68 +75,66 @@ export function AboutModal() {
 
           {/* Content */}
           <div class="p-4 sm:p-8 bg-qr-cream border-4 border-black rounded-b-3xl shadow-chunky space-y-6">
-            {/* Story */}
+            {/* Intro */}
             <div class="space-y-3">
-              <p class="text-lg leading-relaxed text-gray-800">
-                I got tired of boring black-and-white QR codes. So I built this.
+              <p class="text-lg leading-relaxed text-gray-800 font-bold">
+                Hi, I'm Pablo. 👋
               </p>
-              <p class="text-base leading-relaxed text-gray-700">
-                QRBuddy makes beautiful gradient QR codes with personality.
-                Think of it like choosing a fun domain name for your site— same
-                idea, but for QR codes. Your codes should match your vibe.
+              <p class="text-base leading-relaxed text-gray-800">
+                Most QR generators are ugly, static, and feel like enterprise software from 1999. I hated that.
               </p>
-              <p class="text-base leading-relaxed text-gray-700">
-                Privacy-first dynamic redirects. Destructible one-time links.
-                Minimal ethical analytics that respects Do Not Track. Just QR
-                codes that make you smile.
+              <p class="text-base leading-relaxed text-gray-800">
+                So I built QRBuddy. It’s a tool for humans, not data points. It turns QR codes from boring squares into living, breathing interactions.
               </p>
             </div>
 
-            {/* Features */}
+            {/* What it does */}
             <div class="py-4 px-4 bg-gradient-to-r from-pink-100 to-purple-100 border-3 border-black rounded-xl">
-              <p class="text-base font-semibold text-gray-800 mb-2">
+              <p class="text-base font-black text-gray-800 mb-2">
                 ✨ What it does:
               </p>
-              <ul class="text-sm space-y-1 text-gray-700">
-                <li>• 6 gorgeous gradient presets + custom creator</li>
-                <li>• 5 QR templates (WiFi, vCard, SMS, Email, Text)</li>
-                <li>• Custom logo support in QR center</li>
-                <li>• Dynamic QR codes you can edit anytime</li>
-                <li>• Destructible links that self-destruct after 1 scan</li>
-                <li>• Privacy-first (minimal analytics, respects DNT)</li>
-                <li>• Works offline as a PWA</li>
+              
+              <ul class="text-sm space-y-2 text-gray-800">
+                <li>
+                  <span class="font-bold">Shapeshifting Codes:</span> Want a code that shows a video on the first scan, a meme on the second? Done.
+                </li>
+                <li>
+                  <span class="font-bold">Ping Pong Drop:</span> Like AirDrop for the web. Scan to upload, scan to download. Back and forth.
+                </li>
+                <li>
+                  <span class="font-bold">Secret Agent Mode:</span> Create password-protected "Dead Drops" or files that self-destruct.
+                </li>
+                <li>
+                  <span class="font-bold">Mistake-Proof Links:</span> Change the destination anytime without reprinting.
+                </li>
+                <li>
+                  <span class="font-bold">Zero-Creep Analytics:</span> Ethical data only. I don't want your personal info.
+                </li>
+                <li>
+                  <span class="font-bold">No Boring Squares:</span> 6 sunset-drenched presets. Make them match your vibe.
+                </li>
+                <li>
+                  <span class="font-bold">Always Ready:</span> Installs as a PWA. Works offline.
+                </li>
               </ul>
             </div>
 
-            {/* Links */}
-            <div class="pt-2">
-              <div class="flex flex-wrap gap-3 justify-center">
-                {
-                  /* <a
-                  href="https://pibul.us"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold transition-all hover:scale-105 shadow-chunky"
-                >
-                  🌐 Portfolio
-                </a> */
-                }
+            {/* Footer / Made by */}
+            <div class="pt-6 border-t-3 border-black space-y-4">
+              <p class="text-base font-medium text-gray-800 text-center">
+                Made with ❤️ in Melbourne. No VC funding. No corporate BS. Just nice tools for nice people.
+              </p>
+              
+              <div class="bg-white/50 p-4 rounded-xl border-2 border-black/10 text-sm">
                 <a
-                  href="https://github.com/pibulus/qrbuddy"
+                  href="https://madebypablo.com" 
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-white text-black border-3 border-black rounded-xl font-bold transition-all hover:scale-105 shadow-chunky"
+                  class="block w-full text-center px-4 py-2 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
                 >
-                  💻 GitHub
+                  Check out my other tools →
                 </a>
               </div>
-            </div>
-
-            {/* Footer */}
-            <div class="pt-4 text-center border-t-3 border-black">
-              <p class="text-xs text-gray-600">
-                Made in Melbourne with 🧁 by Pablo
-              </p>
             </div>
           </div>
 
