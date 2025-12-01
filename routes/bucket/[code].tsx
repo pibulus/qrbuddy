@@ -56,13 +56,19 @@ export const handler: Handlers<BucketPageData> = {
     });
 
     if (!response.ok) {
-      return ctx.renderNotFound();
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/boom" },
+      });
     }
 
     const data = await response.json();
 
     if (!data.success) {
-      return ctx.renderNotFound();
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/boom" },
+      });
     }
 
     const bucketUrl = `${

@@ -46,7 +46,8 @@ serve(async (req) => {
         last_emptied_at,
         created_at,
         owner_token,
-        password_hash
+        password_hash,
+        delete_on_download
       `)
       .eq("bucket_code", bucketCode)
       .single();
@@ -124,6 +125,7 @@ serve(async (req) => {
           style: bucket.style,
           is_password_protected: bucket.is_password_protected,
           is_reusable: bucket.is_reusable,
+          delete_on_download: bucket.delete_on_download,
           is_empty: bucket.is_empty,
           content_type: bucket.content_type,
           content_metadata: safeMetadata,

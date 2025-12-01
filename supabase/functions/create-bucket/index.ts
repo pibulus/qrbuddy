@@ -54,6 +54,7 @@ serve(async (req) => {
       style = "sunset",
       password,
       is_reusable = true,
+      delete_on_download = false,
     } = body;
 
     // Validate bucket type
@@ -126,6 +127,7 @@ serve(async (req) => {
         is_password_protected: !!password,
         password_hash: passwordHash,
         is_reusable,
+        delete_on_download,
         is_empty: true,
       });
 
@@ -145,6 +147,7 @@ serve(async (req) => {
         bucket_type,
         style,
         is_empty: true,
+        delete_on_download,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

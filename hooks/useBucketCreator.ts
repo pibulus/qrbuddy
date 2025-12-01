@@ -9,6 +9,7 @@ export interface CreateBucketOptions {
   bucketType?: "file" | "text" | "link";
   style?: string;
   isReusable?: boolean;
+  deleteOnDownload?: boolean;
   password?: string;
 }
 
@@ -98,6 +99,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
         bucketType = "file",
         style = "sunset",
         isReusable = true,
+        deleteOnDownload = false,
         password,
       } = options;
 
@@ -115,6 +117,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
             bucket_type: bucketType,
             style,
             is_reusable: isReusable,
+            delete_on_download: deleteOnDownload,
             ...(password ? { password } : {}),
           }),
         },

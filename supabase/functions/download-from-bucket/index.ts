@@ -161,6 +161,20 @@ serve(async (req) => {
       if (!bucket.is_reusable) {
         await supabase.storage.from("qr-files").remove([storagePath]);
         await supabase.from("file_buckets").delete().eq("id", bucket.id);
+      } else if (bucket.delete_on_download) {
+        // Ping Pong Mode: Delete content but keep bucket
+        await supabase.storage.from("qr-files").remove([storagePath]);
+        await supabase
+          .from("file_buckets")
+          .update({
+            content_type: null,
+            content_data: null,
+            content_metadata: null,
+            is_empty: true,
+            last_emptied_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bucket.id);
       } else {
         // For reusable buckets, keep content and update access time
         await supabase
@@ -175,7 +189,7 @@ serve(async (req) => {
       responseHeaders["Content-Type"] = bucket.content_metadata.mimetype;
       responseHeaders["Content-Disposition"] =
         `attachment; filename="${bucket.content_metadata.filename}"`;
-      responseHeaders["X-Bucket-Emptied"] = (!bucket.is_reusable).toString();
+      responseHeaders["X-Bucket-Emptied"] = (!bucket.is_reusable || bucket.delete_on_download).toString();
       responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
 
       return new Response(fileData, { headers: responseHeaders });
@@ -193,6 +207,19 @@ serve(async (req) => {
       // Empty bucket if not reusable
       if (!bucket.is_reusable) {
         await supabase.from("file_buckets").delete().eq("id", bucket.id);
+      } else if (bucket.delete_on_download) {
+        // Ping Pong Mode: Empty content but keep bucket
+        await supabase
+          .from("file_buckets")
+          .update({
+            content_type: null,
+            content_data: null,
+            content_metadata: null,
+            is_empty: true,
+            last_emptied_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bucket.id);
       } else {
         // For reusable buckets, keep content and update access time
         await supabase

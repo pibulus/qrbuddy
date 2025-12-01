@@ -348,13 +348,16 @@ export default function BucketQR({
         }
       }
 
-      // Update state
-      if (isReusable) {
+      // Update state based on server response
+      const isEmptied = response.headers.get("X-Bucket-Emptied") === "true";
+      
+      if (isEmptied) {
         setIsEmpty(true);
         setContentType(null);
         setContentMetadata(null);
-      } else {
-        removeOwnerToken("bucket", bucketCode);
+        if (!isReusable) {
+           removeOwnerToken("bucket", bucketCode);
+        }
       }
 
       haptics.success();

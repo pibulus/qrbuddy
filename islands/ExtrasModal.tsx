@@ -69,7 +69,7 @@ export default function ExtrasModal({
 }: ExtrasModalProps) {
   const [showLogoUploader, setShowLogoUploader] = useState(false);
   const [lockerExpanded, setLockerExpanded] = useState(false);
-  const [lockerMode, setLockerMode] = useState<"open" | "single">("open");
+  const [lockerMode, setLockerMode] = useState<"open" | "single" | "pingpong">("open");
   const [lockerRequirePin, setLockerRequirePin] = useState(false);
   const [lockerStyle, setLockerStyle] = useState(qrStyle.value || "sunset");
   const [lockerError, setLockerError] = useState<string | null>(null);
@@ -125,7 +125,8 @@ export default function ExtrasModal({
 
     const success = await onLockerConfirm({
       bucketType: "file",
-      isReusable: lockerMode === "open",
+      isReusable: lockerMode === "open" || lockerMode === "pingpong",
+      deleteOnDownload: lockerMode === "pingpong",
       style: lockerStyle,
       password: lockerRequirePin ? lockerPinValue : undefined,
     });
@@ -405,7 +406,18 @@ export default function ExtrasModal({
                               : "bg-white text-gray-700 border-gray-300 hover:border-teal-400"
                           }`}
                         >
-                          Open locker (unlimited)
+                          Open (Persistent)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLockerMode("pingpong")}
+                          class={`px-4 py-2 text-sm font-semibold rounded-xl border-2 transition ${
+                            lockerMode === "pingpong"
+                              ? "bg-purple-500 text-white border-purple-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:border-purple-400"
+                          }`}
+                        >
+                          Ping Pong (Auto-Clear)
                         </button>
                         <button
                           type="button"
@@ -416,9 +428,17 @@ export default function ExtrasModal({
                               : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
                           }`}
                         >
-                          Single drop (auto-lock)
+                          Single Drop (One-Time)
                         </button>
                       </div>
+                      <p class="text-[11px] text-gray-500 italic">
+                        {lockerMode === "open" &&
+                          "Files stay in the locker until you delete them."}
+                        {lockerMode === "pingpong" &&
+                          "File is deleted after download, but the locker stays open for new uploads."}
+                        {lockerMode === "single" &&
+                          "Locker and file self-destruct after one download."}
+                      </p>
                     </div>
 
                     <div class="space-y-3">
