@@ -193,10 +193,10 @@ export function PricingModal() {
 
                 <button
                   type="button"
-                  onClick={handleUpgrade}
-                  class="w-full mt-6 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95"
+                  disabled
+                  class="w-full mt-6 px-4 py-3 bg-gray-300 text-gray-500 border-3 border-gray-400 rounded-xl font-bold shadow-none cursor-not-allowed"
                 >
-                  Get Pro for $20 →
+                  Pro Tier Coming Soon ✨
                 </button>
 
                 <p class="text-xs text-center text-gray-600 mt-3">

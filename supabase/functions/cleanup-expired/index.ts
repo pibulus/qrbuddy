@@ -99,14 +99,17 @@ serve(async (req) => {
       if (updateError) throw updateError;
     }
 
-    // 2. Delete abandoned one-time buckets (older than 24h - keep this short for one-time)
-    // One-time buckets are meant to be used immediately. 24h is fine.
-    const oneTimeCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    // 2. Delete abandoned/empty buckets (older than 30 days)
+    // This includes:
+    // - One-time buckets that were never used
+    // - Persistent buckets that have been empty for 30 days
+    const abandonedCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    
     const { error: deleteError, count } = await supabase
       .from("file_buckets")
       .delete({ count: "exact" })
-      .lt("created_at", oneTimeCutoff)
-      .eq("is_reusable", false);
+      .lt("updated_at", abandonedCutoff) // updated_at is touched on creation and modification
+      .eq("is_empty", true); // Only delete if empty
 
     if (deleteError) throw deleteError;
     deletedBuckets = count || 0;

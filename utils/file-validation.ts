@@ -30,7 +30,7 @@
  * Maximum allowed file size: 25MB
  * Matches Supabase edge function limit
  */
-export const MAX_FILE_SIZE = 25 * 1024 * 1024;
+export const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 /**
  * Blocked file extensions for security
