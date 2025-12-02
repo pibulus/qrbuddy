@@ -34,8 +34,8 @@ export default function SmartInputToolbar({
         <span class="text-lg group-hover:scale-110 transition-transform">
           {templateMeta.icon}
         </span>
-        <span class="hidden sm:inline group-hover:text-blue-700 truncate">{templateMeta.label}</span>
-        <span class="sm:hidden group-hover:text-blue-700">Type</span>
+        <span class="hidden sm:inline group-hover:text-blue-700 truncate">Templates</span>
+        <span class="sm:hidden group-hover:text-blue-700">Templates</span>
       </button>
       <button
         type="button"
