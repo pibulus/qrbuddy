@@ -201,7 +201,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
           {/* QR Code Display - FIRST */}
           <div class="flex justify-center">
-            <div class="shadow-xl rounded-2xl w-full max-w-[320px] sm:max-w-md transition-all duration-300 overflow-hidden">
+            <div class="shadow-xl rounded-2xl w-full max-w-[320px] sm:max-w-md transition-all duration-300">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}
@@ -232,7 +232,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         </main>
 
         {/* Footer */}
-        <footer class="mt-16 py-8 border-t-4 border-black">
+        <footer class="mt-14 py-8 border-t-4 border-black">
           <div class="max-w-md mx-auto px-4">
             <div class="flex items-center justify-center gap-4 flex-wrap">
               <PricingLink label="Upgrade to Pro ✨" />
@@ -241,7 +241,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
             </div>
             <p class="text-center text-xs text-gray-500 mt-4 opacity-60">
               <span class="hidden sm:inline">
-                Pablo • Melbourne • Drop a link. Watch it bloom.
+                Made by Pablo • Melbourne • Drop a link. Watch it bloom.
               </span>
               <span class="sm:hidden">Made with 🧁 by Pablo</span>
             </p>

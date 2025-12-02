@@ -7,6 +7,7 @@ export interface PricingTier {
   billingPeriod: "lifetime" | "month" | "year";
   paymentUrl?: string; // Lemon Squeezy checkout URL or Ko-fi link
   features: string[];
+  upcomingFeatures?: string[];
   limitations?: string[];
 }
 
@@ -18,19 +19,16 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     billingPeriod: "lifetime",
     features: [
       "Unlimited Static QRs",
-      "3 Dynamic QRs (Editable)",
+      "Unlimited Dynamic QRs (Fair Use)",
+      "3 Active File Lockers",
+      "3 Active One-Time Files",
       "Sequential Redirection",
-      "Batch Creation (Limit: 10 at a time)",
-      "Basic Analytics (Last 20 scans)",
+      "Batch Creation (Unlimited)",
       "Custom Colors & Logos",
       "PNG Download",
     ],
-    limitations: [
-      "QRBuddy Branding on Redirects",
-      "No Vector (SVG/EPS) Export",
-      "Limited Batch Size",
-      "Limited Analytics History",
-    ],
+    // Limitations removed from UI as per request
+    limitations: [],
   },
   pro: {
     id: "pro",
@@ -42,11 +40,13 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     features: [
       "Everything in Free, plus:",
       "Lifetime Access (Pay once, own forever)",
-      "Unlimited Batch Creation",
-      "Full Analytics & History",
-      "Vector Export (SVG, EPS, PDF)",
-      "Remove QRBuddy Branding",
-      "Priority Support",
+    ],
+    upcomingFeatures: [
+      "Unlimited Lockers",
+      "Unlimited Active Files",
+      "Larger File Uploads",
+      "Vector Export",
+      "Remove Branding",
     ],
   },
 };

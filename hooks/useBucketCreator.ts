@@ -89,7 +89,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
   // Create file bucket
   const createBucket = async (
     options: CreateBucketOptions = {},
-  ): Promise<boolean> => {
+  ): Promise<{ bucket_code: string; owner_token: string } | null> => {
     try {
       setIsCreatingBucket(true);
       haptics.medium();
@@ -143,7 +143,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       globalThis.dispatchEvent(event);
 
       setIsCreatingBucket(false);
-      return true;
+      return { bucket_code: data.bucket_code, owner_token: data.owner_token };
     } catch (error) {
       console.error("[HOOK:useBucketCreator] Create bucket failed:", {
         error: error instanceof Error ? error.message : String(error),
@@ -163,6 +163,44 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
         },
       });
       globalThis.dispatchEvent(event);
+      return null;
+    }
+  };
+
+  // Upload file to bucket with metadata
+  const uploadToBucket = async (
+    bucketCode: string,
+    ownerToken: string,
+    file: File,
+    metadata?: { title?: string; description?: string; creator?: string },
+  ) => {
+    try {
+      setIsCreatingBucket(true);
+      const apiUrl = getApiUrl();
+      const formData = new FormData();
+      formData.append("file", file);
+      if (metadata?.title) formData.append("title", metadata.title);
+      if (metadata?.description) formData.append("description", metadata.description);
+      if (metadata?.creator) formData.append("creator", metadata.creator);
+
+      await apiRequest(
+        `${apiUrl}/upload-to-bucket?bucket_code=${bucketCode}&owner_token=${ownerToken}`,
+        {
+          method: "POST",
+          headers: {
+            // Content-Type is automatically set by browser for FormData
+          },
+          body: formData,
+        },
+        "Failed to upload file",
+      );
+
+      setIsCreatingBucket(false);
+      return true;
+    } catch (error) {
+      console.error("[HOOK:useBucketCreator] Upload failed:", error);
+      setIsCreatingBucket(false);
+      haptics.error();
       return false;
     }
   };
@@ -171,5 +209,6 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
     isCreatingBucket,
     createTextBucket,
     createBucket,
+    uploadToBucket,
   };
 }

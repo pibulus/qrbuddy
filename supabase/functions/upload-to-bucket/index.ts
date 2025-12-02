@@ -160,11 +160,18 @@ serve(async (req) => {
 
       contentData = fileId;
       uploadedContentType = "file";
+      const title = formData.get("title") as string | null;
+      const description = formData.get("description") as string | null;
+      const creator = formData.get("creator") as string | null;
+
       contentMetadata = {
         filename: file.name,
         size: file.size,
         mimetype: file.type,
         storage_path: fileName,
+        ...(title && { title }),
+        ...(description && { description }),
+        ...(creator && { creator }),
       };
     } else {
       // Handle text or link (JSON)

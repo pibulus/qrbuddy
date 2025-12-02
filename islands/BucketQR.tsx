@@ -24,6 +24,7 @@ interface BucketQRProps {
   contentMetadata: BucketContentMetadata | null;
   isPasswordProtected: boolean;
   isReusable: boolean;
+  deleteOnDownload: boolean;
   supabaseUrl: string;
 }
 
@@ -36,6 +37,7 @@ export default function BucketQR({
   contentMetadata: initialContentMetadata,
   isPasswordProtected,
   isReusable,
+  deleteOnDownload,
   supabaseUrl,
 }: BucketQRProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -174,11 +176,11 @@ export default function BucketQR({
 
   // Hide owner_token from URL if present
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
+    if (typeof globalThis.window !== "undefined") {
+      const url = new URL(globalThis.window.location.href);
       if (url.searchParams.has("owner_token")) {
         url.searchParams.delete("owner_token");
-        window.history.replaceState({}, "", url.toString());
+        globalThis.window.history.replaceState({}, "", url.toString());
       }
     }
   }, []);
@@ -336,7 +338,7 @@ export default function BucketQR({
           globalThis.dispatchEvent(event);
         } catch {
           // Fallback: show in console if clipboard fails
-          console.log("Content:", data.content);
+          // console.log("Content:", data.content);
           const event = new CustomEvent("show-toast", {
             detail: {
               message: "Content: " + data.content.substring(0, 50) +
@@ -427,6 +429,27 @@ export default function BucketQR({
           <p class="text-2xl font-bold text-center break-words">
             {contentMetadata.content}
           </p>
+        </div>
+      )}
+
+      {/* Metadata Display (Title, Desc, Creator) */}
+      {!isEmpty && contentMetadata && (contentMetadata.title || contentMetadata.description || contentMetadata.creator) && (
+        <div class="text-center space-y-2 animate-slide-down">
+          {contentMetadata.title && (
+            <h1 class="text-3xl font-black text-gray-900 leading-tight">
+              {contentMetadata.title as string}
+            </h1>
+          )}
+          {contentMetadata.creator && (
+            <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">
+              By {contentMetadata.creator as string}
+            </p>
+          )}
+          {contentMetadata.description && (
+            <p class="text-lg text-gray-700 max-w-md mx-auto leading-relaxed">
+              {contentMetadata.description as string}
+            </p>
+          )}
         </div>
       )}
 
@@ -739,7 +762,11 @@ export default function BucketQR({
                       : pinValue.length !== 4)}
                   class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                 >
-                  {isDownloading ? "Downloading..." : "💥 Download & Empty"}
+                  {isDownloading
+                    ? "Downloading..."
+                    : (!isReusable || deleteOnDownload)
+                    ? "💥 Download & Empty"
+                    : "⬇️ Download File"}
                 </button>
               </div>
             )}
@@ -751,7 +778,11 @@ export default function BucketQR({
                 disabled={isDownloading}
                 class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 animate-pulse-glow"
               >
-                {isDownloading ? "Downloading..." : "💥 Download & Empty"}
+                {isDownloading
+                  ? "Downloading..."
+                  : (!isReusable || deleteOnDownload)
+                  ? "💥 Download & Empty"
+                  : "⬇️ Download File"}
               </button>
             )}
 

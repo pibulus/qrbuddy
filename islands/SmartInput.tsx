@@ -4,6 +4,8 @@ import { haptics } from "../utils/haptics.ts";
 import { QRTemplateType } from "../types/qr-templates.ts";
 import TemplateModal from "./TemplateModal.tsx";
 import ExtrasModal from "./ExtrasModal.tsx";
+import HistoryDrawer from "./HistoryDrawer.tsx";
+import { addToHistory, HistoryItem } from "../utils/history.ts";
 import { useDynamicQR } from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
 import { useBatchGenerator } from "../hooks/useBatchGenerator.ts";
@@ -15,8 +17,8 @@ import { UNLIMITED_SCANS } from "../utils/constants.ts";
 
 // Sub-components
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
-import SequentialOptions from "./smart-input/SequentialOptions.tsx";
-import StatusBadge from "./smart-input/StatusBadge.tsx";
+
+
 import FileUploadOptions from "./smart-input/FileUploadOptions.tsx";
 
 interface SmartInputProps {
@@ -48,8 +50,8 @@ export default function SmartInput(
     "idle" | "valid" | "invalid"
   >("idle");
   const [touched, setTouched] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [_inputType, setInputType] = useState<"text" | "file">("text");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Template selector state
@@ -61,7 +63,7 @@ export default function SmartInput(
   const [extrasHasUpdates, setExtrasHasUpdates] = useState(false);
 
   // Dynamic QR options
-  const [scanLimit, setScanLimit] = useState<number | null>(1); // Default to 1 (destructible)
+  const [scanLimit, setScanLimit] = useState<number | null>(null); // Default to null (unlimited)
   const [expiryDate, setExpiryDate] = useState<string>("");
 
   // Sequential QR options
@@ -93,7 +95,7 @@ export default function SmartInput(
       url,
       isDestructible,
       maxDownloads,
-      setInputType,
+      setInputType: () => {}, // SmartInput doesn't directly manage inputType state for file uploads
       setValidationState,
       setTouched,
     });
@@ -104,7 +106,7 @@ export default function SmartInput(
       logoUrl,
     });
 
-  const { isCreatingBucket, createTextBucket, createBucket } = useBucketCreator(
+  const { isCreatingBucket, createTextBucket, createBucket, uploadToBucket } = useBucketCreator(
     {
       url,
       bucketUrl,
@@ -117,18 +119,21 @@ export default function SmartInput(
     isDynamic.value = false;
     setIsBatchMode(false);
     setIsSequential(false);
+    setScanLimit(null);
+    setExpiryDate("");
 
-    const success = await createBucket({
+    const result = await createBucket({
       ...options,
       style: options.style ?? (qrStyle.value || "sunset"),
     });
 
-    if (success) {
+    if (result) {
       isBucket.value = true;
       setExtrasHasUpdates(true);
+      return true;
     }
 
-    return success;
+    return false;
   };
 
   const handleLockerDisable = () => {
@@ -144,6 +149,50 @@ export default function SmartInput(
     });
     globalThis.dispatchEvent(event);
   };
+
+  // Handle Smart Media Creation (from MediaHubForm)
+  useEffect(() => {
+    const handleSmartMediaCreate = async (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      const { file, metadata, password } = detail;
+
+      if (!file) return;
+
+      // 1. Create Bucket
+      const bucketData = await createBucket({
+        bucketType: "file",
+        style: qrStyle.value || "sunset",
+        isReusable: true,
+        password: password || undefined,
+      });
+
+      if (bucketData) {
+        // 2. Upload File with Metadata
+        await uploadToBucket(
+          bucketData.bucket_code,
+          bucketData.owner_token,
+          file,
+          metadata
+        );
+        
+        // 3. Update UI
+        isBucket.value = true;
+        setExtrasHasUpdates(true);
+      }
+    };
+
+    globalThis.addEventListener(
+      "smart-media-create",
+      handleSmartMediaCreate as EventListener,
+    );
+
+    return () => {
+      globalThis.removeEventListener(
+        "smart-media-create",
+        handleSmartMediaCreate as EventListener,
+      );
+    };
+  }, [qrStyle.value]);
 
   // URL validation function
   const validateURL = (urlString: string): boolean => {
@@ -213,8 +262,7 @@ export default function SmartInput(
     const input = e.target as HTMLInputElement;
     url.value = input.value;
     isDestructible.value = false; // Regular text/URL, not destructible
-    setInputType("text");
-
+    
     if (!touched) {
       setTouched(true);
     }
@@ -300,8 +348,67 @@ export default function SmartInput(
     return baseClass;
   };
 
+  const handleHistorySelect = (item: HistoryItem) => {
+    // Restore state based on item type
+    if (item.type === "file" && item.metadata?.bucketCode) {
+      const historyUrl = `/bucket/${item.metadata.bucketCode}${item.metadata.ownerToken ? `?owner_token=${item.metadata.ownerToken}` : ""}`;
+      globalThis.location.href = historyUrl;
+      return;
+    }
+
+    // For dynamic QRs (Redirect to Edit Page)
+    if (item.metadata?.dynamicUrl) {
+      globalThis.location.href = item.metadata.dynamicUrl as string;
+      return;
+    }
+
+    // For static types
+    if (item.type === "url" || item.type === "text" || item.type === "wifi") {
+      setSelectedTemplate(item.type); // Set the template type
+      url.value = item.content; // Set the input value
+      setTouched(true); // Mark as touched to trigger validation
+      // No direct QR generation here, just setting the input for user to generate/edit.
+    }
+    setShowHistory(false); // Close history drawer after selection
+  };
+
+  // Effect to save to history when a QR is successfully generated/updated
+  useEffect(() => {
+    // This effect should ideally trigger when a QR is *finalized* and ready to be displayed/used.
+    // For SmartInput, this means when `editUrl.value` (dynamic QR) or `bucketUrl.value` (bucket) is set,
+    // or when a static QR is generated (which happens in the parent component that consumes `url.value`).
+    // For now, let's focus on dynamic and bucket QRs as they are managed within SmartInput.
+
+    if (editUrl.value && url.value && !isCreatingDynamic) {
+      addToHistory({
+        type: selectedTemplate,
+        content: url.value,
+        metadata: {
+          title: url.value.length > 30 ? url.value.substring(0, 30) + "..." : url.value,
+          dynamicUrl: editUrl.value,
+        }
+      });
+    } else if (isBucket.value && bucketUrl.value && url.value && !isCreatingBucket) {
+      addToHistory({
+        type: "file", // Assuming bucket is primarily for files or smart text
+        content: url.value,
+        metadata: {
+          title: url.value.length > 30 ? url.value.substring(0, 30) + "..." : url.value,
+          bucketCode: bucketUrl.value.split('/').pop(), // Extract code from URL
+          // ownerToken might be needed here if available
+        }
+      });
+    }
+  }, [editUrl.value, bucketUrl.value, url.value, isCreatingDynamic, isCreatingBucket, isBucket.value, selectedTemplate]);
+
   return (
     <div class="w-full space-y-4">
+      <HistoryDrawer
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        onSelect={handleHistorySelect}
+      />
+
       {/* Toolbar */}
       <SmartInputToolbar
         selectedTemplate={selectedTemplate}
@@ -309,11 +416,11 @@ export default function SmartInput(
         setIsExtrasModalOpen={setIsExtrasModalOpen}
         setExtrasHasUpdates={setExtrasHasUpdates}
         extrasHasUpdates={extrasHasUpdates}
+        onShowHistory={() => setShowHistory(true)} // Pass handler to toolbar
       />
 
-      {/* URL/File Input - only shown for URL template */}
-      {selectedTemplate === "url" && (
-        <div
+      {/* URL/File Input - Always visible */}
+      <div
           class="relative"
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
@@ -379,39 +486,8 @@ export default function SmartInput(
             </div>
           )}
         </div>
-      )}
 
-      {/* Sequential QR Options */}
-      {selectedTemplate === "url" && isDynamic.value && !isDestructible.value &&
-        !isBucket.value && !isBatchMode && (
-        <SequentialOptions
-          isSequential={isSequential}
-          setIsSequential={setIsSequential}
-          sequentialUrls={sequentialUrls}
-        />
-      )}
 
-      {/* Batch Mode Active Badge */}
-      {isBatchMode && (
-        <StatusBadge
-          icon="📦"
-          label="Batch Mode Active"
-          subtext={`${
-            batchUrls.split("\n").filter((u) => u.trim()).length
-          } URLs queued • Manage in Power-Ups`}
-          colorClass="blue"
-        />
-      )}
-
-      {/* File Locker Active Badge */}
-      {isBucket.value && (
-        <StatusBadge
-          icon="🪣"
-          label="Locker Active"
-          subtext="Manage settings in Power-Ups"
-          colorClass="teal"
-        />
-      )}
 
       {/* Helper text */}
       {touched && validationState === "invalid" && url.value.trim() !== "" && (
@@ -461,20 +537,12 @@ export default function SmartInput(
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         selectedTemplate={selectedTemplate}
-        onTemplateSelect={(template) => {
+        onSelectTemplate={(template) => {
           setSelectedTemplate(template);
           setTouched(false);
           setValidationState("idle");
         }}
         url={url}
-        isDestructible={isDestructible}
-        onInputChange={(value) => {
-          url.value = value;
-          isDestructible.value = false;
-          if (!touched) setTouched(true);
-        }}
-        onFocus={handleFocus}
-        onBlur={() => setTouched(true)}
       />
       {/* Extras Modal */}
       <ExtrasModal

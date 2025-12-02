@@ -48,7 +48,7 @@ export function PricingModal() {
 
   if (!isOpen) return null;
 
-  const handleUpgrade = () => {
+  const _handleUpgrade = () => {
     // Track conversion intent
     const globalScope = getPricingGlobal();
 
@@ -98,7 +98,7 @@ export function PricingModal() {
                   id="pricing-modal-title"
                   class="text-2xl sm:text-3xl font-black text-black"
                 >
-                  Choose Your Plan
+                  Go Pro
                 </h2>
                 <p class="text-xs sm:text-sm text-purple-900 mt-1">
                   Start free. Upgrade for power tools and zero branding.
@@ -118,51 +118,31 @@ export function PricingModal() {
           {/* Content */}
           <div class="p-4 sm:p-8 bg-qr-cream border-4 border-black rounded-b-3xl shadow-chunky space-y-6">
             {/* Pricing Cards */}
-            <div class="grid md:grid-cols-2 gap-6">
+            <div class="grid md:grid-cols-2 gap-6 items-stretch">
               {/* Free Tier */}
-              <div class="bg-white border-4 border-black rounded-2xl p-6 shadow-chunky">
+              <div class="bg-white border-4 border-black rounded-2xl p-6 shadow-chunky flex flex-col h-full">
                 <div class="text-center mb-4">
                   <h3 class="text-2xl font-black text-black">Free</h3>
                   <div class="text-4xl font-black text-black mt-2">$0</div>
                   <p class="text-sm text-gray-600 mt-1">Forever free</p>
                 </div>
 
-                <ul class="space-y-2 text-sm">
+                <ul class="space-y-3 text-sm flex-grow">
                   {PRICING_TIERS.free.features.map((feature) => (
                     <li key={feature} class="flex items-start gap-2">
-                      <span class="text-green-600 font-bold">✓</span>
+                      <span class="text-green-600 font-bold flex-shrink-0">✓</span>
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
 
-                <div class="mt-4 pt-4 border-t-2 border-gray-200">
-                  <p class="text-xs text-gray-500 font-bold mb-2">
-                    Limitations:
-                  </p>
-                  <ul class="space-y-1 text-xs text-gray-500">
-                    {PRICING_TIERS.free.limitations?.map((limit) => (
-                      <li key={limit} class="flex items-start gap-2">
-                        <span>•</span>
-                        <span>{limit}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
 
-                <button
-                  type="button"
-                  disabled
-                  class="w-full mt-6 px-4 py-3 bg-gray-200 text-gray-600 border-3 border-black rounded-xl font-bold cursor-not-allowed"
-                >
-                  Current Plan
-                </button>
               </div>
 
               {/* Pro Tier */}
-              <div class="bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-black rounded-2xl p-6 shadow-chunky relative">
+              <div class="bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-black rounded-2xl p-6 shadow-chunky relative flex flex-col h-full">
                 <div class="absolute -top-3 -right-3 bg-yellow-300 text-black text-xs font-black px-3 py-1 border-3 border-black rounded-full rotate-12 shadow-chunky">
-                  PAY ONCE, OWN FOREVER
+                  Coming Soon
                 </div>
 
                 <div class="text-center mb-4">
@@ -175,10 +155,10 @@ export function PricingModal() {
                   </p>
                 </div>
 
-                <ul class="space-y-2 text-sm">
+                <ul class="space-y-3 text-sm flex-grow">
                   {PRICING_TIERS.pro.features.map((feature) => (
                     <li key={feature} class="flex items-start gap-2">
-                      <span class="text-purple-600 font-bold">✓</span>
+                      <span class="text-purple-600 font-bold flex-shrink-0">✓</span>
                       <span
                         class={feature.startsWith("Everything") ||
                             feature.includes("Lifetime")
@@ -189,15 +169,29 @@ export function PricingModal() {
                       </span>
                     </li>
                   ))}
+                  
+                  {PRICING_TIERS.pro.upcomingFeatures && (
+                    <>
+
+                      {PRICING_TIERS.pro.upcomingFeatures.map((feature) => (
+                        <li key={feature} class="flex items-start gap-2">
+                          <span class="text-purple-400 flex-shrink-0">✨</span>
+                          <span class="text-gray-600">{feature}</span>
+                        </li>
+                      ))}
+                    </>
+                  )}
                 </ul>
 
-                <button
-                  type="button"
-                  onClick={handleUpgrade}
-                  class="w-full mt-6 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95"
-                >
-                  Get Pro for $20 →
-                </button>
+                {getPricingGlobal().__PAYMENT_URL_PRO__ && (
+                  <button
+                    type="button"
+                    onClick={_handleUpgrade}
+                    class="w-full mt-8 px-4 py-3 border-3 rounded-xl font-bold shadow-chunky transition-all bg-purple-600 text-white border-black hover:bg-purple-700 hover:scale-[1.02] active:scale-95"
+                  >
+                    Get Pro Lifetime ✨
+                  </button>
+                )}
 
                 <p class="text-xs text-center text-gray-600 mt-3">
                   No subscriptions. No recurring fees. Own it forever.
@@ -207,7 +201,6 @@ export function PricingModal() {
 
             {/* FAQ */}
             <div class="mt-8 pt-6 border-t-3 border-black">
-              <h4 class="font-black text-lg mb-3">FAQ</h4>
               <div class="space-y-2 text-sm">
                 <details class="group">
                   <summary class="font-bold cursor-pointer hover:text-purple-600">
@@ -268,7 +261,7 @@ interface PricingLinkProps {
 }
 
 export function PricingLink({
-  label = "Upgrade to Pro ✨",
+  label = "Pro",
   className = "",
 }: PricingLinkProps) {
   return (

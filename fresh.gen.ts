@@ -22,6 +22,7 @@ import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $ExtrasModal from "./islands/ExtrasModal.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
+import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
@@ -37,12 +38,14 @@ import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
 import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
 import * as $edit_qr_RoutingModeSelector from "./islands/edit-qr/RoutingModeSelector.tsx";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
-import * as $smart_input_SequentialOptions from "./islands/smart-input/SequentialOptions.tsx";
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
 import * as $smart_input_StatusBadge from "./islands/smart-input/StatusBadge.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
+import * as $templates_MediaHubForm from "./islands/templates/MediaHubForm.tsx";
 import * as $templates_SMSForm from "./islands/templates/SMSForm.tsx";
+import * as $templates_SocialHubForm from "./islands/templates/SocialHubForm.tsx";
 import * as $templates_VCardForm from "./islands/templates/VCardForm.tsx";
+import * as $templates_WebsiteForm from "./islands/templates/WebsiteForm.tsx";
 import * as $templates_WiFiForm from "./islands/templates/WiFiForm.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -70,6 +73,7 @@ const manifest = {
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/ExtrasModal.tsx": $ExtrasModal,
     "./islands/GradientCreator.tsx": $GradientCreator,
+    "./islands/HistoryDrawer.tsx": $HistoryDrawer,
     "./islands/KofiModal.tsx": $KofiModal,
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/PricingModal.tsx": $PricingModal,
@@ -86,14 +90,15 @@ const manifest = {
     "./islands/edit-qr/RoutingModeSelector.tsx": $edit_qr_RoutingModeSelector,
     "./islands/smart-input/FileUploadOptions.tsx":
       $smart_input_FileUploadOptions,
-    "./islands/smart-input/SequentialOptions.tsx":
-      $smart_input_SequentialOptions,
     "./islands/smart-input/SmartInputToolbar.tsx":
       $smart_input_SmartInputToolbar,
     "./islands/smart-input/StatusBadge.tsx": $smart_input_StatusBadge,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
+    "./islands/templates/MediaHubForm.tsx": $templates_MediaHubForm,
     "./islands/templates/SMSForm.tsx": $templates_SMSForm,
+    "./islands/templates/SocialHubForm.tsx": $templates_SocialHubForm,
     "./islands/templates/VCardForm.tsx": $templates_VCardForm,
+    "./islands/templates/WebsiteForm.tsx": $templates_WebsiteForm,
     "./islands/templates/WiFiForm.tsx": $templates_WiFiForm,
   },
   baseUrl: import.meta.url,

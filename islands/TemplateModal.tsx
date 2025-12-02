@@ -1,158 +1,163 @@
-import { Signal } from "@preact/signals";
+import type { Signal } from "@preact/signals";
+import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import { haptics } from "../utils/haptics.ts";
-import { QR_TEMPLATES, type QRTemplateType } from "../types/qr-templates.ts";
 import WiFiForm from "./templates/WiFiForm.tsx";
 import VCardForm from "./templates/VCardForm.tsx";
 import SMSForm from "./templates/SMSForm.tsx";
 import EmailForm from "./templates/EmailForm.tsx";
+import WebsiteForm from "./templates/WebsiteForm.tsx";
+import SocialHubForm from "./templates/SocialHubForm.tsx";
+import MediaHubForm from "./templates/MediaHubForm.tsx";
+import { addToast } from "./ToastManager.tsx";
 
-interface TemplateModalProps {
+interface Props {
   isOpen: boolean;
   onClose: () => void;
   selectedTemplate: QRTemplateType;
-  onTemplateSelect: (template: QRTemplateType) => void;
+  onSelectTemplate: (template: QRTemplateType) => void;
   url: Signal<string>;
-  isDestructible: Signal<boolean>;
-  onInputChange: (value: string) => void;
-  onFocus: () => void;
-  onBlur: () => void;
 }
 
 export default function TemplateModal({
   isOpen,
   onClose,
   selectedTemplate,
-  onTemplateSelect,
+  onSelectTemplate,
   url,
-  isDestructible,
-  onInputChange,
-  onFocus,
-  onBlur,
-}: TemplateModalProps) {
+}: Props) {
   if (!isOpen) return null;
 
-  const handleTemplateClick = (templateType: QRTemplateType) => {
-    onTemplateSelect(templateType);
-    haptics.light();
-    url.value = "";
-    isDestructible.value = false;
-  };
-
   const renderTemplateForm = () => {
-    if (selectedTemplate === "wifi") return <WiFiForm url={url} />;
-    if (selectedTemplate === "vcard") return <VCardForm url={url} />;
-    if (selectedTemplate === "sms") return <SMSForm url={url} />;
-    if (selectedTemplate === "email") return <EmailForm url={url} />;
-    if (selectedTemplate === "text") {
-      return (
-        <div class="space-y-4">
-          <div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-2xl">📝</span>
-              <h3 class="font-black text-gray-900">Plain Text QR</h3>
+    switch (selectedTemplate) {
+      case "url":
+        return <WebsiteForm url={url} />;
+      case "social":
+        return <SocialHubForm url={url} />;
+      case "media":
+        return <MediaHubForm url={url} />;
+      case "wifi":
+        return <WiFiForm url={url} />;
+      case "vcard":
+        return <VCardForm url={url} />;
+      case "sms":
+        return <SMSForm url={url} />;
+      case "email":
+        return <EmailForm url={url} />;
+      case "text":
+        return (
+          <div class="space-y-4 animate-slide-down">
+            <div class="bg-gray-50 border-3 border-gray-200 rounded-xl p-4 shadow-chunky">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">📝</span>
+                <h3 class="font-black text-gray-900">Plain Text</h3>
+              </div>
+              <p class="text-sm text-gray-600">
+                Display any text message, code, or note.
+              </p>
             </div>
-            <p class="text-sm text-gray-700">
-              Any text content - perfect for notes, codes, or short messages.
-            </p>
+            <textarea
+              value={url.value}
+              onInput={(e) => {
+                url.value = (e.target as HTMLTextAreaElement).value;
+                haptics.light();
+              }}
+              placeholder="Enter your text here..."
+              rows={4}
+              class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none transition-colors resize-none font-medium"
+              autoFocus
+            />
           </div>
-          <textarea
-            value={url.value}
-            onInput={(e) =>
-              onInputChange((e.target as HTMLTextAreaElement).value)}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            placeholder="Enter any text..."
-            rows={4}
-            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-gray-500 focus:outline-none resize-none"
-          />
-        </div>
-      );
+        );
+      default:
+        return (
+          <div class="text-center py-8 text-gray-500">
+            <p>Select a template to get started</p>
+          </div>
+        );
     }
-    return null;
   };
 
   return (
-    <div class="fixed inset-0 z-40 flex items-center justify-center px-4 py-4">
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
+      {/* Backdrop */}
       <div
-        class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+        class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
-      <div class="relative z-10 w-full max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-slide-up">
-        <div class="flex items-start justify-between gap-3">
+
+      {/* Modal */}
+      <div class="relative w-full max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col animate-slide-up sm:animate-pop-in">
+        {/* Header */}
+        <div class="flex items-center justify-between p-6 border-b-2 border-gray-100">
           <div>
-            <p class="text-xs uppercase tracking-wide text-blue-500 font-bold">
-              Templates
-            </p>
-            <p class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
-              Choose Format
-            </p>
-            <p class="text-xs sm:text-sm text-gray-600">
-              Smart forms for smart codes.
+            <h2 class="text-2xl font-black text-gray-900">Choose Format</h2>
+            <p class="text-sm text-gray-500 font-medium">
+              What kind of QR code do you want?
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            class="text-3xl font-black text-gray-400 hover:text-gray-900 hover:rotate-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
-            aria-label="Close template modal"
+            class="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            ×
+            <span class="text-xl">✕</span>
           </button>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {/* Content - Scrollable */}
+        <div class="flex-1 overflow-y-auto p-6">
+          {/* Template Grid */}
+          <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-8">
+            {(Object.keys(QR_TEMPLATES) as QRTemplateType[]).map((key) => {
+              const template = QR_TEMPLATES[key];
+              const isSelected = selectedTemplate === key;
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    if (selectedTemplate !== key) {
+                      // Clear URL when switching templates to avoid confusion
+                      url.value = ""; 
+                    }
+                    onSelectTemplate(key);
+                    haptics.light();
+                  }}
+                  class={`
+                    flex flex-col items-center justify-center p-3 rounded-2xl border-3 transition-all duration-200
+                    ${
+                      isSelected
+                        ? "bg-purple-100 border-purple-500 text-purple-700 shadow-chunky scale-105 z-10"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                    }
+                  `}
+                >
+                  <span class="text-2xl mb-1">{template.icon}</span>
+                  <span class={`text-xs font-bold ${isSelected ? "text-purple-700" : "text-gray-500"}`}>
+                    {template.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Form */}
+          <div class="bg-white rounded-xl">
+            {renderTemplateForm()}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div class="p-6 border-t-2 border-gray-100 bg-gray-50 rounded-b-3xl">
+
           <button
             type="button"
             onClick={() => {
-              onTemplateSelect("url");
-              haptics.light();
               onClose();
+              addToast("Template ready! ✨");
             }}
-            class={`px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex flex-col items-center justify-center gap-1
-              ${
-              selectedTemplate === "url"
-                ? "bg-gray-900 text-white border-black scale-105 shadow-lg"
-                : "bg-white text-gray-700 border-gray-300 hover:border-gray-900 hover:scale-105"
-            }`}
-          >
-            <span class="text-2xl">🔗</span>
-            <span>Standard</span>
-          </button>
-
-          {(Object.keys(QR_TEMPLATES) as QRTemplateType[]).map(
-            (templateType) => {
-              const template = QR_TEMPLATES[templateType];
-              return (
-                <button
-                  key={templateType}
-                  type="button"
-                  onClick={() => handleTemplateClick(templateType)}
-                  class={`px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex flex-col items-center justify-center gap-1
-                    ${
-                    selectedTemplate === templateType
-                      ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white border-pink-600 scale-105 shadow-lg"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-pink-400 hover:scale-105"
-                  }`}
-                  title={template.description}
-                >
-                  <span class="text-2xl">{template.icon}</span>
-                  <span>{template.label}</span>
-                </button>
-              );
-            },
-          )}
-        </div>
-
-        {/* Template form reveals IN the modal after selection */}
-        <div class={selectedTemplate !== "url" ? "animate-slide-down" : ""}>
-          {renderTemplateForm()}
-        </div>
-
-        <div class="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            class="px-4 py-2 rounded-xl border-2 border-gray-900 font-semibold hover:bg-gray-900 hover:text-white transition-colors"
+            class="w-full py-4 bg-black text-white text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             Done
           </button>

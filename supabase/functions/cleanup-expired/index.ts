@@ -99,17 +99,52 @@ serve(async (req) => {
       if (updateError) throw updateError;
     }
 
-    // 2. Delete abandoned one-time buckets (older than 24h - keep this short for one-time)
-    // One-time buckets are meant to be used immediately. 24h is fine.
-    const oneTimeCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    // 2. Delete abandoned/empty buckets (older than 30 days)
+    // This includes:
+    // - One-time buckets that were never used
+    // - Persistent buckets that have been empty for 30 days
+    const abandonedCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    
     const { error: deleteError, count } = await supabase
       .from("file_buckets")
       .delete({ count: "exact" })
-      .lt("created_at", oneTimeCutoff)
-      .eq("is_reusable", false);
+      .lt("updated_at", abandonedCutoff) // updated_at is touched on creation and modification
+      .eq("is_empty", true); // Only delete if empty
 
     if (deleteError) throw deleteError;
     deletedBuckets = count || 0;
+
+    // 3. Delete expired destructible_files (older than 30 days)
+    // These are single-use files that were never downloaded.
+    const { data: expiredFiles, error: fetchFilesError } = await supabase
+      .from("destructible_files")
+      .select("id, file_name")
+      .lt("created_at", abandonedCutoff)
+      .eq("accessed", false);
+
+    if (fetchFilesError) throw fetchFilesError;
+
+    if (expiredFiles && expiredFiles.length > 0) {
+      const paths = expiredFiles.map(f => f.file_name);
+      
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from("qr-files")
+        .remove(paths);
+
+      if (storageError) console.error("Storage delete error (destructible):", storageError);
+
+      // Delete from DB
+      const ids = expiredFiles.map(f => f.id);
+      const { error: dbDeleteError } = await supabase
+        .from("destructible_files")
+        .delete()
+        .in("id", ids);
+
+      if (dbDeleteError) throw dbDeleteError;
+      
+      deletedFiles += expiredFiles.length;
+    }
 
     return new Response(
       JSON.stringify({
