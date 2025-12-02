@@ -174,11 +174,11 @@ export default function BucketQR({
 
   // Hide owner_token from URL if present
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
+    if (typeof globalThis.window !== "undefined") {
+      const url = new URL(globalThis.window.location.href);
       if (url.searchParams.has("owner_token")) {
         url.searchParams.delete("owner_token");
-        window.history.replaceState({}, "", url.toString());
+        globalThis.window.history.replaceState({}, "", url.toString());
       }
     }
   }, []);
@@ -336,7 +336,7 @@ export default function BucketQR({
           globalThis.dispatchEvent(event);
         } catch {
           // Fallback: show in console if clipboard fails
-          console.log("Content:", data.content);
+          // console.log("Content:", data.content);
           const event = new CustomEvent("show-toast", {
             detail: {
               message: "Content: " + data.content.substring(0, 50) +

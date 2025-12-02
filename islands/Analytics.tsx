@@ -33,7 +33,7 @@ export default function Analytics({
   useEffect(() => {
     // Skip if no PostHog key configured
     if (!posthogKey) {
-      console.log("📊 PostHog not configured (set POSTHOG_KEY env var)");
+      // console.log("📊 PostHog not configured (set POSTHOG_KEY env var)");
       return;
     }
 
@@ -45,7 +45,7 @@ export default function Analytics({
     const dnt = navigator.doNotTrack || globalScope.doNotTrack ||
       navigatorWithMsDnt.msDoNotTrack;
     if (dnt === "1" || dnt === "yes") {
-      console.log("🔒 PostHog disabled: respecting Do Not Track");
+      // console.log("🔒 PostHog disabled: respecting Do Not Track");
       return;
     }
 
@@ -71,7 +71,7 @@ export default function Analytics({
         person_profiles: 'never',
         ip: false,
         loaded: function(ph) {
-          console.log('📊 PostHog loaded (privacy-first mode)');
+          // console.log('📊 PostHog loaded (privacy-first mode)');
 
           // Track pageview with campaign data
           const pageviewProps = {
@@ -133,7 +133,7 @@ export default function Analytics({
         ph.capture("upgrade_completed", {
           plan: "pro",
         });
-        console.log("🎉 Upgrade successful!");
+        // console.log("🎉 Upgrade successful!");
 
         // Clean URL
         globalScope.history?.replaceState(
@@ -145,7 +145,7 @@ export default function Analytics({
         ph.capture("upgrade_cancelled", {
           plan: "pro",
         });
-        console.log("❌ Upgrade cancelled");
+        // console.log("❌ Upgrade cancelled");
 
         // Clean URL
         globalScope.history?.replaceState(

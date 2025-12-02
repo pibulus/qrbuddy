@@ -10,7 +10,7 @@ export interface HistoryItem {
     bucketCode?: string;
     ownerToken?: string;
     shortCode?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
