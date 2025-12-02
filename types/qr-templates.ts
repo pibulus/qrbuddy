@@ -3,19 +3,13 @@
 
 export type QRTemplateType =
   | "url"
-  | "instagram"
-  | "facebook"
-  | "whatsapp"
-  | "twitter"
+  | "social"
+  | "media"
   | "wifi"
   | "vcard"
   | "sms"
   | "email"
-  | "text"
-  | "images"
-  | "video"
-  | "mp3"
-  | "pdf";
+  | "text";
 
 export interface QRTemplate {
   type: QRTemplateType;
@@ -31,29 +25,17 @@ export const QR_TEMPLATES: Record<QRTemplateType, QRTemplate> = {
     icon: "🔗",
     description: "Link to any website URL",
   },
-  instagram: {
-    type: "instagram",
-    label: "Instagram",
-    icon: "📸",
-    description: "Share your Instagram profile",
+  social: {
+    type: "social",
+    label: "Social",
+    icon: "🤳",
+    description: "Instagram, X, & more",
   },
-  facebook: {
-    type: "facebook",
-    label: "Facebook",
-    icon: "👍",
-    description: "Share your Facebook page",
-  },
-  whatsapp: {
-    type: "whatsapp",
-    label: "WhatsApp",
-    icon: "💬",
-    description: "Start a WhatsApp chat",
-  },
-  twitter: {
-    type: "twitter",
-    label: "X / Twitter",
-    icon: "🐦",
-    description: "Share your X profile",
+  media: {
+    type: "media",
+    label: "Media",
+    icon: "📂",
+    description: "Share files with style & security",
   },
   wifi: {
     type: "wifi",
@@ -63,73 +45,48 @@ export const QR_TEMPLATES: Record<QRTemplateType, QRTemplate> = {
   },
   vcard: {
     type: "vcard",
-    label: "vCard",
+    label: "Contact",
     icon: "👤",
     description: "Share contact details",
   },
   sms: {
     type: "sms",
     label: "SMS",
-    icon: "📱",
+    icon: "💬",
     description: "Send a text message",
   },
   email: {
     type: "email",
     label: "Email",
-    icon: "📧",
+    icon: "✉️",
     description: "Send an email",
   },
   text: {
     type: "text",
     label: "Text",
     icon: "📝",
-    description: "Show plain text",
-  },
-  images: {
-    type: "images",
-    label: "Images",
-    icon: "🖼️",
-    description: "Share multiple images",
-  },
-  video: {
-    type: "video",
-    label: "Video",
-    icon: "🎥",
-    description: "Show a video",
-  },
-  mp3: {
-    type: "mp3",
-    label: "MP3",
-    icon: "🎵",
-    description: "Share an audio file",
-  },
-  pdf: {
-    type: "pdf",
-    label: "PDF",
-    icon: "📄",
-    description: "Share a PDF document",
+    description: "Display plain text",
   },
 };
 
 // WiFi Template Data
 export interface WiFiData {
   ssid: string;
-  password: string;
+  password?: string;
   encryption: "WPA" | "WEP" | "nopass";
-  hidden?: boolean;
+  hidden: boolean;
 }
 
 // vCard Template Data
 export interface VCardData {
   firstName: string;
   lastName: string;
-  organization?: string;
-  title?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  address?: string;
-  note?: string;
+  phone: string;
+  email: string;
+  website: string;
+  organization: string;
+  jobTitle: string;
+  address: string;
 }
 
 // SMS Template Data
@@ -140,18 +97,19 @@ export interface SMSData {
 
 // Email Template Data
 export interface EmailData {
-  to: string;
-  subject?: string;
-  body?: string;
+  email: string;
+  subject: string;
+  body: string;
 }
 
 // Format functions for each template type
 export function formatWiFi(data: WiFiData): string {
   const encryption = data.encryption === "nopass" ? "" : data.encryption;
   const hidden = data.hidden ? "H:true" : "";
+  const password = data.password || "";
 
   return `WIFI:T:${encryption};S:${escapeSpecialChars(data.ssid)};P:${
-    escapeSpecialChars(data.password)
+    escapeSpecialChars(password)
   };${hidden};`;
 }
 
@@ -166,8 +124,8 @@ export function formatVCard(data: VCardData): string {
   if (data.organization) {
     lines.push(`ORG:${data.organization}`);
   }
-  if (data.title) {
-    lines.push(`TITLE:${data.title}`);
+  if (data.jobTitle) {
+    lines.push(`TITLE:${data.jobTitle}`);
   }
   if (data.phone) {
     lines.push(`TEL:${data.phone}`);
@@ -181,9 +139,6 @@ export function formatVCard(data: VCardData): string {
   if (data.address) {
     lines.push(`ADR:;;${data.address};;;;`);
   }
-  if (data.note) {
-    lines.push(`NOTE:${data.note}`);
-  }
 
   lines.push("END:VCARD");
   return lines.join("\n");
@@ -194,59 +149,43 @@ export function formatSMS(data: SMSData): string {
 }
 
 export function formatEmail(data: EmailData): string {
-  const params = new URLSearchParams();
-
-  if (data.subject) {
-    params.append("subject", data.subject);
-  }
-  if (data.body) {
-    params.append("body", data.body);
-  }
-
-  const queryString = params.toString();
-  return `mailto:${data.to}${queryString ? "?" + queryString : ""}`;
-}
-
-// Escape special characters for WiFi QR codes
-function escapeSpecialChars(str: string): string {
-  return str.replace(/[\\;,":]/g, (char) => "\\" + char);
+  return `mailto:${data.email}?subject=${encodeURIComponent(data.subject)}&body=${
+    encodeURIComponent(data.body)
+  }`;
 }
 
 // Validation functions
-export function validateWiFi(data: Partial<WiFiData>): string | null {
-  if (!data.ssid?.trim()) {
-    return "Network name (SSID) is required";
-  }
-  if (data.encryption !== "nopass" && !data.password?.trim()) {
+export function validateWiFi(data: WiFiData): string | null {
+  if (!data.ssid) return "Network name (SSID) is required";
+  if (data.encryption !== "nopass" && !data.password) {
     return "Password is required for secured networks";
   }
   return null;
 }
 
-export function validateVCard(data: Partial<VCardData>): string | null {
-  if (!data.firstName?.trim() || !data.lastName?.trim()) {
-    return "First name and last name are required";
+export function validateVCard(data: VCardData): string | null {
+  if (!data.firstName && !data.lastName) {
+    return "Name is required";
+  }
+  if (!data.phone && !data.email) {
+    return "Phone or Email is required";
   }
   return null;
 }
 
-export function validateSMS(data: Partial<SMSData>): string | null {
-  if (!data.phone?.trim()) {
-    return "Phone number is required";
-  }
-  if (!data.message?.trim()) {
-    return "Message is required";
-  }
+export function validateSMS(data: SMSData): string | null {
+  if (!data.phone) return "Phone number is required";
+  if (!data.message) return "Message is required";
   return null;
 }
 
-export function validateEmail(data: Partial<EmailData>): string | null {
-  if (!data.to?.trim()) {
-    return "Email address is required";
-  }
-  // Basic email validation
-  if (!data.to.includes("@")) {
-    return "Invalid email address";
-  }
+export function validateEmail(data: EmailData): string | null {
+  if (!data.email) return "Email address is required";
+  if (!data.subject && !data.body) return "Subject or Body is required";
   return null;
+}
+
+// Helper to escape special characters in WiFi string
+function escapeSpecialChars(str: string): string {
+  return str.replace(/([\\;,:])/g, "\\$1");
 }

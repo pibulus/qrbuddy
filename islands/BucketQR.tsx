@@ -430,6 +430,27 @@ export default function BucketQR({
         </div>
       )}
 
+      {/* Metadata Display (Title, Desc, Creator) */}
+      {!isEmpty && contentMetadata && (contentMetadata.title || contentMetadata.description || contentMetadata.creator) && (
+        <div class="text-center space-y-2 animate-slide-down">
+          {contentMetadata.title && (
+            <h1 class="text-3xl font-black text-gray-900 leading-tight">
+              {contentMetadata.title as string}
+            </h1>
+          )}
+          {contentMetadata.creator && (
+            <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">
+              By {contentMetadata.creator as string}
+            </p>
+          )}
+          {contentMetadata.description && (
+            <p class="text-lg text-gray-700 max-w-md mx-auto leading-relaxed">
+              {contentMetadata.description as string}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Media Preview */}
       {!isEmpty && (
         <div class="space-y-4">

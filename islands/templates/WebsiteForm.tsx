@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
 
@@ -7,39 +7,42 @@ interface Props {
 }
 
 export default function WebsiteForm({ url }: Props) {
-  const [value, setValue] = useState(url.value);
+  const [inputValue, setInputValue] = useState(url.value);
 
-  useEffect(() => {
+  const handleInput = (e: Event) => {
+    const value = (e.target as HTMLInputElement).value;
+    setInputValue(value);
     url.value = value;
-  }, [value]);
+    haptics.light();
+  };
 
   return (
     <div class="space-y-4 animate-slide-down">
-      <div class="bg-gray-50 border-3 border-black rounded-xl p-4 shadow-chunky">
+      <div class="bg-gray-50 border-3 border-gray-200 rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">🔗</span>
-          <h3 class="font-black text-black">Website URL</h3>
+          <h3 class="font-black text-gray-900">Website URL</h3>
         </div>
-        <p class="text-sm text-gray-600 font-medium">
-          Link to any website, article, or page.
+        <p class="text-sm text-gray-600">
+          Link to any website, article, or online resource.
         </p>
       </div>
 
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Website URL
+          URL
         </label>
         <input
           type="url"
-          value={value}
-          onInput={(e) => {
-            setValue((e.target as HTMLInputElement).value);
-            haptics.light();
-          }}
+          value={inputValue}
+          onInput={handleInput}
           placeholder="https://example.com"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none font-medium transition-colors"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none transition-colors font-medium"
           autoFocus
         />
+        <p class="text-xs text-gray-400">
+          Must start with http:// or https://
+        </p>
       </div>
     </div>
   );

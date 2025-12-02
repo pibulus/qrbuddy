@@ -106,7 +106,7 @@ export default function SmartInput(
       logoUrl,
     });
 
-  const { isCreatingBucket, createTextBucket, createBucket } = useBucketCreator(
+  const { isCreatingBucket, createTextBucket, createBucket, uploadToBucket } = useBucketCreator(
     {
       url,
       bucketUrl,
@@ -120,17 +120,18 @@ export default function SmartInput(
     setIsBatchMode(false);
     setIsSequential(false);
 
-    const success = await createBucket({
+    const result = await createBucket({
       ...options,
       style: options.style ?? (qrStyle.value || "sunset"),
     });
 
-    if (success) {
+    if (result) {
       isBucket.value = true;
       setExtrasHasUpdates(true);
+      return true;
     }
 
-    return success;
+    return false;
   };
 
   const handleLockerDisable = () => {
@@ -146,6 +147,50 @@ export default function SmartInput(
     });
     globalThis.dispatchEvent(event);
   };
+
+  // Handle Smart Media Creation (from MediaHubForm)
+  useEffect(() => {
+    const handleSmartMediaCreate = async (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      const { file, metadata, password } = detail;
+
+      if (!file) return;
+
+      // 1. Create Bucket
+      const bucketData = await createBucket({
+        bucketType: "file",
+        style: qrStyle.value || "sunset",
+        isReusable: true,
+        password: password || undefined,
+      });
+
+      if (bucketData) {
+        // 2. Upload File with Metadata
+        await uploadToBucket(
+          bucketData.bucket_code,
+          bucketData.owner_token,
+          file,
+          metadata
+        );
+        
+        // 3. Update UI
+        isBucket.value = true;
+        setExtrasHasUpdates(true);
+      }
+    };
+
+    globalThis.addEventListener(
+      "smart-media-create",
+      handleSmartMediaCreate as EventListener,
+    );
+
+    return () => {
+      globalThis.removeEventListener(
+        "smart-media-create",
+        handleSmartMediaCreate as EventListener,
+      );
+    };
+  }, [qrStyle.value]);
 
   // URL validation function
   const validateURL = (urlString: string): boolean => {
@@ -522,20 +567,12 @@ export default function SmartInput(
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
         selectedTemplate={selectedTemplate}
-        onTemplateSelect={(template) => {
+        onSelectTemplate={(template) => {
           setSelectedTemplate(template);
           setTouched(false);
           setValidationState("idle");
         }}
         url={url}
-        isDestructible={isDestructible}
-        onInputChange={(value) => {
-          url.value = value;
-          isDestructible.value = false;
-          if (!touched) setTouched(true);
-        }}
-        onFocus={handleFocus}
-        onBlur={() => setTouched(true)}
       />
       {/* Extras Modal */}
       <ExtrasModal

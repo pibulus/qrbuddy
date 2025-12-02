@@ -2,7 +2,7 @@ import { IS_BROWSER } from "$fresh/runtime.ts";
 
 export interface HistoryItem {
   id: string;
-  type: "text" | "url" | "wifi" | "email" | "phone" | "vcard" | "file" | "dynamic" | "sms";
+  type: "text" | "url" | "wifi" | "email" | "phone" | "vcard" | "file" | "dynamic" | "sms" | "social" | "media";
   content: string; // The main text/url or a summary
   timestamp: number;
   metadata?: {
