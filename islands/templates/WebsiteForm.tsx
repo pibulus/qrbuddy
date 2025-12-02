@@ -14,13 +14,13 @@ export default function WebsiteForm({ url }: Props) {
   }, [value]);
 
   return (
-    <div class="space-y-4">
-      <div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
+    <div class="space-y-4 animate-slide-down">
+      <div class="bg-gray-50 border-3 border-black rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">🔗</span>
-          <h3 class="font-black text-gray-900">Website URL</h3>
+          <h3 class="font-black text-black">Website URL</h3>
         </div>
-        <p class="text-sm text-gray-700">
+        <p class="text-sm text-gray-600 font-medium">
           Link to any website, article, or page.
         </p>
       </div>
@@ -37,7 +37,7 @@ export default function WebsiteForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="https://example.com"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none"
+          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none font-medium transition-colors"
           autoFocus
         />
       </div>

@@ -13,8 +13,6 @@ export default function SocialForm({ url, type }: Props) {
 
   useEffect(() => {
     if (!handle) {
-      // Don't clear url value immediately to avoid flickering if user is typing
-      // But if handle is empty, url should probably be empty or invalid
       return;
     }
 
@@ -70,34 +68,27 @@ export default function SocialForm({ url, type }: Props) {
     }
   };
 
-  const getBgColor = () => {
+  // Using specific colors to match the "Brutalist" vibe
+  const getColors = () => {
     switch (type) {
-      case "instagram": return "bg-pink-50";
-      case "facebook": return "bg-blue-50";
-      case "twitter": return "bg-gray-50";
-      case "whatsapp": return "bg-green-50";
-      default: return "bg-gray-50";
+      case "instagram": return { bg: "bg-pink-50", border: "border-pink-400", text: "text-pink-600", focus: "focus:border-pink-500" };
+      case "facebook": return { bg: "bg-blue-50", border: "border-blue-400", text: "text-blue-600", focus: "focus:border-blue-500" };
+      case "twitter": return { bg: "bg-gray-50", border: "border-gray-400", text: "text-gray-800", focus: "focus:border-black" };
+      case "whatsapp": return { bg: "bg-green-50", border: "border-green-400", text: "text-green-600", focus: "focus:border-green-500" };
+      default: return { bg: "bg-gray-50", border: "border-gray-400", text: "text-gray-800", focus: "focus:border-black" };
     }
   };
 
-  const getBorderColor = () => {
-    switch (type) {
-      case "instagram": return "border-pink-200";
-      case "facebook": return "border-blue-200";
-      case "twitter": return "border-gray-200";
-      case "whatsapp": return "border-green-200";
-      default: return "border-gray-200";
-    }
-  };
+  const colors = getColors();
 
   return (
-    <div class="space-y-4">
-      <div class={`${getBgColor()} border-2 ${getBorderColor()} rounded-xl p-4`}>
+    <div class="space-y-4 animate-slide-down">
+      <div class={`${colors.bg} border-3 ${colors.border} rounded-xl p-4 shadow-chunky transition-colors`}>
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">{getIcon()}</span>
-          <h3 class="font-black text-gray-900">{type.charAt(0).toUpperCase() + type.slice(1)} QR</h3>
+          <h3 class={`font-black ${colors.text}`}>{type.charAt(0).toUpperCase() + type.slice(1)} QR</h3>
         </div>
-        <p class="text-sm text-gray-700">
+        <p class={`text-sm ${colors.text} opacity-80 font-medium`}>
           Enter your {type === "whatsapp" ? "number" : "username"} to create a direct link.
         </p>
       </div>
@@ -108,7 +99,7 @@ export default function SocialForm({ url, type }: Props) {
         </label>
         <div class="relative">
            {type !== "whatsapp" && type !== "facebook" && (
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-lg">
               @
             </span>
            )}
@@ -120,10 +111,10 @@ export default function SocialForm({ url, type }: Props) {
               haptics.light();
             }}
             placeholder={getPlaceholder()}
-            class={`w-full ${type !== "whatsapp" && type !== "facebook" ? "pl-9" : "px-4"} py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none`}
+            class={`w-full ${type !== "whatsapp" && type !== "facebook" ? "pl-9" : "px-4"} py-3 border-3 border-gray-300 rounded-xl text-lg ${colors.focus} focus:outline-none transition-colors font-medium`}
           />
         </div>
-        <p class="text-xs text-gray-500">
+        <p class="text-xs text-gray-500 font-mono truncate">
           Preview: {url.value || "..."}
         </p>
       </div>
