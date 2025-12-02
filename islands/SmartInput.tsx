@@ -17,8 +17,8 @@ import { UNLIMITED_SCANS } from "../utils/constants.ts";
 
 // Sub-components
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
-import SequentialOptions from "./smart-input/SequentialOptions.tsx";
-import StatusBadge from "./smart-input/StatusBadge.tsx";
+
+
 import FileUploadOptions from "./smart-input/FileUploadOptions.tsx";
 
 interface SmartInputProps {
@@ -63,7 +63,7 @@ export default function SmartInput(
   const [extrasHasUpdates, setExtrasHasUpdates] = useState(false);
 
   // Dynamic QR options
-  const [scanLimit, setScanLimit] = useState<number | null>(1); // Default to 1 (destructible)
+  const [scanLimit, setScanLimit] = useState<number | null>(null); // Default to null (unlimited)
   const [expiryDate, setExpiryDate] = useState<string>("");
 
   // Sequential QR options
@@ -119,6 +119,8 @@ export default function SmartInput(
     isDynamic.value = false;
     setIsBatchMode(false);
     setIsSequential(false);
+    setScanLimit(null);
+    setExpiryDate("");
 
     const result = await createBucket({
       ...options,
@@ -487,37 +489,7 @@ export default function SmartInput(
         </div>
       )}
 
-      {/* Sequential QR Options */}
-      {selectedTemplate === "url" && isDynamic.value && !isDestructible.value &&
-        !isBucket.value && !isBatchMode && (
-        <SequentialOptions
-          isSequential={isSequential}
-          setIsSequential={setIsSequential}
-          sequentialUrls={sequentialUrls}
-        />
-      )}
 
-      {/* Batch Mode Active Badge */}
-      {isBatchMode && (
-        <StatusBadge
-          icon="📦"
-          label="Batch Mode Active"
-          subtext={`${
-            batchUrls.split("\n").filter((u) => u.trim()).length
-          } URLs queued • Manage in Power-Ups`}
-          colorClass="blue"
-        />
-      )}
-
-      {/* File Locker Active Badge */}
-      {isBucket.value && (
-        <StatusBadge
-          icon="🪣"
-          label="Locker Active"
-          subtext="Manage settings in Power-Ups"
-          colorClass="teal"
-        />
-      )}
 
       {/* Helper text */}
       {touched && validationState === "invalid" && url.value.trim() !== "" && (

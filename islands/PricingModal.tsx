@@ -193,10 +193,17 @@ export function PricingModal() {
 
                 <button
                   type="button"
-                  disabled
-                  class="w-full mt-8 px-4 py-3 bg-gray-300 text-gray-500 border-3 border-gray-400 rounded-xl font-bold shadow-none cursor-not-allowed"
+                  onClick={_handleUpgrade}
+                  disabled={!getPricingGlobal().__PAYMENT_URL_PRO__}
+                  class={`w-full mt-8 px-4 py-3 border-3 rounded-xl font-bold shadow-chunky transition-all ${
+                    getPricingGlobal().__PAYMENT_URL_PRO__
+                      ? "bg-purple-600 text-white border-black hover:bg-purple-700 hover:scale-[1.02] active:scale-95"
+                      : "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed shadow-none"
+                  }`}
                 >
-                  Pro Tier Coming Soon ✨
+                  {getPricingGlobal().__PAYMENT_URL_PRO__
+                    ? "Get Pro Lifetime ✨"
+                    : "Pro Tier Coming Soon ✨"}
                 </button>
 
                 <p class="text-xs text-center text-gray-600 mt-3">

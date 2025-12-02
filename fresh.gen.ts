@@ -38,7 +38,6 @@ import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
 import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
 import * as $edit_qr_RoutingModeSelector from "./islands/edit-qr/RoutingModeSelector.tsx";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
-import * as $smart_input_SequentialOptions from "./islands/smart-input/SequentialOptions.tsx";
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
 import * as $smart_input_StatusBadge from "./islands/smart-input/StatusBadge.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
@@ -91,8 +90,6 @@ const manifest = {
     "./islands/edit-qr/RoutingModeSelector.tsx": $edit_qr_RoutingModeSelector,
     "./islands/smart-input/FileUploadOptions.tsx":
       $smart_input_FileUploadOptions,
-    "./islands/smart-input/SequentialOptions.tsx":
-      $smart_input_SequentialOptions,
     "./islands/smart-input/SmartInputToolbar.tsx":
       $smart_input_SmartInputToolbar,
     "./islands/smart-input/StatusBadge.tsx": $smart_input_StatusBadge,

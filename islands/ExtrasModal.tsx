@@ -73,6 +73,16 @@ export default function ExtrasModal({
   const [lockerRequirePin, setLockerRequirePin] = useState(false);
   const [lockerStyle, setLockerStyle] = useState(qrStyle.value || "sunset");
   const [lockerError, setLockerError] = useState<string | null>(null);
+  
+  // New state for Time Bomb visibility (derived from limits being active)
+  const [isTimeBombActive, setIsTimeBombActive] = useState(false);
+
+  // Sync Time Bomb state with actual limits
+  useEffect(() => {
+    if (scanLimit !== null || expiryDate !== "") {
+      setIsTimeBombActive(true);
+    }
+  }, [scanLimit, expiryDate]);
 
   // Use shared keypad hook for PIN entry
   const {
@@ -136,6 +146,11 @@ export default function ExtrasModal({
       setLockerMode("open");
       setLockerRequirePin(false);
       resetLockerPin();
+      
+      // Ensure mutual exclusivity
+      setIsTimeBombActive(false);
+      setScanLimit(null);
+      setExpiryDate("");
     } else {
       setLockerError("Couldn't create locker. Try again in a moment.");
     }
@@ -193,21 +208,34 @@ export default function ExtrasModal({
 
           {/* Main Power-Up Cards */}
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* 1. Editable Link */}
             <button
               type="button"
               onClick={() => {
-                isDynamic.value = !isDynamic.value;
-                if (isDynamic.value) {
+                const newState = !isDynamic.value;
+                isDynamic.value = newState;
+                
+                if (newState) {
+                  // Enable Editable Link -> Disable everything else
                   isBucket.value = false;
+                  bucketUrl.value = "";
+                  setLockerExpanded(false);
                   setIsBatchMode(false);
-                } else {
-                  // Disable sequential if dynamic is disabled
                   setIsSequential(false);
+                  setIsTimeBombActive(false);
+                  setScanLimit(null);
+                  setExpiryDate("");
+                } else {
+                  // Disable Editable Link -> Disable dependent features too
+                  setIsSequential(false);
+                  setIsTimeBombActive(false);
+                  setScanLimit(null);
+                  setExpiryDate("");
                 }
                 haptics.light();
               }}
               class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
-                isDynamic.value
+                isDynamic.value && !isSequential && !isTimeBombActive
                   ? "bg-gradient-to-br from-[#FFB3D9] to-[#C9A0DC] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                   : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
               }`}
@@ -219,7 +247,7 @@ export default function ExtrasModal({
               <div class="text-xs text-gray-600 leading-snug mt-1">
                 Print once, update forever. Perfect for menus, events, or merch.
               </div>
-              {isDynamic.value && (
+              {isDynamic.value && !isSequential && !isTimeBombActive && (
                 <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#9370DB]">
                   <span>✓</span>
                   Active
@@ -227,6 +255,7 @@ export default function ExtrasModal({
               )}
             </button>
 
+            {/* 2. File Locker */}
             <button
               type="button"
               onClick={handleLockerCardClick}
@@ -253,14 +282,21 @@ export default function ExtrasModal({
               )}
             </button>
 
+            {/* 3. Batch Mode */}
             <button
               type="button"
               onClick={() => {
-                setIsBatchMode(!isBatchMode);
-                if (!isBatchMode) {
+                const newState = !isBatchMode;
+                setIsBatchMode(newState);
+                if (newState) {
                   isDynamic.value = false;
                   isBucket.value = false;
+                  bucketUrl.value = "";
+                  setLockerExpanded(false);
                   setIsSequential(false);
+                  setIsTimeBombActive(false);
+                  setScanLimit(null);
+                  setExpiryDate("");
                 }
                 haptics.light();
               }}
@@ -285,6 +321,7 @@ export default function ExtrasModal({
               )}
             </button>
 
+            {/* 4. Custom Logo */}
             <button
               type="button"
               onClick={() => {
@@ -312,7 +349,7 @@ export default function ExtrasModal({
               )}
             </button>
 
-            {/* Multi-Link (Sequential) Button */}
+            {/* 5. Multi-Link (Sequential) */}
             <button
               type="button"
               onClick={() => {
@@ -321,7 +358,15 @@ export default function ExtrasModal({
                 if (newState) {
                   isDynamic.value = true; // Must be dynamic
                   isBucket.value = false;
+                  bucketUrl.value = "";
+                  setLockerExpanded(false);
                   setIsBatchMode(false);
+                  // Exclusive: Disable Time Bomb
+                  setIsTimeBombActive(false);
+                  setScanLimit(null);
+                  setExpiryDate("");
+                } else {
+                  isDynamic.value = false;
                 }
                 haptics.light();
               }}
@@ -340,6 +385,48 @@ export default function ExtrasModal({
               </div>
               {isSequential && (
                 <div class="mt-2 flex items-center gap-1 text-xs font-bold text-indigo-600">
+                  <span>✓</span>
+                  Active
+                </div>
+              )}
+            </button>
+
+            {/* 6. Time Bomb (Limits) - NEW */}
+            <button
+              type="button"
+              onClick={() => {
+                const newState = !isTimeBombActive;
+                setIsTimeBombActive(newState);
+                if (newState) {
+                  isDynamic.value = true; // Must be dynamic
+                  isBucket.value = false;
+                  bucketUrl.value = "";
+                  setLockerExpanded(false);
+                  setIsBatchMode(false);
+                  // Exclusive: Disable Multi-Link
+                  setIsSequential(false);
+                } else {
+                  isDynamic.value = false;
+                  setScanLimit(null);
+                  setExpiryDate("");
+                }
+                haptics.light();
+              }}
+              class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left ${
+                isTimeBombActive
+                  ? "bg-gradient-to-br from-red-100 to-orange-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                  : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+              }`}
+            >
+              <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                💣
+              </div>
+              <div class="font-black text-sm text-gray-900">Time Bomb</div>
+              <div class="text-xs text-gray-600 leading-snug mt-1">
+                Self-destruct after X scans or on a specific date.
+              </div>
+              {isTimeBombActive && (
+                <div class="mt-2 flex items-center gap-1 text-xs font-bold text-red-600">
                   <span>✓</span>
                   Active
                 </div>
@@ -628,7 +715,21 @@ export default function ExtrasModal({
           )}
 
           {isDynamic.value && (
-            <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky">
+            <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
+              {/* Default Guidance for Editable Link */}
+              {!isSequential && !isTimeBombActive && !editUrl.value && (
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl">✨</span>
+                  <div>
+                    <h4 class="font-bold text-sm text-[#9370DB]">
+                      Editable Mode Ready
+                    </h4>
+                    <p class="text-xs text-gray-700 leading-relaxed">
+                      Close this menu and enter your destination URL. We'll create a magic link you can update anytime.
+                    </p>
+                  </div>
+                </div>
+              )}
               {/* Multi-Link Settings */}
               {isSequential && (
                 <div class="bg-white/60 rounded-xl p-3 mb-4 border-2 border-indigo-200">
@@ -700,95 +801,109 @@ export default function ExtrasModal({
                 </div>
               )}
 
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
-                  Scan limit
-                </label>
-                <p class="text-xs text-gray-600">
-                  How many scans before this link stops responding.
-                </p>
-                <div class="flex gap-2 flex-wrap">
-                  {[1, 5, 10, 100, null].map((limit) => (
+              {/* Time Bomb Settings */}
+              {isTimeBombActive && (
+                <div class="bg-white/60 rounded-xl p-3 mb-4 border-2 border-red-200 animate-slide-down">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-xl">💣</span>
+                    <h4 class="font-bold text-sm text-red-900">
+                      Time Bomb Settings
+                    </h4>
+                  </div>
+                  
+                  <div class="space-y-4">
+                    <div class="space-y-2">
+                      <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+                        Scan limit
+                      </label>
+                      <p class="text-xs text-gray-600">
+                        How many scans before this link stops responding.
+                      </p>
+                      <div class="flex gap-2 flex-wrap">
+                        {[1, 5, 10, 100, null].map((limit) => (
+                          <button
+                            type="button"
+                            key={limit?.toString() || "unlimited"}
+                            onClick={() => {
+                              setScanLimit(limit);
+                              haptics.light();
+                            }}
+                            class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all ${
+                              scanLimit === limit
+                                ? "bg-[#FF69B4] text-white border-[#D84A94] scale-105"
+                                : "bg-white text-gray-700 border-gray-300 hover:border-[#FF69B4]"
+                            }`}
+                          >
+                            {limit === null ? "∞" : limit}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div class="space-y-2">
+                      <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
+                        Expiry date (optional)
+                      </label>
+                      <p class="text-xs text-gray-600">
+                        Leave blank to keep this link alive.
+                      </p>
+                      <input
+                        type="datetime-local"
+                        value={expiryDate}
+                        onChange={(e) => {
+                          setExpiryDate((e.target as HTMLInputElement).value);
+                          haptics.light();
+                        }}
+                        class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#FF69B4] focus:outline-none"
+                      />
+                    </div>
+
+                    <div class="bg-[#FFE5F0] border-2 border-[#FF69B4] rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
+                      💡 <strong>Set to 1 for a self-destruct QR.</strong>{" "}
+                      Higher limits let you reuse and edit anytime. No tracking, ever.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {editUrl.value && (
+                <div class="bg-gradient-to-r from-[#F5E6FF] to-[#FFE5F0] border-3 border-[#9370DB] rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xl">✨</span>
+                    <p class="text-sm font-black text-[#6B46A8]">
+                      Editable QR created!
+                    </p>
+                  </div>
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      value={editUrl.value}
+                      readOnly
+                      class="flex-1 px-3 py-2 bg-white border-2 border-[#9370DB] rounded-lg text-xs font-mono"
+                    />
                     <button
                       type="button"
-                      key={limit?.toString() || "unlimited"}
                       onClick={() => {
-                        setScanLimit(limit);
-                        haptics.light();
+                        navigator.clipboard.writeText(editUrl.value);
+                        haptics.success();
+                        const event = new CustomEvent("show-toast", {
+                          detail: {
+                            message: "Edit link copied! 📋",
+                            type: "success",
+                          },
+                        });
+                        globalThis.dispatchEvent(event);
                       }}
-                      class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all ${
-                        scanLimit === limit
-                          ? "bg-[#FF69B4] text-white border-[#D84A94] scale-105"
-                          : "bg-white text-gray-700 border-gray-300 hover:border-[#FF69B4]"
-                      }`}
+                      class="px-4 py-2 bg-[#9370DB] text-white rounded-lg font-semibold text-sm hover:bg-[#6B46A8] transition-colors"
                     >
-                      {limit === null ? "∞" : limit}
+                      Copy
                     </button>
-                  ))}
+                  </div>
+                  <p class="text-xs text-[#6B46A8]">
+                    Bookmark this link—you'll need it to edit your QR later.
+                  </p>
                 </div>
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
-                  Expiry date (optional)
-                </label>
-                <p class="text-xs text-gray-600">
-                  Leave blank to keep this link alive.
-                </p>
-                <input
-                  type="datetime-local"
-                  value={expiryDate}
-                  onChange={(e) => {
-                    setExpiryDate((e.target as HTMLInputElement).value);
-                    haptics.light();
-                  }}
-                  class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#FF69B4] focus:outline-none"
-                />
-              </div>
-
-              <div class="bg-[#FFE5F0] border-2 border-[#FF69B4] rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
-                💡 <strong>Set to 1 for a self-destruct QR.</strong>{" "}
-                Higher limits let you reuse and edit anytime. No tracking, ever.
-              </div>
-            </div>
-          )}
-
-          {editUrl.value && (
-            <div class="bg-gradient-to-r from-[#F5E6FF] to-[#FFE5F0] border-3 border-[#9370DB] rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">✨</span>
-                <p class="text-sm font-black text-[#6B46A8]">
-                  Editable QR created!
-                </p>
-              </div>
-              <div class="flex gap-2">
-                <input
-                  type="text"
-                  value={editUrl.value}
-                  readOnly
-                  class="flex-1 px-3 py-2 bg-white border-2 border-[#9370DB] rounded-lg text-xs font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(editUrl.value);
-                    haptics.success();
-                    const event = new CustomEvent("show-toast", {
-                      detail: {
-                        message: "Edit link copied! 📋",
-                        type: "success",
-                      },
-                    });
-                    globalThis.dispatchEvent(event);
-                  }}
-                  class="px-4 py-2 bg-[#9370DB] text-white rounded-lg font-semibold text-sm hover:bg-[#6B46A8] transition-colors"
-                >
-                  Copy
-                </button>
-              </div>
-              <p class="text-xs text-[#6B46A8]">
-                Bookmark this link—you'll need it to edit your QR later.
-              </p>
+              )}
             </div>
           )}
 
