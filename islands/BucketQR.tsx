@@ -24,6 +24,7 @@ interface BucketQRProps {
   contentMetadata: BucketContentMetadata | null;
   isPasswordProtected: boolean;
   isReusable: boolean;
+  deleteOnDownload: boolean;
   supabaseUrl: string;
 }
 
@@ -36,6 +37,7 @@ export default function BucketQR({
   contentMetadata: initialContentMetadata,
   isPasswordProtected,
   isReusable,
+  deleteOnDownload,
   supabaseUrl,
 }: BucketQRProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -760,7 +762,11 @@ export default function BucketQR({
                       : pinValue.length !== 4)}
                   class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
                 >
-                  {isDownloading ? "Downloading..." : "💥 Download & Empty"}
+                  {isDownloading
+                    ? "Downloading..."
+                    : (!isReusable || deleteOnDownload)
+                    ? "💥 Download & Empty"
+                    : "⬇️ Download File"}
                 </button>
               </div>
             )}
@@ -772,7 +778,11 @@ export default function BucketQR({
                 disabled={isDownloading}
                 class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 animate-pulse-glow"
               >
-                {isDownloading ? "Downloading..." : "💥 Download & Empty"}
+                {isDownloading
+                  ? "Downloading..."
+                  : (!isReusable || deleteOnDownload)
+                  ? "💥 Download & Empty"
+                  : "⬇️ Download File"}
               </button>
             )}
 
