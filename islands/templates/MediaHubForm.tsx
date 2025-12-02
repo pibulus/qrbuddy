@@ -1,4 +1,4 @@
-import { useState, useRef } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
 
@@ -6,7 +6,7 @@ interface Props {
   url: Signal<string>;
 }
 
-export default function MediaHubForm({ url }: Props) {
+export default function MediaHubForm({ url: _url }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -49,9 +49,11 @@ export default function MediaHubForm({ url }: Props) {
   return (
     <div class="space-y-4 animate-slide-down">
       {/* File Drop Zone */}
-      <div 
+      <div
         class={`border-3 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
-          file ? "border-purple-500 bg-purple-50" : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
+          file
+            ? "border-purple-500 bg-purple-50"
+            : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
         }`}
         onClick={() => fileInputRef.current?.click()}
       >
@@ -66,7 +68,9 @@ export default function MediaHubForm({ url }: Props) {
           {file ? file.name : "Tap to select a file"}
         </p>
         <p class="text-xs text-gray-500 mt-1">
-          {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "Images, Video, Audio, PDF"}
+          {file
+            ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
+            : "Images, Video, Audio, PDF"}
         </p>
       </div>
 
@@ -101,16 +105,17 @@ export default function MediaHubForm({ url }: Props) {
           🔒 Password Protect
         </span>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             checked={isPasswordProtected}
             onChange={(e) => {
               setIsPasswordProtected((e.target as HTMLInputElement).checked);
               haptics.light();
             }}
-            class="sr-only peer" 
+            class="sr-only peer"
           />
-          <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
+          <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black">
+          </div>
         </label>
       </div>
 
@@ -126,6 +131,7 @@ export default function MediaHubForm({ url }: Props) {
 
       {/* Action Button */}
       <button
+        type="button"
         onClick={handleCreate}
         disabled={!file || isCreating || (isPasswordProtected && !password)}
         class="w-full py-4 bg-black text-white text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"

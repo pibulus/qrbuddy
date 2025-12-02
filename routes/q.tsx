@@ -174,7 +174,7 @@ export default function SharePage(props: PageProps) {
 
         {/* Footer */}
         <footer class="mt-16 text-center text-sm text-gray-500 opacity-60">
-          Made with 🧁 by Pablo
+          Made by Pablo • Melbourne
         </footer>
       </div>
     </>

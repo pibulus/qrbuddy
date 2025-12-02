@@ -29,12 +29,11 @@ export default function VCardForm({ url }: Props) {
       firstName,
       lastName,
       organization,
-      title,
+      jobTitle: title,
       phone,
       email,
       website,
       address,
-      note,
     };
     const validationError = validateVCard(data);
 

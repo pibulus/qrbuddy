@@ -130,13 +130,13 @@ export function PricingModal() {
                 <ul class="space-y-3 text-sm flex-grow">
                   {PRICING_TIERS.free.features.map((feature) => (
                     <li key={feature} class="flex items-start gap-2">
-                      <span class="text-green-600 font-bold flex-shrink-0">✓</span>
+                      <span class="text-green-600 font-bold flex-shrink-0">
+                        ✓
+                      </span>
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
-
-
               </div>
 
               {/* Pro Tier */}
@@ -158,7 +158,9 @@ export function PricingModal() {
                 <ul class="space-y-3 text-sm flex-grow">
                   {PRICING_TIERS.pro.features.map((feature) => (
                     <li key={feature} class="flex items-start gap-2">
-                      <span class="text-purple-600 font-bold flex-shrink-0">✓</span>
+                      <span class="text-purple-600 font-bold flex-shrink-0">
+                        ✓
+                      </span>
                       <span
                         class={feature.startsWith("Everything") ||
                             feature.includes("Lifetime")
@@ -169,10 +171,9 @@ export function PricingModal() {
                       </span>
                     </li>
                   ))}
-                  
+
                   {PRICING_TIERS.pro.upcomingFeatures && (
                     <>
-
                       {PRICING_TIERS.pro.upcomingFeatures.map((feature) => (
                         <li key={feature} class="flex items-start gap-2">
                           <span class="text-purple-400 flex-shrink-0">✨</span>

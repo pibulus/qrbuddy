@@ -352,13 +352,13 @@ export default function BucketQR({
 
       // Update state based on server response
       const isEmptied = response.headers.get("X-Bucket-Emptied") === "true";
-      
+
       if (isEmptied) {
         setIsEmpty(true);
         setContentType(null);
         setContentMetadata(null);
         if (!isReusable) {
-           removeOwnerToken("bucket", bucketCode);
+          removeOwnerToken("bucket", bucketCode);
         }
       }
 
@@ -433,25 +433,28 @@ export default function BucketQR({
       )}
 
       {/* Metadata Display (Title, Desc, Creator) */}
-      {!isEmpty && contentMetadata && (contentMetadata.title || contentMetadata.description || contentMetadata.creator) && (
-        <div class="text-center space-y-2 animate-slide-down">
-          {contentMetadata.title && (
-            <h1 class="text-3xl font-black text-gray-900 leading-tight">
-              {contentMetadata.title as string}
-            </h1>
-          )}
-          {contentMetadata.creator && (
-            <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">
-              By {contentMetadata.creator as string}
-            </p>
-          )}
-          {contentMetadata.description && (
-            <p class="text-lg text-gray-700 max-w-md mx-auto leading-relaxed">
-              {contentMetadata.description as string}
-            </p>
-          )}
-        </div>
-      )}
+      {!isEmpty && contentMetadata &&
+        (contentMetadata.title || contentMetadata.description ||
+          contentMetadata.creator) &&
+        (
+          <div class="text-center space-y-2 animate-slide-down">
+            {contentMetadata.title && (
+              <h1 class="text-3xl font-black text-gray-900 leading-tight">
+                {contentMetadata.title as string}
+              </h1>
+            )}
+            {contentMetadata.creator && (
+              <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">
+                By {contentMetadata.creator as string}
+              </p>
+            )}
+            {contentMetadata.description && (
+              <p class="text-lg text-gray-700 max-w-md mx-auto leading-relaxed">
+                {contentMetadata.description as string}
+              </p>
+            )}
+          </div>
+        )}
 
       {/* Media Preview */}
       {!isEmpty && (
@@ -541,9 +544,13 @@ export default function BucketQR({
               {/* If metadata is redacted (null), show generic locked state */}
               {!contentMetadata && (
                 <div class="bg-gray-100 border-4 border-black rounded-xl p-8 text-center shadow-chunky">
-                   <span class="text-5xl block mb-4">🔒</span>
-                   <h3 class="text-xl font-bold text-gray-800 mb-2">Secure File</h3>
-                   <p class="text-gray-600">Enter password to view details and download</p>
+                  <span class="text-5xl block mb-4">🔒</span>
+                  <h3 class="text-xl font-bold text-gray-800 mb-2">
+                    Secure File
+                  </h3>
+                  <p class="text-gray-600">
+                    Enter password to view details and download
+                  </p>
                 </div>
               )}
 
@@ -612,14 +619,19 @@ export default function BucketQR({
                 </div>
               )}
 
-               {/* Generic File Preview (if mimetype not handled above but metadata exists) */}
-               {contentMetadata && !contentMetadata.mimetype?.startsWith("image/") && !contentMetadata.mimetype?.startsWith("audio/") && !contentMetadata.mimetype?.startsWith("video/") && (
-                  <div class="bg-white border-4 border-black rounded-xl p-6 shadow-chunky text-center">
-                    <span class="text-4xl block mb-2">📄</span>
-                    <p class="font-bold text-lg">{contentMetadata.filename}</p>
-                    <p class="text-sm text-gray-500">{contentMetadata.mimetype}</p>
-                  </div>
-               )}
+              {/* Generic File Preview (if mimetype not handled above but metadata exists) */}
+              {contentMetadata &&
+                !contentMetadata.mimetype?.startsWith("image/") &&
+                !contentMetadata.mimetype?.startsWith("audio/") &&
+                !contentMetadata.mimetype?.startsWith("video/") && (
+                <div class="bg-white border-4 border-black rounded-xl p-6 shadow-chunky text-center">
+                  <span class="text-4xl block mb-2">📄</span>
+                  <p class="font-bold text-lg">{contentMetadata.filename}</p>
+                  <p class="text-sm text-gray-500">
+                    {contentMetadata.mimetype}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

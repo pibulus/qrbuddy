@@ -119,7 +119,7 @@ export default function TemplateModal({
                   onClick={() => {
                     if (selectedTemplate !== key) {
                       // Clear URL when switching templates to avoid confusion
-                      url.value = ""; 
+                      url.value = "";
                     }
                     onSelectTemplate(key);
                     haptics.light();
@@ -127,14 +127,18 @@ export default function TemplateModal({
                   class={`
                     flex flex-col items-center justify-center p-3 rounded-2xl border-3 transition-all duration-200
                     ${
-                      isSelected
-                        ? "bg-purple-100 border-purple-500 text-purple-700 shadow-chunky scale-105 z-10"
-                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                    }
+                    isSelected
+                      ? "bg-purple-100 border-purple-500 text-purple-700 shadow-chunky scale-105 z-10"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                  }
                   `}
                 >
                   <span class="text-2xl mb-1">{template.icon}</span>
-                  <span class={`text-xs font-bold ${isSelected ? "text-purple-700" : "text-gray-500"}`}>
+                  <span
+                    class={`text-xs font-bold ${
+                      isSelected ? "text-purple-700" : "text-gray-500"
+                    }`}
+                  >
                     {template.label}
                   </span>
                 </button>
@@ -150,7 +154,6 @@ export default function TemplateModal({
 
         {/* Footer */}
         <div class="p-6 border-t-2 border-gray-100 bg-gray-50 rounded-b-3xl">
-
           <button
             type="button"
             onClick={() => {

@@ -32,7 +32,11 @@ export default function StyleSelector(
     haptics.light();
     sounds.click();
     setIsGalleryOpen(false);
-    addToast(`Style applied: ${STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY].name} 🎨`);
+    addToast(
+      `Style applied: ${
+        STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY].name
+      } 🎨`,
+    );
   };
 
   const handleCustomGradient = (gradient: QRStyle) => {

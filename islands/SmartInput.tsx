@@ -18,7 +18,6 @@ import { UNLIMITED_SCANS } from "../utils/constants.ts";
 // Sub-components
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
 
-
 import FileUploadOptions from "./smart-input/FileUploadOptions.tsx";
 
 interface SmartInputProps {
@@ -106,12 +105,13 @@ export default function SmartInput(
       logoUrl,
     });
 
-  const { isCreatingBucket, createTextBucket, createBucket, uploadToBucket } = useBucketCreator(
-    {
-      url,
-      bucketUrl,
-    },
-  );
+  const { isCreatingBucket, createTextBucket, createBucket, uploadToBucket } =
+    useBucketCreator(
+      {
+        url,
+        bucketUrl,
+      },
+    );
 
   const handleLockerConfirm = async (
     options: CreateBucketOptions,
@@ -172,9 +172,9 @@ export default function SmartInput(
           bucketData.bucket_code,
           bucketData.owner_token,
           file,
-          metadata
+          metadata,
         );
-        
+
         // 3. Update UI
         isBucket.value = true;
         setExtrasHasUpdates(true);
@@ -262,7 +262,7 @@ export default function SmartInput(
     const input = e.target as HTMLInputElement;
     url.value = input.value;
     isDestructible.value = false; // Regular text/URL, not destructible
-    
+
     if (!touched) {
       setTouched(true);
     }
@@ -351,7 +351,11 @@ export default function SmartInput(
   const handleHistorySelect = (item: HistoryItem) => {
     // Restore state based on item type
     if (item.type === "file" && item.metadata?.bucketCode) {
-      const historyUrl = `/bucket/${item.metadata.bucketCode}${item.metadata.ownerToken ? `?owner_token=${item.metadata.ownerToken}` : ""}`;
+      const historyUrl = `/bucket/${item.metadata.bucketCode}${
+        item.metadata.ownerToken
+          ? `?owner_token=${item.metadata.ownerToken}`
+          : ""
+      }`;
       globalThis.location.href = historyUrl;
       return;
     }
@@ -384,22 +388,36 @@ export default function SmartInput(
         type: selectedTemplate,
         content: url.value,
         metadata: {
-          title: url.value.length > 30 ? url.value.substring(0, 30) + "..." : url.value,
+          title: url.value.length > 30
+            ? url.value.substring(0, 30) + "..."
+            : url.value,
           dynamicUrl: editUrl.value,
-        }
+        },
       });
-    } else if (isBucket.value && bucketUrl.value && url.value && !isCreatingBucket) {
+    } else if (
+      isBucket.value && bucketUrl.value && url.value && !isCreatingBucket
+    ) {
       addToHistory({
         type: "file", // Assuming bucket is primarily for files or smart text
         content: url.value,
         metadata: {
-          title: url.value.length > 30 ? url.value.substring(0, 30) + "..." : url.value,
-          bucketCode: bucketUrl.value.split('/').pop(), // Extract code from URL
+          title: url.value.length > 30
+            ? url.value.substring(0, 30) + "..."
+            : url.value,
+          bucketCode: bucketUrl.value.split("/").pop(), // Extract code from URL
           // ownerToken might be needed here if available
-        }
+        },
       });
     }
-  }, [editUrl.value, bucketUrl.value, url.value, isCreatingDynamic, isCreatingBucket, isBucket.value, selectedTemplate]);
+  }, [
+    editUrl.value,
+    bucketUrl.value,
+    url.value,
+    isCreatingDynamic,
+    isCreatingBucket,
+    isBucket.value,
+    selectedTemplate,
+  ]);
 
   return (
     <div class="w-full space-y-4">
@@ -421,73 +439,71 @@ export default function SmartInput(
 
       {/* URL/File Input - Always visible */}
       <div
-          class="relative"
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <input
-            type="text"
-            value={url.value}
-            onInput={handleInput}
-            onFocus={handleFocus}
-            onBlur={() => setTouched(true)}
-            placeholder={isDragging
-              ? "Drop file here..."
-              : "Enter URL, text, or drop a file..."}
-            aria-label="URL, text, or file to encode in QR code"
-            aria-invalid={validationState === "invalid"}
-            aria-describedby={validationState === "invalid"
-              ? "input-error"
-              : undefined}
-            class={getInputClass()}
-            disabled={isUploading}
-          />
+        class="relative"
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <input
+          type="text"
+          value={url.value}
+          onInput={handleInput}
+          onFocus={handleFocus}
+          onBlur={() => setTouched(true)}
+          placeholder={isDragging
+            ? "Drop file here..."
+            : "Enter URL, text, or drop a file..."}
+          aria-label="URL, text, or file to encode in QR code"
+          aria-invalid={validationState === "invalid"}
+          aria-describedby={validationState === "invalid"
+            ? "input-error"
+            : undefined}
+          class={getInputClass()}
+          disabled={isUploading}
+        />
 
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            class="hidden"
-            onChange={handleFileInputChange}
-            accept="*/*"
-          />
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          class="hidden"
+          onChange={handleFileInputChange}
+          accept="*/*"
+        />
 
-          {/* File upload button */}
-          {!isUploading && !isDestructible.value && (
-            <button
-              type="button"
-              onClick={handleFileInputClick}
-              class="absolute right-4 top-1/2 transform -translate-y-1/2
+        {/* File upload button */}
+        {!isUploading && !isDestructible.value && (
+          <button
+            type="button"
+            onClick={handleFileInputClick}
+            class="absolute right-4 top-1/2 transform -translate-y-1/2
                    text-2xl hover:scale-110 transition-transform"
-              aria-label="Upload file"
-              title="Upload file"
-            >
-              📎
-            </button>
-          )}
+            aria-label="Upload file"
+            title="Upload file"
+          >
+            📎
+          </button>
+        )}
 
-          {/* Validation indicator */}
-          {touched && validationState === "valid" && !isUploading && (
-            <div class="absolute right-14 top-1/2 transform -translate-y-1/2
+        {/* Validation indicator */}
+        {touched && validationState === "valid" && !isUploading && (
+          <div class="absolute right-14 top-1/2 transform -translate-y-1/2
                       text-xl animate-pop">
-              {isDestructible.value ? "💣" : "✓"}
-            </div>
-          )}
+            {isDestructible.value ? "💣" : "✓"}
+          </div>
+        )}
 
-          {/* Upload progress */}
-          {isUploading && (
-            <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
-              <div
-                class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          )}
-        </div>
-
-
+        {/* Upload progress */}
+        {isUploading && (
+          <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
+            <div
+              class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Helper text */}
       {touched && validationState === "invalid" && url.value.trim() !== "" && (

@@ -16,7 +16,8 @@ export default function FileUploadOptions(
         <h4 class="text-sm font-bold text-gray-700">File Options</h4>
       </div>
       <p class="text-xs text-gray-600">
-        Set a download limit if you want the file to expire after a certain number of scans.
+        Set a download limit if you want the file to expire after a certain
+        number of scans.
       </p>
       <div class="space-y-2">
         <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">

@@ -40,7 +40,9 @@ serve(async (req) => {
     const downloadCount = file.download_count || 0;
 
     // Check if already exploded (but not for unlimited files)
-    if (file.accessed || (maxDownloads < 999999 && downloadCount >= maxDownloads)) {
+    if (
+      file.accessed || (maxDownloads < 999999 && downloadCount >= maxDownloads)
+    ) {
       return Response.redirect("/boom", 302);
     }
 

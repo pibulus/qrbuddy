@@ -81,8 +81,10 @@ export default function QRCanvas(
         type: "url", // Generic type for static QRs
         content: url.value,
         metadata: {
-          title: url.value.length > 30 ? url.value.substring(0, 30) + "..." : url.value,
-        }
+          title: url.value.length > 30
+            ? url.value.substring(0, 30) + "..."
+            : url.value,
+        },
       });
     }
 

@@ -19,7 +19,7 @@ export default function EmailForm({ url }: Props) {
 
   // Update QR data whenever form changes
   useEffect(() => {
-    const data: EmailData = { to, subject, body };
+    const data: EmailData = { email: to, subject, body };
     const validationError = validateEmail(data);
 
     if (validationError) {

@@ -66,7 +66,7 @@ export default function Boom() {
 
         {/* Footer */}
         <footer class="mt-16 text-center text-black opacity-70">
-          Made with 🧁 by Pablo
+          Made by Pablo • Melbourne
         </footer>
       </div>
 

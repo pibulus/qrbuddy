@@ -149,9 +149,9 @@ export function formatSMS(data: SMSData): string {
 }
 
 export function formatEmail(data: EmailData): string {
-  return `mailto:${data.email}?subject=${encodeURIComponent(data.subject)}&body=${
-    encodeURIComponent(data.body)
-  }`;
+  return `mailto:${data.email}?subject=${
+    encodeURIComponent(data.subject)
+  }&body=${encodeURIComponent(data.body)}`;
 }
 
 // Validation functions

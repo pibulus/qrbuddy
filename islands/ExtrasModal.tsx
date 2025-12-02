@@ -70,11 +70,13 @@ export default function ExtrasModal({
 }: ExtrasModalProps) {
   const [showLogoUploader, setShowLogoUploader] = useState(false);
   const [lockerExpanded, setLockerExpanded] = useState(false);
-  const [lockerMode, setLockerMode] = useState<"open" | "single" | "pingpong">("open");
+  const [lockerMode, setLockerMode] = useState<"open" | "single" | "pingpong">(
+    "open",
+  );
   const [lockerRequirePin, setLockerRequirePin] = useState(false);
   const [lockerStyle, setLockerStyle] = useState(qrStyle.value || "sunset");
   const [lockerError, setLockerError] = useState<string | null>(null);
-  
+
   // New state for Time Bomb visibility (derived from limits being active)
   const [isTimeBombActive, setIsTimeBombActive] = useState(false);
 
@@ -147,7 +149,7 @@ export default function ExtrasModal({
       setLockerMode("open");
       setLockerRequirePin(false);
       resetLockerPin();
-      
+
       // Ensure mutual exclusivity
       setIsTimeBombActive(false);
       setScanLimit(null);
@@ -219,7 +221,7 @@ export default function ExtrasModal({
               onClick={() => {
                 const newState = !isDynamic.value;
                 isDynamic.value = newState;
-                
+
                 if (newState) {
                   // Enable Editable Link -> Disable everything else
                   isBucket.value = false;
@@ -730,7 +732,8 @@ export default function ExtrasModal({
                       Editable Mode Ready
                     </h4>
                     <p class="text-xs text-gray-700 leading-relaxed">
-                      Close this menu and enter your destination URL. We'll create a magic link you can update anytime.
+                      Close this menu and enter your destination URL. We'll
+                      create a magic link you can update anytime.
                     </p>
                   </div>
                 </div>
@@ -815,7 +818,7 @@ export default function ExtrasModal({
                       Time Bomb Settings
                     </h4>
                   </div>
-                  
+
                   <div class="space-y-4">
                     <div class="space-y-2">
                       <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
@@ -865,7 +868,8 @@ export default function ExtrasModal({
 
                     <div class="bg-[#FFE5F0] border-2 border-[#FF69B4] rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
                       💡 <strong>Set to 1 for a self-destruct QR.</strong>{" "}
-                      Higher limits let you reuse and edit anytime. No tracking, ever.
+                      Higher limits let you reuse and edit anytime. No tracking,
+                      ever.
                     </div>
                   </div>
                 </div>

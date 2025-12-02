@@ -1,5 +1,10 @@
 import { useEffect, useState } from "preact/hooks";
-import { getHistory, HistoryItem, removeFromHistory, clearHistory } from "../utils/history.ts";
+import {
+  clearHistory,
+  getHistory,
+  HistoryItem,
+  removeFromHistory,
+} from "../utils/history.ts";
 
 interface HistoryDrawerProps {
   isOpen: boolean;
@@ -7,7 +12,9 @@ interface HistoryDrawerProps {
   onSelect: (item: HistoryItem) => void;
 }
 
-export default function HistoryDrawer({ isOpen, onClose, onSelect }: HistoryDrawerProps) {
+export default function HistoryDrawer(
+  { isOpen, onClose, onSelect }: HistoryDrawerProps,
+) {
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
   useEffect(() => {
@@ -31,12 +38,18 @@ export default function HistoryDrawer({ isOpen, onClose, onSelect }: HistoryDraw
 
   const getIcon = (type: string) => {
     switch (type) {
-      case "url": return "🔗";
-      case "text": return "📝";
-      case "wifi": return "📶";
-      case "file": return "📂";
-      case "dynamic": return "⚡";
-      default: return "📄";
+      case "url":
+        return "🔗";
+      case "text":
+        return "📝";
+      case "wifi":
+        return "📶";
+      case "file":
+        return "📂";
+      case "dynamic":
+        return "⚡";
+      default:
+        return "📄";
     }
   };
 
@@ -45,7 +58,9 @@ export default function HistoryDrawer({ isOpen, onClose, onSelect }: HistoryDraw
       {/* Backdrop */}
       <div
         class={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
         onClick={onClose}
       />
@@ -63,6 +78,7 @@ export default function HistoryDrawer({ isOpen, onClose, onSelect }: HistoryDraw
             <p class="text-xs font-bold opacity-70">Your QR History</p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             class="w-8 h-8 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors"
           >
@@ -72,63 +88,71 @@ export default function HistoryDrawer({ isOpen, onClose, onSelect }: HistoryDraw
 
         {/* List */}
         <div class="flex-1 overflow-y-auto p-4 space-y-3">
-          {history.length === 0 ? (
-            <div class="text-center py-10 opacity-50">
-              <div class="text-6xl mb-4">👻</div>
-              <p class="font-bold">No ghosts here yet.</p>
-              <p class="text-xs">Create some QRs to populate history!</p>
-            </div>
-          ) : (
-            history.map((item) => (
-              <div
-                key={item.id}
-                class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer"
-                onClick={() => {
-                  onSelect(item);
-                  onClose();
-                }}
-              >
-                <div class="flex items-start gap-3">
-                  <div class="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-lg border border-black">
-                    {getIcon(item.type)}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start">
-                      <p class="font-bold text-sm truncate pr-2">
-                        {item.metadata?.title || item.content}
+          {history.length === 0
+            ? (
+              <div class="text-center py-10 opacity-50">
+                <div class="text-6xl mb-4">👻</div>
+                <p class="font-bold">No ghosts here yet.</p>
+                <p class="text-xs">Create some QRs to populate history!</p>
+              </div>
+            )
+            : (
+              history.map((item) => (
+                <div
+                  key={item.id}
+                  class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer"
+                  onClick={() => {
+                    onSelect(item);
+                    onClose();
+                  }}
+                >
+                  <div class="flex items-start gap-3">
+                    <div class="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-lg border border-black">
+                      {getIcon(item.type)}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between items-start">
+                        <p class="font-bold text-sm truncate pr-2">
+                          {item.metadata?.title || item.content}
+                        </p>
+                      </div>
+                      <p class="text-[10px] text-gray-500 font-mono mt-1 truncate">
+                        {item.type === "file" ? "File Locker" : item.content}
+                      </p>
+                      <p class="text-[10px] text-gray-400 mt-1">
+                        {formatDate(item.timestamp)}
                       </p>
                     </div>
-                    <p class="text-[10px] text-gray-500 font-mono mt-1 truncate">
-                      {item.type === "file" ? "File Locker" : item.content}
-                    </p>
-                    <p class="text-[10px] text-gray-400 mt-1">
-                      {formatDate(item.timestamp)}
-                    </p>
                   </div>
-                </div>
 
-                {/* Delete Button (visible on hover/group-hover) */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFromHistory(item.id);
-                  }}
-                  class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
-                  title="Forget this memory"
-                >
-                  ✕
-                </button>
-              </div>
-            ))
-          )}
+                  {/* Delete Button (visible on hover/group-hover) */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromHistory(item.id);
+                    }}
+                    class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
+                    title="Forget this memory"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))
+            )}
         </div>
 
         {/* Footer */}
         {history.length > 0 && (
           <div class="p-4 border-t-4 border-black bg-gray-50">
             <button
+              type="button"
               onClick={() => {
-                if (confirm("Are you sure you want to wipe your history? This cannot be undone.")) {
+                if (
+                  confirm(
+                    "Are you sure you want to wipe your history? This cannot be undone.",
+                  )
+                ) {
                   clearHistory();
                 }
               }}

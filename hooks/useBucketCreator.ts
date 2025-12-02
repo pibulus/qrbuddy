@@ -180,7 +180,9 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       const formData = new FormData();
       formData.append("file", file);
       if (metadata?.title) formData.append("title", metadata.title);
-      if (metadata?.description) formData.append("description", metadata.description);
+      if (metadata?.description) {
+        formData.append("description", metadata.description);
+      }
       if (metadata?.creator) formData.append("creator", metadata.creator);
 
       await apiRequest(

@@ -32,7 +32,8 @@ export default function SmartInputToolbar({
     };
 
     globalThis.addEventListener("history-updated", handleUpdate);
-    return () => globalThis.removeEventListener("history-updated", handleUpdate);
+    return () =>
+      globalThis.removeEventListener("history-updated", handleUpdate);
   }, []);
 
   return (
@@ -50,7 +51,9 @@ export default function SmartInputToolbar({
         <span class="text-lg group-hover:scale-110 transition-transform">
           {templateMeta.icon}
         </span>
-        <span class="hidden sm:inline group-hover:text-blue-700 truncate">Templates</span>
+        <span class="hidden sm:inline group-hover:text-blue-700 truncate">
+          Templates
+        </span>
         <span class="sm:hidden group-hover:text-blue-700">Templates</span>
       </button>
       <button
@@ -68,13 +71,15 @@ export default function SmartInputToolbar({
         <span class="text-lg group-hover:scale-110 transition-transform">
           ✨
         </span>
-        <span class="hidden sm:inline group-hover:text-pink-700">Power Ups</span>
+        <span class="hidden sm:inline group-hover:text-pink-700">
+          Power Ups
+        </span>
         <span class="sm:hidden group-hover:text-pink-700">Extras</span>
         {extrasHasUpdates && (
           <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
         )}
       </button>
-      
+
       {hasHistory && (
         <button
           type="button"

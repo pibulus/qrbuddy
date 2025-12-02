@@ -73,16 +73,17 @@ serve(async (req) => {
     // If bucket.owner_token is 32 chars (hex), it might be a legacy token or a hash?
     // Actually, legacy tokens were UUIDs without hyphens (32 chars hex).
     // SHA-256 hash is 64 chars hex.
-    
+
     let isTokenValid = false;
-    
+
     if (bucket.owner_token.length === 64) {
       // It's a hash, verify incoming token
       const encoder = new TextEncoder();
       const data = encoder.encode(ownerToken);
       const hashBuffer = await crypto.subtle.digest("SHA-256", data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
       isTokenValid = hashHex === bucket.owner_token;
     } else {
       // Legacy plain text token
@@ -90,7 +91,7 @@ serve(async (req) => {
     }
 
     if (!isTokenValid) {
-       return new Response(
+      return new Response(
         JSON.stringify({ error: "Invalid owner token" }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

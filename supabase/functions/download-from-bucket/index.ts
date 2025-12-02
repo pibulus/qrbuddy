@@ -45,7 +45,7 @@ serve(async (req) => {
     } else {
       bucketCode = url.searchParams.get("bucket_code");
       // REMOVED: password from URL query params
-      // password = url.searchParams.get("password"); 
+      // password = url.searchParams.get("password");
     }
 
     if (!bucketCode) {
@@ -61,6 +61,7 @@ serve(async (req) => {
     // Atomic Claim (Fixes Race Condition)
     const { data: bucket, error: bucketError } = await supabase
       .rpc("claim_bucket_download", { p_bucket_code: bucketCode })
+      // deno-lint-ignore no-explicit-any
       .maybeSingle<any>(); // Cast to any or specific interface to fix TS errors
 
     if (bucketError) {
@@ -92,8 +93,10 @@ serve(async (req) => {
     if (bucket.is_password_protected) {
       // Require POST for password protected buckets
       if (req.method !== "POST") {
-         return new Response(
-          JSON.stringify({ error: "Password protected buckets require POST request" }),
+        return new Response(
+          JSON.stringify({
+            error: "Password protected buckets require POST request",
+          }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 405,
@@ -191,7 +194,8 @@ serve(async (req) => {
       responseHeaders["Content-Type"] = bucket.content_metadata.mimetype;
       responseHeaders["Content-Disposition"] =
         `attachment; filename="${bucket.content_metadata.filename}"`;
-      responseHeaders["X-Bucket-Emptied"] = (!bucket.is_reusable || bucket.delete_on_download).toString();
+      responseHeaders["X-Bucket-Emptied"] =
+        (!bucket.is_reusable || bucket.delete_on_download).toString();
       responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
 
       return new Response(fileData, { headers: responseHeaders });

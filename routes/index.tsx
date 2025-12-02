@@ -235,7 +235,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <footer class="mt-14 py-8 border-t-4 border-black">
           <div class="max-w-md mx-auto px-4">
             <div class="flex items-center justify-center gap-4 flex-wrap">
-              <PricingLink label="Upgrade to Pro ✨" />
+              <PricingLink label="Pro ✨" />
               <AboutLink />
               <KofiButton size="sm" />
             </div>
@@ -243,7 +243,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
               <span class="hidden sm:inline">
                 Made by Pablo • Melbourne • Drop a link. Watch it bloom.
               </span>
-              <span class="sm:hidden">Made with 🧁 by Pablo</span>
+              <span class="sm:hidden">Made by Pablo • Melbourne</span>
             </p>
           </div>
         </footer>

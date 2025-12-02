@@ -105,7 +105,7 @@ interface KofiButtonProps {
 }
 
 export function KofiButton({
-  label = "☕ Support",
+  label = "Support ☕",
   size = "md",
 }: KofiButtonProps) {
   const sizeClasses = {

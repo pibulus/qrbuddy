@@ -36,7 +36,7 @@ serve(async (req) => {
     const clientIP = getClientIP(req);
     const rateLimitResult = checkRateLimit(clientIP, {
       windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 3,
+      maxRequests: 10,
     });
 
     if (rateLimitResult.isLimited) {
@@ -64,7 +64,8 @@ serve(async (req) => {
     if (activeLockers !== null && activeLockers >= 3) {
       return new Response(
         JSON.stringify({
-          error: "Limit reached. You can only have 3 active lockers at a time. Delete an old one to create a new one.",
+          error:
+            "Limit reached. You can only have 3 active lockers at a time. Delete an old one to create a new one.",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -117,7 +118,9 @@ serve(async (req) => {
     const tokenData = encoder.encode(ownerToken);
     const tokenHashBuffer = await crypto.subtle.digest("SHA-256", tokenData);
     const tokenHashArray = Array.from(new Uint8Array(tokenHashBuffer));
-    const ownerTokenHash = tokenHashArray.map((b) => b.toString(16).padStart(2, "0"))
+    const ownerTokenHash = tokenHashArray.map((b) =>
+      b.toString(16).padStart(2, "0")
+    )
       .join("");
 
     // Hash password if provided (Salted SHA-256)

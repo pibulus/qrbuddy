@@ -20,7 +20,10 @@ serve(async (req) => {
     const startTime = Date.now();
 
     // 1. Check Database
-    const { error: dbError } = await supabase.from("file_buckets").select("count", { count: "exact", head: true });
+    const { error: dbError } = await supabase.from("file_buckets").select(
+      "count",
+      { count: "exact", head: true },
+    );
     const dbLatency = Date.now() - startTime;
 
     // 2. Check Storage (List buckets)

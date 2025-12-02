@@ -56,7 +56,8 @@ serve(async (req) => {
     if (activeFiles !== null && activeFiles >= 3) {
       return new Response(
         JSON.stringify({
-          error: "Limit reached. You can only have 3 active files at a time. Wait for them to be downloaded or expire.",
+          error:
+            "Limit reached. You can only have 3 active files at a time. Wait for them to be downloaded or expire.",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },

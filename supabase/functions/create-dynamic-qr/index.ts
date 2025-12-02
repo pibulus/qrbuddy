@@ -36,7 +36,7 @@ serve(async (req) => {
     const clientIP = getClientIP(req);
     const rateLimitResult = checkRateLimit(clientIP, {
       windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 20,
+      maxRequests: 10,
     });
 
     if (rateLimitResult.isLimited) {

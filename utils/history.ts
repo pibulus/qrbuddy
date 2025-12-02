@@ -2,7 +2,18 @@ import { IS_BROWSER } from "$fresh/runtime.ts";
 
 export interface HistoryItem {
   id: string;
-  type: "text" | "url" | "wifi" | "email" | "phone" | "vcard" | "file" | "dynamic" | "sms" | "social" | "media";
+  type:
+    | "text"
+    | "url"
+    | "wifi"
+    | "email"
+    | "phone"
+    | "vcard"
+    | "file"
+    | "dynamic"
+    | "sms"
+    | "social"
+    | "media";
   content: string; // The main text/url or a summary
   timestamp: number;
   metadata?: {
@@ -31,7 +42,7 @@ export function addToHistory(item: Omit<HistoryItem, "id" | "timestamp">) {
   if (!IS_BROWSER) return;
 
   const history = getHistory();
-  
+
   // Create new item
   const newItem: HistoryItem = {
     ...item,
@@ -40,14 +51,15 @@ export function addToHistory(item: Omit<HistoryItem, "id" | "timestamp">) {
   };
 
   // Add to top, remove duplicates (by content/type) if they exist to bump them up
-  const filtered = history.filter(h => 
-    !(h.type === newItem.type && h.content === newItem.content && h.metadata?.bucketCode === newItem.metadata?.bucketCode)
+  const filtered = history.filter((h) =>
+    !(h.type === newItem.type && h.content === newItem.content &&
+      h.metadata?.bucketCode === newItem.metadata?.bucketCode)
   );
 
   const updated = [newItem, ...filtered].slice(0, MAX_ITEMS);
 
   localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
-  
+
   // Dispatch event for UI updates
   globalThis.dispatchEvent(new CustomEvent("history-updated"));
 }
