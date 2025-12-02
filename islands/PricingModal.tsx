@@ -98,7 +98,7 @@ export function PricingModal() {
                   id="pricing-modal-title"
                   class="text-2xl sm:text-3xl font-black text-black"
                 >
-                  Choose Your Plan
+                  Go Pro
                 </h2>
                 <p class="text-xs sm:text-sm text-purple-900 mt-1">
                   Start free. Upgrade for power tools and zero branding.
@@ -136,19 +136,13 @@ export function PricingModal() {
                   ))}
                 </ul>
 
-                <button
-                  type="button"
-                  disabled
-                  class="w-full mt-8 px-4 py-3 bg-gray-200 text-gray-600 border-3 border-black rounded-xl font-bold cursor-not-allowed"
-                >
-                  Current Plan
-                </button>
+
               </div>
 
               {/* Pro Tier */}
               <div class="bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-black rounded-2xl p-6 shadow-chunky relative flex flex-col h-full">
                 <div class="absolute -top-3 -right-3 bg-yellow-300 text-black text-xs font-black px-3 py-1 border-3 border-black rounded-full rotate-12 shadow-chunky">
-                  PAY ONCE, OWN FOREVER
+                  Coming Soon
                 </div>
 
                 <div class="text-center mb-4">
@@ -178,9 +172,7 @@ export function PricingModal() {
                   
                   {PRICING_TIERS.pro.upcomingFeatures && (
                     <>
-                      <li class="pt-2 pb-1">
-                        <span class="text-xs font-bold text-purple-800 uppercase tracking-wide">Coming Soon:</span>
-                      </li>
+
                       {PRICING_TIERS.pro.upcomingFeatures.map((feature) => (
                         <li key={feature} class="flex items-start gap-2">
                           <span class="text-purple-400 flex-shrink-0">✨</span>
@@ -191,20 +183,15 @@ export function PricingModal() {
                   )}
                 </ul>
 
-                <button
-                  type="button"
-                  onClick={_handleUpgrade}
-                  disabled={!getPricingGlobal().__PAYMENT_URL_PRO__}
-                  class={`w-full mt-8 px-4 py-3 border-3 rounded-xl font-bold shadow-chunky transition-all ${
-                    getPricingGlobal().__PAYMENT_URL_PRO__
-                      ? "bg-purple-600 text-white border-black hover:bg-purple-700 hover:scale-[1.02] active:scale-95"
-                      : "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed shadow-none"
-                  }`}
-                >
-                  {getPricingGlobal().__PAYMENT_URL_PRO__
-                    ? "Get Pro Lifetime ✨"
-                    : "Pro Tier Coming Soon ✨"}
-                </button>
+                {getPricingGlobal().__PAYMENT_URL_PRO__ && (
+                  <button
+                    type="button"
+                    onClick={_handleUpgrade}
+                    class="w-full mt-8 px-4 py-3 border-3 rounded-xl font-bold shadow-chunky transition-all bg-purple-600 text-white border-black hover:bg-purple-700 hover:scale-[1.02] active:scale-95"
+                  >
+                    Get Pro Lifetime ✨
+                  </button>
+                )}
 
                 <p class="text-xs text-center text-gray-600 mt-3">
                   No subscriptions. No recurring fees. Own it forever.
