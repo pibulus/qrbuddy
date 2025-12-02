@@ -127,13 +127,13 @@ export default function TemplateModal({
                     flex flex-col items-center justify-center p-3 rounded-2xl border-3 transition-all duration-200
                     ${
                       isSelected
-                        ? "bg-black border-black text-white shadow-chunky scale-105 z-10"
+                        ? "bg-purple-100 border-purple-500 text-purple-700 shadow-chunky scale-105 z-10"
                         : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                     }
                   `}
                 >
                   <span class="text-2xl mb-1">{template.icon}</span>
-                  <span class={`text-xs font-bold ${isSelected ? "text-white" : "text-gray-500"}`}>
+                  <span class={`text-xs font-bold ${isSelected ? "text-purple-700" : "text-gray-500"}`}>
                     {template.label}
                   </span>
                 </button>

@@ -417,8 +417,8 @@ export default function SmartInput(
         onShowHistory={() => setShowHistory(true)} // Pass handler to toolbar
       />
 
-      {/* URL/File Input - only shown for URL template */}
-      {selectedTemplate === "url" && (
+      {/* URL/File Input - only shown for URL or Text template */}
+      {(selectedTemplate === "url" || selectedTemplate === "text") && (
         <div
           class="relative"
           onDragEnter={handleDragEnter}
