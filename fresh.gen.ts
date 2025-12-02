@@ -37,6 +37,12 @@ import * as $edit_qr_AnalyticsDashboard from "./islands/edit-qr/AnalyticsDashboa
 import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
 import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
 import * as $edit_qr_RoutingModeSelector from "./islands/edit-qr/RoutingModeSelector.tsx";
+import * as $extras_BatchSettings from "./islands/extras/BatchSettings.tsx";
+import * as $extras_EditableLinkSettings from "./islands/extras/EditableLinkSettings.tsx";
+import * as $extras_LockerSettings from "./islands/extras/LockerSettings.tsx";
+import * as $extras_LogoSettings from "./islands/extras/LogoSettings.tsx";
+import * as $extras_MultiLinkSettings from "./islands/extras/MultiLinkSettings.tsx";
+import * as $extras_TimeBombSettings from "./islands/extras/TimeBombSettings.tsx";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
 import * as $smart_input_StatusBadge from "./islands/smart-input/StatusBadge.tsx";
@@ -88,6 +94,12 @@ const manifest = {
     "./islands/edit-qr/QRStatusCard.tsx": $edit_qr_QRStatusCard,
     "./islands/edit-qr/RoutingConfigForm.tsx": $edit_qr_RoutingConfigForm,
     "./islands/edit-qr/RoutingModeSelector.tsx": $edit_qr_RoutingModeSelector,
+    "./islands/extras/BatchSettings.tsx": $extras_BatchSettings,
+    "./islands/extras/EditableLinkSettings.tsx": $extras_EditableLinkSettings,
+    "./islands/extras/LockerSettings.tsx": $extras_LockerSettings,
+    "./islands/extras/LogoSettings.tsx": $extras_LogoSettings,
+    "./islands/extras/MultiLinkSettings.tsx": $extras_MultiLinkSettings,
+    "./islands/extras/TimeBombSettings.tsx": $extras_TimeBombSettings,
     "./islands/smart-input/FileUploadOptions.tsx":
       $smart_input_FileUploadOptions,
     "./islands/smart-input/SmartInputToolbar.tsx":

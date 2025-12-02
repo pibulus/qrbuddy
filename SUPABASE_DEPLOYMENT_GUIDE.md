@@ -660,19 +660,20 @@ Bookmark this guide for future reference.
 
 ## 🛡️ Release 2025-12-01: Security Hardening
 
-This release introduces critical security improvements for File Buckets and automated cleanup.
+This release introduces critical security improvements for File Buckets and
+automated cleanup.
 
 ### Deployment Steps
 
-1. **Deploy Database Migration:**
-   Apply the new RLS policies to lock down bucket access.
+1. **Deploy Database Migration:** Apply the new RLS policies to lock down bucket
+   access.
    ```bash
    supabase db push
    # Or manually run contents of: supabase/migrations/20251201000000_remediate_rls.sql
    ```
 
-2. **Deploy Edge Functions:**
-   Update all functions to include new validation and security logic.
+2. **Deploy Edge Functions:** Update all functions to include new validation and
+   security logic.
    ```bash
    supabase functions deploy upload-to-bucket
    supabase functions deploy create-bucket
@@ -681,9 +682,9 @@ This release introduces critical security improvements for File Buckets and auto
    supabase functions deploy cleanup-expired
    ```
 
-3. **Schedule Cleanup Job:**
-   The `cleanup-expired` function needs to run periodically.
-   
+3. **Schedule Cleanup Job:** The `cleanup-expired` function needs to run
+   periodically.
+
    **Option A: Via SQL (Recommended)**
    1. Open `supabase/cron.sql`.
    2. Replace `<PROJECT_REF>` and `<SERVICE_ROLE_KEY>` with your actual values.

@@ -9,6 +9,7 @@ import { addToast } from "./ToastManager.tsx";
 interface StyleSelectorProps {
   style: Signal<string>;
   customStyle?: Signal<QRStyle | null>;
+  isHidden?: Signal<boolean>;
 }
 
 const STYLE_DISPLAY = {
@@ -22,10 +23,12 @@ const STYLE_DISPLAY = {
 };
 
 export default function StyleSelector(
-  { style, customStyle }: StyleSelectorProps,
+  { style, customStyle, isHidden }: StyleSelectorProps,
 ) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const isCreatorOpen = useSignal(false);
+
+  if (isHidden?.value) return null;
 
   const handleStyleSelect = (s: string) => {
     style.value = s;

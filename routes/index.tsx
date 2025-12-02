@@ -52,6 +52,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
   const maxDownloads = useSignal(UNLIMITED_SCANS);
   const isBucket = useSignal(false);
   const bucketUrl = useSignal("");
+  const isModalOpen = useSignal(false);
 
   return (
     <>
@@ -184,10 +185,14 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
         {/* Style Selector - Top Right Corner */}
         <div
-          class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50"
+          class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 animate-fade-in"
           aria-label="Style selector"
         >
-          <StyleSelector style={style} customStyle={customStyle} />
+          <StyleSelector
+            style={style}
+            customStyle={customStyle}
+            isHidden={isModalOpen}
+          />
         </div>
 
         <main id="main-content" class="w-full max-w-md space-y-8 sm:space-y-10">
@@ -228,6 +233,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
             bucketUrl={bucketUrl}
             logoUrl={logoUrl}
             qrStyle={style}
+            onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
           />
         </main>
 

@@ -30,6 +30,7 @@ interface SmartInputProps {
   bucketUrl: Signal<string>;
   logoUrl: Signal<string>;
   qrStyle: Signal<string>;
+  onModalStateChange?: (isOpen: boolean) => void;
 }
 
 export default function SmartInput(
@@ -43,6 +44,7 @@ export default function SmartInput(
     bucketUrl,
     logoUrl,
     qrStyle,
+    onModalStateChange,
   }: SmartInputProps,
 ) {
   const [validationState, setValidationState] = useState<
@@ -60,6 +62,11 @@ export default function SmartInput(
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isExtrasModalOpen, setIsExtrasModalOpen] = useState(false);
   const [extrasHasUpdates, setExtrasHasUpdates] = useState(false);
+
+  // Report modal state changes
+  useEffect(() => {
+    onModalStateChange?.(isTemplateModalOpen || isExtrasModalOpen);
+  }, [isTemplateModalOpen, isExtrasModalOpen, onModalStateChange]);
 
   // Dynamic QR options
   const [scanLimit, setScanLimit] = useState<number | null>(null); // Default to null (unlimited)
@@ -437,6 +444,52 @@ export default function SmartInput(
         onShowHistory={() => setShowHistory(true)} // Pass handler to toolbar
       />
 
+      {/* Template Modal - Rendered here for mobile layout flow */}
+      <TemplateModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        selectedTemplate={selectedTemplate}
+        onSelectTemplate={(template) => {
+          setSelectedTemplate(template);
+          setTouched(false);
+          setValidationState("idle");
+        }}
+        url={url}
+      />
+
+      {/* Extras Modal - Rendered here for mobile layout flow */}
+      <ExtrasModal
+        isOpen={isExtrasModalOpen}
+        onClose={() => setIsExtrasModalOpen(false)}
+        isDynamic={isDynamic}
+        isBucket={isBucket}
+        editUrl={editUrl}
+        bucketUrl={bucketUrl}
+        logoUrl={logoUrl}
+        qrStyle={qrStyle}
+        scanLimit={scanLimit}
+        setScanLimit={setScanLimit}
+        expiryDate={expiryDate}
+        setExpiryDate={setExpiryDate}
+        isBatchMode={isBatchMode}
+        setIsBatchMode={setIsBatchMode}
+        isSequential={isSequential}
+        setIsSequential={setIsSequential}
+        sequentialUrls={sequentialUrls}
+        setSequentialUrls={setSequentialUrls}
+        loopSequence={loopSequence}
+        setLoopSequence={setLoopSequence}
+        batchUrls={batchUrls}
+        setBatchUrls={setBatchUrls}
+        isGeneratingBatch={isGeneratingBatch}
+        batchProgress={batchProgress}
+        onGenerateBatch={generateBatchZIP}
+        onLockerConfirm={handleLockerConfirm}
+        onLockerDisable={handleLockerDisable}
+        isCreatingLocker={isCreatingBucket}
+      />
+
+      <div class="relative group">
       {/* URL/File Input - Always visible */}
       <div
         class="relative"
@@ -547,50 +600,7 @@ export default function SmartInput(
           Uploading... {uploadProgress}%
         </p>
       )}
-
-      {/* Template Modal */}
-      <TemplateModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        selectedTemplate={selectedTemplate}
-        onSelectTemplate={(template) => {
-          setSelectedTemplate(template);
-          setTouched(false);
-          setValidationState("idle");
-        }}
-        url={url}
-      />
-      {/* Extras Modal */}
-      <ExtrasModal
-        isOpen={isExtrasModalOpen}
-        onClose={() => setIsExtrasModalOpen(false)}
-        isDynamic={isDynamic}
-        isBucket={isBucket}
-        editUrl={editUrl}
-        bucketUrl={bucketUrl}
-        logoUrl={logoUrl}
-        qrStyle={qrStyle}
-        scanLimit={scanLimit}
-        setScanLimit={setScanLimit}
-        expiryDate={expiryDate}
-        setExpiryDate={setExpiryDate}
-        isBatchMode={isBatchMode}
-        setIsBatchMode={setIsBatchMode}
-        isSequential={isSequential}
-        setIsSequential={setIsSequential}
-        sequentialUrls={sequentialUrls}
-        setSequentialUrls={setSequentialUrls}
-        loopSequence={loopSequence}
-        setLoopSequence={setLoopSequence}
-        batchUrls={batchUrls}
-        setBatchUrls={setBatchUrls}
-        isGeneratingBatch={isGeneratingBatch}
-        batchProgress={batchProgress}
-        onGenerateBatch={generateBatchZIP}
-        onLockerConfirm={handleLockerConfirm}
-        onLockerDisable={handleLockerDisable}
-        isCreatingLocker={isCreatingBucket}
-      />
+    </div>
     </div>
   );
 }

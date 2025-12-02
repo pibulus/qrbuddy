@@ -106,48 +106,59 @@ export default function TemplateModal({
 
         {/* Content - Scrollable */}
         <div class="flex-1 overflow-y-auto p-6">
-          {/* Template Grid */}
-          <div class="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-8">
+          {/* Template Grid/List */}
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-8">
             {(Object.keys(QR_TEMPLATES) as QRTemplateType[]).map((key) => {
               const template = QR_TEMPLATES[key];
               const isSelected = selectedTemplate === key;
 
               return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => {
-                    if (selectedTemplate !== key) {
-                      // Clear URL when switching templates to avoid confusion
-                      url.value = "";
+                <div key={key} class="contents sm:block">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedTemplate !== key) {
+                        url.value = "";
+                      }
+                      onSelectTemplate(key);
+                      haptics.light();
+                    }}
+                    class={`
+                      flex sm:flex-col items-center sm:justify-center p-3 rounded-2xl border-3 transition-all duration-200 w-full text-left sm:text-center gap-4 sm:gap-0
+                      ${
+                      isSelected
+                        ? "bg-purple-100 border-purple-500 text-purple-700 shadow-chunky scale-[1.02] sm:scale-105 z-10"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                     }
-                    onSelectTemplate(key);
-                    haptics.light();
-                  }}
-                  class={`
-                    flex flex-col items-center justify-center p-3 rounded-2xl border-3 transition-all duration-200
-                    ${
-                    isSelected
-                      ? "bg-purple-100 border-purple-500 text-purple-700 shadow-chunky scale-105 z-10"
-                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                  }
-                  `}
-                >
-                  <span class="text-2xl mb-1">{template.icon}</span>
-                  <span
-                    class={`text-xs font-bold ${
-                      isSelected ? "text-purple-700" : "text-gray-500"
-                    }`}
+                    `}
                   >
-                    {template.label}
-                  </span>
-                </button>
+                    <span class="text-2xl sm:mb-1">{template.icon}</span>
+                    <span
+                      class={`text-lg sm:text-xs font-bold ${
+                        isSelected ? "text-purple-700" : "text-gray-500"
+                      }`}
+                    >
+                      {template.label}
+                    </span>
+                    {/* Mobile Chevron */}
+                    <span class="sm:hidden ml-auto text-gray-400">
+                      {isSelected ? "▼" : "›"}
+                    </span>
+                  </button>
+
+                  {/* Mobile: Inline Form Accordion */}
+                  {isSelected && (
+                    <div class="sm:hidden mt-2 mb-4 animate-slide-down pl-4 border-l-4 border-purple-200">
+                      {renderTemplateForm()}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
 
-          {/* Active Form */}
-          <div class="bg-white rounded-xl">
+          {/* Desktop: Active Form at Bottom */}
+          <div class="hidden sm:block bg-white rounded-xl">
             {renderTemplateForm()}
           </div>
         </div>
