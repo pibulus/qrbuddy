@@ -8,6 +8,7 @@ import EmailForm from "./templates/EmailForm.tsx";
 import WebsiteForm from "./templates/WebsiteForm.tsx";
 import SocialHubForm from "./templates/SocialHubForm.tsx";
 import MediaHubForm from "./templates/MediaHubForm.tsx";
+import { addToast } from "./ToastManager.tsx";
 
 interface Props {
   isOpen: boolean;
@@ -149,9 +150,13 @@ export default function TemplateModal({
 
         {/* Footer */}
         <div class="p-6 border-t-2 border-gray-100 bg-gray-50 rounded-b-3xl">
+
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              addToast("Template ready! ✨");
+            }}
             class="w-full py-4 bg-black text-white text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             Done

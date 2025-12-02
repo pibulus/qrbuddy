@@ -232,7 +232,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         </main>
 
         {/* Footer */}
-        <footer class="mt-16 py-8 border-t-4 border-black">
+        <footer class="mt-14 py-8 border-t-4 border-black">
           <div class="max-w-md mx-auto px-4">
             <div class="flex items-center justify-center gap-4 flex-wrap">
               <PricingLink label="Upgrade to Pro ✨" />

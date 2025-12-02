@@ -4,6 +4,7 @@ import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import GradientCreator from "./GradientCreator.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
+import { addToast } from "./ToastManager.tsx";
 
 interface StyleSelectorProps {
   style: Signal<string>;
@@ -31,6 +32,7 @@ export default function StyleSelector(
     haptics.light();
     sounds.click();
     setIsGalleryOpen(false);
+    addToast(`Style applied: ${STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY].name} 🎨`);
   };
 
   const handleCustomGradient = (gradient: QRStyle) => {

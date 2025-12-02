@@ -2,6 +2,7 @@ import { Signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import LogoUploader from "./LogoUploader.tsx";
+import { addToast } from "./ToastManager.tsx";
 import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
 import { useKeypad } from "../hooks/useKeypad.ts";
 
@@ -186,9 +187,13 @@ export default function ExtrasModal({
               Editable links, file buckets, custom logos.
             </p>
           </div>
+
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              addToast("Power Ups updated! 🚀");
+            }}
             class="text-3xl font-black text-gray-400 hover:text-gray-900 hover:rotate-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
             aria-label="Close power ups modal"
           >
