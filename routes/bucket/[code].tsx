@@ -18,6 +18,7 @@ interface BucketData {
   style: string;
   is_password_protected: boolean;
   is_reusable: boolean;
+  delete_on_download: boolean;
   is_empty: boolean;
   content_type: string | null;
   content_metadata: BucketContentMetadata | null;
@@ -140,6 +141,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
             contentMetadata={bucket.content_metadata}
             isPasswordProtected={bucket.is_password_protected}
             isReusable={bucket.is_reusable}
+            deleteOnDownload={bucket.delete_on_download}
             supabaseUrl={supabaseUrl}
           />
 

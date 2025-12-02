@@ -6,8 +6,8 @@ import { assertEquals, assertExists } from "https://deno.land/std@0.168.0/testin
 // Or we can mock the fetch calls if we want unit tests.
 // Given the environment, let's try to write an integration test that hits the functions.
 
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhyc2JoY2FpaWNxaWJsaGh1enp1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDI0MTg3MCwiZXhwIjoyMDc5NjAxODcwfQ.yoYq4piK7AvH4poClt2EB0HMn9UeGQjT_Psgy366z34";
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://xrsbhcaiicqiblhhuzzu.supabase.co";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "http://localhost:54321";
 const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
 // We'll use a simple fetch wrapper
