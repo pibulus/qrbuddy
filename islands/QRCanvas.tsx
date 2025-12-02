@@ -5,6 +5,7 @@ import { QR_STYLES } from "../utils/qr-styles.ts";
 import { addToast } from "./ToastManager.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
+import { addToHistory } from "../utils/history.ts";
 
 interface QRCanvasProps {
   url: Signal<string>;
@@ -73,6 +74,17 @@ export default function QRCanvas(
       name: `qrbuddy-${style.value}-${Date.now()}`,
       extension: "png",
     });
+
+    // Save to history (Time Machine)
+    if (url.value) {
+      addToHistory({
+        type: "url", // Generic type for static QRs
+        content: url.value,
+        metadata: {
+          title: url.value.length > 30 ? url.value.substring(0, 30) + "..." : url.value,
+        }
+      });
+    }
 
     // Copy URL to clipboard
     if (url.value) {

@@ -358,7 +358,7 @@ export default function SmartInput(
 
     // For dynamic QRs (Redirect to Edit Page)
     if (item.metadata?.dynamicUrl) {
-      globalThis.location.href = item.metadata.dynamicUrl;
+      globalThis.location.href = item.metadata.dynamicUrl as string;
       return;
     }
 
@@ -419,9 +419,8 @@ export default function SmartInput(
         onShowHistory={() => setShowHistory(true)} // Pass handler to toolbar
       />
 
-      {/* URL/File Input - only shown for URL or Text template */}
-      {(selectedTemplate === "url" || selectedTemplate === "text") && (
-        <div
+      {/* URL/File Input - Always visible */}
+      <div
           class="relative"
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
@@ -487,7 +486,6 @@ export default function SmartInput(
             </div>
           )}
         </div>
-      )}
 
 
 
