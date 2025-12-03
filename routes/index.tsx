@@ -10,7 +10,8 @@ import ToastManager from "../islands/ToastManager.tsx";
 import Analytics from "../islands/Analytics.tsx";
 import { AboutLink, AboutModal } from "../islands/AboutModal.tsx";
 import { KofiButton, KofiModal } from "../islands/KofiModal.tsx";
-import { PricingLink, PricingModal } from "../islands/PricingModal.tsx";
+// import { PricingLink, PricingModal } from "../islands/PricingModal.tsx";
+import { PricingModal } from "../islands/PricingModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { getSupabaseUrl } from "../utils/api.ts";
@@ -241,7 +242,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <footer class="mt-14 py-8 border-t-4 border-black">
           <div class="max-w-md mx-auto px-4">
             <div class="flex items-center justify-center gap-4 flex-wrap">
-              <PricingLink label="Pro ✨" />
+              {/* <PricingLink label="Pro ✨" /> */}
               <AboutLink />
               <KofiButton size="sm" />
             </div>
