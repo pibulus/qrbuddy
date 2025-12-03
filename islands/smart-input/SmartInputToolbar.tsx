@@ -74,7 +74,7 @@ export default function SmartInputToolbar({
         <span class="hidden sm:inline group-hover:text-pink-700">
           Power Ups
         </span>
-        <span class="sm:hidden group-hover:text-pink-700">Extras</span>
+        <span class="sm:hidden group-hover:text-pink-700">Power Ups</span>
         {extrasHasUpdates && (
           <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
         )}
