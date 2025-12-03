@@ -45,7 +45,6 @@ import * as $extras_MultiLinkSettings from "./islands/extras/MultiLinkSettings.t
 import * as $extras_TimeBombSettings from "./islands/extras/TimeBombSettings.tsx";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
-import * as $smart_input_StatusBadge from "./islands/smart-input/StatusBadge.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
 import * as $templates_MediaHubForm from "./islands/templates/MediaHubForm.tsx";
 import * as $templates_SMSForm from "./islands/templates/SMSForm.tsx";
@@ -104,7 +103,6 @@ const manifest = {
       $smart_input_FileUploadOptions,
     "./islands/smart-input/SmartInputToolbar.tsx":
       $smart_input_SmartInputToolbar,
-    "./islands/smart-input/StatusBadge.tsx": $smart_input_StatusBadge,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
     "./islands/templates/MediaHubForm.tsx": $templates_MediaHubForm,
     "./islands/templates/SMSForm.tsx": $templates_SMSForm,
