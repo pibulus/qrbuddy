@@ -70,6 +70,8 @@ serve(async (req) => {
       formData.get("maxDownloads") as string || String(DEFAULT_MAX_DOWNLOADS),
       10,
     );
+    const theme = (formData.get("theme") as string) || "sunset";
+
     const maxDownloads =
       Number.isFinite(parsedMaxDownloads) && parsedMaxDownloads > 0
         ? Math.min(parsedMaxDownloads, MAX_DOWNLOADS_LIMIT)
@@ -200,6 +202,7 @@ serve(async (req) => {
         size: firstFile.size, // Legacy column
         mime_type: firstFile.type, // Legacy column
         files: uploadedFiles, // NEW JSON column
+        theme: theme,
         created_at: new Date().toISOString(),
         accessed: false,
         max_downloads: maxDownloads,

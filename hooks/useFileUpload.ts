@@ -17,6 +17,7 @@ interface UseFileUploadProps {
   url: Signal<string>;
   isDestructible: Signal<boolean>;
   maxDownloads: Signal<number>;
+  qrStyle?: Signal<string>; // Add qrStyle prop
   setInputType: (type: "text" | "file") => void;
   setValidationState: (state: "idle" | "valid" | "invalid") => void;
   setTouched: (touched: boolean) => void;
@@ -27,6 +28,7 @@ export function useFileUpload(
     url,
     isDestructible,
     maxDownloads,
+    qrStyle,
     setInputType,
     setValidationState,
     setTouched,
@@ -59,6 +61,9 @@ export function useFileUpload(
         formData.append("file", file);
       });
       formData.append("maxDownloads", maxDownloads.value.toString());
+      if (qrStyle?.value) {
+        formData.append("theme", qrStyle.value);
+      }
 
       // Simulate progress (real progress needs XHR)
       const progressInterval = setInterval(() => {
@@ -92,6 +97,13 @@ export function useFileUpload(
       setValidationState("valid");
       setTouched(true);
 
+      // Auto-Copy URL
+      try {
+        await navigator.clipboard.writeText(data.url);
+      } catch (err) {
+        console.warn("Auto-copy failed:", err);
+      }
+
       // Success haptic
       haptics.success();
 
@@ -113,6 +125,9 @@ export function useFileUpload(
           ? `✅ ${files[0].name} uploaded! Limit: ${scanText}`
           : `✅ ${files[0].name} uploaded! Ready to share ✨`;
       }
+
+      // Append copy notice
+      successMessage += " (Link copied!)";
 
       const event = new CustomEvent("show-toast", {
         detail: {

@@ -111,6 +111,7 @@ export default function SmartInput(
       url,
       isDestructible,
       maxDownloads,
+      qrStyle, // Pass theme
       setInputType: () => {}, // SmartInput doesn't directly manage inputType state for file uploads
       setValidationState,
       setTouched,

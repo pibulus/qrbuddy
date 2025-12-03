@@ -64,6 +64,7 @@ serve(async (req) => {
         fileSize: file.size,
         mimeType: file.mime_type,
         files: file.files, // Return multi-file array
+        theme: file.theme,
         maxDownloads,
         downloadCount,
         remainingDownloads,
