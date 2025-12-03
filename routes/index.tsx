@@ -8,6 +8,7 @@ import EasterEggs from "../islands/EasterEggs.tsx";
 import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
 import Analytics from "../islands/Analytics.tsx";
+
 import { AboutLink, AboutModal } from "../islands/AboutModal.tsx";
 import { KofiButton, KofiModal } from "../islands/KofiModal.tsx";
 // import { PricingLink, PricingModal } from "../islands/PricingModal.tsx";
@@ -19,7 +20,7 @@ import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import RotatingTitle from "../islands/RotatingTitle.tsx";
 
 interface HomeProps {
-  posthogKey?: string;
+
   paymentUrlPro?: string;
   supabaseUrl?: string;
   supabaseAnonKey?: string;
@@ -27,13 +28,13 @@ interface HomeProps {
 
 export const handler: Handlers<HomeProps> = {
   GET(_req, ctx) {
-    const posthogKey = Deno.env.get("POSTHOG_KEY");
+
     const paymentUrlPro = Deno.env.get("PAYMENT_URL_PRO");
     const supabaseUrl = getSupabaseUrl();
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
     return ctx.render({
-      posthogKey,
+
       paymentUrlPro,
       supabaseUrl: supabaseUrl ?? undefined,
       supabaseAnonKey: supabaseAnonKey ?? undefined,
@@ -116,6 +117,14 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="QRBuddy" />
 
+        {/* Umami Analytics */}
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="280ec8ac-9eb5-4d06-89fe-369960e40b5d"
+        >
+        </script>
+
         {/* Inject env vars for client-side */}
         <script>
           {`
@@ -175,13 +184,13 @@ export default function Home({ data }: PageProps<HomeProps>) {
       <div class="min-h-screen flex flex-col items-center justify-start sm:justify-center pt-12 sm:pt-6 p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
         <ToastManager />
         <Analytics
-          posthogKey={data?.posthogKey}
           url={url}
           style={style}
           isDynamic={isDynamic}
           isDestructible={isDestructible}
           logoUrl={logoUrl}
         />
+
         <EasterEggs url={url} style={style} />
 
         {/* Style Selector - Top Right Corner */}

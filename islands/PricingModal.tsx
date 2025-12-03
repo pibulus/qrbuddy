@@ -3,14 +3,17 @@ import { signal } from "@preact/signals";
 import { PRICING_TIERS } from "../types/pricing.ts";
 import { addToast } from "./ToastManager.tsx";
 
-type PostHogClient = {
-  capture: (event: string, props?: Record<string, unknown>) => void;
-};
-
 type PricingGlobal = typeof globalThis & {
-  posthog?: PostHogClient;
   __PAYMENT_URL_PRO__?: string;
 };
+
+declare global {
+  interface Window {
+    umami?: {
+      track: (event: string, data?: Record<string, unknown>) => void;
+    };
+  }
+}
 
 const getPricingGlobal = (): PricingGlobal => globalThis as PricingGlobal;
 
@@ -52,8 +55,10 @@ export function PricingModal() {
     // Track conversion intent
     const globalScope = getPricingGlobal();
 
-    if (globalScope.posthog) {
-      globalScope.posthog.capture("upgrade_clicked", {
+    // deno-lint-ignore no-explicit-any
+    const win = globalThis as any;
+    if (win.umami) {
+      win.umami.track("upgrade_clicked", {
         plan: "pro",
         billing: "lifetime",
       });
