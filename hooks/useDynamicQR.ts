@@ -12,11 +12,25 @@ interface UseDynamicQRProps {
   expiryDate: string;
   routingMode?: "simple" | "sequential";
   routingConfig?: { urls: string[]; loop: boolean };
+  splashConfig?: {
+    enabled: boolean;
+    title: string;
+    buttonText: string;
+    imageUrl?: string;
+    description?: string;
+  } | null;
 }
 
 export function useDynamicQR(
-  { url, editUrl, scanLimit, expiryDate, routingMode, routingConfig }:
-    UseDynamicQRProps,
+  {
+    url,
+    editUrl,
+    scanLimit,
+    expiryDate,
+    routingMode,
+    routingConfig,
+    splashConfig,
+  }: UseDynamicQRProps,
 ) {
   const [isCreating, setIsCreating] = useState(false);
 
@@ -34,6 +48,9 @@ export function useDynamicQR(
       if (expiryDate) body.expires_at = new Date(expiryDate).toISOString();
       if (routingMode) body.routing_mode = routingMode;
       if (routingConfig) body.routing_config = routingConfig;
+      if (splashConfig && splashConfig.enabled) {
+        body.splash_config = splashConfig;
+      }
 
       // Use shared API helper (automatically includes auth headers)
       const data = await apiRequest<{

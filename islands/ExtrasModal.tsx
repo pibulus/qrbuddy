@@ -9,6 +9,7 @@ import LogoSettings from "./extras/LogoSettings.tsx";
 import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
 import MultiLinkSettings from "./extras/MultiLinkSettings.tsx";
 import TimeBombSettings from "./extras/TimeBombSettings.tsx";
+import SplashSettings from "./extras/SplashSettings.tsx";
 
 interface ExtrasModalProps {
   isOpen: boolean;
@@ -40,6 +41,13 @@ interface ExtrasModalProps {
   onLockerConfirm: (options: CreateBucketOptions) => Promise<boolean>;
   onLockerDisable: () => void;
   isCreatingLocker: boolean;
+  splashConfig: Signal<{
+    enabled: boolean;
+    title: string;
+    buttonText: string;
+    imageUrl?: string;
+    description?: string;
+  } | null>;
 }
 
 export default function ExtrasModal({
@@ -71,6 +79,7 @@ export default function ExtrasModal({
   onLockerConfirm,
   onLockerDisable,
   isCreatingLocker,
+  splashConfig,
 }: ExtrasModalProps) {
   const [showLogoUploader, setShowLogoUploader] = useState(false);
   const [lockerExpanded, setLockerExpanded] = useState(false);
@@ -92,6 +101,7 @@ export default function ExtrasModal({
   }, [isOpen]);
 
   const lockerActive = isBucket.value && bucketUrl.value !== "";
+  const splashActive = splashConfig.value?.enabled ?? false;
 
   const handleLockerCardClick = () => {
     setLockerExpanded((prev) => !prev);
@@ -105,6 +115,7 @@ export default function ExtrasModal({
       setIsTimeBombActive(false);
       setScanLimit(null);
       setExpiryDate("");
+      splashConfig.value = null;
     }
     return success;
   };
@@ -179,17 +190,19 @@ export default function ExtrasModal({
                     setIsTimeBombActive(false);
                     setScanLimit(null);
                     setExpiryDate("");
+                    splashConfig.value = null;
                   } else {
                     // Disable Editable Link -> Disable dependent features too
                     setIsSequential(false);
                     setIsTimeBombActive(false);
                     setScanLimit(null);
                     setExpiryDate("");
+                    splashConfig.value = null;
                   }
                   haptics.light();
                 }}
                 class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
-                  isDynamic.value && !isSequential && !isTimeBombActive
+                  isDynamic.value && !isSequential && !isTimeBombActive && !splashActive
                     ? "bg-gradient-to-br from-[#FFB3D9] to-[#C9A0DC] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
@@ -203,7 +216,7 @@ export default function ExtrasModal({
                 <div class="text-xs text-gray-600 leading-snug mt-1">
                   Print once, update forever. Perfect for menus, events, or merch.
                 </div>
-                {isDynamic.value && !isSequential && !isTimeBombActive && (
+                {isDynamic.value && !isSequential && !isTimeBombActive && !splashActive && (
                   <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#9370DB]">
                     <span>✓</span>
                     Active
@@ -212,7 +225,7 @@ export default function ExtrasModal({
               </button>
 
               {/* Mobile: Editable Link Settings */}
-              {isDynamic.value && !isSequential && !isTimeBombActive && (
+              {isDynamic.value && !isSequential && !isTimeBombActive && !splashActive && (
                 <div class="sm:hidden mt-3 mb-4 animate-slide-down">
                   <EditableLinkSettings
                     editUrl={editUrl}
@@ -283,6 +296,7 @@ export default function ExtrasModal({
                     setIsTimeBombActive(false);
                     setScanLimit(null);
                     setExpiryDate("");
+                    splashConfig.value = null;
                   }
                   haptics.light();
                 }}
@@ -358,7 +372,67 @@ export default function ExtrasModal({
               )}
             </div>
 
-            {/* 5. Multi-Link (Sequential) */}
+            {/* 5. Splash Screen (NEW) */}
+            <div class="contents sm:block">
+              <button
+                type="button"
+                onClick={() => {
+                  const newState = !splashActive;
+                  if (newState) {
+                    isDynamic.value = true; // Must be dynamic
+                    isBucket.value = false;
+                    bucketUrl.value = "";
+                    setLockerExpanded(false);
+                    setIsBatchMode(false);
+                    // Exclusive: Disable other dynamic modes? No, Splash can stack!
+                    // But for MVP UI simplicity, let's keep it somewhat exclusive or just stack it.
+                    // Let's allow stacking with Time Bomb and Multi-Link eventually.
+                    // For now, let's just enable it.
+                    splashConfig.value = {
+                      enabled: true,
+                      title: "Welcome!",
+                      buttonText: "Continue",
+                    };
+                  } else {
+                    splashConfig.value = null;
+                    // If no other dynamic features are active, should we disable dynamic?
+                    // Let's keep dynamic active if it was already active.
+                    if (!isSequential && !isTimeBombActive && !editUrl.value) {
+                      isDynamic.value = false;
+                    }
+                  }
+                  haptics.light();
+                }}
+                class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
+                  splashActive
+                    ? "bg-gradient-to-br from-green-100 to-emerald-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
+                    : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
+                }`}
+              >
+                <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                  ✨
+                </div>
+                <div class="font-black text-sm text-gray-900">Splash Page</div>
+                <div class="text-xs text-gray-600 leading-snug mt-1">
+                  Show a welcome screen before redirecting.
+                </div>
+                {splashActive && (
+                  <div class="mt-2 flex items-center gap-1 text-xs font-bold text-emerald-600">
+                    <span>✓</span>
+                    Active
+                  </div>
+                )}
+              </button>
+
+              {/* Mobile: Splash Settings */}
+              {splashActive && (
+                <div class="sm:hidden mt-3 mb-4 animate-slide-down">
+                  <SplashSettings splashConfig={splashConfig} />
+                </div>
+              )}
+            </div>
+
+            {/* 6. Multi-Link (Sequential) */}
             <div class="contents sm:block">
               <button
                 type="button"
@@ -376,7 +450,7 @@ export default function ExtrasModal({
                     setScanLimit(null);
                     setExpiryDate("");
                   } else {
-                    isDynamic.value = false;
+                    // isDynamic.value = false; // Don't disable dynamic, might have other features
                   }
                   haptics.light();
                 }}
@@ -414,7 +488,7 @@ export default function ExtrasModal({
               )}
             </div>
 
-            {/* 6. Time Bomb (Limits) */}
+            {/* 7. Time Bomb (Limits) */}
             <div class="contents sm:block">
               <button
                 type="button"
@@ -430,7 +504,7 @@ export default function ExtrasModal({
                     // Exclusive: Disable Multi-Link
                     setIsSequential(false);
                   } else {
-                    isDynamic.value = false;
+                    // isDynamic.value = false;
                     setScanLimit(null);
                     setExpiryDate("");
                   }
@@ -494,13 +568,14 @@ export default function ExtrasModal({
               />
             )}
             {showLogoUploader && <LogoSettings logoUrl={logoUrl} />}
-            {isDynamic.value && !isSequential && !isTimeBombActive && (
+            {isDynamic.value && !isSequential && !isTimeBombActive && !splashActive && (
               <EditableLinkSettings
                 editUrl={editUrl}
                 isSequential={isSequential}
                 isTimeBombActive={isTimeBombActive}
               />
             )}
+            {splashActive && <SplashSettings splashConfig={splashConfig} />}
             {isSequential && (
               <MultiLinkSettings
                 sequentialUrls={sequentialUrls}

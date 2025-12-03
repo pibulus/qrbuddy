@@ -42,6 +42,7 @@ import * as $extras_EditableLinkSettings from "./islands/extras/EditableLinkSett
 import * as $extras_LockerSettings from "./islands/extras/LockerSettings.tsx";
 import * as $extras_LogoSettings from "./islands/extras/LogoSettings.tsx";
 import * as $extras_MultiLinkSettings from "./islands/extras/MultiLinkSettings.tsx";
+import * as $extras_SplashSettings from "./islands/extras/SplashSettings.tsx";
 import * as $extras_TimeBombSettings from "./islands/extras/TimeBombSettings.tsx";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
@@ -98,6 +99,7 @@ const manifest = {
     "./islands/extras/LockerSettings.tsx": $extras_LockerSettings,
     "./islands/extras/LogoSettings.tsx": $extras_LogoSettings,
     "./islands/extras/MultiLinkSettings.tsx": $extras_MultiLinkSettings,
+    "./islands/extras/SplashSettings.tsx": $extras_SplashSettings,
     "./islands/extras/TimeBombSettings.tsx": $extras_TimeBombSettings,
     "./islands/smart-input/FileUploadOptions.tsx":
       $smart_input_FileUploadOptions,

@@ -10,18 +10,6 @@ import {
 } from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-/**
- * Validate URL to prevent open redirect attacks
- * Only allows http: and https: protocols
- */
-function isValidUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return ["http:", "https:"].includes(parsed.protocol);
-  } catch {
-    return false;
-  }
-}
 
 serve(async (req) => {
   // Handle CORS
@@ -56,6 +44,7 @@ serve(async (req) => {
       is_active,
       routing_mode,
       routing_config,
+      splash_config,
     } = body;
 
     if (!owner_token) {
@@ -85,13 +74,32 @@ serve(async (req) => {
       );
     }
 
+    // Helper function to validate URLs
+    // Relaxed validation to allow "weird utility" protocols
+    const isValidUrl = (url: string): boolean => {
+      try {
+        const parsed = new URL(url);
+        return [
+          "http:",
+          "https:",
+          "wifi:",
+          "mailto:",
+          "tel:",
+          "sms:",
+          "facetime:",
+        ].includes(parsed.protocol);
+      } catch {
+        return false;
+      }
+    };
+
     // Validate destination_url if provided
     if (destination_url !== undefined) {
       if (!isValidUrl(destination_url)) {
         return new Response(
           JSON.stringify({
             error:
-              "Invalid URL format or protocol. Only HTTP and HTTPS are allowed.",
+              "Invalid URL format or protocol. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.",
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -131,7 +139,7 @@ serve(async (req) => {
             return new Response(
               JSON.stringify({
                 error:
-                  `Invalid URL in routing config: ${url}. Only HTTP and HTTPS are allowed.`,
+                  `Invalid URL in routing config: ${url}. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.`,
               }),
               {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -154,7 +162,7 @@ serve(async (req) => {
     }
 
     // Build update object (only update provided fields)
-    const updates: Record<string, string | number | null> = {};
+    const updates: Record<string, string | number | null | object> = {};
     if (destination_url !== undefined) {
       updates.destination_url = destination_url;
     }
@@ -163,6 +171,7 @@ serve(async (req) => {
     if (is_active !== undefined) updates.is_active = is_active;
     if (routing_mode !== undefined) updates.routing_mode = routing_mode;
     if (routing_config !== undefined) updates.routing_config = routing_config;
+    if (splash_config !== undefined) updates.splash_config = splash_config;
 
     // Update the record
     const { data, error: updateError } = await supabase

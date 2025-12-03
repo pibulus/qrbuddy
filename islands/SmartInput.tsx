@@ -1,4 +1,4 @@
-import { Signal } from "@preact/signals";
+import { Signal, useSignal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { QRTemplateType } from "../types/qr-templates.ts";
@@ -81,6 +81,15 @@ export default function SmartInput(
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [batchUrls, setBatchUrls] = useState("");
 
+  // Splash Page options
+  const splashConfig = useSignal<{
+    enabled: boolean;
+    title: string;
+    buttonText: string;
+    imageUrl?: string;
+    description?: string;
+  } | null>(null);
+
   // Custom hooks
   const { isCreating: isCreatingDynamic, createDynamicQR } = useDynamicQR({
     url,
@@ -94,6 +103,7 @@ export default function SmartInput(
         loop: loopSequence,
       }
       : undefined,
+    splashConfig: splashConfig.value,
   });
 
   const { isUploading, uploadProgress, uploadError, uploadFile } =
@@ -128,6 +138,7 @@ export default function SmartInput(
     setIsSequential(false);
     setScanLimit(null);
     setExpiryDate("");
+    splashConfig.value = null; // Reset splash
 
     const result = await createBucket({
       ...options,
@@ -487,6 +498,7 @@ export default function SmartInput(
         onLockerConfirm={handleLockerConfirm}
         onLockerDisable={handleLockerDisable}
         isCreatingLocker={isCreatingBucket}
+        splashConfig={splashConfig}
       />
 
       <div class="relative group">

@@ -10,6 +10,7 @@ interface FileData {
   downloadCount: number;
   remainingDownloads: number;
   isExpired: boolean;
+  mimeType?: string;
 }
 
 export const handler: Handlers = {
@@ -73,12 +74,25 @@ export const handler: Handlers = {
 };
 
 export default function FilePage({ data }: PageProps<FileData>) {
-  const { fileId, fileName, fileSize, remainingDownloads, maxDownloads } = data;
+  const {
+    fileId,
+    fileName,
+    fileSize,
+    remainingDownloads,
+    maxDownloads,
+    mimeType,
+  } = data;
 
   const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
   const isUnlimited = maxDownloads >= 999999;
   const isOneTime = maxDownloads === 1;
   const downloadUrl = `/api/download-file?id=${fileId}`;
+
+  // Helper to determine media type
+  const isImage = mimeType?.startsWith("image/");
+  const isAudio = mimeType?.startsWith("audio/");
+  const isVideo = mimeType?.startsWith("video/");
+  const showPreview = isUnlimited && (isImage || isAudio || isVideo);
 
   return (
     <>
@@ -107,6 +121,33 @@ export default function FilePage({ data }: PageProps<FileData>) {
                   : "This message will self-destruct..."}
               </p>
             </div>
+
+            {/* Media Preview (Only for unlimited files) */}
+            {showPreview && (
+              <div class="rounded-xl overflow-hidden border-4 border-black bg-gray-100 mb-4">
+                {isImage && (
+                  <img
+                    src={downloadUrl}
+                    alt={fileName}
+                    class="w-full h-auto object-contain max-h-64"
+                  />
+                )}
+                {isAudio && (
+                  <div class="p-4">
+                    <audio controls class="w-full">
+                      <source src={downloadUrl} type={mimeType} />
+                      Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                )}
+                {isVideo && (
+                  <video controls class="w-full max-h-64 bg-black">
+                    <source src={downloadUrl} type={mimeType} />
+                    Your browser does not support the video element.
+                  </video>
+                )}
+              </div>
+            )}
 
             {/* File info */}
             <div class="py-6 px-6 bg-gradient-to-r from-red-50 to-orange-50 border-3 border-red-200 rounded-xl space-y-3">
@@ -154,6 +195,7 @@ export default function FilePage({ data }: PageProps<FileData>) {
             {/* Download button */}
             <a
               href={downloadUrl}
+              download={fileName}
               class={`inline-block w-full px-6 py-4 ${
                 isUnlimited
                   ? "bg-gradient-to-r from-blue-500 to-purple-500"

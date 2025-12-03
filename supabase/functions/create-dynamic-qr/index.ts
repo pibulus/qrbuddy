@@ -56,6 +56,7 @@ serve(async (req) => {
       password_hash,
       routing_mode,
       routing_config,
+      splash_config,
     } = body;
 
     if (!destination_url) {
@@ -69,21 +70,30 @@ serve(async (req) => {
     }
 
     // Helper function to validate URLs
+    // Relaxed validation to allow "weird utility" protocols
     const isValidUrl = (url: string): boolean => {
       try {
         const parsed = new URL(url);
-        return ["http:", "https:"].includes(parsed.protocol);
+        return [
+          "http:",
+          "https:",
+          "wifi:",
+          "mailto:",
+          "tel:",
+          "sms:",
+          "facetime:",
+        ].includes(parsed.protocol);
       } catch {
         return false;
       }
     };
 
-    // Validate destination_url format and protocol to prevent XSS via javascript: or data: URLs
+    // Validate destination_url format and protocol
     if (!isValidUrl(destination_url)) {
       return new Response(
         JSON.stringify({
           error:
-            "Invalid URL format or protocol. Only HTTP and HTTPS are allowed.",
+            "Invalid URL format or protocol. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -121,7 +131,7 @@ serve(async (req) => {
             return new Response(
               JSON.stringify({
                 error:
-                  `Invalid URL in routing config: ${url}. Only HTTP and HTTPS are allowed.`,
+                  `Invalid URL in routing config: ${url}. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.`,
               }),
               {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -173,6 +183,7 @@ serve(async (req) => {
         password_hash: password_hash || null,
         routing_mode: routing_mode || "simple",
         routing_config: routing_config || null,
+        splash_config: splash_config || null,
         owner_token: ownerToken,
         is_active: true,
       })

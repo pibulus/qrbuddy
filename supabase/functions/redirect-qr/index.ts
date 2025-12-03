@@ -10,14 +10,23 @@ import {
 } from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
+
 /**
  * Validate URL for redirect to prevent open redirect attacks
- * Only allows http: and https: protocols
+ * Relaxed validation to allow "weird utility" protocols
  */
 function isValidRedirectUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return ["http:", "https:"].includes(parsed.protocol);
+    return [
+      "http:",
+      "https:",
+      "wifi:",
+      "mailto:",
+      "tel:",
+      "sms:",
+      "facetime:",
+    ].includes(parsed.protocol);
   } catch {
     return false;
   }
@@ -228,6 +237,7 @@ serve(async (req) => {
       }
     }
 
+
     // Validate URL before redirecting to prevent open redirect attacks
     if (!isValidRedirectUrl(destinationUrl)) {
       console.error("[SECURITY] Invalid redirect URL blocked:", {
@@ -237,6 +247,111 @@ serve(async (req) => {
       });
       // Redirect to home instead of malicious URL
       return Response.redirect("/", 302);
+    }
+
+    // --------------------------------------------------------------------------
+    // 3. SPLASH PAGE MIDDLEWARE
+    // --------------------------------------------------------------------------
+    if (qr.splash_config && qr.splash_config.enabled) {
+      const {
+        title = "Welcome",
+        buttonText = "Continue",
+        imageUrl,
+        description,
+      } = qr.splash_config;
+
+      const html = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${title}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              background-color: #f3f4f6;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              margin: 0;
+              padding: 20px;
+            }
+            .card {
+              background: white;
+              border-radius: 24px;
+              box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+              padding: 32px;
+              width: 100%;
+              max-width: 400px;
+              text-align: center;
+              border: 4px solid black;
+            }
+            .image-container {
+              margin-bottom: 24px;
+              border-radius: 16px;
+              overflow: hidden;
+              border: 3px solid black;
+              background: #eee;
+            }
+            img {
+              width: 100%;
+              height: auto;
+              display: block;
+            }
+            h1 {
+              font-size: 24px;
+              font-weight: 900;
+              margin: 0 0 12px 0;
+              color: #111827;
+            }
+            p {
+              color: #4b5563;
+              margin: 0 0 24px 0;
+              line-height: 1.5;
+            }
+            .btn {
+              display: inline-block;
+              background: black;
+              color: white;
+              font-weight: 700;
+              padding: 16px 32px;
+              border-radius: 16px;
+              text-decoration: none;
+              transition: transform 0.1s;
+              width: 100%;
+              box-sizing: border-box;
+              border: none;
+              cursor: pointer;
+              font-size: 18px;
+            }
+            .btn:active {
+              transform: scale(0.98);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            ${
+        imageUrl
+          ? `<div class="image-container"><img src="${imageUrl}" alt="Splash Image"></div>`
+          : ""
+      }
+            <h1>${title}</h1>
+            ${description ? `<p>${description}</p>` : ""}
+            <a href="${destinationUrl}" class="btn">${buttonText}</a>
+          </div>
+        </body>
+        </html>
+      `;
+
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          ...corsHeaders,
+        },
+      });
     }
 
     // Redirect to destination

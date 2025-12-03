@@ -30,7 +30,17 @@ export const handler: Handlers = {
     try {
       const response = await fetch(downloadUrl, {
         headers: authHeaders,
+        redirect: "manual", // Important: Handle redirects manually
       });
+
+      // If the edge function redirects (e.g. to /boom), we should follow or handle it
+      if (response.status === 302 || response.status === 301) {
+        const location = response.headers.get("Location");
+        return new Response(null, {
+          status: 302,
+          headers: { Location: location || "/boom" },
+        });
+      }
 
       if (!response.ok) {
         // File doesn't exist or already exploded
@@ -46,15 +56,15 @@ export const handler: Handlers = {
       const contentDisposition = response.headers.get("Content-Disposition") ||
         "attachment";
       const downloadsRemaining =
-        response.headers.get("X-Downloads-Remaining") ||
-        "0";
+        response.headers.get("X-Downloads-Remaining");
 
       const headers = new Headers();
       headers.set("Content-Type", contentType);
       headers.set("Content-Disposition", contentDisposition);
 
       // Add script to redirect to boom after download starts
-      const willExplode = parseInt(downloadsRemaining) === 0;
+      // Only explode if explicitly 0. If null/undefined, assume unlimited/safe.
+      const willExplode = downloadsRemaining === "0";
 
       if (willExplode) {
         // Redirect to boom page after download
