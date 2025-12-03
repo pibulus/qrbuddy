@@ -315,7 +315,7 @@ export default function SmartInput(
 
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
-      uploadFile(files[0]);
+      uploadFile(files);
     }
   };
 
@@ -328,7 +328,7 @@ export default function SmartInput(
     const input = e.target as HTMLInputElement;
     const files = input.files;
     if (files && files.length > 0) {
-      uploadFile(files[0]);
+      uploadFile(files);
     }
   };
 
@@ -535,6 +535,7 @@ export default function SmartInput(
           class="hidden"
           onChange={handleFileInputChange}
           accept="*/*"
+          multiple
         />
 
         {/* File upload button */}

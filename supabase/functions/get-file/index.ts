@@ -46,11 +46,27 @@ serve(async (req) => {
       return Response.redirect("/boom", 302);
     }
 
+    // Check if a specific file path is requested (for multi-file)
+    const requestedPath = url.searchParams.get("path");
+    
+    let targetPath = file.file_name;
+    let targetName = file.original_name;
+    let targetMime = file.mime_type;
+
+    if (requestedPath && file.files && Array.isArray(file.files)) {
+      const subFile = file.files.find((f: { path: string; name: string; type: string }) => f.path === requestedPath);
+      if (subFile) {
+        targetPath = subFile.path;
+        targetName = subFile.name;
+        targetMime = subFile.type;
+      }
+    }
+
     // Download file from storage
     const { data: fileData, error: downloadError } = await supabase
       .storage
       .from("qr-files")
-      .download(file.file_name);
+      .download(targetPath);
 
     if (downloadError) throw downloadError;
 
@@ -77,8 +93,8 @@ serve(async (req) => {
     // Serve the file
     const headers = {
       ...corsHeaders,
-      "Content-Type": file.mime_type || "application/octet-stream",
-      "Content-Disposition": `attachment; filename="${file.original_name}"`,
+      "Content-Type": targetMime || "application/octet-stream",
+      "Content-Disposition": `attachment; filename="${targetName}"`,
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "X-Destructible": "true",
       "X-Downloads-Remaining": String(maxDownloads - newDownloadCount),

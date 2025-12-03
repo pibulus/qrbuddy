@@ -36,21 +36,28 @@ export function useFileUpload(
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (input: File | FileList | File[]) => {
     try {
       setIsUploading(true);
       setUploadProgress(0);
       setUploadError(null);
       haptics.medium();
 
-      // Validate file (size and type) before upload
-      const validation = validateFile(file);
-      if (!validation.valid) {
-        throw new Error(validation.error);
+      const files = input instanceof FileList ? Array.from(input) : (Array.isArray(input) ? input : [input]);
+      const isMulti = files.length > 1;
+
+      // Validate files
+      for (const file of files) {
+        const validation = validateFile(file);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
       }
 
       const formData = new FormData();
-      formData.append("file", file);
+      files.forEach((file) => {
+        formData.append("file", file);
+      });
       formData.append("maxDownloads", maxDownloads.value.toString());
 
       // Simulate progress (real progress needs XHR)
@@ -95,9 +102,18 @@ export function useFileUpload(
         ? "1 scan"
         : `${maxDownloads.value} scans`;
       const limitedDownloads = maxDownloads.value !== UNLIMITED_SCANS;
-      const successMessage = limitedDownloads
-        ? `✅ ${file.name} uploaded! Limit: ${scanText}`
-        : `✅ ${file.name} uploaded! Ready to share ✨`;
+      
+      let successMessage = "";
+      if (isMulti) {
+        successMessage = limitedDownloads
+          ? `✅ ${files.length} files uploaded! Limit: ${scanText}`
+          : `✅ ${files.length} files uploaded! Ready to share ✨`;
+      } else {
+        successMessage = limitedDownloads
+          ? `✅ ${files[0].name} uploaded! Limit: ${scanText}`
+          : `✅ ${files[0].name} uploaded! Ready to share ✨`;
+      }
+
       const event = new CustomEvent("show-toast", {
         detail: {
           message: successMessage,

@@ -1,5 +1,5 @@
 // Edge Function: Upload File for Destructible QR
-// Receives file, stores in Supabase, returns URL that self-destructs after one access
+// Receives file(s), stores in Supabase, returns URL that self-destructs after one access
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -39,7 +39,7 @@ serve(async (req) => {
 
     // Get file and options from request
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const files = formData.getAll("file") as File[]; // Get all files
 
     // Strict Limit: Max 3 active files per IP
     const { count: activeFiles, error: countError } = await supabase
@@ -65,6 +65,7 @@ serve(async (req) => {
         },
       );
     }
+
     const parsedMaxDownloads = parseInt(
       formData.get("maxDownloads") as string || String(DEFAULT_MAX_DOWNLOADS),
       10,
@@ -74,7 +75,7 @@ serve(async (req) => {
         ? Math.min(parsedMaxDownloads, MAX_DOWNLOADS_LIMIT)
         : DEFAULT_MAX_DOWNLOADS;
 
-    if (!file) {
+    if (!files || files.length === 0) {
       return new Response(
         JSON.stringify({ error: "No file provided" }),
         {
@@ -84,10 +85,10 @@ serve(async (req) => {
       );
     }
 
-    // Check file size (50MB limit)
-    if (file.size > 50 * 1024 * 1024) {
+    // Multi-file validation
+    if (files.length > 10) {
       return new Response(
-        JSON.stringify({ error: "File too large (max 50MB)" }),
+        JSON.stringify({ error: "Max 10 files allowed per share." }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
@@ -95,130 +96,110 @@ serve(async (req) => {
       );
     }
 
-    // Validate file type - block dangerous executables
-    // Check entire filename (not just last extension) to prevent bypasses like "innocent.txt.exe"
-    const fileName = file.name.toLowerCase();
-    const blockedExtensions = [
-      "exe",
-      "bat",
-      "cmd",
-      "sh",
-      "app",
-      "dmg",
-      "pkg",
-      "deb",
-      "rpm",
-      "msi",
-      "scr",
-      "vbs",
-      "js",
-      "jar",
-      "apk",
-      "ipa",
-      "com",
-      "pif",
-      "application",
-      "gadget",
-      "msp",
-      "cpl",
-      "hta",
-      "inf",
-      "ins",
-      "isp",
-      "jse",
-      "lnk",
-      "msc",
-      "psc1",
-      "reg",
-      "scf",
-      "vb",
-      "vbe",
-      "wsf",
-      "wsh",
-      "ps1",
-      "ps1xml",
-      "ps2",
-      "ps2xml",
-      "psc2",
-      "msh",
-      "msh1",
-      "msh2",
-      "mshxml",
-      "msh1xml",
-      "msh2xml",
-    ];
+    // If multiple files, enforce IMAGES ONLY
+    const isMultiFile = files.length > 1;
+    
+    // Validate each file
+    for (const file of files) {
+      // Check file size (5MB limit per file for multi-file, or 50MB for single)
+      const sizeLimit = isMultiFile ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
+      if (file.size > sizeLimit) {
+        return new Response(
+          JSON.stringify({ 
+            error: isMultiFile 
+              ? `File ${file.name} too large (max 5MB for slideshows)` 
+              : "File too large (max 50MB)" 
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
 
-    // Check if filename ends with any blocked extension
-    const hasBlockedExt = blockedExtensions.some((ext) =>
-      fileName.endsWith(`.${ext}`)
-    );
+      // Validate file type
+      const fileName = file.name.toLowerCase();
+      
+      // If multi-file, MUST be image
+      if (isMultiFile && !file.type.startsWith("image/")) {
+        return new Response(
+          JSON.stringify({ error: `File ${file.name} is not an image. Slideshows only support images.` }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
 
-    if (hasBlockedExt) {
-      const matchedExt = blockedExtensions.find((ext) =>
+      // Block dangerous extensions (same logic as before)
+      const blockedExtensions = [
+        "exe", "bat", "cmd", "sh", "app", "dmg", "pkg", "deb", "rpm", "msi",
+        "scr", "vbs", "js", "jar", "apk", "ipa", "com", "pif", "application",
+        "gadget", "msp", "cpl", "hta", "inf", "ins", "isp", "jse", "lnk",
+        "msc", "psc1", "reg", "scf", "vb", "vbe", "wsf", "wsh", "ps1",
+        "ps1xml", "ps2", "ps2xml", "psc2", "msh", "msh1", "msh2", "mshxml",
+        "msh1xml", "msh2xml",
+      ];
+
+      const hasBlockedExt = blockedExtensions.some((ext) =>
         fileName.endsWith(`.${ext}`)
       );
-      return new Response(
-        JSON.stringify({
-          error:
-            `File type '.${matchedExt}' is not allowed for security reasons. Executable files are blocked.`,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        },
-      );
+
+      if (hasBlockedExt) {
+        return new Response(
+          JSON.stringify({
+            error: `File type of '${file.name}' is not allowed for security reasons.`,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          },
+        );
+      }
     }
 
-    // Extract actual file extension for storage
-    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+    // Generate main ID
+    const mainId = uuidv4();
+    const uploadedFiles = [];
 
-    // Also validate MIME type if available
-    const blockedMimeTypes = [
-      "application/x-msdownload",
-      "application/x-msdos-program",
-      "application/x-executable",
-      "application/x-sh",
-      "application/x-bat",
-      "application/x-ms-application",
-      "application/vnd.microsoft.portable-executable",
-    ];
+    // Upload all files
+    for (const file of files) {
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+      const fileId = uuidv4(); // Unique ID for each file in storage
+      const storageFileName = `${mainId}/${fileId}.${fileExt}`; // Store in folder named after mainId
 
-    if (file.type && blockedMimeTypes.includes(file.type)) {
-      return new Response(
-        JSON.stringify({
-          error: "This file type is not allowed for security reasons.",
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        },
-      );
-    }
+      const { error: uploadError } = await supabase
+        .storage
+        .from("qr-files")
+        .upload(storageFileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-    // Generate unique ID (fileExt already extracted above for validation)
-    const fileId = uuidv4();
-    const storageFileName = `${fileId}.${fileExt}`;
+      if (uploadError) throw uploadError;
 
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabase
-      .storage
-      .from("qr-files")
-      .upload(storageFileName, file, {
-        cacheControl: "3600",
-        upsert: false,
+      uploadedFiles.push({
+        id: fileId,
+        path: storageFileName,
+        name: file.name,
+        size: file.size,
+        type: file.type,
       });
-
-    if (uploadError) throw uploadError;
+    }
 
     // Store metadata in database
+    // For backward compatibility, store the first file's details in the main columns
+    const firstFile = uploadedFiles[0];
+    
     const { error: dbError } = await supabase
       .from("destructible_files")
       .insert({
-        id: fileId,
-        file_name: storageFileName,
-        original_name: file.name,
-        size: file.size,
-        mime_type: file.type,
+        id: mainId,
+        file_name: firstFile.path, // Legacy column
+        original_name: firstFile.name, // Legacy column
+        size: firstFile.size, // Legacy column
+        mime_type: firstFile.type, // Legacy column
+        files: uploadedFiles, // NEW JSON column
         created_at: new Date().toISOString(),
         accessed: false,
         max_downloads: maxDownloads,
@@ -228,26 +209,26 @@ serve(async (req) => {
 
     if (dbError) throw dbError;
 
-    // Generate retrieval URL (prettier format)
+    // Generate retrieval URL
     const baseUrl = Deno.env.get("APP_URL") ||
       (Deno.env.get("DENO_DEPLOYMENT_ID")
         ? `https://qrbuddy.app`
         : `http://localhost:8000`);
-    const retrievalUrl = `${baseUrl}/f/${fileId}`;
+    const retrievalUrl = `${baseUrl}/f/${mainId}`;
 
     const message = maxDownloads === UNLIMITED_DOWNLOADS
-      ? "File uploaded! Ready to share — unlimited downloads."
+      ? "Files uploaded! Ready to share — unlimited downloads."
       : maxDownloads === 1
-      ? "File uploaded! It will self-destruct after 1 download."
-      : `File uploaded! It will self-destruct after ${maxDownloads} downloads.`;
+      ? "Files uploaded! They will self-destruct after 1 download."
+      : `Files uploaded! They will self-destruct after ${maxDownloads} downloads.`;
 
     return new Response(
       JSON.stringify({
         success: true,
-        fileId,
+        fileId: mainId,
         url: retrievalUrl,
-        fileName: file.name,
-        size: file.size,
+        fileName: firstFile.name + (files.length > 1 ? ` + ${files.length - 1} more` : ""),
+        size: files.reduce((acc, f) => acc + f.size, 0),
         maxDownloads,
         message,
       }),

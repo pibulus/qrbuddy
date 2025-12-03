@@ -21,6 +21,7 @@ import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $ExtrasModal from "./islands/ExtrasModal.tsx";
+import * as $FileSlideshow from "./islands/FileSlideshow.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
@@ -78,6 +79,7 @@ const manifest = {
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/ExtrasModal.tsx": $ExtrasModal,
+    "./islands/FileSlideshow.tsx": $FileSlideshow,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/HistoryDrawer.tsx": $HistoryDrawer,
     "./islands/KofiModal.tsx": $KofiModal,
