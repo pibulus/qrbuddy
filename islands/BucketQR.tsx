@@ -338,7 +338,6 @@ export default function BucketQR({
           globalThis.dispatchEvent(event);
         } catch {
           // Fallback: show in console if clipboard fails
-          // console.log("Content:", data.content);
           const event = new CustomEvent("show-toast", {
             detail: {
               message: "Content: " + data.content.substring(0, 50) +
