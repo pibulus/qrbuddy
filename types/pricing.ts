@@ -27,25 +27,20 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
       "Custom Colors & Logos",
       "PNG Download",
     ],
-    // Limitations removed from UI as per request
     limitations: [],
   },
   pro: {
     id: "pro",
-    name: "Pro",
-    price: 20, // One-time payment, lifetime access
+    name: "Supporter",
+    price: 20,
     billingPeriod: "lifetime",
-    // Set via PAYMENT_URL_PRO env var (Ko-fi Shop, Gumroad, or Paddle link)
     paymentUrl: "",
-    features: [
-      "Everything in Free, plus:",
-      "Lifetime Access (Pay once, own forever)",
-    ],
+    features: [],
     upcomingFeatures: [
       "Unlimited Lockers",
       "Unlimited Active Files",
       "Larger File Uploads",
-      "Vector Export",
+      "Vector Export (SVG)",
       "Remove Branding",
     ],
   },

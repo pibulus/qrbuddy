@@ -103,10 +103,10 @@ export function PricingModal() {
                   id="pricing-modal-title"
                   class="text-2xl sm:text-3xl font-black text-black"
                 >
-                  Go Pro
+                  Support
                 </h2>
                 <p class="text-xs sm:text-sm text-purple-900 mt-1">
-                  Start free. Upgrade for power tools and zero branding.
+                  Free forever. Support to unlock extras and fund more apps like this.
                 </p>
               </div>
               <button
@@ -144,50 +144,42 @@ export function PricingModal() {
                 </ul>
               </div>
 
-              {/* Pro Tier */}
+              {/* Supporter Tier */}
               <div class="bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-black rounded-2xl p-6 shadow-chunky relative flex flex-col h-full">
                 <div class="absolute -top-3 -right-3 bg-yellow-300 text-black text-xs font-black px-3 py-1 border-3 border-black rounded-full rotate-12 shadow-chunky">
                   Coming Soon
                 </div>
 
                 <div class="text-center mb-4">
-                  <h3 class="text-2xl font-black text-black">Pro</h3>
+                  <h3 class="text-2xl font-black text-black">Supporter</h3>
                   <div class="text-4xl font-black text-black mt-2">
                     ${PRICING_TIERS.pro.price}
                   </div>
                   <p class="text-sm text-gray-600 mt-1">
-                    One-time payment, lifetime access
+                    Pay once, keep forever
                   </p>
                 </div>
 
-                <ul class="space-y-3 text-sm flex-grow">
-                  {PRICING_TIERS.pro.features.map((feature) => (
-                    <li key={feature} class="flex items-start gap-2">
-                      <span class="text-purple-600 font-bold flex-shrink-0">
-                        ✓
-                      </span>
-                      <span
-                        class={feature.startsWith("Everything") ||
-                            feature.includes("Lifetime")
-                          ? "font-bold"
-                          : ""}
-                      >
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
+                <p class="text-sm text-gray-700 mb-4">
+                  Supporters get:
+                </p>
 
+                <ul class="space-y-3 text-sm flex-grow">
                   {PRICING_TIERS.pro.upcomingFeatures && (
                     <>
                       {PRICING_TIERS.pro.upcomingFeatures.map((feature) => (
                         <li key={feature} class="flex items-start gap-2">
-                          <span class="text-purple-400 flex-shrink-0">✨</span>
-                          <span class="text-gray-600">{feature}</span>
+                          <span class="text-purple-600 font-bold flex-shrink-0">✓</span>
+                          <span>{feature}</span>
                         </li>
                       ))}
                     </>
                   )}
                 </ul>
+
+                <p class="text-xs text-gray-600 mt-4 italic">
+                  Plus you're funding more locally-made apps that don't mine your data or ruin your day.
+                </p>
 
                 {getPricingGlobal().__PAYMENT_URL_PRO__ && (
                   <button
@@ -195,12 +187,12 @@ export function PricingModal() {
                     onClick={_handleUpgrade}
                     class="w-full mt-8 px-4 py-3 border-3 rounded-xl font-bold shadow-chunky transition-all bg-purple-600 text-white border-black hover:bg-purple-700 hover:scale-[1.02] active:scale-95"
                   >
-                    Get Pro Lifetime ✨
+                    Become a Supporter
                   </button>
                 )}
 
                 <p class="text-xs text-center text-gray-600 mt-3">
-                  No subscriptions. No recurring fees. Own it forever.
+                  One payment. No subscriptions. Yours forever.
                 </p>
               </div>
             </div>
@@ -210,38 +202,34 @@ export function PricingModal() {
               <div class="space-y-2 text-sm">
                 <details class="group">
                   <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    Why one-time payment instead of subscription?
+                    Why one-time instead of subscription?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    No recurring anxiety. Pay once, own it forever. We believe
-                    in fair, transparent pricing - not rent-seeking.
+                    Because subscriptions suck. Pay once, keep forever. No recurring charges, no anxiety.
                   </p>
                 </details>
                 <details class="group">
                   <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    What payment methods do you accept?
+                    What payment methods?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    All major credit cards via our payment processor. Safe and
-                    secure.
+                    All major credit cards via our payment processor.
                   </p>
                 </details>
                 <details class="group">
                   <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    Do I get future Pro features included?
+                    Do I get future features?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    Yep! Any new Pro features we add are yours too. One payment,
-                    lifetime updates.
+                    Yep. Any new supporter features we add are yours.
                   </p>
                 </details>
                 <details class="group">
                   <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    Can I get a refund?
+                    Refunds?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    Absolutely. 30-day no-questions-asked refund policy. Email
-                    pablo@qrbuddy.app
+                    30-day no-questions-asked. Email pablo@qrbuddy.app
                   </p>
                 </details>
               </div>
@@ -267,7 +255,7 @@ interface PricingLinkProps {
 }
 
 export function PricingLink({
-  label = "Pro",
+  label = "Support",
   className = "",
 }: PricingLinkProps) {
   return (
