@@ -156,13 +156,9 @@ export function PricingModal() {
                     ${PRICING_TIERS.pro.price}
                   </div>
                   <p class="text-sm text-gray-600 mt-1">
-                    Unlock extras. Fund more apps like this.
+                    Pay once, keep forever
                   </p>
                 </div>
-
-                <p class="text-sm font-bold text-gray-800 mb-3">
-                  Supporters get:
-                </p>
 
                 <ul class="space-y-3 text-sm flex-grow">
                   {PRICING_TIERS.pro.upcomingFeatures && (
@@ -177,9 +173,6 @@ export function PricingModal() {
                   )}
                 </ul>
 
-                <p class="text-xs text-gray-600 mt-4 italic">
-                  Plus you're funding more locally-made apps that don't mine your data or ruin your day.
-                </p>
 
                 {getPricingGlobal().__PAYMENT_URL_PRO__ && (
                   <button
