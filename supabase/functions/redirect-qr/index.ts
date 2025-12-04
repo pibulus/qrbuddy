@@ -10,6 +10,15 @@ import {
 } from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
+function redirectWithCors(path: string, status = 302) {
+  return new Response(null, {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Location": path,
+    },
+  });
+}
 
 /**
  * Validate URL for redirect to prevent open redirect attacks
@@ -72,12 +81,12 @@ serve(async (req) => {
 
     if (fetchError || !qr) {
       // QR doesn't exist - redirect to home
-      return Response.redirect("/", 302);
+      return redirectWithCors("/");
     }
 
     // Check if QR is active
     if (!qr.is_active) {
-      return Response.redirect("/boom", 302);
+      return redirectWithCors("/boom");
     }
 
     // Check if expired
@@ -90,7 +99,7 @@ serve(async (req) => {
           .from("dynamic_qr_codes")
           .update({ is_active: false })
           .eq("short_code", shortCode);
-        return Response.redirect("/boom", 302);
+        return redirectWithCors("/boom");
       }
     }
 
@@ -101,7 +110,7 @@ serve(async (req) => {
         .from("dynamic_qr_codes")
         .update({ is_active: false })
         .eq("short_code", shortCode);
-      return Response.redirect("/boom", 302);
+      return redirectWithCors("/boom");
     }
 
     // --------------------------------------------------------------------------
@@ -237,7 +246,6 @@ serve(async (req) => {
       }
     }
 
-
     // Validate URL before redirecting to prevent open redirect attacks
     if (!isValidRedirectUrl(destinationUrl)) {
       console.error("[SECURITY] Invalid redirect URL blocked:", {
@@ -246,7 +254,7 @@ serve(async (req) => {
         timestamp: new Date().toISOString(),
       });
       // Redirect to home instead of malicious URL
-      return Response.redirect("/", 302);
+      return redirectWithCors("/");
     }
 
     // --------------------------------------------------------------------------
@@ -355,7 +363,7 @@ serve(async (req) => {
     }
 
     // Redirect to destination
-    return Response.redirect(destinationUrl, 302);
+    return redirectWithCors(destinationUrl);
   } catch (error) {
     // Log detailed error information for security monitoring
     console.error("[SECURITY] Redirect failed:", {
@@ -378,6 +386,6 @@ serve(async (req) => {
     }
 
     // For all other errors, redirect to home as fallback
-    return Response.redirect("/", 302);
+    return redirectWithCors("/");
   }
 });

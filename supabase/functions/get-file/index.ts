@@ -5,6 +5,16 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
+function redirectTo(path: string, status = 302) {
+  return new Response(null, {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Location": path,
+    },
+  });
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -16,7 +26,7 @@ serve(async (req) => {
     const fileId = url.searchParams.get("id");
 
     if (!fileId) {
-      return Response.redirect("/boom", 302);
+      return redirectTo("/boom");
     }
 
     const supabase = createClient(
@@ -32,7 +42,7 @@ serve(async (req) => {
       .single();
 
     if (fetchError || !file) {
-      return Response.redirect("/boom", 302);
+      return redirectTo("/boom");
     }
 
     // Treat null/undefined as unlimited (999999)
@@ -43,18 +53,20 @@ serve(async (req) => {
     if (
       file.accessed || (maxDownloads < 999999 && downloadCount >= maxDownloads)
     ) {
-      return Response.redirect("/boom", 302);
+      return redirectTo("/boom");
     }
 
     // Check if a specific file path is requested (for multi-file)
     const requestedPath = url.searchParams.get("path");
-    
+
     let targetPath = file.file_name;
     let targetName = file.original_name;
     let targetMime = file.mime_type;
 
     if (requestedPath && file.files && Array.isArray(file.files)) {
-      const subFile = file.files.find((f: { path: string; name: string; type: string }) => f.path === requestedPath);
+      const subFile = file.files.find((
+        f: { path: string; name: string; type: string },
+      ) => f.path === requestedPath);
       if (subFile) {
         targetPath = subFile.path;
         targetName = subFile.name;
@@ -108,6 +120,6 @@ serve(async (req) => {
     return new Response(arrayBuffer, { headers });
   } catch (error) {
     console.error("File download error:", error);
-    return Response.redirect("/boom", 302);
+    return redirectTo("/boom");
   }
 });

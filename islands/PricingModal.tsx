@@ -129,7 +129,7 @@ export function PricingModal() {
                 <div class="text-center mb-4">
                   <h3 class="text-2xl font-black text-black">Free</h3>
                   <div class="text-4xl font-black text-black mt-2">$0</div>
-                  <p class="text-sm text-gray-600 mt-1">Forever free</p>
+                  <p class="text-sm text-gray-600 mt-1">Make QRs. Keep your data. No strings.</p>
                 </div>
 
                 <ul class="space-y-3 text-sm flex-grow">
@@ -156,11 +156,11 @@ export function PricingModal() {
                     ${PRICING_TIERS.pro.price}
                   </div>
                   <p class="text-sm text-gray-600 mt-1">
-                    Pay once, keep forever
+                    Unlock extras. Fund more apps like this.
                   </p>
                 </div>
 
-                <p class="text-sm text-gray-700 mb-4">
+                <p class="text-sm font-bold text-gray-800 mb-3">
                   Supporters get:
                 </p>
 
