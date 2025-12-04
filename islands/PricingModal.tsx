@@ -180,7 +180,7 @@ export function PricingModal() {
                     onClick={_handleUpgrade}
                     class="w-full mt-8 px-4 py-3 border-3 rounded-xl font-bold shadow-chunky transition-all bg-purple-600 text-white border-black hover:bg-purple-700 hover:scale-[1.02] active:scale-95"
                   >
-                    Become a Supporter
+                    Support 💜
                   </button>
                 )}
 
