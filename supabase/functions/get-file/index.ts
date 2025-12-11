@@ -122,9 +122,7 @@ serve(async (req) => {
         "Cache-Control": "no-cache, no-store, must-revalidate",
         "X-Destructible": "true",
         "X-Downloads-Remaining": String(maxDownloads - newDownloadCount),
-        "X-Message": willExplode
-          ? "🔥 This file self-destructed!"
-          : `💣 ${maxDownloads - newDownloadCount} download(s) remaining`,
+        "X-Will-Explode": willExplode ? "true" : "false",
       };
 
       // Slice the blob to the requested range
@@ -142,9 +140,7 @@ serve(async (req) => {
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "X-Destructible": "true",
       "X-Downloads-Remaining": String(maxDownloads - newDownloadCount),
-      "X-Message": willExplode
-        ? "🔥 This file self-destructed!"
-        : `💣 ${maxDownloads - newDownloadCount} download(s) remaining`,
+      "X-Will-Explode": willExplode ? "true" : "false",
     };
 
     // Return the Blob directly to prevent truncation
