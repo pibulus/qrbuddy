@@ -146,13 +146,13 @@ serve(async (req) => {
       }
 
       // Upload file to storage
+      // Pass File object directly - arrayBuffer conversion can cause truncation
       const fileId = crypto.randomUUID();
       const fileName = `bucket-${bucketCode}-${fileId}`;
-      const fileBuffer = await file.arrayBuffer();
 
       const { error: uploadError } = await supabase.storage
         .from("qr-files")
-        .upload(fileName, fileBuffer, {
+        .upload(fileName, file, {
           contentType: file.type,
           upsert: false,
         });
