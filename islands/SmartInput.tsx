@@ -82,13 +82,15 @@ export default function SmartInput(
   const [batchUrls, setBatchUrls] = useState("");
 
   // Splash Page options
-  const splashConfig = useSignal<{
-    enabled: boolean;
-    title: string;
-    buttonText: string;
-    imageUrl?: string;
-    description?: string;
-  } | null>(null);
+  const splashConfig = useSignal<
+    {
+      enabled: boolean;
+      title: string;
+      buttonText: string;
+      imageUrl?: string;
+      description?: string;
+    } | null
+  >(null);
 
   // Custom hooks
   const { isCreating: isCreatingDynamic, createDynamicQR } = useDynamicQR({
@@ -503,118 +505,119 @@ export default function SmartInput(
       />
 
       <div class="relative group">
-      {/* URL/File Input - Always visible */}
-      <div
-        class="relative"
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <input
-          type="text"
-          value={url.value}
-          onInput={handleInput}
-          onFocus={handleFocus}
-          onBlur={() => setTouched(true)}
-          placeholder={isDragging
-            ? "Drop file here..."
-            : "Enter URL, text, or drop a file..."}
-          aria-label="URL, text, or file to encode in QR code"
-          aria-invalid={validationState === "invalid"}
-          aria-describedby={validationState === "invalid"
-            ? "input-error"
-            : undefined}
-          class={getInputClass()}
-          disabled={isUploading}
-        />
+        {/* URL/File Input - Always visible */}
+        <div
+          class="relative"
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <input
+            type="text"
+            value={url.value}
+            onInput={handleInput}
+            onFocus={handleFocus}
+            onBlur={() => setTouched(true)}
+            placeholder={isDragging
+              ? "Drop file here..."
+              : "Enter URL, text, or drop a file..."}
+            aria-label="URL, text, or file to encode in QR code"
+            aria-invalid={validationState === "invalid"}
+            aria-describedby={validationState === "invalid"
+              ? "input-error"
+              : undefined}
+            class={getInputClass()}
+            disabled={isUploading}
+          />
 
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          class="hidden"
-          onChange={handleFileInputChange}
-          accept="*/*"
-          multiple
-        />
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            class="hidden"
+            onChange={handleFileInputChange}
+            accept="*/*"
+            multiple
+          />
 
-        {/* File upload button */}
-        {!isUploading && !isDestructible.value && (
-          <button
-            type="button"
-            onClick={handleFileInputClick}
-            class="absolute right-4 top-1/2 transform -translate-y-1/2
+          {/* File upload button */}
+          {!isUploading && !isDestructible.value && (
+            <button
+              type="button"
+              onClick={handleFileInputClick}
+              class="absolute right-4 top-1/2 transform -translate-y-1/2
                    text-2xl hover:scale-110 transition-transform"
-            aria-label="Upload file"
-            title="Upload file"
-          >
-            📎
-          </button>
-        )}
+              aria-label="Upload file"
+              title="Upload file"
+            >
+              📎
+            </button>
+          )}
 
-        {/* Validation indicator */}
-        {touched && validationState === "valid" && !isUploading && (
-          <div class="absolute right-14 top-1/2 transform -translate-y-1/2
+          {/* Validation indicator */}
+          {touched && validationState === "valid" && !isUploading && (
+            <div class="absolute right-14 top-1/2 transform -translate-y-1/2
                       text-xl animate-pop">
-            {isDestructible.value ? "💣" : "✓"}
-          </div>
+              {isDestructible.value ? "💣" : "✓"}
+            </div>
+          )}
+
+          {/* Upload progress */}
+          {isUploading && (
+            <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
+              <div
+                class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Helper text */}
+        {touched && validationState === "invalid" && url.value.trim() !== "" &&
+          (
+            <p
+              id="input-error"
+              class="text-red-500 text-sm mt-2 text-center animate-slide-down"
+              role="alert"
+            >
+              Enter any text, URL, or drop a file
+            </p>
+          )}
+
+        {/* Upload error */}
+        {uploadError && (
+          <p
+            class="text-red-500 text-sm mt-2 text-center animate-slide-down"
+            role="alert"
+          >
+            {uploadError}
+          </p>
         )}
 
-        {/* Upload progress */}
+        {/* File Upload Options - shown when dragging file */}
+        {selectedTemplate === "url" && !isDynamic.value &&
+          !isDestructible.value && !isUploading && isDragging && (
+          <FileUploadOptions maxDownloads={maxDownloads} />
+        )}
+
+        {/* Destructible indicator */}
+        {isDestructible.value && !isUploading &&
+          maxDownloads.value !== UNLIMITED_SCANS && (
+          <p class="text-orange-600 text-sm mt-2 text-center font-semibold animate-slide-down">
+            ⚠️ This file will self-destruct after {maxDownloads.value}{" "}
+            {maxDownloads.value === 1 ? "scan" : "scans"}
+          </p>
+        )}
+
+        {/* Upload progress text */}
         {isUploading && (
-          <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
-            <div
-              class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-              style={{ width: `${uploadProgress}%` }}
-            />
-          </div>
+          <p class="text-purple-600 text-sm mt-2 text-center animate-pulse">
+            Uploading... {uploadProgress}%
+          </p>
         )}
       </div>
-
-      {/* Helper text */}
-      {touched && validationState === "invalid" && url.value.trim() !== "" && (
-        <p
-          id="input-error"
-          class="text-red-500 text-sm mt-2 text-center animate-slide-down"
-          role="alert"
-        >
-          Enter any text, URL, or drop a file
-        </p>
-      )}
-
-      {/* Upload error */}
-      {uploadError && (
-        <p
-          class="text-red-500 text-sm mt-2 text-center animate-slide-down"
-          role="alert"
-        >
-          {uploadError}
-        </p>
-      )}
-
-      {/* File Upload Options - shown when dragging file */}
-      {selectedTemplate === "url" && !isDynamic.value &&
-        !isDestructible.value && !isUploading && isDragging && (
-        <FileUploadOptions maxDownloads={maxDownloads} />
-      )}
-
-      {/* Destructible indicator */}
-      {isDestructible.value && !isUploading &&
-        maxDownloads.value !== UNLIMITED_SCANS && (
-        <p class="text-orange-600 text-sm mt-2 text-center font-semibold animate-slide-down">
-          ⚠️ This file will self-destruct after {maxDownloads.value}{" "}
-          {maxDownloads.value === 1 ? "scan" : "scans"}
-        </p>
-      )}
-
-      {/* Upload progress text */}
-      {isUploading && (
-        <p class="text-purple-600 text-sm mt-2 text-center animate-pulse">
-          Uploading... {uploadProgress}%
-        </p>
-      )}
-    </div>
     </div>
   );
 }

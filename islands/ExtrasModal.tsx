@@ -41,13 +41,15 @@ interface ExtrasModalProps {
   onLockerConfirm: (options: CreateBucketOptions) => Promise<boolean>;
   onLockerDisable: () => void;
   isCreatingLocker: boolean;
-  splashConfig: Signal<{
-    enabled: boolean;
-    title: string;
-    buttonText: string;
-    imageUrl?: string;
-    description?: string;
-  } | null>;
+  splashConfig: Signal<
+    {
+      enabled: boolean;
+      title: string;
+      buttonText: string;
+      imageUrl?: string;
+      description?: string;
+    } | null
+  >;
 }
 
 export default function ExtrasModal({
@@ -202,7 +204,8 @@ export default function ExtrasModal({
                   haptics.light();
                 }}
                 class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
-                  isDynamic.value && !isSequential && !isTimeBombActive && !splashActive
+                  isDynamic.value && !isSequential && !isTimeBombActive &&
+                    !splashActive
                     ? "bg-gradient-to-br from-[#FFB3D9] to-[#C9A0DC] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
@@ -214,9 +217,11 @@ export default function ExtrasModal({
                   Editable link
                 </div>
                 <div class="text-xs text-gray-600 leading-snug mt-1">
-                  Print once, update forever. Perfect for menus, events, or merch.
+                  Print once, update forever. Perfect for menus, events, or
+                  merch.
                 </div>
-                {isDynamic.value && !isSequential && !isTimeBombActive && !splashActive && (
+                {isDynamic.value && !isSequential && !isTimeBombActive &&
+                  !splashActive && (
                   <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#9370DB]">
                     <span>✓</span>
                     Active
@@ -225,7 +230,8 @@ export default function ExtrasModal({
               </button>
 
               {/* Mobile: Editable Link Settings */}
-              {isDynamic.value && !isSequential && !isTimeBombActive && !splashActive && (
+              {isDynamic.value && !isSequential && !isTimeBombActive &&
+                !splashActive && (
                 <div class="sm:hidden mt-3 mb-4 animate-slide-down">
                   <EditableLinkSettings
                     editUrl={editUrl}
@@ -254,7 +260,8 @@ export default function ExtrasModal({
                   File Locker
                 </div>
                 <div class="text-xs text-gray-600 leading-snug mt-1">
-                  Secure digital drop box. Scan to upload, scan again to download.
+                  Secure digital drop box. Scan to upload, scan again to
+                  download.
                 </div>
                 {lockerActive && (
                   <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#3AA8A4]">
@@ -568,7 +575,8 @@ export default function ExtrasModal({
               />
             )}
             {showLogoUploader && <LogoSettings logoUrl={logoUrl} />}
-            {isDynamic.value && !isSequential && !isTimeBombActive && !splashActive && (
+            {isDynamic.value && !isSequential && !isTimeBombActive &&
+              !splashActive && (
               <EditableLinkSettings
                 editUrl={editUrl}
                 isSequential={isSequential}

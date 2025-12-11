@@ -82,6 +82,10 @@ serve(async (req) => {
 
     if (downloadError) throw downloadError;
 
+    // Check if client is requesting a byte range (for video/audio scrubbing)
+    const rangeHeader = req.headers.get("Range");
+    const fileSize = fileData.size;
+
     // Increment download count
     const newDownloadCount = downloadCount + 1;
     const willExplode = newDownloadCount >= maxDownloads;
@@ -102,11 +106,39 @@ serve(async (req) => {
         .remove([file.file_name]);
     }
 
-    // Serve the file
+    // Handle range requests for video/audio scrubbing
+    if (rangeHeader && rangeHeader.startsWith("bytes=")) {
+      const parts = rangeHeader.substring(6).split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunkSize = (end - start) + 1;
+
+      const headers = {
+        ...corsHeaders,
+        "Content-Type": targetMime || "application/octet-stream",
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": String(chunkSize),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "X-Destructible": "true",
+        "X-Downloads-Remaining": String(maxDownloads - newDownloadCount),
+        "X-Message": willExplode
+          ? "🔥 This file self-destructed!"
+          : `💣 ${maxDownloads - newDownloadCount} download(s) remaining`,
+      };
+
+      // Slice the blob to the requested range
+      const chunk = fileData.slice(start, end + 1);
+      return new Response(chunk, { status: 206, headers });
+    }
+
+    // Serve the full file
     const headers = {
       ...corsHeaders,
       "Content-Type": targetMime || "application/octet-stream",
       "Content-Disposition": `attachment; filename="${targetName}"`,
+      "Content-Length": String(fileSize),
+      "Accept-Ranges": "bytes",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "X-Destructible": "true",
       "X-Downloads-Remaining": String(maxDownloads - newDownloadCount),
@@ -115,9 +147,9 @@ serve(async (req) => {
         : `💣 ${maxDownloads - newDownloadCount} download(s) remaining`,
     };
 
-    const arrayBuffer = await fileData.arrayBuffer();
-
-    return new Response(arrayBuffer, { headers });
+    // Return the Blob directly to prevent truncation
+    // Converting to arrayBuffer causes Deno edge runtime to truncate to ~1KB
+    return new Response(fileData, { headers });
   } catch (error) {
     console.error("File download error:", error);
     return redirectTo("/boom");

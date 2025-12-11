@@ -78,10 +78,13 @@ export function AboutModal() {
             {/* Intro */}
             <div class="space-y-3">
               <p class="text-base leading-relaxed text-gray-800">
-                Hi, I'm Pablo 👋. Most QR generators are ugly, static, and feel like enterprise software from 1999. I hated that.
+                Hi, I'm Pablo 👋. Most QR generators are ugly, static, and feel
+                like enterprise software from 1999. I hated that.
               </p>
               <p class="text-base leading-relaxed text-gray-800">
-                So I built QRBuddy. It’s a tool for humans, not data points. It turns QR codes from boring squares into living, breathing interactions.
+                So I built QRBuddy. It’s a tool for humans, not data points. It
+                turns QR codes from boring squares into living, breathing
+                interactions.
               </p>
             </div>
 
@@ -90,28 +93,38 @@ export function AboutModal() {
               <p class="text-base font-black text-gray-800 mb-2">
                 ✨ What it does:
               </p>
-              
+
               <ul class="text-sm space-y-2 text-gray-800">
                 <li>
-                  <span class="font-bold">Dynamic Codes:</span> Want a code that shows a video on the first scan, a meme on the second? Done.
+                  <span class="font-bold">Dynamic Codes:</span>{" "}
+                  Want a code that shows a video on the first scan, a meme on
+                  the second? Done.
                 </li>
                 <li>
-                  <span class="font-bold">Ping Pong Drops:</span> Like AirDrop for the web. Scan to upload, scan to download. Back and forth.
+                  <span class="font-bold">Ping Pong Drops:</span>{" "}
+                  Like AirDrop for the web. Scan to upload, scan to download.
+                  Back and forth.
                 </li>
                 <li>
-                  <span class="font-bold">Self-Destruct Mode:</span> Create password-protected "Dead Drops" or files that self-destruct.
+                  <span class="font-bold">Self-Destruct Mode:</span>{" "}
+                  Create password-protected "Dead Drops" or files that
+                  self-destruct.
                 </li>
                 <li>
-                  <span class="font-bold">Mistake-Proof Links:</span> Change the destination anytime without reprinting.
+                  <span class="font-bold">Mistake-Proof Links:</span>{" "}
+                  Change the destination anytime without reprinting.
                 </li>
                 <li>
-                  <span class="font-bold">Zero-Creep Analytics:</span> Ethical data only. I don't want your personal info.
+                  <span class="font-bold">Zero-Creep Analytics:</span>{" "}
+                  Ethical data only. I don't want your personal info.
                 </li>
                 <li>
-                  <span class="font-bold">No Boring Squares:</span> 6 sunset-drenched presets. Make them match your vibe.
+                  <span class="font-bold">No Boring Squares:</span>{" "}
+                  6 sunset-drenched presets. Make them match your vibe.
                 </li>
                 <li>
-                  <span class="font-bold">Always Ready:</span> Installs as a PWA. Works offline.
+                  <span class="font-bold">Always Ready:</span>{" "}
+                  Installs as a PWA. Works offline.
                 </li>
               </ul>
             </div>
@@ -122,7 +135,7 @@ export function AboutModal() {
                 Made with ❤️ in Melbourne. No VC funding. No corporate BS.<br />
                 Just nice tools for nice people.
               </p>
-              
+
               <div class="flex justify-center">
                 <a
                   href="https://github.com/pibulus/qrbuddy"

@@ -34,9 +34,17 @@ export const handler: Handlers = {
     }
     const authHeaders = getAuthHeaders();
 
+    // Check if browser is requesting a byte range (for video/audio scrubbing)
+    const rangeHeader = req.headers.get("Range");
+
     try {
+      const edgeFunctionHeaders = {
+        ...authHeaders,
+        ...(rangeHeader && { "Range": rangeHeader }),
+      };
+
       const response = await fetch(downloadUrl.toString(), {
-        headers: authHeaders,
+        headers: edgeFunctionHeaders,
         redirect: "manual", // Important: Handle redirects manually
       });
 
@@ -67,6 +75,30 @@ export const handler: Handlers = {
       const headers = new Headers();
       headers.set("Content-Type", contentType);
       headers.set("Content-Disposition", contentDisposition);
+
+      // Add Content-Length header for proper media playback and download progress
+      const contentLength = response.headers.get("Content-Length");
+      if (contentLength) {
+        headers.set("Content-Length", contentLength);
+      }
+
+      // Handle range requests for video/audio scrubbing (206 Partial Content)
+      if (response.status === 206) {
+        const acceptRanges = response.headers.get("Accept-Ranges");
+        const contentRange = response.headers.get("Content-Range");
+
+        if (acceptRanges) {
+          headers.set("Accept-Ranges", acceptRanges);
+        }
+        if (contentRange) {
+          headers.set("Content-Range", contentRange);
+        }
+
+        return new Response(response.body, {
+          status: 206,
+          headers,
+        });
+      }
 
       // Add script to redirect to boom after download starts
       // Only explode if explicitly 0. If null/undefined, assume unlimited/safe.

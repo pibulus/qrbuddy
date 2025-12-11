@@ -71,8 +71,7 @@ export default function TimeBombSettings({
 
         <div class="bg-[#FFE5F0] border-2 border-[#FF69B4] rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
           💡 <strong>Set to 1 for a self-destruct QR.</strong>{" "}
-          Higher limits let you reuse and edit anytime. No tracking,
-          ever.
+          Higher limits let you reuse and edit anytime. No tracking, ever.
         </div>
       </div>
     </div>

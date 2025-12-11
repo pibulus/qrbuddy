@@ -272,9 +272,7 @@ export default function LockerSettings({
               </select>
             </div>
 
-            {lockerError && (
-              <p class="text-xs text-red-500">{lockerError}</p>
-            )}
+            {lockerError && <p class="text-xs text-red-500">{lockerError}</p>}
 
             <div class="flex flex-wrap gap-2">
               <button

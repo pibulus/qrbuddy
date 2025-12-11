@@ -23,8 +23,8 @@ export default function EditableLinkSettings({
               Editable Mode Ready
             </h4>
             <p class="text-xs text-gray-700 leading-relaxed">
-              Close this menu and enter your destination URL. We'll
-              create a magic link you can update anytime.
+              Close this menu and enter your destination URL. We'll create a
+              magic link you can update anytime.
             </p>
           </div>
         </div>

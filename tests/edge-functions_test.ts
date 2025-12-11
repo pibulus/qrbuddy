@@ -43,14 +43,15 @@ async function callEdgeFunction(
 // Helper to clean up files (requires Service Role Key)
 async function cleanupFiles() {
   if (!SUPABASE_SERVICE_ROLE_KEY) return;
-  
+
   // We can't easily know our own IP as seen by the server without making a request,
   // but we can try to delete ALL files if we are running in a dev/test project.
   // OR, we can just try to delete files created recently?
   // Better: Just delete all files from 'destructible_files' to be sure.
   // WARNING: This wipes the table. Only safe for dev/test project.
-  
-  const url = `${SUPABASE_URL}/rest/v1/destructible_files?id=neq.00000000-0000-0000-0000-000000000000`;
+
+  const url =
+    `${SUPABASE_URL}/rest/v1/destructible_files?id=neq.00000000-0000-0000-0000-000000000000`;
   const res = await fetch(url, {
     method: "DELETE",
     headers: {
@@ -69,7 +70,7 @@ Deno.test({
   ignore: true, // Flaky in remote env
   async fn() {
     await cleanupFiles(); // Clean up before starting
-    
+
     // Make 30 requests rapidly to trigger rate limit (limit is 20/hour)
     // Note: In serverless env, this might be flaky if requests hit different isolates
     const requests = Array.from(
@@ -242,7 +243,7 @@ Deno.test({
 
     // Should fail without token
     assertEquals(response.ok, false);
-    
+
     // Consume body
     if (response.body) await response.body.cancel();
   },

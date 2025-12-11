@@ -29,7 +29,7 @@ export default function FileSlideshow({
   theme = "sunset",
 }: FileSlideshowProps) {
   const isUnlimited = maxDownloads >= 999999;
-  
+
   // Slideshow State
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -43,9 +43,9 @@ export default function FileSlideshow({
   const displayFileName = currentFile ? currentFile.name : fileName;
   const displayFileSize = currentFile ? currentFile.size : fileSize;
   const displayMimeType = currentFile ? currentFile.type : mimeType;
-  
+
   const fileSizeMB = (displayFileSize / (1024 * 1024)).toFixed(2);
-  
+
   // Download URL logic
   const getDownloadUrl = (path?: string) => {
     let url = `/api/download-file?id=${fileId}`;
@@ -55,7 +55,7 @@ export default function FileSlideshow({
     return url;
   };
 
-  const currentDownloadUrl = hasMultipleFiles 
+  const currentDownloadUrl = hasMultipleFiles
     ? getDownloadUrl(currentFile!.path)
     : getDownloadUrl();
 
@@ -143,11 +143,11 @@ export default function FileSlideshow({
   // Download All Handler
   const handleDownloadAll = async () => {
     if (!files || isZipping) return;
-    
+
     try {
       setIsZipping(true);
       const zip = new JSZip();
-      
+
       // Fetch all files
       const promises = files.map(async (file) => {
         const response = await fetch(getDownloadUrl(file.path));
@@ -156,10 +156,10 @@ export default function FileSlideshow({
       });
 
       await Promise.all(promises);
-      
+
       const content = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(content);
-      
+
       const a = document.createElement("a");
       a.href = url;
       a.download = `${fileName || "slideshow"}.zip`;
@@ -176,14 +176,16 @@ export default function FileSlideshow({
   };
 
   return (
-    <div class={`min-h-screen flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden transition-colors duration-500 ${getThemeStyles()}`}>
-      
+    <div
+      class={`min-h-screen flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden transition-colors duration-500 ${getThemeStyles()}`}
+    >
       {/* Slideshow Container */}
       <div class="w-full max-w-4xl flex flex-col items-center gap-6 animate-fade-in">
-        
         {/* Header / Counter */}
         {hasMultipleFiles && (
-          <div class={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full border ${getCardStyles()}`}>
+          <div
+            class={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full border ${getCardStyles()}`}
+          >
             <span>{currentIndex + 1}</span>
             <span class="opacity-50">/</span>
             <span>{files!.length}</span>
@@ -191,7 +193,7 @@ export default function FileSlideshow({
         )}
 
         {/* Main Content Card */}
-        <div 
+        <div
           class={`relative w-full aspect-[4/3] md:aspect-video rounded-3xl overflow-hidden border group ${getCardStyles()}`}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
@@ -200,7 +202,7 @@ export default function FileSlideshow({
           {/* Navigation Arrows (Desktop) */}
           {hasMultipleFiles && (
             <>
-              <button 
+              <button
                 type="button"
                 onClick={prevSlide}
                 class="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
@@ -208,7 +210,7 @@ export default function FileSlideshow({
               >
                 ←
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={nextSlide}
                 class="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
@@ -221,44 +223,54 @@ export default function FileSlideshow({
 
           {/* Media Content */}
           <div class="w-full h-full flex items-center justify-center p-4">
-            {showPreview ? (
-              <>
-                {isImage && (
-                  <img
-                    key={currentDownloadUrl} // Force re-render on change
-                    src={currentDownloadUrl}
-                    alt={displayFileName}
-                    class="w-full h-full object-contain animate-scale-in"
-                  />
-                )}
-                {isAudio && (
-                  <div class={`w-full max-w-md p-8 rounded-2xl border text-center ${getCardStyles()}`}>
-                    <div class="text-6xl mb-4">🎵</div>
-                    <p class="mb-4 font-bold truncate">{displayFileName}</p>
-                    <audio controls class="w-full">
+            {showPreview
+              ? (
+                <>
+                  {isImage && (
+                    <img
+                      key={currentDownloadUrl} // Force re-render on change
+                      src={currentDownloadUrl}
+                      alt={displayFileName}
+                      class="w-full h-full object-contain animate-scale-in"
+                    />
+                  )}
+                  {isAudio && (
+                    <div
+                      class={`w-full max-w-md p-8 rounded-2xl border text-center ${getCardStyles()}`}
+                    >
+                      <div class="text-6xl mb-4">🎵</div>
+                      <p class="mb-4 font-bold truncate">{displayFileName}</p>
+                      <audio controls class="w-full">
+                        <source
+                          src={currentDownloadUrl}
+                          type={displayMimeType}
+                        />
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  )}
+                  {isVideo && (
+                    <video
+                      controls
+                      class="w-full h-full object-contain bg-black rounded-xl"
+                    >
                       <source src={currentDownloadUrl} type={displayMimeType} />
-                      Your browser does not support the audio element.
-                    </audio>
+                      Your browser does not support the video element.
+                    </video>
+                  )}
+                </>
+              )
+              : (
+                <div class="text-center p-8">
+                  <div class="text-8xl mb-6 animate-bounce-slow">
+                    {isUnlimited ? "📦" : "💣"}
                   </div>
-                )}
-                {isVideo && (
-                  <video controls class="w-full h-full object-contain bg-black rounded-xl">
-                    <source src={currentDownloadUrl} type={displayMimeType} />
-                    Your browser does not support the video element.
-                  </video>
-                )}
-              </>
-            ) : (
-              <div class="text-center p-8">
-                <div class="text-8xl mb-6 animate-bounce-slow">
-                  {isUnlimited ? "📦" : "💣"}
+                  <h2 class="text-2xl font-bold mb-2">
+                    {isUnlimited ? "Shared File" : "Self-Destructing File"}
+                  </h2>
+                  <p class="opacity-60">Preview not available</p>
                 </div>
-                <h2 class="text-2xl font-bold mb-2">
-                  {isUnlimited ? "Shared File" : "Self-Destructing File"}
-                </h2>
-                <p class="opacity-60">Preview not available</p>
-              </div>
-            )}
+              )}
           </div>
         </div>
 
@@ -266,7 +278,10 @@ export default function FileSlideshow({
         <div class="w-full max-w-md space-y-4">
           <div class={`rounded-2xl p-6 space-y-4 border ${getCardStyles()}`}>
             <div class="flex items-center justify-between">
-              <h1 class="text-xl font-bold truncate flex-1 mr-4" title={displayFileName}>
+              <h1
+                class="text-xl font-bold truncate flex-1 mr-4"
+                title={displayFileName}
+              >
                 {displayFileName}
               </h1>
               <span class="text-sm opacity-60 whitespace-nowrap">
@@ -280,7 +295,9 @@ export default function FileSlideshow({
               download={displayFileName}
               class={`block w-full py-4 rounded-xl font-bold text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
                 isUnlimited
-                  ? (theme === "cyber" ? "bg-[#00ff9d] text-black" : "bg-white text-black hover:bg-gray-200")
+                  ? (theme === "cyber"
+                    ? "bg-[#00ff9d] text-black"
+                    : "bg-white text-black hover:bg-gray-200")
                   : "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
               }`}
             >
@@ -294,8 +311,8 @@ export default function FileSlideshow({
                 onClick={handleDownloadAll}
                 disabled={isZipping}
                 class={`block w-full py-3 rounded-xl font-bold text-center text-base transition-all border-2 ${
-                  theme === "cyber" 
-                    ? "border-[#00ff9d] text-[#00ff9d] hover:bg-[#00ff9d]/10" 
+                  theme === "cyber"
+                    ? "border-[#00ff9d] text-[#00ff9d] hover:bg-[#00ff9d]/10"
                     : "border-white/20 hover:bg-white/10"
                 }`}
               >
@@ -306,7 +323,9 @@ export default function FileSlideshow({
             {/* Limits Info */}
             <div class="flex justify-between text-xs opacity-50 pt-2 border-t border-white/10">
               <span>
-                {isUnlimited ? "∞ Unlimited Downloads" : `${remainingDownloads}/${maxDownloads} uses left`}
+                {isUnlimited
+                  ? "∞ Unlimited Downloads"
+                  : `${remainingDownloads}/${maxDownloads} uses left`}
               </span>
               <span>Powered by QRBuddy</span>
             </div>
@@ -322,7 +341,6 @@ export default function FileSlideshow({
             </a>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -45,7 +45,9 @@ export function useFileUpload(
       setUploadError(null);
       haptics.medium();
 
-      const files = input instanceof FileList ? Array.from(input) : (Array.isArray(input) ? input : [input]);
+      const files = input instanceof FileList
+        ? Array.from(input)
+        : (Array.isArray(input) ? input : [input]);
       const isMulti = files.length > 1;
 
       // Validate files
@@ -114,7 +116,7 @@ export function useFileUpload(
         ? "1 scan"
         : `${maxDownloads.value} scans`;
       const limitedDownloads = maxDownloads.value !== UNLIMITED_SCANS;
-      
+
       let successMessage = "";
       if (isMulti) {
         successMessage = limitedDownloads

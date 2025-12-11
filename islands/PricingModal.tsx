@@ -106,7 +106,8 @@ export function PricingModal() {
                   Support
                 </h2>
                 <p class="text-xs sm:text-sm text-purple-900 mt-1">
-                  Free forever. Support to unlock extras and fund more apps like this.
+                  Free forever. Support to unlock extras and fund more apps like
+                  this.
                 </p>
               </div>
               <button
@@ -129,7 +130,9 @@ export function PricingModal() {
                 <div class="text-center mb-4">
                   <h3 class="text-2xl font-black text-black">Free</h3>
                   <div class="text-4xl font-black text-black mt-2">$0</div>
-                  <p class="text-sm text-gray-600 mt-1">Make QRs. Keep your data. No strings.</p>
+                  <p class="text-sm text-gray-600 mt-1">
+                    Make QRs. Keep your data. No strings.
+                  </p>
                 </div>
 
                 <ul class="space-y-3 text-sm flex-grow">
@@ -165,14 +168,15 @@ export function PricingModal() {
                     <>
                       {PRICING_TIERS.pro.upcomingFeatures.map((feature) => (
                         <li key={feature} class="flex items-start gap-2">
-                          <span class="text-purple-600 font-bold flex-shrink-0">✓</span>
+                          <span class="text-purple-600 font-bold flex-shrink-0">
+                            ✓
+                          </span>
                           <span>{feature}</span>
                         </li>
                       ))}
                     </>
                   )}
                 </ul>
-
 
                 {getPricingGlobal().__PAYMENT_URL_PRO__ && (
                   <button
@@ -198,7 +202,8 @@ export function PricingModal() {
                     Why one-time instead of subscription?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    Because subscriptions suck. Pay once, keep forever. No recurring charges, no anxiety.
+                    Because subscriptions suck. Pay once, keep forever. No
+                    recurring charges, no anxiety.
                   </p>
                 </details>
                 <details class="group">

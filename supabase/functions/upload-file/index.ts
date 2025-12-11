@@ -100,17 +100,17 @@ serve(async (req) => {
 
     // If multiple files, enforce IMAGES ONLY
     const isMultiFile = files.length > 1;
-    
+
     // Validate each file
     for (const file of files) {
       // Check file size (5MB limit per file for multi-file, or 50MB for single)
       const sizeLimit = isMultiFile ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
       if (file.size > sizeLimit) {
         return new Response(
-          JSON.stringify({ 
-            error: isMultiFile 
-              ? `File ${file.name} too large (max 5MB for slideshows)` 
-              : "File too large (max 50MB)" 
+          JSON.stringify({
+            error: isMultiFile
+              ? `File ${file.name} too large (max 5MB for slideshows)`
+              : "File too large (max 50MB)",
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -121,11 +121,14 @@ serve(async (req) => {
 
       // Validate file type
       const fileName = file.name.toLowerCase();
-      
+
       // If multi-file, MUST be image
       if (isMultiFile && !file.type.startsWith("image/")) {
         return new Response(
-          JSON.stringify({ error: `File ${file.name} is not an image. Slideshows only support images.` }),
+          JSON.stringify({
+            error:
+              `File ${file.name} is not an image. Slideshows only support images.`,
+          }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 400,
@@ -135,12 +138,53 @@ serve(async (req) => {
 
       // Block dangerous extensions (same logic as before)
       const blockedExtensions = [
-        "exe", "bat", "cmd", "sh", "app", "dmg", "pkg", "deb", "rpm", "msi",
-        "scr", "vbs", "js", "jar", "apk", "ipa", "com", "pif", "application",
-        "gadget", "msp", "cpl", "hta", "inf", "ins", "isp", "jse", "lnk",
-        "msc", "psc1", "reg", "scf", "vb", "vbe", "wsf", "wsh", "ps1",
-        "ps1xml", "ps2", "ps2xml", "psc2", "msh", "msh1", "msh2", "mshxml",
-        "msh1xml", "msh2xml",
+        "exe",
+        "bat",
+        "cmd",
+        "sh",
+        "app",
+        "dmg",
+        "pkg",
+        "deb",
+        "rpm",
+        "msi",
+        "scr",
+        "vbs",
+        "js",
+        "jar",
+        "apk",
+        "ipa",
+        "com",
+        "pif",
+        "application",
+        "gadget",
+        "msp",
+        "cpl",
+        "hta",
+        "inf",
+        "ins",
+        "isp",
+        "jse",
+        "lnk",
+        "msc",
+        "psc1",
+        "reg",
+        "scf",
+        "vb",
+        "vbe",
+        "wsf",
+        "wsh",
+        "ps1",
+        "ps1xml",
+        "ps2",
+        "ps2xml",
+        "psc2",
+        "msh",
+        "msh1",
+        "msh2",
+        "mshxml",
+        "msh1xml",
+        "msh2xml",
       ];
 
       const hasBlockedExt = blockedExtensions.some((ext) =>
@@ -150,7 +194,8 @@ serve(async (req) => {
       if (hasBlockedExt) {
         return new Response(
           JSON.stringify({
-            error: `File type of '${file.name}' is not allowed for security reasons.`,
+            error:
+              `File type of '${file.name}' is not allowed for security reasons.`,
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -192,7 +237,7 @@ serve(async (req) => {
     // Store metadata in database
     // For backward compatibility, store the first file's details in the main columns
     const firstFile = uploadedFiles[0];
-    
+
     const { error: dbError } = await supabase
       .from("destructible_files")
       .insert({
@@ -230,7 +275,8 @@ serve(async (req) => {
         success: true,
         fileId: mainId,
         url: retrievalUrl,
-        fileName: firstFile.name + (files.length > 1 ? ` + ${files.length - 1} more` : ""),
+        fileName: firstFile.name +
+          (files.length > 1 ? ` + ${files.length - 1} more` : ""),
         size: files.reduce((acc, f) => acc + f.size, 0),
         maxDownloads,
         message,

@@ -10,7 +10,6 @@ import {
 } from "../_shared/rate-limit.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {

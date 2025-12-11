@@ -20,7 +20,6 @@ import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import RotatingTitle from "../islands/RotatingTitle.tsx";
 
 interface HomeProps {
-
   paymentUrlPro?: string;
   supabaseUrl?: string;
   supabaseAnonKey?: string;
@@ -28,13 +27,11 @@ interface HomeProps {
 
 export const handler: Handlers<HomeProps> = {
   GET(_req, ctx) {
-
     const paymentUrlPro = Deno.env.get("PAYMENT_URL_PRO");
     const supabaseUrl = getSupabaseUrl();
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
     return ctx.render({
-
       paymentUrlPro,
       supabaseUrl: supabaseUrl ?? undefined,
       supabaseAnonKey: supabaseAnonKey ?? undefined,
