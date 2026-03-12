@@ -195,7 +195,7 @@ serve(async (req) => {
     // Use APP_URL from environment, fallback to localhost for dev
     const baseUrl = Deno.env.get("APP_URL") ||
       (Deno.env.get("DENO_DEPLOYMENT_ID")
-        ? "https://qrbuddy.app"
+        ? "https://qrbuddy.deno.dev"
         : "http://localhost:8000");
 
     return new Response(

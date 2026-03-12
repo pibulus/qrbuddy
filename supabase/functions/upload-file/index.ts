@@ -260,7 +260,7 @@ serve(async (req) => {
     // Generate retrieval URL
     const baseUrl = Deno.env.get("APP_URL") ||
       (Deno.env.get("DENO_DEPLOYMENT_ID")
-        ? `https://qrbuddy.app`
+        ? `https://qrbuddy.deno.dev`
         : `http://localhost:8000`);
     const retrievalUrl = `${baseUrl}/f/${mainId}`;
 

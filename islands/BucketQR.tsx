@@ -553,80 +553,32 @@ export default function BucketQR({
                 </div>
               )}
 
-              {/* Image Preview */}
-              {contentMetadata?.mimetype?.startsWith("image/") && (
-                <div class="relative rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-white">
-                  {isPasswordProtected
-                    ? (
-                      <div class="h-48 flex items-center justify-center bg-gray-100 text-gray-400">
-                        <span class="text-4xl">🔒</span>
-                        <p class="text-sm ml-2">Download to view</p>
-                      </div>
-                    )
-                    : (
-                      <img
-                        src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
-                        alt="Bucket content"
-                        class="w-full h-auto object-cover"
-                      />
-                    )}
-                </div>
-              )}
-
-              {/* Audio Preview */}
-              {contentMetadata?.mimetype?.startsWith("audio/") && (
-                <div class="bg-white border-4 border-black rounded-xl p-4 shadow-chunky">
-                  <div class="flex items-center gap-3 mb-2">
-                    <span class="text-2xl animate-bounce">🎵</span>
-                    <span class="font-bold text-sm truncate">
-                      {contentMetadata.filename}
-                    </span>
-                  </div>
-                  {isPasswordProtected
-                    ? (
-                      <div class="text-center text-sm text-gray-500 py-2">
-                        Download to listen 🔒
-                      </div>
-                    )
-                    : (
-                      <audio
-                        controls
-                        src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
-                        class="w-full"
-                      />
-                    )}
-                </div>
-              )}
-
-              {/* Video Preview */}
-              {contentMetadata?.mimetype?.startsWith("video/") && (
-                <div class="rounded-xl overflow-hidden border-4 border-black shadow-chunky bg-black">
-                  {isPasswordProtected
-                    ? (
-                      <div class="h-48 flex items-center justify-center text-gray-500">
-                        <span class="text-4xl">🔒</span>
-                        <p class="text-sm ml-2">Download to view</p>
-                      </div>
-                    )
-                    : (
-                      <video
-                        controls
-                        src={`${supabaseUrl}/functions/v1/download-from-bucket?bucket_code=${bucketCode}`}
-                        class="w-full"
-                      />
-                    )}
-                </div>
-              )}
-
-              {/* Generic File Preview (if mimetype not handled above but metadata exists) */}
-              {contentMetadata &&
-                !contentMetadata.mimetype?.startsWith("image/") &&
-                !contentMetadata.mimetype?.startsWith("audio/") &&
-                !contentMetadata.mimetype?.startsWith("video/") && (
+              {/* File Info Card - shows file details without destructive preview */}
+              {contentMetadata && (
                 <div class="bg-white border-4 border-black rounded-xl p-6 shadow-chunky text-center">
-                  <span class="text-4xl block mb-2">📄</span>
-                  <p class="font-bold text-lg">{contentMetadata.filename}</p>
-                  <p class="text-sm text-gray-500">
+                  <span class="text-5xl block mb-3">
+                    {contentMetadata.mimetype?.startsWith("image/")
+                      ? "🖼️"
+                      : contentMetadata.mimetype?.startsWith("audio/")
+                      ? "🎵"
+                      : contentMetadata.mimetype?.startsWith("video/")
+                      ? "🎬"
+                      : contentMetadata.mimetype?.includes("pdf")
+                      ? "📕"
+                      : contentMetadata.mimetype?.includes("zip") ||
+                          contentMetadata.mimetype?.includes("archive")
+                      ? "📦"
+                      : "📄"}
+                  </span>
+                  <p class="font-bold text-lg truncate">
+                    {contentMetadata.filename}
+                  </p>
+                  {typeof contentMetadata.size === "number" && (
+                    <p class="text-sm text-gray-500 mt-1">
+                      {(contentMetadata.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  )}
+                  <p class="text-xs text-gray-400 mt-1">
                     {contentMetadata.mimetype}
                   </p>
                 </div>

@@ -263,12 +263,24 @@ export default function FileSlideshow({
               : (
                 <div class="text-center p-8">
                   <div class="text-8xl mb-6 animate-bounce-slow">
-                    {isUnlimited ? "📦" : "💣"}
+                    {isUnlimited
+                      ? (isImage
+                        ? "🖼️"
+                        : isVideo
+                        ? "🎬"
+                        : isAudio
+                        ? "🎵"
+                        : "📦")
+                      : "💣"}
                   </div>
                   <h2 class="text-2xl font-bold mb-2">
                     {isUnlimited ? "Shared File" : "Self-Destructing File"}
                   </h2>
-                  <p class="opacity-60">Preview not available</p>
+                  <p class="opacity-60 mb-1">{displayFileName}</p>
+                  <p class="opacity-40 text-sm">
+                    {fileSizeMB} MB
+                    {displayMimeType ? ` · ${displayMimeType}` : ""}
+                  </p>
                 </div>
               )}
           </div>
@@ -301,7 +313,17 @@ export default function FileSlideshow({
                   : "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
               }`}
             >
-              {isUnlimited ? "Download Image ↓" : "Download & Destroy 💥"}
+              {isUnlimited
+                ? `Download ${
+                  isImage
+                    ? "Image"
+                    : isVideo
+                    ? "Video"
+                    : isAudio
+                    ? "Audio"
+                    : "File"
+                } ↓`
+                : "Download & Destroy 💥"}
             </a>
 
             {/* Download All Button */}
