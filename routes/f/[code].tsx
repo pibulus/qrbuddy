@@ -11,6 +11,7 @@ interface FileData {
   remainingDownloads: number;
   isExpired: boolean;
   mimeType?: string;
+  theme?: string;
   files?: Array<{
     id: string;
     path: string;
