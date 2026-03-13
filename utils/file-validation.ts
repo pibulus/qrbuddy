@@ -6,7 +6,7 @@
  * Validates files BEFORE upload for better UX and security.
  *
  * Key Features:
- * - File size validation (25MB limit)
+ * - File size validation (50MB limit)
  * - File extension blocking (prevents executable files)
  * - MIME type validation (additional security layer)
  * - User-friendly error messages
@@ -27,7 +27,7 @@
  */
 
 /**
- * Maximum allowed file size: 25MB
+ * Maximum allowed file size: 50MB
  * Matches Supabase edge function limit
  */
 export const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -118,7 +118,7 @@ export interface FileValidationResult {
  * Validate file for upload
  *
  * Performs comprehensive client-side validation:
- * 1. Checks file size against MAX_FILE_SIZE (25MB)
+ * 1. Checks file size against MAX_FILE_SIZE (50MB)
  * 2. Checks file extension against BLOCKED_EXTENSIONS
  * 3. Checks MIME type against BLOCKED_MIME_TYPES
  *
@@ -140,7 +140,7 @@ export function validateFile(file: File): FileValidationResult {
   if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
-      error: "File too large (max 25MB)",
+      error: "File too large (max 50MB)",
     };
   }
 

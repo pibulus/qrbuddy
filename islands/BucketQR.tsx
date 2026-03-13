@@ -375,33 +375,43 @@ export default function BucketQR({
     }
   };
 
+  const handleCopyUrl = async () => {
+    haptics.light();
+    try {
+      await navigator.clipboard.writeText(bucketUrl);
+      const event = new CustomEvent("show-toast", {
+        detail: {
+          message: "Bucket URL copied! 📋",
+          type: "success",
+        },
+      });
+      globalThis.dispatchEvent(event);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+      const event = new CustomEvent("show-toast", {
+        detail: {
+          message: "Failed to copy URL ❌",
+          type: "error",
+        },
+      });
+      globalThis.dispatchEvent(event);
+    }
+  };
+
   return (
     <div class="space-y-6">
       {/* Giant Interactive QR Code */}
       <div
         ref={canvasRef}
         class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-all duration-300 mx-auto max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto"
-        onClick={async () => {
-          haptics.light();
-          // Copy URL on click
-          try {
-            await navigator.clipboard.writeText(bucketUrl);
-            const event = new CustomEvent("show-toast", {
-              detail: {
-                message: "Bucket URL copied! 📋",
-                type: "success",
-              },
-            });
-            globalThis.dispatchEvent(event);
-          } catch (err) {
-            console.error("Failed to copy URL:", err);
-            const event = new CustomEvent("show-toast", {
-              detail: {
-                message: "Failed to copy URL ❌",
-                type: "error",
-              },
-            });
-            globalThis.dispatchEvent(event);
+        role="button"
+        tabIndex={0}
+        aria-label="Copy bucket URL to clipboard"
+        onClick={handleCopyUrl}
+        onKeyDown={(e: KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleCopyUrl();
           }
         }}
         title="Click to copy URL"
