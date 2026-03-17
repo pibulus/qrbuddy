@@ -73,9 +73,10 @@ export const handler: Handlers<BucketPageData> = {
     }
 
     const bucketUrl = `${
-      Deno.env.get("DENO_DEPLOYMENT_ID")
-        ? "https://qrbuddy.app"
-        : "http://localhost:8000"
+      Deno.env.get("APP_URL") ||
+      (Deno.env.get("DENO_DEPLOYMENT_ID")
+        ? "https://qrbuddy.deno.dev"
+        : "http://localhost:8000")
     }/bucket/${code}`;
 
     return ctx.render({

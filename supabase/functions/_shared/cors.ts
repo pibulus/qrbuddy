@@ -3,15 +3,21 @@
 
 /**
  * Get allowed origin based on environment
- * Production: Only qrbuddy.app
+ * Production: qrbuddy.deno.dev (or APP_URL if set, e.g. qrbuddy.app once DNS is live)
  * Development: localhost for testing
  */
 function getAllowedOrigin(): string {
+  // Prefer APP_URL if explicitly set
+  const appUrl = Deno.env.get("APP_URL");
+  if (appUrl) {
+    return appUrl;
+  }
+
   // Check if we're in production (Deno Deploy)
   const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID");
 
   if (isProduction) {
-    return "https://qrbuddy.app";
+    return "https://qrbuddy.deno.dev";
   }
 
   // Development: allow localhost

@@ -225,7 +225,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 ### Security
 
 - **File Upload Security**: Client-side validation blocks executable files and
-  enforces 25MB size limit using `utils/file-validation.ts`
+  enforces 50MB size limit using `utils/file-validation.ts`
 - **URL Validation**: All redirect URLs validated to prevent open redirect
   vulnerabilities (blocks javascript:, data:, file: protocols)
 - **CORS Policy**: Environment-specific origins (qrbuddy.app in prod, localhost

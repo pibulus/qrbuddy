@@ -250,10 +250,19 @@ export default function QRCanvas(
       <div
         ref={canvasRef}
         onClick={handleDownloadClick}
+        onKeyDown={(e: KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleDownloadClick();
+          }
+        }}
         onDragOver={handleDragOver}
         onDragEnter={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        role="button"
+        tabIndex={0}
+        aria-label="Download QR code as PNG"
         class={`
           bg-white rounded-chunky border-4
           ${showSuccessFlash ? "border-green-500" : "border-black"}
