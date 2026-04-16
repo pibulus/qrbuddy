@@ -3,12 +3,12 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return createCorsResponse(req);
   }
 
   try {
@@ -20,7 +20,10 @@ serve(async (req) => {
         JSON.stringify({ error: "File ID required" }),
         {
           status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
         },
       );
     }
@@ -42,7 +45,10 @@ serve(async (req) => {
         JSON.stringify({ error: "File not found or already destroyed" }),
         {
           status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
         },
       );
     }
@@ -71,7 +77,7 @@ serve(async (req) => {
         isExpired,
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       },
     );
   } catch (error) {
@@ -81,7 +87,7 @@ serve(async (req) => {
       JSON.stringify({ error: message }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       },
     );
   }

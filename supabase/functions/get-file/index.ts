@@ -3,13 +3,13 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
-function redirectTo(path: string, status = 302) {
+function redirectTo(path: string, request?: Request, status = 302) {
   return new Response(null, {
     status,
     headers: {
-      ...corsHeaders,
+      ...getCorsHeaders(request),
       "Location": path,
     },
   });
@@ -18,7 +18,7 @@ function redirectTo(path: string, status = 302) {
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return createCorsResponse(req);
   }
 
   try {
@@ -26,7 +26,7 @@ serve(async (req) => {
     const fileId = url.searchParams.get("id");
 
     if (!fileId) {
-      return redirectTo("/boom");
+      return redirectTo("/boom", req);
     }
 
     const supabase = createClient(
@@ -42,7 +42,7 @@ serve(async (req) => {
       .single();
 
     if (fetchError || !file) {
-      return redirectTo("/boom");
+      return redirectTo("/boom", req);
     }
 
     // Treat null/undefined as unlimited (999999)
@@ -53,7 +53,7 @@ serve(async (req) => {
     if (
       file.accessed || (maxDownloads < 999999 && downloadCount >= maxDownloads)
     ) {
-      return redirectTo("/boom");
+      return redirectTo("/boom", req);
     }
 
     // Check if a specific file path is requested (for multi-file)
@@ -114,7 +114,7 @@ serve(async (req) => {
       const chunkSize = (end - start) + 1;
 
       const headers = {
-        ...corsHeaders,
+        ...getCorsHeaders(req),
         "Content-Type": targetMime || "application/octet-stream",
         "Content-Range": `bytes ${start}-${end}/${fileSize}`,
         "Accept-Ranges": "bytes",
@@ -132,7 +132,7 @@ serve(async (req) => {
 
     // Serve the full file
     const headers = {
-      ...corsHeaders,
+      ...getCorsHeaders(req),
       "Content-Type": targetMime || "application/octet-stream",
       "Content-Disposition": `attachment; filename="${targetName}"`,
       "Content-Length": String(fileSize),
@@ -148,6 +148,6 @@ serve(async (req) => {
     return new Response(fileData, { headers });
   } catch (error) {
     console.error("File download error:", error);
-    return redirectTo("/boom");
+    return redirectTo("/boom", req);
   }
 });

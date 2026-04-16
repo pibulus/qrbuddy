@@ -8,7 +8,7 @@ import {
   createRateLimitResponse,
   getClientIP,
 } from "../_shared/rate-limit.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { validateFile } from "../_shared/file-validation.ts";
 
 type BucketContentMetadata = Record<string, unknown>;
@@ -17,7 +17,7 @@ type UploadContentType = "file" | "text" | "link";
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return createCorsResponse(req);
   }
 
   try {
@@ -29,7 +29,7 @@ serve(async (req) => {
     });
 
     if (rateLimitResult.isLimited) {
-      return createRateLimitResponse(rateLimitResult, corsHeaders);
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
     }
 
     const supabase = createClient(
@@ -45,7 +45,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "bucket_code and owner_token required" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 400,
         },
       );
@@ -62,7 +65,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Invalid bucket" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 404,
         },
       );
@@ -94,7 +100,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Invalid owner token" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 403,
         },
       );
@@ -107,7 +116,10 @@ serve(async (req) => {
           error: "Bucket is full. Download current content first.",
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 400,
         },
       );
@@ -127,7 +139,10 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "No file provided" }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 400,
           },
         );
@@ -139,7 +154,10 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: validation.error }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 400,
           },
         );
@@ -183,7 +201,10 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "type and content required" }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 400,
           },
         );
@@ -201,7 +222,10 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "Invalid type. Must be 'text' or 'link'" }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 400,
           },
         );
@@ -231,7 +255,7 @@ serve(async (req) => {
         is_empty: false,
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       },
     );
   } catch (error) {
@@ -241,7 +265,7 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : String(error),
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         status: 500,
       },
     );

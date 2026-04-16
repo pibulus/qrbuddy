@@ -9,7 +9,7 @@ import {
   createRateLimitResponse,
   getClientIP,
 } from "../_shared/rate-limit.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
 const UNLIMITED_DOWNLOADS = 999999;
 const MAX_DOWNLOADS_LIMIT = UNLIMITED_DOWNLOADS;
@@ -18,7 +18,7 @@ const DEFAULT_MAX_DOWNLOADS = UNLIMITED_DOWNLOADS;
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return createCorsResponse(req);
   }
 
   try {
@@ -30,7 +30,7 @@ serve(async (req) => {
     });
 
     if (rateLimitResult.isLimited) {
-      return createRateLimitResponse(rateLimitResult, corsHeaders);
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
     }
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -60,7 +60,10 @@ serve(async (req) => {
             "Limit reached. You can only have 3 active files at a time. Wait for them to be downloaded or expire.",
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 403,
         },
       );
@@ -81,7 +84,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "No file provided" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 400,
         },
       );
@@ -92,7 +98,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Max 10 files allowed per share." }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 400,
         },
       );
@@ -113,7 +122,10 @@ serve(async (req) => {
               : "File too large (max 50MB)",
           }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 400,
           },
         );
@@ -130,7 +142,10 @@ serve(async (req) => {
               `File ${file.name} is not an image. Slideshows only support images.`,
           }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 400,
           },
         );
@@ -198,7 +213,10 @@ serve(async (req) => {
               `File type of '${file.name}' is not allowed for security reasons.`,
           }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 400,
           },
         );
@@ -281,7 +299,9 @@ serve(async (req) => {
         maxDownloads,
         message,
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      },
     );
   } catch (error) {
     return new Response(
@@ -289,7 +309,7 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : String(error),
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         status: 500,
       },
     );

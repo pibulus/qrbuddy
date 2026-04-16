@@ -8,7 +8,7 @@ import {
   createRateLimitResponse,
   getClientIP,
 } from "../_shared/rate-limit.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
 // Generate short code (6 chars, URL-safe)
 function generateShortCode(): string {
@@ -28,7 +28,7 @@ function generateOwnerToken(): string {
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return createCorsResponse(req);
   }
 
   try {
@@ -40,7 +40,7 @@ serve(async (req) => {
     });
 
     if (rateLimitResult.isLimited) {
-      return createRateLimitResponse(rateLimitResult, corsHeaders);
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
     }
 
     const supabase = createClient(
@@ -63,7 +63,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "destination_url is required" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 400,
         },
       );
@@ -96,7 +99,10 @@ serve(async (req) => {
             "Invalid URL format or protocol. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.",
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 400,
         },
       );
@@ -134,7 +140,10 @@ serve(async (req) => {
                   `Invalid URL in routing config: ${url}. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.`,
               }),
               {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                headers: {
+                  ...getCorsHeaders(req),
+                  "Content-Type": "application/json",
+                },
                 status: 400,
               },
             );
@@ -146,7 +155,10 @@ serve(async (req) => {
             error: "Invalid routing_config format",
           }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 400,
           },
         );
@@ -210,7 +222,7 @@ serve(async (req) => {
         expires_at: expires_at || null,
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
       },
     );
   } catch (error) {
@@ -224,7 +236,7 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : String(error),
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         status: 500,
       },
     );

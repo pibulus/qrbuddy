@@ -8,12 +8,12 @@ import {
   createRateLimitResponse,
   getClientIP,
 } from "../_shared/rate-limit.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return createCorsResponse(req);
   }
 
   try {
@@ -25,7 +25,7 @@ serve(async (req) => {
     });
 
     if (rateLimitResult.isLimited) {
-      return createRateLimitResponse(rateLimitResult, corsHeaders);
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
     }
 
     const supabase = createClient(
@@ -52,7 +52,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "bucket_code required" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 400,
         },
       );
@@ -69,7 +72,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Database error" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 500,
         },
       );
@@ -83,7 +89,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Bucket not found, empty, or busy" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 404,
         },
       );
@@ -98,7 +107,10 @@ serve(async (req) => {
             error: "Password protected buckets require POST request",
           }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 405,
           },
         );
@@ -108,7 +120,10 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "Password required" }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 401,
           },
         );
@@ -143,14 +158,17 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "Invalid password" }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
             status: 401,
           },
         );
       }
     }
 
-    const responseHeaders: Record<string, string> = { ...corsHeaders };
+    const responseHeaders: Record<string, string> = { ...getCorsHeaders(req) };
 
     // Handle different content types
     if (bucket.content_type === "file") {
@@ -239,14 +257,20 @@ serve(async (req) => {
       return new Response(
         JSON.stringify(payload),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
         },
       );
     } else {
       return new Response(
         JSON.stringify({ error: "Unknown content type" }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
           status: 500,
         },
       );
@@ -258,7 +282,7 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : String(error),
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
         status: 500,
       },
     );

@@ -8,13 +8,13 @@ import {
   createRateLimitResponse,
   getClientIP,
 } from "../_shared/rate-limit.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
-function redirectWithCors(path: string, status = 302) {
+function redirectWithCors(path: string, request?: Request, status = 302) {
   return new Response(null, {
     status,
     headers: {
-      ...corsHeaders,
+      ...getCorsHeaders(request),
       "Location": path,
     },
   });
@@ -44,7 +44,7 @@ function isValidRedirectUrl(url: string): boolean {
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return createCorsResponse(req);
   }
 
   try {
@@ -57,7 +57,7 @@ serve(async (req) => {
 
     if (rateLimitResult.isLimited) {
       // For redirects, we return JSON rather than redirecting
-      return createRateLimitResponse(rateLimitResult, corsHeaders);
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
     }
 
     const url = new URL(req.url);
@@ -81,12 +81,12 @@ serve(async (req) => {
 
     if (fetchError || !qr) {
       // QR doesn't exist - redirect to home
-      return redirectWithCors("/");
+      return redirectWithCors("/", req);
     }
 
     // Check if QR is active
     if (!qr.is_active) {
-      return redirectWithCors("/boom");
+      return redirectWithCors("/boom", req);
     }
 
     // Check if expired
@@ -99,7 +99,7 @@ serve(async (req) => {
           .from("dynamic_qr_codes")
           .update({ is_active: false })
           .eq("short_code", shortCode);
-        return redirectWithCors("/boom");
+        return redirectWithCors("/boom", req);
       }
     }
 
@@ -110,7 +110,7 @@ serve(async (req) => {
         .from("dynamic_qr_codes")
         .update({ is_active: false })
         .eq("short_code", shortCode);
-      return redirectWithCors("/boom");
+      return redirectWithCors("/boom", req);
     }
 
     // --------------------------------------------------------------------------
@@ -254,7 +254,7 @@ serve(async (req) => {
         timestamp: new Date().toISOString(),
       });
       // Redirect to home instead of malicious URL
-      return redirectWithCors("/");
+      return redirectWithCors("/", req);
     }
 
     // --------------------------------------------------------------------------
@@ -357,13 +357,13 @@ serve(async (req) => {
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
-          ...corsHeaders,
+          ...getCorsHeaders(req),
         },
       });
     }
 
     // Redirect to destination
-    return redirectWithCors(destinationUrl);
+    return redirectWithCors(destinationUrl, req);
   } catch (error) {
     // Log detailed error information for security monitoring
     console.error("[SECURITY] Redirect failed:", {
@@ -386,6 +386,6 @@ serve(async (req) => {
     }
 
     // For all other errors, redirect to home as fallback
-    return redirectWithCors("/");
+    return redirectWithCors("/", req);
   }
 });

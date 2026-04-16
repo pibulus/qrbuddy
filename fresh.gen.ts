@@ -9,6 +9,7 @@ import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $edit from "./routes/edit.tsx";
 import * as $f_code_ from "./routes/f/[code].tsx";
+import * as $go from "./routes/go.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
@@ -65,6 +66,7 @@ const manifest = {
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/edit.tsx": $edit,
     "./routes/f/[code].tsx": $f_code_,
+    "./routes/go.tsx": $go,
     "./routes/index.tsx": $index,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
