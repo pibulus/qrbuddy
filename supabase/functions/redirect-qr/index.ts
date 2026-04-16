@@ -212,33 +212,28 @@ serve(async (req) => {
         console.error("Error parsing device config:", e);
       }
     } else if (qr.routing_mode === "time" && qr.routing_config) {
-      // TIME ROUTING
+      // TIME ROUTING - uses scanner's timezone via Cloudflare header,
+      // falls back to config.timezone IANA string, then UTC
       try {
         const config = typeof qr.routing_config === "string"
           ? JSON.parse(qr.routing_config)
           : qr.routing_config;
 
-        // Config format: { startTime: "09:00", endTime: "17:00", activeUrl: "...", inactiveUrl: "..." }
-        // We assume the time is in the user's target timezone or UTC?
-        // For MVP, let's assume UTC or server time, or simple hour check.
-        // Better: Store timezone in config, or just use simple HH:MM comparison against UTC?
-        // Let's stick to simple UTC for now or allow user to specify offset.
-        // Actually, let's keep it simple: "Work Hours" (9-5) usually implies local time.
-        // But we don't know the user's local time easily without complex UI.
-        // Let's implement a simple "Current Hour" check based on a provided timezone offset in config.
-
-        const now = new Date();
-        const utcHour = now.getUTCHours();
-        const offset = config.timezoneOffset || 0; // Hours offset from UTC
-        const localHour = (utcHour + offset + 24) % 24;
+        const tz = req.headers.get("cf-timezone") ||
+          config.timezone ||
+          "UTC";
+        const scannerTime = new Date(
+          new Date().toLocaleString("en-US", { timeZone: tz }),
+        );
+        const localHour = scannerTime.getHours();
 
         const startHour = parseInt(config.startHour || "9");
         const endHour = parseInt(config.endHour || "17");
 
         if (localHour >= startHour && localHour < endHour) {
-          destinationUrl = config.activeUrl;
+          if (config.activeUrl) destinationUrl = config.activeUrl;
         } else {
-          destinationUrl = config.inactiveUrl;
+          if (config.inactiveUrl) destinationUrl = config.inactiveUrl;
         }
       } catch (e) {
         console.error("Error parsing time config:", e);

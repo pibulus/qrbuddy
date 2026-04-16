@@ -94,7 +94,7 @@ export default function EditQRForm() {
         endHour,
         activeUrl: timeActiveUrl,
         inactiveUrl: timeInactiveUrl,
-        timezoneOffset: 0, // Default to UTC for now, or browser offset?
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
     }
 
