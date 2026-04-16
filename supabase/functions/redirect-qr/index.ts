@@ -148,10 +148,16 @@ serve(async (req) => {
     else if (ua.includes("firefox")) browser = "firefox";
     else if (ua.includes("edge")) browser = "edge";
 
-    // Log to DB (Async - don't await to keep redirect fast?)
-    // Actually, for Edge Functions, we should await or use EdgeRuntime.waitUntil if available.
-    // Deno Deploy doesn't support waitUntil yet in standard serve, so we await but keep it fast.
-    const logPromise = supabase
+    // Atomically increment scan count and get the new value
+    // This prevents race conditions where concurrent scans read the same count
+    const { data: newScanCount } = await supabase
+      .rpc("increment_scan_count", { p_short_code: shortCode });
+
+    // The scan index for routing is the pre-increment value (0-based)
+    const scanIndex = (newScanCount ?? qr.scan_count + 1) - 1;
+
+    // Log scan analytics (fire and forget - don't block redirect)
+    supabase
       .from("scan_logs")
       .insert({
         qr_id: qr.id,
@@ -160,16 +166,10 @@ serve(async (req) => {
         browser: browser,
         country: country,
         city: city,
+      })
+      .then(({ error }) => {
+        if (error) console.error("Scan log insert failed:", error.message);
       });
-
-    // Increment scan count (Legacy counter)
-    const countPromise = supabase
-      .from("dynamic_qr_codes")
-      .update({ scan_count: qr.scan_count + 1 })
-      .eq("short_code", shortCode);
-
-    // Run DB updates in parallel
-    await Promise.all([logPromise, countPromise]);
 
     // --------------------------------------------------------------------------
     // 2. SMART ROUTING ENGINE
@@ -177,7 +177,6 @@ serve(async (req) => {
     let destinationUrl = qr.destination_url;
 
     if (qr.routing_mode === "sequential" && qr.routing_config) {
-      // ... (Existing Sequential Logic) ...
       try {
         const config = typeof qr.routing_config === "string"
           ? JSON.parse(qr.routing_config)
@@ -189,9 +188,9 @@ serve(async (req) => {
         if (urls.length > 0) {
           let index = 0;
           if (loop) {
-            index = qr.scan_count % urls.length;
+            index = scanIndex % urls.length;
           } else {
-            index = Math.min(qr.scan_count, urls.length - 1);
+            index = Math.min(scanIndex, urls.length - 1);
           }
           destinationUrl = urls[index];
         }
