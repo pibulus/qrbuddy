@@ -59,13 +59,13 @@ The local API server runs on port 8005 and stores files in `local-api/files/`
 ### 🚀 Production Deployment (Supabase)
 
 For production deployment with Supabase backend, see
-**[SUPABASE-TODO.md](./docs/SUPABASE-TODO.md)** for the migration guide.
+**[Deployment Guide](./docs/SUPABASE_DEPLOYMENT_GUIDE.md)**.
 
 **TL;DR:**
 
 1. Create Supabase project
 2. Run `supabase/setup.sql` in SQL Editor
-3. Deploy 11 edge functions
+3. Deploy 13 edge functions
 4. Set environment variables
 5. Deploy Fresh app to Deno Deploy
 
