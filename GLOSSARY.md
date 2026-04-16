@@ -1,6 +1,6 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components - 17 total)
+## Islands (Interactive Components - 41 registered)
 
 **Core QR Components:**
 
@@ -12,6 +12,10 @@
 - `TemplateModal` - WiFi/vCard/SMS/Email/Text helpers that write into SmartInput
 - `LogoUploader` - Custom center-logo uploader with previews
 - `ActionButtons` - Download/copy/share triggers tied to signals
+- `ShareActions` - Share sheet for QR codes
+- `HistoryDrawer` - QR generation history panel
+- `RotatingTitle` - Animated header text
+- `FileSlideshow` - Multi-image slideshow viewer
 
 **Modals & Overlays:**
 
@@ -31,6 +35,38 @@
 - `ErrorBoundary` - QR generation error handling
 - `EasterEggs` - Hidden features and playful interactions
 - `Analytics` - PostHog analytics integration
+
+**Sub-Islands (edit-qr/):**
+
+- `AnalyticsDashboard` - QR scan analytics view
+- `QRStatusCard` - Status display for dynamic QR
+- `RoutingConfigForm` - Multi-destination routing editor
+- `RoutingModeSelector` - Simple vs sequential routing toggle
+
+**Sub-Islands (extras/):**
+
+- `BatchSettings` - Batch QR generation options
+- `EditableLinkSettings` - Dynamic link configuration
+- `LockerSettings` - File locker/bucket creation settings
+- `LogoSettings` - Logo upload settings panel
+- `MultiLinkSettings` - Multi-link QR options
+- `SplashSettings` - Splash page configuration
+- `TimeBombSettings` - Self-destructing QR options
+
+**Sub-Islands (smart-input/):**
+
+- `FileUploadOptions` - File upload UI controls
+- `SmartInputToolbar` - Input mode toolbar
+
+**Sub-Islands (templates/):**
+
+- `EmailForm` - Email template builder
+- `MediaHubForm` - Media/social hub template
+- `SMSForm` - SMS template builder
+- `SocialHubForm` - Social links template
+- `VCardForm` - Contact card template
+- `WebsiteForm` - Website URL template
+- `WiFiForm` - WiFi network template
 
 ## Utils
 

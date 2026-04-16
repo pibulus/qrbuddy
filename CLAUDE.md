@@ -73,7 +73,7 @@ HTML.
 - Orchestrates component layout
 - Handles SEO meta tags
 
-**Islands (Interactive Components - 17 total)**
+**Islands (Interactive Components - 41 registered)**
 
 See GLOSSARY.md for complete list organized by category. Key islands:
 
@@ -238,7 +238,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Performance Optimizations
 
-- **Islands Architecture**: Only interactive components hydrate (12 islands
+- **Islands Architecture**: Only interactive components hydrate (41 islands
   total)
 - **Signal-Based State**: Efficient reactive updates without re-renders
 - **Lazy QR Updates**: QR regenerates only on url/style change via useEffect
@@ -253,12 +253,13 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   tracking/analytics
 - **Database Schema**: Added `dynamic_qr_codes` table with scan limits and
   expiry tracking
-- **Edge Functions**: 11 total Supabase functions:
+- **Edge Functions**: 13 total Supabase functions:
   - Dynamic QRs: create-dynamic-qr, update-dynamic-qr, get-dynamic-qr,
     redirect-qr
   - Destructible files: upload-file, get-file, get-file-metadata
   - File buckets: create-bucket, get-bucket-status, upload-to-bucket,
     download-from-bucket
+  - System: health, cleanup-expired
 - **Smart Input Enhancements**: Checkbox + options UI for scan limits
   (1/5/10/100/∞) and expiry dates
 - **Edit Page**: New `/edit?token={owner_token}` route with EditQRForm island
@@ -268,7 +269,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   redirect logic
 - **Visual Indicators**: Purple/pink "editable" badge on dynamic QRs alongside
   destructible badge
-- **17 Interactive Islands**: Complete island architecture with modals,
+- **41 Interactive Islands**: Complete island architecture with modals,
   templates, and feature discovery
 
 ### Previous Features

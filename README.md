@@ -59,7 +59,7 @@ The local API server runs on port 8005 and stores files in `local-api/files/`
 ### 🚀 Production Deployment (Supabase)
 
 For production deployment with Supabase backend, see
-**[SUPABASE-TODO.md](./SUPABASE-TODO.md)** for complete migration guide.
+**[SUPABASE-TODO.md](./docs/SUPABASE-TODO.md)** for the migration guide.
 
 **TL;DR:**
 
@@ -87,11 +87,12 @@ qrbuddy/
 │   ├── q.tsx                 # Shared QR showcase
 │   ├── edit.tsx              # Dynamic QR editor
 │   ├── boom.tsx              # Self-destruct landing page
+│   ├── go.tsx                # Free-tier redirect interstitial
 │   ├── r.tsx / r/[code].tsx  # Redirect helpers
 │   ├── f/[code].tsx          # Destructible file download gate
 │   ├── bucket/[code].tsx     # File bucket viewer
 │   └── api/download-file.ts  # Server-side file proxy
-├── islands/              # Interactive Preact islands (17 total)
+├── islands/              # Interactive Preact islands (41 registered)
 │   ├── QRCanvas.tsx          # Core QR rendering + download/copy logic
 │   ├── SmartInput.tsx        # Smart input (URLs/files/text + dynamic settings)
 │   ├── StyleSelector.tsx     # Gradient selector + custom creator entry
@@ -106,12 +107,16 @@ qrbuddy/
 │   ├── EasterEggs.tsx        # Hidden interactions
 │   ├── ToastManager.tsx      # Notification stack
 │   ├── ErrorBoundary.tsx     # QR error guard
-│   └── Analytics.tsx         # PostHog wiring
+│   ├── Analytics.tsx         # PostHog wiring
+│   ├── edit-qr/             # Dynamic QR edit sub-islands (4)
+│   ├── extras/              # Extras modal sub-islands (7)
+│   ├── smart-input/         # Input toolbar sub-islands (2)
+│   └── templates/           # Template form sub-islands (7)
 ├── local-api/            # Local mock Supabase edge function server
 │   └── server.ts             # Upload + dynamic QR emulator for dev
 ├── supabase/             # Production schema + edge functions
 │   ├── setup.sql             # Core tables
-│   └── functions/            # 11 edge functions
+│   └── functions/            # 13 edge functions
 ├── utils/                # Shared utilities
 │   ├── api.ts                # SUPABASE_URL + API helpers
 │   ├── haptics.ts            # Haptic wrappers
