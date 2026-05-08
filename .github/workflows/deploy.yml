@@ -27,8 +27,14 @@ jobs:
         run: "deno task build"
 
       - name: Upload to Deno Deploy
-        uses: denoland/deployctl@v1
-        with:
-          project: "qrbuddy"
-          entrypoint: "main.ts"
-          root: "."
+        if: github.event_name == 'push'
+        env:
+          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: >
+          deno run -A jsr:@deno/deployctl deploy --prod
+          --project=qrbuddy
+          --entrypoint=main.ts
+          --env=APP_URL=https://qrbuddy.app
+          --env=SUPABASE_URL=https://aqydpibnvlhcjcwosrti.supabase.co
+          --env=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
