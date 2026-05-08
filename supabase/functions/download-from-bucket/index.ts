@@ -10,6 +10,12 @@ import {
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
+function safeDownloadFilename(filename: unknown): string {
+  const fallback = "download";
+  if (typeof filename !== "string" || filename.trim() === "") return fallback;
+  return filename.replace(/[\r\n"\\]/g, "_");
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -210,8 +216,9 @@ serve(async (req) => {
 
       // Return file
       responseHeaders["Content-Type"] = bucket.content_metadata.mimetype;
-      responseHeaders["Content-Disposition"] =
-        `attachment; filename="${bucket.content_metadata.filename}"`;
+      responseHeaders["Content-Disposition"] = `attachment; filename="${
+        safeDownloadFilename(bucket.content_metadata.filename)
+      }"`;
       responseHeaders["X-Bucket-Emptied"] =
         (!bucket.is_reusable || bucket.delete_on_download).toString();
       responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
@@ -254,13 +261,15 @@ serve(async (req) => {
           .eq("id", bucket.id);
       }
 
+      responseHeaders["Content-Type"] = "application/json";
+      responseHeaders["X-Bucket-Emptied"] =
+        (!bucket.is_reusable || bucket.delete_on_download).toString();
+      responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
+
       return new Response(
         JSON.stringify(payload),
         {
-          headers: {
-            ...getCorsHeaders(req),
-            "Content-Type": "application/json",
-          },
+          headers: responseHeaders,
         },
       );
     } else {

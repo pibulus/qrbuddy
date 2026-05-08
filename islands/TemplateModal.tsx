@@ -64,7 +64,6 @@ export default function TemplateModal({
               placeholder="Enter your text here..."
               rows={4}
               class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none transition-colors resize-none font-medium"
-              autoFocus
             />
           </div>
         );
@@ -78,7 +77,7 @@ export default function TemplateModal({
   };
 
   return (
-    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6">
+    <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
         class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
@@ -88,32 +87,35 @@ export default function TemplateModal({
       {/* Modal */}
       <div class="relative w-full max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col animate-slide-up sm:animate-pop-in">
         {/* Header */}
-        <div class="flex items-center justify-between p-6 border-b-2 border-gray-100">
+        <div class="flex items-center justify-between p-4 sm:p-6 border-b-2 border-gray-100">
           <div>
-            <h2 class="text-2xl font-black text-gray-900">Choose Format</h2>
+            <h2 class="text-xl sm:text-2xl font-black text-gray-900">
+              Choose Format
+            </h2>
             <p class="text-sm text-gray-500 font-medium">
-              What kind of QR code do you want?
+              Pick one, then fill in the details.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            class="min-w-[44px] min-h-[44px] hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close templates modal"
           >
             <span class="text-xl">✕</span>
           </button>
         </div>
 
         {/* Content - Scrollable */}
-        <div class="flex-1 overflow-y-auto p-6">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
           {/* Template Grid/List */}
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-8">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-8">
             {(Object.keys(QR_TEMPLATES) as QRTemplateType[]).map((key) => {
               const template = QR_TEMPLATES[key];
               const isSelected = selectedTemplate === key;
 
               return (
-                <div key={key} class="contents sm:block">
+                <div key={key}>
                   <button
                     type="button"
                     onClick={() => {
@@ -124,7 +126,7 @@ export default function TemplateModal({
                       haptics.light();
                     }}
                     class={`
-                      flex sm:flex-col items-center sm:justify-center p-3 rounded-2xl border-3 transition-all duration-200 w-full text-left sm:text-center gap-4 sm:gap-0
+                      flex flex-col items-center justify-center min-h-[98px] sm:min-h-[116px] p-2.5 sm:p-3 rounded-2xl border-3 transition-all duration-200 w-full text-center gap-1
                       ${
                       isSelected
                         ? "bg-purple-100 border-purple-500 text-purple-700 shadow-chunky scale-[1.02] sm:scale-105 z-10"
@@ -132,48 +134,43 @@ export default function TemplateModal({
                     }
                     `}
                   >
-                    <span class="text-2xl sm:mb-1">{template.icon}</span>
+                    <span class="text-2xl">{template.icon}</span>
                     <span
-                      class={`text-lg sm:text-xs font-bold ${
+                      class={`text-sm font-black leading-tight ${
                         isSelected ? "text-purple-700" : "text-gray-500"
                       }`}
                     >
                       {template.label}
                     </span>
-                    {/* Mobile Chevron */}
-                    <span class="sm:hidden ml-auto text-gray-400">
-                      {isSelected ? "▼" : "›"}
+                    <span
+                      class={`hidden sm:block text-[11px] leading-tight ${
+                        isSelected ? "text-purple-600" : "text-gray-400"
+                      }`}
+                    >
+                      {template.description}
                     </span>
                   </button>
-
-                  {/* Mobile: Inline Form Accordion */}
-                  {isSelected && (
-                    <div class="sm:hidden mt-2 mb-4 animate-slide-down pl-4 border-l-4 border-purple-200">
-                      {renderTemplateForm()}
-                    </div>
-                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Desktop: Active Form at Bottom */}
-          <div class="hidden sm:block bg-white rounded-xl">
+          <div class="bg-white rounded-xl">
             {renderTemplateForm()}
           </div>
         </div>
 
         {/* Footer */}
-        <div class="p-6 border-t-2 border-gray-100 bg-gray-50 rounded-b-3xl">
+        <div class="p-4 sm:p-6 border-t-2 border-gray-100 bg-gray-50 rounded-b-3xl">
           <button
             type="button"
             onClick={() => {
               onClose();
               addToast("Template ready! ✨");
             }}
-            class="w-full py-4 bg-black text-white text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all"
+            class="w-full min-h-[52px] bg-black text-white text-lg sm:text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
-            Done
+            Use this format
           </button>
         </div>
       </div>

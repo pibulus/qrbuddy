@@ -14,6 +14,42 @@ import { validateFile } from "../_shared/file-validation.ts";
 type BucketContentMetadata = Record<string, unknown>;
 type UploadContentType = "file" | "text" | "link";
 
+async function sha256Hex(value: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    encoder.encode(value),
+  );
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function verifyOwnerToken(
+  storedToken: string,
+  incomingToken: string,
+): Promise<boolean> {
+  if (storedToken.length === 64) {
+    return (await sha256Hex(incomingToken)) === storedToken;
+  }
+
+  return storedToken === incomingToken;
+}
+
+async function verifyPassword(
+  storedHash: string | null,
+  incomingPassword: string | null,
+): Promise<boolean> {
+  if (!storedHash || !incomingPassword) return false;
+
+  if (storedHash.includes(":")) {
+    const [saltHex, hashHex] = storedHash.split(":");
+    return (await sha256Hex(saltHex + incomingPassword)) === hashHex;
+  }
+
+  return (await sha256Hex(incomingPassword)) === storedHash;
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -41,9 +77,9 @@ serve(async (req) => {
     const bucketCode = url.searchParams.get("bucket_code");
     const ownerToken = url.searchParams.get("owner_token");
 
-    if (!bucketCode || !ownerToken) {
+    if (!bucketCode) {
       return new Response(
-        JSON.stringify({ error: "bucket_code and owner_token required" }),
+        JSON.stringify({ error: "bucket_code required" }),
         {
           headers: {
             ...getCorsHeaders(req),
@@ -74,41 +110,6 @@ serve(async (req) => {
       );
     }
 
-    // Verify owner token
-    // We support both legacy (plain text) and new (hashed) tokens
-    // If bucket.owner_token is 32 chars (hex), it might be a legacy token or a hash?
-    // Actually, legacy tokens were UUIDs without hyphens (32 chars hex).
-    // SHA-256 hash is 64 chars hex.
-
-    let isTokenValid = false;
-
-    if (bucket.owner_token.length === 64) {
-      // It's a hash, verify incoming token
-      const encoder = new TextEncoder();
-      const data = encoder.encode(ownerToken);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-      isTokenValid = hashHex === bucket.owner_token;
-    } else {
-      // Legacy plain text token
-      isTokenValid = bucket.owner_token === ownerToken;
-    }
-
-    if (!isTokenValid) {
-      return new Response(
-        JSON.stringify({ error: "Invalid owner token" }),
-        {
-          headers: {
-            ...getCorsHeaders(req),
-            "Content-Type": "application/json",
-          },
-          status: 403,
-        },
-      );
-    }
-
     // Check if bucket is already full
     if (!bucket.is_empty) {
       return new Response(
@@ -129,11 +130,51 @@ serve(async (req) => {
     let contentData: string | null = null;
     let contentMetadata: BucketContentMetadata = {};
     let uploadedContentType: UploadContentType = "text";
+    let password: string | null = null;
+
+    const authorizeUpload = async (): Promise<Response | null> => {
+      if (ownerToken) {
+        const isTokenValid = await verifyOwnerToken(
+          bucket.owner_token,
+          ownerToken,
+        );
+
+        if (!isTokenValid) {
+          return new Response(
+            JSON.stringify({ error: "Invalid owner token" }),
+            {
+              headers: {
+                ...getCorsHeaders(req),
+                "Content-Type": "application/json",
+              },
+              status: 403,
+            },
+          );
+        }
+      } else if (
+        bucket.is_password_protected &&
+        !(await verifyPassword(bucket.password_hash, password))
+      ) {
+        return new Response(
+          JSON.stringify({ error: "Locker PIN required or invalid" }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 401,
+          },
+        );
+      }
+
+      return null;
+    };
 
     // Handle file upload (multipart/form-data)
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const file = formData.get("file") as File;
+      password = formData.get("password") as string | null;
 
       if (!file) {
         return new Response(
@@ -147,6 +188,9 @@ serve(async (req) => {
           },
         );
       }
+
+      const authFailure = await authorizeUpload();
+      if (authFailure) return authFailure;
 
       // Validate file
       const validation = validateFile(file);
@@ -196,6 +240,7 @@ serve(async (req) => {
       // Handle text or link (JSON)
       const body = await req.json();
       const { type, content } = body;
+      password = typeof body.password === "string" ? body.password : null;
 
       if (!type || !content) {
         return new Response(
@@ -209,6 +254,9 @@ serve(async (req) => {
           },
         );
       }
+
+      const authFailure = await authorizeUpload();
+      if (authFailure) return authFailure;
 
       if (type === "text") {
         contentData = content;

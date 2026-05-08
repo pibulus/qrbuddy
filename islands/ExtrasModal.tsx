@@ -130,22 +130,22 @@ export default function ExtrasModal({
   if (!isOpen) return null;
 
   return (
-    <div class="fixed inset-0 z-40 flex items-center justify-center px-4 py-4">
+    <div class="fixed inset-0 z-[60] flex items-center justify-center px-4 py-4">
       <div
         class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
-      <div class="relative z-10 w-full max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-bounce-in">
+      <div class="relative z-10 w-full max-w-lg sm:max-w-2xl max-h-[92dvh] overflow-y-auto bg-white border-4 border-black rounded-3xl shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 animate-bounce-in">
         <div class="flex items-start justify-between gap-3">
           <div>
             <p class="text-xs uppercase tracking-wide text-pink-500 font-bold">
               Power-Ups
             </p>
             <p class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
-              Make it dynamic
+              Add Power-Ups
             </p>
             <p class="text-xs sm:text-sm text-gray-600">
-              Editable links, file buckets, custom logos.
+              Pick a tool. Settings open below the grid.
             </p>
           </div>
 
@@ -173,9 +173,9 @@ export default function ExtrasModal({
           )}
 
           {/* Main Power-Up Cards */}
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
             {/* 1. Editable Link */}
-            <div class="contents sm:block">
+            <div>
               <button
                 type="button"
                 onClick={() => {
@@ -203,92 +203,65 @@ export default function ExtrasModal({
                   }
                   haptics.light();
                 }}
-                class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
+                class={`group min-h-[112px] sm:min-h-[154px] p-3 sm:p-4 rounded-2xl border-3 border-black transition-all duration-200 text-center sm:text-left w-full ${
                   isDynamic.value && !isSequential && !isTimeBombActive &&
                     !splashActive
                     ? "bg-gradient-to-br from-[#FFB3D9] to-[#C9A0DC] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
               >
-                <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                <div class="text-2xl sm:text-3xl mb-1 sm:mb-2 group-hover:scale-110 transition-transform inline-block">
                   🔗
                 </div>
-                <div class="font-black text-sm text-gray-900">
+                <div class="font-black text-sm text-gray-900 leading-tight">
                   Editable link
                 </div>
-                <div class="text-xs text-gray-600 leading-snug mt-1">
+                <div class="hidden sm:block text-xs text-gray-600 leading-snug mt-1">
                   Print once, update forever. Perfect for menus, events, or
                   merch.
                 </div>
                 {isDynamic.value && !isSequential && !isTimeBombActive &&
                   !splashActive && (
-                  <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#9370DB]">
+                  <div class="mt-1 sm:mt-2 flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-[#9370DB]">
                     <span>✓</span>
                     Active
                   </div>
                 )}
               </button>
-
-              {/* Mobile: Editable Link Settings */}
-              {isDynamic.value && !isSequential && !isTimeBombActive &&
-                !splashActive && (
-                <div class="sm:hidden mt-3 mb-4 animate-slide-down">
-                  <EditableLinkSettings
-                    editUrl={editUrl}
-                    isSequential={isSequential}
-                    isTimeBombActive={isTimeBombActive}
-                  />
-                </div>
-              )}
             </div>
 
             {/* 2. File Locker */}
-            <div class="contents sm:block">
+            <div>
               <button
                 type="button"
                 onClick={handleLockerCardClick}
-                class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
+                class={`group min-h-[112px] sm:min-h-[154px] p-3 sm:p-4 rounded-2xl border-3 border-black transition-all duration-200 text-center sm:text-left w-full ${
                   lockerActive
                     ? "bg-gradient-to-br from-[#B0E5E8] to-[#A3E4E1] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
               >
-                <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                <div class="text-2xl sm:text-3xl mb-1 sm:mb-2 group-hover:scale-110 transition-transform inline-block">
                   🪣
                 </div>
-                <div class="font-black text-sm text-gray-900">
+                <div class="font-black text-sm text-gray-900 leading-tight">
                   File Locker
                 </div>
-                <div class="text-xs text-gray-600 leading-snug mt-1">
+                <div class="hidden sm:block text-xs text-gray-600 leading-snug mt-1">
                   Secure digital drop box. Scan to upload, scan again to
                   download.
                 </div>
                 {lockerActive && (
-                  <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#3AA8A4]">
+                  <div class="mt-1 sm:mt-2 flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-[#3AA8A4]">
                     <span>✓</span>
                     Active
                   </div>
                 )}
               </button>
-
-              {/* Mobile: Locker Settings */}
-              {lockerExpanded && (
-                <div class="sm:hidden mt-3 mb-4 animate-slide-down">
-                  <LockerSettings
-                    isActive={lockerActive}
-                    bucketUrl={bucketUrl.value}
-                    defaultStyle={qrStyle.value || "sunset"}
-                    isCreating={isCreatingLocker}
-                    onClose={() => setLockerExpanded(false)}
-                    onDisable={handleLockerDisableWrapper}
-                    onConfirm={handleLockerConfirmWrapper}
-                  />
-                </div>
-              )}
             </div>
 
             {/* 3. Batch Mode */}
-            <div class="contents sm:block">
+            <div>
               <button
                 type="button"
                 onClick={() => {
@@ -307,80 +280,64 @@ export default function ExtrasModal({
                   }
                   haptics.light();
                 }}
-                class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
+                class={`group min-h-[112px] sm:min-h-[154px] p-3 sm:p-4 rounded-2xl border-3 border-black transition-all duration-200 text-center sm:text-left w-full ${
                   isBatchMode
                     ? "bg-gradient-to-br from-blue-100 to-cyan-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
               >
-                <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                <div class="text-2xl sm:text-3xl mb-1 sm:mb-2 group-hover:scale-110 transition-transform inline-block">
                   📦
                 </div>
-                <div class="font-black text-sm text-gray-900">Batch Mode</div>
-                <div class="text-xs text-gray-600 leading-snug mt-1">
+                <div class="font-black text-sm text-gray-900 leading-tight">
+                  Batch Mode
+                </div>
+                <div class="hidden sm:block text-xs text-gray-600 leading-snug mt-1">
                   Generate multiple QRs at once from a list.
                 </div>
                 {isBatchMode && (
-                  <div class="mt-2 flex items-center gap-1 text-xs font-bold text-blue-600">
+                  <div class="mt-1 sm:mt-2 flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-blue-600">
                     <span>✓</span>
                     Active
                   </div>
                 )}
               </button>
-
-              {/* Mobile: Batch Settings */}
-              {isBatchMode && (
-                <div class="sm:hidden mt-3 mb-4 animate-slide-down">
-                  <BatchSettings
-                    batchUrls={batchUrls}
-                    setBatchUrls={setBatchUrls}
-                    isGeneratingBatch={isGeneratingBatch}
-                    batchProgress={batchProgress}
-                    onGenerateBatch={onGenerateBatch}
-                  />
-                </div>
-              )}
             </div>
 
             {/* 4. Custom Logo */}
-            <div class="contents sm:block">
+            <div>
               <button
                 type="button"
                 onClick={() => {
                   setShowLogoUploader(!showLogoUploader);
                   haptics.light();
                 }}
-                class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
+                class={`group min-h-[112px] sm:min-h-[154px] p-3 sm:p-4 rounded-2xl border-3 border-black transition-all duration-200 text-center sm:text-left w-full ${
                   showLogoUploader
                     ? "bg-gradient-to-br from-[#FFE5B4] to-[#FFDAB3] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
               >
-                <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                <div class="text-2xl sm:text-3xl mb-1 sm:mb-2 group-hover:scale-110 transition-transform inline-block">
                   🎨
                 </div>
-                <div class="font-black text-sm text-gray-900">Custom logo</div>
-                <div class="text-xs text-gray-600 leading-snug mt-1">
+                <div class="font-black text-sm text-gray-900 leading-tight">
+                  Custom logo
+                </div>
+                <div class="hidden sm:block text-xs text-gray-600 leading-snug mt-1">
                   Add your brand to the QR center.
                 </div>
                 {showLogoUploader && (
-                  <div class="mt-2 flex items-center gap-1 text-xs font-bold text-[#CC9966]">
+                  <div class="mt-1 sm:mt-2 flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-[#CC9966]">
                     <span>✓</span>
                     Active
                   </div>
                 )}
               </button>
-
-              {/* Mobile: Logo Settings */}
-              {showLogoUploader && (
-                <div class="sm:hidden mt-3 mb-4 animate-slide-down">
-                  <LogoSettings logoUrl={logoUrl} />
-                </div>
-              )}
             </div>
 
             {/* 5. Splash Screen (NEW) */}
-            <div class="contents sm:block">
+            <div>
               <button
                 type="button"
                 onClick={() => {
@@ -410,37 +367,32 @@ export default function ExtrasModal({
                   }
                   haptics.light();
                 }}
-                class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
+                class={`group min-h-[112px] sm:min-h-[154px] p-3 sm:p-4 rounded-2xl border-3 border-black transition-all duration-200 text-center sm:text-left w-full ${
                   splashActive
                     ? "bg-gradient-to-br from-green-100 to-emerald-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
               >
-                <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                <div class="text-2xl sm:text-3xl mb-1 sm:mb-2 group-hover:scale-110 transition-transform inline-block">
                   ✨
                 </div>
-                <div class="font-black text-sm text-gray-900">Splash Page</div>
-                <div class="text-xs text-gray-600 leading-snug mt-1">
+                <div class="font-black text-sm text-gray-900 leading-tight">
+                  Splash Page
+                </div>
+                <div class="hidden sm:block text-xs text-gray-600 leading-snug mt-1">
                   Show a welcome screen before redirecting.
                 </div>
                 {splashActive && (
-                  <div class="mt-2 flex items-center gap-1 text-xs font-bold text-emerald-600">
+                  <div class="mt-1 sm:mt-2 flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-emerald-600">
                     <span>✓</span>
                     Active
                   </div>
                 )}
               </button>
-
-              {/* Mobile: Splash Settings */}
-              {splashActive && (
-                <div class="sm:hidden mt-3 mb-4 animate-slide-down">
-                  <SplashSettings splashConfig={splashConfig} />
-                </div>
-              )}
             </div>
 
             {/* 6. Multi-Link (Sequential) */}
-            <div class="contents sm:block">
+            <div>
               <button
                 type="button"
                 onClick={() => {
@@ -461,42 +413,32 @@ export default function ExtrasModal({
                   }
                   haptics.light();
                 }}
-                class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
+                class={`group min-h-[112px] sm:min-h-[154px] p-3 sm:p-4 rounded-2xl border-3 border-black transition-all duration-200 text-center sm:text-left w-full ${
                   isSequential
                     ? "bg-gradient-to-br from-purple-100 to-indigo-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
               >
-                <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                <div class="text-2xl sm:text-3xl mb-1 sm:mb-2 group-hover:scale-110 transition-transform inline-block">
                   ⛓️
                 </div>
-                <div class="font-black text-sm text-gray-900">Multi-Link</div>
-                <div class="text-xs text-gray-600 leading-snug mt-1">
+                <div class="font-black text-sm text-gray-900 leading-tight">
+                  Multi-Link
+                </div>
+                <div class="hidden sm:block text-xs text-gray-600 leading-snug mt-1">
                   Rotate through different URLs with each scan.
                 </div>
                 {isSequential && (
-                  <div class="mt-2 flex items-center gap-1 text-xs font-bold text-indigo-600">
+                  <div class="mt-1 sm:mt-2 flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-indigo-600">
                     <span>✓</span>
                     Active
                   </div>
                 )}
               </button>
-
-              {/* Mobile: Multi-Link Settings */}
-              {isSequential && (
-                <div class="sm:hidden mt-3 mb-4 animate-slide-down">
-                  <MultiLinkSettings
-                    sequentialUrls={sequentialUrls}
-                    setSequentialUrls={setSequentialUrls}
-                    loopSequence={loopSequence}
-                    setLoopSequence={setLoopSequence}
-                  />
-                </div>
-              )}
             </div>
 
             {/* 7. Time Bomb (Limits) */}
-            <div class="contents sm:block">
+            <div>
               <button
                 type="button"
                 onClick={() => {
@@ -517,43 +459,32 @@ export default function ExtrasModal({
                   }
                   haptics.light();
                 }}
-                class={`group p-4 rounded-2xl border-3 border-black transition-all duration-200 text-left w-full ${
+                class={`group min-h-[112px] sm:min-h-[154px] p-3 sm:p-4 rounded-2xl border-3 border-black transition-all duration-200 text-center sm:text-left w-full ${
                   isTimeBombActive
                     ? "bg-gradient-to-br from-red-100 to-orange-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-2px] translate-y-[-2px]"
                     : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px]"
                 }`}
               >
-                <div class="text-3xl mb-2 group-hover:scale-110 transition-transform inline-block">
+                <div class="text-2xl sm:text-3xl mb-1 sm:mb-2 group-hover:scale-110 transition-transform inline-block">
                   💣
                 </div>
-                <div class="font-black text-sm text-gray-900">Time Bomb</div>
-                <div class="text-xs text-gray-600 leading-snug mt-1">
+                <div class="font-black text-sm text-gray-900 leading-tight">
+                  Time Bomb
+                </div>
+                <div class="hidden sm:block text-xs text-gray-600 leading-snug mt-1">
                   Self-destruct after X scans or on a specific date.
                 </div>
                 {isTimeBombActive && (
-                  <div class="mt-2 flex items-center gap-1 text-xs font-bold text-red-600">
+                  <div class="mt-1 sm:mt-2 flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-red-600">
                     <span>✓</span>
                     Active
                   </div>
                 )}
               </button>
-
-              {/* Mobile: Time Bomb Settings */}
-              {isTimeBombActive && (
-                <div class="sm:hidden mt-3 mb-4 animate-slide-down">
-                  <TimeBombSettings
-                    scanLimit={scanLimit}
-                    setScanLimit={setScanLimit}
-                    expiryDate={expiryDate}
-                    setExpiryDate={setExpiryDate}
-                  />
-                </div>
-              )}
             </div>
           </div>
 
-          {/* Desktop: Bottom Settings Area */}
-          <div class="hidden sm:block">
+          <div class="block">
             {lockerExpanded && (
               <LockerSettings
                 isActive={lockerActive}

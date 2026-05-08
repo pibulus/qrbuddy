@@ -25,7 +25,7 @@ interface BucketQRProps {
   isPasswordProtected: boolean;
   isReusable: boolean;
   deleteOnDownload: boolean;
-  supabaseUrl: string;
+  apiUrl: string;
 }
 
 export default function BucketQR({
@@ -38,7 +38,7 @@ export default function BucketQR({
   isPasswordProtected,
   isReusable,
   deleteOnDownload,
-  supabaseUrl,
+  apiUrl,
 }: BucketQRProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
@@ -64,6 +64,7 @@ export default function BucketQR({
     value: pinValue,
   } = useKeypad(4);
 
+  const unlockPassword = useManualPassword ? manualPassword.trim() : pinValue;
   const hasUnlockInput = useManualPassword
     ? manualPassword.trim().length > 0
     : pinValue.length === 4;
@@ -192,16 +193,19 @@ export default function BucketQR({
       setError("");
       haptics.medium();
 
-      // Get owner token from secure storage
+      // The creator has an owner token in local storage. Scanned locker guests
+      // can still upload to an empty locker without that token.
       const ownerToken = await getOwnerToken("bucket", bucketCode);
-      if (!ownerToken) {
-        throw new Error(
-          "Owner token not found. You may not have permission to upload.",
-        );
+      const uploadUrl = new URL(`${apiUrl}/upload-to-bucket`);
+      uploadUrl.searchParams.set("bucket_code", bucketCode);
+      if (ownerToken) {
+        uploadUrl.searchParams.set("owner_token", ownerToken);
       }
 
-      const uploadUrl =
-        `${supabaseUrl}/functions/v1/upload-to-bucket?bucket_code=${bucketCode}&owner_token=${ownerToken}`;
+      if (isPasswordProtected && !ownerToken && !hasUnlockInput) {
+        setShowPasswordInput(true);
+        throw new Error("Enter the locker PIN before uploading.");
+      }
 
       const authHeaders = getAuthHeaders();
       let response;
@@ -210,7 +214,10 @@ export default function BucketQR({
         // Upload file
         const formData = new FormData();
         formData.append("file", file);
-        response = await fetch(uploadUrl, {
+        if (isPasswordProtected && !ownerToken) {
+          formData.append("password", unlockPassword);
+        }
+        response = await fetch(uploadUrl.toString(), {
           method: "POST",
           headers: {
             ...authHeaders,
@@ -219,7 +226,7 @@ export default function BucketQR({
         });
       } else if (text || link) {
         // Upload text or link
-        response = await fetch(uploadUrl, {
+        response = await fetch(uploadUrl.toString(), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -228,6 +235,9 @@ export default function BucketQR({
           body: JSON.stringify({
             type: text ? "text" : "link",
             content: text || link,
+            ...(isPasswordProtected && !ownerToken
+              ? { password: unlockPassword }
+              : {}),
           }),
         });
       }
@@ -250,6 +260,10 @@ export default function BucketQR({
 
       haptics.success();
       setIsUploading(false);
+      setShowPasswordInput(false);
+      setUseManualPassword(false);
+      setManualPassword("");
+      resetPinDigits();
     } catch (err) {
       console.error("Upload error:", err);
       setError(err instanceof Error ? err.message : String(err));
@@ -289,7 +303,7 @@ export default function BucketQR({
         }
       }
 
-      const downloadUrl = `${supabaseUrl}/functions/v1/download-from-bucket`;
+      const downloadUrl = `${apiUrl}/download-from-bucket`;
 
       const authHeaders = getAuthHeaders();
 
@@ -302,9 +316,7 @@ export default function BucketQR({
         },
         body: JSON.stringify({
           bucket_code: bucketCode,
-          password: isPasswordProtected
-            ? (useManualPassword ? manualPassword.trim() : pinValue)
-            : undefined,
+          password: isPasswordProtected ? unlockPassword : undefined,
         }),
       });
 
@@ -397,6 +409,100 @@ export default function BucketQR({
       globalThis.dispatchEvent(event);
     }
   };
+
+  const renderPasswordControls = () => (
+    <div class="space-y-4">
+      {!useManualPassword && (
+        <div class="space-y-3">
+          <div class="flex justify-center gap-4">
+            {pinDigits.map((digit, index) => (
+              <div
+                key={`pin-${index}`}
+                class="w-12 h-14 bg-white border-3 border-black rounded-2xl flex items-center justify-center text-3xl font-black"
+              >
+                {digit ? "•" : ""}
+              </div>
+            ))}
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            {[
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "clear",
+              "0",
+              "back",
+            ].map(
+              (key) => (
+                <button
+                  key={`keypad-${key}`}
+                  type="button"
+                  class={`min-h-[48px] rounded-2xl text-lg font-black border-3 border-black bg-white hover:-translate-y-0.5 transition ${
+                    key === "clear" || key === "back"
+                      ? "text-gray-600"
+                      : "text-gray-900"
+                  }`}
+                  onClick={() => handleKeypadPress(String(key))}
+                >
+                  {key === "clear" ? "Clear" : key === "back" ? "⌫" : key}
+                </button>
+              ),
+            )}
+          </div>
+        </div>
+      )}
+
+      {useManualPassword && (
+        <input
+          type="password"
+          value={manualPassword}
+          onInput={(e) =>
+            setManualPassword((e.target as HTMLInputElement).value)}
+          placeholder="Enter password"
+          class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
+        />
+      )}
+
+      <div class="flex items-center justify-between text-[11px] text-gray-500">
+        <button
+          type="button"
+          class="min-h-[44px] underline"
+          onClick={() => {
+            setUseManualPassword((prev) => {
+              const next = !prev;
+              if (next) {
+                resetPinDigits();
+              } else {
+                setManualPassword("");
+              }
+              return next;
+            });
+            haptics.light();
+          }}
+        >
+          {useManualPassword ? "Use keypad" : "Use keyboard"}
+        </button>
+        <button
+          type="button"
+          class="min-h-[44px] underline"
+          onClick={() => {
+            setShowPasswordInput(false);
+            setUseManualPassword(false);
+            setManualPassword("");
+            resetPinDigits();
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div class="space-y-6">
@@ -602,14 +708,40 @@ export default function BucketQR({
       {isEmpty
         ? (
           <div class="space-y-3">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
-            >
-              {isUploading ? "Uploading..." : "📤 Upload File"}
-            </button>
+            {isPasswordProtected && !showPasswordInput && (
+              <button
+                type="button"
+                onClick={() => setShowPasswordInput(true)}
+                class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                🔒 Unlock to Upload
+              </button>
+            )}
+
+            {isPasswordProtected && showPasswordInput && (
+              <div class="space-y-4">
+                {renderPasswordControls()}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading || !hasUnlockInput}
+                  class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                >
+                  {isUploading ? "Uploading..." : "📤 Upload File"}
+                </button>
+              </div>
+            )}
+
+            {!isPasswordProtected && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+              >
+                {isUploading ? "Uploading..." : "📤 Upload File"}
+              </button>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -632,99 +764,7 @@ export default function BucketQR({
 
             {isPasswordProtected && showPasswordInput && (
               <div class="space-y-4">
-                {!useManualPassword && (
-                  <div class="space-y-3">
-                    <div class="flex justify-center gap-4">
-                      {pinDigits.map((digit, index) => (
-                        <div
-                          key={`pin-${index}`}
-                          class="w-12 h-14 bg-white border-3 border-black rounded-2xl flex items-center justify-center text-3xl font-black"
-                        >
-                          {digit ? "•" : ""}
-                        </div>
-                      ))}
-                    </div>
-                    <div class="grid grid-cols-3 gap-3">
-                      {[
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "clear",
-                        "0",
-                        "back",
-                      ].map(
-                        (key) => (
-                          <button
-                            key={`keypad-${key}`}
-                            type="button"
-                            class={`py-3 rounded-2xl text-lg font-black border-3 border-black bg-white hover:-translate-y-0.5 transition ${
-                              key === "clear" || key === "back"
-                                ? "text-gray-600"
-                                : "text-gray-900"
-                            }`}
-                            onClick={() => handleKeypadPress(String(key))}
-                          >
-                            {key === "clear"
-                              ? "Clear"
-                              : key === "back"
-                              ? "⌫"
-                              : key}
-                          </button>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {useManualPassword && (
-                  <input
-                    type="password"
-                    value={manualPassword}
-                    onInput={(e) =>
-                      setManualPassword((e.target as HTMLInputElement).value)}
-                    placeholder="Enter password"
-                    class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
-                  />
-                )}
-
-                <div class="flex items-center justify-between text-[11px] text-gray-500">
-                  <button
-                    type="button"
-                    class="underline"
-                    onClick={() => {
-                      setUseManualPassword((prev) => {
-                        const next = !prev;
-                        if (next) {
-                          resetPinDigits();
-                        } else {
-                          setManualPassword("");
-                        }
-                        return next;
-                      });
-                      haptics.light();
-                    }}
-                  >
-                    {useManualPassword ? "Use keypad" : "Use keyboard"}
-                  </button>
-                  <button
-                    type="button"
-                    class="underline"
-                    onClick={() => {
-                      setShowPasswordInput(false);
-                      setUseManualPassword(false);
-                      setManualPassword("");
-                      resetPinDigits();
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
+                {renderPasswordControls()}
 
                 <button
                   type="button"

@@ -48,11 +48,16 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Strict Limit: Max 3 active lockers per IP
-    const { count: activeLockers, error: countError } = await supabase
+    // Abuse guard only. Do not permanently block an IP from creating lockers:
+    // lockers have no owner account delete flow, so an "active locker" cap
+    // becomes a permanent product break after a few experiments.
+    const dailyWindowStart = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      .toISOString();
+    const { count: dailyLockers, error: countError } = await supabase
       .from("file_buckets")
       .select("*", { count: "exact", head: true })
-      .eq("creator_ip", clientIP);
+      .eq("creator_ip", clientIP)
+      .gte("created_at", dailyWindowStart);
 
     if (countError) {
       console.error("Failed to check locker limit:", countError);
@@ -61,11 +66,10 @@ serve(async (req) => {
       throw new Error("System busy, please try again.");
     }
 
-    if (activeLockers !== null && activeLockers >= 3) {
+    if (dailyLockers !== null && dailyLockers >= 25) {
       return new Response(
         JSON.stringify({
-          error:
-            "Limit reached. You can only have 3 active lockers at a time. Delete an old one to create a new one.",
+          error: "Daily locker limit reached. Try again tomorrow.",
         }),
         {
           headers: {
@@ -170,7 +174,7 @@ serve(async (req) => {
 
     const baseUrl = Deno.env.get("APP_URL") ||
       (Deno.env.get("DENO_DEPLOYMENT_ID")
-        ? "https://qrbuddy.deno.dev"
+        ? "https://qrbuddy.app"
         : "http://localhost:8000");
 
     return new Response(

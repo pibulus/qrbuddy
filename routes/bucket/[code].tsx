@@ -1,7 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import BucketQR from "../../islands/BucketQR.tsx";
-import { getAuthHeaders, getSupabaseUrl } from "../../utils/api.ts";
+import { getApiUrl, getAuthHeaders } from "../../utils/api.ts";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -30,22 +30,18 @@ interface BucketData {
 interface BucketPageData {
   bucket: BucketData;
   bucketUrl: string;
-  supabaseUrl: string;
+  apiUrl: string;
 }
 
 export const handler: Handlers<BucketPageData> = {
   async GET(_req, ctx) {
     const { code } = ctx.params;
-    const supabaseUrl = getSupabaseUrl();
-
-    if (!supabaseUrl) {
-      return ctx.renderNotFound();
-    }
+    const apiUrl = getApiUrl();
 
     // Fetch bucket status
     const ownerToken = ctx.url.searchParams.get("owner_token");
     const statusUrl = new URL(
-      `${supabaseUrl}/functions/v1/get-bucket-status?bucket_code=${code}`,
+      `${apiUrl}/get-bucket-status?bucket_code=${code}`,
     );
     if (ownerToken) {
       statusUrl.searchParams.set("owner_token", ownerToken);
@@ -75,20 +71,20 @@ export const handler: Handlers<BucketPageData> = {
     const bucketUrl = `${
       Deno.env.get("APP_URL") ||
       (Deno.env.get("DENO_DEPLOYMENT_ID")
-        ? "https://qrbuddy.deno.dev"
+        ? "https://qrbuddy.app"
         : "http://localhost:8000")
     }/bucket/${code}`;
 
     return ctx.render({
       bucket: data.bucket,
       bucketUrl,
-      supabaseUrl: supabaseUrl || "",
+      apiUrl,
     });
   },
 };
 
 export default function BucketPage({ data }: PageProps<BucketPageData>) {
-  const { bucket, bucketUrl, supabaseUrl } = data;
+  const { bucket, bucketUrl, apiUrl } = data;
   const stateEmoji = bucket.is_empty ? "🪣" : "💥";
   const stateText = bucket.is_empty ? "Empty" : "Full";
 
@@ -143,7 +139,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
             isPasswordProtected={bucket.is_password_protected}
             isReusable={bucket.is_reusable}
             deleteOnDownload={bucket.delete_on_download}
-            supabaseUrl={supabaseUrl}
+            apiUrl={apiUrl}
           />
 
           {/* Info */}

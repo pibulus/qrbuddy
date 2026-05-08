@@ -65,14 +65,12 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <link rel="canonical" href="https://qrbuddy.app" />
 
         {/* Performance hints */}
-        <link
-          rel="dns-prefetch"
-          href="https://rckahvngsukzkmbpaejs.supabase.co"
-        />
-        <link
-          rel="preconnect"
-          href="https://rckahvngsukzkmbpaejs.supabase.co"
-        />
+        {data?.supabaseUrl && (
+          <>
+            <link rel="dns-prefetch" href={data.supabaseUrl} />
+            <link rel="preconnect" href={data.supabaseUrl} />
+          </>
+        )}
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />

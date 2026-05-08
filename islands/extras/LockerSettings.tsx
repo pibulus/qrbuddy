@@ -119,10 +119,10 @@ export default function LockerSettings({
           <div class="space-y-4">
             <div>
               <p class="text-sm font-bold text-gray-900">
-                Build a locker before we print
+                Create file locker
               </p>
               <p class="text-xs text-gray-600">
-                Pick how it behaves, add an optional PIN, then confirm.
+                Choose what happens after someone downloads the file.
               </p>
             </div>
 
@@ -130,48 +130,48 @@ export default function LockerSettings({
               <p class="text-xs font-bold uppercase tracking-wide text-gray-600">
                 Mode
               </p>
-              <div class="flex flex-wrap gap-2">
+              <div class="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setLockerMode("open")}
-                  class={`px-4 py-2 text-sm font-semibold rounded-xl border-2 transition ${
+                  class={`min-h-[56px] px-2 py-2 text-xs sm:text-sm font-black rounded-xl border-2 transition ${
                     lockerMode === "open"
                       ? "bg-teal-500 text-white border-teal-600"
                       : "bg-white text-gray-700 border-gray-300 hover:border-teal-400"
                   }`}
                 >
-                  Open (Persistent)
+                  Open
                 </button>
                 <button
                   type="button"
                   onClick={() => setLockerMode("pingpong")}
-                  class={`px-4 py-2 text-sm font-semibold rounded-xl border-2 transition ${
+                  class={`min-h-[56px] px-2 py-2 text-xs sm:text-sm font-black rounded-xl border-2 transition ${
                     lockerMode === "pingpong"
                       ? "bg-purple-500 text-white border-purple-600"
                       : "bg-white text-gray-700 border-gray-300 hover:border-purple-400"
                   }`}
                 >
-                  Ping Pong (Auto-Clear)
+                  Swap
                 </button>
                 <button
                   type="button"
                   onClick={() => setLockerMode("single")}
-                  class={`px-4 py-2 text-sm font-semibold rounded-xl border-2 transition ${
+                  class={`min-h-[56px] px-2 py-2 text-xs sm:text-sm font-black rounded-xl border-2 transition ${
                     lockerMode === "single"
                       ? "bg-orange-500 text-white border-orange-600"
                       : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
                   }`}
                 >
-                  Single Drop (One-Time)
+                  One-shot
                 </button>
               </div>
               <p class="text-[11px] text-gray-500 italic">
                 {lockerMode === "open" &&
                   "Files stay in the locker until you delete them."}
                 {lockerMode === "pingpong" &&
-                  "File is deleted after download, but the locker stays open for new uploads."}
+                  "Download clears the file, then the locker accepts another upload."}
                 {lockerMode === "single" &&
-                  "Locker and file self-destruct after one download."}
+                  "The whole locker disappears after one download."}
               </p>
             </div>
 
@@ -182,7 +182,7 @@ export default function LockerSettings({
                     Require 4-digit PIN?
                   </p>
                   <p class="text-[11px] text-gray-500">
-                    Keep the locker invite-only.
+                    Guests need the code to upload or download.
                   </p>
                 </div>
                 <button
@@ -193,7 +193,7 @@ export default function LockerSettings({
                     if (!next) resetLockerPin();
                     haptics.light();
                   }}
-                  class={`px-4 py-1 rounded-full border-2 text-xs font-bold transition ${
+                  class={`min-w-[64px] min-h-[44px] px-4 py-1 rounded-full border-2 text-xs font-bold transition ${
                     lockerRequirePin
                       ? "bg-teal-500 text-white border-teal-600"
                       : "bg-white text-gray-700 border-gray-300"
@@ -234,7 +234,7 @@ export default function LockerSettings({
                         <button
                           key={`locker-pad-${key}`}
                           type="button"
-                          class={`py-3 rounded-xl text-sm font-semibold border-2 bg-white transition ${
+                          class={`min-h-[44px] rounded-xl text-sm font-semibold border-2 bg-white transition ${
                             key === "clear" || key === "back"
                               ? "border-gray-300 text-gray-600"
                               : "border-teal-200 text-gray-900"
@@ -274,10 +274,10 @@ export default function LockerSettings({
 
             {lockerError && <p class="text-xs text-red-500">{lockerError}</p>}
 
-            <div class="flex flex-wrap gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-[auto_auto] gap-2">
               <button
                 type="button"
-                class="px-4 py-2 rounded-xl border-2 border-black bg-black text-white text-sm font-bold shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                class="min-h-[48px] px-4 py-2 rounded-xl border-2 border-black bg-black text-white text-sm font-bold shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={handleConfirm}
                 disabled={isCreating}
               >
@@ -285,7 +285,7 @@ export default function LockerSettings({
               </button>
               <button
                 type="button"
-                class="px-4 py-2 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:border-gray-500 transition"
+                class="min-h-[48px] px-4 py-2 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:border-gray-500 transition"
                 onClick={() => {
                   onClose();
                   setLockerError(null);
