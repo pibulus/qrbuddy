@@ -5,10 +5,17 @@
 
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { crypto } from "https://deno.land/std@0.216.0/crypto/mod.ts";
+import QRCode from "npm:qrcode@1.5.4";
+import { QR_STYLES } from "../utils/qr-styles.ts";
 
 const PORT = 8005;
 const FILES_DIR = "./local-api/files";
 const DB_FILE = "./local-api/db.json";
+const QR_DEFAULT_SIZE = 384;
+const QR_MIN_SIZE = 128;
+const QR_MAX_SIZE = 1024;
+const QR_QUIET_ZONE = 4;
+const QR_MAX_DATA_LENGTH = 512;
 
 // Ensure directories exist
 try {
@@ -55,6 +62,16 @@ interface Database {
   destructible_files: DestructibleFile[];
   dynamic_qr_codes: DynamicQR[];
 }
+
+type RenderStyleName = keyof typeof QR_STYLES;
+type PaintConfig = {
+  color?: string;
+  gradient?: {
+    type?: "linear" | "radial";
+    rotation?: number;
+    colorStops?: Array<{ offset: number; color: string }>;
+  };
+};
 
 async function loadDB(): Promise<Database> {
   try {
@@ -416,8 +433,45 @@ async function handleGetDynamicQR(req: Request): Promise<Response> {
 }
 
 // ===================================================================
+// RENDER QR ENDPOINT (Styled static SVG)
+// ===================================================================
+
+async function handleRenderQR(req: Request): Promise<Response> {
+  try {
+    const params = await getRenderQRParams(req);
+
+    if (!params.data) {
+      return jsonError("QR data is required", 400);
+    }
+
+    if (params.data.length > QR_MAX_DATA_LENGTH) {
+      return jsonError(`QR data is too long (max ${QR_MAX_DATA_LENGTH})`, 413);
+    }
+
+    const svg = renderStyledQrSvg(params.data, params.style, params.size);
+
+    return new Response(svg, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "image/svg+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=86400",
+      },
+    });
+  } catch (error) {
+    return jsonError(error instanceof Error ? error.message : String(error));
+  }
+}
+
+// ===================================================================
 // HELPERS
 // ===================================================================
+
+function jsonError(message: string, status = 500): Response {
+  return new Response(JSON.stringify({ error: message }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status,
+  });
+}
 
 function generateShortCode(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -426,6 +480,128 @@ function generateShortCode(): string {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return code;
+}
+
+async function getRenderQRParams(req: Request): Promise<{
+  data: string;
+  style: RenderStyleName;
+  size: number;
+}> {
+  const url = new URL(req.url);
+  let data = url.searchParams.get("d") || url.searchParams.get("data") || "";
+  let style = normalizeStyle(
+    url.searchParams.get("s") || url.searchParams.get("style"),
+  );
+  let size = normalizeSize(url.searchParams.get("size"));
+
+  if (req.method === "POST") {
+    const body = await req.json().catch(() => ({}));
+    if (typeof body.data === "string") data = body.data;
+    if (typeof body.style === "string") style = normalizeStyle(body.style);
+    if (typeof body.size === "number" || typeof body.size === "string") {
+      size = normalizeSize(String(body.size));
+    }
+  }
+
+  return { data, style, size };
+}
+
+function normalizeStyle(style: string | null): RenderStyleName {
+  if (style && style in QR_STYLES) return style as RenderStyleName;
+  return "sunset";
+}
+
+function normalizeSize(size: string | null): number {
+  const parsed = Number.parseInt(size || "", 10);
+  if (!Number.isFinite(parsed)) return QR_DEFAULT_SIZE;
+  return Math.min(QR_MAX_SIZE, Math.max(QR_MIN_SIZE, parsed));
+}
+
+function renderStyledQrSvg(
+  data: string,
+  styleName: RenderStyleName,
+  size: number,
+): string {
+  const qr = QRCode.create(data, {
+    errorCorrectionLevel: "Q",
+    margin: 0,
+  });
+  const moduleCount = qr.modules.size;
+  const viewSize = moduleCount + QR_QUIET_ZONE * 2;
+  const style = QR_STYLES[styleName];
+  const backgroundPaint = getPaint(
+    "passportBackground",
+    style.background,
+    "#FFF8F0",
+  );
+  const dotPaint = getPaint("passportDots", style.dots, "#111827");
+  const cells: string[] = [];
+
+  for (let row = 0; row < moduleCount; row += 1) {
+    for (let column = 0; column < moduleCount; column += 1) {
+      if (!qr.modules.data[row * moduleCount + column]) continue;
+
+      cells.push(
+        `<rect x="${column + QR_QUIET_ZONE}" y="${
+          row + QR_QUIET_ZONE
+        }" width="1" height="1" rx="0.28" ry="0.28" fill="${dotPaint.fill}" />`,
+      );
+    }
+  }
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${viewSize} ${viewSize}" role="img" aria-label="QRBuddy QR code" shape-rendering="geometricPrecision">`,
+    "<defs>",
+    backgroundPaint.definition,
+    dotPaint.definition,
+    "</defs>",
+    `<rect width="${viewSize}" height="${viewSize}" rx="3.5" fill="${backgroundPaint.fill}" />`,
+    cells.join(""),
+    "</svg>",
+  ].join("");
+}
+
+function getPaint(id: string, paint: PaintConfig, fallbackColor: string): {
+  definition: string;
+  fill: string;
+} {
+  if (!paint.gradient?.colorStops?.length) {
+    return { definition: "", fill: escapeXml(paint.color || fallbackColor) };
+  }
+
+  const stops = paint.gradient.colorStops
+    .map((stop) =>
+      `<stop offset="${Number(stop.offset) * 100}%" stop-color="${
+        escapeXml(stop.color)
+      }" />`
+    )
+    .join("");
+
+  if (paint.gradient.type === "radial") {
+    return {
+      definition:
+        `<radialGradient id="${id}" cx="50%" cy="50%" r="72%">${stops}</radialGradient>`,
+      fill: `url(#${id})`,
+    };
+  }
+
+  const rotation = Number.isFinite(paint.gradient.rotation)
+    ? paint.gradient.rotation
+    : 45;
+
+  return {
+    definition:
+      `<linearGradient id="${id}" x1="0%" y1="0%" x2="100%" y2="100%" gradientTransform="rotate(${rotation} .5 .5)">${stops}</linearGradient>`,
+    fill: `url(#${id})`,
+  };
+}
+
+function escapeXml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function serveBoomPage(): Response {
@@ -512,6 +688,13 @@ function handler(req: Request): Promise<Response> {
 
   if (url.pathname === "/get-dynamic-qr" && req.method === "GET") {
     return handleGetDynamicQR(req);
+  }
+
+  if (
+    url.pathname === "/render-qr" &&
+    (req.method === "GET" || req.method === "POST")
+  ) {
+    return handleRenderQR(req);
   }
 
   return Promise.resolve(
