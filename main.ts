@@ -16,7 +16,7 @@ const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined ||
 if (isProduction) {
   const requiredEnvVars = [
     "SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_ANON_KEY",
   ];
 
   const missing = requiredEnvVars.filter((varName) => !Deno.env.get(varName));

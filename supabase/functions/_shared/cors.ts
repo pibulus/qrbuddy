@@ -44,6 +44,7 @@ export function getAllowedOrigin(request?: Request): string {
 export function getCorsHeaders(request?: Request): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": getAllowedOrigin(request),
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Credentials": "true",
