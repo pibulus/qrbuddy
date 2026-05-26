@@ -1,5 +1,5 @@
 import { Signal } from "@preact/signals";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
 import {
@@ -37,8 +37,12 @@ export function useFileUpload(
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const inFlightRef = useRef(false);
 
   const uploadFile = async (input: File | FileList | File[]) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+
     try {
       setIsUploading(true);
       setUploadProgress(0);
@@ -133,6 +137,7 @@ export function useFileUpload(
 
       // Reset progress after a moment
       setTimeout(() => {
+        inFlightRef.current = false;
         setIsUploading(false);
         setUploadProgress(0);
       }, UPLOAD_RESET_DELAY_MS);
@@ -147,6 +152,7 @@ export function useFileUpload(
         ? error.message
         : String(error);
       setUploadError(errorMessage);
+      inFlightRef.current = false;
       setIsUploading(false);
       setUploadProgress(0);
       haptics.error();

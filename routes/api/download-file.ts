@@ -7,6 +7,7 @@ export const handler: Handlers = {
     const url = new URL(req.url);
     const fileId = url.searchParams.get("id");
     const pathParam = url.searchParams.get("path");
+    const downloadParam = url.searchParams.get("download");
 
     if (!fileId) {
       return new Response(null, {
@@ -31,6 +32,9 @@ export const handler: Handlers = {
     downloadUrl.searchParams.set("id", fileId);
     if (pathParam) {
       downloadUrl.searchParams.set("path", pathParam);
+    }
+    if (downloadParam) {
+      downloadUrl.searchParams.set("download", downloadParam);
     }
     const authHeaders = getAuthHeaders();
 

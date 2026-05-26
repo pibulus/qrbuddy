@@ -331,9 +331,15 @@ export default function SmartInput(
     const input = e.target as HTMLInputElement;
     const files = input.files;
     if (files && files.length > 0) {
-      uploadFile(files);
+      uploadFile(files).finally(() => {
+        input.value = "";
+      });
     }
   };
+
+  const uploadStatusText = uploadProgress >= 99
+    ? "Processing..."
+    : "Uploading...";
 
   const getInputClass = () => {
     const baseClass = `
@@ -614,7 +620,7 @@ export default function SmartInput(
         {/* Upload progress text */}
         {isUploading && (
           <p class="text-purple-600 text-sm mt-2 text-center animate-pulse">
-            Uploading... {uploadProgress}%
+            {uploadStatusText} {uploadProgress}%
           </p>
         )}
       </div>

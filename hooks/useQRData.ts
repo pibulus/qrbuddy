@@ -23,6 +23,7 @@ export interface QRData {
     endHour?: string;
     activeUrl?: string;
     inactiveUrl?: string;
+    timezone?: string;
     timezoneOffset?: number;
   } | null;
   analytics?: {

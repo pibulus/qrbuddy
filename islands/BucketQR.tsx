@@ -16,6 +16,15 @@ interface BucketContentMetadata {
   [key: string]: unknown;
 }
 
+interface BucketStatusResponse {
+  success: boolean;
+  bucket?: {
+    is_empty: boolean;
+    content_type: string | null;
+    content_metadata: BucketContentMetadata | null;
+  };
+}
+
 interface BucketQRProps {
   bucketUrl: string;
   bucketCode: string;
@@ -70,6 +79,49 @@ export default function BucketQR({
   const hasUnlockInput = useManualPassword
     ? manualPassword.trim().length > 0
     : pinValue.length === 4;
+  const uploadStatusText = uploadProgress >= 99
+    ? "Processing..."
+    : "Uploading...";
+
+  const refreshBucketStatus = async (
+    options: { preserveLocalMetadata?: boolean } = {},
+  ): Promise<boolean> => {
+    try {
+      const ownerToken = await getOwnerToken("bucket", bucketCode);
+      const statusUrl = new URL(`${apiUrl}/get-bucket-status`);
+      statusUrl.searchParams.set("bucket_code", bucketCode);
+      if (ownerToken) {
+        statusUrl.searchParams.set("owner_token", ownerToken);
+      }
+
+      const response = await fetch(statusUrl.toString(), {
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json() as BucketStatusResponse;
+      if (!data.success || !data.bucket) return false;
+
+      setIsEmpty(data.bucket.is_empty);
+      setContentType(data.bucket.content_type);
+      setContentMetadata((currentMetadata) => {
+        if (
+          options.preserveLocalMetadata &&
+          !data.bucket?.content_metadata &&
+          currentMetadata
+        ) {
+          return currentMetadata;
+        }
+        return data.bucket?.content_metadata ?? null;
+      });
+
+      return true;
+    } catch (err) {
+      console.warn("Failed to refresh bucket status:", err);
+      return false;
+    }
+  };
 
   // Get QR style based on empty/full state
   const getQRStyle = () => {
@@ -262,6 +314,8 @@ export default function BucketQR({
         });
       }
 
+      await refreshBucketStatus({ preserveLocalMetadata: true });
+
       haptics.success();
       setIsUploading(false);
       setUploadProgress(0);
@@ -271,6 +325,7 @@ export default function BucketQR({
       resetPinDigits();
     } catch (err) {
       console.error("Upload error:", err);
+      await refreshBucketStatus();
       setError(err instanceof Error ? err.message : String(err));
       setIsUploading(false);
       setUploadProgress(0);
@@ -282,7 +337,9 @@ export default function BucketQR({
   const handleFileInput = (e: Event) => {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      handleUpload(input.files[0]);
+      handleUpload(input.files[0]).finally(() => {
+        input.value = "";
+      });
     }
   };
 
@@ -379,6 +436,8 @@ export default function BucketQR({
         }
       }
 
+      await refreshBucketStatus({ preserveLocalMetadata: !isEmptied });
+
       haptics.success();
       setIsDownloading(false);
       setShowPasswordInput(false);
@@ -387,6 +446,7 @@ export default function BucketQR({
       resetPinDigits();
     } catch (err) {
       console.error("Download error:", err);
+      await refreshBucketStatus();
       setError(err instanceof Error ? err.message : String(err));
       setIsDownloading(false);
       haptics.error();
@@ -764,7 +824,7 @@ export default function BucketQR({
                   />
                 </div>
                 <p class="text-center text-xs font-bold text-purple-700 mt-2">
-                  Uploading... {uploadProgress}%
+                  {uploadStatusText} {uploadProgress}%
                 </p>
               </div>
             )}
@@ -825,6 +885,13 @@ export default function BucketQR({
                 {typeof contentMetadata.size === "number"
                   ? ` ${(contentMetadata.size / 1024 / 1024).toFixed(2)} MB`
                   : ""}
+              </p>
+            )}
+
+            {(!isReusable || deleteOnDownload) && (
+              <p class="text-center text-xs text-orange-700 leading-relaxed">
+                Starting this download empties the locker, even if the browser
+                later cancels the handoff.
               </p>
             )}
           </div>

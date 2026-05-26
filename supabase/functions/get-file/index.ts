@@ -3,12 +3,18 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import JSZip from "https://esm.sh/jszip@3.10.1";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
 type StoredFile = {
   path: string;
   name: string;
   type: string;
+};
+
+type StoredFileMetadata = {
+  files: StoredFile[] | null;
+  max_downloads: number | null;
 };
 
 type ClaimedFile = {
@@ -33,6 +39,12 @@ function safeDownloadFilename(filename: unknown): string {
   const fallback = "download";
   if (typeof filename !== "string" || filename.trim() === "") return fallback;
   return filename.replace(/[\r\n"\\]/g, "_");
+}
+
+function safeZipEntryName(filename: unknown, index: number): string {
+  const fallback = `file-${index + 1}`;
+  if (typeof filename !== "string" || filename.trim() === "") return fallback;
+  return filename.replace(/[/\\\0\r\n]/g, "_");
 }
 
 function redirectTo(path: string, request?: Request, status = 302) {
@@ -65,18 +77,25 @@ serve(async (req) => {
     );
 
     const requestedPath = url.searchParams.get("path");
+    const wantsZip = url.searchParams.get("download") === "zip";
 
     if (requestedPath) {
       const { data: metadata, error: metadataError } = await supabase
         .from("destructible_files")
-        .select("files")
+        .select("files,max_downloads")
         .eq("id", fileId)
-        .maybeSingle<{ files: StoredFile[] | null }>();
+        .maybeSingle<StoredFileMetadata>();
 
       if (
         metadataError ||
         !metadata?.files?.some((file) => file.path === requestedPath)
       ) {
+        return redirectTo("/boom", req);
+      }
+
+      const isFiniteMultiFile = metadata.files.length > 1 &&
+        (metadata.max_downloads ?? 999999) < 999999;
+      if (isFiniteMultiFile) {
         return redirectTo("/boom", req);
       }
     }
@@ -92,6 +111,65 @@ serve(async (req) => {
 
     if (!file) {
       return redirectTo("/boom", req);
+    }
+
+    if (wantsZip && file.files && file.files.length > 1) {
+      const zip = new JSZip();
+
+      for (const [index, storedFile] of file.files.entries()) {
+        const { data: storedFileData, error: storedFileError } = await supabase
+          .storage
+          .from("qr-files")
+          .download(storedFile.path);
+
+        if (storedFileError) throw storedFileError;
+
+        zip.file(
+          safeZipEntryName(storedFile.name, index),
+          await storedFileData.arrayBuffer(),
+        );
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+
+      const { data: finalizedDownload, error: finalizeError } = await supabase
+        .rpc("finalize_destructible_file_download", { p_file_id: fileId })
+        .maybeSingle<FinalizedDownload>();
+
+      if (finalizeError || !finalizedDownload) {
+        if (finalizeError) {
+          console.error("File finalize error:", finalizeError);
+        }
+        return redirectTo("/boom", req);
+      }
+
+      if (finalizedDownload.will_expire) {
+        const { error: removeError } = await supabase
+          .storage
+          .from("qr-files")
+          .remove(file.files.map((storedFile) => storedFile.path));
+
+        if (removeError) {
+          console.error("Expired file cleanup failed:", removeError);
+        }
+      }
+
+      const headers = {
+        ...getCorsHeaders(req),
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="${
+          safeDownloadFilename(file.original_name || "files")
+        }.zip"`,
+        "Content-Length": String(zipBlob.size),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "X-Destructible": "true",
+        "X-Downloads-Remaining": String(
+          finalizedDownload.max_downloads - finalizedDownload.download_count,
+        ),
+        "X-Will-Explode": finalizedDownload.will_expire ? "true" : "false",
+      };
+
+      return new Response(zipBlob, { headers });
     }
 
     let targetPath = file.file_name;

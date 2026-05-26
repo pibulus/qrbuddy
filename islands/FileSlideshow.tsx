@@ -47,10 +47,13 @@ export default function FileSlideshow({
   const fileSizeMB = (displayFileSize / (1024 * 1024)).toFixed(2);
 
   // Download URL logic
-  const getDownloadUrl = (path?: string) => {
+  const getDownloadUrl = (path?: string, format?: "zip") => {
     let url = `/api/download-file?id=${fileId}`;
     if (path) {
       url += `&path=${encodeURIComponent(path)}`;
+    }
+    if (format) {
+      url += `&download=${format}`;
     }
     return url;
   };
@@ -58,6 +61,13 @@ export default function FileSlideshow({
   const currentDownloadUrl = hasMultipleFiles
     ? getDownloadUrl(currentFile!.path)
     : getDownloadUrl();
+  const zipDownloadUrl = getDownloadUrl(undefined, "zip");
+  const primaryDownloadUrl = hasMultipleFiles && !isUnlimited
+    ? zipDownloadUrl
+    : currentDownloadUrl;
+  const primaryDownloadName = hasMultipleFiles && !isUnlimited
+    ? `${fileName || "files"}.zip`
+    : displayFileName;
 
   // Helper to determine media type
   const isImage = displayMimeType?.startsWith("image/");
@@ -303,8 +313,8 @@ export default function FileSlideshow({
 
             {/* Download Button */}
             <a
-              href={currentDownloadUrl}
-              download={displayFileName}
+              href={primaryDownloadUrl}
+              download={primaryDownloadName}
               class={`block w-full py-4 rounded-xl font-bold text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
                 isUnlimited
                   ? (theme === "cyber"
@@ -313,7 +323,9 @@ export default function FileSlideshow({
                   : "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
               }`}
             >
-              {isUnlimited
+              {hasMultipleFiles && !isUnlimited
+                ? "Download All & Destroy (.zip) 💥"
+                : isUnlimited
                 ? `Download ${
                   isImage
                     ? "Image"
@@ -340,6 +352,20 @@ export default function FileSlideshow({
               >
                 {isZipping ? "Zipping..." : "Download All (.zip)"}
               </button>
+            )}
+
+            {hasMultipleFiles && !isUnlimited && (
+              <p class="text-xs text-center text-orange-200 leading-relaxed">
+                This limited share downloads as one zip so every file survives
+                the trip. Starting the download consumes one use.
+              </p>
+            )}
+
+            {!isUnlimited && !hasMultipleFiles && (
+              <p class="text-xs text-center text-orange-200 leading-relaxed">
+                Starting this download consumes one use, even if the browser
+                later cancels the handoff.
+              </p>
             )}
 
             {/* Limits Info */}
