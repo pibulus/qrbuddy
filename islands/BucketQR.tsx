@@ -5,6 +5,7 @@ import { haptics } from "../utils/haptics.ts";
 import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
 import { getAuthHeaders } from "../utils/api.ts";
 import { useKeypad } from "../hooks/useKeypad.ts";
+import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -50,6 +51,7 @@ export default function BucketQR({
     BucketContentMetadata | null
   >(initialContentMetadata);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [useManualPassword, setUseManualPassword] = useState(false);
@@ -190,6 +192,7 @@ export default function BucketQR({
   const handleUpload = async (file?: File, text?: string, link?: string) => {
     try {
       setIsUploading(true);
+      setUploadProgress(0);
       setError("");
       haptics.medium();
 
@@ -208,7 +211,7 @@ export default function BucketQR({
       }
 
       const authHeaders = getAuthHeaders();
-      let response;
+      let response: Response | undefined;
 
       if (file) {
         // Upload file
@@ -217,13 +220,12 @@ export default function BucketQR({
         if (isPasswordProtected && !ownerToken) {
           formData.append("password", unlockPassword);
         }
-        response = await fetch(uploadUrl.toString(), {
-          method: "POST",
-          headers: {
-            ...authHeaders,
-          },
-          body: formData,
-        });
+        await apiRequestFormDataWithProgress(
+          uploadUrl.toString(),
+          formData,
+          setUploadProgress,
+          "Upload failed",
+        );
       } else if (text || link) {
         // Upload text or link
         response = await fetch(uploadUrl.toString(), {
@@ -240,10 +242,12 @@ export default function BucketQR({
               : {}),
           }),
         });
+      } else {
+        throw new Error("No content selected for upload.");
       }
 
-      if (!response || !response.ok) {
-        const errorData = await response?.json();
+      if (response && !response.ok) {
+        const errorData = await response.json();
         throw new Error(errorData?.error || "Upload failed");
       }
 
@@ -260,6 +264,7 @@ export default function BucketQR({
 
       haptics.success();
       setIsUploading(false);
+      setUploadProgress(0);
       setShowPasswordInput(false);
       setUseManualPassword(false);
       setManualPassword("");
@@ -268,6 +273,7 @@ export default function BucketQR({
       console.error("Upload error:", err);
       setError(err instanceof Error ? err.message : String(err));
       setIsUploading(false);
+      setUploadProgress(0);
       haptics.error();
     }
   };
@@ -748,6 +754,20 @@ export default function BucketQR({
               class="hidden"
               onChange={handleFileInput}
             />
+
+            {isUploading && (
+              <div class="bg-white border-3 border-black rounded-xl p-3 shadow-chunky">
+                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-200"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p class="text-center text-xs font-bold text-purple-700 mt-2">
+                  Uploading... {uploadProgress}%
+                </p>
+              </div>
+            )}
           </div>
         )
         : (

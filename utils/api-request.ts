@@ -214,3 +214,72 @@ export async function apiRequestFormData<T = unknown>(
     );
   }
 }
+
+/**
+ * Make a FormData request with real browser upload progress when available.
+ * Falls back to fetch in non-browser contexts.
+ */
+export async function apiRequestFormDataWithProgress<T = unknown>(
+  url: string,
+  formData: FormData,
+  onProgress: (progress: number) => void,
+  errorMessage = "Upload failed",
+): Promise<T> {
+  if (typeof XMLHttpRequest === "undefined") {
+    onProgress(90);
+    const result = await apiRequestFormData<T>(url, formData, errorMessage);
+    onProgress(100);
+    return result;
+  }
+
+  const authHeaders = getAuthHeaders();
+
+  return await new Promise<T>((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open("POST", url);
+
+    Object.entries(authHeaders).forEach(([key, value]) => {
+      request.setRequestHeader(key, value);
+    });
+
+    request.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+      const progress = Math.round((event.loaded / event.total) * 100);
+      onProgress(Math.min(progress, 99));
+    };
+
+    request.onload = () => {
+      const statusCode = request.status;
+      const responseText = request.responseText || "{}";
+
+      if (statusCode < 200 || statusCode >= 300) {
+        let serverError = errorMessage;
+        try {
+          const errorData = JSON.parse(responseText);
+          serverError = errorData.error || errorMessage;
+        } catch {
+          // Use default error message
+        }
+        reject(new ApiError(serverError, statusCode));
+        return;
+      }
+
+      try {
+        onProgress(100);
+        resolve(JSON.parse(responseText) as T);
+      } catch (_parseError) {
+        reject(new ApiError("Failed to parse server response", statusCode));
+      }
+    };
+
+    request.onerror = () => {
+      reject(new ApiError("Network error", 0));
+    };
+
+    request.onabort = () => {
+      reject(new ApiError("Upload cancelled", 0));
+    };
+
+    request.send(formData);
+  });
+}

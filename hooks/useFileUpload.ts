@@ -2,14 +2,14 @@ import { Signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
-import { ApiError, apiRequestFormData } from "../utils/api-request.ts";
+import {
+  ApiError,
+  apiRequestFormDataWithProgress,
+} from "../utils/api-request.ts";
 import { validateFile } from "../utils/file-validation.ts";
 import {
   UNLIMITED_SCANS,
   UNLIMITED_SCANS_TEXT,
-  UPLOAD_PROGRESS_INCREMENT,
-  UPLOAD_PROGRESS_INTERVAL_MS,
-  UPLOAD_PROGRESS_MAX,
   UPLOAD_RESET_DELAY_MS,
 } from "../utils/constants.ts";
 
@@ -67,17 +67,9 @@ export function useFileUpload(
         formData.append("theme", qrStyle.value);
       }
 
-      // Simulate progress (real progress needs XHR)
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) =>
-          Math.min(prev + UPLOAD_PROGRESS_INCREMENT, UPLOAD_PROGRESS_MAX)
-        );
-      }, UPLOAD_PROGRESS_INTERVAL_MS);
-
       const apiUrl = getApiUrl();
 
-      // Use shared API helper (automatically includes auth headers)
-      const data = await apiRequestFormData<{
+      const data = await apiRequestFormDataWithProgress<{
         success: boolean;
         url: string;
         fileName: string;
@@ -86,10 +78,10 @@ export function useFileUpload(
       }>(
         `${apiUrl}/upload-file`,
         formData,
+        setUploadProgress,
         "Upload failed",
       );
 
-      clearInterval(progressInterval);
       setUploadProgress(100);
 
       // Set the destructible URL

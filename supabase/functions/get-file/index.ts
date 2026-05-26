@@ -5,6 +5,36 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
+type StoredFile = {
+  path: string;
+  name: string;
+  type: string;
+};
+
+type ClaimedFile = {
+  id: string;
+  file_name: string;
+  original_name: string;
+  size: number;
+  mime_type: string;
+  files: StoredFile[] | null;
+  max_downloads: number;
+  download_count: number;
+  will_expire: boolean;
+};
+
+type FinalizedDownload = {
+  max_downloads: number;
+  download_count: number;
+  will_expire: boolean;
+};
+
+function safeDownloadFilename(filename: unknown): string {
+  const fallback = "download";
+  if (typeof filename !== "string" || filename.trim() === "") return fallback;
+  return filename.replace(/[\r\n"\\]/g, "_");
+}
+
 function redirectTo(path: string, request?: Request, status = 302) {
   return new Response(null, {
     status,
@@ -34,39 +64,42 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Get file metadata
-    const { data: file, error: fetchError } = await supabase
-      .from("destructible_files")
-      .select("*")
-      .eq("id", fileId)
-      .single();
-
-    if (fetchError || !file) {
-      return redirectTo("/boom", req);
-    }
-
-    // Treat null/undefined as unlimited (999999)
-    const maxDownloads = file.max_downloads || 999999;
-    const downloadCount = file.download_count || 0;
-
-    // Check if already exploded (but not for unlimited files)
-    if (
-      file.accessed || (maxDownloads < 999999 && downloadCount >= maxDownloads)
-    ) {
-      return redirectTo("/boom", req);
-    }
-
-    // Check if a specific file path is requested (for multi-file)
     const requestedPath = url.searchParams.get("path");
+
+    if (requestedPath) {
+      const { data: metadata, error: metadataError } = await supabase
+        .from("destructible_files")
+        .select("files")
+        .eq("id", fileId)
+        .maybeSingle<{ files: StoredFile[] | null }>();
+
+      if (
+        metadataError ||
+        !metadata?.files?.some((file) => file.path === requestedPath)
+      ) {
+        return redirectTo("/boom", req);
+      }
+    }
+
+    const { data: file, error: claimError } = await supabase
+      .rpc("claim_destructible_file_download", { p_file_id: fileId })
+      .maybeSingle<ClaimedFile>();
+
+    if (claimError) {
+      console.error("File claim error:", claimError);
+      return redirectTo("/boom", req);
+    }
+
+    if (!file) {
+      return redirectTo("/boom", req);
+    }
 
     let targetPath = file.file_name;
     let targetName = file.original_name;
     let targetMime = file.mime_type;
 
     if (requestedPath && file.files && Array.isArray(file.files)) {
-      const subFile = file.files.find((
-        f: { path: string; name: string; type: string },
-      ) => f.path === requestedPath);
+      const subFile = file.files.find((f) => f.path === requestedPath);
       if (subFile) {
         targetPath = subFile.path;
         targetName = subFile.name;
@@ -82,28 +115,35 @@ serve(async (req) => {
 
     if (downloadError) throw downloadError;
 
+    const { data: finalizedDownload, error: finalizeError } = await supabase
+      .rpc("finalize_destructible_file_download", { p_file_id: fileId })
+      .maybeSingle<FinalizedDownload>();
+
+    if (finalizeError || !finalizedDownload) {
+      if (finalizeError) {
+        console.error("File finalize error:", finalizeError);
+      }
+      return redirectTo("/boom", req);
+    }
+
     // Check if client is requesting a byte range (for video/audio scrubbing)
     const rangeHeader = req.headers.get("Range");
     const fileSize = fileData.size;
 
-    // Increment download count
-    const newDownloadCount = downloadCount + 1;
-    const willExplode = newDownloadCount >= maxDownloads;
-
-    await supabase
-      .from("destructible_files")
-      .update({
-        download_count: newDownloadCount,
-        accessed: willExplode, // Mark as accessed when limit reached
-      })
-      .eq("id", fileId);
-
     // Delete file from storage if limit reached
-    if (willExplode) {
-      await supabase
+    if (finalizedDownload.will_expire) {
+      const paths = file.files && file.files.length > 0
+        ? file.files.map((storedFile) => storedFile.path)
+        : [file.file_name];
+
+      const { error: removeError } = await supabase
         .storage
         .from("qr-files")
-        .remove([file.file_name]);
+        .remove(paths);
+
+      if (removeError) {
+        console.error("Expired file cleanup failed:", removeError);
+      }
     }
 
     // Handle range requests for video/audio scrubbing
@@ -121,8 +161,10 @@ serve(async (req) => {
         "Content-Length": String(chunkSize),
         "Cache-Control": "no-cache, no-store, must-revalidate",
         "X-Destructible": "true",
-        "X-Downloads-Remaining": String(maxDownloads - newDownloadCount),
-        "X-Will-Explode": willExplode ? "true" : "false",
+        "X-Downloads-Remaining": String(
+          finalizedDownload.max_downloads - finalizedDownload.download_count,
+        ),
+        "X-Will-Explode": finalizedDownload.will_expire ? "true" : "false",
       };
 
       // Slice the blob to the requested range
@@ -134,13 +176,17 @@ serve(async (req) => {
     const headers = {
       ...getCorsHeaders(req),
       "Content-Type": targetMime || "application/octet-stream",
-      "Content-Disposition": `attachment; filename="${targetName}"`,
+      "Content-Disposition": `attachment; filename="${
+        safeDownloadFilename(targetName)
+      }"`,
       "Content-Length": String(fileSize),
       "Accept-Ranges": "bytes",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "X-Destructible": "true",
-      "X-Downloads-Remaining": String(maxDownloads - newDownloadCount),
-      "X-Will-Explode": willExplode ? "true" : "false",
+      "X-Downloads-Remaining": String(
+        finalizedDownload.max_downloads - finalizedDownload.download_count,
+      ),
+      "X-Will-Explode": finalizedDownload.will_expire ? "true" : "false",
     };
 
     // Return the Blob directly to prevent truncation

@@ -16,6 +16,31 @@ function safeDownloadFilename(filename: unknown): string {
   return filename.replace(/[\r\n"\\]/g, "_");
 }
 
+async function sha256Hex(value: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    encoder.encode(value),
+  );
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function verifyPassword(
+  storedHash: string | null,
+  incomingPassword: string | null,
+): Promise<boolean> {
+  if (!storedHash || !incomingPassword) return false;
+
+  if (storedHash.includes(":")) {
+    const [saltHex, hashHex] = storedHash.split(":");
+    return (await sha256Hex(saltHex + incomingPassword)) === hashHex;
+  }
+
+  return (await sha256Hex(incomingPassword)) === storedHash;
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -67,6 +92,82 @@ serve(async (req) => {
       );
     }
 
+    const { data: bucketAuth, error: authFetchError } = await supabase
+      .from("file_buckets")
+      .select("is_password_protected, password_hash")
+      .eq("bucket_code", bucketCode)
+      .maybeSingle();
+
+    if (authFetchError) {
+      console.error("Bucket auth fetch error:", authFetchError);
+      return new Response(
+        JSON.stringify({ error: "Database error" }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 500,
+        },
+      );
+    }
+
+    if (!bucketAuth) {
+      return new Response(
+        JSON.stringify({ error: "Bucket not found, empty, or busy" }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 404,
+        },
+      );
+    }
+
+    if (bucketAuth.is_password_protected) {
+      if (req.method !== "POST") {
+        return new Response(
+          JSON.stringify({
+            error: "Password protected buckets require POST request",
+          }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 405,
+          },
+        );
+      }
+
+      if (!password) {
+        return new Response(
+          JSON.stringify({ error: "Password required" }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 401,
+          },
+        );
+      }
+
+      if (!(await verifyPassword(bucketAuth.password_hash, password))) {
+        return new Response(
+          JSON.stringify({ error: "Invalid password" }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 401,
+          },
+        );
+      }
+    }
+
     // Atomic Claim (Fixes Race Condition)
     const { data: bucket, error: bucketError } = await supabase
       .rpc("claim_bucket_download", { p_bucket_code: bucketCode })
@@ -104,76 +205,6 @@ serve(async (req) => {
       );
     }
 
-    // Check password if protected
-    if (bucket.is_password_protected) {
-      // Require POST for password protected buckets
-      if (req.method !== "POST") {
-        return new Response(
-          JSON.stringify({
-            error: "Password protected buckets require POST request",
-          }),
-          {
-            headers: {
-              ...getCorsHeaders(req),
-              "Content-Type": "application/json",
-            },
-            status: 405,
-          },
-        );
-      }
-
-      if (!password) {
-        return new Response(
-          JSON.stringify({ error: "Password required" }),
-          {
-            headers: {
-              ...getCorsHeaders(req),
-              "Content-Type": "application/json",
-            },
-            status: 401,
-          },
-        );
-      }
-
-      // Hash provided password and compare
-      const encoder = new TextEncoder();
-      let isValid = false;
-
-      if (bucket.password_hash.includes(":")) {
-        // New Salted Hash (salt:hash)
-        const [saltHex, storedHash] = bucket.password_hash.split(":");
-        const data = encoder.encode(saltHex + password);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const computedHash = hashArray.map((b) =>
-          b.toString(16).padStart(2, "0")
-        ).join("");
-        isValid = computedHash === storedHash;
-      } else {
-        // Legacy Unsalted Hash
-        const data = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const computedHash = hashArray.map((b) =>
-          b.toString(16).padStart(2, "0")
-        ).join("");
-        isValid = computedHash === bucket.password_hash;
-      }
-
-      if (!isValid) {
-        return new Response(
-          JSON.stringify({ error: "Invalid password" }),
-          {
-            headers: {
-              ...getCorsHeaders(req),
-              "Content-Type": "application/json",
-            },
-            status: 401,
-          },
-        );
-      }
-    }
-
     const responseHeaders: Record<string, string> = { ...getCorsHeaders(req) };
 
     // Handle different content types
@@ -200,6 +231,7 @@ serve(async (req) => {
             content_data: null,
             content_metadata: null,
             is_empty: true,
+            download_started_at: null,
             last_emptied_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })
@@ -247,6 +279,7 @@ serve(async (req) => {
             content_data: null,
             content_metadata: null,
             is_empty: true,
+            download_started_at: null,
             last_emptied_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })

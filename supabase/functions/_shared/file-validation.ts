@@ -78,7 +78,7 @@ export function validateFile(file: File): FileValidationResult {
   if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
-      error: "File too large (max 25MB)",
+      error: "File too large (max 50MB)",
     };
   }
 

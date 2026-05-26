@@ -131,6 +131,7 @@ serve(async (req) => {
     let contentMetadata: BucketContentMetadata = {};
     let uploadedContentType: UploadContentType = "text";
     let password: string | null = null;
+    let uploadedStoragePath: string | null = null;
 
     const authorizeUpload = async (): Promise<Response | null> => {
       if (ownerToken) {
@@ -221,6 +222,7 @@ serve(async (req) => {
 
       if (uploadError) throw uploadError;
 
+      uploadedStoragePath = fileName;
       contentData = fileId;
       uploadedContentType = "file";
       const title = formData.get("title") as string | null;
@@ -281,19 +283,48 @@ serve(async (req) => {
     }
 
     // Update bucket with content
-    const { error: updateError } = await supabase
+    const { data: updatedBucket, error: updateError } = await supabase
       .from("file_buckets")
       .update({
         content_type: uploadedContentType,
         content_data: contentData,
         content_metadata: contentMetadata,
         is_empty: false,
+        download_started_at: null,
         last_filled_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq("id", bucket.id);
+      .eq("id", bucket.id)
+      .eq("is_empty", true)
+      .select("id")
+      .maybeSingle();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      if (uploadedStoragePath) {
+        await supabase.storage.from("qr-files").remove([uploadedStoragePath]);
+      }
+      throw updateError;
+    }
+
+    if (!updatedBucket) {
+      if (uploadedStoragePath) {
+        await supabase.storage.from("qr-files").remove([uploadedStoragePath]);
+      }
+
+      return new Response(
+        JSON.stringify({
+          error:
+            "Bucket was filled by someone else. Download current content first.",
+        }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 409,
+        },
+      );
+    }
 
     return new Response(
       JSON.stringify({
