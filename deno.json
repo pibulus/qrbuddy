@@ -38,7 +38,20 @@
   "deploy": {
     "project": "qrbuddy",
     "exclude": ["**/node_modules"],
-    "include": [],
+    "include": [
+      "_fresh",
+      "static",
+      "routes",
+      "islands",
+      "hooks",
+      "utils",
+      "types",
+      "main.ts",
+      "fresh.gen.ts",
+      "fresh.config.ts",
+      "tailwind.config.ts",
+      "deno.json"
+    ],
     "entrypoint": "main.ts"
   }
 }
