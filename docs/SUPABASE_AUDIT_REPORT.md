@@ -3,6 +3,12 @@
 **Date:** 2025-11-28 **Project:** QRBuddy **Scope:** Complete Supabase
 integration, edge functions, authentication, and security
 
+> Status note, 2026-05-27: this is a historical audit snapshot. Several findings
+> below have since been remediated, including CORS hardening, redirect URL
+> validation, locker RLS/metadata/password fixes, atomic file-transfer RPCs, and
+> service-role-only RPC grants. Use `SUPABASE_REMEDIATION_PLAN.md`,
+> `supabase/README.md`, and the current code as the live source of truth.
+
 ---
 
 ## Executive Summary

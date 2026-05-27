@@ -1,67 +1,55 @@
 # QRBuddy Tests
 
-Basic integration tests for QRBuddy edge functions.
+Integration tests for QRBuddy Supabase Edge Functions.
 
 ## Running Tests
 
-### Prerequisites
-
-1. Configure your `.env` file with Supabase credentials:
+Configure environment variables first:
 
 ```bash
 SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+
+# Optional, only used by cleanup helpers. Do not expose this to the Fresh app.
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-### Run All Tests
+Run all tests:
 
 ```bash
-deno test --allow-net --allow-env --allow-read
+deno task test
 ```
 
-### Run Specific Test File
+Run a specific file:
 
 ```bash
 deno test --allow-net --allow-env --allow-read tests/edge-functions_test.ts
+deno test --allow-net --allow-env --allow-read tests/remediation_test.ts
 ```
 
-### Watch Mode (for development)
+## Test Files
 
-```bash
-deno test --allow-net --allow-env --allow-read --watch
-```
-
-## Test Coverage
-
-Current test coverage includes:
-
-### Edge Functions
-
-- ✅ **create-dynamic-qr**
-  - Rate limiting enforcement
-  - Required field validation
-  - Successful QR creation
-
-- ✅ **upload-file**
-  - Executable file blocking
-  - File size limit enforcement
-
-- ✅ **redirect-qr**
-  - Missing code parameter handling
-
-- ✅ **get-dynamic-qr**
-  - Token requirement validation
+- `edge-functions_test.ts` - Dynamic QR validation, upload-file validation, and
+  basic redirect/get-dynamic checks. Tests auto-skip when `SUPABASE_URL` or
+  `SUPABASE_ANON_KEY` is missing.
+- `remediation_test.ts` - Locker security regression flow: password bucket
+  creation, owner-token upload, invalid-token rejection, blocked file upload,
+  POST-only protected download, and metadata redaction. If functions are not
+  reachable, the setup step logs and exits early.
 
 ## Notes
 
-- Tests will be skipped automatically if `SUPABASE_URL` is not configured
-- Rate limiting tests may affect your actual edge function usage temporarily
-- Tests use real edge functions (not mocked) for integration testing
+- These are integration tests against real edge functions, not unit tests.
+- Rate limiting tests are marked ignored because remote/serverless timing makes
+  them flaky.
+- Be careful running cleanup-backed tests against production projects; prefer a
+  test Supabase project when service-role cleanup is enabled.
 
 ## Future Improvements
 
 - [ ] Add E2E tests with Playwright
 - [ ] Add unit tests for utility functions
-- [ ] Add tests for destructible file flow
+- [ ] Add full destructible file lifecycle tests, including finite multi-file
+      zip behavior
 - [ ] Mock Supabase for faster unit tests
 - [ ] Add CI/CD integration with GitHub Actions

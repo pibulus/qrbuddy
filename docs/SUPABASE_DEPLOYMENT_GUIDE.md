@@ -2,6 +2,11 @@
 
 A simple, reusable guide for connecting any project to Supabase Edge Functions.
 
+> QRBuddy note, 2026-05-27: for this repo's current backend inventory and file
+> semantics, start with [`../supabase/README.md`](../supabase/README.md). This
+> document remains a reusable/general Supabase guide plus historical deployment
+> notes.
+
 ## 🎯 Quick Overview
 
 Supabase Edge Functions are serverless functions that run on Deno. This guide

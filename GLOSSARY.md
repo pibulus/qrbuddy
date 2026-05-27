@@ -15,7 +15,8 @@
 - `ShareActions` - Share sheet for QR codes
 - `HistoryDrawer` - QR generation history panel
 - `RotatingTitle` - Animated header text
-- `FileSlideshow` - Multi-image slideshow viewer
+- `FileSlideshow` - Multi-image slideshow viewer; finite shares download as a
+  single zip
 
 **Modals & Overlays:**
 
@@ -72,10 +73,24 @@
 
 - `qr-styles.ts` - Gradient style definitions
   (sunset/pool/terminal/candy/vapor/brutalist) (utils/qr-styles.ts)
+- `api.ts` - Supabase URL + anon auth header helpers for server and browser
+  contexts
+- `api-request.ts` - Shared JSON/FormData request wrappers with consistent error
+  handling
+- `constants.ts` - Shared scan limits, upload progress, and UI timing constants
+- `file-validation.ts` - Client-side upload size/type/extension checks
+- `token-vault.ts` - Local owner-token storage helpers for editable QRs and
+  lockers
 
 ## Key Functions
 
 - `addToast()` - Add notification to stack (islands/ToastManager.tsx)
+- `claim_destructible_file_download()` /
+  `finalize_destructible_file_download()` - Supabase RPC pair that claims a
+  destructible file before serving it, then finalizes/removes it after storage
+  retrieval succeeds
+- `claim_bucket_download()` - Supabase RPC used by File Locker downloads to
+  atomically mark content as busy and prevent concurrent double-download races
 
 ## Core Concepts
 
@@ -90,11 +105,18 @@
   with drag/drop
 - **Destructible QRs** - One-time QR codes (URLs OR files) that self-destruct
   after 1 scan → KABOOM page
+- **Finite Multi-File Shares** - Multi-image limited shares are delivered as one
+  zip so a single item cannot consume/destroy the whole share
+- **File Locker** - Persistent QR bucket for passing files, text, or links; can
+  be reusable or empty/delete on download
 - **Dynamic QR Codes** - Privacy-first editable redirects with scan limits (1,
   5, 10, 100, ∞) and expiry dates
 - **Anti-Scale Dynamic** - Editable QR destinations with scan limits, expiry,
   and owner tokens (NO tracking/analytics)
 - **Local Development** - Mock API server (local-api/server.ts) for testing
-  without Supabase
+  basic destructible/dynamic flows without Supabase; locker parity requires
+  Supabase
+- **Service Role Boundary** - Fresh/client code uses anon key headers; database,
+  storage, and internal RPC access stays inside Supabase edge functions
 - **KABOOM Page** - Epic explosion page shown when destructible file already
   accessed

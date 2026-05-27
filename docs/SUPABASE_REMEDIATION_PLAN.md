@@ -1,6 +1,9 @@
 # Supabase Remediation Plan
 
-**Last updated:** 2025-12-01
+**Last updated:** 2026-05-27
+
+**Status:** Historical punch list. Priority 0 has been remediated in the current
+codebase. Remaining items are product/ops hardening, not launch blockers.
 
 This document converts the latest Supabase audit into a punch list prioritized
 by impact and effort. Work top-to-bottom; each section lists concrete fixes,
@@ -9,6 +12,9 @@ context, and suggested owners.
 ## Priority 0 – Ship Before Anything Else
 
 1. **Lock Down Bucket RLS (file_buckets table)**
+   - _Status 2026-05-27:_ Done. Public updates/deletes are blocked by RLS;
+     mutations go through service-role edge functions. Owner tokens are hashed
+     before storage.
    - _Files:_ `supabase/migrations/20251111000001_file_buckets.sql`,
      `supabase/functions/upload-to-bucket`, `supabase/functions/create-bucket`
    - _Issue:_ Current policy uses `USING (true)` which lets anyone mutate every
@@ -20,6 +26,8 @@ context, and suggested owners.
      bucket code.
 
 2. **Mirror File Validation for Bucket Uploads**
+   - _Status 2026-05-27:_ Done. Bucket uploads use shared edge validation and
+     stream `File` objects into Supabase Storage instead of array buffers.
    - _Files:_ `supabase/functions/upload-to-bucket/index.ts`,
      `utils/file-validation.ts`
    - _Issue:_ Bucket uploads skip size/type limits and stream entire files into
@@ -31,6 +39,8 @@ context, and suggested owners.
      memory usage.
 
 3. **Require POST + Body for Password-Protected Downloads**
+   - _Status 2026-05-27:_ Done. Protected downloads require POST JSON bodies;
+     query-string passwords are ignored.
    - _Files:_ `supabase/functions/download-from-bucket/index.ts`, client calls
      in `islands/BucketQR.tsx`
    - _Issue:_ Passwords are accepted via GET query params, leaking through
@@ -41,6 +51,8 @@ context, and suggested owners.
      disclosure.
 
 4. **Redact Sensitive Bucket Metadata**
+   - _Status 2026-05-27:_ Done for password-protected buckets. Public status
+     hides metadata until owner token or password authorization succeeds.
    - _Files:_ `supabase/functions/get-bucket-status/index.ts`,
      `routes/bucket/[code].tsx`
    - _Issue:_ Anyone who guesses a bucket code learns filenames, styles,
@@ -53,6 +65,8 @@ context, and suggested owners.
 ## Priority 1 – High Impact, Short Work
 
 5. **Stream File Downloads through Fresh**
+   - _Status 2026-05-27:_ Done. `routes/api/download-file.ts` proxies response
+     bodies and forwards download/path parameters without buffering full files.
    - _Files:_ `routes/api/download-file.ts`
    - _Issue:_ Uses `await response.blob()`, doubling memory for large files.
    - _Fix:_ Return `new Response(response.body, { headers })` and pass through
@@ -60,6 +74,9 @@ context, and suggested owners.
    - _Value:_ Removes size ceiling and improves download reliability.
 
 6. **Clean Up Destructible Files + Buckets Automatically**
+   - _Status 2026-05-27:_ Partly done. `cleanup-expired` exists and
+     `supabase/cron.sql` documents scheduling; verify cron is installed per
+     environment.
    - _Files:_ new cron/SQL script, maybe `supabase/functions/_shared`
    - _Issue:_ Rows marked `accessed=true` and orphaned storage objects never
      purge.
@@ -79,6 +96,9 @@ context, and suggested owners.
    - _Value:_ Reduces chance of token leaks via screenshots or analytics.
 
 8. **Improve Bucket Password Hashing**
+   - _Status 2026-05-27:_ Partly done. Passwords now use salted SHA-256, which
+     fixes the original unsalted hash issue; bcrypt/argon2 remains a stronger
+     future upgrade.
    - _Files:_ `supabase/functions/create-bucket/index.ts`,
      `download-from-bucket/index.ts`
    - _Issue:_ Passwords are raw SHA-256 without salt.
@@ -104,6 +124,11 @@ context, and suggested owners.
 - _Value:_ Faster rollout for future domain/preview changes.
 
 11. **Expand Edge Function Test Coverage**
+
+- _Status 2026-05-27:_ Partly done. `tests/remediation_test.ts` covers bucket
+  creation/upload/download, password POST flow, invalid owner token, blocked
+  files, and metadata redaction. Full destructible lifecycle tests are still
+  open.
 
 - _Files:_ `tests/edge-functions_test.ts`
 - _Issue:_ Only dynamic QR + upload validations are covered.
@@ -150,7 +175,8 @@ context, and suggested owners.
 
 ### How to Work This List
 
-- Treat Priority 0 items as blockers; nothing else ships until they’re resolved.
+- Priority 0 is now cleared in current code. Reopen only if a regression is
+  found.
 - After each fix, update this file with a short note and date so future
   instances know the state of play.
 - If new risks appear, add them under the appropriate priority with owner + ETA.

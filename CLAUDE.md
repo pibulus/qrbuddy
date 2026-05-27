@@ -85,6 +85,8 @@ See GLOSSARY.md for complete list organized by category. Key islands:
 - `LogoUploader`: Custom logo upload with drag-drop
 - `EditQRForm`: Dynamic QR edit interface
 - `BucketQR`: File bucket display and management
+- `FileSlideshow`: Destructible multi-image preview and finite-share zip
+  download entry point
 - `ToastManager`: Notification stacking system
 - `AboutModal`/`KofiModal`/`PricingModal`/`TemplateModal`/`ExtrasModal`: Feature
   discovery
@@ -175,22 +177,29 @@ if (maxDownloads === 999999) {
 
 - **Primary**: Deno Deploy (zero-config deployment from GitHub)
 - **Alternative**: Any Deno-compatible host via `deno run -A main.ts`
-- **Project ID**: `fff4f21f-dab0-46f0-aa13-ea22dd20be78` (qrbuddy project)
-- **Live URL**: https://qrbuddy.deno.dev
-- **Custom Domain**: qrbuddy.app (pending DNS setup)
+- **Deno Deploy project**: `qrbuddy`
+- **Live URL**: https://qrbuddy.app
+- **Deno Deploy alias**: https://qrbuddy.deno.dev
+- **Supabase project ref**: `aqydpibnvlhcjcwosrti`
 
 #### Deployment Commands
 
 ```bash
-# Deploy to production (uses project ID from deno.json)
-deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
+# Deploy Fresh production. Only pass public/client-safe Supabase config here.
+PROJECT_REF=aqydpibnvlhcjcwosrti
+deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN \
+  --env="SUPABASE_URL=https://${PROJECT_REF}.supabase.co" \
+  --env="APP_URL=https://qrbuddy.app" \
+  --env="SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
 
-# First-time deploy adds a "deploy" section to deno.json with:
-# - project: UUID linking to Deno Deploy project
-# - entrypoint: main.ts (Fresh standard)
-# - exclude/include: deployment file filters
-# This should be committed to track deployment config
+# Deploy all Supabase edge functions when backend code changes.
+for func in supabase/functions/*/; do
+  supabase functions deploy "$(basename "$func")" --project-ref "$PROJECT_REF"
+done
 ```
+
+Never pass `SUPABASE_SERVICE_ROLE_KEY` to Deno Deploy. It belongs only in
+Supabase edge function secrets.
 
 ## 🎨 Design System
 
@@ -215,8 +224,8 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Memory Management
 
-- **Event Listeners**: KeyboardHandler properly cleans up with
-  `removeEventListener` in useEffect return
+- **Event Listeners**: Islands/hooks that attach global or document listeners
+  clean up with `removeEventListener` in useEffect returns
 - **Timeouts**: All setTimeout calls are short-lived (400ms-3500ms) for UI
   feedback only
 - **QR Library**: QRCodeStyling instance is properly managed via refs, no memory
@@ -225,13 +234,16 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 ### Security
 
 - **File Upload Security**: Client-side validation blocks executable files and
-  enforces 50MB size limit using `utils/file-validation.ts`
+  enforces 50MB size limit using `utils/file-validation.ts`; server functions
+  validate again, with stricter per-file limits for multi-image shares
 - **URL Validation**: All redirect URLs validated to prevent open redirect
   vulnerabilities (blocks javascript:, data:, file: protocols)
 - **CORS Policy**: Environment-specific origins (qrbuddy.app in prod, localhost
   in dev) - no wildcard access
 - **Authentication**: All Supabase edge function calls include required
   Authorization and apikey headers via `utils/api-request.ts`
+- **Service Role Boundary**: Client/Fresh code uses the anon key only; Supabase
+  edge functions use service role secrets for database/storage/RPC access
 - **Clipboard API**: Uses modern Clipboard API with proper error handling
 - **Hybrid Architecture**: Static QR generation is client-side only; dynamic QRs
   and file uploads use Supabase edge functions
@@ -247,7 +259,20 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ## ✅ Recently Completed
 
-### Dynamic QR Codes Integration (Latest)
+### File Transfer Hardening (Latest)
+
+- **Atomic Destructible Downloads**: File claims/finalization run through
+  service-role-only RPCs to avoid double-spend races
+- **Finite Multi-File Semantics**: Limited multi-image shares download as one
+  zip; direct sub-file downloads are rejected before consuming a use
+- **Locker Freshness**: Bucket pages refetch status after upload/download
+  success or failure so cross-device state does not stay stale
+- **Upload Progress Polish**: Upload UI switches from "Uploading..." to
+  "Processing..." at 99% while server-side work completes
+- **RPC Grant Lockdown**: Public `anon`/`authenticated` roles cannot directly
+  execute internal file-transfer RPCs
+
+### Dynamic QR Codes Integration
 
 - **Anti-Scale Dynamic QRs**: Privacy-first editable redirects with NO
   tracking/analytics
@@ -280,7 +305,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   Tailwind CSS
 - **Destructible Files**: Self-destructing file uploads with KABOOM explosion
   page
-- **12 Interactive Islands**: GradientCreator, keyboard shortcuts,
-  copy-to-clipboard, error handling, toast notifications
+- **Early Islands**: GradientCreator, copy-to-clipboard, error handling, toast
+  notifications
 - **Mobile Dev Config**: Added --host 0.0.0.0 flag for mobile testing on local
   network

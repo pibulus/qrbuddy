@@ -12,10 +12,14 @@ gradient art pieces with that soft brutal aesthetic.
   after 1 scan → KABOOM!
 - **Dynamic QR Codes** 🔗 - Privacy-first editable redirects with scan limits
   (NO tracking/analytics)
+- **File Locker** 🔐 - Reusable or one-shot QR lockers for passing files, text,
+  and links
 - **Scan Limits** - Set 1, 5, 10, 100, or unlimited scans before self-destruct
 - **Expiry Dates** - Optional time-based QR expiration
 - **Edit Anytime** - Change destination URL without reprinting QR (works for
   both URLs and files)
+- **Multi-File Shares** - Image sets preview as a slideshow; finite shares
+  download as one zip so one file cannot consume the whole set
 - **6 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, and Brutalist
   themes
 - **Custom Gradient Creator** - Build your own gradient QR codes
@@ -36,25 +40,28 @@ curl -fsSL https://deno.land/install.sh | sh
 git clone https://github.com/pibulus/qrbuddy.git
 cd qrbuddy
 
-# Start the local mock API server (for destructible files + dynamic QRs)
-deno task api
-
-# In another terminal, start the Fresh dev server
+# Start the Fresh dev server
 deno task start
+
+# Optional: in another terminal, start the local mock API server
+# for basic destructible file + dynamic QR development without Supabase
+deno task api
 ```
 
 Visit **http://localhost:8004** and start creating beautiful QR codes!
 
 The local API server runs on port 8005 and stores files in `local-api/files/`
-(gitignored).
+(gitignored). It is a convenience mock, not full production parity: File Locker
+and Supabase security/RPC behavior should be tested against Supabase.
 
 ### 🎯 What Works Locally
 
 - ✅ **Basic QR Codes** - All 6 gradient styles + custom gradients
-- ✅ **Destructible QRs** - URLs or files that self-destruct after 1 scan
+- ✅ **Destructible QRs** - Basic URL/file flows through the local mock API
 - ✅ **Dynamic QR Codes** - Editable redirects with scan limits & expiry (works
-  for both URLs and files)
+  through the local mock API)
 - ✅ **KABOOM Page** - Epic explosion when already accessed
+- ⚠️ **File Locker** - Requires Supabase edge functions for realistic testing
 
 ### 🚀 Production Deployment (Supabase)
 
@@ -63,11 +70,12 @@ For production deployment with Supabase backend, see
 
 **TL;DR:**
 
-1. Create Supabase project
-2. Run `supabase/setup.sql` in SQL Editor
-3. Deploy 13 edge functions
-4. Set environment variables
-5. Deploy Fresh app to Deno Deploy
+1. Create/link Supabase project
+2. Apply `supabase/setup.sql` or run the migrations with `supabase db push`
+3. Deploy all 13 edge functions
+4. Set Supabase secrets (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_URL`)
+5. Deploy Fresh to Deno Deploy with `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and
+   `APP_URL`
 
 ## 🛠 Tech Stack
 
@@ -115,13 +123,18 @@ qrbuddy/
 ├── local-api/            # Local mock Supabase edge function server
 │   └── server.ts             # Upload + dynamic QR emulator for dev
 ├── supabase/             # Production schema + edge functions
-│   ├── setup.sql             # Core tables
+│   ├── setup.sql             # Current one-shot schema/RPC bootstrap
+│   ├── migrations/           # Historical + incremental production migrations
 │   └── functions/            # 13 edge functions
 ├── utils/                # Shared utilities
-│   ├── api.ts                # SUPABASE_URL + API helpers
+│   ├── api.ts                # SUPABASE_URL + auth header helpers
+│   ├── api-request.ts        # Shared JSON/FormData request helpers
+│   ├── constants.ts          # Shared scan/progress/timing constants
+│   ├── file-validation.ts    # Client-side upload validation
 │   ├── haptics.ts            # Haptic wrappers
 │   ├── qr-styles.ts          # Gradient style definitions
 │   └── sounds.ts             # UI soundboard
+├── types/                # Shared ambient/runtime type declarations
 ├── static/               # Icons, manifest, robots, sitemap, CSS
 ├── tests/                # Edge function integration tests
 └── tailwind.config.ts    # Tailwind design tokens/theme
@@ -152,6 +165,15 @@ deno check **/*.ts **/*.tsx
 deno task build
 ```
 
+## 📚 Documentation
+
+- [CLAUDE.md](./CLAUDE.md) - agent/developer contract and architecture notes
+- [GLOSSARY.md](./GLOSSARY.md) - component and concept glossary
+- [docs/README.md](./docs/README.md) - documentation index and status labels
+- [supabase/README.md](./supabase/README.md) - current backend setup and
+  semantics
+- [tests/README.md](./tests/README.md) - integration test guide
+
 ## 🚢 Deployment
 
 QRBuddy can be deployed to any platform that supports Deno:
@@ -160,7 +182,11 @@ QRBuddy can be deployed to any platform that supports Deno:
 
 1. Push to GitHub
 2. Connect to [Deno Deploy](https://deno.com/deploy)
-3. Deploy with zero config
+3. Deploy project `qrbuddy` with `APP_URL`, `SUPABASE_URL`, and
+   `SUPABASE_ANON_KEY`
+
+Do not deploy `SUPABASE_SERVICE_ROLE_KEY` to Fresh/Deno Deploy; keep it in
+Supabase edge function secrets only.
 
 ### Self-Hosted
 

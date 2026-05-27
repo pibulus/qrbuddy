@@ -1,75 +1,86 @@
-# Supabase Setup for QRBuddy
+# Supabase Backend for QRBuddy
 
-## Quick Start
+QRBuddy uses Supabase for dynamic QR redirects, destructible file shares, file
+lockers, cleanup, and private file storage. The Fresh app should only know the
+Supabase URL and anon key; service-role access stays inside Supabase Edge
+Functions.
 
-### 1. Database Setup (2 minutes)
+## Current Shape
 
-Go to your Supabase SQL Editor and run `setup.sql`:
+- Project ref in production: `aqydpibnvlhcjcwosrti`
+- Private storage bucket: `qr-files`
+- Bootstrap schema/RPC script: `supabase/setup.sql`
+- Incremental schema history: `supabase/migrations/`
+- Edge functions: 13 in `supabase/functions/`
 
-```sql
--- Copy/paste the contents of setup.sql
-```
+Functions:
 
-### 2. Deploy Edge Functions (5 minutes)
+- `upload-file`, `get-file`, `get-file-metadata`
+- `create-bucket`, `get-bucket-status`, `upload-to-bucket`,
+  `download-from-bucket`
+- `create-dynamic-qr`, `get-dynamic-qr`, `update-dynamic-qr`, `redirect-qr`
+- `cleanup-expired`, `health`
+
+## Setup
 
 ```bash
-# Install Supabase CLI if needed
-brew install supabase/tap/supabase
-
-# Link to your project
 supabase link --project-ref YOUR_PROJECT_REF
 
-# Deploy functions
-supabase functions deploy upload-file
-supabase functions deploy get-file
+# New project bootstrap:
+# Run supabase/setup.sql in the SQL Editor, or use migrations when the remote
+# history is aligned with this repo.
+supabase db push
+
+supabase secrets set \
+  SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co \
+  SUPABASE_SERVICE_ROLE_KEY=your-service-role-key \
+  APP_URL=https://qrbuddy.app
 ```
 
-### 3. Set Environment Variables
+## Deploy Functions
+
+Deploy one function while iterating:
 
 ```bash
-# In your edge functions settings, add:
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+supabase functions deploy get-file --project-ref YOUR_PROJECT_REF
 ```
 
-### 4. Update QRBuddy Config
-
-Create `.env` file in project root:
+Deploy all QRBuddy functions:
 
 ```bash
-cp .env.example .env
-# Edit .env with your actual keys
+for func in supabase/functions/*/; do
+  supabase functions deploy "$(basename "$func")" --project-ref YOUR_PROJECT_REF
+done
 ```
 
-## How It Works
+## Auth Boundary
 
-**upload-file**: Receives file → uploads to private storage → returns
-destructible URL **get-file**: Serves file ONCE → deletes from storage →
-redirects to KABOOM page for subsequent requests
+- Browser/Fresh requests send `Authorization: Bearer <anon key>` and `apikey`.
+- Edge functions create Supabase clients with `SUPABASE_SERVICE_ROLE_KEY`.
+- Internal download RPCs are granted to `service_role` only.
+- Owner tokens and locker PIN/password checks happen in edge functions before
+  database/storage mutations.
 
-## Testing Locally
+## File Semantics
+
+- Single destructible downloads consume a use when the server starts returning
+  the file.
+- Finite multi-file shares are downloaded as one zip; direct sub-file downloads
+  are rejected before the share is claimed.
+- File lockers can be reusable, one-shot, or reusable-but-empty-on-download.
+- Password-protected locker downloads use POST body auth, not query-string
+  passwords.
+
+## Smoke Checks
 
 ```bash
-# Start Supabase locally
-supabase start
+# Health
+curl "https://YOUR_PROJECT_REF.supabase.co/functions/v1/health" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+  -H "apikey: $SUPABASE_ANON_KEY"
 
-# Deploy functions locally
-supabase functions serve
-
-# Test upload
-curl -X POST http://localhost:54321/functions/v1/upload-file \
-  -F "file=@test.pdf"
-
-# Test download (use the URL from upload response)
-curl http://localhost:54321/functions/v1/get-file?id=UUID_HERE
+# Integration tests, when env is configured
+deno task test
 ```
 
-## Cost
-
-Free tier covers:
-
-- 1GB storage = ~1000 files @ 1MB each
-- 2GB bandwidth = ~2000 downloads
-- Unlimited function invocations
-
-"Can't scale" is the feature 💣
+See `tests/README.md` for the current test files and caveats.

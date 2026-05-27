@@ -41,9 +41,11 @@ qrbuddy/
 │   ├── q.tsx               # Shared QR showcase
 │   ├── edit.tsx            # Dynamic QR editor shell
 │   ├── boom.tsx            # KABOOM landing
+│   ├── go.tsx              # Free-tier redirect interstitial
 │   ├── r.tsx / r/[code].tsx# Redirect helpers
 │   ├── f/[code].tsx        # Destructible file gate
-│   └── bucket/[code].tsx   # File bucket viewer
+│   ├── bucket/[code].tsx   # File bucket viewer
+│   └── api/download-file.ts# Fresh download proxy
 ├── islands/
 │   ├── SmartInput.tsx      # Smart input (URL/text/file) + dynamic controls
 │   ├── QRCanvas.tsx        # Renders QR + download/copy
@@ -58,8 +60,14 @@ qrbuddy/
 │   ├── ToastManager.tsx    # Notifications
 │   └── Analytics.tsx       # PostHog wiring
 ├── utils/
-│   ├── api.ts              # SUPABASE_URL helpers
+│   ├── api.ts              # SUPABASE_URL + anon auth helpers
+│   ├── api-request.ts      # Shared fetch helpers
+│   ├── constants.ts        # Shared timing/limit values
+│   ├── file-validation.ts  # Upload validation
 │   └── qr-styles.ts        # Gradient presets
+├── supabase/
+│   ├── functions/          # 13 production edge functions
+│   └── migrations/         # Schema/RPC history
 ├── local-api/              # Mock Supabase edge functions for dev
 └── static/                 # Images, CSS, manifest, robots, sitemap
 ```
@@ -245,11 +253,13 @@ deno task start
 ### One-Liner Deploy
 
 ```bash
-# DENO DEPLOY (already configured)
-deployctl deploy --prod --project=fff4f21f-dab0-46f0-aa13-ea22dd20be78
-
-# Or using token:
-deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
+# Deno Deploy project is "qrbuddy" in deno.json.
+# Only pass public/client-safe Supabase config here.
+PROJECT_REF=aqydpibnvlhcjcwosrti
+deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN \
+  --env="SUPABASE_URL=https://${PROJECT_REF}.supabase.co" \
+  --env="APP_URL=https://qrbuddy.app" \
+  --env="SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
 ```
 
 ### Manual Deploy Steps
@@ -259,8 +269,8 @@ deployctl deploy --production --token=$DENO_DEPLOY_TOKEN
 3. Push it: `git push origin main`
 4. Deploy: `deployctl deploy --prod`
 
-**Note**: Project ID is in deno.json (deploy.project) - commit it after first
-deploy!
+**Note**: `SUPABASE_SERVICE_ROLE_KEY` is only for Supabase edge functions. Do
+not pass it to Deno Deploy.
 
 ---
 
@@ -297,10 +307,6 @@ colors.
     routes/index.tsx
   - Islands watch signals via useEffect
 - **QR library**: `qr-code-styling@1.6.0-rc.1` (supports gradients!)
-- **Keyboard shortcuts**: KeyboardHandler.tsx island
-  - `s` = shuffle style
-  - `d` or `Cmd+S` = download
-  - `c` or `Cmd+C` = copy to clipboard
 - **Animations**: Custom Tailwind keyframes (lines 28-88 in tailwind.config.ts)
   - squish, rotate-shuffle, float, pop, shake, etc.
 - **No build step**: Fresh uses JIT compilation
@@ -330,7 +336,7 @@ deno task start
 # Edit: routes/index.tsx (line 25+)
 
 # Ship it
-deployctl deploy --prod
+deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
 
 # When broken
 rm -rf _fresh deno.lock
