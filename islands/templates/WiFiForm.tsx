@@ -16,6 +16,7 @@ export default function WiFiForm({ url }: Props) {
   const [password, setPassword] = useState("");
   const [encryption, setEncryption] = useState<"WPA" | "WEP" | "nopass">("WPA");
   const [hidden, setHidden] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [_error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
@@ -99,16 +100,28 @@ export default function WiFiForm({ url }: Props) {
           <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
             Password *
           </label>
-          <input
-            type="text"
-            value={password}
-            onInput={(e) => {
-              setPassword((e.target as HTMLInputElement).value);
-              haptics.light();
-            }}
-            placeholder="Network password"
-            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#4ECDC4] focus:outline-none"
-          />
+          <div class="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onInput={(e) => {
+                setPassword((e.target as HTMLInputElement).value);
+                haptics.light();
+              }}
+              placeholder="Network password"
+              class="w-full px-4 py-3 pr-20 border-3 border-gray-300 rounded-xl text-lg focus:border-[#4ECDC4] focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setShowPassword((current) => !current);
+                haptics.light();
+              }}
+              class="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] px-3 rounded-lg text-sm font-black text-[#3AA8A4] hover:bg-[#E0FFFF]"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
         </div>
       )}
 

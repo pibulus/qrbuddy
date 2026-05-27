@@ -81,7 +81,7 @@ export default function EmailForm({ url }: Props) {
       {/* Body */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Message Body
+          Message
         </label>
         <textarea
           value={body}

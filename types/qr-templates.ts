@@ -1,4 +1,4 @@
-// QR Code Template Types
+// QR code type definitions
 // Supports various QR code data formats beyond simple URLs
 
 export type QRTemplateType =
@@ -21,21 +21,21 @@ export interface QRTemplate {
 export const QR_TEMPLATES: Record<QRTemplateType, QRTemplate> = {
   url: {
     type: "url",
-    label: "Website",
+    label: "Link",
     icon: "🔗",
-    description: "Link to any website URL",
+    description: "Send scanners to a website or page",
   },
   social: {
     type: "social",
-    label: "Social",
+    label: "Social profile",
     icon: "🤳",
     description: "Instagram, X, & more",
   },
   media: {
     type: "media",
-    label: "Media",
+    label: "Share a File",
     icon: "📂",
-    description: "Share files with style & security",
+    description: "Create a secure file page",
   },
   wifi: {
     type: "wifi",
@@ -45,13 +45,13 @@ export const QR_TEMPLATES: Record<QRTemplateType, QRTemplate> = {
   },
   vcard: {
     type: "vcard",
-    label: "Contact",
+    label: "Contact Card",
     icon: "👤",
     description: "Share contact details",
   },
   sms: {
     type: "sms",
-    label: "SMS",
+    label: "Text Message",
     icon: "💬",
     description: "Send a text message",
   },
@@ -63,13 +63,13 @@ export const QR_TEMPLATES: Record<QRTemplateType, QRTemplate> = {
   },
   text: {
     type: "text",
-    label: "Text",
+    label: "Plain text",
     icon: "📝",
     description: "Display plain text",
   },
 };
 
-// WiFi Template Data
+// WiFi QR type data
 export interface WiFiData {
   ssid: string;
   password?: string;
@@ -77,7 +77,7 @@ export interface WiFiData {
   hidden: boolean;
 }
 
-// vCard Template Data
+// vCard QR type data
 export interface VCardData {
   firstName: string;
   lastName: string;
@@ -89,20 +89,20 @@ export interface VCardData {
   address: string;
 }
 
-// SMS Template Data
+// SMS QR type data
 export interface SMSData {
   phone: string;
   message: string;
 }
 
-// Email Template Data
+// Email QR type data
 export interface EmailData {
   email: string;
   subject: string;
   body: string;
 }
 
-// Format functions for each template type
+// Format functions for each QR type
 export function formatWiFi(data: WiFiData): string {
   const encryption = data.encryption === "nopass" ? "" : data.encryption;
   const hidden = data.hidden ? "H:true" : "";

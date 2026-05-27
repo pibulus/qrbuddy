@@ -32,21 +32,22 @@ export default function SplashSettings({ splashConfig }: SplashSettingsProps) {
 
   return (
     <div class="space-y-4 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-      <div class="flex items-center justify-between">
-        <label class="font-bold text-gray-700">Enable Splash Screen</label>
+      <div class="flex items-center justify-between gap-4">
+        <label class="font-bold text-gray-700">Enable intro page</label>
         <button
           type="button"
           onClick={() => {
             updateConfig({ enabled: !localConfig.enabled });
             haptics.light();
           }}
-          class={`w-12 h-6 rounded-full transition-colors relative ${
+          class={`min-w-[64px] min-h-[44px] rounded-full transition-colors relative ${
             localConfig.enabled ? "bg-green-500" : "bg-gray-300"
           }`}
+          aria-label="Toggle intro page"
         >
           <div
-            class={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-              localConfig.enabled ? "translate-x-6" : "translate-x-0"
+            class={`absolute top-2.5 left-2.5 w-6 h-6 bg-white rounded-full transition-transform ${
+              localConfig.enabled ? "translate-x-5" : "translate-x-0"
             }`}
           />
         </button>
@@ -56,7 +57,7 @@ export default function SplashSettings({ splashConfig }: SplashSettingsProps) {
         <div class="space-y-3 animate-slide-down">
           <div>
             <label class="block text-xs font-bold text-gray-500 mb-1">
-              Page Title
+              Page title
             </label>
             <input
               type="text"
@@ -70,7 +71,7 @@ export default function SplashSettings({ splashConfig }: SplashSettingsProps) {
 
           <div>
             <label class="block text-xs font-bold text-gray-500 mb-1">
-              Button Text
+              Button text
             </label>
             <input
               type="text"

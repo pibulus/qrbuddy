@@ -44,18 +44,17 @@ qrbuddy/
 │   ├── go.tsx              # Free-tier redirect interstitial
 │   ├── r.tsx / r/[code].tsx# Redirect helpers
 │   ├── f/[code].tsx        # Destructible file gate
-│   ├── bucket/[code].tsx   # File bucket viewer
+│   ├── bucket/[code].tsx   # File locker viewer
 │   └── api/download-file.ts# Fresh download proxy
 ├── islands/
 │   ├── SmartInput.tsx      # Smart input (URL/text/file) + dynamic controls
 │   ├── QRCanvas.tsx        # Renders QR + download/copy
 │   ├── StyleSelector.tsx   # Gradient picker + custom entry
 │   ├── GradientCreator.tsx # Custom gradient modal
-│   ├── TemplateModal.tsx   # WiFi/vCard/SMS/Email/Text helpers
-│   ├── ExtrasModal.tsx     # Buckets, logos, destructible goodies
+│   ├── CreateModal.tsx     # QR type/options/design creation sheet
 │   ├── LogoUploader.tsx    # Center logo uploader
 │   ├── ActionButtons.tsx   # Download/copy triggers
-│   ├── BucketQR.tsx        # File bucket QR display
+│   ├── BucketQR.tsx        # File locker QR display
 │   ├── EditQRForm.tsx      # Dynamic QR editing
 │   ├── ToastManager.tsx    # Notifications
 │   └── Analytics.tsx       # PostHog wiring

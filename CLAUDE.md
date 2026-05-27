@@ -73,7 +73,7 @@ HTML.
 - Orchestrates component layout
 - Handles SEO meta tags
 
-**Islands (Interactive Components - 41 registered)**
+**Islands (Interactive Components - 40 registered)**
 
 See GLOSSARY.md for complete list organized by category. Key islands:
 
@@ -84,12 +84,12 @@ See GLOSSARY.md for complete list organized by category. Key islands:
 - `GradientCreator`: Custom gradient builder
 - `LogoUploader`: Custom logo upload with drag-drop
 - `EditQRForm`: Dynamic QR edit interface
-- `BucketQR`: File bucket display and management
+- `BucketQR`: File locker display and management
 - `FileSlideshow`: Destructible multi-image preview and finite-share zip
   download entry point
 - `ToastManager`: Notification stacking system
-- `AboutModal`/`KofiModal`/`PricingModal`/`TemplateModal`/`ExtrasModal`: Feature
-  discovery
+- `CreateModal`: Combined QR type, options, file locker, and design sheet
+- `AboutModal`/`KofiModal`/`PricingModal`: Feature discovery
 - `ErrorBoundary`: Error handling
 - `Analytics`: PostHog integration
 
@@ -250,7 +250,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Performance Optimizations
 
-- **Islands Architecture**: Only interactive components hydrate (41 islands
+- **Islands Architecture**: Only interactive components hydrate (40 islands
   total)
 - **Signal-Based State**: Efficient reactive updates without re-renders
 - **Lazy QR Updates**: QR regenerates only on url/style change via useEffect
@@ -282,7 +282,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   - Dynamic QRs: create-dynamic-qr, update-dynamic-qr, get-dynamic-qr,
     redirect-qr
   - Destructible files: upload-file, get-file, get-file-metadata
-  - File buckets: create-bucket, get-bucket-status, upload-to-bucket,
+  - File lockers: create-bucket, get-bucket-status, upload-to-bucket,
     download-from-bucket
   - System: health, cleanup-expired
 - **Smart Input Enhancements**: Checkbox + options UI for scan limits
@@ -294,8 +294,8 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   redirect logic
 - **Visual Indicators**: Purple/pink "editable" badge on dynamic QRs alongside
   destructible badge
-- **41 Interactive Islands**: Complete island architecture with modals,
-  templates, and feature discovery
+- **40 Interactive Islands**: Complete island architecture with modals, QR
+  types, and feature discovery
 
 ### Previous Features
 

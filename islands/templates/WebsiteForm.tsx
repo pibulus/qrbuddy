@@ -21,7 +21,7 @@ export default function WebsiteForm({ url }: Props) {
       <div class="bg-gray-50 border-3 border-gray-200 rounded-xl p-4 shadow-chunky">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">🔗</span>
-          <h3 class="font-black text-gray-900">Website URL</h3>
+          <h3 class="font-black text-gray-900">Link QR</h3>
         </div>
         <p class="text-sm text-gray-600">
           Link to any website, article, or online resource.
@@ -40,7 +40,7 @@ export default function WebsiteForm({ url }: Props) {
           class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none transition-colors font-medium"
         />
         <p class="text-xs text-gray-400">
-          Must start with http:// or https://
+          Paste a full link, or use the main input for quick text.
         </p>
       </div>
     </div>

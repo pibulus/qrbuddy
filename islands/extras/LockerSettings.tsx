@@ -55,7 +55,7 @@ export default function LockerSettings({
     setLockerError(null);
 
     if (lockerRequirePin && lockerPinValue.length !== 4) {
-      setLockerError("Enter a 4-digit PIN to lock the bucket.");
+      setLockerError("Enter a 4-digit PIN to lock the locker.");
       haptics.error();
       return;
     }
@@ -100,14 +100,14 @@ export default function LockerSettings({
             <div class="flex flex-wrap gap-2">
               <button
                 type="button"
-                class="px-4 py-2 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:border-gray-500 transition"
+                class="min-h-[44px] px-4 py-2 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:border-gray-500 transition"
                 onClick={onClose}
               >
                 Done
               </button>
               <button
                 type="button"
-                class="px-4 py-2 rounded-xl border-2 border-red-500 text-sm font-semibold text-red-600 bg-white hover:bg-red-50 transition"
+                class="min-h-[44px] px-4 py-2 rounded-xl border-2 border-red-500 text-sm font-semibold text-red-600 bg-white hover:bg-red-50 transition"
                 onClick={handleDisable}
               >
                 Disconnect locker
@@ -134,35 +134,35 @@ export default function LockerSettings({
                 <button
                   type="button"
                   onClick={() => setLockerMode("open")}
-                  class={`min-h-[56px] px-2 py-2 text-xs sm:text-sm font-black rounded-xl border-2 transition ${
+                  class={`min-h-[64px] px-2 py-2 text-[11px] sm:text-xs font-black leading-tight rounded-xl border-2 transition ${
                     lockerMode === "open"
                       ? "bg-teal-500 text-white border-teal-600"
                       : "bg-white text-gray-700 border-gray-300 hover:border-teal-400"
                   }`}
                 >
-                  Open
+                  Keep file
                 </button>
                 <button
                   type="button"
                   onClick={() => setLockerMode("pingpong")}
-                  class={`min-h-[56px] px-2 py-2 text-xs sm:text-sm font-black rounded-xl border-2 transition ${
+                  class={`min-h-[64px] px-2 py-2 text-[11px] sm:text-xs font-black leading-tight rounded-xl border-2 transition ${
                     lockerMode === "pingpong"
                       ? "bg-purple-500 text-white border-purple-600"
                       : "bg-white text-gray-700 border-gray-300 hover:border-purple-400"
                   }`}
                 >
-                  Swap
+                  Clear after download
                 </button>
                 <button
                   type="button"
                   onClick={() => setLockerMode("single")}
-                  class={`min-h-[56px] px-2 py-2 text-xs sm:text-sm font-black rounded-xl border-2 transition ${
+                  class={`min-h-[64px] px-2 py-2 text-[11px] sm:text-xs font-black leading-tight rounded-xl border-2 transition ${
                     lockerMode === "single"
                       ? "bg-orange-500 text-white border-orange-600"
                       : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
                   }`}
                 >
-                  One-shot
+                  Destroy after download
                 </button>
               </div>
               <p class="text-[11px] text-gray-500 italic">
@@ -260,7 +260,7 @@ export default function LockerSettings({
               </label>
               <select
                 value={lockerStyle}
-                class="w-full px-4 py-2 border-2 border-gray-300 rounded-xl text-sm bg-white focus:border-black focus:outline-none"
+                class="w-full min-h-[44px] px-4 py-2 border-2 border-gray-300 rounded-xl text-sm bg-white focus:border-black focus:outline-none"
                 onInput={(e) =>
                   setLockerStyle((e.target as HTMLSelectElement).value)}
               >

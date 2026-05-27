@@ -1,15 +1,15 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components - 41 registered)
+## Islands (Interactive Components - 40 registered)
 
 **Core QR Components:**
 
-- `SmartInput` - Handles URLs, files, templates, destructible/dynamic toggles
+- `SmartInput` - Handles URLs, files, QR types, destructible/dynamic toggles
   with drag & drop
 - `QRCanvas` - Renders QR codes, manages download/copy, shows dynamic badges
 - `StyleSelector` - Gradient picker with quick menu + custom entry point
 - `GradientCreator` - Full modal for custom gradients
-- `TemplateModal` - WiFi/vCard/SMS/Email/Text helpers that write into SmartInput
+- `CreateModal` - Combined QR type, options, file locker, and design sheet
 - `LogoUploader` - Custom center-logo uploader with previews
 - `ActionButtons` - Download/copy/share triggers tied to signals
 - `ShareActions` - Share sheet for QR codes
@@ -20,15 +20,14 @@
 
 **Modals & Overlays:**
 
-- `ExtrasModal` - File buckets, destructible goodies, logo uploader access
 - `AboutModal` - Feature overview + release notes
 - `KofiModal` - Ko-fi support modal
 - `PricingModal` - Pro tier upsell modal
 
-**Dynamic + Bucket Features:**
+**Dynamic + Locker Features:**
 
 - `EditQRForm` - Dynamic QR edit interface (scan limits + redirects)
-- `BucketQR` - File bucket QR display/manage view
+- `BucketQR` - File locker QR display/manage view
 
 **System Components:**
 
@@ -48,11 +47,11 @@
 
 - `BatchSettings` - Batch QR generation options
 - `EditableLinkSettings` - Dynamic link configuration
-- `LockerSettings` - File locker/bucket creation settings
+- `LockerSettings` - File locker creation settings
 - `LogoSettings` - Logo upload settings panel
-- `MultiLinkSettings` - Multi-link QR options
-- `SplashSettings` - Splash page configuration
-- `TimeBombSettings` - Self-destructing QR options
+- `MultiLinkSettings` - Link rotation options
+- `SplashSettings` - Intro page configuration
+- `TimeBombSettings` - Scan and date limit options
 
 **Sub-Islands (smart-input/):**
 
@@ -61,13 +60,13 @@
 
 **Sub-Islands (templates/):**
 
-- `EmailForm` - Email template builder
-- `MediaHubForm` - Media/social hub template
-- `SMSForm` - SMS template builder
-- `SocialHubForm` - Social links template
-- `VCardForm` - Contact card template
-- `WebsiteForm` - Website URL template
-- `WiFiForm` - WiFi network template
+- `EmailForm` - Email QR type builder
+- `MediaHubForm` - File-share page builder
+- `SMSForm` - Text message QR type builder
+- `SocialHubForm` - Social profile QR type builder
+- `VCardForm` - Contact card QR type builder
+- `WebsiteForm` - Link QR type builder
+- `WiFiForm` - WiFi network QR type builder
 
 ## Utils
 

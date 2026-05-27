@@ -18,10 +18,10 @@ import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $Analytics from "./islands/Analytics.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
+import * as $CreateModal from "./islands/CreateModal.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
-import * as $ExtrasModal from "./islands/ExtrasModal.tsx";
 import * as $FileSlideshow from "./islands/FileSlideshow.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
@@ -33,7 +33,6 @@ import * as $RotatingTitle from "./islands/RotatingTitle.tsx";
 import * as $ShareActions from "./islands/ShareActions.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
-import * as $TemplateModal from "./islands/TemplateModal.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
 import * as $edit_qr_AnalyticsDashboard from "./islands/edit-qr/AnalyticsDashboard.tsx";
 import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
@@ -77,10 +76,10 @@ const manifest = {
     "./islands/ActionButtons.tsx": $ActionButtons,
     "./islands/Analytics.tsx": $Analytics,
     "./islands/BucketQR.tsx": $BucketQR,
+    "./islands/CreateModal.tsx": $CreateModal,
     "./islands/EasterEggs.tsx": $EasterEggs,
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
-    "./islands/ExtrasModal.tsx": $ExtrasModal,
     "./islands/FileSlideshow.tsx": $FileSlideshow,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/HistoryDrawer.tsx": $HistoryDrawer,
@@ -92,7 +91,6 @@ const manifest = {
     "./islands/ShareActions.tsx": $ShareActions,
     "./islands/SmartInput.tsx": $SmartInput,
     "./islands/StyleSelector.tsx": $StyleSelector,
-    "./islands/TemplateModal.tsx": $TemplateModal,
     "./islands/ToastManager.tsx": $ToastManager,
     "./islands/edit-qr/AnalyticsDashboard.tsx": $edit_qr_AnalyticsDashboard,
     "./islands/edit-qr/QRStatusCard.tsx": $edit_qr_QRStatusCard,

@@ -2,8 +2,7 @@ import { Signal, useSignal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { QRTemplateType } from "../types/qr-templates.ts";
-import TemplateModal from "./TemplateModal.tsx";
-import ExtrasModal from "./ExtrasModal.tsx";
+import CreateModal from "./CreateModal.tsx";
 import HistoryDrawer from "./HistoryDrawer.tsx";
 import { addToHistory, HistoryItem } from "../utils/history.ts";
 import { useDynamicQR } from "../hooks/useDynamicQR.ts";
@@ -55,18 +54,17 @@ export default function SmartInput(
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Template selector state
+  // Create sheet state
   const [selectedTemplate, setSelectedTemplate] = useState<QRTemplateType>(
     "url",
   );
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [isExtrasModalOpen, setIsExtrasModalOpen] = useState(false);
-  const [extrasHasUpdates, setExtrasHasUpdates] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createHasUpdates, setCreateHasUpdates] = useState(false);
 
   // Report modal state changes
   useEffect(() => {
-    onModalStateChange?.(isTemplateModalOpen || isExtrasModalOpen);
-  }, [isTemplateModalOpen, isExtrasModalOpen, onModalStateChange]);
+    onModalStateChange?.(isCreateModalOpen);
+  }, [isCreateModalOpen, onModalStateChange]);
 
   // Dynamic QR options
   const [scanLimit, setScanLimit] = useState<number | null>(null); // Default to null (unlimited)
@@ -77,11 +75,11 @@ export default function SmartInput(
   const [sequentialUrls, setSequentialUrls] = useState<string[]>(["", ""]);
   const [loopSequence, setLoopSequence] = useState(false);
 
-  // Batch Mode options
+  // Bulk create options
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [batchUrls, setBatchUrls] = useState("");
 
-  // Splash Page options
+  // Intro page options
   const splashConfig = useSignal<
     {
       enabled: boolean;
@@ -150,7 +148,7 @@ export default function SmartInput(
 
     if (result) {
       isBucket.value = true;
-      setExtrasHasUpdates(true);
+      setCreateHasUpdates(true);
       return true;
     }
 
@@ -174,31 +172,44 @@ export default function SmartInput(
   // Handle Smart Media Creation (from MediaHubForm)
   useEffect(() => {
     const handleSmartMediaCreate = async (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      const { file, metadata, password } = detail;
+      const detail = (event as CustomEvent<{
+        file?: File;
+        metadata?: { title?: string; description?: string; creator?: string };
+        password?: string | null;
+        onComplete?: (success: boolean) => void;
+      }>).detail;
+      const { file, metadata, password, onComplete } = detail;
 
-      if (!file) return;
+      if (!file) {
+        onComplete?.(false);
+        return;
+      }
 
-      // 1. Create Bucket
-      const bucketData = await createBucket({
-        bucketType: "file",
-        style: qrStyle.value || "sunset",
-        isReusable: true,
-        password: password || undefined,
-      });
+      let success = false;
 
-      if (bucketData) {
-        // 2. Upload File with Metadata
-        await uploadToBucket(
-          bucketData.bucket_code,
-          bucketData.owner_token,
-          file,
-          metadata,
-        );
+      try {
+        const bucketData = await createBucket({
+          bucketType: "file",
+          style: qrStyle.value || "sunset",
+          isReusable: true,
+          password: password || undefined,
+        });
 
-        // 3. Update UI
-        isBucket.value = true;
-        setExtrasHasUpdates(true);
+        if (bucketData) {
+          success = await uploadToBucket(
+            bucketData.bucket_code,
+            bucketData.owner_token,
+            file,
+            metadata,
+          );
+
+          if (success) {
+            isBucket.value = true;
+            setCreateHasUpdates(true);
+          }
+        }
+      } finally {
+        onComplete?.(success);
       }
     };
 
@@ -272,12 +283,12 @@ export default function SmartInput(
     }
   }, [isDynamic.value, url.value]);
 
-  // Flag extras button when new goodies exist
+  // Flag create button when new QR management links exist
   useEffect(() => {
-    if ((editUrl.value || bucketUrl.value) && !isExtrasModalOpen) {
-      setExtrasHasUpdates(true);
+    if ((editUrl.value || bucketUrl.value) && !isCreateModalOpen) {
+      setCreateHasUpdates(true);
     }
-  }, [editUrl.value, bucketUrl.value, isExtrasModalOpen]);
+  }, [editUrl.value, bucketUrl.value, isCreateModalOpen]);
 
   const handleInput = (e: Event) => {
     const input = e.target as HTMLInputElement;
@@ -395,7 +406,7 @@ export default function SmartInput(
 
     // For static types
     if (item.type === "url" || item.type === "text" || item.type === "wifi") {
-      setSelectedTemplate(item.type); // Set the template type
+      setSelectedTemplate(item.type); // Set the QR type
       url.value = item.content; // Set the input value
       setTouched(true); // Mark as touched to trigger validation
       // No direct QR generation here, just setting the input for user to generate/edit.
@@ -457,17 +468,16 @@ export default function SmartInput(
       {/* Toolbar */}
       <SmartInputToolbar
         selectedTemplate={selectedTemplate}
-        setIsTemplateModalOpen={setIsTemplateModalOpen}
-        setIsExtrasModalOpen={setIsExtrasModalOpen}
-        setExtrasHasUpdates={setExtrasHasUpdates}
-        extrasHasUpdates={extrasHasUpdates}
+        setIsCreateModalOpen={setIsCreateModalOpen}
+        setCreateHasUpdates={setCreateHasUpdates}
+        createHasUpdates={createHasUpdates}
         onShowHistory={() => setShowHistory(true)} // Pass handler to toolbar
       />
 
-      {/* Template Modal - Rendered here for mobile layout flow */}
-      <TemplateModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
+      {/* Create Modal - Rendered here for mobile layout flow */}
+      <CreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         selectedTemplate={selectedTemplate}
         onSelectTemplate={(template) => {
           setSelectedTemplate(template);
@@ -475,12 +485,6 @@ export default function SmartInput(
           setValidationState("idle");
         }}
         url={url}
-      />
-
-      {/* Extras Modal - Rendered here for mobile layout flow */}
-      <ExtrasModal
-        isOpen={isExtrasModalOpen}
-        onClose={() => setIsExtrasModalOpen(false)}
         isDynamic={isDynamic}
         isBucket={isBucket}
         editUrl={editUrl}

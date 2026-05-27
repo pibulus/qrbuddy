@@ -98,28 +98,27 @@ qrbuddy/
 │   ├── go.tsx                # Free-tier redirect interstitial
 │   ├── r.tsx / r/[code].tsx  # Redirect helpers
 │   ├── f/[code].tsx          # Destructible file download gate
-│   ├── bucket/[code].tsx     # File bucket viewer
+│   ├── bucket/[code].tsx     # File locker viewer
 │   └── api/download-file.ts  # Server-side file proxy
-├── islands/              # Interactive Preact islands (41 registered)
+├── islands/              # Interactive Preact islands (40 registered)
 │   ├── QRCanvas.tsx          # Core QR rendering + download/copy logic
 │   ├── SmartInput.tsx        # Smart input (URLs/files/text + dynamic settings)
 │   ├── StyleSelector.tsx     # Gradient selector + custom creator entry
 │   ├── GradientCreator.tsx   # Custom gradient builder modal
-│   ├── TemplateModal.tsx     # WiFi/vCard/SMS/Email/Text helpers
-│   ├── ExtrasModal.tsx       # File buckets, destructible goodies, logos
+│   ├── CreateModal.tsx       # QR type/options/design creation sheet
 │   ├── LogoUploader.tsx      # Center logo uploader UI
 │   ├── ActionButtons.tsx     # Download + copy triggers
 │   ├── EditQRForm.tsx        # Dynamic QR edit experience
-│   ├── BucketQR.tsx          # File bucket status + QR display
+│   ├── BucketQR.tsx          # File locker status + QR display
 │   ├── About/Kofi/Pricing modals
 │   ├── EasterEggs.tsx        # Hidden interactions
 │   ├── ToastManager.tsx      # Notification stack
 │   ├── ErrorBoundary.tsx     # QR error guard
 │   ├── Analytics.tsx         # PostHog wiring
 │   ├── edit-qr/             # Dynamic QR edit sub-islands (4)
-│   ├── extras/              # Extras modal sub-islands (7)
+│   ├── extras/              # Options/design sub-islands (7)
 │   ├── smart-input/         # Input toolbar sub-islands (2)
-│   └── templates/           # Template form sub-islands (7)
+│   └── templates/           # QR type form sub-islands (7)
 ├── local-api/            # Local mock Supabase edge function server
 │   └── server.ts             # Upload + dynamic QR emulator for dev
 ├── supabase/             # Production schema + edge functions

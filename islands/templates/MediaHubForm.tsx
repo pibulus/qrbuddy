@@ -41,6 +41,20 @@ export default function MediaHubForm({ url: _url }: Props) {
           creator,
         },
         password: isPasswordProtected ? password : null,
+        onComplete: (success: boolean) => {
+          setIsCreating(false);
+          if (success) {
+            setFile(null);
+            setTitle("");
+            setDescription("");
+            setCreator("");
+            setPassword("");
+            setIsPasswordProtected(false);
+            haptics.success();
+          } else {
+            haptics.error();
+          }
+        },
       },
     });
     globalThis.dispatchEvent(event);
@@ -70,7 +84,7 @@ export default function MediaHubForm({ url: _url }: Props) {
         <p class="text-xs text-gray-500 mt-1">
           {file
             ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
-            : "Images, Video, Audio, PDF"}
+            : "Images, video, audio, PDF"}
         </p>
       </div>
 
@@ -102,7 +116,7 @@ export default function MediaHubForm({ url: _url }: Props) {
       {/* Password Toggle */}
       <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border-2 border-gray-200">
         <span class="font-bold text-gray-700 flex items-center gap-2">
-          🔒 Password Protect
+          🔒 Require password
         </span>
         <label class="relative inline-flex items-center cursor-pointer">
           <input
@@ -136,11 +150,11 @@ export default function MediaHubForm({ url: _url }: Props) {
         disabled={!file || isCreating || (isPasswordProtected && !password)}
         class="w-full py-4 bg-black text-white text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
       >
-        {isCreating ? "Creating..." : "Create Secure Page 🚀"}
+        {isCreating ? "Creating..." : "Create file page 🚀"}
       </button>
 
       <p class="text-xs text-center text-gray-400">
-        Creates a persistent, secure bucket for your file.
+        Creates a persistent, secure locker for your file.
       </p>
     </div>
   );

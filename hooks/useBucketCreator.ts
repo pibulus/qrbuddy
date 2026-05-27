@@ -86,7 +86,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
     }
   };
 
-  // Create file bucket
+  // Create file locker
   const createBucket = async (
     options: CreateBucketOptions = {},
   ): Promise<{ bucket_code: string; owner_token: string } | null> => {
@@ -121,7 +121,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
             ...(password ? { password } : {}),
           }),
         },
-        "Failed to create bucket",
+        "Failed to create locker",
       );
 
       // Update URL to the bucket URL
@@ -136,7 +136,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
 
       const event = new CustomEvent("show-toast", {
         detail: {
-          message: `✅ File Bucket created! Scan to upload/download files 🪣`,
+          message: `✅ File Locker created! Scan to upload/download files 🪣`,
           type: "success",
         },
       });
@@ -156,7 +156,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
 
       const event = new CustomEvent("show-toast", {
         detail: {
-          message: `❌ Failed to create bucket: ${
+          message: `❌ Failed to create locker: ${
             error instanceof Error ? error.message : String(error)
           }`,
           type: "error",

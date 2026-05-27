@@ -18,7 +18,7 @@ export default function TimeBombSettings({
       <div class="flex items-center gap-2 mb-3">
         <span class="text-xl">💣</span>
         <h4 class="font-bold text-sm text-red-900">
-          Time Bomb Settings
+          Scan & date limits
         </h4>
       </div>
 
@@ -30,25 +30,21 @@ export default function TimeBombSettings({
           <p class="text-xs text-gray-600">
             How many scans before this link stops responding.
           </p>
-          <div class="flex gap-2 flex-wrap">
-            {[1, 5, 10, 100, null].map((limit) => (
-              <button
-                type="button"
-                key={limit?.toString() || "unlimited"}
-                onClick={() => {
-                  setScanLimit(limit);
-                  haptics.light();
-                }}
-                class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all ${
-                  scanLimit === limit
-                    ? "bg-[#FF69B4] text-white border-[#D84A94] scale-105"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-[#FF69B4]"
-                }`}
-              >
-                {limit === null ? "∞" : limit}
-              </button>
-            ))}
-          </div>
+          <select
+            value={scanLimit === null ? "unlimited" : String(scanLimit)}
+            onChange={(e) => {
+              const value = (e.target as HTMLSelectElement).value;
+              setScanLimit(value === "unlimited" ? null : Number(value));
+              haptics.light();
+            }}
+            class="w-full min-h-[44px] px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-bold bg-white focus:border-[#FF69B4] focus:outline-none"
+          >
+            <option value="unlimited">Unlimited scans</option>
+            <option value="1">1 scan</option>
+            <option value="5">5 scans</option>
+            <option value="10">10 scans</option>
+            <option value="100">100 scans</option>
+          </select>
         </div>
 
         <div class="space-y-2">
@@ -65,12 +61,12 @@ export default function TimeBombSettings({
               setExpiryDate((e.target as HTMLInputElement).value);
               haptics.light();
             }}
-            class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#FF69B4] focus:outline-none"
+            class="w-full min-h-[44px] px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#FF69B4] focus:outline-none"
           />
         </div>
 
         <div class="bg-[#FFE5F0] border-2 border-[#FF69B4] rounded-lg p-3 text-xs text-gray-700 leading-relaxed">
-          💡 <strong>Set to 1 for a self-destruct QR.</strong>{" "}
+          💡 <strong>Set to 1 scan for a self-destruct QR.</strong>{" "}
           Higher limits let you reuse and edit anytime. No tracking, ever.
         </div>
       </div>

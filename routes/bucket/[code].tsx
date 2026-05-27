@@ -92,12 +92,12 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
     <>
       <Head>
         <title>
-          {stateEmoji} File Bucket {bucket.is_empty ? "(Empty)" : "(Full)"}{" "}
+          {stateEmoji} File Locker {bucket.is_empty ? "(Empty)" : "(Full)"}{" "}
           | QRBuddy
         </title>
         <meta
           name="description"
-          content={`Your persistent file bucket for quick transfers between devices. Currently ${stateText.toLowerCase()}.`}
+          content={`Your persistent file locker for quick transfers between devices. Currently ${stateText.toLowerCase()}.`}
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -113,7 +113,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           name="apple-mobile-web-app-status-bar-style"
           content={bucket.is_empty ? "default" : "black-translucent"}
         />
-        <meta name="apple-mobile-web-app-title" content="File Bucket" />
+        <meta name="apple-mobile-web-app-title" content="File Locker" />
       </Head>
 
       <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1">
@@ -121,7 +121,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           {/* Header */}
           <header class="text-center space-y-2">
             <h1 class="text-4xl font-black text-black tracking-tight">
-              {stateEmoji} File Bucket
+              {stateEmoji} File Locker
             </h1>
             <p class="text-sm text-gray-600">
               {bucket.is_reusable ? "Persistent" : "One-time"} • {stateText}
@@ -146,8 +146,8 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           <div class="text-center space-y-2">
             <p class="text-xs text-gray-500">
               {bucket.is_reusable
-                ? "This bucket refills after each download"
-                : "This bucket self-destructs after download"}
+                ? "This locker refills after each download"
+                : "This locker self-destructs after download"}
             </p>
             {bucket.last_filled_at && (
               <p class="text-xs text-gray-400">
@@ -162,7 +162,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
               href="/"
               class="text-sm text-gray-500 hover:text-pink-600 transition-colors"
             >
-              ← Make your own bucket at QRBuddy
+              ← Make your own locker at QRBuddy
             </a>
           </footer>
         </div>
