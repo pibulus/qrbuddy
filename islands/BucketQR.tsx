@@ -6,6 +6,7 @@ import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
 import { getAuthHeaders } from "../utils/api.ts";
 import { useKeypad } from "../hooks/useKeypad.ts";
 import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
+import { formatFileSize, validateFile } from "../utils/file-validation.ts";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -82,6 +83,30 @@ export default function BucketQR({
   const uploadStatusText = uploadProgress >= 99
     ? "Processing..."
     : "Uploading...";
+  const bucketFileKind = contentMetadata?.mimetype?.startsWith("image/")
+    ? "Image"
+    : contentMetadata?.mimetype?.startsWith("audio/")
+    ? "Audio"
+    : contentMetadata?.mimetype?.startsWith("video/")
+    ? "Video"
+    : contentMetadata?.mimetype?.includes("pdf")
+    ? "PDF"
+    : "File";
+  const bucketFileGlyph = contentMetadata?.mimetype?.startsWith("image/")
+    ? "🖼️"
+    : contentMetadata?.mimetype?.startsWith("audio/")
+    ? "🎵"
+    : contentMetadata?.mimetype?.startsWith("video/")
+    ? "🎬"
+    : contentMetadata?.mimetype?.includes("pdf")
+    ? "📕"
+    : contentMetadata?.mimetype?.includes("zip") ||
+        contentMetadata?.mimetype?.includes("archive")
+    ? "📦"
+    : "📄";
+  const bucketFileSizeLabel = typeof contentMetadata?.size === "number"
+    ? formatFileSize(contentMetadata.size)
+    : null;
 
   const refreshBucketStatus = async (
     options: { preserveLocalMetadata?: boolean } = {},
@@ -266,6 +291,11 @@ export default function BucketQR({
       let response: Response | undefined;
 
       if (file) {
+        const validation = validateFile(file);
+        if (!validation.valid) {
+          throw new Error(validation.error);
+        }
+
         // Upload file
         const formData = new FormData();
         formData.append("file", file);
@@ -572,23 +602,6 @@ export default function BucketQR({
 
   return (
     <div class="space-y-6">
-      {/* Giant Interactive QR Code */}
-      <div
-        ref={canvasRef}
-        class="bg-white rounded-chunky border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-all duration-300 mx-auto max-w-full [&>canvas]:max-w-full [&>canvas]:h-auto"
-        role="button"
-        tabIndex={0}
-        aria-label="Copy bucket URL to clipboard"
-        onClick={handleCopyUrl}
-        onKeyDown={(e: KeyboardEvent) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleCopyUrl();
-          }
-        }}
-        title="Click to copy URL"
-      />
-
       {/* Status Badge */}
       <div class="text-center">
         <span
@@ -598,10 +611,11 @@ export default function BucketQR({
               : "bg-gradient-to-r from-orange-500 to-red-500 text-white animate-pulse"
           }`}
         >
-          {isEmpty
-            ? "🪣 Empty - Ready for Upload"
-            : "💥 Full - Ready to Download"}
+          {isEmpty ? "🪣 Ready for upload" : "💥 File ready"}
         </span>
+        <p class="text-sm text-gray-600 mt-3 leading-relaxed">
+          {isEmpty ? "Waiting for content." : "Current locker contents."}
+        </p>
       </div>
 
       {/* Content Display (if text and full) */}
@@ -738,26 +752,16 @@ export default function BucketQR({
               {/* File Info Card - shows file details without destructive preview */}
               {contentMetadata && (
                 <div class="bg-white border-4 border-black rounded-xl p-6 shadow-chunky text-center">
-                  <span class="text-5xl block mb-3">
-                    {contentMetadata.mimetype?.startsWith("image/")
-                      ? "🖼️"
-                      : contentMetadata.mimetype?.startsWith("audio/")
-                      ? "🎵"
-                      : contentMetadata.mimetype?.startsWith("video/")
-                      ? "🎬"
-                      : contentMetadata.mimetype?.includes("pdf")
-                      ? "📕"
-                      : contentMetadata.mimetype?.includes("zip") ||
-                          contentMetadata.mimetype?.includes("archive")
-                      ? "📦"
-                      : "📄"}
-                  </span>
+                  <span class="text-5xl block mb-3">{bucketFileGlyph}</span>
+                  <p class="text-xs font-black uppercase tracking-wide text-gray-400 mb-1">
+                    {bucketFileKind}
+                  </p>
                   <p class="font-bold text-lg truncate">
                     {contentMetadata.filename}
                   </p>
-                  {typeof contentMetadata.size === "number" && (
+                  {bucketFileSizeLabel && (
                     <p class="text-sm text-gray-500 mt-1">
-                      {(contentMetadata.size / 1024 / 1024).toFixed(2)} MB
+                      {bucketFileSizeLabel}
                     </p>
                   )}
                   <p class="text-xs text-gray-400 mt-1">
@@ -882,9 +886,7 @@ export default function BucketQR({
             {contentMetadata && contentType === "file" && (
               <p class="text-center text-sm text-gray-600">
                 📄 {contentMetadata.filename ?? "File"}
-                {typeof contentMetadata.size === "number"
-                  ? ` ${(contentMetadata.size / 1024 / 1024).toFixed(2)} MB`
-                  : ""}
+                {bucketFileSizeLabel ? ` ${bucketFileSizeLabel}` : ""}
               </p>
             )}
 
@@ -896,6 +898,41 @@ export default function BucketQR({
             )}
           </div>
         )}
+
+      <section class="bg-white border-3 border-black rounded-2xl p-4 shadow-chunky space-y-3">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-black uppercase tracking-wide text-gray-500">
+              Share this locker
+            </h2>
+            <p class="text-sm text-gray-600">
+              Link and QR ready.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleCopyUrl}
+            class="min-h-[44px] px-3 py-2 rounded-xl border-2 border-black bg-black text-white text-sm font-black shadow-chunky hover:-translate-y-0.5 transition"
+          >
+            Copy
+          </button>
+        </div>
+        <div
+          ref={canvasRef}
+          class="bg-white rounded-2xl border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-all duration-300 mx-auto w-full max-w-[220px] [&>canvas]:max-w-full [&>canvas]:h-auto"
+          role="button"
+          tabIndex={0}
+          aria-label="Copy bucket URL to clipboard"
+          onClick={handleCopyUrl}
+          onKeyDown={(e: KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleCopyUrl();
+            }
+          }}
+          title="Click to copy URL"
+        />
+      </section>
 
       {/* Error Message */}
       {error && (

@@ -99,6 +99,19 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           name="description"
           content={`Your persistent file locker for quick transfers between devices. Currently ${stateText.toLowerCase()}.`}
         />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta
+          property="og:title"
+          content={`QRBuddy File Locker - ${stateText}`}
+        />
+        <meta
+          property="og:description"
+          content={bucket.is_empty
+            ? "Upload a file into this QRBuddy locker."
+            : "Download the file waiting in this QRBuddy locker."}
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={bucketUrl} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         {/* PWA-ready */}
@@ -116,7 +129,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
         <meta name="apple-mobile-web-app-title" content="File Locker" />
       </Head>
 
-      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1">
+      <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1">
         <div class="w-full max-w-lg space-y-6">
           {/* Header */}
           <header class="text-center space-y-2">

@@ -13,6 +13,9 @@ import {
   UPLOAD_RESET_DELAY_MS,
 } from "../utils/constants.ts";
 
+const MAX_SLIDESHOW_FILES = 10;
+const MAX_SLIDESHOW_FILE_SIZE = 5 * 1024 * 1024;
+
 interface UseFileUploadProps {
   url: Signal<string>;
   isDestructible: Signal<boolean>;
@@ -55,7 +58,25 @@ export function useFileUpload(
       const isMulti = files.length > 1;
 
       // Validate files
+      if (files.length > MAX_SLIDESHOW_FILES) {
+        throw new Error(`Max ${MAX_SLIDESHOW_FILES} files allowed per share.`);
+      }
+
       for (const file of files) {
+        if (isMulti) {
+          if (!file.type.startsWith("image/")) {
+            throw new Error(
+              `File ${file.name} is not an image. Slideshows only support images.`,
+            );
+          }
+
+          if (file.size > MAX_SLIDESHOW_FILE_SIZE) {
+            throw new Error(
+              `File ${file.name} too large (max 5MB for slideshows)`,
+            );
+          }
+        }
+
         const validation = validateFile(file);
         if (!validation.valid) {
           throw new Error(validation.error);

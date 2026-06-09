@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import JSZip from "https://esm.sh/jszip@3.10.1";
+import { formatFileSize } from "../utils/file-validation.ts";
 
 interface FileSlideshowProps {
   files?: Array<{
@@ -44,7 +45,7 @@ export default function FileSlideshow({
   const displayFileSize = currentFile ? currentFile.size : fileSize;
   const displayMimeType = currentFile ? currentFile.type : mimeType;
 
-  const fileSizeMB = (displayFileSize / (1024 * 1024)).toFixed(2);
+  const fileSizeLabel = formatFileSize(displayFileSize);
 
   // Download URL logic
   const getDownloadUrl = (path?: string, format?: "zip") => {
@@ -74,6 +75,24 @@ export default function FileSlideshow({
   const isAudio = displayMimeType?.startsWith("audio/");
   const isVideo = displayMimeType?.startsWith("video/");
   const showPreview = isUnlimited && (isImage || isAudio || isVideo);
+  const fileKindLabel = isImage
+    ? "Image"
+    : isVideo
+    ? "Video"
+    : isAudio
+    ? "Audio"
+    : displayMimeType?.includes("pdf")
+    ? "PDF"
+    : "File";
+  const fileGlyph = isImage
+    ? "🖼️"
+    : isVideo
+    ? "🎬"
+    : isAudio
+    ? "🎵"
+    : displayMimeType?.includes("pdf")
+    ? "📕"
+    : "📦";
 
   // Theme Styles
   const getThemeStyles = () => {
@@ -161,6 +180,9 @@ export default function FileSlideshow({
       // Fetch all files
       const promises = files.map(async (file) => {
         const response = await fetch(getDownloadUrl(file.path));
+        if (!response.ok) {
+          throw new Error(`Failed to download ${file.name}`);
+        }
         const blob = await response.blob();
         zip.file(file.name, blob);
       });
@@ -191,16 +213,25 @@ export default function FileSlideshow({
     >
       {/* Slideshow Container */}
       <div class="w-full max-w-4xl flex flex-col items-center gap-6 animate-fade-in">
-        {/* Header / Counter */}
-        {hasMultipleFiles && (
+        <header class="w-full max-w-md text-center space-y-2">
           <div
-            class={`flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full border ${getCardStyles()}`}
+            class={`inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide px-3 py-2 rounded-full border ${getCardStyles()}`}
           >
-            <span>{currentIndex + 1}</span>
-            <span class="opacity-50">/</span>
-            <span>{files!.length}</span>
+            <span>{isUnlimited ? "Shared file" : "Limited share"}</span>
+            {hasMultipleFiles && (
+              <>
+                <span class="opacity-40">•</span>
+                <span>{currentIndex + 1} / {files!.length}</span>
+              </>
+            )}
           </div>
-        )}
+          <h1 class="text-2xl sm:text-3xl font-black leading-tight break-words">
+            {displayFileName}
+          </h1>
+          <p class="text-sm opacity-60">
+            {fileKindLabel} • {fileSizeLabel}
+          </p>
+        </header>
 
         {/* Main Content Card */}
         <div
@@ -215,7 +246,7 @@ export default function FileSlideshow({
               <button
                 type="button"
                 onClick={prevSlide}
-                class="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
+                class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-black/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
                 aria-label="Previous image"
               >
                 ←
@@ -223,7 +254,7 @@ export default function FileSlideshow({
               <button
                 type="button"
                 onClick={nextSlide}
-                class="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
+                class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-black/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
                 aria-label="Next image"
               >
                 →
@@ -271,25 +302,17 @@ export default function FileSlideshow({
                 </>
               )
               : (
-                <div class="text-center p-8">
-                  <div class="text-8xl mb-6 animate-bounce-slow">
-                    {isUnlimited
-                      ? (isImage
-                        ? "🖼️"
-                        : isVideo
-                        ? "🎬"
-                        : isAudio
-                        ? "🎵"
-                        : "📦")
-                      : "💣"}
+                <div class="text-center p-6 sm:p-8 max-w-md">
+                  <div class="text-7xl sm:text-8xl mb-5">
+                    {isUnlimited ? fileGlyph : "💣"}
                   </div>
-                  <h2 class="text-2xl font-bold mb-2">
-                    {isUnlimited ? "Shared File" : "Self-Destructing File"}
+                  <h2 class="text-2xl font-black mb-2">
+                    {isUnlimited ? `${fileKindLabel} ready` : "Preview locked"}
                   </h2>
-                  <p class="opacity-60 mb-1">{displayFileName}</p>
-                  <p class="opacity-40 text-sm">
-                    {fileSizeMB} MB
-                    {displayMimeType ? ` · ${displayMimeType}` : ""}
+                  <p class="opacity-70 leading-relaxed">
+                    {isUnlimited
+                      ? "Download or preview this shared file."
+                      : "This share is limited, so preview stays closed until download starts."}
                   </p>
                 </div>
               )}
@@ -298,16 +321,18 @@ export default function FileSlideshow({
 
         {/* File Details & Actions */}
         <div class="w-full max-w-md space-y-4">
-          <div class={`rounded-2xl p-6 space-y-4 border ${getCardStyles()}`}>
-            <div class="flex items-center justify-between">
+          <div
+            class={`rounded-2xl p-5 sm:p-6 space-y-4 border ${getCardStyles()}`}
+          >
+            <div class="flex items-start justify-between gap-3">
               <h1
-                class="text-xl font-bold truncate flex-1 mr-4"
+                class="text-lg sm:text-xl font-bold break-words flex-1"
                 title={displayFileName}
               >
                 {displayFileName}
               </h1>
-              <span class="text-sm opacity-60 whitespace-nowrap">
-                {fileSizeMB} MB
+              <span class="text-xs sm:text-sm opacity-60 whitespace-nowrap pt-1">
+                {fileSizeLabel}
               </span>
             </div>
 
@@ -315,7 +340,7 @@ export default function FileSlideshow({
             <a
               href={primaryDownloadUrl}
               download={primaryDownloadName}
-              class={`block w-full py-4 rounded-xl font-bold text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
+              class={`min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl font-black text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
                 isUnlimited
                   ? (theme === "cyber"
                     ? "bg-[#00ff9d] text-black"
@@ -326,15 +351,7 @@ export default function FileSlideshow({
               {hasMultipleFiles && !isUnlimited
                 ? "Download All & Destroy (.zip) 💥"
                 : isUnlimited
-                ? `Download ${
-                  isImage
-                    ? "Image"
-                    : isVideo
-                    ? "Video"
-                    : isAudio
-                    ? "Audio"
-                    : "File"
-                } ↓`
+                ? `Download ${fileKindLabel} ↓`
                 : "Download & Destroy 💥"}
             </a>
 
@@ -344,7 +361,7 @@ export default function FileSlideshow({
                 type="button"
                 onClick={handleDownloadAll}
                 disabled={isZipping}
-                class={`block w-full py-3 rounded-xl font-bold text-center text-base transition-all border-2 ${
+                class={`min-h-[48px] block w-full py-3 rounded-xl font-bold text-center text-base transition-all border-2 disabled:opacity-60 ${
                   theme === "cyber"
                     ? "border-[#00ff9d] text-[#00ff9d] hover:bg-[#00ff9d]/10"
                     : "border-white/20 hover:bg-white/10"

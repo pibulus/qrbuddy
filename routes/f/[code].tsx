@@ -89,6 +89,22 @@ export default function FilePage({ data }: PageProps<FileData>) {
       <Head>
         <title>{data.fileName} | QRBuddy</title>
         <meta name="robots" content="noindex, nofollow" />
+        <meta
+          name="description"
+          content={`Download ${data.fileName} from QRBuddy.`}
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`${data.fileName} | QRBuddy`} />
+        <meta
+          property="og:description"
+          content={data.remainingDownloads >= 999999
+            ? "A shared QRBuddy file is ready to download."
+            : `A limited QRBuddy file is ready. ${data.remainingDownloads} use${
+              data.remainingDownloads === 1 ? "" : "s"
+            } left.`}
+        />
+        <meta property="og:image" content="https://qrbuddy.app/og-image.png" />
+        <meta name="twitter:card" content="summary_large_image" />
       </Head>
 
       <FileSlideshow {...data} />
