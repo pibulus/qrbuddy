@@ -45,7 +45,9 @@ Deploy one function while iterating:
 supabase functions deploy get-file --project-ref YOUR_PROJECT_REF
 ```
 
-Deploy all QRBuddy functions:
+Deploy all QRBuddy functions. Public product functions have `verify_jwt = false`
+in `supabase/config.toml`; keep those blocks in place so browser publishable
+keys can call the functions.
 
 ```bash
 for func in supabase/functions/*/; do
@@ -55,7 +57,11 @@ done
 
 ## Auth Boundary
 
-- Browser/Fresh requests send `Authorization: Bearer <anon key>` and `apikey`.
+- Browser/Fresh requests send `apikey` for Supabase publishable keys. Legacy JWT
+  anon keys also get `Authorization: Bearer <jwt>`.
+- Public product edge functions disable Supabase's platform JWT gate and enforce
+  QRBuddy authorization inside handlers with owner tokens, bucket
+  PINs/passwords, short codes, and rate limits.
 - Edge functions create Supabase clients with `SUPABASE_SERVICE_ROLE_KEY`.
 - Internal download RPCs are granted to `service_role` only.
 - Owner tokens and locker PIN/password checks happen in edge functions before

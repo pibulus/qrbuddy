@@ -11,6 +11,10 @@ import {
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "http://localhost:54321";
 const FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
+const isLocalSupabase = SUPABASE_URL.includes("localhost") ||
+  SUPABASE_URL.includes("127.0.0.1");
+const allowRemoteTests = Deno.env.get("SUPABASE_TEST_REMOTE") === "true";
+const skipTests = !SUPABASE_ANON_KEY || (!isLocalSupabase && !allowRemoteTests);
 
 // We'll use a simple fetch wrapper
 async function callFunction(
@@ -33,134 +37,150 @@ async function callFunction(
   return res;
 }
 
-Deno.test("Security Remediation Verification", async (t) => {
-  let bucketCode = "";
-  let ownerToken = "";
-  const password = "securepassword123";
+Deno.test({
+  name: "Security Remediation Verification",
+  ignore: skipTests,
+  async fn(t) {
+    let bucketCode = "";
+    let ownerToken = "";
+    const password = "1234";
 
-  await t.step(
-    "1. Create Bucket with Password (should return token)",
-    async () => {
-      const res = await callFunction("create-bucket", {
+    await t.step(
+      "1. Create one-time PIN bucket (should return token)",
+      async () => {
+        const res = await callFunction("create-bucket", {
+          method: "POST",
+          body: JSON.stringify({
+            bucket_type: "file",
+            is_reusable: false,
+            password,
+          }),
+        });
+
+        // If functions are not running, this will fail.
+        // We assume the user has the environment set up or we can't run this.
+        if (!res.ok) {
+          console.log(
+            "Skipping test: Functions not reachable or error",
+            await res.text(),
+          );
+          return;
+        }
+
+        const data = await res.json();
+        assertExists(data.bucket_code);
+        assertExists(data.owner_token);
+        bucketCode = data.bucket_code;
+        ownerToken = data.owner_token;
+
+        console.log(`Created bucket: ${bucketCode}`);
+      },
+    );
+
+    if (!bucketCode) return;
+
+    await t.step("2. Upload File (Invalid Token)", async () => {
+      const formData = new FormData();
+      const file = new File(["hacker"], "hack.txt", { type: "text/plain" });
+      formData.append("file", file);
+
+      const res = await callFunction("upload-to-bucket", {
+        method: "POST",
+        body: formData,
+      }, { bucket_code: bucketCode, owner_token: "wrongtoken" });
+
+      assertEquals(res.status, 403); // Should be forbidden
+      await res.text(); // Consume body
+    });
+
+    await t.step("3. Upload Invalid File (Blocked Extension)", async () => {
+      const formData = new FormData();
+      const file = new File(["malware"], "virus.exe", {
+        type: "application/x-msdownload",
+      });
+      formData.append("file", file);
+
+      const res = await callFunction("upload-to-bucket", {
+        method: "POST",
+        body: formData,
+      }, { bucket_code: bucketCode, owner_token: ownerToken });
+
+      assertEquals(res.status, 400); // Should be bad request
+      const data = await res.json();
+      assertExists(data.error);
+    });
+
+    await t.step("4. Upload File (Valid Token)", async () => {
+      const formData = new FormData();
+      const file = new File(["hello world"], "test.txt", {
+        type: "text/plain",
+      });
+      formData.append("file", file);
+
+      const res = await callFunction("upload-to-bucket", {
+        method: "POST",
+        body: formData,
+      }, { bucket_code: bucketCode, owner_token: ownerToken });
+
+      assertEquals(res.status, 200);
+      const data = await res.json();
+      assertEquals(data.success, true);
+    });
+
+    await t.step("5. Metadata Redaction (No Token)", async () => {
+      const res = await callFunction("get-bucket-status", {
+        method: "GET",
+      }, { bucket_code: bucketCode });
+
+      const data = await res.json();
+      assertEquals(data.success, true);
+      // Should be redacted because it's password protected and we didn't provide token/password
+      assertEquals(data.bucket.content_metadata, null);
+    });
+
+    await t.step("6. Metadata Full (With Token)", async () => {
+      const res = await callFunction("get-bucket-status", {
+        method: "GET",
+      }, { bucket_code: bucketCode, owner_token: ownerToken });
+
+      const data = await res.json();
+      assertEquals(data.success, true);
+      assertExists(data.bucket.content_metadata);
+      assertEquals(data.bucket.content_metadata.filename, "test.txt");
+    });
+
+    await t.step("7. Download (Password - GET) - Should Fail", async () => {
+      const res = await callFunction("download-from-bucket", {
+        method: "GET",
+      }, { bucket_code: bucketCode, password: password });
+
+      // Should fail with 405 Method Not Allowed or 401 if it ignores password in URL
+      // Our implementation returns 405 if method is not POST for protected buckets
+      assertEquals(res.status, 405);
+      await res.text(); // Consume body to prevent leak
+    });
+
+    await t.step("8. Download (Password - POST) - Should Succeed", async () => {
+      const res = await callFunction("download-from-bucket", {
         method: "POST",
         body: JSON.stringify({
-          bucket_type: "file",
+          bucket_code: bucketCode,
           password: password,
         }),
       });
 
-      // If functions are not running, this will fail.
-      // We assume the user has the environment set up or we can't run this.
-      if (!res.ok) {
-        console.log(
-          "Skipping test: Functions not reachable or error",
-          await res.text(),
-        );
-        return;
-      }
-
-      const data = await res.json();
-      assertExists(data.bucket_code);
-      assertExists(data.owner_token);
-      bucketCode = data.bucket_code;
-      ownerToken = data.owner_token;
-
-      console.log(`Created bucket: ${bucketCode}`);
-    },
-  );
-
-  if (!bucketCode) return;
-
-  await t.step("2. Upload File (Valid Token)", async () => {
-    const formData = new FormData();
-    const file = new File(["hello world"], "test.txt", { type: "text/plain" });
-    formData.append("file", file);
-
-    const res = await callFunction("upload-to-bucket", {
-      method: "POST",
-      body: formData,
-    }, { bucket_code: bucketCode, owner_token: ownerToken });
-
-    assertEquals(res.status, 200);
-    const data = await res.json();
-    assertEquals(data.success, true);
-  });
-
-  await t.step("3. Upload File (Invalid Token)", async () => {
-    const formData = new FormData();
-    const file = new File(["hacker"], "hack.txt", { type: "text/plain" });
-    formData.append("file", file);
-
-    const res = await callFunction("upload-to-bucket", {
-      method: "POST",
-      body: formData,
-    }, { bucket_code: bucketCode, owner_token: "wrongtoken" });
-
-    assertEquals(res.status, 403); // Should be forbidden
-    await res.text(); // Consume body
-  });
-
-  await t.step("4. Upload Invalid File (Blocked Extension)", async () => {
-    const formData = new FormData();
-    const file = new File(["malware"], "virus.exe", {
-      type: "application/x-msdownload",
-    });
-    formData.append("file", file);
-
-    const res = await callFunction("upload-to-bucket", {
-      method: "POST",
-      body: formData,
-    }, { bucket_code: bucketCode, owner_token: ownerToken });
-
-    assertEquals(res.status, 400); // Should be bad request
-    const data = await res.json();
-    console.log("Blocked file error:", data.error);
-  });
-
-  await t.step("5. Download (Password - GET) - Should Fail", async () => {
-    const res = await callFunction("download-from-bucket", {
-      method: "GET",
-    }, { bucket_code: bucketCode, password: password });
-
-    // Should fail with 405 Method Not Allowed or 401 if it ignores password in URL
-    // Our implementation returns 405 if method is not POST for protected buckets
-    assertEquals(res.status, 405);
-    await res.text(); // Consume body to prevent leak
-  });
-
-  await t.step("6. Download (Password - POST) - Should Succeed", async () => {
-    const res = await callFunction("download-from-bucket", {
-      method: "POST",
-      body: JSON.stringify({
-        bucket_code: bucketCode,
-        password: password,
-      }),
+      assertEquals(res.status, 200);
+      const text = await res.text();
+      assertEquals(text, "hello world");
     });
 
-    assertEquals(res.status, 200);
-    const text = await res.text();
-    assertEquals(text, "hello world");
-  });
+    await t.step("9. One-time bucket is deleted after download", async () => {
+      const res = await callFunction("get-bucket-status", {
+        method: "GET",
+      }, { bucket_code: bucketCode, owner_token: ownerToken });
 
-  await t.step("7. Metadata Redaction (No Token)", async () => {
-    const res = await callFunction("get-bucket-status", {
-      method: "GET",
-    }, { bucket_code: bucketCode });
-
-    const data = await res.json();
-    assertEquals(data.success, true);
-    // Should be redacted because it's password protected and we didn't provide token/password
-    assertEquals(data.bucket.content_metadata, null);
-  });
-
-  await t.step("8. Metadata Full (With Token)", async () => {
-    const res = await callFunction("get-bucket-status", {
-      method: "GET",
-    }, { bucket_code: bucketCode, owner_token: ownerToken });
-
-    const data = await res.json();
-    assertEquals(data.success, true);
-    assertExists(data.bucket.content_metadata);
-    assertEquals(data.bucket.content_metadata.filename, "test.txt");
-  });
+      assertEquals(res.status, 404);
+      await res.text();
+    });
+  },
 });

@@ -22,7 +22,11 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
   const [isCreatingBucket, setIsCreatingBucket] = useState(false);
 
   // Create text bucket (Smart Dynamic for text)
-  const createTextBucket = async (text: string) => {
+  const createTextBucket = async (
+    text: string,
+  ): Promise<
+    { bucket_code: string; owner_token: string; note_url: string } | null
+  > => {
     try {
       setIsCreatingBucket(true);
       // haptics.medium(); // reduce noise
@@ -62,9 +66,11 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
         "Failed to save text",
       );
 
+      const noteUrl = bucketData.bucket_url.replace("/bucket/", "/note/");
+
       // 3. Update UI
-      url.value = bucketData.bucket_url;
-      bucketUrl.value = bucketData.bucket_url;
+      url.value = noteUrl;
+      bucketUrl.value = noteUrl;
 
       // Save token
       await saveOwnerToken(
@@ -75,6 +81,11 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
 
       setIsCreatingBucket(false);
       haptics.success();
+      return {
+        bucket_code: bucketData.bucket_code,
+        owner_token: bucketData.owner_token,
+        note_url: noteUrl,
+      };
     } catch (error) {
       console.error("[HOOK:useBucketCreator] Text bucket failed:", {
         error: error instanceof Error ? error.message : String(error),
@@ -83,6 +94,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       });
       setIsCreatingBucket(false);
       // Don't show toast/error for every keystroke, just log
+      return null;
     }
   };
 

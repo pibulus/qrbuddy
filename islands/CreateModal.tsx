@@ -1,8 +1,10 @@
-import type { Signal } from "@preact/signals";
+import { type Signal, useSignal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import { haptics } from "../utils/haptics.ts";
 import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
+import { QR_STYLES } from "../utils/qr-styles.ts";
+import QRCanvas from "./QRCanvas.tsx";
 import WiFiForm from "./templates/WiFiForm.tsx";
 import VCardForm from "./templates/VCardForm.tsx";
 import SMSForm from "./templates/SMSForm.tsx";
@@ -20,6 +22,7 @@ import SplashSettings from "./extras/SplashSettings.tsx";
 
 type ActiveTab = "type" | "options" | "design";
 type TypeIntent = "qr" | "share-file" | "collect-files";
+type CompletionKind = "share-file" | "collect-files" | "text-card";
 
 interface CreateModalProps {
   isOpen: boolean;
@@ -52,6 +55,7 @@ interface CreateModalProps {
   onGenerateBatch: () => void;
   onLockerConfirm: (options: CreateBucketOptions) => Promise<boolean>;
   onLockerDisable: () => void;
+  onTextCardConfirm: (text: string) => Promise<boolean>;
   isCreatingLocker: boolean;
   splashConfig: Signal<
     {
@@ -182,11 +186,16 @@ export default function CreateModal({
   onGenerateBatch,
   onLockerConfirm,
   onLockerDisable,
+  onTextCardConfirm,
   isCreatingLocker,
   splashConfig,
 }: CreateModalProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("type");
   const [typeIntent, setTypeIntent] = useState<TypeIntent>("qr");
+  const [completionKind, setCompletionKind] = useState<CompletionKind | null>(
+    null,
+  );
+  const completionDownload = useSignal(false);
   const [showLockerSettings, setShowLockerSettings] = useState(false);
   const [isLimitSettingsOpen, setIsLimitSettingsOpen] = useState(false);
   const [showBatchSettings, setShowBatchSettings] = useState(false);
@@ -204,10 +213,17 @@ export default function CreateModal({
   useEffect(() => {
     if (!isOpen) {
       setTypeIntent("qr");
+      setCompletionKind(null);
       setShowLockerSettings(false);
       setShowBatchSettings(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (completionKind && !bucketUrl.value) {
+      setCompletionKind(null);
+    }
+  }, [completionKind, bucketUrl.value]);
 
   if (!isOpen) return null;
 
@@ -240,6 +256,7 @@ export default function CreateModal({
 
   const handleShareFileSelect = () => {
     setTypeIntent("share-file");
+    setCompletionKind(null);
     setIsBatchMode(false);
     setShowLockerSettings(false);
     haptics.light();
@@ -247,6 +264,7 @@ export default function CreateModal({
 
   const handleCollectFilesSelect = () => {
     setTypeIntent("collect-files");
+    setCompletionKind(null);
     setShowLockerSettings(true);
     setIsBatchMode(false);
     haptics.light();
@@ -260,13 +278,87 @@ export default function CreateModal({
       setScanLimit(null);
       setExpiryDate("");
       splashConfig.value = null;
+      setTypeIntent("collect-files");
+      setCompletionKind("collect-files");
+      setActiveTab("type");
+      void handleCopyResult("Share link copied! 📋", false);
     }
     return success;
   };
 
   const handleLockerDisableWrapper = () => {
     onLockerDisable();
+    setCompletionKind(null);
     setShowLockerSettings(false);
+  };
+
+  const handleTextCardConfirm = async () => {
+    const success = await onTextCardConfirm(url.value);
+    if (success) {
+      setTypeIntent("qr");
+      setCompletionKind("text-card");
+      setActiveTab("type");
+      void handleCopyResult("Text card link copied! 📋", false);
+    }
+  };
+
+  function notify(message: string, type: "success" | "error" = "success") {
+    const event = new CustomEvent("show-toast", {
+      detail: { message, type },
+    });
+    globalThis.dispatchEvent(event);
+  }
+
+  async function handleCopyResult(
+    message = "Link copied! 📋",
+    showFailure = true,
+  ) {
+    const resultUrl = bucketUrl.value;
+    if (!resultUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(resultUrl);
+      notify(message);
+      haptics.copy();
+    } catch (error) {
+      console.error("Copy result link failed:", error);
+      if (showFailure) {
+        notify("Couldn't copy link", "error");
+      }
+      haptics.error();
+    }
+  }
+
+  const handleShareResult = async () => {
+    const resultUrl = bucketUrl.value;
+    if (!resultUrl) return;
+
+    const isFilePage = completionKind === "share-file";
+    const isTextCard = completionKind === "text-card";
+    const title = isTextCard
+      ? "QRBuddy text card"
+      : isFilePage
+      ? "QRBuddy download page"
+      : "QRBuddy file locker";
+    const text = isTextCard
+      ? "Read this note on QRBuddy."
+      : isFilePage
+      ? "Download this file from QRBuddy."
+      : "Upload to this QRBuddy file locker.";
+
+    if (typeof navigator === "undefined" || !navigator.share) {
+      await handleCopyResult("Share link copied! 📋");
+      return;
+    }
+
+    try {
+      await navigator.share({ title, text, url: resultUrl });
+      haptics.medium();
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      console.error("Native share failed:", error);
+      await handleCopyResult("Share link copied! 📋");
+    }
   };
 
   const renderTemplateForm = () => {
@@ -305,11 +397,126 @@ export default function CreateModal({
               rows={4}
               class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none transition-colors resize-none font-medium"
             />
+            <button
+              type="button"
+              onClick={handleTextCardConfirm}
+              disabled={!url.value.trim() || isCreatingLocker}
+              class="w-full min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 text-lg font-black text-white shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {isCreatingLocker ? "Creating text card..." : "Create text card"}
+            </button>
+            <p class="text-xs text-center text-gray-500">
+              Scans open a QRBuddy note page instead of a browser search.
+            </p>
           </div>
         );
       default:
         return null;
     }
+  };
+
+  const renderCompletionState = () => {
+    if (!completionKind || !bucketUrl.value) return null;
+
+    const isFilePage = completionKind === "share-file";
+    const isTextCard = completionKind === "text-card";
+    const title = isTextCard
+      ? "Text card ready"
+      : isFilePage
+      ? "Download page ready"
+      : "Locker ready to share";
+    const description = isTextCard
+      ? "Send this link or QR so people can read the note on QRBuddy."
+      : isFilePage
+      ? "Send this link or QR so someone can download the file."
+      : "Send this link or QR so people can upload into the locker.";
+    const statusLabel = isTextCard
+      ? "Text card"
+      : isFilePage
+      ? "File page"
+      : "File locker";
+    const completionQrStyle = qrStyle as Signal<
+      keyof typeof QR_STYLES | "custom"
+    >;
+    const canNativeShare = typeof navigator !== "undefined" &&
+      Boolean(navigator.share);
+
+    return (
+      <div class="space-y-5 animate-slide-down">
+        <section class="rounded-2xl border-3 border-black bg-[#FFF8F0] p-4 sm:p-5 shadow-chunky space-y-4">
+          <div class="flex items-start gap-3">
+            <span class="w-12 h-12 rounded-xl border-2 border-black bg-white flex items-center justify-center text-2xl shrink-0">
+              {isTextCard ? "T" : isFilePage ? "📄" : "🪣"}
+            </span>
+            <div class="min-w-0">
+              <p class="text-xs uppercase tracking-wide text-pink-500 font-black">
+                {statusLabel}
+              </p>
+              <h3 class="text-2xl font-black text-gray-900 leading-tight">
+                {title}
+              </h3>
+              <p class="text-sm text-gray-600 mt-1">
+                {description}
+              </p>
+            </div>
+          </div>
+
+          <div class="mx-auto w-full max-w-[240px] sm:max-w-[280px]">
+            <QRCanvas
+              url={url}
+              style={completionQrStyle}
+              triggerDownload={completionDownload}
+              logoUrl={logoUrl}
+            />
+          </div>
+
+          <div class="rounded-xl border-2 border-black bg-white p-3">
+            <p class="text-[11px] font-black uppercase tracking-wide text-gray-500 mb-1">
+              Share link
+            </p>
+            <p class="text-sm font-bold text-gray-900 break-all">
+              {bucketUrl.value}
+            </p>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => handleCopyResult()}
+              class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+            >
+              📋 Copy link
+            </button>
+            <button
+              type="button"
+              onClick={handleShareResult}
+              class="min-h-[52px] rounded-xl border-3 border-black bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 px-4 py-3 font-black text-black shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+            >
+              {canNativeShare ? "📲 Share" : "📋 Copy share link"}
+            </button>
+            <a
+              href={bucketUrl.value}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center"
+            >
+              ↗ Open page
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setCompletionKind(null);
+                setActiveTab("design");
+                haptics.light();
+              }}
+              class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+            >
+              🎨 Edit design
+            </button>
+          </div>
+        </section>
+      </div>
+    );
   };
 
   const renderTypeTab = () => (
@@ -365,7 +572,18 @@ export default function CreateModal({
       </section>
 
       <div class="pt-2">
-        {typeIntent === "share-file" && <MediaHubForm url={url} />}
+        {typeIntent === "share-file" && (
+          <MediaHubForm
+            url={url}
+            onCreated={() => {
+              setTypeIntent("share-file");
+              setCompletionKind("share-file");
+              setShowLockerSettings(false);
+              setActiveTab("type");
+              void handleCopyResult("Share link copied! 📋", false);
+            }}
+          />
+        )}
         {typeIntent === "collect-files" && showLockerSettings && (
           <LockerSettings
             isActive={lockerActive}
@@ -598,6 +816,7 @@ export default function CreateModal({
     { id: "options", label: "Options", icon: "⚙️" },
     { id: "design", label: "Design", icon: "🎨" },
   ];
+  const hasCompletion = completionKind !== null && bucketUrl.value !== "";
 
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
@@ -610,13 +829,15 @@ export default function CreateModal({
         <div class="flex items-start justify-between gap-3 p-4 sm:p-6 border-b-2 border-gray-100">
           <div>
             <p class="text-xs uppercase tracking-wide text-pink-500 font-black">
-              Create
+              {hasCompletion ? "Ready" : "Create"}
             </p>
             <h2 class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
-              What should this QR do?
+              {hasCompletion ? "Ready to share" : "What should this QR do?"}
             </h2>
             <p class="text-sm text-gray-600">
-              Pick the type first. Add options only when they help.
+              {hasCompletion
+                ? "The QR now points at the new page."
+                : "Pick the type first. Add options only when they help."}
             </p>
           </div>
           <button
@@ -629,33 +850,39 @@ export default function CreateModal({
           </button>
         </div>
 
-        <div class="px-4 sm:px-6 pt-3">
-          <div class="grid grid-cols-3 gap-2 rounded-2xl bg-gray-100 p-1 border-2 border-gray-200">
-            {tabs.map((tab) => (
-              <button
-                type="button"
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  haptics.light();
-                }}
-                class={`min-h-[44px] rounded-xl text-sm font-black transition-all flex items-center justify-center gap-1 ${
-                  activeTab === tab.id
-                    ? "bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)]"
-                    : "text-gray-600 hover:bg-white"
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
+        {!hasCompletion && (
+          <div class="px-4 sm:px-6 pt-3">
+            <div class="grid grid-cols-3 gap-2 rounded-2xl bg-gray-100 p-1 border-2 border-gray-200">
+              {tabs.map((tab) => (
+                <button
+                  type="button"
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    haptics.light();
+                  }}
+                  class={`min-h-[44px] rounded-xl text-sm font-black transition-all flex items-center justify-center gap-1 ${
+                    activeTab === tab.id
+                      ? "bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)]"
+                      : "text-gray-600 hover:bg-white"
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div class="flex-1 overflow-y-auto p-4 sm:p-6">
-          {activeTab === "type" && renderTypeTab()}
-          {activeTab === "options" && renderOptionsTab()}
-          {activeTab === "design" && renderDesignTab()}
+          {hasCompletion ? renderCompletionState() : (
+            <>
+              {activeTab === "type" && renderTypeTab()}
+              {activeTab === "options" && renderOptionsTab()}
+              {activeTab === "design" && renderDesignTab()}
+            </>
+          )}
         </div>
 
         <div class="p-4 sm:p-6 border-t-2 border-gray-100 bg-gray-50">

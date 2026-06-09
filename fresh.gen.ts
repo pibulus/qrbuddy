@@ -11,6 +11,7 @@ import * as $edit from "./routes/edit.tsx";
 import * as $f_code_ from "./routes/f/[code].tsx";
 import * as $go from "./routes/go.tsx";
 import * as $index from "./routes/index.tsx";
+import * as $note_code_ from "./routes/note/[code].tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
 import * as $r_code_ from "./routes/r/[code].tsx";
@@ -67,6 +68,7 @@ const manifest = {
     "./routes/f/[code].tsx": $f_code_,
     "./routes/go.tsx": $go,
     "./routes/index.tsx": $index,
+    "./routes/note/[code].tsx": $note_code_,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
     "./routes/r/[code].tsx": $r_code_,

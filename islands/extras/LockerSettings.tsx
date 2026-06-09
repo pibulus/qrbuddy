@@ -52,6 +52,8 @@ export default function LockerSettings({
   }, [defaultStyle, isActive]);
 
   const handleConfirm = async () => {
+    if (isCreating) return;
+
     setLockerError(null);
 
     if (lockerRequirePin && lockerPinValue.length !== 4) {

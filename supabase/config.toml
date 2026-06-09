@@ -327,6 +327,46 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# QRBuddy's public edge functions use app-level authorization in the function
+# body (owner tokens, bucket PINs/passwords, short codes, and rate limits), not
+# Supabase Auth user JWTs. Keep JWT verification disabled so browser
+# publishable keys can invoke them.
+[functions.upload-file]
+verify_jwt = false
+
+[functions.get-file]
+verify_jwt = false
+
+[functions.get-file-metadata]
+verify_jwt = false
+
+[functions.create-bucket]
+verify_jwt = false
+
+[functions.get-bucket-status]
+verify_jwt = false
+
+[functions.upload-to-bucket]
+verify_jwt = false
+
+[functions.download-from-bucket]
+verify_jwt = false
+
+[functions.create-dynamic-qr]
+verify_jwt = false
+
+[functions.get-dynamic-qr]
+verify_jwt = false
+
+[functions.update-dynamic-qr]
+verify_jwt = false
+
+[functions.redirect-qr]
+verify_jwt = false
+
+[functions.health]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

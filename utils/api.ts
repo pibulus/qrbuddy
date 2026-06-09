@@ -99,12 +99,20 @@ export function getSupabaseAnonKey(): string | null {
  * Get authorization headers for Supabase edge function requests
  */
 export function getAuthHeaders(): Record<string, string> {
-  const anonKey = getSupabaseAnonKey();
-  if (anonKey) {
-    return {
-      "Authorization": `Bearer ${anonKey}`,
-      "apikey": anonKey,
-    };
+  const apiKey = getSupabaseAnonKey();
+  if (!apiKey) {
+    return {};
   }
-  return {};
+
+  const headers: Record<string, string> = {
+    "apikey": apiKey,
+  };
+
+  // Legacy anon/service-role keys are JWTs and can be used as Bearer tokens.
+  // New Supabase publishable keys are opaque and should only be sent as apikey.
+  if (apiKey.split(".").length === 3) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  return headers;
 }

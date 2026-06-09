@@ -1,21 +1,28 @@
 import { useRef, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
+import { useKeypad } from "../../hooks/useKeypad.ts";
 
 interface Props {
   url: Signal<string>;
+  onCreated?: () => void;
 }
 
-export default function MediaHubForm({ url: _url }: Props) {
+export default function MediaHubForm({ url: _url, onCreated }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [creator, setCreator] = useState("");
   const [isPasswordProtected, setIsPasswordProtected] = useState(false);
-  const [password, setPassword] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    digits: pinDigits,
+    handlePress: handleKeypadPress,
+    reset: resetPin,
+    value: pinValue,
+  } = useKeypad(4);
 
   const handleFileSelect = (e: Event) => {
     const input = e.target as HTMLInputElement;
@@ -26,7 +33,11 @@ export default function MediaHubForm({ url: _url }: Props) {
   };
 
   const handleCreate = () => {
-    if (!file) return;
+    if (
+      !file || isCreating || (isPasswordProtected && pinValue.length !== 4)
+    ) {
+      return;
+    }
 
     setIsCreating(true);
     haptics.medium();
@@ -40,7 +51,7 @@ export default function MediaHubForm({ url: _url }: Props) {
           description,
           creator,
         },
-        password: isPasswordProtected ? password : null,
+        password: isPasswordProtected ? pinValue : null,
         onComplete: (success: boolean) => {
           setIsCreating(false);
           if (success) {
@@ -48,8 +59,9 @@ export default function MediaHubForm({ url: _url }: Props) {
             setTitle("");
             setDescription("");
             setCreator("");
-            setPassword("");
             setIsPasswordProtected(false);
+            resetPin();
+            onCreated?.();
             haptics.success();
           } else {
             haptics.error();
@@ -116,14 +128,16 @@ export default function MediaHubForm({ url: _url }: Props) {
       {/* Password Toggle */}
       <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border-2 border-gray-200">
         <span class="font-bold text-gray-700 flex items-center gap-2">
-          🔒 Require password
+          🔒 Require 4-digit PIN
         </span>
         <label class="relative inline-flex items-center cursor-pointer">
           <input
             type="checkbox"
             checked={isPasswordProtected}
             onChange={(e) => {
-              setIsPasswordProtected((e.target as HTMLInputElement).checked);
+              const next = (e.target as HTMLInputElement).checked;
+              setIsPasswordProtected(next);
+              if (!next) resetPin();
               haptics.light();
             }}
             class="sr-only peer"
@@ -134,20 +148,55 @@ export default function MediaHubForm({ url: _url }: Props) {
       </div>
 
       {isPasswordProtected && (
-        <input
-          type="text"
-          value={password}
-          onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
-          placeholder="Enter password"
-          class="w-full px-4 py-3 border-3 border-black rounded-xl focus:outline-none font-mono animate-slide-down"
-        />
+        <div class="space-y-3 animate-slide-down">
+          <div class="flex justify-center gap-3">
+            {pinDigits.map((digit, index) => (
+              <div
+                key={`media-pin-${index}`}
+                class="w-10 h-12 bg-white border-2 border-gray-300 rounded-xl flex items-center justify-center text-2xl font-bold text-gray-800"
+              >
+                {digit ? "•" : ""}
+              </div>
+            ))}
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            {[
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "clear",
+              "0",
+              "back",
+            ].map((key) => (
+              <button
+                key={`media-pad-${key}`}
+                type="button"
+                class={`min-h-[44px] rounded-xl text-sm font-semibold border-2 bg-white transition ${
+                  key === "clear" || key === "back"
+                    ? "border-gray-300 text-gray-600"
+                    : "border-purple-200 text-gray-900"
+                } hover:border-purple-400`}
+                onClick={() => handleKeypadPress(String(key))}
+              >
+                {key === "clear" ? "Clear" : key === "back" ? "⌫" : key}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Action Button */}
       <button
         type="button"
         onClick={handleCreate}
-        disabled={!file || isCreating || (isPasswordProtected && !password)}
+        disabled={!file || isCreating ||
+          (isPasswordProtected && pinValue.length !== 4)}
         class="w-full py-4 bg-black text-white text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
       >
         {isCreating ? "Creating..." : "Create file page 🚀"}

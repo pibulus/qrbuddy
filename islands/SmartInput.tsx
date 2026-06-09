@@ -155,6 +155,27 @@ export default function SmartInput(
     return false;
   };
 
+  const handleTextCardConfirm = async (text: string): Promise<boolean> => {
+    const trimmedText = text.trim();
+    if (!trimmedText) return false;
+
+    isDynamic.value = false;
+    setIsBatchMode(false);
+    setIsSequential(false);
+    setScanLimit(null);
+    setExpiryDate("");
+    splashConfig.value = null;
+
+    const result = await createTextBucket(trimmedText);
+    if (result) {
+      isBucket.value = true;
+      setCreateHasUpdates(true);
+      return true;
+    }
+
+    return false;
+  };
+
   const handleLockerDisable = () => {
     isBucket.value = false;
     bucketUrl.value = "";
@@ -275,7 +296,12 @@ export default function SmartInput(
           createDynamicQR(url.value);
         } else {
           // It's Text -> Create Text Bucket
-          createTextBucket(url.value);
+          createTextBucket(url.value).then((result) => {
+            if (result) {
+              isBucket.value = true;
+              setCreateHasUpdates(true);
+            }
+          });
         }
       }, 800); // Increased debounce for text typing
 
@@ -510,6 +536,7 @@ export default function SmartInput(
         onGenerateBatch={generateBatchZIP}
         onLockerConfirm={handleLockerConfirm}
         onLockerDisable={handleLockerDisable}
+        onTextCardConfirm={handleTextCardConfirm}
         isCreatingLocker={isCreatingBucket}
         splashConfig={splashConfig}
       />

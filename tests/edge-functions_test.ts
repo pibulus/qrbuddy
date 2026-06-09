@@ -10,11 +10,17 @@ await load({ export: true, allowEmptyValues: true, examplePath: null });
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const skipTests = !SUPABASE_URL || !SUPABASE_ANON_KEY;
+const isLocalSupabase = SUPABASE_URL?.includes("localhost") ||
+  SUPABASE_URL?.includes("127.0.0.1");
+const allowRemoteTests = Deno.env.get("SUPABASE_TEST_REMOTE") === "true";
+const allowDestructiveCleanup = isLocalSupabase &&
+  Deno.env.get("SUPABASE_TEST_DESTRUCTIVE_CLEANUP") === "true";
+const skipTests = !SUPABASE_URL || !SUPABASE_ANON_KEY ||
+  (!isLocalSupabase && !allowRemoteTests);
 
 if (skipTests) {
   console.warn(
-    "⚠️  Skipping edge function tests - SUPABASE_URL or SUPABASE_ANON_KEY not configured",
+    "⚠️  Skipping edge function tests - configure local Supabase or set SUPABASE_TEST_REMOTE=true",
   );
 }
 
@@ -42,7 +48,7 @@ async function callEdgeFunction(
 
 // Helper to clean up files (requires Service Role Key)
 async function cleanupFiles() {
-  if (!SUPABASE_SERVICE_ROLE_KEY) return;
+  if (!SUPABASE_SERVICE_ROLE_KEY || !allowDestructiveCleanup) return;
 
   // We can't easily know our own IP as seen by the server without making a request,
   // but we can try to delete ALL files if we are running in a dev/test project.

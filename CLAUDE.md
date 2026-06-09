@@ -240,8 +240,11 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   vulnerabilities (blocks javascript:, data:, file: protocols)
 - **CORS Policy**: Environment-specific origins (qrbuddy.app in prod, localhost
   in dev) - no wildcard access
-- **Authentication**: All Supabase edge function calls include required
-  Authorization and apikey headers via `utils/api-request.ts`
+- **Authentication**: Supabase edge function calls include an `apikey` header
+  via `utils/api-request.ts`; legacy JWT anon keys also get
+  `Authorization: Bearer <jwt>`. Public QRBuddy functions have
+  `verify_jwt = false` in `supabase/config.toml` because handler-level owner
+  tokens, PINs/passwords, and rate limits are the real product authorization.
 - **Service Role Boundary**: Client/Fresh code uses the anon key only; Supabase
   edge functions use service role secrets for database/storage/RPC access
 - **Clipboard API**: Uses modern Clipboard API with proper error handling
