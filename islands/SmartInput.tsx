@@ -309,7 +309,17 @@ export default function SmartInput(
 
       return () => clearTimeout(timer);
     }
-  }, [isDynamic.value, url.value]);
+    // Include the creation guards so that when a failed auto-create flips
+    // isCreating* back to false, the effect re-evaluates and can retry without
+    // the user having to toggle the mode or type another character.
+  }, [
+    isDynamic.value,
+    url.value,
+    isCreatingDynamic,
+    isCreatingBucket,
+    isBucket.value,
+    editUrl.value,
+  ]);
 
   // Flag create button when new QR management links exist
   useEffect(() => {

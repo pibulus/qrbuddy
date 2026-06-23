@@ -132,14 +132,30 @@ serve(async (req) => {
     // These are single-use files that were never downloaded.
     const { data: expiredFiles, error: fetchFilesError } = await supabase
       .from("destructible_files")
-      .select("id, file_name")
+      .select("id, file_name, files")
       .lt("created_at", abandonedCutoff)
       .eq("accessed", false);
 
     if (fetchFilesError) throw fetchFilesError;
 
     if (expiredFiles && expiredFiles.length > 0) {
-      const paths = expiredFiles.map((f) => f.file_name);
+      // Multi-file shares store sub-file paths in the `files` JSONB column.
+      // file_name is only the first sub-file, so collecting just that would
+      // orphan the rest in storage forever. Gather every path, de-duped.
+      const paths = Array.from(
+        new Set(
+          expiredFiles.flatMap((f) => {
+            const subPaths: string[] = [];
+            if (f.file_name) subPaths.push(f.file_name);
+            if (Array.isArray(f.files)) {
+              for (const sub of f.files) {
+                if (sub?.path) subPaths.push(sub.path);
+              }
+            }
+            return subPaths;
+          }),
+        ),
+      );
 
       // Delete from storage
       const { error: storageError } = await supabase.storage

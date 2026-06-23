@@ -63,6 +63,11 @@ serve(async (req) => {
     return createCorsResponse(req);
   }
 
+  // Hoisted so the catch block can release a claim slot if the download fails
+  // after claiming (otherwise a transient storage/zip error burns a finite
+  // download for up to 1 minute via the download_started_at guard).
+  let claimedFileId: string | null = null;
+
   try {
     const url = new URL(req.url);
     const fileId = url.searchParams.get("id");
@@ -113,6 +118,9 @@ serve(async (req) => {
       return redirectTo("/boom", req);
     }
 
+    // Claim succeeded — remember it so a later failure can release the slot.
+    claimedFileId = fileId;
+
     if (wantsZip && file.files && file.files.length > 1) {
       const zip = new JSZip();
 
@@ -142,6 +150,10 @@ serve(async (req) => {
         }
         return redirectTo("/boom", req);
       }
+
+      // Finalized: the slot is committed (finalize nulls download_started_at
+      // itself), so the catch must not touch it.
+      claimedFileId = null;
 
       if (finalizedDownload.will_expire) {
         const { error: removeError } = await supabase
@@ -203,6 +215,9 @@ serve(async (req) => {
       }
       return redirectTo("/boom", req);
     }
+
+    // Finalized: slot committed, catch must not release it.
+    claimedFileId = null;
 
     // Check if client is requesting a byte range (for video/audio scrubbing)
     const rangeHeader = req.headers.get("Range");
@@ -272,6 +287,27 @@ serve(async (req) => {
     return new Response(fileData, { headers });
   } catch (error) {
     console.error("File download error:", error);
+    // If we claimed a finite download but never finalized it (storage/zip
+    // failure mid-flight), release the slot so the user can retry immediately
+    // instead of waiting out the 1-minute download_started_at guard.
+    if (claimedFileId) {
+      try {
+        const recovery = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        );
+        const { error: releaseError } = await recovery
+          .from("destructible_files")
+          .update({ download_started_at: null })
+          .eq("id", claimedFileId)
+          .eq("accessed", false); // never resurrect an already-finalized file
+        if (releaseError) {
+          console.error("Failed to release claim slot:", releaseError);
+        }
+      } catch (releaseErr) {
+        console.error("Failed to release claim slot:", releaseErr);
+      }
+    }
     return redirectTo("/boom", req);
   }
 });
