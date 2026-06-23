@@ -11,6 +11,7 @@ CREATE OR REPLACE FUNCTION increment_scan_count(p_short_code TEXT)
 RETURNS INTEGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_scan_count INTEGER;
