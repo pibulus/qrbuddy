@@ -19,31 +19,24 @@ serve(async (req) => {
 
     const startTime = Date.now();
 
-    // 1. Check Database
+    // Check Database liveness only. We deliberately do NOT call
+    // storage.listBuckets() here: this endpoint is unauthenticated, and there
+    // is no reason to run a service-role storage enumeration on every public
+    // ping. A lightweight head-count against an indexed table is enough to
+    // tell whether the backend is reachable, and the result is not exposed.
     const { error: dbError } = await supabase.from("file_buckets").select(
       "count",
       { count: "exact", head: true },
     );
     const dbLatency = Date.now() - startTime;
 
-    // 2. Check Storage (List buckets)
-    const storageStart = Date.now();
-    const { error: storageError } = await supabase.storage.listBuckets();
-    const storageLatency = Date.now() - storageStart;
-
     const status = {
-      status: !dbError && !storageError ? "healthy" : "degraded",
+      status: !dbError ? "healthy" : "degraded",
       timestamp: new Date().toISOString(),
       services: {
         database: {
           status: dbError ? "down" : "up",
           latency_ms: dbLatency,
-          error: dbError?.message,
-        },
-        storage: {
-          status: storageError ? "down" : "up",
-          latency_ms: storageLatency,
-          error: storageError?.message,
         },
       },
       version: "1.0.0",

@@ -9,6 +9,7 @@ import {
   getClientIP,
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { validateSplashConfig } from "../_shared/splash-validation.ts";
 
 // Generate short code (6 chars, URL-safe)
 function generateShortCode(): string {
@@ -62,6 +63,21 @@ serve(async (req) => {
     if (!destination_url) {
       return new Response(
         JSON.stringify({ error: "destination_url is required" }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 400,
+        },
+      );
+    }
+
+    // Validate splash_config before it gets stored + rendered into HTML later.
+    const splashCheck = validateSplashConfig(splash_config);
+    if (!splashCheck.ok) {
+      return new Response(
+        JSON.stringify({ error: splashCheck.error }),
         {
           headers: {
             ...getCorsHeaders(req),
@@ -195,7 +211,7 @@ serve(async (req) => {
         password_hash: password_hash || null,
         routing_mode: routing_mode || "simple",
         routing_config: routing_config || null,
-        splash_config: splash_config || null,
+        splash_config: splashCheck.value,
         owner_token: ownerToken,
         is_active: true,
       })

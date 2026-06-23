@@ -9,6 +9,7 @@ import {
   getClientIP,
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { validateSplashConfig } from "../_shared/splash-validation.ts";
 
 serve(async (req) => {
   // Handle CORS
@@ -175,6 +176,25 @@ serve(async (req) => {
       }
     }
 
+    // Validate splash_config if provided (it gets rendered into HTML on scan).
+    let validatedSplash: object | null = null;
+    if (splash_config !== undefined) {
+      const splashCheck = validateSplashConfig(splash_config);
+      if (!splashCheck.ok) {
+        return new Response(
+          JSON.stringify({ error: splashCheck.error }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 400,
+          },
+        );
+      }
+      validatedSplash = splashCheck.value;
+    }
+
     // Build update object (only update provided fields)
     const updates: Record<string, string | number | null | object> = {};
     if (destination_url !== undefined) {
@@ -185,7 +205,7 @@ serve(async (req) => {
     if (is_active !== undefined) updates.is_active = is_active;
     if (routing_mode !== undefined) updates.routing_mode = routing_mode;
     if (routing_config !== undefined) updates.routing_config = routing_config;
-    if (splash_config !== undefined) updates.splash_config = splash_config;
+    if (splash_config !== undefined) updates.splash_config = validatedSplash;
 
     // Update the record
     const { data, error: updateError } = await supabase

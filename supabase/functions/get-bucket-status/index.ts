@@ -68,14 +68,17 @@ serve(async (req) => {
       );
     }
 
-    // Check authorization for full metadata
+    // Check authorization for full metadata.
+    // Password-based metadata unlock is intentionally NOT supported here: a
+    // password in a query string leaks via logs/history/referrer. Password
+    // unlock happens via download-from-bucket (POST body) instead. Metadata
+    // for password-protected buckets stays redacted until owner-token auth.
     const ownerToken = url.searchParams.get("owner_token");
-    const password = url.searchParams.get("password"); // Optional: allow password to unlock metadata
 
     let isAuthorized = false;
 
     // Check owner token
-    if (ownerToken) {
+    if (ownerToken && bucket.owner_token) {
       if (bucket.owner_token.length === 64) {
         // Hash check
         const encoder = new TextEncoder();
@@ -88,35 +91,6 @@ serve(async (req) => {
       } else {
         // Legacy check
         if (bucket.owner_token === ownerToken) isAuthorized = true;
-      }
-    }
-
-    // Check password (if provided and bucket is protected)
-    if (
-      !isAuthorized && password && bucket.is_password_protected &&
-      bucket.password_hash
-    ) {
-      const encoder = new TextEncoder();
-
-      if (bucket.password_hash.includes(":")) {
-        // New Salted Hash
-        const [saltHex, storedHash] = bucket.password_hash.split(":");
-        const data = encoder.encode(saltHex + password);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const computedHash = hashArray.map((b) =>
-          b.toString(16).padStart(2, "0")
-        ).join("");
-        if (computedHash === storedHash) isAuthorized = true;
-      } else {
-        // Legacy Unsalted Hash
-        const data = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const passwordHash = hashArray.map((b) =>
-          b.toString(16).padStart(2, "0")
-        ).join("");
-        if (passwordHash === bucket.password_hash) isAuthorized = true;
       }
     }
 
