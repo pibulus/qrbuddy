@@ -4,6 +4,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  getClientIP,
+} from "../_shared/rate-limit.ts";
 
 serve(async (req) => {
   // Handle CORS
@@ -12,6 +17,17 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting: 30 requests per hour per IP
+    const clientIP = getClientIP(req);
+    const rateLimitResult = checkRateLimit(clientIP, {
+      windowMs: 60 * 60 * 1000,
+      maxRequests: 30,
+    });
+
+    if (rateLimitResult.isLimited) {
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+    }
+
     const url = new URL(req.url);
     const ownerToken = url.searchParams.get("token");
 
@@ -120,7 +136,7 @@ serve(async (req) => {
     console.error("Get dynamic QR failed:", error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
+        error: "An unexpected error occurred. Please try again.",
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

@@ -304,9 +304,10 @@ serve(async (req) => {
       },
     );
   } catch (error) {
+    console.error("Upload file failed:", error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
+        error: "An unexpected error occurred. Please try again.",
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

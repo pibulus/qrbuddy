@@ -156,7 +156,7 @@ serve(async (req) => {
     console.error("Get bucket status failed:", error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
+        error: "An unexpected error occurred. Please try again.",
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

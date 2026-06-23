@@ -75,7 +75,6 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const bucketCode = url.searchParams.get("bucket_code");
-    const ownerToken = url.searchParams.get("owner_token");
 
     if (!bucketCode) {
       return new Response(
@@ -130,6 +129,7 @@ serve(async (req) => {
     let contentData: string | null = null;
     let contentMetadata: BucketContentMetadata = {};
     let uploadedContentType: UploadContentType = "text";
+    let ownerToken: string | null = null;
     let password: string | null = null;
     let uploadedStoragePath: string | null = null;
 
@@ -175,6 +175,7 @@ serve(async (req) => {
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const file = formData.get("file") as File;
+      ownerToken = formData.get("owner_token") as string | null;
       password = formData.get("password") as string | null;
 
       if (!file) {
@@ -242,6 +243,9 @@ serve(async (req) => {
       // Handle text or link (JSON)
       const body = await req.json();
       const { type, content } = body;
+      ownerToken = typeof body.owner_token === "string"
+        ? body.owner_token
+        : null;
       password = typeof body.password === "string" ? body.password : null;
 
       if (!type || !content) {
@@ -341,7 +345,7 @@ serve(async (req) => {
     console.error("Upload to bucket failed:", error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
+        error: "An unexpected error occurred. Please try again.",
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

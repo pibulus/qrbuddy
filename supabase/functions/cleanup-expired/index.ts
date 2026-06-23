@@ -12,10 +12,17 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authorization (Service Role or specific secret)
-    // For now, we assume this is triggered by a secure cron job passing a secret
+    const expectedSecret = Deno.env.get("CLEANUP_SECRET");
+    if (!expectedSecret) {
+      console.error("CLEANUP_SECRET not configured");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: getCorsHeaders(req),
+      });
+    }
+
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
+    if (!authHeader || authHeader !== `Bearer ${expectedSecret}`) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: getCorsHeaders(req),
@@ -171,7 +178,7 @@ serve(async (req) => {
     console.error("Cleanup failed:", error);
     return new Response(
       JSON.stringify({
-        error: error instanceof Error ? error.message : String(error),
+        error: "An unexpected error occurred. Please try again.",
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

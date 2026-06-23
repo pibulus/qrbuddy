@@ -1,10 +1,12 @@
 import { Signal, useSignal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
+import { addToast } from "./ToastManager.tsx";
 import { QRTemplateType } from "../types/qr-templates.ts";
 import CreateModal from "./CreateModal.tsx";
 import HistoryDrawer from "./HistoryDrawer.tsx";
 import { addToHistory, HistoryItem } from "../utils/history.ts";
+import { getOwnerToken } from "../utils/token-vault.ts";
 import { useDynamicQR } from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
 import { useBatchGenerator } from "../hooks/useBatchGenerator.ts";
@@ -413,41 +415,44 @@ export default function SmartInput(
   };
 
   const handleHistorySelect = (item: HistoryItem) => {
-    // Restore state based on item type
     if (item.type === "file" && item.metadata?.bucketCode) {
-      const historyUrl = `/bucket/${item.metadata.bucketCode}${
-        item.metadata.ownerToken
-          ? `?owner_token=${item.metadata.ownerToken}`
-          : ""
-      }`;
-      globalThis.location.href = historyUrl;
+      const bucketCode = item.metadata.bucketCode;
+      getOwnerToken("bucket", bucketCode).then((token) => {
+        const historyUrl = `/bucket/${bucketCode}${
+          token ? `?owner_token=${token}` : ""
+        }`;
+        globalThis.location.href = historyUrl;
+      });
       return;
     }
 
-    // For dynamic QRs (Redirect to Edit Page)
-    if (item.metadata?.dynamicUrl) {
-      globalThis.location.href = item.metadata.dynamicUrl as string;
+    if (item.metadata?.shortCode) {
+      const shortCode = item.metadata.shortCode;
+      getOwnerToken("qr", shortCode).then((token) => {
+        if (token) {
+          globalThis.location.href = `/edit?token=${token}`;
+        } else {
+          addToast(
+            "Owner token not found. Re-create this QR to edit it.",
+            4000,
+          );
+        }
+      });
       return;
     }
 
-    // For static types
     if (item.type === "url" || item.type === "text" || item.type === "wifi") {
-      setSelectedTemplate(item.type); // Set the QR type
-      url.value = item.content; // Set the input value
-      setTouched(true); // Mark as touched to trigger validation
-      // No direct QR generation here, just setting the input for user to generate/edit.
+      setSelectedTemplate(item.type);
+      url.value = item.content;
+      setTouched(true);
     }
-    setShowHistory(false); // Close history drawer after selection
+    setShowHistory(false);
   };
 
   // Effect to save to history when a QR is successfully generated/updated
   useEffect(() => {
-    // This effect should ideally trigger when a QR is *finalized* and ready to be displayed/used.
-    // For SmartInput, this means when `editUrl.value` (dynamic QR) or `bucketUrl.value` (bucket) is set,
-    // or when a static QR is generated (which happens in the parent component that consumes `url.value`).
-    // For now, let's focus on dynamic and bucket QRs as they are managed within SmartInput.
-
     if (editUrl.value && url.value && !isCreatingDynamic) {
+      const shortCode = new URL(url.value).searchParams.get("code") || "";
       addToHistory({
         type: selectedTemplate,
         content: url.value,
@@ -455,21 +460,20 @@ export default function SmartInput(
           title: url.value.length > 30
             ? url.value.substring(0, 30) + "..."
             : url.value,
-          dynamicUrl: editUrl.value,
+          shortCode,
         },
       });
     } else if (
       isBucket.value && bucketUrl.value && url.value && !isCreatingBucket
     ) {
       addToHistory({
-        type: "file", // Assuming bucket is primarily for files or smart text
+        type: "file",
         content: url.value,
         metadata: {
           title: url.value.length > 30
             ? url.value.substring(0, 30) + "..."
             : url.value,
-          bucketCode: bucketUrl.value.split("/").pop(), // Extract code from URL
-          // ownerToken might be needed here if available
+          bucketCode: bucketUrl.value.split("/").pop(),
         },
       });
     }

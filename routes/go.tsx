@@ -6,19 +6,30 @@ interface GoData {
   tier: string;
 }
 
+function isValidRedirectUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return [
+      "http:",
+      "https:",
+      "wifi:",
+      "mailto:",
+      "tel:",
+      "sms:",
+      "facetime:",
+    ].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
 export const handler: Handlers<GoData> = {
   GET(req, ctx) {
     const params = new URL(req.url).searchParams;
     const url = params.get("url") || "";
     const tier = params.get("tier") || "free";
 
-    // Validate the redirect URL - block dangerous protocols
-    if (
-      !url ||
-      url.startsWith("javascript:") ||
-      url.startsWith("data:") ||
-      url.startsWith("file:")
-    ) {
+    if (!url || !isValidRedirectUrl(url)) {
       return new Response(null, {
         status: 302,
         headers: { Location: "/" },

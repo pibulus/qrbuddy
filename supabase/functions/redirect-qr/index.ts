@@ -10,6 +10,15 @@ import {
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function redirectWithCors(path: string, request?: Request, status = 302) {
   return new Response(null, {
     status,
@@ -103,15 +112,25 @@ serve(async (req) => {
       }
     }
 
-    // Check if max scans reached
-    if (qr.max_scans && qr.scan_count >= qr.max_scans) {
-      // Mark as inactive and redirect to KABOOM
+    // Atomically increment scan count and get the new value.
+    // increment_scan_count now uses SELECT ... FOR UPDATE to serialise
+    // concurrent scans, checks max_scans internally, and returns -1 if
+    // the limit has already been reached.
+    const { data: newScanCount } = await supabase
+      .rpc("increment_scan_count", { p_short_code: shortCode });
+
+    if (newScanCount === null || newScanCount === -1) {
+      // QR doesn't exist, is inactive, or scan limit already reached.
+      // Mark inactive so future scans also hit /boom.
       await supabase
         .from("dynamic_qr_codes")
         .update({ is_active: false })
         .eq("short_code", shortCode);
       return redirectWithCors("/boom", req);
     }
+
+    // The scan index for routing is the pre-increment value (0-based)
+    const scanIndex = newScanCount - 1;
 
     // --------------------------------------------------------------------------
     // 1. ANALYTICS LOGGING (Fire and Forget)
@@ -147,14 +166,6 @@ serve(async (req) => {
     else if (ua.includes("safari")) browser = "safari";
     else if (ua.includes("firefox")) browser = "firefox";
     else if (ua.includes("edge")) browser = "edge";
-
-    // Atomically increment scan count and get the new value
-    // This prevents race conditions where concurrent scans read the same count
-    const { data: newScanCount } = await supabase
-      .rpc("increment_scan_count", { p_short_code: shortCode });
-
-    // The scan index for routing is the pre-increment value (0-based)
-    const scanIndex = (newScanCount ?? qr.scan_count + 1) - 1;
 
     // Log scan analytics (fire and forget - don't block redirect)
     supabase
@@ -262,13 +273,32 @@ serve(async (req) => {
         description,
       } = qr.splash_config;
 
+      let safeImageUrl: string | null = null;
+      if (imageUrl) {
+        try {
+          const parsed = new URL(imageUrl);
+          if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+            safeImageUrl = parsed.href;
+          }
+        } catch { /* drop invalid image URL */ }
+      }
+
+      const safeTitle = escapeHtml(title);
+      const safeButtonText = escapeHtml(buttonText);
+      const safeDescription = description ? escapeHtml(description) : null;
+      const imgHtml = safeImageUrl
+        ? `<div class="image-container"><img src="${
+          escapeHtml(safeImageUrl)
+        }" alt="Splash Image"></div>`
+        : "";
+
       const html = `
         <!DOCTYPE html>
         <html lang="en">
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${title}</title>
+          <title>${safeTitle}</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -335,14 +365,12 @@ serve(async (req) => {
         </head>
         <body>
           <div class="card">
-            ${
-        imageUrl
-          ? `<div class="image-container"><img src="${imageUrl}" alt="Splash Image"></div>`
-          : ""
-      }
-            <h1>${title}</h1>
-            ${description ? `<p>${description}</p>` : ""}
-            <a href="${destinationUrl}" class="btn">${buttonText}</a>
+            ${imgHtml}
+            <h1>${safeTitle}</h1>
+            ${safeDescription ? `<p>${safeDescription}</p>` : ""}
+            <a href="${
+        escapeHtml(destinationUrl)
+      }" class="btn">${safeButtonText}</a>
           </div>
         </body>
         </html>

@@ -57,10 +57,11 @@ serve(async (req) => {
       },
     );
   } catch (error) {
+    console.error("Health check failed:", error);
     return new Response(
       JSON.stringify({
         status: "unhealthy",
-        error: error instanceof Error ? error.message : String(error),
+        error: "An unexpected error occurred. Please try again.",
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

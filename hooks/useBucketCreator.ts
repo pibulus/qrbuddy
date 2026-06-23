@@ -54,11 +54,12 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
 
       // 2. Upload Text
       await apiRequest(
-        `${apiUrl}/upload-to-bucket?bucket_code=${bucketData.bucket_code}&owner_token=${bucketData.owner_token}`,
+        `${apiUrl}/upload-to-bucket?bucket_code=${bucketData.bucket_code}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            owner_token: bucketData.owner_token,
             type: "text",
             content: text,
           }),
@@ -191,6 +192,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       const apiUrl = getApiUrl();
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("owner_token", ownerToken);
       if (metadata?.title) formData.append("title", metadata.title);
       if (metadata?.description) {
         formData.append("description", metadata.description);
@@ -198,7 +200,7 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       if (metadata?.creator) formData.append("creator", metadata.creator);
 
       await apiRequest(
-        `${apiUrl}/upload-to-bucket?bucket_code=${bucketCode}&owner_token=${ownerToken}`,
+        `${apiUrl}/upload-to-bucket?bucket_code=${bucketCode}`,
         {
           method: "POST",
           headers: {
