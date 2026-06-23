@@ -1,12 +1,22 @@
 // Shared CORS headers for all QRBuddy edge functions
 // Centralized to make CORS policy updates easier
 
-const ALLOWED_ORIGINS = [
+const PROD_ORIGINS = [
   "https://qrbuddy.app",
   "https://qrbuddy.deno.dev",
+];
+
+const DEV_ORIGINS = [
   "http://localhost:8000",
   "http://localhost:8004",
 ];
+
+// Only allow localhost origins outside production. With Allow-Credentials: true,
+// a credentialed localhost origin is a (small) DNS-rebinding surface, so we drop
+// it once DENO_DEPLOYMENT_ID is set (i.e. running on Deno Deploy / prod).
+const ALLOWED_ORIGINS = Deno.env.get("DENO_DEPLOYMENT_ID")
+  ? PROD_ORIGINS
+  : [...PROD_ORIGINS, ...DEV_ORIGINS];
 
 /**
  * Match the request Origin against the whitelist.

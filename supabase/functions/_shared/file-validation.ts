@@ -82,16 +82,25 @@ export function validateFile(file: File): FileValidationResult {
     };
   }
 
-  // Check file extension
-  const fileName = file.name.toLowerCase();
-  const blockedExt = BLOCKED_EXTENSIONS.find((ext) =>
-    fileName.endsWith(`.${ext}`)
-  );
-
-  if (blockedExt) {
+  // Reject control characters in the filename outright. A null byte (or other
+  // control char) can truncate the name at the OS/storage layer so that
+  // "evil.php\x00.jpg" passes an endsWith(".jpg") check but lands as .php.
+  // deno-lint-ignore no-control-regex
+  if (/[\x00-\x1f]/.test(file.name)) {
     return {
       valid: false,
-      error: `File type '.${blockedExt}' is not allowed for security reasons.`,
+      error: "Filename contains invalid characters.",
+    };
+  }
+
+  // Check the LAST extension specifically (not just any-suffix match). For
+  // "archive.jpg.exe" the real extension is "exe"; for "report.PDF" it's "pdf".
+  const fileName = file.name.toLowerCase();
+  const lastExt = fileName.includes(".") ? fileName.split(".").pop() ?? "" : "";
+  if (lastExt && BLOCKED_EXTENSIONS.includes(lastExt)) {
+    return {
+      valid: false,
+      error: `File type '.${lastExt}' is not allowed for security reasons.`,
     };
   }
 

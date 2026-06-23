@@ -1,7 +1,7 @@
 // Edge Function: Upload File for Destructible QR
 // Receives file(s), stores in Supabase, returns URL that self-destructs after one access
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { v4 as uuidv4 } from "https://esm.sh/uuid@9";
 import {
@@ -134,6 +134,24 @@ serve(async (req) => {
       // Validate file type
       const fileName = file.name.toLowerCase();
 
+      // Reject control characters (e.g. a null byte that truncates the name at
+      // the storage layer so "evil.php\x00.jpg" lands as .php).
+      // deno-lint-ignore no-control-regex
+      if (/[\x00-\x1f]/.test(file.name)) {
+        return new Response(
+          JSON.stringify({
+            error: `Filename of '${file.name}' contains invalid characters.`,
+          }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 400,
+          },
+        );
+      }
+
       // If multi-file, MUST be image
       if (isMultiFile && !file.type.startsWith("image/")) {
         return new Response(
@@ -202,9 +220,12 @@ serve(async (req) => {
         "msh2xml",
       ];
 
-      const hasBlockedExt = blockedExtensions.some((ext) =>
-        fileName.endsWith(`.${ext}`)
-      );
+      // Check the LAST extension specifically — "archive.jpg.exe" is an exe.
+      const lastExt = fileName.includes(".")
+        ? fileName.split(".").pop() ?? ""
+        : "";
+      const hasBlockedExt = lastExt !== "" &&
+        blockedExtensions.includes(lastExt);
 
       if (hasBlockedExt) {
         return new Response(

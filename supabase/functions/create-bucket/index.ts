@@ -1,7 +1,7 @@
 // Edge Function: Create File Bucket
 // Creates a persistent QR bucket for file/text/link storage
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   checkRateLimit,
@@ -10,12 +10,21 @@ import {
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
-// Generate short code (6 chars, URL-safe)
+// Generate short code (6 chars, URL-safe).
+// Uses crypto.getRandomValues (not Math.random) so codes aren't predictable
+// from generation time. Rejection sampling avoids modulo bias on the 36-char
+// alphabet (256 % 36 != 0). The code is a public-ish shareable id, not the
+// auth boundary (that's the crypto.randomUUID owner token), but unguessable
+// is still the right default.
 function generateShortCode(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const max = Math.floor(256 / chars.length) * chars.length; // 252
   let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
+  while (code.length < 6) {
+    const buf = crypto.getRandomValues(new Uint8Array(6 - code.length));
+    for (const b of buf) {
+      if (b < max) code += chars[b % chars.length];
+    }
   }
   return code;
 }

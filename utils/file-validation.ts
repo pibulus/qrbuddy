@@ -144,17 +144,23 @@ export function validateFile(file: File): FileValidationResult {
     };
   }
 
-  // Check file extension
-  const fileName = file.name.toLowerCase();
-  const blockedExt = BLOCKED_EXTENSIONS.find((ext) =>
-    fileName.endsWith(`.${ext}`)
-  );
+  // Reject control characters in the filename (null byte truncation, etc.).
+  // deno-lint-ignore no-control-regex
+  if (/[\x00-\x1f]/.test(file.name)) {
+    return {
+      valid: false,
+      error: "Filename contains invalid characters.",
+    };
+  }
 
-  if (blockedExt) {
+  // Check the LAST extension specifically — "archive.jpg.exe" is an exe.
+  const fileName = file.name.toLowerCase();
+  const lastExt = fileName.includes(".") ? fileName.split(".").pop() ?? "" : "";
+  if (lastExt && BLOCKED_EXTENSIONS.includes(lastExt)) {
     return {
       valid: false,
       error:
-        `File type '.${blockedExt}' is not allowed for security reasons. Executable files are blocked.`,
+        `File type '.${lastExt}' is not allowed for security reasons. Executable files are blocked.`,
     };
   }
 

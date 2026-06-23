@@ -1,7 +1,7 @@
 // Edge Function: Download from Bucket
 // Downloads content from bucket and empties it (if configured)
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   checkRateLimit,

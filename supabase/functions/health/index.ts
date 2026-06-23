@@ -1,7 +1,7 @@
 // Edge Function: Health Check
 // Returns the status of the system (Database, Storage)
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
