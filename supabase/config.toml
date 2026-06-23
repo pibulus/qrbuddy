@@ -367,6 +367,12 @@ verify_jwt = false
 [functions.health]
 verify_jwt = false
 
+[functions.cleanup-expired]
+# Handler validates CLEANUP_SECRET via the Authorization header itself, so the
+# platform JWT gate must be off (otherwise the gateway rejects the secret as a
+# malformed JWT before the handler runs).
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
