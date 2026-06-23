@@ -126,7 +126,7 @@ function ChoiceRow(
       onClick={onClick}
       class={`group w-full min-h-[64px] rounded-2xl border-3 px-3 py-3 text-left transition-all flex items-center gap-3 ${
         active
-          ? "border-black bg-[#FFF8F0] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]"
+          ? "border-black bg-qr-cream shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]"
           : "border-gray-200 bg-white hover:border-black hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
       }`}
     >
@@ -217,6 +217,25 @@ export default function CreateModal({
       setShowLockerSettings(false);
       setShowBatchSettings(false);
     }
+  }, [isOpen]);
+
+  // Dialog behaviour: lock body scroll, close on Escape, and move focus into
+  // the modal on open (mirrors AboutModal, which was the only modal doing this).
+  useEffect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = "hidden";
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    const firstFocusable = document.querySelector(
+      "[data-create-modal] button",
+    ) as HTMLElement | null;
+    firstFocusable?.focus();
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -443,7 +462,7 @@ export default function CreateModal({
 
     return (
       <div class="space-y-5 animate-slide-down">
-        <section class="rounded-2xl border-3 border-black bg-[#FFF8F0] p-4 sm:p-5 shadow-chunky space-y-4">
+        <section class="rounded-2xl border-3 border-black bg-qr-cream p-4 sm:p-5 shadow-chunky space-y-4">
           <div class="flex items-start gap-3">
             <span class="w-12 h-12 rounded-xl border-2 border-black bg-white flex items-center justify-center text-2xl shrink-0">
               {isTextCard ? "T" : isFilePage ? "📄" : "🪣"}
@@ -785,7 +804,7 @@ export default function CreateModal({
         <div
           class={`w-full min-h-[64px] rounded-2xl border-3 px-3 py-3 text-left flex items-center gap-3 ${
             logoActive
-              ? "border-black bg-[#FFF8F0] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              ? "border-black bg-qr-cream shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
               : "border-gray-200 bg-white"
           }`}
         >
@@ -825,13 +844,22 @@ export default function CreateModal({
         onClick={onClose}
       />
 
-      <div class="relative w-full max-w-3xl bg-white sm:border-4 sm:border-black rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden">
+      <div
+        data-create-modal
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-modal-title"
+        class="relative w-full max-w-3xl bg-white sm:border-4 sm:border-black rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
+      >
         <div class="flex items-start justify-between gap-3 p-4 sm:p-6 border-b-2 border-gray-100">
           <div>
-            <p class="text-xs uppercase tracking-wide text-pink-500 font-black">
+            <p class="text-xs uppercase tracking-wide text-pink-600 font-black">
               {hasCompletion ? "Ready" : "Create"}
             </p>
-            <h2 class="text-xl sm:text-2xl font-black text-gray-900 leading-tight">
+            <h2
+              id="create-modal-title"
+              class="text-xl sm:text-2xl font-black text-gray-900 leading-tight"
+            >
               {hasCompletion ? "Ready to share" : "What should this QR do?"}
             </h2>
             <p class="text-sm text-gray-600">

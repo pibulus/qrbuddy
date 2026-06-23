@@ -32,6 +32,9 @@ export default function QRCanvas(
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
+  // The init effect already renders with the current signal values, so the
+  // update effect must skip its OWN first (mount) run to avoid a double render.
+  const updateEffectRan = useRef(false);
   const [isDragHover, setIsDragHover] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
   const [showSuccessFlash, setShowSuccessFlash] = useState(false);
@@ -102,6 +105,24 @@ export default function QRCanvas(
     // Show success flash
     setShowSuccessFlash(true);
     setTimeout(() => setShowSuccessFlash(false), 600);
+  };
+
+  // Derive the ambient-glow gradient from the ACTIVE style's dot colors so the
+  // glow matches the QR (it used to be hardcoded sunset — looked like a bug on
+  // Terminal/Brutalist). Falls back to the sunset tokens if colors are missing.
+  const getGlowGradient = (): string => {
+    const s = getCurrentStyle();
+    const dots = s?.dots as
+      | { color?: string; gradient?: { colorStops?: { color: string }[] } }
+      | undefined;
+    const stops = dots?.gradient?.colorStops?.map((cs) => cs.color);
+    if (stops && stops.length >= 2) {
+      return `linear-gradient(135deg, ${stops.join(", ")})`;
+    }
+    if (dots?.color) {
+      return `linear-gradient(135deg, ${dots.color}, ${dots.color})`;
+    }
+    return "linear-gradient(135deg, #FFE5B4, #FF69B4, #9370DB)";
   };
 
   // Helper function to get the current style object
@@ -183,6 +204,12 @@ export default function QRCanvas(
 
   useEffect(() => {
     if (!qrCodeRef.current) return;
+    // Skip this effect's first (mount) run — the init effect above already
+    // rendered the current signal values, so updating again would double-render.
+    if (!updateEffectRan.current) {
+      updateEffectRan.current = true;
+      return;
+    }
 
     const currentStyle = getCurrentStyle();
 
@@ -284,11 +311,30 @@ export default function QRCanvas(
         `}
         title="Click to download"
       />
-      <div class="absolute -z-10 inset-0 bg-gradient-to-br from-qr-sunset1 via-qr-sunset2 to-qr-sunset3 opacity-20 blur-xl rounded-chunky" />
+      <div
+        class="absolute -z-10 inset-0 opacity-20 blur-xl rounded-chunky"
+        style={{ background: getGlowGradient() }}
+      />
+
+      {
+        /* Empty-state hint: until the user enters something, the canvas shows a
+          placeholder QR for qrbuddy.app — make it clear that's not "their" QR
+          and tell them how to get theirs. */
+      }
+      {!url.value && (
+        <p class="text-center text-xs text-gray-500 mt-2 select-none">
+          your QR appears here — start typing above
+        </p>
+      )}
+      {url.value && (
+        <p class="text-center text-xs text-gray-500 mt-2 select-none">
+          tap the code to download
+        </p>
+      )}
 
       {/* Destructible badge */}
       {isDestructible?.value && (
-        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float z-10">
+        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float will-change-transform z-10">
           💣 {maxDownloads?.value === UNLIMITED_SCANS
             ? "∞"
             : maxDownloads?.value || 1}{" "}
@@ -298,7 +344,7 @@ export default function QRCanvas(
 
       {/* Dynamic QR badge */}
       {isDynamic?.value && !isDestructible?.value && (
-        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float z-10">
+        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float will-change-transform z-10">
           🔗 editable
         </div>
       )}

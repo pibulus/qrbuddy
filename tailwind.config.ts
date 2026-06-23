@@ -26,6 +26,7 @@ export default {
         "pulse-glow": "pulse-glow 1.5s ease-in-out infinite",
         "glow-pulse": "glow-pulse 1.5s ease-out forwards",
         "bounce-in": "bounce-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+        "pop-in": "pop-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
       },
 
       keyframes: {
@@ -100,6 +101,10 @@ export default {
         "bounce-in": {
           "0%": { opacity: "0", transform: "scale(0.5)" },
           "50%": { opacity: "1", transform: "scale(1.05)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "pop-in": {
+          "0%": { opacity: "0", transform: "scale(0.85)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
         "glow-pulse": {

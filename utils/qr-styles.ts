@@ -144,8 +144,8 @@ export const QR_STYLES = {
       gradient: {
         type: "radial" as const,
         colorStops: [
-          { offset: 0, color: "rgba(255, 0, 255, 0.1)" },
-          { offset: 1, color: "rgba(0, 255, 255, 0.1)" },
+          { offset: 0, color: "rgba(255, 0, 255, 0.22)" },
+          { offset: 1, color: "rgba(0, 255, 255, 0.22)" },
         ],
       },
     },

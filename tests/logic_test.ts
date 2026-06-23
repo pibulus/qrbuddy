@@ -78,7 +78,12 @@ Deno.test("validateWiFi - requires ssid, and password for secured", () => {
     "Password is required for secured networks",
   );
   assertEquals(
-    validateWiFi({ ssid: "N", password: "", encryption: "nopass", hidden: false }),
+    validateWiFi({
+      ssid: "N",
+      password: "",
+      encryption: "nopass",
+      hidden: false,
+    }),
     null,
   );
 });
@@ -120,12 +125,18 @@ Deno.test("validateVCard - needs a name and a contact method", () => {
     validateVCard({ ...base, firstName: "A" }),
     "Phone or Email is required",
   );
-  assertEquals(validateVCard({ ...base, firstName: "A", email: "a@b.c" }), null);
+  assertEquals(
+    validateVCard({ ...base, firstName: "A", email: "a@b.c" }),
+    null,
+  );
 });
 
 Deno.test("formatSMS / validateSMS", () => {
   assertEquals(formatSMS({ phone: "555", message: "yo" }), "SMSTO:555:yo");
-  assertEquals(validateSMS({ phone: "", message: "x" }), "Phone number is required");
+  assertEquals(
+    validateSMS({ phone: "", message: "x" }),
+    "Phone number is required",
+  );
   assertEquals(validateSMS({ phone: "1", message: "" }), "Message is required");
   assertEquals(validateSMS({ phone: "1", message: "x" }), null);
 });
@@ -155,7 +166,10 @@ Deno.test("validateEmail - needs email and subject-or-body", () => {
 // File validation (incl. the hardening we added)
 // ===========================================================================
 Deno.test("validateFile - accepts a normal image", () => {
-  assertEquals(validateFile(fakeFile("photo.jpg", 1024, "image/jpeg")).valid, true);
+  assertEquals(
+    validateFile(fakeFile("photo.jpg", 1024, "image/jpeg")).valid,
+    true,
+  );
 });
 
 Deno.test("validateFile - rejects files over 50MB", () => {
@@ -176,7 +190,10 @@ Deno.test("validateFile - blocks on the LAST extension (jpg.exe is an exe)", () 
 
 Deno.test("validateFile - does NOT block a safe double extension", () => {
   // "report.exe.jpg" ends in .jpg — the real type — so it's allowed.
-  assertEquals(validateFile(fakeFile("report.exe.jpg", 1024, "image/jpeg")).valid, true);
+  assertEquals(
+    validateFile(fakeFile("report.exe.jpg", 1024, "image/jpeg")).valid,
+    true,
+  );
 });
 
 Deno.test("validateFile - rejects null-byte / control chars in filename", () => {
@@ -208,7 +225,10 @@ Deno.test("validateSplashConfig - disabled splash normalises to null", () => {
 });
 
 Deno.test("validateSplashConfig - rejects non-string title (the 500 vector)", () => {
-  const r = validateSplashConfig({ enabled: true, title: ["not", "a", "string"] });
+  const r = validateSplashConfig({
+    enabled: true,
+    title: ["not", "a", "string"],
+  });
   assertEquals(r.ok, false);
   if (!r.ok) assertMatch(r.error, /title must be a string/);
 });

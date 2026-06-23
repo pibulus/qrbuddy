@@ -188,7 +188,7 @@ export default function GradientCreator(
             <button
               type="button"
               onClick={addColorStop}
-              class="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+              class="px-4 min-h-[44px] bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-bold"
             >
               + Add
             </button>
@@ -206,7 +206,7 @@ export default function GradientCreator(
                       "color",
                       (e.target as HTMLInputElement).value,
                     )}
-                  class="w-12 h-8 rounded border-2 border-gray-300"
+                  class="w-12 h-11 rounded border-2 border-gray-300"
                 />
                 <input
                   type="range"

@@ -13,6 +13,9 @@ class SoundManager implements SoundEffects {
   private audioCache = new Map<string, HTMLAudioElement>();
   private isEnabled: boolean = true;
   private volume: number = 0.1;
+  // Reused across beeps — creating a new AudioContext per call is expensive
+  // and causes an audible stutter on rapid successive clicks.
+  private audioCtx: AudioContext | null = null;
 
   constructor() {
     // Check user preference for reduced motion (applies to audio too)
@@ -32,7 +35,8 @@ class SoundManager implements SoundEffects {
 
     const audio = new Audio(url);
     audio.volume = this.volume;
-    audio.preload = "auto";
+    // "metadata" not "auto": don't eagerly download whole sound files on load.
+    audio.preload = "metadata";
 
     return new Promise((resolve, reject) => {
       audio.addEventListener("canplaythrough", () => {
@@ -78,9 +82,16 @@ class SoundManager implements SoundEffects {
     type: OscillatorType = "sine",
   ): void {
     try {
-      const audioContext = new (globalThis.AudioContext ||
-        // @ts-ignore - webkitAudioContext is a non-standard property
-        globalThis.webkitAudioContext)();
+      if (!this.audioCtx) {
+        this.audioCtx = new (globalThis.AudioContext ||
+          // @ts-ignore - webkitAudioContext is a non-standard property
+          globalThis.webkitAudioContext)();
+      }
+      const audioContext = this.audioCtx;
+      // Contexts auto-suspend after a gesture-timeout; resume before use.
+      if (audioContext.state === "suspended") {
+        audioContext.resume().catch(() => {});
+      }
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 

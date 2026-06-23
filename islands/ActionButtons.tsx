@@ -68,12 +68,12 @@ export default function ActionButtons(
           onClick={handleCopyUrl}
           class="
             group flex-1 px-6 py-4 text-lg font-black
-            bg-gradient-to-br from-blue-400 to-purple-400 text-white
+            bg-gradient-to-br from-blue-600 to-purple-600 text-white
             rounded-2xl border-3 border-black
             shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
             hover:shadow-[7px_7px_0px_0px_rgba(0,0,0,1)]
             hover:translate-x-[-2px] hover:translate-y-[-2px]
-            hover:from-blue-500 hover:to-purple-500
+            hover:from-blue-700 hover:to-purple-700
             active:translate-x-[2px] active:translate-y-[2px]
             active:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
             transition-all duration-150

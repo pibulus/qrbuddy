@@ -305,7 +305,7 @@ export default function SmartInput(
             }
           });
         }
-      }, 800); // Increased debounce for text typing
+      }, 1200); // Debounce for text typing — long enough to finish a URL before auto-creating
 
       return () => clearTimeout(timer);
     }
@@ -597,8 +597,9 @@ export default function SmartInput(
             <button
               type="button"
               onClick={handleFileInputClick}
-              class="absolute right-4 top-1/2 transform -translate-y-1/2
-                   text-2xl hover:scale-110 transition-transform"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2
+                   w-11 h-11 flex items-center justify-center rounded-lg
+                   text-2xl hover:bg-gray-100 hover:scale-110 transition-all"
               aria-label="Upload file"
               title="Upload file"
             >
@@ -630,7 +631,7 @@ export default function SmartInput(
           (
             <p
               id="input-error"
-              class="text-red-500 text-sm mt-2 text-center animate-slide-down"
+              class="text-red-600 text-sm mt-2 text-center animate-slide-down"
               role="alert"
             >
               Enter any text, URL, or drop a file
@@ -640,7 +641,7 @@ export default function SmartInput(
         {/* Upload error */}
         {uploadError && (
           <p
-            class="text-red-500 text-sm mt-2 text-center animate-slide-down"
+            class="text-red-600 text-sm mt-2 text-center animate-slide-down"
             role="alert"
           >
             {uploadError}
@@ -656,7 +657,7 @@ export default function SmartInput(
         {/* Destructible indicator */}
         {isDestructible.value && !isUploading &&
           maxDownloads.value !== UNLIMITED_SCANS && (
-          <p class="text-orange-600 text-sm mt-2 text-center font-semibold animate-slide-down">
+          <p class="text-orange-700 text-sm mt-2 text-center font-semibold animate-slide-down">
             ⚠️ This file will self-destruct after {maxDownloads.value}{" "}
             {maxDownloads.value === 1 ? "scan" : "scans"}
           </p>

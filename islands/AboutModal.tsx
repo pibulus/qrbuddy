@@ -141,7 +141,7 @@ export function AboutModal() {
                   href="https://github.com/pibulus/qrbuddy"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-white text-black border-3 border-black rounded-xl font-bold transition-all hover:scale-105 shadow-chunky"
+                  class="inline-flex items-center justify-center gap-2 px-4 min-h-[44px] bg-white text-black border-3 border-black rounded-xl font-bold transition-all hover:scale-105 shadow-chunky"
                 >
                   💻 GitHub
                 </a>
@@ -194,7 +194,7 @@ export function AboutLink({
     <button
       type="button"
       onClick={openAboutModal}
-      class={`px-4 py-2 text-sm bg-white text-black border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95 ${className}`}
+      class={`px-4 min-h-[44px] inline-flex items-center justify-center text-sm bg-white text-black border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95 ${className}`}
     >
       {label}
     </button>

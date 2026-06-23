@@ -27,6 +27,20 @@ export default function HistoryDrawer(
     return () => globalThis.removeEventListener("history-updated", handler);
   }, []);
 
+  // Dialog behaviour: close on Escape and move focus into the drawer on open.
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    const closeBtn = document.querySelector(
+      "[data-history-drawer] [data-history-close]",
+    ) as HTMLElement | null;
+    closeBtn?.focus();
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen]);
+
   const formatDate = (ts: number) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
@@ -67,20 +81,28 @@ export default function HistoryDrawer(
 
       {/* Drawer (Left Side) */}
       <div
-        class={`fixed top-0 left-0 h-full w-80 bg-[#FFFBF5] shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col border-r-4 border-black ${
+        data-history-drawer
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="history-drawer-title"
+        class={`fixed top-0 left-0 h-full w-80 bg-qr-cream shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col border-r-4 border-black ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Header */}
         <div class="p-6 border-b-4 border-black bg-yellow-300 flex justify-between items-center">
           <div>
-            <h2 class="text-2xl font-black italic">Time Machine</h2>
+            <h2 id="history-drawer-title" class="text-2xl font-black italic">
+              Time Machine
+            </h2>
             <p class="text-xs font-bold opacity-70">Your QR History</p>
           </div>
           <button
             type="button"
+            data-history-close
             onClick={onClose}
-            class="w-8 h-8 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors"
+            aria-label="Close history"
+            class="w-11 h-11 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors"
           >
             ✕
           </button>
@@ -100,10 +122,20 @@ export default function HistoryDrawer(
               history.map((item) => (
                 <div
                   key={item.id}
-                  class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open ${item.metadata?.title || item.content}`}
+                  class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
                   onClick={() => {
                     onSelect(item);
                     onClose();
+                  }}
+                  onKeyDown={(e: KeyboardEvent) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(item);
+                      onClose();
+                    }
                   }}
                 >
                   <div class="flex items-start gap-3">
@@ -119,7 +151,7 @@ export default function HistoryDrawer(
                       <p class="text-[10px] text-gray-500 font-mono mt-1 truncate">
                         {item.type === "file" ? "File Locker" : item.content}
                       </p>
-                      <p class="text-[10px] text-gray-400 mt-1">
+                      <p class="text-[10px] text-gray-500 mt-1">
                         {formatDate(item.timestamp)}
                       </p>
                     </div>
@@ -132,7 +164,8 @@ export default function HistoryDrawer(
                       e.stopPropagation();
                       removeFromHistory(item.id);
                     }}
-                    class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
+                    class="absolute -top-2 -right-2 w-10 h-10 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:scale-110"
+                    aria-label="Remove from history"
                     title="Forget this memory"
                   >
                     ✕

@@ -88,3 +88,17 @@ body {
   clip: auto;
   white-space: normal;
 }
+
+/* Respect the user's OS-level reduced-motion preference.
+   Nuclear but safe: near-instant animations/transitions, no visual breakage.
+   The sounds system already honours this; the UI now does too. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

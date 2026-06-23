@@ -1,5 +1,5 @@
 import { Signal, useSignal } from "@preact/signals";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import GradientCreator from "./GradientCreator.tsx";
@@ -27,6 +27,16 @@ export default function StyleSelector(
 ) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const isCreatorOpen = useSignal(false);
+
+  // Close the style gallery on Escape (matches the other dialogs).
+  useEffect(() => {
+    if (!isGalleryOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsGalleryOpen(false);
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isGalleryOpen]);
 
   if (isHidden?.value) return null;
 
@@ -68,8 +78,11 @@ export default function StyleSelector(
             haptics.light();
             sounds.click();
           }}
+          aria-label={`Select QR style, current: ${currentStyleInfo.name}`}
+          aria-haspopup="dialog"
+          aria-expanded={isGalleryOpen}
           class="
-            flex items-center gap-2 px-4 py-2.5
+            flex items-center gap-2 px-4 py-3
             bg-white border-3 border-black rounded-xl
             hover:bg-gray-50
             transition-all duration-200
@@ -97,14 +110,22 @@ export default function StyleSelector(
             class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsGalleryOpen(false)}
           />
-          <div class="relative z-10 w-full max-w-lg bg-white border-4 border-black rounded-3xl shadow-2xl p-6 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="style-gallery-title"
+            class="relative z-10 w-full max-w-lg bg-white border-4 border-black rounded-3xl shadow-2xl p-6 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto"
+          >
             {/* Header */}
             <div class="flex items-start justify-between gap-3">
               <div>
-                <p class="text-xs uppercase tracking-wide text-pink-500 font-bold">
+                <p class="text-xs uppercase tracking-wide text-pink-600 font-bold">
                   Style Gallery
                 </p>
-                <p class="text-2xl font-black text-gray-900 leading-tight">
+                <p
+                  id="style-gallery-title"
+                  class="text-2xl font-black text-gray-900 leading-tight"
+                >
                   Pick your Vibe
                 </p>
               </div>
@@ -141,7 +162,10 @@ export default function StyleSelector(
 
                   {/* Content Overlay */}
                   <div class="relative z-10 p-4 h-24 flex flex-col justify-end">
-                    <span class="font-black text-white text-xl drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
+                    <span
+                      class="font-black text-white text-xl"
+                      style="text-shadow: 0 1px 4px rgba(0,0,0,0.85), 0 0 8px rgba(0,0,0,0.6)"
+                    >
                       {info.name}
                     </span>
                     {style.value === key && (

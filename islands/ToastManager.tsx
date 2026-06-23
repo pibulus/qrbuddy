@@ -48,7 +48,12 @@ export default function ToastManager() {
   if (toasts.length === 0) return null;
 
   return (
-    <div class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2">
+    <div
+      class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2"
+      role="status"
+      aria-live="polite"
+      aria-atomic="false"
+    >
       {toasts.map((toast, index) => (
         <div
           key={toast.id}
