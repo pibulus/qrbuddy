@@ -270,8 +270,6 @@ export default function QRCanvas(
     }
   }, [triggerDownload.value]);
 
-  // ... (lines 143-233 omitted)
-
   return (
     <div class="relative max-w-full w-full">
       <div

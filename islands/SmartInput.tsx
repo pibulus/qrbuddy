@@ -462,7 +462,15 @@ export default function SmartInput(
   // Effect to save to history when a QR is successfully generated/updated
   useEffect(() => {
     if (editUrl.value && url.value && !isCreatingDynamic) {
-      const shortCode = new URL(url.value).searchParams.get("code") || "";
+      // url.value is only a QR link right after creation — if the user types
+      // free text while editUrl is still set, new URL() would throw and each
+      // keystroke would pollute history. Skip anything that doesn't parse.
+      let shortCode = "";
+      try {
+        shortCode = new URL(url.value).searchParams.get("code") || "";
+      } catch {
+        return;
+      }
       addToHistory({
         type: selectedTemplate,
         content: url.value,
