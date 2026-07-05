@@ -36,6 +36,8 @@ deno test --allow-net --allow-env --allow-read tests/remediation_test.ts
   creation, owner-token upload, invalid-token rejection, blocked file upload,
   POST-only protected download, and metadata redaction. If functions are not
   reachable, the setup step logs and exits early.
+- `logic_test.ts` - 23 offline pure-logic tests (QR payload formatting,
+  validation, file checks, splash config) — no network or env needed.
 
 ## Notes
 

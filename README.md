@@ -11,7 +11,8 @@ gradient art pieces with that soft brutal aesthetic.
 - **Destructible QRs** 💣 - One-time QR codes (URLs or files) that self-destruct
   after 1 scan → KABOOM!
 - **Dynamic QR Codes** 🔗 - Privacy-first editable redirects with scan limits
-  (NO tracking/analytics)
+  (no IPs or raw user agents logged — just coarse scan stats for your own
+  dashboard)
 - **File Locker** 🔐 - Reusable or one-shot QR lockers for passing files, text,
   and links
 - **Scan Limits** - Set 1, 5, 10, 100, or unlimited scans before self-destruct
@@ -20,8 +21,8 @@ gradient art pieces with that soft brutal aesthetic.
   both URLs and files)
 - **Multi-File Shares** - Image sets preview as a slideshow; finite shares
   download as one zip so one file cannot consume the whole set
-- **6 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, and Brutalist
-  themes
+- **7 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, Classic, and
+  Brutalist themes
 - **Custom Gradient Creator** - Build your own gradient QR codes
 - **Instant Generation** - <100ms QR generation with no loading states
 - **Download & Copy** - Save PNGs or copy to clipboard with one click
@@ -56,7 +57,7 @@ and Supabase security/RPC behavior should be tested against Supabase.
 
 ### 🎯 What Works Locally
 
-- ✅ **Basic QR Codes** - All 6 gradient styles + custom gradients
+- ✅ **Basic QR Codes** - All 7 gradient styles + custom gradients
 - ✅ **Destructible QRs** - Basic URL/file flows through the local mock API
 - ✅ **Dynamic QR Codes** - Editable redirects with scan limits & expiry (works
   through the local mock API)
@@ -146,6 +147,7 @@ qrbuddy/
 - **Terminal** 💻 - Classic green on black hacker aesthetic
 - **Candy** 🍬 - Playful pink, gold, and teal
 - **Vapor** 🌫️ - Vaporwave magenta and cyan
+- **Classic** ⬜ - Near-black on off-white (the `noir` key)
 - **Brutalist** ⬛ - Bold black on yellow
 
 ## 🏃‍♂️ Development

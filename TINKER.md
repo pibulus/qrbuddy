@@ -98,7 +98,7 @@ What: Change tagline, description, meta tags
 ```
 File: utils/qr-styles.ts
 Line 1: export const QR_STYLES = {
-Current styles: sunset, pool, terminal, candy, vapor, brutalist
+Current styles: sunset, pool, terminal, candy, vapor, noir, brutalist
 
 Add new style (copy any existing and modify):
   mystyle: {
@@ -151,7 +151,7 @@ Used in: background classes, style pill colors
 File: routes/index.tsx
 Line 16: const style = useSignal<keyof typeof QR_STYLES | 'custom'>("sunset");
 Current: "sunset"
-Change to: "pool", "terminal", "candy", "vapor", or "brutalist"
+Change to: "pool", "terminal", "candy", "vapor", "noir", or "brutalist"
 (Must match a key from utils/qr-styles.ts)
 ```
 
@@ -275,7 +275,7 @@ not pass it to Deno Deploy.
 
 ## 🎨 QR STYLES CHEAT SHEET
 
-Current gradient presets (in `utils/qr-styles.ts` lines 1-174):
+Current gradient presets (in `utils/qr-styles.ts` lines 1-189):
 
 - **sunset** (line 2) - Pink/orange/purple gradient (#FFE5B4 → #FF69B4 →
   #9370DB)
@@ -283,7 +283,9 @@ Current gradient presets (in `utils/qr-styles.ts` lines 1-174):
 - **terminal** (line 81) - Matrix green on black (#00FF41 on #0A0A0A)
 - **candy** (line 96) - Rainbow candy (#FF69B4 → #FFD700 → #4ECDC4)
 - **vapor** (line 129) - Vaporwave magenta/cyan (#FF00FF ↔ #00FFFF)
-- **brutalist** (line 160) - Black on yellow (#000000 on #FFFF00)
+- **noir** (line 160) - "Classic" in the picker: near-black on off-white
+  (#1A1A1A on #FAFAFA)
+- **brutalist** (line 174) - Black on yellow (#000000 on #FFFF00)
 
 Each style has 4 properties:
 

@@ -47,7 +47,7 @@ HTML.
    across components. Key signals:
    - `url`: The URL to encode in the QR code
    - `style`: Current selected gradient style (sunset, pool, terminal, candy,
-     vapor, brutalist)
+     vapor, noir, brutalist)
    - `triggerDownload`/`triggerCopy`: Action triggers that components watch via
      useEffect
 
@@ -208,7 +208,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 - **Chunky borders**: 4px black borders with custom shadow classes
 - **Warm pastels**: Cream backgrounds with gradient accents
 - **Spring animations**: Squish, rotate-shuffle, and pop effects
-- **Gradient themes**: 6 pre-defined gradient styles emphasizing visual delight
+- **Gradient themes**: 7 pre-defined gradient styles emphasizing visual delight
 
 ## 📝 Development Notes
 
@@ -277,8 +277,10 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Dynamic QR Codes Integration
 
-- **Anti-Scale Dynamic QRs**: Privacy-first editable redirects with NO
-  tracking/analytics
+- **Anti-Scale Dynamic QRs**: Privacy-first editable redirects. Each scan logs
+  coarse stats (device type/os/browser/country) to `scan_logs` for the owner's
+  analytics dashboard — no IPs, no raw user agents, 90-day retention via
+  cleanup-expired
 - **Database Schema**: Added `dynamic_qr_codes` table with scan limits and
   expiry tracking
 - **Edge Functions**: 13 total Supabase functions:

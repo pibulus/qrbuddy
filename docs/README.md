@@ -34,9 +34,9 @@ instructions.
 
 ## Current Repo Shape
 
-- Fresh routes: 11 TSX route modules plus 1 API route.
-- Islands: 41 registered Preact islands.
+- Fresh routes: 12 TSX route modules plus 1 API route.
+- Islands: 40 registered Preact islands.
 - Supabase edge functions: 13.
-- Integration test files: 2.
+- Test files: 3 (two integration, one offline pure-logic suite).
 - Production app: https://qrbuddy.app.
 - Production Supabase project ref: `aqydpibnvlhcjcwosrti`.

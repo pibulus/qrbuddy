@@ -71,15 +71,28 @@
 ## Utils
 
 - `qr-styles.ts` - Gradient style definitions
-  (sunset/pool/terminal/candy/vapor/brutalist) (utils/qr-styles.ts)
+  (sunset/pool/terminal/candy/vapor/noir/brutalist) (utils/qr-styles.ts)
 - `api.ts` - Supabase URL + anon auth header helpers for server and browser
   contexts
 - `api-request.ts` - Shared JSON/FormData request wrappers with consistent error
   handling
-- `constants.ts` - Shared scan limits, upload progress, and UI timing constants
+- `constants.ts` - Shared scan limits and UI timing constants
 - `file-validation.ts` - Client-side upload size/type/extension checks
 - `token-vault.ts` - Local owner-token storage helpers for editable QRs and
   lockers
+- `haptics.ts` - Vibration feedback patterns for mobile interactions
+- `history.ts` - localStorage-backed "Time Machine" of recently created QRs
+- `sounds.ts` - Web Audio click/success/error effects (silently no-op when
+  unsupported)
+
+## Hooks
+
+- `useBatchGenerator` - Bulk QR → ZIP generation from a URL list
+- `useBucketCreator` - File locker + text card creation and uploads
+- `useDynamicQR` - Dynamic (editable) QR creation against the edge API
+- `useFileUpload` - Destructible file upload with progress and validation
+- `useKeypad` - Numeric keypad input handling for PIN entry
+- `useQRData` - QR payload formatting/validation for template types
 
 ## Key Functions
 
@@ -95,7 +108,7 @@
 
 - **Signal-Based State** - Preact signals for reactive updates (url, style,
   triggerDownload, triggerCopy, isDestructible, isDynamic, editUrl)
-- **Gradient QR Codes** - `qr-code-styling` library with 6 pre-defined gradient
+- **Gradient QR Codes** - `qr-code-styling` library with 7 pre-defined gradient
   themes
 - **Island Architecture** - Selective client hydration, server-rendered HTML
 - **Soft Brutal Aesthetic** - Chunky 4px borders, warm pastels, spring
@@ -111,7 +124,8 @@
 - **Dynamic QR Codes** - Privacy-first editable redirects with scan limits (1,
   5, 10, 100, ∞) and expiry dates
 - **Anti-Scale Dynamic** - Editable QR destinations with scan limits, expiry,
-  and owner tokens (NO tracking/analytics)
+  and owner tokens (coarse per-scan stats for the owner dashboard only — no IPs,
+  no raw user agents)
 - **Local Development** - Mock API server (local-api/server.ts) for testing
   basic destructible/dynamic flows without Supabase; locker parity requires
   Supabase
