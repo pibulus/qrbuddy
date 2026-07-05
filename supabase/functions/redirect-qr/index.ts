@@ -1,5 +1,7 @@
 // Edge Function: Dynamic QR Redirect
-// Privacy-first editable redirects with NO tracking/analytics
+// Privacy-conscious editable redirects. Each scan logs COARSE analytics for
+// the owner's dashboard (device type / os / browser / country / city from CF
+// headers) — no IP addresses, no raw user agents, no cross-site tracking.
 
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -238,8 +240,18 @@ serve(async (req) => {
         );
         const localHour = scannerTime.getHours();
 
-        const startHour = parseInt(config.startHour || "9");
-        const endHour = parseInt(config.endHour || "17");
+        // Fall back to business hours when config holds garbage — NaN
+        // comparisons would otherwise silently route every scan inactive.
+        const parsedStart = parseInt(config.startHour, 10);
+        const parsedEnd = parseInt(config.endHour, 10);
+        const startHour =
+          Number.isInteger(parsedStart) && parsedStart >= 0 && parsedStart <= 23
+            ? parsedStart
+            : 9;
+        const endHour =
+          Number.isInteger(parsedEnd) && parsedEnd >= 0 && parsedEnd <= 24
+            ? parsedEnd
+            : 17;
 
         if (localHour >= startHour && localHour < endHour) {
           if (config.activeUrl) destinationUrl = config.activeUrl;

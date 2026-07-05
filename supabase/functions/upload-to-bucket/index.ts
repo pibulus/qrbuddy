@@ -241,7 +241,21 @@ serve(async (req) => {
       };
     } else {
       // Handle text or link (JSON)
-      const body = await req.json();
+      let body;
+      try {
+        body = await req.json();
+      } catch {
+        return new Response(
+          JSON.stringify({ error: "Invalid JSON body" }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 400,
+          },
+        );
+      }
       const { type, content } = body;
       ownerToken = typeof body.owner_token === "string"
         ? body.owner_token

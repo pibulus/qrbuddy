@@ -178,6 +178,28 @@ serve(async (req) => {
       deletedFiles += expiredFiles.length;
     }
 
+    // 4. Deactivate expired dynamic QRs.
+    // redirect-qr only flips is_active lazily on scan, so an expired QR that
+    // never gets scanned again would look live in the DB forever.
+    const { count: deactivatedQRs, error: qrError } = await supabase
+      .from("dynamic_qr_codes")
+      .update({ is_active: false }, { count: "exact" })
+      .lt("expires_at", new Date().toISOString())
+      .eq("is_active", true);
+
+    if (qrError) console.error("Dynamic QR deactivation error:", qrError);
+
+    // 5. Scan-log retention: coarse per-scan analytics only need to power the
+    // owner dashboard, not grow forever. Keep 90 days.
+    const scanLogCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+      .toISOString();
+    const { count: prunedScanLogs, error: scanLogError } = await supabase
+      .from("scan_logs")
+      .delete({ count: "exact" })
+      .lt("scanned_at", scanLogCutoff);
+
+    if (scanLogError) console.error("Scan log pruning error:", scanLogError);
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -185,6 +207,8 @@ serve(async (req) => {
           `Cleanup complete. Emptied persistent buckets with old content. Deleted ${deletedBuckets} abandoned buckets.`,
         deleted_files: deletedFiles,
         deleted_buckets: deletedBuckets,
+        deactivated_dynamic_qrs: deactivatedQRs ?? 0,
+        pruned_scan_logs: prunedScanLogs ?? 0,
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

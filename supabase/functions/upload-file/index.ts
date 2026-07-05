@@ -21,6 +21,11 @@ serve(async (req) => {
     return createCorsResponse(req);
   }
 
+  // Hoisted so the catch block can sweep blobs that were uploaded before a
+  // later file or the DB insert failed — without this they'd sit in storage
+  // with no destructible_files row, invisible to cleanup-expired, forever.
+  const uploadedPaths: string[] = [];
+
   try {
     // Rate limiting: 10 uploads per hour per IP
     const clientIP = getClientIP(req);
@@ -264,6 +269,7 @@ serve(async (req) => {
 
       if (uploadError) throw uploadError;
 
+      uploadedPaths.push(storageFileName);
       uploadedFiles.push({
         id: fileId,
         path: storageFileName,
@@ -296,6 +302,9 @@ serve(async (req) => {
 
     if (dbError) throw dbError;
 
+    // The DB row now owns these blobs — the catch must not sweep them.
+    uploadedPaths.length = 0;
+
     // Generate retrieval URL
     const baseUrl = Deno.env.get("APP_URL") ||
       (Deno.env.get("DENO_DEPLOYMENT_ID")
@@ -326,6 +335,23 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Upload file failed:", error);
+    // Roll back any blobs uploaded before the failure so they don't orphan.
+    if (uploadedPaths.length > 0) {
+      try {
+        const recovery = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        );
+        const { error: removeError } = await recovery.storage
+          .from("qr-files")
+          .remove(uploadedPaths);
+        if (removeError) {
+          console.error("Orphan blob rollback failed:", removeError);
+        }
+      } catch (removeErr) {
+        console.error("Orphan blob rollback failed:", removeErr);
+      }
+    }
     return new Response(
       JSON.stringify({
         error: "An unexpected error occurred. Please try again.",

@@ -40,7 +40,7 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting: 20 QR creations per hour per IP
+    // Rate limiting: 10 QR creations per hour per IP
     const clientIP = getClientIP(req);
     const rateLimitResult = checkRateLimit(clientIP, {
       windowMs: 60 * 60 * 1000, // 1 hour
@@ -56,7 +56,21 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON body" }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 400,
+        },
+      );
+    }
     const {
       destination_url,
       max_scans,
@@ -66,6 +80,58 @@ serve(async (req) => {
       routing_config,
       splash_config,
     } = body;
+
+    // Validate the optional knobs so garbage can't silently disable controls:
+    // an unparseable expires_at never expires (every comparison against an
+    // Invalid Date is false) and a non-positive max_scans kills the QR on its
+    // first scan while the create response happily echoes it back.
+    if (expires_at && isNaN(new Date(expires_at).getTime())) {
+      return new Response(
+        JSON.stringify({ error: "Invalid expires_at — must be a valid date" }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 400,
+        },
+      );
+    }
+    if (
+      max_scans !== undefined && max_scans !== null &&
+      (!Number.isInteger(max_scans) || max_scans < 1)
+    ) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid max_scans — must be a positive integer",
+        }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 400,
+        },
+      );
+    }
+    if (
+      routing_mode &&
+      !["simple", "sequential", "device", "time"].includes(routing_mode)
+    ) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Invalid routing_mode — must be simple, sequential, device, or time",
+        }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 400,
+        },
+      );
+    }
 
     if (!destination_url) {
       return new Response(

@@ -90,7 +90,21 @@ serve(async (req) => {
       );
     }
 
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON body" }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 400,
+        },
+      );
+    }
     const {
       bucket_type = "file", // 'file', 'text', 'link'
       style = "sunset",

@@ -47,6 +47,11 @@ serve(async (req) => {
     return createCorsResponse(req);
   }
 
+  // Hoisted so the catch block can release the claim slot if delivery fails
+  // after claiming (otherwise a transient storage error locks a one-time or
+  // ping-pong bucket for a minute via the download_started_at guard).
+  let claimedBucketId: string | null = null;
+
   try {
     // Rate limiting: 50 downloads per hour per IP
     const clientIP = getClientIP(req);
@@ -70,7 +75,21 @@ serve(async (req) => {
 
     // Support both GET (for non-password) and POST (for password security)
     if (req.method === "POST") {
-      const body = await req.json();
+      let body: { bucket_code?: string; password?: string };
+      try {
+        body = await req.json();
+      } catch {
+        return new Response(
+          JSON.stringify({ error: "Invalid JSON body" }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 400,
+          },
+        );
+      }
       bucketCode = body.bucket_code || null;
       password = body.password || null; // Password from body (secure)
     } else {
@@ -205,6 +224,9 @@ serve(async (req) => {
       );
     }
 
+    // Claim succeeded — remember it so a later failure can release the slot.
+    claimedBucketId = bucket.id;
+
     const responseHeaders: Record<string, string> = { ...getCorsHeaders(req) };
 
     // Handle different content types
@@ -255,6 +277,8 @@ serve(async (req) => {
         (!bucket.is_reusable || bucket.delete_on_download).toString();
       responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
 
+      // Delivered: the slot is committed, the catch must not release it.
+      claimedBucketId = null;
       return new Response(fileData, { headers: responseHeaders });
     } else if (
       bucket.content_type === "text" || bucket.content_type === "link"
@@ -299,6 +323,8 @@ serve(async (req) => {
         (!bucket.is_reusable || bucket.delete_on_download).toString();
       responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
 
+      // Delivered: the slot is committed, the catch must not release it.
+      claimedBucketId = null;
       return new Response(
         JSON.stringify(payload),
         {
@@ -319,6 +345,28 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error("Download from bucket failed:", error);
+    // If we claimed a download but never delivered it (storage failure
+    // mid-flight), release the slot so a retry works immediately instead of
+    // waiting out the 1-minute download_started_at guard. Same pattern as
+    // get-file's claim release.
+    if (claimedBucketId) {
+      try {
+        const recovery = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        );
+        const { error: releaseError } = await recovery
+          .from("file_buckets")
+          .update({ download_started_at: null })
+          .eq("id", claimedBucketId)
+          .eq("is_empty", false); // never resurrect an already-emptied bucket
+        if (releaseError) {
+          console.error("Failed to release bucket claim:", releaseError);
+        }
+      } catch (releaseErr) {
+        console.error("Failed to release bucket claim:", releaseErr);
+      }
+    }
     return new Response(
       JSON.stringify({
         error: "An unexpected error occurred. Please try again.",
