@@ -152,7 +152,7 @@ if (!validation.valid) {
 Import constants from `utils/constants.ts` instead of hardcoding values:
 
 ```typescript
-import { UNLIMITED_SCANS, UPLOAD_PROGRESS_MAX } from "../utils/constants.ts";
+import { UNLIMITED_SCANS } from "../utils/constants.ts";
 
 // Good: Named constant
 if (maxDownloads === UNLIMITED_SCANS) {

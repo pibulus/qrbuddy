@@ -6,24 +6,6 @@
 // ============================================================================
 
 /**
- * Upload progress simulation interval in milliseconds
- * Used to update the progress bar during file uploads
- */
-export const UPLOAD_PROGRESS_INTERVAL_MS = 200;
-
-/**
- * Upload progress increment per interval (percentage points)
- * Progress bar increases by this amount every UPLOAD_PROGRESS_INTERVAL_MS
- */
-export const UPLOAD_PROGRESS_INCREMENT = 10;
-
-/**
- * Maximum progress percentage before upload completes
- * Prevents showing 100% before server responds
- */
-export const UPLOAD_PROGRESS_MAX = 90;
-
-/**
  * Delay before resetting upload UI state (milliseconds)
  * Allows user to see 100% completion before clearing
  */

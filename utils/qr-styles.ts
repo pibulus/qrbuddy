@@ -188,8 +188,3 @@ export const QR_STYLES = {
 };
 
 export const STYLE_NAMES = Object.keys(QR_STYLES) as (keyof typeof QR_STYLES)[];
-
-export function getRandomStyle() {
-  const randomIndex = Math.floor(Math.random() * STYLE_NAMES.length);
-  return STYLE_NAMES[randomIndex];
-}

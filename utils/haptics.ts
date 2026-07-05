@@ -68,13 +68,3 @@ class HapticManager implements HapticPattern {
 }
 
 export const haptics = new HapticManager();
-
-// Utility function to add haptic feedback to any element
-export function addHapticToElement(
-  element: HTMLElement,
-  pattern: keyof HapticPattern = "light",
-): void {
-  element.addEventListener("click", () => {
-    haptics[pattern]();
-  });
-}

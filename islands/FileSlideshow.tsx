@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import JSZip from "https://esm.sh/jszip@3.10.1";
+import JSZip from "jszip";
 import { formatFileSize } from "../utils/file-validation.ts";
 
 interface FileSlideshowProps {

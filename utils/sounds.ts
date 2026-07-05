@@ -172,13 +172,3 @@ class SoundManager implements SoundEffects {
 }
 
 export const sounds = new SoundManager();
-
-// Utility to add sound to any clickable element
-export function addSoundToElement(
-  element: HTMLElement,
-  soundType: keyof SoundEffects = "click",
-): void {
-  element.addEventListener("click", () => {
-    sounds[soundType]();
-  });
-}

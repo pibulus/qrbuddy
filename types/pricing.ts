@@ -45,39 +45,3 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     ],
   },
 };
-
-// Feature flags - what requires Pro
-export const PRO_FEATURES = {
-  BULK_EXPORT: "bulk_export",
-  SCAN_ANALYTICS: "scan_analytics",
-  SVG_EXPORT: "svg_export",
-  NO_BRANDING: "no_branding",
-  API_ACCESS: "api_access",
-} as const;
-
-export type ProFeature = (typeof PRO_FEATURES)[keyof typeof PRO_FEATURES];
-
-// Check if user has Pro (from localStorage token or API)
-export function hasProAccess(): boolean {
-  const globalScope = globalThis as typeof globalThis & {
-    localStorage?: Storage;
-  };
-
-  if (!globalScope.localStorage) return false;
-
-  const proToken = globalScope.localStorage.getItem("qrbuddy_pro_token");
-  const proExpiry = globalScope.localStorage.getItem("qrbuddy_pro_expiry");
-
-  if (!proToken || !proExpiry) return false;
-
-  const expiryDate = new Date(proExpiry);
-  const now = new Date();
-
-  return expiryDate > now;
-}
-
-// Check if user can use specific feature
-export function canUseFeature(_feature: ProFeature): boolean {
-  // All features free for now, or check Pro status
-  return hasProAccess();
-}
