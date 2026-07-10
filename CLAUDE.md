@@ -73,7 +73,7 @@ HTML.
 - Orchestrates component layout
 - Handles SEO meta tags
 
-**Islands (Interactive Components - 39 registered)**
+**Islands (Interactive Components - 40 registered)**
 
 See GLOSSARY.md for complete list organized by category. Key islands:
 
@@ -253,7 +253,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Performance Optimizations
 
-- **Islands Architecture**: Only interactive components hydrate (39 islands
+- **Islands Architecture**: Only interactive components hydrate (40 islands
   total)
 - **Signal-Based State**: Efficient reactive updates without re-renders
 - **Lazy QR Updates**: QR regenerates only on url/style change via useEffect
@@ -299,7 +299,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
   redirect logic
 - **Visual Indicators**: Purple/pink "editable" badge on dynamic QRs alongside
   destructible badge
-- **39 Interactive Islands**: Complete island architecture with modals, QR
+- **40 Interactive Islands**: Complete island architecture with modals, QR
   types, and feature discovery
 
 ### Previous Features

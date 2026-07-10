@@ -235,3 +235,53 @@ d93e914 feat: ✨ intro-page parity on the edit page
 ```
 
 (+ this docs commit.)
+
+---
+
+# 🔍 Addendum — QR Reader + market notes (2026-07-10, later)
+
+## QR Reader shipped
+
+New `QRReader` island (40 islands now): decode a QR from a dropped image, a
+pasted screenshot (⌘V), or the camera — solving "the QR is on my screen and
+my phone is in the other room." jsQR via esm.sh (pure, no worker files to
+break under Deno/esm.sh; mini-qr's dual html5-qrcode + qr-scanner stack was
+the cautionary tale). Type detection (link/WiFi/vCard/SMS/email/tel/text),
+WiFi and vCard parsed into pretty rows (mini-qr only shows raw strings —
+leapfrogged), Open restricted to http/https, and the signature move stolen
+from mini-qr's best idea: **"🌸 Remake it beautiful"** prefills the input so
+an ugly scanned QR comes back as a gradient one. Dropping an image on the
+main input that is itself a QR offers "read it instead" in the staging panel.
+Verified live: generated a QR, screenshotted it, fed it back, decoded,
+bloomed. Camera path needs a real-device check (Playwright has no webcam;
+permission errors fall back to drop/paste with clear copy).
+
+Bonus from the steal list: error correction auto-bumps Q→H when a center
+logo is set (logos hide modules; nobody should have to know that).
+
+## Market notes (for the Pro decision)
+
+2026 dynamic-QR SaaS pricing: QR Tiger $7/mo, Uniqode $9–399/mo, Flowcode
+$250+/mo; typical small-business spend $5–15/mo forever. The industry's core
+dark pattern: **cancelling the subscription deactivates printed codes** —
+customers pay in perpetuity because their signage is hostage. QRBuddy's
+counter-position is already designed (docs/ETHICAL_PAYMENT_SETUP.md: $49
+lifetime via Ko-fi/Lemon Squeezy; PricingModal parked one uncomment away).
+Free tier already includes what they paywall (dynamic QRs, templates, logos,
+analytics); the doc reserves bulk/SVG/no-branding for Pro — note SVG export
+is trivially available via qr-code-styling when wanted.
+
+## mini-qr steal list — still on the shelf (ranked, all optional)
+
+1. Frame with caption ("SCAN ME") baked into the export — dead-on brand.
+2. Randomize-style dice (random gradient + shape combo) — pure Pablo energy.
+3. Dot/corner shape pickers in GradientCreator (qr-code-styling supports it).
+4. ASCII/Unicode QR export (terminal aesthetic; needs raw-matrix lib).
+5. Save/load design as JSON.
+6. Audit WiFi/vCard forms against RFC escaping (their dataEncoding.ts is a
+   good reference; GPL — reference only, no copying).
+7. PWA/offline (static generation is already client-side).
+
+What QRBuddy does better (from the same audit): gradients (they dropped them),
+all server-backed features (dynamic/destructible/lockers/analytics), history,
+payload weight, and now scan-result parsing.

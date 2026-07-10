@@ -1,6 +1,6 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components - 39 registered)
+## Islands (Interactive Components - 40 registered)
 
 **Core QR Components:**
 
@@ -17,6 +17,8 @@
 - `RotatingTitle` - Animated header text
 - `FileSlideshow` - Multi-image slideshow viewer; finite shares download as a
   single zip
+- `QRReader` - Decode QR codes from images, screenshots (paste), or camera;
+  parsed WiFi/vCard results + "remake it beautiful" prefill loop
 
 **Modals & Overlays:**
 
@@ -114,7 +116,10 @@
 - **Soft Brutal Aesthetic** - Chunky 4px borders, warm pastels, spring
   animations
 - **Smart Input Detection** - Automatically detects URLs, files, or plain text
-  with drag/drop
+  with drag/drop; a dropped image that is itself a QR code offers "read it
+  instead"
+- **QR Reading** - jsQR-based decode (no server round-trip) from image drop,
+  clipboard paste, or camera; URL opens are protocol-restricted to http/https
 - **Destructible QRs** - One-time QR codes (URLs OR files) that self-destruct
   after 1 scan → KABOOM page
 - **Finite Multi-File Shares** - Multi-image limited shares are delivered as one
