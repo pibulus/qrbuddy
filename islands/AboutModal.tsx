@@ -12,8 +12,23 @@ export function closeAboutModal() {
   aboutModalOpen.value = false;
 }
 
+const INTRO_SEEN_KEY = "qrbuddy_intro_seen";
+
 export function AboutModal() {
   const isOpen = aboutModalOpen.value;
+
+  // First visit: open once as the intro, after the page has had its
+  // bloom-in moment. Never again after that.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(INTRO_SEEN_KEY)) return;
+      localStorage.setItem(INTRO_SEEN_KEY, "1");
+      const t = setTimeout(() => openAboutModal(), 1200);
+      return () => clearTimeout(t);
+    } catch {
+      // localStorage unavailable — skip the intro, never block the app.
+    }
+  }, []);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -78,56 +93,72 @@ export function AboutModal() {
             {/* Intro */}
             <div class="space-y-3">
               <p class="text-base leading-relaxed text-gray-800">
-                Hi, I'm Pablo 👋. Most QR generators are ugly, static, and feel
-                like enterprise software from 1999. I hated that.
+                Hi, I'm Pablo 👋. QR codes are boring. They don't have to be.
               </p>
               <p class="text-base leading-relaxed text-gray-800">
-                So I built QRBuddy. It’s a tool for humans, not data points. It
-                turns QR codes from boring squares into living, breathing
-                interactions.
+                A QR code is just a doorway — and a doorway can lead to a
+                gallery, a mixtape, a secret that burns after reading, or a
+                locker your friends drop files into. QRBuddy makes all of those,
+                and makes them gorgeous.
               </p>
             </div>
 
             {/* What it does */}
             <div class="py-4 px-4 bg-gradient-to-r from-pink-100 to-purple-100 border-3 border-black rounded-xl">
               <p class="text-base font-black text-gray-800 mb-2">
-                ✨ What it does:
+                ✨ What a QR can be:
               </p>
 
               <ul class="text-sm space-y-2 text-gray-800">
                 <li>
-                  <span class="font-bold">Dynamic Codes:</span>{" "}
-                  Want a code that shows a video on the first scan, a meme on
-                  the second? Done.
+                  <span class="font-bold">🎨 Art:</span>{" "}
+                  7 gradient styles, a custom builder, a dice that rolls fresh
+                  combos (and never rolls an unscannable one), your logo in the
+                  middle, and "SCAN ME" frames ready to print.
                 </li>
                 <li>
-                  <span class="font-bold">Ping Pong Drops:</span>{" "}
-                  Like AirDrop for the web. Scan to upload, scan to download.
-                  Back and forth.
+                  <span class="font-bold">💣 A secret:</span>{" "}
+                  Files that self-destruct after 1 download. Notes that live
+                  inside the code itself — no internet needed to read them.
                 </li>
                 <li>
-                  <span class="font-bold">Self-Destruct Mode:</span>{" "}
-                  Create password-protected "Dead Drops" or files that
-                  self-destruct.
+                  <span class="font-bold">🪣 A mailbox:</span>{" "}
+                  Lockers people scan to drop files into — PIN-protected,
+                  reusable, or ping-pong (like AirDrop, but it's a poster).
                 </li>
                 <li>
-                  <span class="font-bold">Mistake-Proof Links:</span>{" "}
-                  Change the destination anytime without reprinting.
+                  <span class="font-bold">🔗 Mistake-proof:</span>{" "}
+                  Editable codes — change where they point anytime, no
+                  reprinting. Add scan limits, expiry dates, link rotation, or
+                  an intro page.
                 </li>
                 <li>
-                  <span class="font-bold">Zero-Creep Analytics:</span>{" "}
-                  Ethical data only. I don't want your personal info.
+                  <span class="font-bold">📶 Useful:</span>{" "}
+                  WiFi passwords, contact cards, pre-filled texts and emails —
+                  plus bulk-create a whole ZIP of codes from a list.
                 </li>
                 <li>
-                  <span class="font-bold">No Boring Squares:</span>{" "}
-                  6 sunset-drenched presets. Make them match your vibe.
+                  <span class="font-bold">🔍 A reader too:</span>{" "}
+                  Drop in any QR image or screenshot (or use your camera) to see
+                  what it says — then remake the ugly ones beautiful.
                 </li>
                 <li>
-                  <span class="font-bold">Always Ready:</span>{" "}
-                  Installs as a PWA. Works offline.
+                  <span class="font-bold">🌱 Yours forever:</span>{" "}
+                  Free. No accounts. Your codes never die because you stopped
+                  paying — looking at you, subscription QR industry. Only
+                  coarse, IP-free stats, and only for your own dashboard.
                 </li>
               </ul>
             </div>
+
+            {/* CTA */}
+            <button
+              type="button"
+              onClick={closeAboutModal}
+              class="w-full min-h-[52px] bg-black text-white text-lg font-black rounded-xl border-3 border-black shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              Make something 🌸
+            </button>
 
             {/* Footer / Made by */}
             <div class="pt-6 border-t-3 border-black space-y-4">
