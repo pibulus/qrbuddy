@@ -3,8 +3,11 @@ import { signal } from "@preact/signals";
 
 // Global signal for modal state
 export const aboutModalOpen = signal(false);
+// "intro" = short first-visit poster; "about" = the full tour.
+export const aboutModalMode = signal<"intro" | "about">("about");
 
-export function openAboutModal() {
+export function openAboutModal(mode: "intro" | "about" = "about") {
+  aboutModalMode.value = mode;
   aboutModalOpen.value = true;
 }
 
@@ -16,14 +19,15 @@ const INTRO_SEEN_KEY = "qrbuddy_intro_seen";
 
 export function AboutModal() {
   const isOpen = aboutModalOpen.value;
+  const isIntro = aboutModalMode.value === "intro";
 
-  // First visit: open once as the intro, after the page has had its
+  // First visit: open once as the intro poster, after the page has had its
   // bloom-in moment. Never again after that.
   useEffect(() => {
     try {
       if (localStorage.getItem(INTRO_SEEN_KEY)) return;
       localStorage.setItem(INTRO_SEEN_KEY, "1");
-      const t = setTimeout(() => openAboutModal(), 1200);
+      const t = setTimeout(() => openAboutModal("intro"), 1200);
       return () => clearTimeout(t);
     } catch {
       // localStorage unavailable — skip the intro, never block the app.
@@ -49,6 +53,93 @@ export function AboutModal() {
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  // ─── First-visit poster: mascot, rhyme, three punches, one CTA ───
+  if (isIntro) {
+    return (
+      <div
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+        onClick={closeAboutModal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="intro-title"
+      >
+        <div
+          class="relative w-full max-w-sm bg-qr-cream border-4 border-black rounded-3xl shadow-chunky-hover p-6 sm:p-8 space-y-5 animate-slide-up text-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Mini buddy */}
+          <div class="flex justify-center">
+            <div class="w-16 h-16 rounded-2xl border-3 border-black bg-gradient-to-br from-qr-sunset1 via-pink-400 to-purple-500 shadow-chunky animate-float flex items-center justify-center text-3xl select-none">
+              🌸
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <h2
+              id="intro-title"
+              class="text-2xl sm:text-3xl font-black leading-tight text-gray-900"
+            >
+              QRBuddy makes 'em{" "}
+              <span class="bg-pink-200 px-1.5 rounded-md">bloom.</span>
+              <br />
+              Boring squares? No room.
+            </h2>
+            <p class="text-sm sm:text-base font-bold text-pink-500">
+              The prettiest QR codes on the internet — with superpowers.
+            </p>
+          </div>
+
+          <ul class="space-y-3 text-left">
+            <li class="flex items-start gap-3">
+              <span class="w-10 h-10 shrink-0 rounded-xl border-2 border-black bg-rose-100 flex items-center justify-center text-lg">
+                🎨
+              </span>
+              <span class="min-w-0 text-sm text-gray-800 leading-snug">
+                <span class="font-black block">Gorgeous by default</span>
+                7 gradients, a style dice, printable "SCAN ME" frames.
+              </span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-10 h-10 shrink-0 rounded-xl border-2 border-black bg-amber-100 flex items-center justify-center text-lg">
+                💣
+              </span>
+              <span class="min-w-0 text-sm text-gray-800 leading-snug">
+                <span class="font-black block">Codes with superpowers</span>
+                Self-destructing files, editable links, PIN'd file lockers.
+              </span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-10 h-10 shrink-0 rounded-xl border-2 border-black bg-purple-100 flex items-center justify-center text-lg">
+                🔍
+              </span>
+              <span class="min-w-0 text-sm text-gray-800 leading-snug">
+                <span class="font-black block">Reads them too</span>
+                Scan any code — then remake the ugly ones beautiful.
+              </span>
+            </li>
+          </ul>
+
+          <div class="space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={closeAboutModal}
+              class="w-full min-h-[52px] rounded-full border-3 border-black bg-gradient-to-r from-qr-sunset1 via-pink-400 to-purple-400 px-6 py-3 text-lg font-black text-black shadow-chunky hover:scale-[1.02] hover:shadow-chunky-hover active:scale-[0.97] transition-all"
+            >
+              Make something 🌸
+            </button>
+            <button
+              type="button"
+              onClick={() => (aboutModalMode.value = "about")}
+              class="text-xs font-bold text-gray-500 hover:text-pink-600 transition-colors min-h-[44px] px-2"
+            >
+              see everything it does →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
