@@ -1,0 +1,34 @@
+# Launch hints for Launch Arsenal.
+# Edit aggressively. These fields should pin the app's real audience, problem, and promise.
+name: QRBuddy
+slug: qrbuddy
+app_type: web-app
+audience: people who need QR codes that look good and stay under their control
+problem: Made with ❤️ in Melbourne. No VC funding. No corporate BS.
+promise: "QR codes that spark joy. Drop a link, watch it bloom. \U0001F308"
+cta: Reply if you want the link.
+differentiators:
+  - "QR codes that spark joy. Drop a link, watch it bloom. \U0001F308"
+  - >-
+      So I built QRBuddy. It’s a tool for humans, not data points. It turns QR
+      codes from boring squares into living, breathing interactions.
+  - QRBuddy - Drop a link. Watch it bloom.
+  - "Dynamic QR Codes \U0001F517 - Privacy-first editable redirects with scan limits (coarse scan stats for the owner dashboard only — no IPs, no user agents)"
+proof_points:
+  - "Smart Input - Paste URLs, type text, or drop files - it just works"
+  - "Destructible QRs \U0001F4A3 - One-time QR codes (URLs or files) that self-destruct after 1 scan → KABOOM!"
+  - "Dynamic QR Codes \U0001F517 - Privacy-first editable redirects with scan limits (coarse scan stats for the owner dashboard only — no IPs, no user agents)"
+  - "Scan Limits - Set 1, 5, 10, 100, or unlimited scans before self-destruct"
+objections:
+  - "Still wants a human pass on audience, proof, and the sharpest angle."
+keywords:
+  seed:
+    - QRBuddy
+    - qrbuddy
+    - web app
+  audience: people who need QR codes that look good and stay under their control
+  intent:
+    - launch faster
+    - clearer first draft
+manual_notes:
+  - Edit this aggressively. Keep only the lines that feel native to the app.

@@ -123,3 +123,115 @@ c154e2c fix: 🐛 guard history effect against non-URL input, drop stray artifac
 (+ this audit doc. Safety stash `fable-audit-safepoint WIP` left intact on the
 stash list — contains nothing beyond `.launch-hints.yaml`, which is also still
 in the working tree.)
+
+---
+
+# 🔥 Fable Audit, Session 2 — 2026-07-10
+
+Focus: Create-modal cognitive ergonomics + end-to-end verification of every QR
+mode (text cards, media share, destructible files, dynamic QRs, lockers). Five
+parallel tracing agents read every client → hook → edge-function path; the
+headline flows were then driven live in a browser against the dev server.
+Verified: `deno task check` ✓ · tests 23/23 ✓ · live smoke of the staged-upload
+panel, restructured modal, and editable-text hint.
+
+**⚠️ Redeploy needed: `get-dynamic-qr`** (now returns `splash_config`). Nothing
+else server-side changed. Fresh frontend needs its usual `deployctl` deploy.
+
+## The two big finds (both were headline features, both broken)
+
+1. **Self-destruct was unreachable.** The download-limit picker only rendered
+   mid-drag, outside the drag-listening DOM, and unmounted on drop — physically
+   unclickable. Every dropped file uploaded with the unlimited default. Fixed by
+   staging files on drop/pick: filename + size + limit picker (∞/1/3/5/10, reset
+   each time) + Create QR/Cancel. Client validation now runs before the options
+   step.
+2. **"Share a file" never presented media.** The bucket pages it creates were
+   download-only (no `<img>`/`<video>`/`<audio>` anywhere in BucketQR); the
+   inline preview component (FileSlideshow) belongs to the destructible `/f/`
+   route. Fixed both ways: every piece of copy that overpromised was corrected,
+   AND bucket pages now offer 👁️ Preview for image/video/audio on open
+   (keep-file) lockers — the only mode where a download is non-destructive.
+   PIN-locked buckets preview too: metadata is redacted pre-unlock, so the media
+   check keys off the response Content-Type, with a graceful fall-back to
+   download for non-media (e.g. PDFs). Ping-pong and one-shot lockers
+   deliberately get no preview (it would consume the content).
+
+## Create modal restructure
+
+Options tab presented five sibling rows with hidden, inconsistent mutual
+exclusion (rotation↔limits wiped each other; intro wiped nothing; "Editable"
+showed inactive whenever any add-on was on). The backend never required this —
+create/update/redirect all compose limits + rotation + splash correctly. Now:
+Static vs Editable binary, with rotation/limits/intro as independent add-ons
+under "Editable extras". All cross-wiping deleted. Tooltip question resolved: no
+hover tooltips — inline one-line descriptions (the existing ChoiceRow pattern)
+are the right mobile-first answer; deeper explanation lives inside each expanded
+panel.
+
+## Other fixes in this session
+
+- **Typing-clobber bug**: Editable mode auto-created a text bucket after a 1.2s
+  pause and overwrote further typing with the note URL (silent infinite retry on
+  failure). Auto-create is now URL-only; text cards are explicit via Create →
+  Plain text (hint added under the input).
+- **Splash edit parity**: intro pages were uneditable/invisible on /edit;
+  get-dynamic-qr now returns splash_config and EditQRForm can view/edit/clear
+  it.
+- **Dead code**: routes/r/[code].tsx + routes/go.tsx (unfinished free/pro tier
+  concept keyed on an X-QRBuddy-Tier header no function sets) deleted.
+  LogoSettings wrapper island deleted. BucketQR text-card theming referenced
+  styles that don't exist (ocean/neon/forest) — replaced with all 7 real ones.
+- **Truth pass leftovers**: index.tsx SEO meta said "6 gradients" ×4 (it's 7);
+  edit page said "No tracking, no analytics" directly under the analytics
+  dashboard; locker page said reusable lockers "refill after each download"
+  (wrong for ping-pong); "Disconnect locker" only forgets locally (renamed +
+  explained); MediaHubForm's "persistent, secure locker" is a download page, and
+  "replace anytime" would be false (uploads to full buckets are rejected).
+  `.launch-hints.yaml` analytics line fixed. Island/route counts: 39/11.
+- **Copy unification**: file shares say "downloads" end to end (DB/RPC
+  language); QR links keep "scans". WiFi type got the same copy voice as its
+  siblings. MediaHubForm got client validation + a visible error line (failures
+  were haptic-only).
+- **Listener race**: smart-media-create handler re-registered on every style
+  change (dropped-event window) — now registered once.
+- **Slideshow themes were dead**: FileSlideshow's page theming switched on
+  "b&w"/"retro"/"cyber" — style names that don't exist — so every real style
+  except sunset fell to the default dark look. Now keyed to the real 7 (terminal
+  keeps the green-glow look, noir the mono look, brutalist the cream card;
+  pool/candy/vapor get tinted backdrops).
+- **PIN flow reviewed**: server-side verified solid (salted-hash storage,
+  POST-body-only transmission, gates both upload and download, owner-token
+  bypass for the creator's own device). The MediaHubForm CORS failure was used
+  as a live test of the new error display — it renders.
+
+## Deliberately left alone
+
+- **`local-api/server.ts` mock drift** — no routing/splash support, non-atomic
+  scan counts. Anyone testing dynamic features against it will see phantom bugs.
+  Rewrite or label before next dynamic-QR work.
+- **Sequential rotation exhaustion** serves the last URL forever (no boom).
+  Reads as intentional (last-URL-as-landing-page); confirm before launch copy
+  promises otherwise.
+- **PIN keypad duplication** (LockerSettings + MediaHubForm render the same
+  12-key pad inline) — a shared `<PinPad>` would save ~80 lines; cosmetic.
+- **UNLIMITED sentinel duplicated** client (`utils/constants.ts`) and server
+  (`upload-file`) as separate 999999 literals — agree today, no shared import
+  path across the deploy boundary; left with this note.
+- **PricingModal orphan** — unchanged from session 1 (parked product intent).
+- **Bucket preview can't be E2E-tested from localhost** — deployed edge
+  functions only allow the qrbuddy.app origin (correct security posture), so the
+  👁️ Preview button needs one real-phone check after deploy: share an image with
+  a PIN, unlock, preview.
+
+## Commits (session 2)
+
+```
+4d84401 feat: 💅 CreateModal ergonomics — honest Static/Editable binary, composable extras
+aecaa70 fix: 🐛 make self-destruct reachable — stage files before upload
+9f5ce2b fix: 💅 locker + file-page truth pass — copy matches what the server does
+f4db59b chore: 🧹 delete dead free/pro tier routes, fix stale meta claims
+d93e914 feat: ✨ intro-page parity on the edit page
+```
+
+(+ this docs commit.)

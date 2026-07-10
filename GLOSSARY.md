@@ -1,6 +1,6 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components - 40 registered)
+## Islands (Interactive Components - 39 registered)
 
 **Core QR Components:**
 
@@ -48,14 +48,14 @@
 - `BatchSettings` - Batch QR generation options
 - `EditableLinkSettings` - Dynamic link configuration
 - `LockerSettings` - File locker creation settings
-- `LogoSettings` - Logo upload settings panel
 - `MultiLinkSettings` - Link rotation options
 - `SplashSettings` - Intro page configuration
 - `TimeBombSettings` - Scan and date limit options
 
 **Sub-Islands (smart-input/):**
 
-- `FileUploadOptions` - File upload UI controls
+- `FileUploadOptions` - Staged-upload panel: file summary, download limit
+  picker, confirm/cancel
 - `SmartInputToolbar` - Input mode toolbar
 
 **Sub-Islands (templates/):**
