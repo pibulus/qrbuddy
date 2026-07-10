@@ -45,11 +45,7 @@ export default function StyleSelector(
     haptics.light();
     sounds.click();
     setIsGalleryOpen(false);
-    addToast(
-      `Style applied: ${
-        STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY].name
-      } 🎨`,
-    );
+    addToast(`🎨 ${STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY].name}`);
   };
 
   const handleCustomGradient = (gradient: QRStyle) => {
@@ -229,7 +225,7 @@ export default function StyleSelector(
               <button
                 type="button"
                 onClick={handleDiceRoll}
-                class="relative group overflow-hidden rounded-2xl border-3 border-gray-200 hover:border-black hover:scale-[1.02] hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-yellow-50 via-pink-50 to-purple-50 flex flex-col items-center justify-center h-24 gap-1"
+                class="relative group overflow-hidden rounded-2xl border-3 border-gray-200 hover:border-black hover:scale-[1.02] hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-200 flex flex-col items-center justify-center h-24 gap-1"
               >
                 <span class="text-2xl group-hover:rotate-[360deg] transition-transform duration-500">
                   🎲
@@ -237,7 +233,7 @@ export default function StyleSelector(
                 <span class="font-bold text-gray-900">Surprise me</span>
               </button>
 
-              {/* Custom Style Card */}
+              {/* Custom — full-width "build your own" bar closes the grid */}
               <button
                 type="button"
                 onClick={() => {
@@ -247,9 +243,9 @@ export default function StyleSelector(
                   setIsGalleryOpen(false);
                 }}
                 class={`
-                  relative group overflow-hidden rounded-2xl border-3 border-dashed border-gray-300 
-                  hover:border-black hover:border-solid hover:scale-[1.02] hover:shadow-lg transition-all duration-200
-                  bg-gray-50 flex flex-col items-center justify-center h-24 gap-1
+                  col-span-2 relative group overflow-hidden rounded-2xl border-3 border-dashed border-gray-300
+                  hover:border-black hover:border-solid hover:scale-[1.01] hover:shadow-lg transition-all duration-200
+                  bg-gray-50 flex items-center justify-center h-16 gap-2
                   ${
                   style.value === "custom"
                     ? "border-black border-solid shadow-chunky bg-white"
@@ -258,7 +254,9 @@ export default function StyleSelector(
                 `}
               >
                 <span class="text-2xl">🎨</span>
-                <span class="font-bold text-gray-900">Custom</span>
+                <span class="font-bold text-gray-900">
+                  Build your own gradient
+                </span>
               </button>
             </div>
 

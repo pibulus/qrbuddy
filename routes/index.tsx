@@ -192,9 +192,9 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
         <EasterEggs url={url} style={style} />
 
-        {/* Style Selector - Top Right Corner */}
+        {/* Style Selector - aligned with the title line */}
         <div
-          class="absolute top-4 right-4 sm:top-6 sm:right-6 z-50 animate-fade-in"
+          class="absolute top-7 right-4 sm:top-12 sm:right-6 z-50 animate-fade-in"
           aria-label="Style selector"
         >
           <StyleSelector
@@ -215,7 +215,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
           {/* QR Code Display - FIRST */}
           <div class="flex justify-center animate-slide-up">
-            <div class="shadow-xl rounded-2xl w-full max-w-[300px] sm:max-w-md transition-all duration-300">
+            <div class="shadow-xl rounded-2xl w-full max-w-[300px] sm:max-w-[360px] transition-all duration-300">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}

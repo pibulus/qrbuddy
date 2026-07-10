@@ -49,7 +49,11 @@ export default function QRCanvas(
   // springy pop when the style changes — the card acknowledges every update.
   const [bloomTick, setBloomTick] = useState(false);
   const [stylePop, setStylePop] = useState(false);
+  // While the input is empty the QR sits ghosted — but a style change must
+  // still SHOW its colors, so hold full vibrancy for a moment, then ease back.
+  const [stylePreviewHold, setStylePreviewHold] = useState(false);
   const prevStyleRef = useRef(style.value);
+  const prevCustomRef = useRef(customStyle?.value);
 
   useEffect(() => {
     if (!url.value) return;
@@ -59,12 +63,20 @@ export default function QRCanvas(
   }, [url.value]);
 
   useEffect(() => {
-    if (prevStyleRef.current === style.value) return;
+    const styleChanged = prevStyleRef.current !== style.value;
+    const customChanged = prevCustomRef.current !== customStyle?.value;
+    if (!styleChanged && !customChanged) return;
     prevStyleRef.current = style.value;
+    prevCustomRef.current = customStyle?.value;
     setStylePop(true);
-    const t = setTimeout(() => setStylePop(false), 380);
-    return () => clearTimeout(t);
-  }, [style.value]);
+    setStylePreviewHold(true);
+    const popTimer = setTimeout(() => setStylePop(false), 380);
+    const holdTimer = setTimeout(() => setStylePreviewHold(false), 4000);
+    return () => {
+      clearTimeout(popTimer);
+      clearTimeout(holdTimer);
+    };
+  }, [style.value, customStyle?.value]);
 
   const handleDragOver = (event: DragEvent) => {
     event.preventDefault();
@@ -423,11 +435,11 @@ export default function QRCanvas(
           bg-white rounded-chunky border-4
           ${showSuccessFlash ? "border-green-500" : "border-black"}
           shadow-chunky-hover cursor-pointer
-          transition-all duration-200
+          transition-all duration-300
           w-full flex justify-center items-center
           [&>canvas]:w-full [&>canvas]:h-auto
           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pink-400
-          ${!url.value ? "opacity-40 saturate-50" : ""}
+          ${!url.value && !stylePreviewHold ? "opacity-55 saturate-[.8]" : ""}
           ${
           isClicking
             ? "scale-95"

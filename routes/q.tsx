@@ -122,7 +122,7 @@ export default function SharePage(props: PageProps) {
 
           {/* QR Code Display - FIRST */}
           <div class="flex justify-center">
-            <div class="shadow-xl rounded-2xl">
+            <div class="shadow-xl rounded-2xl w-full max-w-[300px] sm:max-w-[360px]">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}
