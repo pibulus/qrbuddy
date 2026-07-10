@@ -17,6 +17,10 @@ interface QRCanvasProps {
   isDynamic?: Signal<boolean>;
   logoUrl?: Signal<string>;
   maxDownloads?: Signal<number>;
+  /** Frame ("SCAN ME") config — previewed on the card, baked into PNGs. */
+  frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
+  /** Listen for global "qr-export" events (only the primary canvas should). */
+  listenForExportEvents?: boolean;
 }
 
 export default function QRCanvas(
@@ -29,6 +33,8 @@ export default function QRCanvas(
     isDynamic,
     logoUrl,
     maxDownloads,
+    frameConfig,
+    listenForExportEvents = false,
   }: QRCanvasProps,
 ) {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -86,6 +92,66 @@ export default function QRCanvas(
     }
   };
 
+  // Composite the QR onto a chunky-bordered card with a caption strip and
+  // download the result — the "SCAN ME" table-tent look, baked into the file.
+  const downloadFramedPng = async (caption: string) => {
+    const qr = qrCodeRef.current;
+    if (!qr) return;
+    const raw = await qr.getRawData("png");
+    if (!raw) return;
+    const img = await createImageBitmap(raw as Blob);
+
+    const pad = 64;
+    const border = 20;
+    const captionText = caption.trim().toUpperCase();
+    const capH = captionText ? 170 : 0;
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width + pad * 2;
+    canvas.height = img.height + pad * 2 + capH;
+    const ctx = canvas.getContext("2d")!;
+
+    // Cream card with a fat black border, soft-brutal style.
+    const r = 56;
+    ctx.fillStyle = "#FFFBF5";
+    ctx.beginPath();
+    ctx.roundRect(
+      border / 2,
+      border / 2,
+      canvas.width - border,
+      canvas.height - border,
+      r,
+    );
+    ctx.fill();
+    ctx.lineWidth = border;
+    ctx.strokeStyle = "#000000";
+    ctx.stroke();
+
+    ctx.drawImage(img, pad, pad);
+
+    if (captionText) {
+      ctx.fillStyle = "#000000";
+      ctx.font = "900 92px 'Inter Black', Inter, system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(
+        captionText,
+        canvas.width / 2,
+        img.height + pad + capH / 2 + 12,
+        canvas.width - pad * 2,
+      );
+    }
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/png")
+    );
+    if (!blob) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `qrbuddy-${style.value}-framed-${Date.now()}.png`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   const handleDownloadClick = async () => {
     if (!qrCodeRef.current) return;
 
@@ -93,11 +159,15 @@ export default function QRCanvas(
     setIsClicking(true);
     setTimeout(() => setIsClicking(false), 150);
 
-    // Trigger download
-    qrCodeRef.current.download({
-      name: `qrbuddy-${style.value}-${Date.now()}`,
-      extension: "png",
-    });
+    // Trigger download — framed composite when a frame is on
+    if (frameConfig?.value?.enabled) {
+      await downloadFramedPng(frameConfig.value.caption);
+    } else {
+      qrCodeRef.current.download({
+        name: `qrbuddy-${style.value}-${Date.now()}`,
+        extension: "png",
+      });
+    }
 
     // Save to history (Time Machine)
     if (url.value) {
@@ -299,6 +369,36 @@ export default function QRCanvas(
     }
   }, [triggerDownload.value]);
 
+  // Global export requests (from the Create modal's Design tab).
+  useEffect(() => {
+    if (!listenForExportEvents) return;
+    const handleExport = (event: Event) => {
+      const format = (event as CustomEvent<{ format?: string }>).detail
+        ?.format;
+      const qr = qrCodeRef.current;
+      if (!qr) return;
+      if (format === "svg") {
+        qr.download({
+          name: `qrbuddy-${style.value}-${Date.now()}`,
+          extension: "svg",
+        });
+      } else if (frameConfig?.value?.enabled) {
+        void downloadFramedPng(frameConfig.value.caption);
+      } else {
+        qr.download({
+          name: `qrbuddy-${style.value}-${Date.now()}`,
+          extension: "png",
+        });
+      }
+    };
+    globalThis.addEventListener("qr-export", handleExport as EventListener);
+    return () =>
+      globalThis.removeEventListener(
+        "qr-export",
+        handleExport as EventListener,
+      );
+  }, [listenForExportEvents]);
+
   return (
     <div
       class={`relative max-w-full w-full ${stylePop ? "animate-pop-in" : ""}`}
@@ -352,6 +452,16 @@ export default function QRCanvas(
         class="absolute -z-10 inset-0 opacity-20 blur-xl rounded-chunky"
         style={{ background: getGlowGradient() }}
       />
+
+      {/* Frame caption preview — the downloaded PNG bakes this in */}
+      {frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== "" &&
+        (
+          <div class="bg-white border-4 border-t-0 border-black rounded-b-chunky -mt-3 pt-4 pb-3 text-center animate-slide-down">
+            <span class="font-chunky font-black text-xl sm:text-2xl tracking-wide text-black uppercase">
+              {frameConfig.value.caption}
+            </span>
+          </div>
+        )}
 
       {
         /* Empty state is shown, not told: the placeholder QR sits ghosted

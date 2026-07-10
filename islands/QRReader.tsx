@@ -2,6 +2,7 @@ import { type Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
+import { decodeQRFromFile, decodeQRFromImageData } from "../utils/qr-decode.ts";
 
 interface QRReaderProps {
   isOpen: boolean;
@@ -153,29 +154,11 @@ export default function QRReader(
     };
   }, [isOpen]);
 
-  const decodeImageData = async (
-    imageData: ImageData,
-  ): Promise<string | null> => {
-    const { default: jsQR } = await import("jsqr");
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
-    return code?.data ?? null;
-  };
-
   const decodeFile = async (file: File) => {
     setIsDecoding(true);
     setDecodeError(null);
     try {
-      const bitmap = await createImageBitmap(file);
-      // Downscale huge photos; jsQR handles ~1000px fine and it keeps decode fast.
-      const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(bitmap.width * scale);
-      canvas.height = Math.round(bitmap.height * scale);
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      const data = await decodeImageData(
-        ctx.getImageData(0, 0, canvas.width, canvas.height),
-      );
+      const data = await decodeQRFromFile(file);
       if (data) {
         stopCamera();
         setResult({ data, type: detectType(data) });
@@ -217,7 +200,7 @@ export default function QRReader(
           canvas.width = Math.round(video.videoWidth * scale);
           canvas.height = Math.round(video.videoHeight * scale);
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const data = await decodeImageData(
+          const data = await decodeQRFromImageData(
             ctx.getImageData(0, 0, canvas.width, canvas.height),
           );
           if (data) {

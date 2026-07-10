@@ -16,6 +16,7 @@ import {
 } from "../hooks/useBucketCreator.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import { validateFile } from "../utils/file-validation.ts";
+import { decodeQRFromFile } from "../utils/qr-decode.ts";
 
 // Sub-components
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
@@ -33,6 +34,7 @@ interface SmartInputProps {
   bucketUrl: Signal<string>;
   logoUrl: Signal<string>;
   qrStyle: Signal<string>;
+  frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
   onModalStateChange?: (isOpen: boolean) => void;
 }
 
@@ -47,6 +49,7 @@ export default function SmartInput(
     bucketUrl,
     logoUrl,
     qrStyle,
+    frameConfig,
     onModalStateChange,
   }: SmartInputProps,
 ) {
@@ -380,31 +383,13 @@ export default function SmartInput(
     // If a single dropped image is itself a QR code, quietly decode it and
     // offer to read it instead of sharing the image file.
     if (files.length === 1 && files[0].type.startsWith("image/")) {
-      void (async () => {
-        try {
-          const { default: jsQR } = await import("jsqr");
-          const bitmap = await createImageBitmap(files[0]);
-          const scale = Math.min(
-            1,
-            1200 / Math.max(bitmap.width, bitmap.height),
-          );
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.round(bitmap.width * scale);
-          canvas.height = Math.round(bitmap.height * scale);
-          const ctx = canvas.getContext("2d")!;
-          ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height,
-          );
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
-          if (code?.data) setStagedDecoded(code.data);
-        } catch {
+      decodeQRFromFile(files[0])
+        .then((data) => {
+          if (data) setStagedDecoded(data);
+        })
+        .catch(() => {
           // Not decodable — it's just a regular image, carry on.
-        }
-      })();
+        });
     }
   };
 
@@ -636,6 +621,7 @@ export default function SmartInput(
         onTextCardConfirm={handleTextCardConfirm}
         isCreatingLocker={isCreatingBucket}
         splashConfig={splashConfig}
+        frameConfig={frameConfig}
       />
 
       <div class="relative group">

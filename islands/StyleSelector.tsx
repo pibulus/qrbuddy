@@ -59,6 +59,54 @@ export default function StyleSelector(
     }
   };
 
+  // 🎲 Roll a random vivid gradient. Hues are picked a third of the wheel
+  // apart so the combo always has contrast-with-harmony; light backgrounds
+  // keep the QR scannable.
+  const DICE_QUIPS = [
+    "Ooh, spicy 🌶️",
+    "The dice have spoken 🎲",
+    "Certified fresh combo ✨",
+    "This one's got soul 🎷",
+    "Chaos, but make it pretty 💅",
+    "Nat 20 energy 🐉",
+  ];
+
+  const handleDiceRoll = () => {
+    if (!customStyle) return;
+    const baseHue = Math.floor(Math.random() * 360);
+    const spread = 80 + Math.floor(Math.random() * 100); // 80–180° apart
+    const hues = [baseHue, (baseHue + spread) % 360];
+    // Two stops only, with luma-aware lightness: yellows/greens/cyans read
+    // far lighter than blues/purples at the same HSL lightness, and a washed
+    // finder pattern in any corner kills scannability (verified with the
+    // built-in reader — the dice must never roll an unscannable QR).
+    const lightnessFor = (h: number) =>
+      h >= 40 && h <= 200
+        ? 26 + Math.floor(Math.random() * 8)
+        : 34 + Math.floor(Math.random() * 12);
+    const stops = hues.map((h, i) => ({
+      offset: i / (hues.length - 1),
+      color: `hsl(${h}, ${65 + Math.floor(Math.random() * 20)}%, ${
+        lightnessFor(h)
+      }%)`,
+    }));
+    const gradient = {
+      type: "linear" as const,
+      rotation: Math.random() * Math.PI,
+      colorStops: stops,
+    };
+    customStyle.value = {
+      dots: { type: "gradient", gradient },
+      background: { color: `hsl(${baseHue}, 60%, 96%)` },
+      cornersSquare: { gradient },
+      cornersDot: { gradient },
+    };
+    style.value = "custom";
+    haptics.medium();
+    sounds.click();
+    addToast(DICE_QUIPS[Math.floor(Math.random() * DICE_QUIPS.length)]);
+  };
+
   const currentStyleInfo = style.value === "custom"
     ? { name: "Custom", colors: ["#9370DB", "#FF69B4"] }
     : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY];
@@ -176,6 +224,18 @@ export default function StyleSelector(
                   </div>
                 </button>
               ))}
+
+              {/* Dice — random gradient, stays open for re-rolls */}
+              <button
+                type="button"
+                onClick={handleDiceRoll}
+                class="relative group overflow-hidden rounded-2xl border-3 border-gray-200 hover:border-black hover:scale-[1.02] hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-yellow-50 via-pink-50 to-purple-50 flex flex-col items-center justify-center h-24 gap-1"
+              >
+                <span class="text-2xl group-hover:rotate-[360deg] transition-transform duration-500">
+                  🎲
+                </span>
+                <span class="font-bold text-gray-900">Surprise me</span>
+              </button>
 
               {/* Custom Style Card */}
               <button

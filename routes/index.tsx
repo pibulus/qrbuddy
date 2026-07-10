@@ -52,6 +52,9 @@ export default function Home({ data }: PageProps<HomeProps>) {
   const isBucket = useSignal(false);
   const bucketUrl = useSignal("");
   const isModalOpen = useSignal(false);
+  const frameConfig = useSignal<{ enabled: boolean; caption: string } | null>(
+    null,
+  );
 
   return (
     <>
@@ -223,6 +226,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
                   isDynamic={isDynamic}
                   logoUrl={logoUrl}
                   maxDownloads={maxDownloads}
+                  frameConfig={frameConfig}
+                  listenForExportEvents
                 />
               </ErrorBoundary>
             </div>
@@ -239,6 +244,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
             bucketUrl={bucketUrl}
             logoUrl={logoUrl}
             qrStyle={style}
+            frameConfig={frameConfig}
             onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
           />
         </main>

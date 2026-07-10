@@ -66,6 +66,7 @@ interface CreateModalProps {
       description?: string;
     } | null
   >;
+  frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
 }
 
 interface ChoiceRowProps {
@@ -193,6 +194,7 @@ export default function CreateModal({
   onTextCardConfirm,
   isCreatingLocker,
   splashConfig,
+  frameConfig,
 }: CreateModalProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>("type");
   const [typeIntent, setTypeIntent] = useState<TypeIntent>("qr");
@@ -768,8 +770,10 @@ export default function CreateModal({
     </div>
   );
 
+  const frameActive = frameConfig?.value?.enabled ?? false;
+
   const renderDesignTab = () => (
-    <div class="space-y-4">
+    <div class="space-y-6">
       <section class="space-y-3">
         <div>
           <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
@@ -782,6 +786,83 @@ export default function CreateModal({
         </div>
         <div class="bg-gradient-to-r from-[#FFF8F0] to-[#FFE5B4] border-3 border-[#FFE5B4] rounded-xl p-4 shadow-chunky">
           <LogoUploader logoUrl={logoUrl} />
+        </div>
+      </section>
+
+      {frameConfig && (
+        <section class="space-y-3">
+          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
+            Frame
+          </h3>
+          <ChoiceRow
+            icon="🖼️"
+            title="Caption frame"
+            description={`A chunky border with a label — "${
+              frameConfig.value?.caption || "SCAN ME"
+            }" baked into the download.`}
+            active={frameActive}
+            onClick={() => {
+              frameConfig.value = frameActive
+                ? null
+                : { enabled: true, caption: "SCAN ME" };
+              haptics.light();
+            }}
+          />
+          {frameActive && (
+            <input
+              type="text"
+              value={frameConfig.value?.caption ?? ""}
+              maxLength={24}
+              onInput={(e) => {
+                frameConfig.value = {
+                  enabled: true,
+                  caption: (e.target as HTMLInputElement).value,
+                };
+              }}
+              placeholder="SCAN ME"
+              class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg font-black uppercase tracking-wide focus:border-black focus:outline-none transition-colors animate-slide-down"
+            />
+          )}
+        </section>
+      )}
+
+      <section class="space-y-3">
+        <div>
+          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
+            Download
+          </h3>
+          <p class="text-sm text-gray-600">
+            PNG for sharing, SVG for print shops and designers — infinitely
+            scalable, no frame.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              globalThis.dispatchEvent(
+                new CustomEvent("qr-export", { detail: { format: "png" } }),
+              );
+              haptics.medium();
+              notify("PNG on the way! ⬇");
+            }}
+            class="min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+          >
+            ⬇ PNG
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              globalThis.dispatchEvent(
+                new CustomEvent("qr-export", { detail: { format: "svg" } }),
+              );
+              haptics.medium();
+              notify("SVG on the way! ⬇");
+            }}
+            class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+          >
+            ⬇ SVG
+          </button>
         </div>
       </section>
     </div>

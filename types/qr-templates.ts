@@ -113,19 +113,30 @@ export function formatWiFi(data: WiFiData): string {
   };${hidden};`;
 }
 
+// vCard text values must escape backslash, newline, comma, and semicolon
+// (RFC 6350 §3.4) — otherwise "Foo, Inc." or "Smith; Jr." breaks the card.
+function escapeVCardValue(str: string): string {
+  return str
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/([;,])/g, "\\$1");
+}
+
 export function formatVCard(data: VCardData): string {
+  const first = escapeVCardValue(data.firstName);
+  const last = escapeVCardValue(data.lastName);
   const lines = [
     "BEGIN:VCARD",
     "VERSION:3.0",
-    `FN:${data.firstName} ${data.lastName}`,
-    `N:${data.lastName};${data.firstName};;;`,
+    `FN:${first} ${last}`,
+    `N:${last};${first};;;`,
   ];
 
   if (data.organization) {
-    lines.push(`ORG:${data.organization}`);
+    lines.push(`ORG:${escapeVCardValue(data.organization)}`);
   }
   if (data.jobTitle) {
-    lines.push(`TITLE:${data.jobTitle}`);
+    lines.push(`TITLE:${escapeVCardValue(data.jobTitle)}`);
   }
   if (data.phone) {
     lines.push(`TEL:${data.phone}`);
@@ -137,7 +148,7 @@ export function formatVCard(data: VCardData): string {
     lines.push(`URL:${data.website}`);
   }
   if (data.address) {
-    lines.push(`ADR:;;${data.address};;;;`);
+    lines.push(`ADR:;;${escapeVCardValue(data.address)};;;;`);
   }
 
   lines.push("END:VCARD");
@@ -187,5 +198,5 @@ export function validateEmail(data: EmailData): string | null {
 
 // Helper to escape special characters in WiFi string
 function escapeSpecialChars(str: string): string {
-  return str.replace(/([\\;,:])/g, "\\$1");
+  return str.replace(/([\\;,:"])/g, "\\$1");
 }
