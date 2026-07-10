@@ -82,6 +82,8 @@
 - `file-validation.ts` - Client-side upload size/type/extension checks
 - `token-vault.ts` - Local owner-token storage helpers for editable QRs and
   lockers
+- `qr-decode.ts` - Multi-scale jsQR decoding (640/1024/400px + inversion) shared
+  by QRReader and SmartInput's dropped-image check
 - `haptics.ts` - Vibration feedback patterns for mobile interactions
 - `history.ts` - localStorage-backed "Time Machine" of recently created QRs
 - `sounds.ts` - Web Audio click/success/error effects (silently no-op when
@@ -120,6 +122,10 @@
   instead"
 - **QR Reading** - jsQR-based decode (no server round-trip) from image drop,
   clipboard paste, or camera; URL opens are protocol-restricted to http/https
+- **Caption Frames** - "SCAN ME" borders previewed on the card and baked into
+  PNG downloads (SVG downloads stay frameless)
+- **Style Dice** - random two-stop gradient with luma-aware lightness so every
+  roll stays scannable
 - **Destructible QRs** - One-time QR codes (URLs OR files) that self-destruct
   after 1 scan → KABOOM page
 - **Finite Multi-File Shares** - Multi-image limited shares are delivered as one
