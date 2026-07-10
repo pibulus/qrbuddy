@@ -2,6 +2,7 @@ import { useRef, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
 import { useKeypad } from "../../hooks/useKeypad.ts";
+import { validateFile } from "../../utils/file-validation.ts";
 
 interface Props {
   url: Signal<string>;
@@ -15,6 +16,7 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
   const [creator, setCreator] = useState("");
   const [isPasswordProtected, setIsPasswordProtected] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
@@ -27,7 +29,16 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
   const handleFileSelect = (e: Event) => {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      setFile(input.files[0]);
+      const selected = input.files[0];
+      const validation = validateFile(selected);
+      if (!validation.valid) {
+        setError(validation.error ?? "That file can't be shared.");
+        setFile(null);
+        haptics.error();
+        return;
+      }
+      setError(null);
+      setFile(selected);
       haptics.medium();
     }
   };
@@ -39,6 +50,7 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
       return;
     }
 
+    setError(null);
     setIsCreating(true);
     haptics.medium();
 
@@ -64,6 +76,9 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
             onCreated?.();
             haptics.success();
           } else {
+            setError(
+              "Couldn't create the file page. Check the file size (max 50MB) and try again.",
+            );
             haptics.error();
           }
         },
@@ -86,6 +101,7 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
         <input
           ref={fileInputRef}
           type="file"
+          accept="image/*,video/*,audio/*,application/pdf"
           onChange={handleFileSelect}
           class="hidden"
         />
@@ -96,9 +112,15 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
         <p class="text-xs text-gray-500 mt-1">
           {file
             ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
-            : "Images, video, audio, PDF"}
+            : "Images, video, audio, PDF • up to 50MB"}
         </p>
       </div>
+
+      {error && (
+        <p class="text-red-600 text-sm text-center animate-slide-down">
+          ❌ {error}
+        </p>
+      )}
 
       {/* Metadata Inputs */}
       <div class="space-y-3">
@@ -203,7 +225,8 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
       </button>
 
       <p class="text-xs text-center text-gray-400">
-        Creates a persistent, secure locker for your file.
+        Makes a download page that stays up. One file per page — create a new QR
+        to share a different file.
       </p>
     </div>
   );

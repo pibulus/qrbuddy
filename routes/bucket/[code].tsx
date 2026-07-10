@@ -158,9 +158,11 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           {/* Info */}
           <div class="text-center space-y-2">
             <p class="text-xs text-gray-500">
-              {bucket.is_reusable
-                ? "This locker refills after each download"
-                : "This locker self-destructs after download"}
+              {!bucket.is_reusable
+                ? "This locker self-destructs after one download"
+                : bucket.delete_on_download
+                ? "Each download clears the locker — it then waits for a new file"
+                : "Files stay in this locker until the owner replaces them"}
             </p>
             {bucket.last_filled_at && (
               <p class="text-xs text-gray-400">

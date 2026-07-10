@@ -566,7 +566,7 @@ export default function CreateModal({
         <ChoiceRow
           icon="📂"
           title="Share a file"
-          description="A page where people can grab your file. Stays up until you replace it."
+          description="A download page for one file, with optional PIN."
           active={typeIntent === "share-file"}
           eyebrow="File"
           onClick={handleShareFileSelect}
@@ -598,7 +598,6 @@ export default function CreateModal({
           <LockerSettings
             isActive={lockerActive}
             bucketUrl={bucketUrl.value}
-            defaultStyle={qrStyle.value || "sunset"}
             isCreating={isCreatingLocker}
             onClose={() => setShowLockerSettings(false)}
             onDisable={handleLockerDisableWrapper}

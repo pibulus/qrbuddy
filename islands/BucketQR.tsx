@@ -17,6 +17,43 @@ interface BucketContentMetadata {
   [key: string]: unknown;
 }
 
+// Text-card theming keyed to the real QR styles (see utils/qr-styles.ts).
+const TEXT_CARD_THEMES: Record<
+  string,
+  { card: string; bar: string; text?: string }
+> = {
+  sunset: {
+    card: "bg-gradient-to-br from-orange-50 to-pink-50",
+    bar: "bg-gradient-to-r from-yellow-400 to-orange-500",
+  },
+  pool: {
+    card: "bg-gradient-to-br from-blue-50 to-cyan-50",
+    bar: "bg-gradient-to-r from-blue-400 to-cyan-500",
+  },
+  terminal: {
+    card: "bg-gray-900",
+    bar: "bg-gradient-to-r from-green-400 to-emerald-500",
+    text: "text-green-400",
+  },
+  candy: {
+    card: "bg-gradient-to-br from-pink-50 to-purple-50",
+    bar: "bg-gradient-to-r from-pink-400 to-purple-500",
+  },
+  vapor: {
+    card: "bg-gradient-to-br from-purple-50 to-cyan-50",
+    bar: "bg-gradient-to-r from-purple-400 to-cyan-400",
+  },
+  noir: {
+    card: "bg-gray-900",
+    bar: "bg-gradient-to-r from-gray-400 to-white",
+    text: "text-gray-100",
+  },
+  brutalist: {
+    card: "bg-white",
+    bar: "bg-black",
+  },
+};
+
 interface BucketStatusResponse {
   success: boolean;
   bucket?: {
@@ -657,66 +694,19 @@ export default function BucketQR({
           {/* Text Preview */}
           {contentType === "text" && contentMetadata?.content && (
             <div
-              class={`
-              border-4 border-black rounded-xl p-6 shadow-chunky relative overflow-hidden
-              ${
-                style === "sunset"
-                  ? "bg-gradient-to-br from-orange-50 to-pink-50"
-                  : ""
-              }
-              ${
-                style === "ocean"
-                  ? "bg-gradient-to-br from-blue-50 to-cyan-50"
-                  : ""
-              }
-              ${style === "neon" ? "bg-gray-900 text-white" : ""}
-              ${
-                style === "forest"
-                  ? "bg-gradient-to-br from-green-50 to-emerald-50"
-                  : ""
-              }
-              ${
-                !["sunset", "ocean", "neon", "forest"].includes(style)
-                  ? "bg-white"
-                  : ""
-              }
-            `}
+              class={`border-4 border-black rounded-xl p-6 shadow-chunky relative overflow-hidden ${
+                TEXT_CARD_THEMES[style]?.card ?? "bg-white"
+              }`}
             >
               <div
-                class={`
-                absolute top-0 left-0 w-full h-2
-                ${
-                  style === "sunset"
-                    ? "bg-gradient-to-r from-yellow-400 to-orange-500"
-                    : ""
-                }
-                ${
-                  style === "ocean"
-                    ? "bg-gradient-to-r from-blue-400 to-cyan-500"
-                    : ""
-                }
-                ${
-                  style === "neon"
-                    ? "bg-gradient-to-r from-pink-500 to-purple-500"
-                    : ""
-                }
-                ${
-                  style === "forest"
-                    ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                    : ""
-                }
-                ${
-                  !["sunset", "ocean", "neon", "forest"].includes(style)
-                    ? "bg-gray-200"
-                    : ""
-                }
-              `}
+                class={`absolute top-0 left-0 w-full h-2 ${
+                  TEXT_CARD_THEMES[style]?.bar ?? "bg-gray-200"
+                }`}
               />
               <div
-                class={`
-                font-mono text-lg md:text-xl whitespace-pre-wrap break-words leading-relaxed
-                ${style === "neon" ? "text-green-400" : "text-gray-800"}
-              `}
+                class={`font-mono text-lg md:text-xl whitespace-pre-wrap break-words leading-relaxed ${
+                  TEXT_CARD_THEMES[style]?.text ?? "text-gray-800"
+                }`}
               >
                 {(!isPasswordProtected ||
                     (isPasswordProtected && hasUnlockInput))

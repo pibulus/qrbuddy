@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { useKeypad } from "../../hooks/useKeypad.ts";
 import type { CreateBucketOptions } from "../../hooks/useBucketCreator.ts";
@@ -6,7 +6,6 @@ import type { CreateBucketOptions } from "../../hooks/useBucketCreator.ts";
 interface LockerSettingsProps {
   isActive: boolean;
   bucketUrl: string;
-  defaultStyle: string;
   isCreating: boolean;
   onClose: () => void;
   onDisable: () => void;
@@ -16,7 +15,6 @@ interface LockerSettingsProps {
 export default function LockerSettings({
   isActive,
   bucketUrl,
-  defaultStyle,
   isCreating,
   onClose,
   onDisable,
@@ -26,7 +24,6 @@ export default function LockerSettings({
     "open",
   );
   const [lockerRequirePin, setLockerRequirePin] = useState(false);
-  const [lockerStyle, setLockerStyle] = useState(defaultStyle);
   const [lockerError, setLockerError] = useState<string | null>(null);
 
   const {
@@ -35,21 +32,6 @@ export default function LockerSettings({
     reset: resetLockerPin,
     value: lockerPinValue,
   } = useKeypad(4);
-
-  const lockerStyleOptions = [
-    { value: "sunset", label: "Sunset" },
-    { value: "pool", label: "Pool" },
-    { value: "terminal", label: "Terminal" },
-    { value: "candy", label: "Candy" },
-    { value: "vapor", label: "Vapor" },
-    { value: "brutalist", label: "Brutalist" },
-  ];
-
-  useEffect(() => {
-    if (!isActive) {
-      setLockerStyle(defaultStyle);
-    }
-  }, [defaultStyle, isActive]);
 
   const handleConfirm = async () => {
     if (isCreating) return;
@@ -62,11 +44,12 @@ export default function LockerSettings({
       return;
     }
 
+    // Style intentionally omitted — the locker inherits the current style
+    // from the main picker (see SmartInput.handleLockerConfirm fallback).
     const success = await onConfirm({
       bucketType: "file",
       isReusable: lockerMode === "open" || lockerMode === "pingpong",
       deleteOnDownload: lockerMode === "pingpong",
-      style: lockerStyle,
       password: lockerRequirePin ? lockerPinValue : undefined,
     });
 
@@ -112,9 +95,13 @@ export default function LockerSettings({
                 class="min-h-[44px] px-4 py-2 rounded-xl border-2 border-red-500 text-sm font-semibold text-red-600 bg-white hover:bg-red-50 transition"
                 onClick={handleDisable}
               >
-                Disconnect locker
+                Forget this locker
               </button>
             </div>
+            <p class="text-[11px] text-gray-500">
+              Forgetting only clears it from this device — the locker link keeps
+              working for anyone who has it.
+            </p>
           </div>
         )
         : (
@@ -169,7 +156,7 @@ export default function LockerSettings({
               </div>
               <p class="text-[11px] text-gray-500 italic">
                 {lockerMode === "open" &&
-                  "Files stay in the locker until you delete them."}
+                  "The file stays in the locker for anyone to download."}
                 {lockerMode === "pingpong" &&
                   "Download clears the file, then the locker accepts another upload."}
                 {lockerMode === "single" &&
@@ -254,24 +241,6 @@ export default function LockerSettings({
                   </div>
                 </div>
               )}
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-xs font-bold uppercase tracking-wide text-gray-600">
-                QR Style
-              </label>
-              <select
-                value={lockerStyle}
-                class="w-full min-h-[44px] px-4 py-2 border-2 border-gray-300 rounded-xl text-sm bg-white focus:border-black focus:outline-none"
-                onInput={(e) =>
-                  setLockerStyle((e.target as HTMLSelectElement).value)}
-              >
-                {lockerStyleOptions.map((option) => (
-                  <option value={option.value} key={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {lockerError && <p class="text-xs text-red-500">{lockerError}</p>}
