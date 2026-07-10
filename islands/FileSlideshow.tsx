@@ -94,15 +94,22 @@ export default function FileSlideshow({
     ? "📕"
     : "📦";
 
-  // Theme Styles
+  // Theme styles keyed to the real QR styles (utils/qr-styles.ts) — the
+  // uploader sends the live picker style as `theme`.
   const getThemeStyles = () => {
     switch (theme) {
-      case "b&w":
+      case "noir":
         return "bg-black text-white";
-      case "retro":
+      case "brutalist":
         return "bg-[#f4f1ea] text-[#2c2c2c]";
-      case "cyber":
+      case "terminal":
         return "bg-[#0a0a2a] text-[#00ff9d]";
+      case "pool":
+        return "bg-gradient-to-br from-[#0b2740] via-[#0e3a5c] to-black text-white";
+      case "candy":
+        return "bg-gradient-to-br from-[#2b0f24] via-[#3a1430] to-black text-white";
+      case "vapor":
+        return "bg-gradient-to-br from-[#1d1038] via-[#2a1748] to-black text-white";
       case "sunset":
       default:
         return "bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white";
@@ -111,12 +118,16 @@ export default function FileSlideshow({
 
   const getCardStyles = () => {
     switch (theme) {
-      case "b&w":
+      case "noir":
         return "bg-white/10 border-white/20";
-      case "retro":
+      case "brutalist":
         return "bg-[#e8e4da] border-[#2c2c2c] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
-      case "cyber":
+      case "terminal":
         return "bg-[#0f0f3a] border-[#00ff9d] shadow-[0_0_15px_rgba(0,255,157,0.3)]";
+      case "pool":
+      case "candy":
+      case "vapor":
+        return "bg-black/40 border-white/15 shadow-2xl backdrop-blur-md";
       case "sunset":
       default:
         return "bg-black/50 border-white/10 shadow-2xl backdrop-blur-md";
@@ -342,7 +353,7 @@ export default function FileSlideshow({
               download={primaryDownloadName}
               class={`min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl font-black text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
                 isUnlimited
-                  ? (theme === "cyber"
+                  ? (theme === "terminal"
                     ? "bg-[#00ff9d] text-black"
                     : "bg-white text-black hover:bg-gray-200")
                   : "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
@@ -362,7 +373,7 @@ export default function FileSlideshow({
                 onClick={handleDownloadAll}
                 disabled={isZipping}
                 class={`min-h-[48px] block w-full py-3 rounded-xl font-bold text-center text-base transition-all border-2 disabled:opacity-60 ${
-                  theme === "cyber"
+                  theme === "terminal"
                     ? "border-[#00ff9d] text-[#00ff9d] hover:bg-[#00ff9d]/10"
                     : "border-white/20 hover:bg-white/10"
                 }`}

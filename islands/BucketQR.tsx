@@ -104,6 +104,16 @@ export default function BucketQR({
   const [useManualPassword, setUseManualPassword] = useState(false);
   const [manualPassword, setManualPassword] = useState("");
   const [error, setError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewMime, setPreviewMime] = useState("");
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+  // Revoke the preview object URL when it's replaced or on unmount.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   // Use shared keypad hook for PIN entry
   const {
@@ -144,6 +154,18 @@ export default function BucketQR({
   const bucketFileSizeLabel = typeof contentMetadata?.size === "number"
     ? formatFileSize(contentMetadata.size)
     : null;
+  const isMediaFile = Boolean(
+    contentMetadata?.mimetype?.startsWith("image/") ||
+      contentMetadata?.mimetype?.startsWith("audio/") ||
+      contentMetadata?.mimetype?.startsWith("video/"),
+  );
+  // Preview is only offered when downloading is non-destructive: open
+  // (keep-file) lockers. Ping-pong and one-shot lockers would consume the
+  // content just to show it. PIN-locked buckets redact metadata, so the
+  // media check happens against the response Content-Type instead.
+  const canPreview = contentType === "file" && isReusable &&
+    !deleteOnDownload && !isEmpty &&
+    (isMediaFile || (isPasswordProtected && !contentMetadata));
 
   const refreshBucketStatus = async (
     options: { preserveLocalMetadata?: boolean } = {},
@@ -520,6 +542,70 @@ export default function BucketQR({
     }
   };
 
+  // Fetch the file once and show it inline. Only wired up for open
+  // (keep-file) lockers, where a download doesn't consume anything.
+  const handlePreview = async () => {
+    if (isPreviewLoading || !canPreview) return;
+
+    setError("");
+
+    if (isPasswordProtected && !hasUnlockInput) {
+      setError(
+        useManualPassword
+          ? "Enter the password to unlock this locker."
+          : "Enter the 4-digit PIN.",
+      );
+      haptics.error();
+      return;
+    }
+
+    try {
+      setIsPreviewLoading(true);
+      haptics.light();
+
+      const response = await fetch(`${apiUrl}/download-from-bucket`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({
+          bucket_code: bucketCode,
+          password: isPasswordProtected ? unlockPassword : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Preview failed");
+      }
+
+      const mime = response.headers.get("Content-Type") ?? "";
+      const blob = await response.blob();
+
+      if (/^(image|video|audio)\//.test(mime)) {
+        setPreviewMime(mime);
+        setPreviewUrl(URL.createObjectURL(blob));
+      } else {
+        // Not previewable (e.g. PDF behind a PIN) — hand it over as a
+        // download instead of failing.
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = contentMetadata?.filename || "download";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      haptics.success();
+    } catch (err) {
+      console.error("Preview error:", err);
+      setError(err instanceof Error ? err.message : String(err));
+      haptics.error();
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
   const handleCopyUrl = async () => {
     haptics.light();
     try {
@@ -727,7 +813,7 @@ export default function BucketQR({
           {contentType === "file" && (
             <div class="space-y-4">
               {/* If metadata is redacted (null), show generic locked state */}
-              {!contentMetadata && (
+              {!contentMetadata && !previewUrl && (
                 <div class="bg-gray-100 border-4 border-black rounded-xl p-8 text-center shadow-chunky">
                   <span class="text-5xl block mb-4">🔒</span>
                   <h3 class="text-xl font-bold text-gray-800 mb-2">
@@ -739,8 +825,39 @@ export default function BucketQR({
                 </div>
               )}
 
+              {/* Inline media preview (open lockers only — non-destructive) */}
+              {previewUrl && (
+                <div class="bg-white border-4 border-black rounded-xl p-3 shadow-chunky animate-scale-in">
+                  {previewMime.startsWith("image/") && (
+                    <img
+                      src={previewUrl}
+                      alt={contentMetadata?.filename ?? "Shared image"}
+                      class="w-full max-h-[70vh] object-contain rounded-lg"
+                    />
+                  )}
+                  {previewMime.startsWith("video/") && (
+                    <video
+                      controls
+                      src={previewUrl}
+                      class="w-full max-h-[70vh] rounded-lg bg-black"
+                    />
+                  )}
+                  {previewMime.startsWith("audio/") && (
+                    <div class="p-4 text-center space-y-3">
+                      <span class="text-5xl block">🎵</span>
+                      <audio controls src={previewUrl} class="w-full" />
+                    </div>
+                  )}
+                  {contentMetadata?.filename && (
+                    <p class="text-xs text-gray-500 text-center mt-2 truncate">
+                      {contentMetadata.filename}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* File Info Card - shows file details without destructive preview */}
-              {contentMetadata && (
+              {contentMetadata && !previewUrl && (
                 <div class="bg-white border-4 border-black rounded-xl p-6 shadow-chunky text-center">
                   <span class="text-5xl block mb-3">{bucketFileGlyph}</span>
                   <p class="text-xs font-black uppercase tracking-wide text-gray-400 mb-1">
@@ -855,22 +972,53 @@ export default function BucketQR({
                     ? "💥 Download & Empty"
                     : "⬇️ Download File"}
                 </button>
+
+                {canPreview && !previewUrl && (
+                  <button
+                    type="button"
+                    onClick={handlePreview}
+                    disabled={isPreviewLoading ||
+                      (useManualPassword
+                        ? !manualPassword.trim()
+                        : pinValue.length !== 4)}
+                    class="w-full min-h-[52px] py-3 bg-white text-gray-900 font-black rounded-xl border-3 border-black shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-50"
+                  >
+                    {isPreviewLoading
+                      ? "Loading preview..."
+                      : `👁️ Preview ${bucketFileKind}`}
+                  </button>
+                )}
               </div>
             )}
 
             {!isPasswordProtected && (
-              <button
-                type="button"
-                onClick={handleDownload}
-                disabled={isDownloading}
-                class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 animate-pulse-glow"
-              >
-                {isDownloading
-                  ? "Downloading..."
-                  : (!isReusable || deleteOnDownload)
-                  ? "💥 Download & Empty"
-                  : "⬇️ Download File"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 animate-pulse-glow"
+                >
+                  {isDownloading
+                    ? "Downloading..."
+                    : (!isReusable || deleteOnDownload)
+                    ? "💥 Download & Empty"
+                    : "⬇️ Download File"}
+                </button>
+
+                {canPreview && !previewUrl && (
+                  <button
+                    type="button"
+                    onClick={handlePreview}
+                    disabled={isPreviewLoading}
+                    class="w-full min-h-[52px] py-3 bg-white text-gray-900 font-black rounded-xl border-3 border-black shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-50"
+                  >
+                    {isPreviewLoading
+                      ? "Loading preview..."
+                      : `👁️ Preview ${bucketFileKind}`}
+                  </button>
+                )}
+              </>
             )}
 
             {contentMetadata && contentType === "file" && (
