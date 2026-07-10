@@ -129,7 +129,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
         <meta name="apple-mobile-web-app-title" content="File Locker" />
       </Head>
 
-      <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1">
+      <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-qr-cream via-[#FFF1DE] to-qr-sunset1">
         <div class="w-full max-w-lg space-y-6">
           {/* Header */}
           <header class="text-center space-y-2">

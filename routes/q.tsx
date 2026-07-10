@@ -86,7 +86,7 @@ export default function SharePage(props: PageProps) {
         <meta name="twitter:image" content="https://qrbuddy.app/og-image.png" />
       </Head>
 
-      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
+      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-[#FFF1DE] to-qr-sunset1 relative">
         <ToastManager />
         <EasterEggs url={url} style={style} />
 

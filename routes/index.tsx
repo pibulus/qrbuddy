@@ -180,7 +180,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         Skip to main content
       </a>
 
-      <div class="min-h-screen flex flex-col items-center justify-start sm:justify-center px-6 pb-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
+      <div class="min-h-screen flex flex-col items-center justify-start sm:justify-center px-6 pb-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-[#FFF1DE] to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
         <ToastManager />
         <Analytics
           url={url}
