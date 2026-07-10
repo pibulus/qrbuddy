@@ -394,41 +394,53 @@ export default function CreateModal({
         return <SMSForm url={url} />;
       case "email":
         return <EmailForm url={url} />;
-      case "text":
+      case "text": {
+        const textLength = url.value.length;
+        const nearCapacity = textLength > 800;
         return (
           <div class="space-y-4 animate-slide-down">
-            <div class="bg-gray-50 border-3 border-gray-200 rounded-xl p-4 shadow-chunky">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-2xl">📝</span>
-                <h3 class="font-black text-gray-900">Plain text</h3>
-              </div>
-              <p class="text-sm text-gray-600">
-                Display any text message, code, or note.
-              </p>
-            </div>
             <textarea
               value={url.value}
               onInput={(e) => {
                 url.value = (e.target as HTMLTextAreaElement).value;
                 haptics.light();
               }}
-              placeholder="Enter your text here..."
+              placeholder="Type a note, a code, a secret..."
               rows={4}
+              maxLength={2900}
+              // deno-lint-ignore jsx-boolean-value
+              autoFocus={true}
               class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none transition-colors resize-none font-medium"
             />
+            {url.value.trim() !== "" && (
+              <div class="flex items-center justify-between gap-2 animate-slide-down">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 border-2 border-green-300 px-3 py-1 text-xs font-bold text-green-800">
+                  ✓ Stored in the QR itself — works offline
+                </span>
+                {nearCapacity && (
+                  <span class="text-xs font-bold text-orange-600 whitespace-nowrap">
+                    {textLength}/2900
+                  </span>
+                )}
+              </div>
+            )}
             <button
               type="button"
               onClick={handleTextCardConfirm}
               disabled={!url.value.trim() || isCreatingLocker}
-              class="w-full min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 text-lg font-black text-white shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+              class="w-full min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
             >
-              {isCreatingLocker ? "Creating text card..." : "Create text card"}
+              {isCreatingLocker
+                ? "Creating note page..."
+                : "↗ Host as a note page instead"}
             </button>
             <p class="text-xs text-center text-gray-500">
-              Scans open a QRBuddy note page instead of a browser search.
+              A note page gives you a short link and a cleaner read for long
+              text.
             </p>
           </div>
         );
+      }
       default:
         return null;
     }
