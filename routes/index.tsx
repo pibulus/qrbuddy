@@ -177,7 +177,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         Skip to main content
       </a>
 
-      <div class="min-h-screen flex flex-col items-center justify-start sm:justify-center pt-12 sm:pt-6 p-6 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative">
+      <div class="min-h-screen flex flex-col items-center justify-start sm:justify-center px-6 pb-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-white to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
         <ToastManager />
         <Analytics
           url={url}
@@ -201,9 +201,9 @@ export default function Home({ data }: PageProps<HomeProps>) {
           />
         </div>
 
-        <main id="main-content" class="w-full max-w-md space-y-8 sm:space-y-10">
+        <main id="main-content" class="w-full max-w-md space-y-6 sm:space-y-8">
           {/* Hero Text */}
-          <header class="text-center space-y-2 px-4">
+          <header class="text-center space-y-2 px-4 mb-2 animate-fade-in">
             <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
               QRBuddy
             </h1>
@@ -211,8 +211,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
           </header>
 
           {/* QR Code Display - FIRST */}
-          <div class="flex justify-center">
-            <div class="shadow-xl rounded-2xl w-full max-w-[320px] sm:max-w-md transition-all duration-300">
+          <div class="flex justify-center animate-slide-up">
+            <div class="shadow-xl rounded-2xl w-full max-w-[300px] sm:max-w-md transition-all duration-300">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}
@@ -244,7 +244,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         </main>
 
         {/* Footer */}
-        <footer class="mt-14 py-8 border-t-4 border-black">
+        <footer class="mt-16 py-8 border-t-4 border-black">
           <div class="max-w-md mx-auto px-4">
             <div class="flex items-center justify-center gap-4 flex-wrap">
               {/* <PricingLink label="Pro ✨" /> */}

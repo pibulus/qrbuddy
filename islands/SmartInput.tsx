@@ -421,7 +421,7 @@ export default function SmartInput(
     const baseClass = `
       w-full px-5 py-4 text-lg
       bg-white border-3 border-black
-      rounded-xl
+      rounded-xl shadow-chunky
       focus:outline-none focus:border-pink-500
       focus:scale-[1.03] focus:shadow-2xl
       focus:animate-glow-pulse
