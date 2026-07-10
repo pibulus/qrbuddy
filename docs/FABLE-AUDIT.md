@@ -291,3 +291,57 @@ Still on the shelf (ranked, all optional):
 What QRBuddy does better (from the same audit): gradients (they dropped them),
 all server-backed features (dynamic/destructible/lockers/analytics), history,
 payload weight, and now scan-result parsing.
+
+---
+
+# 🏁 Session wrap — 2026-07-10 (handoff)
+
+**Branch `fable-audit-2026-07-06`, 24 commits ahead of `main`, pushed to
+origin.** Every commit gated: `deno task check` ✓ · tests 23/23 ✓ ·
+`deno task build` ✓ · headline flows Playwright-verified against the dev server.
+This document (top to bottom) is the full session history; this section is
+what's LEFT.
+
+## To ship it (in order)
+
+1. **Deploy the edge function** (only one changed since the last redeploy note):
+   `supabase functions deploy get-dynamic-qr --project-ref
+   aqydpibnvlhcjcwosrti`
+   (now returns `splash_config`). If the session-1 hardening (8 functions) was
+   never deployed either, deploy all of them — see the ⚠️ at the top of this
+   doc.
+2. **Merge/deploy the frontend**: merge this branch to `main` (or deploy the
+   branch) via `deployctl` per CLAUDE.md's Deployment Commands.
+3. **Real-phone smoke pass** (the last mile, ~15 min):
+   - First visit: intro poster fires once, never again
+   - Type a link → bloom; pick styles + roll the dice; download a framed "SCAN
+     ME" PNG and scan the print with a real phone camera
+   - Drop a file → set limit 1 → download twice → KABOOM
+   - Share a file with a PIN → unlock on another device → 👁️ Preview
+   - 🔍 Reader: camera scan a poster + paste a screenshot (camera path is the
+     one thing Playwright could not verify)
+   - Bottom sheets clear the home indicator; toasts appear above modals
+4. **Pro decision (optional, parked)**: $49-lifetime via Ko-fi/Lemon Squeezy per
+   docs/ETHICAL_PAYMENT_SETUP.md; PricingModal is one uncomment in
+   routes/index.tsx + a payment URL away. The market notes (subscription-ransom
+   industry) are in the addendum above.
+
+## Loose ends (all optional, none blocking)
+
+- mini-qr steal list remainder: shape pickers, ASCII export, design JSON, PWA
+  service worker (the About modal no longer claims offline).
+- Stacey's share-funnel idea: mount ActionButtons/ShareActions on the homepage
+  below the QR (built, currently /q-only).
+- `local-api/server.ts` mock has drifted (no routing/splash) — rewrite or label
+  before local dynamic-QR testing.
+- Inline preview on lockers is shipped; PIN keypad markup is still duplicated in
+  LockerSettings + MediaHubForm (~80-line dedupe).
+
+## Environment notes for the next instance
+
+- Dev server: `deno task dev` → localhost:8004 (background-task servers get
+  killed by dev-clean/harness — run it in a user terminal).
+- Localhost CANNOT hit prod edge functions (CORS locked to qrbuddy.app) —
+  client-only flows test fine locally; server-backed flows need the deployed
+  site. See memory note "qrbuddy-verification-paths".
+- Design conventions live in CLAUDE.md → "Layout & Surface Rules".
