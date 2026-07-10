@@ -169,7 +169,8 @@ export default function QRCanvas(
       qrOptions: {
         typeNumber: 0,
         mode: "Byte",
-        errorCorrectionLevel: "Q",
+        // A center logo hides modules — bump error correction to compensate.
+        errorCorrectionLevel: logoUrl?.value ? "H" : "Q",
       },
       imageOptions: {
         hideBackgroundDots: true,
@@ -238,6 +239,12 @@ export default function QRCanvas(
     qrCodeRef.current.update({
       data: url.value || "https://qrbuddy.app",
       image: logoUrl?.value || undefined,
+      qrOptions: {
+        typeNumber: 0,
+        mode: "Byte",
+        // A center logo hides modules — bump error correction to compensate.
+        errorCorrectionLevel: logoUrl?.value ? "H" : "Q",
+      },
       dotsOptions: {
         type:
           ("type" in currentStyle.dots && currentStyle.dots.type === "gradient")

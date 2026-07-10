@@ -21,6 +21,7 @@ import { validateFile } from "../utils/file-validation.ts";
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
 
 import FileUploadOptions from "./smart-input/FileUploadOptions.tsx";
+import QRReader from "./QRReader.tsx";
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -56,6 +57,8 @@ export default function SmartInput(
   const [showHistory, setShowHistory] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [stagedFiles, setStagedFiles] = useState<File[] | null>(null);
+  const [showReader, setShowReader] = useState(false);
+  const [stagedDecoded, setStagedDecoded] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Create sheet state
@@ -371,18 +374,51 @@ export default function SmartInput(
     }
     maxDownloads.value = UNLIMITED_SCANS;
     setStagedFiles(files);
+    setStagedDecoded(null);
     haptics.medium();
+
+    // If a single dropped image is itself a QR code, quietly decode it and
+    // offer to read it instead of sharing the image file.
+    if (files.length === 1 && files[0].type.startsWith("image/")) {
+      void (async () => {
+        try {
+          const { default: jsQR } = await import("jsqr");
+          const bitmap = await createImageBitmap(files[0]);
+          const scale = Math.min(
+            1,
+            1200 / Math.max(bitmap.width, bitmap.height),
+          );
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(bitmap.width * scale);
+          canvas.height = Math.round(bitmap.height * scale);
+          const ctx = canvas.getContext("2d")!;
+          ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+          );
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          if (code?.data) setStagedDecoded(code.data);
+        } catch {
+          // Not decodable — it's just a regular image, carry on.
+        }
+      })();
+    }
   };
 
   const handleStagedConfirm = () => {
     if (!stagedFiles) return;
     uploadFile(stagedFiles).finally(() => {
       setStagedFiles(null);
+      setStagedDecoded(null);
     });
   };
 
   const handleStagedCancel = () => {
     setStagedFiles(null);
+    setStagedDecoded(null);
     maxDownloads.value = UNLIMITED_SCANS;
     if (fileInputRef.current) fileInputRef.current.value = "";
     haptics.light();
@@ -547,6 +583,18 @@ export default function SmartInput(
         setCreateHasUpdates={setCreateHasUpdates}
         createHasUpdates={createHasUpdates}
         onShowHistory={() => setShowHistory(true)} // Pass handler to toolbar
+        onShowReader={() => setShowReader(true)}
+      />
+
+      {/* QR Reader - decode images, screenshots, or camera */}
+      <QRReader
+        isOpen={showReader}
+        onClose={() => {
+          setShowReader(false);
+          setStagedDecoded(null);
+        }}
+        url={url}
+        initialResult={stagedDecoded}
       />
 
       {/* Create Modal - Rendered here for mobile layout flow */}
@@ -685,13 +733,31 @@ export default function SmartInput(
 
         {/* Staged file panel — pick a download limit, then upload */}
         {stagedFiles && (
-          <FileUploadOptions
-            files={stagedFiles}
-            maxDownloads={maxDownloads}
-            isUploading={isUploading}
-            onConfirm={handleStagedConfirm}
-            onCancel={handleStagedCancel}
-          />
+          <>
+            {stagedDecoded && (
+              <button
+                type="button"
+                onClick={() => {
+                  // They chose reading over sharing — drop the staged upload.
+                  setStagedFiles(null);
+                  maxDownloads.value = UNLIMITED_SCANS;
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                  setShowReader(true);
+                  haptics.medium();
+                }}
+                class="w-full mt-4 min-h-[48px] rounded-xl border-3 border-purple-400 bg-purple-50 px-4 py-3 text-sm font-black text-purple-800 shadow-chunky hover:-translate-y-0.5 transition animate-slide-down"
+              >
+                🔍 This image is a QR code — read it instead
+              </button>
+            )}
+            <FileUploadOptions
+              files={stagedFiles}
+              maxDownloads={maxDownloads}
+              isUploading={isUploading}
+              onConfirm={handleStagedConfirm}
+              onCancel={handleStagedCancel}
+            />
+          </>
         )}
 
         {/* Editable mode needs a URL — plain text stays a static QR */}

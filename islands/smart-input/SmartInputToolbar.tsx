@@ -9,6 +9,7 @@ interface SmartInputToolbarProps {
   setCreateHasUpdates: (hasUpdates: boolean) => void;
   createHasUpdates: boolean;
   onShowHistory: () => void;
+  onShowReader: () => void;
 }
 export default function SmartInputToolbar({
   selectedTemplate,
@@ -16,6 +17,7 @@ export default function SmartInputToolbar({
   setCreateHasUpdates,
   createHasUpdates,
   onShowHistory,
+  onShowReader,
 }: SmartInputToolbarProps) {
   const templateMeta = QR_TEMPLATES[selectedTemplate];
   const [hasHistory, setHasHistory] = useState(false);
@@ -37,7 +39,7 @@ export default function SmartInputToolbar({
   return (
     <div
       class={`grid ${
-        hasHistory ? "grid-cols-[1fr_auto]" : "grid-cols-1"
+        hasHistory ? "grid-cols-[1fr_auto_auto]" : "grid-cols-[1fr_auto]"
       } gap-3 text-sm w-full`}
     >
       <button
@@ -63,6 +65,21 @@ export default function SmartInputToolbar({
         {createHasUpdates && (
           <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
         )}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          onShowReader();
+          haptics.light();
+        }}
+        class="group w-14 flex items-center justify-center rounded-xl border-3 border-black bg-gradient-to-br from-purple-50 to-pink-50 shadow-chunky hover:shadow-chunky-hover hover:translate-x-[-2px] hover:translate-y-[-2px] hover:from-purple-100 hover:to-pink-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-chunky transition-all duration-150"
+        title="Read a QR code (image, screenshot, or camera)"
+        aria-label="Read a QR code"
+      >
+        <span class="text-xl group-hover:scale-110 transition-transform">
+          🔍
+        </span>
       </button>
 
       {hasHistory && (
