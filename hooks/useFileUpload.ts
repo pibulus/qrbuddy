@@ -130,8 +130,8 @@ export function useFileUpload(
       const scanText = maxDownloads.value === UNLIMITED_SCANS
         ? UNLIMITED_SCANS_TEXT
         : maxDownloads.value === 1
-        ? "1 scan"
-        : `${maxDownloads.value} scans`;
+        ? "1 download"
+        : `${maxDownloads.value} downloads`;
       const limitedDownloads = maxDownloads.value !== UNLIMITED_SCANS;
 
       let successMessage = "";

@@ -15,6 +15,7 @@ import {
   useBucketCreator,
 } from "../hooks/useBucketCreator.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
+import { validateFile } from "../utils/file-validation.ts";
 
 // Sub-components
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
@@ -54,6 +55,7 @@ export default function SmartInput(
   const [touched, setTouched] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [stagedFiles, setStagedFiles] = useState<File[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Create sheet state
@@ -247,7 +249,10 @@ export default function SmartInput(
         handleSmartMediaCreate as EventListener,
       );
     };
-  }, [qrStyle.value]);
+    // Signals are read live inside the handler, so no deps needed — a
+    // [qrStyle.value] dep re-registered the listener on every style change,
+    // leaving a window where a dispatched event had no listener.
+  }, []);
 
   // URL validation function
   const validateURL = (urlString: string): boolean => {
@@ -286,26 +291,18 @@ export default function SmartInput(
     }
   };
 
-  // Create dynamic QR (Redirect) or Text Bucket (Smart Text)
+  // Create dynamic QR (Redirect) once the input settles on a URL.
+  // Plain text deliberately does NOT auto-create anything server-side — it
+  // used to spawn a text bucket mid-typing and overwrite the input with the
+  // note URL. Text cards are created explicitly via Create → Plain text.
   useEffect(() => {
     if (
       isDynamic.value && url.value && !isCreatingDynamic && !editUrl.value &&
-      !isBucket.value && !isCreatingBucket
+      !isBucket.value && !isCreatingBucket && isValidUrl(url.value)
     ) {
       const timer = setTimeout(() => {
-        if (isValidUrl(url.value)) {
-          // It's a URL -> Create Redirect
-          createDynamicQR(url.value);
-        } else {
-          // It's Text -> Create Text Bucket
-          createTextBucket(url.value).then((result) => {
-            if (result) {
-              isBucket.value = true;
-              setCreateHasUpdates(true);
-            }
-          });
-        }
-      }, 1200); // Debounce for text typing — long enough to finish a URL before auto-creating
+        createDynamicQR(url.value);
+      }, 1200); // Debounce — long enough to finish typing a URL before auto-creating
 
       return () => clearTimeout(timer);
     }
@@ -360,6 +357,37 @@ export default function SmartInput(
     e.stopPropagation();
   };
 
+  // Stage files first so the user can pick a download limit before upload.
+  // (The old flow uploaded on drop, which made the limit picker unreachable.)
+  const stageFiles = (fileList: FileList) => {
+    const files = Array.from(fileList);
+    for (const file of files) {
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        addToast(`❌ ${validation.error}`, 4000);
+        haptics.error();
+        return;
+      }
+    }
+    maxDownloads.value = UNLIMITED_SCANS;
+    setStagedFiles(files);
+    haptics.medium();
+  };
+
+  const handleStagedConfirm = () => {
+    if (!stagedFiles) return;
+    uploadFile(stagedFiles).finally(() => {
+      setStagedFiles(null);
+    });
+  };
+
+  const handleStagedCancel = () => {
+    setStagedFiles(null);
+    maxDownloads.value = UNLIMITED_SCANS;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    haptics.light();
+  };
+
   const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -367,7 +395,7 @@ export default function SmartInput(
 
     const files = e.dataTransfer?.files;
     if (files && files.length > 0) {
-      uploadFile(files);
+      stageFiles(files);
     }
   };
 
@@ -380,9 +408,8 @@ export default function SmartInput(
     const input = e.target as HTMLInputElement;
     const files = input.files;
     if (files && files.length > 0) {
-      uploadFile(files).finally(() => {
-        input.value = "";
-      });
+      stageFiles(files);
+      input.value = "";
     }
   };
 
@@ -656,18 +683,32 @@ export default function SmartInput(
           </p>
         )}
 
-        {/* File Upload Options - shown when dragging file */}
-        {selectedTemplate === "url" && !isDynamic.value &&
-          !isDestructible.value && !isUploading && isDragging && (
-          <FileUploadOptions maxDownloads={maxDownloads} />
+        {/* Staged file panel — pick a download limit, then upload */}
+        {stagedFiles && (
+          <FileUploadOptions
+            files={stagedFiles}
+            maxDownloads={maxDownloads}
+            isUploading={isUploading}
+            onConfirm={handleStagedConfirm}
+            onCancel={handleStagedCancel}
+          />
+        )}
+
+        {/* Editable mode needs a URL — plain text stays a static QR */}
+        {isDynamic.value && !editUrl.value && !isBucket.value &&
+          url.value.trim() !== "" && !isValidUrl(url.value) && (
+          <p class="text-purple-700 text-xs mt-2 text-center animate-slide-down">
+            Editable QRs need a link. This text makes a static QR — for a hosted
+            note, use Create → Plain text.
+          </p>
         )}
 
         {/* Destructible indicator */}
-        {isDestructible.value && !isUploading &&
+        {isDestructible.value && !isUploading && !stagedFiles &&
           maxDownloads.value !== UNLIMITED_SCANS && (
           <p class="text-orange-700 text-sm mt-2 text-center font-semibold animate-slide-down">
-            ⚠️ This file will self-destruct after {maxDownloads.value}{" "}
-            {maxDownloads.value === 1 ? "scan" : "scans"}
+            💣 This file will self-destruct after {maxDownloads.value}{" "}
+            {maxDownloads.value === 1 ? "download" : "downloads"}
           </p>
         )}
 
