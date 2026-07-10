@@ -3,28 +3,23 @@ import { haptics } from "../../utils/haptics.ts";
 
 interface EditableLinkSettingsProps {
   editUrl: Signal<string>;
-  isSequential: boolean;
-  isTimeBombActive: boolean;
 }
 
 export default function EditableLinkSettings({
   editUrl,
-  isSequential,
-  isTimeBombActive,
 }: EditableLinkSettingsProps) {
   return (
     <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
-      {/* Default Guidance for Editable Link */}
-      {!isSequential && !isTimeBombActive && !editUrl.value && (
+      {!editUrl.value && (
         <div class="flex items-start gap-3">
           <span class="text-2xl">✨</span>
           <div>
             <h4 class="font-bold text-sm text-[#9370DB]">
-              Editable Mode Ready
+              Editable mode is on
             </h4>
             <p class="text-xs text-gray-700 leading-relaxed">
-              Close this menu and enter your destination URL. We'll create a
-              magic link you can update anytime.
+              Close this sheet and paste your link in the input — the editable
+              QR creates itself, along with a private edit link.
             </p>
           </div>
         </div>

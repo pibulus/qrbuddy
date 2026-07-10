@@ -14,7 +14,7 @@ import SocialHubForm from "./templates/SocialHubForm.tsx";
 import MediaHubForm from "./templates/MediaHubForm.tsx";
 import LockerSettings from "./extras/LockerSettings.tsx";
 import BatchSettings from "./extras/BatchSettings.tsx";
-import LogoSettings from "./extras/LogoSettings.tsx";
+import LogoUploader from "./LogoUploader.tsx";
 import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
 import MultiLinkSettings from "./extras/MultiLinkSettings.tsx";
 import TimeBombSettings from "./extras/TimeBombSettings.tsx";
@@ -97,6 +97,10 @@ const QR_TYPE_COPY: Partial<
   text: {
     label: "Plain text",
     description: "Show a note, code, or message.",
+  },
+  wifi: {
+    label: "WiFi",
+    description: "Join a network without typing the password.",
   },
   vcard: {
     label: "Contact card",
@@ -198,11 +202,9 @@ export default function CreateModal({
   const completionDownload = useSignal(false);
   const [showLockerSettings, setShowLockerSettings] = useState(false);
   const [isLimitSettingsOpen, setIsLimitSettingsOpen] = useState(false);
-  const [showBatchSettings, setShowBatchSettings] = useState(false);
 
   const lockerActive = isBucket.value && bucketUrl.value !== "";
   const splashActive = splashConfig.value?.enabled ?? false;
-  const logoActive = logoUrl.value.trim() !== "";
 
   useEffect(() => {
     if (scanLimit !== null || expiryDate !== "") {
@@ -215,7 +217,6 @@ export default function CreateModal({
       setTypeIntent("qr");
       setCompletionKind(null);
       setShowLockerSettings(false);
-      setShowBatchSettings(false);
     }
   }, [isOpen]);
 
@@ -252,7 +253,6 @@ export default function CreateModal({
     bucketUrl.value = "";
     setIsBatchMode(false);
     setShowLockerSettings(false);
-    setShowBatchSettings(false);
   };
 
   const disableDynamicBase = () => {
@@ -541,15 +541,6 @@ export default function CreateModal({
   const renderTypeTab = () => (
     <div class="space-y-5">
       <section class="space-y-3">
-        <div>
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            What should this QR contain?
-          </h3>
-          <p class="text-sm text-gray-600">
-            Pick a type, then fill in only the fields that matter.
-          </p>
-        </div>
-
         <div class="space-y-2">
           {QR_TYPE_ORDER.map((key) => {
             const template = QR_TEMPLATES[key];
@@ -575,7 +566,7 @@ export default function CreateModal({
         <ChoiceRow
           icon="📂"
           title="Share a file"
-          description="Create a download page for one file."
+          description="A page where people can grab your file. Stays up until you replace it."
           active={typeIntent === "share-file"}
           eyebrow="File"
           onClick={handleShareFileSelect}
@@ -583,7 +574,7 @@ export default function CreateModal({
         <ChoiceRow
           icon="🪣"
           title="Collect files"
-          description="Create a QR locker people can upload to."
+          description="A locker QR people can drop files into."
           active={typeIntent === "collect-files" || lockerActive}
           eyebrow="Locker"
           onClick={handleCollectFilesSelect}
@@ -628,15 +619,12 @@ export default function CreateModal({
           <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
             Link behavior
           </h3>
-          <p class="text-sm text-gray-600">
-            Start simple. Add editable or expiring behavior only when needed.
-          </p>
         </div>
 
         <ChoiceRow
           icon="⚡"
-          title="Static QR"
-          description="The QR points directly at the current input."
+          title="Static"
+          description="The QR is the content itself. Works forever, even offline."
           active={!isDynamic.value && !isBatchMode && !lockerActive}
           onClick={() => {
             disableDynamicBase();
@@ -649,111 +637,92 @@ export default function CreateModal({
 
         <ChoiceRow
           icon="🔗"
-          title="Editable QR"
-          description="Change the destination later without reprinting."
-          active={isDynamic.value && !isSequential && !isLimitSettingsOpen &&
-            !splashActive}
+          title="Editable"
+          description="A short link you can repoint anytime — no reprinting."
+          active={isDynamic.value}
           onClick={() => {
-            if (
-              isDynamic.value && !isSequential && !isLimitSettingsOpen &&
-              !splashActive
-            ) {
+            if (isDynamic.value) {
               disableDynamicBase();
             } else {
               activateDynamicBase();
-              setIsSequential(false);
-              setIsLimitSettingsOpen(false);
-              setScanLimit(null);
-              setExpiryDate("");
-              splashConfig.value = null;
             }
             haptics.light();
           }}
         />
-        {isDynamic.value && !isSequential && !isLimitSettingsOpen &&
-          !splashActive && (
-          <EditableLinkSettings
-            editUrl={editUrl}
-            isSequential={isSequential}
-            isTimeBombActive={isLimitSettingsOpen}
-          />
-        )}
+        {isDynamic.value && <EditableLinkSettings editUrl={editUrl} />}
+      </section>
 
-        <ChoiceRow
-          icon="🔁"
-          title="Link rotation"
-          description="Rotate through different URLs with each scan."
-          active={isSequential}
-          onClick={() => {
-            const next = !isSequential;
-            if (next) {
-              activateDynamicBase();
-              setIsLimitSettingsOpen(false);
-              setScanLimit(null);
-              setExpiryDate("");
-            }
-            setIsSequential(next);
-            haptics.light();
-          }}
-        />
-        {isSequential && (
-          <MultiLinkSettings
-            sequentialUrls={sequentialUrls}
-            setSequentialUrls={setSequentialUrls}
-            loopSequence={loopSequence}
-            setLoopSequence={setLoopSequence}
-          />
-        )}
+      {isDynamic.value && (
+        <section class="space-y-3 animate-slide-down">
+          <div>
+            <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
+              Editable extras
+            </h3>
+            <p class="text-sm text-gray-600">
+              Mix and match — they work together.
+            </p>
+          </div>
 
-        <ChoiceRow
-          icon="⏳"
-          title="Scan & date limits"
-          description="Stop the QR after a scan count or expiry date."
-          active={isLimitSettingsOpen}
-          onClick={() => {
-            const next = !isLimitSettingsOpen;
-            if (next) {
-              activateDynamicBase();
-              setIsSequential(false);
-            } else {
-              setScanLimit(null);
-              setExpiryDate("");
-            }
-            setIsLimitSettingsOpen(next);
-            haptics.light();
-          }}
-        />
-        {isLimitSettingsOpen && (
-          <TimeBombSettings
-            scanLimit={scanLimit}
-            setScanLimit={setScanLimit}
-            expiryDate={expiryDate}
-            setExpiryDate={setExpiryDate}
+          <ChoiceRow
+            icon="🔁"
+            title="Link rotation"
+            description="Each scan moves to the next URL in your list."
+            active={isSequential}
+            onClick={() => {
+              setIsSequential(!isSequential);
+              haptics.light();
+            }}
           />
-        )}
+          {isSequential && (
+            <MultiLinkSettings
+              sequentialUrls={sequentialUrls}
+              setSequentialUrls={setSequentialUrls}
+              loopSequence={loopSequence}
+              setLoopSequence={setLoopSequence}
+            />
+          )}
 
-        <ChoiceRow
-          icon="✨"
-          title="Intro page"
-          description="Show a short landing page before redirecting."
-          active={splashActive}
-          onClick={() => {
-            const next = !splashActive;
-            if (next) {
-              activateDynamicBase();
-              splashConfig.value = {
+          <ChoiceRow
+            icon="⏳"
+            title="Scan & date limits"
+            description="Stop the QR after a scan count or expiry date."
+            active={isLimitSettingsOpen}
+            onClick={() => {
+              const next = !isLimitSettingsOpen;
+              if (!next) {
+                setScanLimit(null);
+                setExpiryDate("");
+              }
+              setIsLimitSettingsOpen(next);
+              haptics.light();
+            }}
+          />
+          {isLimitSettingsOpen && (
+            <TimeBombSettings
+              scanLimit={scanLimit}
+              setScanLimit={setScanLimit}
+              expiryDate={expiryDate}
+              setExpiryDate={setExpiryDate}
+            />
+          )}
+
+          <ChoiceRow
+            icon="✨"
+            title="Intro page"
+            description="Show a short landing page before redirecting."
+            active={splashActive}
+            onClick={() => {
+              splashConfig.value = splashActive ? null : {
                 enabled: true,
                 title: "Welcome!",
                 buttonText: "Continue",
               };
-            } else {
-              splashConfig.value = null;
-            }
-            haptics.light();
-          }}
-        />
-        {splashActive && <SplashSettings splashConfig={splashConfig} />}
-      </section>
+              haptics.light();
+            }}
+          />
+          {splashActive && <SplashSettings splashConfig={splashConfig} />}
+        </section>
+      )}
 
       <section class="space-y-3">
         <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
@@ -762,12 +731,11 @@ export default function CreateModal({
         <ChoiceRow
           icon="📦"
           title="Bulk create"
-          description="Generate a ZIP of QR codes from a list."
+          description="Paste a list of links, download a ZIP of static QRs."
           active={isBatchMode}
           onClick={() => {
             const next = !isBatchMode;
             setIsBatchMode(next);
-            setShowBatchSettings(next);
             if (next) {
               disableDynamicBase();
               isBucket.value = false;
@@ -776,7 +744,7 @@ export default function CreateModal({
             haptics.light();
           }}
         />
-        {(isBatchMode || showBatchSettings) && (
+        {isBatchMode && (
           <BatchSettings
             batchUrls={batchUrls}
             setBatchUrls={setBatchUrls}
@@ -794,38 +762,16 @@ export default function CreateModal({
       <section class="space-y-3">
         <div>
           <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Appearance
+            Logo
           </h3>
           <p class="text-sm text-gray-600">
-            Style lives in the main picker. Use logo when the QR has enough
-            contrast and room to scan cleanly.
+            Add a center mark to the QR. Colors live in the style picker on the
+            main screen.
           </p>
         </div>
-        <div
-          class={`w-full min-h-[64px] rounded-2xl border-3 px-3 py-3 text-left flex items-center gap-3 ${
-            logoActive
-              ? "border-black bg-qr-cream shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-              : "border-gray-200 bg-white"
-          }`}
-        >
-          <span class="w-11 h-11 rounded-xl border-2 border-black bg-white flex items-center justify-center text-xl shrink-0">
-            🎨
-          </span>
-          <span class="min-w-0 flex-1">
-            <span class="flex items-center gap-2">
-              <span class="font-black text-gray-900 leading-tight">Logo</span>
-              {logoActive && (
-                <span class="rounded-full bg-black px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
-                  Added
-                </span>
-              )}
-            </span>
-            <span class="block text-xs sm:text-sm text-gray-600 leading-snug mt-0.5">
-              Add a center mark to the QR.
-            </span>
-          </span>
+        <div class="bg-gradient-to-r from-[#FFF8F0] to-[#FFE5B4] border-3 border-[#FFE5B4] rounded-xl p-4 shadow-chunky">
+          <LogoUploader logoUrl={logoUrl} />
         </div>
-        <LogoSettings logoUrl={logoUrl} />
       </section>
     </div>
   );
