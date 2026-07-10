@@ -9,12 +9,10 @@ import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $edit from "./routes/edit.tsx";
 import * as $f_code_ from "./routes/f/[code].tsx";
-import * as $go from "./routes/go.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $note_code_ from "./routes/note/[code].tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
-import * as $r_code_ from "./routes/r/[code].tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $Analytics from "./islands/Analytics.tsx";
@@ -42,7 +40,6 @@ import * as $edit_qr_RoutingModeSelector from "./islands/edit-qr/RoutingModeSele
 import * as $extras_BatchSettings from "./islands/extras/BatchSettings.tsx";
 import * as $extras_EditableLinkSettings from "./islands/extras/EditableLinkSettings.tsx";
 import * as $extras_LockerSettings from "./islands/extras/LockerSettings.tsx";
-import * as $extras_LogoSettings from "./islands/extras/LogoSettings.tsx";
 import * as $extras_MultiLinkSettings from "./islands/extras/MultiLinkSettings.tsx";
 import * as $extras_SplashSettings from "./islands/extras/SplashSettings.tsx";
 import * as $extras_TimeBombSettings from "./islands/extras/TimeBombSettings.tsx";
@@ -66,12 +63,10 @@ const manifest = {
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/edit.tsx": $edit,
     "./routes/f/[code].tsx": $f_code_,
-    "./routes/go.tsx": $go,
     "./routes/index.tsx": $index,
     "./routes/note/[code].tsx": $note_code_,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
-    "./routes/r/[code].tsx": $r_code_,
   },
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
@@ -101,7 +96,6 @@ const manifest = {
     "./islands/extras/BatchSettings.tsx": $extras_BatchSettings,
     "./islands/extras/EditableLinkSettings.tsx": $extras_EditableLinkSettings,
     "./islands/extras/LockerSettings.tsx": $extras_LockerSettings,
-    "./islands/extras/LogoSettings.tsx": $extras_LogoSettings,
     "./islands/extras/MultiLinkSettings.tsx": $extras_MultiLinkSettings,
     "./islands/extras/SplashSettings.tsx": $extras_SplashSettings,
     "./islands/extras/TimeBombSettings.tsx": $extras_TimeBombSettings,

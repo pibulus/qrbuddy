@@ -321,7 +321,7 @@ export default function QRCanvas(
       }
       {!url.value && (
         <p class="text-center text-xs text-gray-500 mt-2 select-none">
-          your QR appears here — start typing above
+          your QR appears here — start typing below
         </p>
       )}
       {url.value && (
