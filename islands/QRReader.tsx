@@ -287,7 +287,7 @@ export default function QRReader(
           </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4">
           {!result && (
             <>
               {/* Drop / pick zone */}

@@ -951,7 +951,7 @@ export default function CreateModal({
           )}
         </div>
 
-        <div class="p-4 sm:p-6 border-t-2 border-gray-100 bg-gray-50">
+        <div class="p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 border-t-2 border-gray-100 bg-gray-50">
           <button
             type="button"
             onClick={onClose}

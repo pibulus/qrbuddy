@@ -39,7 +39,7 @@ export function AboutModal() {
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={closeAboutModal}
         role="dialog"
         aria-modal="true"
@@ -47,7 +47,7 @@ export function AboutModal() {
       >
         {/* Modal */}
         <div
-          class="relative w-[95%] max-w-md sm:max-w-2xl max-h-[85vh] overflow-y-auto animate-slide-up"
+          class="relative w-full max-w-md sm:max-w-2xl max-h-[85vh] overflow-y-auto animate-slide-up"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

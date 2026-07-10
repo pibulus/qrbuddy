@@ -147,9 +147,9 @@ export default function StyleSelector(
         </button>
       </div>
 
-      {/* Style Gallery Modal */}
+      {/* Style Gallery — bottom sheet on mobile, centered card on desktop */}
       {isGalleryOpen && (
-        <div class="fixed inset-0 z-50 flex items-center justify-center px-4 py-4">
+        <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
           <div
             class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsGalleryOpen(false)}
@@ -158,7 +158,7 @@ export default function StyleSelector(
             role="dialog"
             aria-modal="true"
             aria-labelledby="style-gallery-title"
-            class="relative z-10 w-full max-w-lg bg-white border-4 border-black rounded-3xl shadow-2xl p-6 space-y-6 animate-slide-up max-h-[90vh] overflow-y-auto"
+            class="relative z-10 w-full max-w-lg bg-white sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-6 animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto"
           >
             {/* Header */}
             <div class="flex items-start justify-between gap-3">

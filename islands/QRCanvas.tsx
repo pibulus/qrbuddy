@@ -49,9 +49,6 @@ export default function QRCanvas(
   // springy pop when the style changes — the card acknowledges every update.
   const [bloomTick, setBloomTick] = useState(false);
   const [stylePop, setStylePop] = useState(false);
-  // While the input is empty the QR sits ghosted — but a style change must
-  // still SHOW its colors, so hold full vibrancy for a moment, then ease back.
-  const [stylePreviewHold, setStylePreviewHold] = useState(false);
   const prevStyleRef = useRef(style.value);
   const prevCustomRef = useRef(customStyle?.value);
 
@@ -69,13 +66,8 @@ export default function QRCanvas(
     prevStyleRef.current = style.value;
     prevCustomRef.current = customStyle?.value;
     setStylePop(true);
-    setStylePreviewHold(true);
     const popTimer = setTimeout(() => setStylePop(false), 380);
-    const holdTimer = setTimeout(() => setStylePreviewHold(false), 4000);
-    return () => {
-      clearTimeout(popTimer);
-      clearTimeout(holdTimer);
-    };
+    return () => clearTimeout(popTimer);
   }, [style.value, customStyle?.value]);
 
   const handleDragOver = (event: DragEvent) => {
@@ -439,12 +431,13 @@ export default function QRCanvas(
           w-full flex justify-center items-center
           [&>canvas]:w-full [&>canvas]:h-auto
           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pink-400
-          ${!url.value && !stylePreviewHold ? "opacity-55 saturate-[.8]" : ""}
           ${
           isClicking
             ? "scale-95"
             : bloomTick
             ? "scale-[1.02]"
+            : !url.value
+            ? "scale-[0.97] hover:scale-100"
             : "hover:scale-105"
         }
           ${
@@ -476,10 +469,10 @@ export default function QRCanvas(
         )}
 
       {
-        /* Empty state is shown, not told: the placeholder QR sits ghosted
-          (low opacity, desaturated) and blooms to full color on the first
-          character. The ⬇ chip appears with real content to show the card
-          is a download button. */
+        /* Empty state is shown, not told: full color always (a faded QR read
+          as broken), but the card sits slightly small and grows to full size
+          on the first character. The ⬇ chip appears with real content to
+          show the card is a download button. */
       }
       {url.value && (
         <div

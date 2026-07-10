@@ -53,7 +53,7 @@ export default function ToastManager() {
     // width at half the viewport (transforms don't affect layout), which
     // wrapped any toast longer than ~50vw onto two lines.
     <div
-      class="fixed bottom-6 inset-x-0 z-50 flex flex-col items-center space-y-2 pointer-events-none px-4"
+      class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] inset-x-0 z-[80] flex flex-col items-center space-y-2 pointer-events-none px-4"
       role="status"
       aria-live="polite"
       aria-atomic="false"
