@@ -26,6 +26,13 @@ export interface QRData {
     timezone?: string;
     timezoneOffset?: number;
   } | null;
+  splash_config?: {
+    enabled: boolean;
+    title: string;
+    buttonText: string;
+    imageUrl?: string;
+    description?: string;
+  } | null;
   analytics?: {
     sparkline: number[];
     last_scan: string | null;

@@ -121,6 +121,7 @@ serve(async (req) => {
           is_active: data.is_active,
           routing_mode: data.routing_mode,
           routing_config: data.routing_config,
+          splash_config: data.splash_config ?? null,
           analytics: {
             sparkline: sparklineData,
             last_scan: lastScan,

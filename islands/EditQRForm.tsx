@@ -35,6 +35,13 @@ export default function EditQRForm() {
   const [timeActiveUrl, setTimeActiveUrl] = useState("");
   const [timeInactiveUrl, setTimeInactiveUrl] = useState("");
 
+  // Intro (splash) page state
+  const [splashEnabled, setSplashEnabled] = useState(false);
+  const [splashTitle, setSplashTitle] = useState("Welcome!");
+  const [splashButtonText, setSplashButtonText] = useState("Continue");
+  const [splashDescription, setSplashDescription] = useState("");
+  const [splashImageUrl, setSplashImageUrl] = useState("");
+
   // Initialize form when data loads
   useEffect(() => {
     if (qrData) {
@@ -47,6 +54,13 @@ export default function EditQRForm() {
       );
       setIsActive(qrData.is_active);
       setRoutingMode(qrData.routing_mode || "simple");
+
+      const splash = qrData.splash_config;
+      setSplashEnabled(splash?.enabled ?? false);
+      setSplashTitle(splash?.title || "Welcome!");
+      setSplashButtonText(splash?.buttonText || "Continue");
+      setSplashDescription(splash?.description ?? "");
+      setSplashImageUrl(splash?.imageUrl ?? "");
 
       // Handle routing config
       if (qrData.routing_config) {
@@ -105,6 +119,17 @@ export default function EditQRForm() {
       is_active: isActive,
       routing_mode: routingMode,
       routing_config: routingConfig,
+      splash_config: splashEnabled
+        ? {
+          enabled: true,
+          title: splashTitle.trim() || "Welcome!",
+          buttonText: splashButtonText.trim() || "Continue",
+          ...(splashDescription.trim()
+            ? { description: splashDescription.trim() }
+            : {}),
+          ...(splashImageUrl.trim() ? { imageUrl: splashImageUrl.trim() } : {}),
+        }
+        : null,
     });
   };
 
@@ -217,6 +242,65 @@ export default function EditQRForm() {
           />
         </div>
 
+        {/* Intro (splash) page */}
+        <div class="space-y-2">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={splashEnabled}
+              onChange={(e) => {
+                setSplashEnabled((e.target as HTMLInputElement).checked);
+                haptics.light();
+              }}
+              class="w-5 h-5 rounded border-2 border-black cursor-pointer"
+            />
+            <span class="text-sm font-bold text-gray-700 uppercase tracking-wide group-hover:text-pink-600">
+              ✨ Intro page
+            </span>
+          </label>
+          <p class="text-xs text-gray-500 ml-8">
+            Show a short landing page before redirecting
+          </p>
+          {splashEnabled && (
+            <div class="ml-8 space-y-2 animate-slide-down">
+              <input
+                type="text"
+                value={splashTitle}
+                onInput={(e) =>
+                  setSplashTitle((e.target as HTMLInputElement).value)}
+                placeholder="Page title"
+                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
+              />
+              <input
+                type="text"
+                value={splashButtonText}
+                onInput={(e) =>
+                  setSplashButtonText((e.target as HTMLInputElement).value)}
+                placeholder="Button text"
+                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
+              />
+              <textarea
+                value={splashDescription}
+                onInput={(e) =>
+                  setSplashDescription(
+                    (e.target as HTMLTextAreaElement).value,
+                  )}
+                placeholder="Description (optional)"
+                rows={2}
+                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none resize-none"
+              />
+              <input
+                type="text"
+                value={splashImageUrl}
+                onInput={(e) =>
+                  setSplashImageUrl((e.target as HTMLInputElement).value)}
+                placeholder="Image URL (optional)"
+                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
+              />
+            </div>
+          )}
+        </div>
+
         {/* Active Toggle */}
         <div class="space-y-2">
           <label class="flex items-center gap-3 cursor-pointer group">
@@ -253,7 +337,8 @@ export default function EditQRForm() {
       <div class="bg-green-50 border-2 border-green-300 rounded-xl p-4 text-center">
         <p class="text-sm text-green-800">
           🔒 <strong>Privacy First:</strong>{" "}
-          No tracking, no analytics. Just editable redirects.
+          Scans log coarse stats only (device type, country) for the dashboard
+          above — no IPs, no user agents, deleted after 90 days.
         </p>
       </div>
     </div>
