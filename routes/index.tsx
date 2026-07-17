@@ -20,22 +20,14 @@ import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import RotatingTitle from "../islands/RotatingTitle.tsx";
 
 interface HomeProps {
-  paymentUrlPro?: string;
   supabaseUrl?: string;
-  supabaseAnonKey?: string;
 }
 
 export const handler: Handlers<HomeProps> = {
   GET(_req, ctx) {
-    const paymentUrlPro = Deno.env.get("PAYMENT_URL_PRO");
-    const supabaseUrl = getSupabaseUrl();
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
-
-    return ctx.render({
-      paymentUrlPro,
-      supabaseUrl: supabaseUrl ?? undefined,
-      supabaseAnonKey: supabaseAnonKey ?? undefined,
-    });
+    // Env injection for islands lives in _app.tsx; this only feeds the
+    // dns-prefetch/preconnect hints below.
+    return ctx.render({ supabaseUrl: getSupabaseUrl() ?? undefined });
   },
 };
 
@@ -121,15 +113,6 @@ export default function Home({ data }: PageProps<HomeProps>) {
           src="https://cloud.umami.is/script.js"
           data-website-id="280ec8ac-9eb5-4d06-89fe-369960e40b5d"
         >
-        </script>
-
-        {/* Inject env vars for client-side */}
-        <script>
-          {`
-            window.__PAYMENT_URL_PRO__ = '${data?.paymentUrlPro || ""}';
-            window.__SUPABASE_URL__ = '${data?.supabaseUrl || ""}';
-            window.__SUPABASE_ANON_KEY__ = '${data?.supabaseAnonKey || ""}';
-          `}
         </script>
 
         {/* JSON-LD Structured Data */}
