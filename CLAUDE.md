@@ -175,19 +175,27 @@ if (maxDownloads === 999999) {
 
 ### Deployment
 
-- **Primary**: Deno Deploy (zero-config deployment from GitHub)
+- **Primary**: Deno Deploy — the NEW platform (console.deno.com). Classic Deno
+  Deploy (dash.deno.com) and `deployctl` are dead as of July 2026; classic
+  tokens no longer authenticate.
 - **Alternative**: Any Deno-compatible host via `deno run -A main.ts`
-- **Deno Deploy project**: `qrbuddy`
+- **Deno Deploy org/app**: `pibulus` / `qrbuddy` (set in `deno.json` `deploy`)
 - **Live URL**: https://qrbuddy.app
-- **Deno Deploy alias**: https://qrbuddy.deno.dev
+- **Deno Deploy alias**: https://qrbuddy.pibulus.deno.net
 - **Supabase project ref**: `aqydpibnvlhcjcwosrti`
+
+The new platform uploads source and builds remotely (Fresh preset auto-detected)
+rather than uploading a prebuilt `_fresh` bundle. `node_modules` is excluded by
+default — hence no `include` allowlist in `deno.json`.
 
 #### Deployment Commands
 
 ```bash
 # Deploy Fresh production. Only pass public/client-safe Supabase config here.
+# Auth: DENO_DEPLOY_TOKEN must be the new `ddo_` token
+# (stored as DENO_DEPLOY_TOKEN_NEW in ~/.config/api_keys).
 PROJECT_REF=aqydpibnvlhcjcwosrti
-deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN \
+deno deploy --prod \
   --env="SUPABASE_URL=https://${PROJECT_REF}.supabase.co" \
   --env="APP_URL=https://qrbuddy.app" \
   --env="SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
@@ -212,29 +220,29 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 
 ### Layout & Surface Rules
 
-Spacing sits on the 8/16/32/64 grid. Established conventions — follow them
-when adding surfaces:
+Spacing sits on the 8/16/32/64 grid. Established conventions — follow them when
+adding surfaces:
 
 - **Page shell**: `px-6 pt-8 pb-6` mobile, `sm:pt-12` desktop; footer
   `mt-16 py-8`. Main column `max-w-md`, `space-y-6 sm:space-y-8`.
 - **QR card**: `max-w-[300px] sm:max-w-[360px]` — always narrower than the
-  controls column (pyramid hierarchy). Never fade/desaturate the QR; the
-  empty state is signalled by a subtle `scale-[0.97]` posture, full color
-  always.
+  controls column (pyramid hierarchy). Never fade/desaturate the QR; the empty
+  state is signalled by a subtle `scale-[0.97]` posture, full color always.
 - **Z scale**: content ≤10 · page chrome 40–50 · modals/sheets `z-[60]` ·
   drawers `z-[70]` · toasts `z-[80]` (toasts must beat every modal).
 - **Backdrop**: one recipe everywhere — `bg-black/60 backdrop-blur-sm`.
 - **Interactive sheets** (CreateModal, QRReader, style gallery,
   GradientCreator): bottom sheet on mobile (`items-end`, `rounded-t-3xl`, no
-  side border, `animate-slide-up`), centered card on `sm:+` (`sm:border-4
-  border-black sm:rounded-3xl`, `sm:animate-pop-in`); `max-h-[92dvh]`;
-  header/body `p-4 sm:p-6`; bottom padding respects the home indicator:
-  `pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6`.
+  side border, `animate-slide-up`), centered card on `sm:+`
+  (`sm:border-4
+  border-black sm:rounded-3xl`, `sm:animate-pop-in`);
+  `max-h-[92dvh]`; header/body `p-4 sm:p-6`; bottom padding respects the home
+  indicator: `pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6`.
 - **Info dialogs** (About/Kofi/Pricing): centered at all sizes, gradient
   header + `border-4` card, same backdrop/z as sheets.
 - **Toasts**: bottom snackbar,
-  `bottom-[max(1.5rem,env(safe-area-inset-bottom))]`, full-width flex
-  container (never `left-1/2` — it caps layout width at 50vw and wraps).
+  `bottom-[max(1.5rem,env(safe-area-inset-bottom))]`, full-width flex container
+  (never `left-1/2` — it caps layout width at 50vw and wraps).
 - **Tap targets**: ≥44px; shadows use the `shadow-chunky` tokens (soft 25%
   black), never hard 0-blur hex shadows.
 - **Show, don't tell**: no instructional captions; state changes get visual

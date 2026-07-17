@@ -14,7 +14,8 @@
 button {
   color: inherit;
 }
-button, [role="button"] {
+button,
+[role="button"] {
   cursor: pointer;
 }
 code {
