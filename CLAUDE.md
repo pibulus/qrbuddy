@@ -191,18 +191,26 @@ default — hence no `include` allowlist in `deno.json`.
 #### Deployment Commands
 
 ```bash
-# Deploy Fresh production. Only pass public/client-safe Supabase config here.
 # Auth: DENO_DEPLOY_TOKEN must be the new `ddo_` token
 # (stored as DENO_DEPLOY_TOKEN_NEW in ~/.config/api_keys).
-PROJECT_REF=aqydpibnvlhcjcwosrti
-deno deploy --prod \
-  --env="SUPABASE_URL=https://${PROJECT_REF}.supabase.co" \
-  --env="APP_URL=https://qrbuddy.app" \
-  --env="SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
+# The CLI has no --env flag anymore — env vars are app-level, set once via
+# `deno deploy env add` (they persist across deploys; verified set 2026-07-17):
+#   deno deploy env add SUPABASE_URL "https://aqydpibnvlhcjcwosrti.supabase.co" --org pibulus --app qrbuddy
+#   deno deploy env add APP_URL "https://qrbuddy.app" --org pibulus --app qrbuddy
+#   deno deploy env add SUPABASE_ANON_KEY "<anon key>" --secret --org pibulus --app qrbuddy
+# Only pass public/client-safe Supabase config here.
 
-# Deploy all Supabase edge functions when backend code changes.
+# Deploy Fresh production:
+DENO_DEPLOY_TOKEN="$DENO_DEPLOY_TOKEN_NEW" deno deploy --prod --org pibulus --app qrbuddy --non-interactive
+
+# Deploy all Supabase edge functions when backend code changes (skip _shared).
+# NOTE: new code can take several minutes to serve — warm edge isolates keep
+# answering with the old bundle. Verify with a header probe, not hope.
+PROJECT_REF=aqydpibnvlhcjcwosrti
 for func in supabase/functions/*/; do
-  supabase functions deploy "$(basename "$func")" --project-ref "$PROJECT_REF"
+  name=$(basename "$func")
+  [ "$name" = "_shared" ] && continue
+  supabase functions deploy "$name" --project-ref "$PROJECT_REF"
 done
 ```
 
