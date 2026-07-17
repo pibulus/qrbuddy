@@ -3,7 +3,9 @@
 
 const PROD_ORIGINS = [
   "https://qrbuddy.app",
-  "https://qrbuddy.deno.dev",
+  "https://www.qrbuddy.app",
+  // New Deno Deploy alias (classic's qrbuddy.deno.dev died July 2026)
+  "https://qrbuddy.pibulus.deno.net",
 ];
 
 const DEV_ORIGINS = [

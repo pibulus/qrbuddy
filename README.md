@@ -73,7 +73,7 @@ For production deployment with Supabase backend, see
 
 1. Create/link Supabase project
 2. Apply `supabase/setup.sql` or run the migrations with `supabase db push`
-3. Deploy all 12 edge functions
+3. Deploy all 13 edge functions
 4. Set Supabase secrets (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_URL`)
 5. Deploy Fresh to Deno Deploy with `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and
    `APP_URL`
@@ -125,7 +125,7 @@ qrbuddy/
 ├── supabase/             # Production schema + edge functions
 │   ├── setup.sql             # Current one-shot schema/RPC bootstrap
 │   ├── migrations/           # Historical + incremental production migrations
-│   └── functions/            # 12 edge functions
+│   └── functions/            # 13 edge functions
 ├── utils/                # Shared utilities
 │   ├── api.ts                # SUPABASE_URL + auth header helpers
 │   ├── api-request.ts        # Shared JSON/FormData request helpers
