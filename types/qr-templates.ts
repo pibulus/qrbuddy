@@ -9,6 +9,7 @@ export type QRTemplateType =
   | "vcard"
   | "sms"
   | "email"
+  | "phone"
   | "text";
 
 export interface QRTemplate {
@@ -60,6 +61,12 @@ export const QR_TEMPLATES: Record<QRTemplateType, QRTemplate> = {
     label: "Email",
     icon: "✉️",
     description: "Send an email",
+  },
+  phone: {
+    type: "phone",
+    label: "Phone call",
+    icon: "📞",
+    description: "Dial a number on scan",
   },
   text: {
     type: "text",
@@ -159,6 +166,16 @@ export function formatSMS(data: SMSData): string {
   return `SMSTO:${data.phone}:${data.message}`;
 }
 
+// Phone QR type data
+export interface PhoneData {
+  phone: string;
+}
+
+export function formatPhone(data: PhoneData): string {
+  // tel: URIs want no separators — keep digits, +, and letters (vanity nums).
+  return `tel:${data.phone.replace(/[\s().-]/g, "")}`;
+}
+
 export function formatEmail(data: EmailData): string {
   return `mailto:${data.email}?subject=${
     encodeURIComponent(data.subject)
@@ -187,6 +204,11 @@ export function validateVCard(data: VCardData): string | null {
 export function validateSMS(data: SMSData): string | null {
   if (!data.phone) return "Phone number is required";
   if (!data.message) return "Message is required";
+  return null;
+}
+
+export function validatePhone(data: PhoneData): string | null {
+  if (!data.phone) return "Phone number is required";
   return null;
 }
 

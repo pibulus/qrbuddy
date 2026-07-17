@@ -8,6 +8,7 @@ import QRCanvas from "./QRCanvas.tsx";
 import WiFiForm from "./templates/WiFiForm.tsx";
 import VCardForm from "./templates/VCardForm.tsx";
 import SMSForm from "./templates/SMSForm.tsx";
+import PhoneForm from "./templates/PhoneForm.tsx";
 import EmailForm from "./templates/EmailForm.tsx";
 import WebsiteForm from "./templates/WebsiteForm.tsx";
 import SocialHubForm from "./templates/SocialHubForm.tsx";
@@ -86,6 +87,7 @@ const QR_TYPE_ORDER: QRTemplateType[] = [
   "social",
   "sms",
   "email",
+  "phone",
 ];
 
 const QR_TYPE_COPY: Partial<
@@ -118,6 +120,10 @@ const QR_TYPE_COPY: Partial<
   email: {
     label: "Email",
     description: "Open a pre-filled email.",
+  },
+  phone: {
+    label: "Phone call",
+    description: "Dial a number straight from the scan.",
   },
 };
 
@@ -396,6 +402,8 @@ export default function CreateModal({
         return <SMSForm url={url} />;
       case "email":
         return <EmailForm url={url} />;
+      case "phone":
+        return <PhoneForm url={url} />;
       case "text": {
         const textLength = url.value.length;
         const nearCapacity = textLength > 800;
@@ -878,7 +886,7 @@ export default function CreateModal({
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
-        class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        class="absolute inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 

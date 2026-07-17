@@ -36,7 +36,7 @@
 - `ToastManager` - Notification stacking system
 - `ErrorBoundary` - QR generation error handling
 - `EasterEggs` - Hidden features and playful interactions
-- `Analytics` - PostHog analytics integration
+- `Analytics` - Umami analytics integration (privacy-first, cookieless)
 
 **Sub-Islands (edit-qr/):**
 
@@ -64,6 +64,7 @@
 
 - `EmailForm` - Email QR type builder
 - `MediaHubForm` - File-share page builder
+- `PhoneForm` - Phone call QR type builder
 - `SMSForm` - Text message QR type builder
 - `SocialHubForm` - Social profile QR type builder
 - `VCardForm` - Contact card QR type builder
