@@ -16,6 +16,7 @@ import MediaHubForm from "./templates/MediaHubForm.tsx";
 import LockerSettings from "./extras/LockerSettings.tsx";
 import BatchSettings from "./extras/BatchSettings.tsx";
 import LogoUploader from "./LogoUploader.tsx";
+import { STYLE_DISPLAY } from "./StyleSelector.tsx";
 import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
 import MultiLinkSettings from "./extras/MultiLinkSettings.tsx";
 import TimeBombSettings from "./extras/TimeBombSettings.tsx";
@@ -58,6 +59,8 @@ interface CreateModalProps {
   onLockerDisable: () => void;
   onTextCardConfirm: (text: string) => Promise<boolean>;
   isCreatingLocker: boolean;
+  onCreateEditable: () => void;
+  isCreatingEditable: boolean;
   splashConfig: Signal<
     {
       enabled: boolean;
@@ -79,16 +82,26 @@ interface ChoiceRowProps {
   onClick: () => void;
 }
 
+// Frequency-ordered for humans, not enterprises: link and note first, then
+// social (creators/small biz), then household WiFi, then contact cards.
+// SMS/email/phone collapse into one "Contact me" row — same intent bucket,
+// two fewer 64px scroll-stops on mobile.
 const QR_TYPE_ORDER: QRTemplateType[] = [
   "url",
   "text",
+  "social",
   "wifi",
   "vcard",
-  "social",
-  "sms",
-  "email",
-  "phone",
 ];
+
+const CONTACT_TYPES: QRTemplateType[] = ["phone", "sms", "email"];
+
+const CONTACT_SEGMENTS: { key: QRTemplateType; label: string; icon: string }[] =
+  [
+    { key: "phone", label: "Call", icon: "📞" },
+    { key: "sms", label: "Text", icon: "💬" },
+    { key: "email", label: "Email", icon: "✉️" },
+  ];
 
 const QR_TYPE_COPY: Partial<
   Record<QRTemplateType, { label: string; description: string }>
@@ -107,7 +120,7 @@ const QR_TYPE_COPY: Partial<
   },
   vcard: {
     label: "Contact card",
-    description: "Save a person or business contact.",
+    description: "One scan saves you to their phone — weddings, gigs, stalls.",
   },
   social: {
     label: "Social profile",
@@ -199,6 +212,8 @@ export default function CreateModal({
   onLockerDisable,
   onTextCardConfirm,
   isCreatingLocker,
+  onCreateEditable,
+  isCreatingEditable,
   splashConfig,
   frameConfig,
 }: CreateModalProps) {
@@ -578,6 +593,14 @@ export default function CreateModal({
               />
             );
           })}
+          <ChoiceRow
+            icon="📲"
+            title="Contact me"
+            description="One scan to call, text, or email you — you pick which."
+            active={typeIntent === "qr" &&
+              CONTACT_TYPES.includes(selectedTemplate)}
+            onClick={() => handleTemplateSelect("phone")}
+          />
         </div>
       </section>
 
@@ -601,6 +624,42 @@ export default function CreateModal({
           eyebrow="Locker"
           onClick={handleCollectFilesSelect}
         />
+      </section>
+
+      {
+        /* Bulk is a what-am-I-making intent (many static QRs at once), not a
+          per-QR behavior — it lives here with the other top-level intents. */
+      }
+      <section class="space-y-3">
+        <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
+          Bulk
+        </h3>
+        <ChoiceRow
+          icon="📦"
+          title="Bulk create"
+          description="Paste a list of links, download a ZIP of static QRs."
+          active={isBatchMode}
+          eyebrow="Zip"
+          onClick={() => {
+            const next = !isBatchMode;
+            setIsBatchMode(next);
+            if (next) {
+              disableDynamicBase();
+              isBucket.value = false;
+              bucketUrl.value = "";
+            }
+            haptics.light();
+          }}
+        />
+        {isBatchMode && (
+          <BatchSettings
+            batchUrls={batchUrls}
+            setBatchUrls={setBatchUrls}
+            isGeneratingBatch={isGeneratingBatch}
+            batchProgress={batchProgress}
+            onGenerateBatch={onGenerateBatch}
+          />
+        )}
       </section>
 
       <div class="pt-2">
@@ -627,7 +686,30 @@ export default function CreateModal({
           />
         )}
         {typeIntent === "qr" && (
-          <div class="animate-slide-down">{renderTemplateForm()}</div>
+          <div class="animate-slide-down">
+            {CONTACT_TYPES.includes(selectedTemplate) && (
+              <div class="grid grid-cols-3 gap-2 mb-3">
+                {CONTACT_SEGMENTS.map((seg) => (
+                  <button
+                    key={seg.key}
+                    type="button"
+                    onClick={() => {
+                      onSelectTemplate(seg.key);
+                      haptics.light();
+                    }}
+                    class={`min-h-[44px] rounded-xl border-3 px-2 py-2 font-black text-sm transition-all ${
+                      selectedTemplate === seg.key
+                        ? "border-black bg-black text-white"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-black"
+                    }`}
+                  >
+                    {seg.icon} {seg.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {renderTemplateForm()}
+          </div>
         )}
       </div>
     </div>
@@ -670,7 +752,14 @@ export default function CreateModal({
             haptics.light();
           }}
         />
-        {isDynamic.value && <EditableLinkSettings editUrl={editUrl} />}
+        {isDynamic.value && (
+          <EditableLinkSettings
+            editUrl={editUrl}
+            pendingUrl={url.value}
+            isCreating={isCreatingEditable}
+            onCreate={onCreateEditable}
+          />
+        )}
       </section>
 
       {isDynamic.value && (
@@ -744,37 +833,6 @@ export default function CreateModal({
           {splashActive && <SplashSettings splashConfig={splashConfig} />}
         </section>
       )}
-
-      <section class="space-y-3">
-        <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-          Bulk
-        </h3>
-        <ChoiceRow
-          icon="📦"
-          title="Bulk create"
-          description="Paste a list of links, download a ZIP of static QRs."
-          active={isBatchMode}
-          onClick={() => {
-            const next = !isBatchMode;
-            setIsBatchMode(next);
-            if (next) {
-              disableDynamicBase();
-              isBucket.value = false;
-              bucketUrl.value = "";
-            }
-            haptics.light();
-          }}
-        />
-        {isBatchMode && (
-          <BatchSettings
-            batchUrls={batchUrls}
-            setBatchUrls={setBatchUrls}
-            isGeneratingBatch={isGeneratingBatch}
-            batchProgress={batchProgress}
-            onGenerateBatch={onGenerateBatch}
-          />
-        )}
-      </section>
     </div>
   );
 
@@ -785,11 +843,54 @@ export default function CreateModal({
       <section class="space-y-3">
         <div>
           <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
+            Colors
+          </h3>
+          <p class="text-sm text-gray-600">
+            Pick a vibe right here — or build your own gradient.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
+            <button
+              key={key}
+              type="button"
+              aria-label={`${info.name} style`}
+              title={info.name}
+              onClick={() => {
+                qrStyle.value = key;
+                haptics.light();
+              }}
+              class={`w-11 h-11 rounded-xl border-3 transition-all hover:scale-110 active:scale-95 ${
+                qrStyle.value === key
+                  ? "border-black scale-110 shadow-chunky"
+                  : "border-gray-300"
+              }`}
+              style={{
+                background: `linear-gradient(45deg, ${info.colors.join(", ")})`,
+              }}
+            />
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            globalThis.dispatchEvent(new CustomEvent("open-gradient-creator"));
+            haptics.light();
+          }}
+          class="w-full min-h-[48px] rounded-xl border-3 border-dashed border-gray-400 bg-white px-4 py-2 font-bold text-gray-700 hover:border-black hover:text-black transition-all"
+        >
+          🎨 Build your own gradient
+        </button>
+      </section>
+
+      <section class="space-y-3">
+        <div>
+          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
             Logo
           </h3>
           <p class="text-sm text-gray-600">
-            Add a center mark to the QR. Colors live in the style picker on the
-            main screen.
+            Add a center mark to the QR.
           </p>
         </div>
         <div class="bg-gradient-to-r from-[#FFF8F0] to-[#FFE5B4] border-3 border-[#FFE5B4] rounded-xl p-4 shadow-chunky">
@@ -872,6 +973,27 @@ export default function CreateModal({
             ⬇ SVG
           </button>
         </div>
+        <button
+          type="button"
+          onClick={async () => {
+            const { qrToTextArt } = await import("../utils/qr-ascii.ts");
+            const art = qrToTextArt(url.value || "https://qrbuddy.app");
+            if (!art) {
+              notify("Too much data for text art 😅");
+              return;
+            }
+            try {
+              await navigator.clipboard.writeText(art);
+              haptics.success();
+              notify("Text-art QR copied — paste it anywhere 📋");
+            } catch {
+              notify("Couldn't reach the clipboard 😞");
+            }
+          }}
+          class="w-full min-h-[48px] rounded-xl border-3 border-dashed border-gray-400 bg-white px-4 py-2 font-bold text-gray-700 hover:border-black hover:text-black transition-all font-mono"
+        >
+          ▀▄█ Copy as text art
+        </button>
       </section>
     </div>
   );

@@ -3,25 +3,54 @@ import { haptics } from "../../utils/haptics.ts";
 
 interface EditableLinkSettingsProps {
   editUrl: Signal<string>;
+  /** The URL currently in the main input — what the editable QR will wrap. */
+  pendingUrl: string;
+  isCreating: boolean;
+  onCreate: () => void;
 }
 
 export default function EditableLinkSettings({
   editUrl,
+  pendingUrl,
+  isCreating,
+  onCreate,
 }: EditableLinkSettingsProps) {
+  const hasLink = pendingUrl.trim() !== "";
+
   return (
     <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
       {!editUrl.value && (
-        <div class="flex items-start gap-3">
-          <span class="text-2xl">✨</span>
-          <div>
-            <h4 class="font-bold text-sm text-[#9370DB]">
-              Editable mode is on
-            </h4>
-            <p class="text-xs text-gray-700 leading-relaxed">
-              Close this sheet and paste your link in the input — the editable
-              QR creates itself, along with a private edit link.
-            </p>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">✨</span>
+            <div class="min-w-0">
+              <h4 class="font-bold text-sm text-[#9370DB]">
+                Editable mode is on
+              </h4>
+              {hasLink
+                ? (
+                  <p class="text-xs text-gray-700 leading-relaxed truncate">
+                    Wraps <span class="font-mono">{pendingUrl}</span>
+                  </p>
+                )
+                : (
+                  <p class="text-xs text-gray-700 leading-relaxed">
+                    Add a link first — type or paste it in the main input.
+                  </p>
+                )}
+            </div>
           </div>
+          <button
+            type="button"
+            disabled={!hasLink || isCreating}
+            onClick={() => {
+              haptics.medium();
+              onCreate();
+            }}
+            class="w-full min-h-[48px] rounded-xl border-3 border-black bg-[#9370DB] px-4 py-2 font-black text-white shadow-chunky hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+          >
+            {isCreating ? "Creating..." : "Create editable link"}
+          </button>
         </div>
       )}
       {editUrl.value && (

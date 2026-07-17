@@ -308,32 +308,27 @@ export default function SmartInput(
     }
   };
 
-  // Create dynamic QR (Redirect) once the input settles on a URL.
-  // Plain text deliberately does NOT auto-create anything server-side — it
-  // used to spawn a text bucket mid-typing and overwrite the input with the
-  // note URL. Text cards are created explicitly via Create → Plain text.
-  useEffect(() => {
+  // Creating an editable QR writes a real server-side row, so it only happens
+  // on an explicit button press (CreateModal → Options → "Create editable
+  // link"). It used to auto-fire on a 1200ms debounce after toggling Editable,
+  // which spent a short code before the user ever consented.
+  const handleCreateEditable = () => {
     if (
-      isDynamic.value && url.value && !isCreatingDynamic && !editUrl.value &&
-      !isBucket.value && !isCreatingBucket && isValidUrl(url.value)
+      url.value && !isCreatingDynamic && !editUrl.value && !isBucket.value &&
+      !isCreatingBucket && isValidUrl(url.value)
     ) {
-      const timer = setTimeout(() => {
-        createDynamicQR(url.value);
-      }, 1200); // Debounce — long enough to finish typing a URL before auto-creating
-
-      return () => clearTimeout(timer);
+      void createDynamicQR(url.value);
+    } else if (url.value && !isValidUrl(url.value)) {
+      globalThis.dispatchEvent(
+        new CustomEvent("show-toast", {
+          detail: {
+            message: "Editable needs a real link — try https://…",
+            type: "error",
+          },
+        }),
+      );
     }
-    // Include the creation guards so that when a failed auto-create flips
-    // isCreating* back to false, the effect re-evaluates and can retry without
-    // the user having to toggle the mode or type another character.
-  }, [
-    isDynamic.value,
-    url.value,
-    isCreatingDynamic,
-    isCreatingBucket,
-    isBucket.value,
-    editUrl.value,
-  ]);
+  };
 
   // Flag create button when new QR management links exist
   useEffect(() => {
@@ -631,6 +626,8 @@ export default function SmartInput(
         onLockerDisable={handleLockerDisable}
         onTextCardConfirm={handleTextCardConfirm}
         isCreatingLocker={isCreatingBucket}
+        onCreateEditable={handleCreateEditable}
+        isCreatingEditable={isCreatingDynamic}
         splashConfig={splashConfig}
         frameConfig={frameConfig}
       />
