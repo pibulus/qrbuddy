@@ -12,7 +12,7 @@ interface StyleSelectorProps {
   isHidden?: Signal<boolean>;
 }
 
-const STYLE_DISPLAY = {
+export const STYLE_DISPLAY = {
   // Swatch colors mirror the actual dot gradients in utils/qr-styles.ts —
   // keep them in sync so the gallery doesn't lie about the output.
   sunset: { name: "Sunset", colors: ["#FF8C42", "#FF69B4", "#9370DB"] },
@@ -39,6 +39,17 @@ export default function StyleSelector(
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isGalleryOpen]);
+
+  // The Create modal's Design tab can summon the gradient builder from here
+  // so brand-minded users never dead-end on a "colors live elsewhere" note.
+  useEffect(() => {
+    const openCreator = () => {
+      isCreatorOpen.value = true;
+    };
+    globalThis.addEventListener("open-gradient-creator", openCreator);
+    return () =>
+      globalThis.removeEventListener("open-gradient-creator", openCreator);
+  }, []);
 
   if (isHidden?.value) return null;
 

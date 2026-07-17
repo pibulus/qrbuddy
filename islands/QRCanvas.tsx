@@ -493,17 +493,19 @@ export default function QRCanvas(
       {
         /* Empty state is shown, not told: full color always (a faded QR read
           as broken), but the card sits slightly small and grows to full size
-          on the first character. The ⬇ chip appears with real content to
-          show the card is a download button. */
+          on the first character. The ⬇ chip is ALWAYS present so first-timers
+          learn the card is a download button — soft while empty, popping to
+          full strength when real content lands. */
       }
-      {url.value && (
-        <div
-          class="absolute -bottom-3 -right-3 w-10 h-10 rounded-full bg-white border-2 border-black shadow-chunky flex items-center justify-center text-xl font-black text-black z-10 pointer-events-none animate-bounce-in select-none"
-          aria-hidden="true"
-        >
-          ↓
-        </div>
-      )}
+      <div
+        key={url.value ? "chip-live" : "chip-idle"}
+        class={`absolute -bottom-3 -right-3 w-10 h-10 rounded-full bg-white border-2 border-black shadow-chunky flex items-center justify-center text-xl font-black text-black z-10 pointer-events-none select-none transition-opacity ${
+          url.value ? "animate-bounce-in" : "opacity-60"
+        }`}
+        aria-hidden="true"
+      >
+        ↓
+      </div>
 
       {/* Destructible badge */}
       {isDestructible?.value && (
