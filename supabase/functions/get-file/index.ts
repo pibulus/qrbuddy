@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
 import JSZip from "https://esm.sh/jszip@3.10.1";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 

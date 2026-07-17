@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+// @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
 import JSZip from "jszip";
 import QRCodeStyling from "qr-code-styling";
 import { haptics } from "../utils/haptics.ts";

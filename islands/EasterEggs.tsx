@@ -25,7 +25,7 @@ export default function EasterEggs({ url, style }: EasterEggsProps) {
 
   useEffect(() => {
     const text = url.value.toLowerCase();
-    const timeouts: number[] = [];
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     for (const [trigger, config] of Object.entries(EASTER_EGGS)) {
       if (text.includes(trigger)) {

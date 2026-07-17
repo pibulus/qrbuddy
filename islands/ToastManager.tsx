@@ -11,7 +11,7 @@ interface Toast {
 export const toastQueue = signal<Toast[]>([]);
 
 // Store timeout IDs to allow cleanup
-const toastTimeouts = new Map<string, number>();
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 export function addToast(message: string, duration = 2000) {
   const id = `${Date.now()}-${Math.random()}`;

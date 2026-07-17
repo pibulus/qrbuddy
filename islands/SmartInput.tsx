@@ -63,6 +63,17 @@ export default function SmartInput(
   const [showReader, setShowReader] = useState(false);
   const [stagedDecoded, setStagedDecoded] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
+
+  // PWA "Quick QR" shortcut (manifest.json) lands on /?quick=true — jump
+  // straight into typing.
+  useEffect(() => {
+    if (
+      new URLSearchParams(globalThis.location?.search ?? "").has("quick")
+    ) {
+      textInputRef.current?.focus();
+    }
+  }, []);
 
   // Create sheet state
   const [selectedTemplate, setSelectedTemplate] = useState<QRTemplateType>(
@@ -634,6 +645,7 @@ export default function SmartInput(
           onDrop={handleDrop}
         >
           <input
+            ref={textInputRef}
             type="text"
             value={url.value}
             onInput={handleInput}
