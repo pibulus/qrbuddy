@@ -26,23 +26,27 @@ const ALLOWED_ORIGINS = Deno.env.get("DENO_DEPLOYMENT_ID")
  * or the primary production origin as a safe default.
  */
 export function getAllowedOrigin(request?: Request): string {
-  // APP_URL env var overrides everything (custom domain during migration etc.)
+  // APP_URL joins the whitelist — it must NOT override it, or secondary
+  // origins (the *.deno.net alias, www) can never pass a credentialed
+  // preflight and every cross-origin call from them dies.
   const appUrl = Deno.env.get("APP_URL");
-  if (appUrl) {
-    return appUrl;
-  }
+  const allowed = appUrl && !ALLOWED_ORIGINS.includes(appUrl)
+    ? [appUrl, ...ALLOWED_ORIGINS]
+    : ALLOWED_ORIGINS;
 
   // If we have a request, echo back the origin if it's in our whitelist
   if (request) {
     const origin = request.headers.get("Origin");
-    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    if (origin && allowed.includes(origin)) {
       return origin;
     }
   }
 
-  // Production fallback
-  const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID");
-  if (isProduction) {
+  // No/unknown Origin: prefer the canonical app URL, then platform defaults
+  if (appUrl) {
+    return appUrl;
+  }
+  if (Deno.env.get("DENO_DEPLOYMENT_ID")) {
     return "https://qrbuddy.app";
   }
 
