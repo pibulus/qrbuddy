@@ -1,4 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
+// @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
 import JSZip from "jszip";
 import { formatFileSize } from "../utils/file-validation.ts";
 
@@ -257,7 +258,7 @@ export default function FileSlideshow({
               <button
                 type="button"
                 onClick={prevSlide}
-                class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-black/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
+                class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-[#2B1A0E]/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
                 aria-label="Previous image"
               >
                 ←
@@ -265,7 +266,7 @@ export default function FileSlideshow({
               <button
                 type="button"
                 onClick={nextSlide}
-                class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-black/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
+                class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-[#2B1A0E]/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
                 aria-label="Next image"
               >
                 →

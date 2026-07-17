@@ -58,7 +58,7 @@ export function AboutModal() {
   if (isIntro) {
     return (
       <div
-        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#2B1A0E]/60 backdrop-blur-sm animate-fade-in"
         onClick={closeAboutModal}
         role="dialog"
         aria-modal="true"
@@ -145,7 +145,7 @@ export function AboutModal() {
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#2B1A0E]/60 backdrop-blur-sm animate-fade-in"
         onClick={closeAboutModal}
         role="dialog"
         aria-modal="true"
@@ -315,7 +315,7 @@ export function AboutLink({
   return (
     <button
       type="button"
-      onClick={openAboutModal}
+      onClick={() => openAboutModal()}
       class={`px-4 min-h-[44px] inline-flex items-center justify-center text-sm bg-white text-black border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95 ${className}`}
     >
       {label}

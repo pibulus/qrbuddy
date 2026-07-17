@@ -255,7 +255,7 @@ export default function QRReader(
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
-        class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        class="absolute inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm"
         onClick={onClose}
       />
 

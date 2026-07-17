@@ -230,7 +230,8 @@ adding surfaces:
   state is signalled by a subtle `scale-[0.97]` posture, full color always.
 - **Z scale**: content ≤10 · page chrome 40–50 · modals/sheets `z-[60]` ·
   drawers `z-[70]` · toasts `z-[80]` (toasts must beat every modal).
-- **Backdrop**: one recipe everywhere — `bg-black/60 backdrop-blur-sm`.
+- **Backdrop**: one recipe everywhere — `bg-[#2B1A0E]/60 backdrop-blur-sm` (warm
+  espresso, not pure black — pure black over the cream page read muddy olive).
 - **Interactive sheets** (CreateModal, QRReader, style gallery,
   GradientCreator): bottom sheet on mobile (`items-end`, `rounded-t-3xl`, no
   side border, `animate-slide-up`), centered card on `sm:+`
