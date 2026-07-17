@@ -6,7 +6,9 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: 45,
         colorStops: [
-          { offset: 0, color: "#FFE5B4" },
+          // Golden-hour orange, not peach — peach (#FFE5B4) matched the bg's
+          // own gradient end and made the top corner undecodable.
+          { offset: 0, color: "#FF8C42" },
           { offset: 0.5, color: "#FF69B4" },
           { offset: 1, color: "#9370DB" },
         ],
@@ -52,10 +54,12 @@ export const QR_STYLES = {
       type: "gradient",
       gradient: {
         type: "radial" as const,
+        // Deep-end blues — the old sky-blue/teal stops sat too close to the
+        // aqua background luminance for decoders.
         colorStops: [
-          { offset: 0, color: "#87CEEB" },
-          { offset: 0.5, color: "#4ECDC4" },
-          { offset: 1, color: "#3AA8A4" },
+          { offset: 0, color: "#4AA8D8" },
+          { offset: 0.5, color: "#2EB5AC" },
+          { offset: 1, color: "#2E8B87" },
         ],
       },
     },
@@ -66,15 +70,15 @@ export const QR_STYLES = {
         rotation: 180,
         colorStops: [
           { offset: 0, color: "#E0FFFF" },
-          { offset: 1, color: "#B0E0E6" },
+          { offset: 1, color: "#C9EEF2" },
         ],
       },
     },
     cornersSquare: {
-      color: "#4ECDC4",
+      color: "#2E8B87",
     },
     cornersDot: {
-      color: "#3AA8A4",
+      color: "#256F6B",
     },
   },
 
@@ -100,9 +104,11 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: 90,
         colorStops: [
+          // Hard-candy saturation — gold (#FFD700) on the blush bg was
+          // ~1.25:1 contrast and failed every decoder tested.
           { offset: 0, color: "#FF69B4" },
-          { offset: 0.33, color: "#FFD700" },
-          { offset: 0.66, color: "#4ECDC4" },
+          { offset: 0.33, color: "#FF8C00" },
+          { offset: 0.66, color: "#2EB5AC" },
           { offset: 1, color: "#FF69B4" },
         ],
       },
@@ -116,7 +122,7 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: 45,
         colorStops: [
-          { offset: 0, color: "#FFD700" },
+          { offset: 0, color: "#FF8C00" },
           { offset: 1, color: "#FF69B4" },
         ],
       },
@@ -133,9 +139,12 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: 45,
         colorStops: [
-          { offset: 0, color: "#FF00FF" },
-          { offset: 0.5, color: "#00FFFF" },
-          { offset: 1, color: "#FF00FF" },
+          // Deepened from pure neon (#FF00FF/#00FFFF): full-saturation hues on
+          // a tinted bg decoded only at lucky resolutions. These keep the
+          // vaporwave read with real luminance margin.
+          { offset: 0, color: "#E600E6" },
+          { offset: 0.5, color: "#009999" },
+          { offset: 1, color: "#E600E6" },
         ],
       },
     },
@@ -144,16 +153,16 @@ export const QR_STYLES = {
       gradient: {
         type: "radial" as const,
         colorStops: [
-          { offset: 0, color: "rgba(255, 0, 255, 0.22)" },
-          { offset: 1, color: "rgba(0, 255, 255, 0.22)" },
+          { offset: 0, color: "rgba(255, 0, 255, 0.14)" },
+          { offset: 1, color: "rgba(0, 255, 255, 0.14)" },
         ],
       },
     },
     cornersSquare: {
-      color: "#FF00FF",
+      color: "#E600E6",
     },
     cornersDot: {
-      color: "#00FFFF",
+      color: "#009999",
     },
   },
 

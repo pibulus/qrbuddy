@@ -30,6 +30,7 @@
     "qr-code-styling": "https://esm.sh/qr-code-styling@1.6.0-rc.1?target=es2022",
     "jszip": "https://esm.sh/jszip@3.10.1?target=es2022",
     "jsqr": "https://esm.sh/jsqr@1.4.0?target=es2022",
+    "zxing-wasm/reader": "https://esm.sh/zxing-wasm@2.1.2/reader?target=es2022",
     "$std/": "https://deno.land/std@0.216.0/"
   },
   "compilerOptions": {

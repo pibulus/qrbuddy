@@ -7,6 +7,7 @@ import type { QRStyle } from "../types/qr-types.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import { addToHistory } from "../utils/history.ts";
 import { haptics } from "../utils/haptics.ts";
+import { checkQRScannability } from "../utils/qr-decode.ts";
 
 interface QRCanvasProps {
   url: Signal<string>;
@@ -51,6 +52,9 @@ export default function QRCanvas(
   const [stylePop, setStylePop] = useState(false);
   const prevStyleRef = useRef(style.value);
   const prevCustomRef = useRef(customStyle?.value);
+  // Decode-check verdict for the current render: silence means scannable.
+  const [scanWarning, setScanWarning] = useState(false);
+  const scanCheckToken = useRef(0);
 
   useEffect(() => {
     if (!url.value) return;
@@ -218,7 +222,7 @@ export default function QRCanvas(
     if (dots?.color) {
       return `linear-gradient(135deg, ${dots.color}, ${dots.color})`;
     }
-    return "linear-gradient(135deg, #FFE5B4, #FF69B4, #9370DB)";
+    return "linear-gradient(135deg, #FF8C42, #FF69B4, #9370DB)";
   };
 
   // Helper function to get the current style object
@@ -363,6 +367,24 @@ export default function QRCanvas(
     });
   }, [url.value, style.value, customStyle?.value, logoUrl?.value]);
 
+  // The honesty check: after each render settles, machine-decode the actual
+  // canvas. If a real decoder can't read it (wild custom gradients, huge
+  // payloads), say so with a chip instead of letting someone print a dud.
+  useEffect(() => {
+    const token = ++scanCheckToken.current;
+    const timer = setTimeout(async () => {
+      const source = canvasRef.current?.querySelector("canvas");
+      if (!source) return;
+      const verdict = await checkQRScannability(
+        source,
+        url.value || "https://qrbuddy.app",
+      );
+      if (token !== scanCheckToken.current) return; // superseded render
+      setScanWarning(verdict === false);
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [url.value, style.value, customStyle?.value, logoUrl?.value]);
+
   useEffect(() => {
     if (triggerDownload.value && qrCodeRef.current) {
       qrCodeRef.current.download({
@@ -497,6 +519,16 @@ export default function QRCanvas(
       {isDynamic?.value && !isDestructible?.value && (
         <div class="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float will-change-transform z-10 pointer-events-none select-none">
           🔗 editable
+        </div>
+      )}
+
+      {/* Scannability warning — only appears when a real decoder failed */}
+      {scanWarning && (
+        <div
+          class="absolute -bottom-3 -left-3 bg-gradient-to-r from-amber-400 to-orange-400 text-black px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-bounce-in z-10 pointer-events-none select-none"
+          title="A scanner may struggle with this combo — try darker colors or a shorter link"
+        >
+          ⚠️ hard to scan
         </div>
       )}
     </div>

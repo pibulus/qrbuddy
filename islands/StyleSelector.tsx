@@ -13,11 +13,13 @@ interface StyleSelectorProps {
 }
 
 const STYLE_DISPLAY = {
-  sunset: { name: "Sunset", colors: ["#FFE5B4", "#FF69B4", "#9370DB"] },
-  pool: { name: "Pool", colors: ["#87CEEB", "#4ECDC4"] },
+  // Swatch colors mirror the actual dot gradients in utils/qr-styles.ts —
+  // keep them in sync so the gallery doesn't lie about the output.
+  sunset: { name: "Sunset", colors: ["#FF8C42", "#FF69B4", "#9370DB"] },
+  pool: { name: "Pool", colors: ["#4AA8D8", "#2EB5AC"] },
   terminal: { name: "Matrix", colors: ["#00FF41", "#0A0A0A"] },
-  candy: { name: "Candy", colors: ["#FF69B4", "#FFD700", "#4ECDC4"] },
-  vapor: { name: "Vapor", colors: ["#FF00FF", "#00FFFF"] },
+  candy: { name: "Candy", colors: ["#FF69B4", "#FF8C00", "#2EB5AC"] },
+  vapor: { name: "Vapor", colors: ["#E600E6", "#009999"] },
   noir: { name: "Classic", colors: ["#1A1A1A", "#FAFAFA"] },
   brutalist: { name: "Brutal", colors: ["#000000", "#FFFF00"] },
 };
@@ -151,7 +153,7 @@ export default function StyleSelector(
       {isGalleryOpen && (
         <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
           <div
-            class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            class="absolute inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsGalleryOpen(false)}
           />
           <div

@@ -48,6 +48,7 @@ import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploa
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
 import * as $templates_MediaHubForm from "./islands/templates/MediaHubForm.tsx";
+import * as $templates_PhoneForm from "./islands/templates/PhoneForm.tsx";
 import * as $templates_SMSForm from "./islands/templates/SMSForm.tsx";
 import * as $templates_SocialHubForm from "./islands/templates/SocialHubForm.tsx";
 import * as $templates_VCardForm from "./islands/templates/VCardForm.tsx";
@@ -107,6 +108,7 @@ const manifest = {
       $smart_input_SmartInputToolbar,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
     "./islands/templates/MediaHubForm.tsx": $templates_MediaHubForm,
+    "./islands/templates/PhoneForm.tsx": $templates_PhoneForm,
     "./islands/templates/SMSForm.tsx": $templates_SMSForm,
     "./islands/templates/SocialHubForm.tsx": $templates_SocialHubForm,
     "./islands/templates/VCardForm.tsx": $templates_VCardForm,
