@@ -1,10 +1,85 @@
 import { Signal, useSignal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
+import QRCodeStyling from "qr-code-styling";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import GradientCreator from "./GradientCreator.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
 import { addToast } from "./ToastManager.tsx";
+import { checkBlobScannability } from "../utils/qr-decode.ts";
+
+const DICE_PROBE_DATA = "https://qrbuddy.app";
+const DICE_MAX_ATTEMPTS = 4;
+
+// Two stops only, with luma-aware lightness: yellows/greens/cyans read far
+// lighter than blues/purples at the same HSL lightness, and a washed finder
+// pattern in any corner kills scannability — this is a starting bias, not a
+// guarantee, which is why every roll gets decode-checked before it commits.
+function rollGradient(): QRStyle {
+  const baseHue = Math.floor(Math.random() * 360);
+  const spread = 80 + Math.floor(Math.random() * 100); // 80–180° apart
+  const hues = [baseHue, (baseHue + spread) % 360];
+  const lightnessFor = (h: number) =>
+    h >= 40 && h <= 200
+      ? 26 + Math.floor(Math.random() * 8)
+      : 34 + Math.floor(Math.random() * 12);
+  const stops = hues.map((h, i) => ({
+    offset: i / (hues.length - 1),
+    color: `hsl(${h}, ${65 + Math.floor(Math.random() * 20)}%, ${
+      lightnessFor(h)
+    }%)`,
+  }));
+  const gradient = {
+    type: "linear" as const,
+    rotation: Math.random() * Math.PI,
+    colorStops: stops,
+  };
+  return {
+    dots: { type: "gradient", gradient },
+    background: { color: `hsl(${baseHue}, 60%, 96%)` },
+    cornersSquare: { gradient },
+    cornersDot: { gradient },
+  };
+}
+
+/** Off-DOM render of a candidate style, for the decode-before-commit probe. */
+async function renderProbeBlob(candidate: QRStyle): Promise<Blob | null> {
+  const qr = new QRCodeStyling({
+    width: 250,
+    height: 250,
+    data: DICE_PROBE_DATA,
+    margin: 8,
+    qrOptions: { typeNumber: 0, mode: "Byte", errorCorrectionLevel: "Q" },
+    dotsOptions: {
+      type: "rounded",
+      gradient: "gradient" in candidate.dots
+        ? candidate.dots.gradient
+        : undefined,
+    },
+    backgroundOptions: {
+      color: "color" in candidate.background
+        ? candidate.background.color
+        : undefined,
+    },
+    cornersSquareOptions: {
+      type: "extra-rounded",
+      gradient: candidate.cornersSquare && "gradient" in candidate.cornersSquare
+        ? candidate.cornersSquare.gradient
+        : undefined,
+    },
+    cornersDotOptions: {
+      type: "dot",
+      gradient: candidate.cornersDot && "gradient" in candidate.cornersDot
+        ? candidate.cornersDot.gradient
+        : undefined,
+    },
+  });
+  try {
+    return await qr.getRawData("png") as Blob | null;
+  } catch {
+    return null;
+  }
+}
 
 interface StyleSelectorProps {
   style: Signal<string>;
@@ -28,6 +103,7 @@ export default function StyleSelector(
   { style, customStyle, isHidden }: StyleSelectorProps,
 ) {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isRolling, setIsRolling] = useState(false);
   const isCreatorOpen = useSignal(false);
 
   // Close the style gallery on Escape (matches the other dialogs).
@@ -80,40 +156,30 @@ export default function StyleSelector(
     "Nat 20 energy 🐉",
   ];
 
-  const handleDiceRoll = () => {
-    if (!customStyle) return;
-    const baseHue = Math.floor(Math.random() * 360);
-    const spread = 80 + Math.floor(Math.random() * 100); // 80–180° apart
-    const hues = [baseHue, (baseHue + spread) % 360];
-    // Two stops only, with luma-aware lightness: yellows/greens/cyans read
-    // far lighter than blues/purples at the same HSL lightness, and a washed
-    // finder pattern in any corner kills scannability (verified with the
-    // built-in reader — the dice must never roll an unscannable QR).
-    const lightnessFor = (h: number) =>
-      h >= 40 && h <= 200
-        ? 26 + Math.floor(Math.random() * 8)
-        : 34 + Math.floor(Math.random() * 12);
-    const stops = hues.map((h, i) => ({
-      offset: i / (hues.length - 1),
-      color: `hsl(${h}, ${65 + Math.floor(Math.random() * 20)}%, ${
-        lightnessFor(h)
-      }%)`,
-    }));
-    const gradient = {
-      type: "linear" as const,
-      rotation: Math.random() * Math.PI,
-      colorStops: stops,
-    };
-    customStyle.value = {
-      dots: { type: "gradient", gradient },
-      background: { color: `hsl(${baseHue}, 60%, 96%)` },
-      cornersSquare: { gradient },
-      cornersDot: { gradient },
-    };
-    style.value = "custom";
-    haptics.medium();
-    sounds.click();
-    addToast(DICE_QUIPS[Math.floor(Math.random() * DICE_QUIPS.length)]);
+  // Roll, decode-check, reroll on a fail — up to DICE_MAX_ATTEMPTS times —
+  // so "the dice must never roll an unscannable QR" is an enforced gate,
+  // not just a hand-tuned hope. Last attempt wins even if every check comes
+  // back null/false, so this can never hang or soft-lock the button.
+  const handleDiceRoll = async () => {
+    if (!customStyle || isRolling) return;
+    setIsRolling(true);
+    try {
+      let candidate = rollGradient();
+      for (let attempt = 0; attempt < DICE_MAX_ATTEMPTS; attempt++) {
+        candidate = attempt === 0 ? candidate : rollGradient();
+        const blob = await renderProbeBlob(candidate);
+        if (!blob) break; // render/probe unavailable — accept, don't hang
+        const verdict = await checkBlobScannability(blob, DICE_PROBE_DATA);
+        if (verdict !== false) break; // true or null (unknown) both pass
+      }
+      customStyle.value = candidate;
+      style.value = "custom";
+      haptics.medium();
+      sounds.click();
+      addToast(DICE_QUIPS[Math.floor(Math.random() * DICE_QUIPS.length)]);
+    } finally {
+      setIsRolling(false);
+    }
   };
 
   const currentStyleInfo = style.value === "custom"

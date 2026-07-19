@@ -122,6 +122,50 @@ export async function checkQRScannability(
   }
 }
 
+/**
+ * Decode straight from an off-DOM render (no live canvas needed) — used to
+ * probe a candidate style BEFORE committing it, e.g. the style dice. Draws
+ * the blob at the same small size checkQRScannability uses, so a probe and
+ * a post-render check agree on the same pass/fail bar.
+ */
+export async function checkBlobScannability(
+  blob: Blob,
+  expected: string,
+): Promise<boolean | null> {
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(blob);
+  } catch {
+    return null;
+  }
+  const probe = document.createElement("canvas");
+  const SIZE = 250;
+  probe.width = SIZE;
+  probe.height = SIZE;
+  const ctx = probe.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return null;
+  ctx.drawImage(bitmap, 0, 0, SIZE, SIZE);
+
+  let imageData: ImageData;
+  try {
+    imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+  } catch {
+    return null;
+  }
+
+  try {
+    const { readBarcodes } = await loadZXing();
+    const results = await readBarcodes(imageData, {
+      formats: ["QRCode"],
+      tryHarder: true,
+      tryInvert: true,
+    });
+    return results.some((r) => r.isValid && r.text === expected);
+  } catch {
+    return null;
+  }
+}
+
 /** Single-shot decode for camera frames (already sized by the caller). */
 export async function decodeQRFromImageData(
   imageData: ImageData,
