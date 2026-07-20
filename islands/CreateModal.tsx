@@ -2,6 +2,7 @@ import { type Signal, useSignal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import { haptics } from "../utils/haptics.ts";
+import { addToast } from "./ToastManager.tsx";
 import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import QRCanvas from "./QRCanvas.tsx";
@@ -344,13 +345,6 @@ export default function CreateModal({
     }
   };
 
-  function notify(message: string, type: "success" | "error" = "success") {
-    const event = new CustomEvent("show-toast", {
-      detail: { message, type },
-    });
-    globalThis.dispatchEvent(event);
-  }
-
   async function handleCopyResult(
     message = "Link copied! 📋",
     showFailure = true,
@@ -360,12 +354,12 @@ export default function CreateModal({
 
     try {
       await navigator.clipboard.writeText(resultUrl);
-      notify(message);
+      addToast(message);
       haptics.copy();
     } catch (error) {
       console.error("Copy result link failed:", error);
       if (showFailure) {
-        notify("Couldn't copy link", "error");
+        addToast("Couldn't copy link", 3000);
       }
       haptics.error();
     }
@@ -953,7 +947,7 @@ export default function CreateModal({
                 new CustomEvent("qr-export", { detail: { format: "png" } }),
               );
               haptics.medium();
-              notify("PNG on the way! ⬇");
+              addToast("PNG on the way! ⬇");
             }}
             class="min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
           >
@@ -966,7 +960,7 @@ export default function CreateModal({
                 new CustomEvent("qr-export", { detail: { format: "svg" } }),
               );
               haptics.medium();
-              notify("SVG on the way! ⬇");
+              addToast("SVG on the way! ⬇");
             }}
             class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
           >
@@ -979,15 +973,15 @@ export default function CreateModal({
             const { qrToTextArt } = await import("../utils/qr-ascii.ts");
             const art = qrToTextArt(url.value || "https://qrbuddy.app");
             if (!art) {
-              notify("Too much data for text art 😅");
+              addToast("Too much data for text art 😅");
               return;
             }
             try {
               await navigator.clipboard.writeText(art);
               haptics.success();
-              notify("Text-art QR copied — paste it anywhere 📋");
+              addToast("Text-art QR copied — paste it anywhere 📋");
             } catch {
-              notify("Couldn't reach the clipboard 😞");
+              addToast("Couldn't reach the clipboard 😞");
             }
           }}
           class="w-full min-h-[48px] rounded-xl border-3 border-dashed border-gray-400 bg-white px-4 py-2 font-bold text-gray-700 hover:border-black hover:text-black transition-all font-mono"

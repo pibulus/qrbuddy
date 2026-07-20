@@ -2,10 +2,9 @@ import { Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
-import {
-  ApiError,
-  apiRequestFormDataWithProgress,
-} from "../utils/api-request.ts";
+import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
+import { addToast } from "../islands/ToastManager.tsx";
+import { reportFailure } from "../utils/report-failure.ts";
 import { validateFile } from "../utils/file-validation.ts";
 import {
   UNLIMITED_SCANS,
@@ -148,13 +147,7 @@ export function useFileUpload(
       // Append copy notice
       successMessage += " (Link copied!)";
 
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: successMessage,
-          type: "success",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      addToast(successMessage, 3000);
 
       // Reset progress after a moment
       setTimeout(() => {
@@ -163,29 +156,15 @@ export function useFileUpload(
         setUploadProgress(0);
       }, UPLOAD_RESET_DELAY_MS);
     } catch (error) {
-      console.error("[HOOK:useFileUpload] Upload failed:", {
-        error: error instanceof Error ? error.message : String(error),
-        statusCode: error instanceof ApiError ? error.statusCode : undefined,
-        timestamp: new Date().toISOString(),
-      });
-
-      const errorMessage = error instanceof Error
-        ? error.message
-        : String(error);
+      const errorMessage = reportFailure(
+        "[HOOK:useFileUpload] Upload failed",
+        error,
+        "❌ Upload failed",
+      );
       setUploadError(errorMessage);
       inFlightRef.current = false;
       setIsUploading(false);
       setUploadProgress(0);
-      haptics.error();
-
-      // Show error toast
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `❌ Upload failed: ${errorMessage}`,
-          type: "error",
-        },
-      });
-      globalThis.dispatchEvent(event);
     }
   };
 

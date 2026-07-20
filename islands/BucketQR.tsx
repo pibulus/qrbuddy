@@ -7,6 +7,7 @@ import { getAuthHeaders } from "../utils/api.ts";
 import { useKeypad } from "../hooks/useKeypad.ts";
 import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
 import { formatFileSize, validateFile } from "../utils/file-validation.ts";
+import { addToast } from "./ToastManager.tsx";
 
 interface BucketContentMetadata {
   filename?: string;
@@ -493,23 +494,14 @@ export default function BucketQR({
         try {
           await navigator.clipboard.writeText(data.content);
           haptics.success();
-          const event = new CustomEvent("show-toast", {
-            detail: {
-              message: "✅ Content copied to clipboard!",
-              type: "success",
-            },
-          });
-          globalThis.dispatchEvent(event);
+          addToast("✅ Content copied to clipboard!");
         } catch {
-          // Fallback: show in console if clipboard fails
-          const event = new CustomEvent("show-toast", {
-            detail: {
-              message: "Content: " + data.content.substring(0, 50) +
-                (data.content.length > 50 ? "..." : ""),
-              type: "info",
-            },
-          });
-          globalThis.dispatchEvent(event);
+          // Fallback: show a preview of the content if clipboard fails
+          addToast(
+            "Content: " + data.content.substring(0, 50) +
+              (data.content.length > 50 ? "..." : ""),
+            4000,
+          );
         }
       }
 
@@ -610,22 +602,10 @@ export default function BucketQR({
     haptics.light();
     try {
       await navigator.clipboard.writeText(bucketUrl);
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: "Bucket URL copied! 📋",
-          type: "success",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      addToast("Bucket URL copied! 📋");
     } catch (err) {
       console.error("Failed to copy URL:", err);
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: "Failed to copy URL ❌",
-          type: "error",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      addToast("Failed to copy URL ❌", 3000);
     }
   };
 

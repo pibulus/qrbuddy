@@ -40,22 +40,22 @@ export function getApiUrl(): string {
     return `${supabaseUrl}/functions/v1`;
   }
 
-  // When no Supabase URL is configured, default to the local mock API
-  // (used in development without Supabase).
-  if (typeof globalThis !== "undefined" && "location" in globalThis) {
-    const hostname = (globalThis as typeof globalThis & { location?: Location })
-      .location?.hostname;
-    if (
-      hostname === "localhost" ||
-      hostname === "0.0.0.0" ||
-      hostname?.startsWith("127.")
-    ) {
-      return "http://localhost:8005";
-    }
+  // No Supabase URL configured: local dev against the mock API. In a browser
+  // on a real domain that's a deploy misconfiguration — fail loud instead of
+  // silently pointing every fetch at localhost.
+  const hostname = (globalThis as typeof globalThis & { location?: Location })
+    .location?.hostname;
+  if (
+    hostname &&
+    hostname !== "localhost" &&
+    hostname !== "0.0.0.0" &&
+    !hostname.startsWith("127.")
+  ) {
+    throw new Error(
+      "SUPABASE_URL is not configured — refusing to fall back to the local mock API in production",
+    );
   }
 
-  // Production fallback (should rarely be hit): assume same-origin edge
-  // function proxy is unavailable and tell the caller to use local mock.
   return "http://localhost:8005";
 }
 

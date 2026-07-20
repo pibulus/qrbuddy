@@ -4,6 +4,8 @@ import JSZip from "jszip";
 import QRCodeStyling from "qr-code-styling";
 import { haptics } from "../utils/haptics.ts";
 import { Signal } from "@preact/signals";
+import { addToast } from "../islands/ToastManager.tsx";
+import { reportFailure } from "../utils/report-failure.ts";
 
 interface UseBatchGeneratorProps {
   batchUrls: string;
@@ -23,13 +25,7 @@ export function useBatchGenerator(
       );
 
       if (urls.length === 0) {
-        const event = new CustomEvent("show-toast", {
-          detail: {
-            message: "❌ No URLs provided!",
-            type: "error",
-          },
-        });
-        globalThis.dispatchEvent(event);
+        addToast("❌ No URLs provided!", 3000);
         return;
       }
 
@@ -91,26 +87,10 @@ export function useBatchGenerator(
       haptics.success();
       setIsGeneratingBatch(false);
 
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `📦 Batch complete! Downloaded ${urls.length} QR codes.`,
-          type: "success",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      addToast(`📦 Batch complete! Downloaded ${urls.length} QR codes.`, 3000);
     } catch (error) {
-      console.error("Batch generation failed:", error);
       setIsGeneratingBatch(false);
-      haptics.error();
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `❌ Batch failed: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-          type: "error",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      reportFailure("Batch generation failed", error, "❌ Batch failed");
     }
   };
 

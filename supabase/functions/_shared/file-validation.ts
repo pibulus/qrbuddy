@@ -3,7 +3,11 @@
  * =================================================
  *
  * Shared validation logic for Supabase Edge Functions.
- * Matches client-side validation in utils/file-validation.ts.
+ *
+ * ⚠️ CANONICAL SOURCE: the blocklists and MAX_FILE_SIZE below are THE single
+ * source of truth — the client (utils/file-validation.ts) imports them from
+ * here. Edge functions can't import outside supabase/functions/, which is why
+ * this copy is the canonical one. Edit the lists here and both sides update.
  */
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB

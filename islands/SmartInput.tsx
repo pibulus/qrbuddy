@@ -202,13 +202,7 @@ export default function SmartInput(
     bucketUrl.value = "";
     url.value = "";
 
-    const event = new CustomEvent("show-toast", {
-      detail: {
-        message: "Locker disconnected. Drop a new link to continue.",
-        type: "info",
-      },
-    });
-    globalThis.dispatchEvent(event);
+    addToast("Locker disconnected. Drop a new link to continue.", 3000);
   };
 
   // Handle Smart Media Creation (from MediaHubForm)
@@ -319,14 +313,7 @@ export default function SmartInput(
     ) {
       void createDynamicQR(url.value);
     } else if (url.value && !isValidUrl(url.value)) {
-      globalThis.dispatchEvent(
-        new CustomEvent("show-toast", {
-          detail: {
-            message: "Editable needs a real link — try https://…",
-            type: "error",
-          },
-        }),
-      );
+      addToast("Editable needs a real link — try https://…", 3000);
     }
   };
 

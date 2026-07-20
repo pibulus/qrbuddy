@@ -1,6 +1,7 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import BucketQR from "../../islands/BucketQR.tsx";
+import ToastManager from "../../islands/ToastManager.tsx";
 import { getApiUrl, getAuthHeaders } from "../../utils/api.ts";
 
 interface BucketContentMetadata {
@@ -130,6 +131,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
       </Head>
 
       <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-qr-cream via-[#FFF1DE] to-qr-sunset1">
+        <ToastManager />
         <div class="w-full max-w-lg space-y-6">
           {/* Header */}
           <header class="text-center space-y-2">

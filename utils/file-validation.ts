@@ -26,88 +26,21 @@
  * - Uses both extension and MIME type checks for defense in depth
  */
 
-/**
- * Maximum allowed file size: 50MB
- * Matches Supabase edge function limit
- */
-export const MAX_FILE_SIZE = 50 * 1024 * 1024;
-
-/**
- * Blocked file extensions for security
- * Prevents executable files, scripts, and installers from being uploaded
- *
- * Includes:
- * - Windows executables (.exe, .bat, .cmd, .msi, .scr)
- * - Scripts (.js, .vbs, .ps1, .sh)
- * - Mobile apps (.apk, .ipa)
- * - System files (.sys, .dll via other patterns)
- */
-export const BLOCKED_EXTENSIONS = [
-  "exe",
-  "bat",
-  "cmd",
-  "sh",
-  "app",
-  "dmg",
-  "pkg",
-  "deb",
-  "rpm",
-  "msi",
-  "scr",
-  "vbs",
-  "js",
-  "jar",
-  "apk",
-  "ipa",
-  "com",
-  "pif",
-  "application",
-  "gadget",
-  "msp",
-  "cpl",
-  "hta",
-  "inf",
-  "ins",
-  "isp",
-  "jse",
-  "lnk",
-  "msc",
-  "psc1",
-  "reg",
-  "scf",
-  "vb",
-  "vbe",
-  "wsf",
-  "wsh",
-  "ps1",
-  "ps1xml",
-  "ps2",
-  "ps2xml",
-  "psc2",
-  "msh",
-  "msh1",
-  "msh2",
-  "mshxml",
-  "msh1xml",
-  "msh2xml",
-];
-
-/**
- * Blocked MIME types for additional security
- * Provides a second layer of validation beyond file extensions
- *
- * Note: Attackers can spoof MIME types, so this is used in combination
- * with extension checking for defense in depth
- */
-export const BLOCKED_MIME_TYPES = [
-  "application/x-msdownload",
-  "application/x-msdos-program",
-  "application/x-executable",
-  "application/x-sh",
-  "application/x-bat",
-  "application/x-ms-application",
-  "application/vnd.microsoft.portable-executable",
-];
+// CANONICAL SOURCE for the blocklists + size limit:
+// supabase/functions/_shared/file-validation.ts
+// Edge functions can't import from outside supabase/functions/, but the
+// client can import from anywhere — so the edge copy is the single source
+// of truth. Edit the lists THERE, never here.
+export {
+  BLOCKED_EXTENSIONS,
+  BLOCKED_MIME_TYPES,
+  MAX_FILE_SIZE,
+} from "../supabase/functions/_shared/file-validation.ts";
+import {
+  BLOCKED_EXTENSIONS,
+  BLOCKED_MIME_TYPES,
+  MAX_FILE_SIZE,
+} from "../supabase/functions/_shared/file-validation.ts";
 
 export interface FileValidationResult {
   valid: boolean;

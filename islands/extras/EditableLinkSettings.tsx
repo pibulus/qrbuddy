@@ -1,5 +1,6 @@
 import { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
+import { addToast } from "../ToastManager.tsx";
 
 interface EditableLinkSettingsProps {
   editUrl: Signal<string>;
@@ -73,13 +74,7 @@ export default function EditableLinkSettings({
               onClick={() => {
                 navigator.clipboard.writeText(editUrl.value);
                 haptics.success();
-                const event = new CustomEvent("show-toast", {
-                  detail: {
-                    message: "Edit link copied! 📋",
-                    type: "success",
-                  },
-                });
-                globalThis.dispatchEvent(event);
+                addToast("Edit link copied! 📋");
               }}
               class="px-4 py-2 bg-[#9370DB] text-white rounded-lg font-semibold text-sm hover:bg-[#6B46A8] transition-colors"
             >

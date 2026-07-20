@@ -3,7 +3,9 @@ import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
-import { ApiError, apiRequest } from "../utils/api-request.ts";
+import { apiRequest } from "../utils/api-request.ts";
+import { addToast } from "../islands/ToastManager.tsx";
+import { reportFailure } from "../utils/report-failure.ts";
 
 interface UseDynamicQRProps {
   url: Signal<string>;
@@ -86,34 +88,16 @@ export function useDynamicQR(
       // Success feedback
       haptics.success();
 
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `✅ Dynamic QR created! Link copied 🔗`,
-          type: "success",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      addToast("✅ Dynamic QR created! Link copied 🔗");
 
       setIsCreating(false);
     } catch (error) {
-      console.error("[HOOK:useDynamicQR] Create failed:", {
-        error: error instanceof Error ? error.message : String(error),
-        statusCode: error instanceof ApiError ? error.statusCode : undefined,
-        timestamp: new Date().toISOString(),
-      });
-
       setIsCreating(false);
-      haptics.error();
-
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `❌ Failed to create dynamic QR: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-          type: "error",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      reportFailure(
+        "[HOOK:useDynamicQR] Create failed",
+        error,
+        "❌ Failed to create dynamic QR",
+      );
     }
   };
 

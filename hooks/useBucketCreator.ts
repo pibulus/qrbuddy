@@ -4,6 +4,8 @@ import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
+import { addToast } from "../islands/ToastManager.tsx";
+import { reportFailure } from "../utils/report-failure.ts";
 
 export interface CreateBucketOptions {
   bucketType?: "file" | "text" | "link";
@@ -147,35 +149,17 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       // Success feedback
       haptics.success();
 
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `✅ File Locker created! Scan to upload/download files 🪣`,
-          type: "success",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      addToast("✅ File Locker created! Scan to upload/download files 🪣");
 
       setIsCreatingBucket(false);
       return { bucket_code: data.bucket_code, owner_token: data.owner_token };
     } catch (error) {
-      console.error("[HOOK:useBucketCreator] Create bucket failed:", {
-        error: error instanceof Error ? error.message : String(error),
-        statusCode: error instanceof ApiError ? error.statusCode : undefined,
-        timestamp: new Date().toISOString(),
-      });
-
       setIsCreatingBucket(false);
-      haptics.error();
-
-      const event = new CustomEvent("show-toast", {
-        detail: {
-          message: `❌ Failed to create locker: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-          type: "error",
-        },
-      });
-      globalThis.dispatchEvent(event);
+      reportFailure(
+        "[HOOK:useBucketCreator] Create bucket failed",
+        error,
+        "❌ Failed to create locker",
+      );
       return null;
     }
   };
