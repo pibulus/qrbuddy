@@ -84,7 +84,7 @@ export function PricingModal() {
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#2B1A0E]/60 backdrop-blur-sm animate-fade-in"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
         onClick={closePricingModal}
         role="dialog"
         aria-modal="true"

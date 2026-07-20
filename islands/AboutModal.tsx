@@ -58,7 +58,7 @@ export function AboutModal() {
   if (isIntro) {
     return (
       <div
-        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#2B1A0E]/60 backdrop-blur-sm animate-fade-in"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
         onClick={closeAboutModal}
         role="dialog"
         aria-modal="true"
@@ -145,7 +145,7 @@ export function AboutModal() {
     <>
       {/* Backdrop */}
       <div
-        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#2B1A0E]/60 backdrop-blur-sm animate-fade-in"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
         onClick={closeAboutModal}
         role="dialog"
         aria-modal="true"

@@ -132,6 +132,7 @@ export default {
           sunset1: "#FFE5B4",
           sunset2: "#FF69B4",
           sunset3: "#9370DB",
+          sunsetMid: "#FFF1DE",
 
           // Pool gradient
           pool1: "#87CEEB",
@@ -157,6 +158,9 @@ export default {
 
           // Background
           cream: "#FFF8F0",
+
+          // Modal backdrop scrim (warm-black, not pure #000)
+          scrim: "#2B1A0E",
         },
       },
 

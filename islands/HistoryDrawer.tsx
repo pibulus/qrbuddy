@@ -71,7 +71,7 @@ export default function HistoryDrawer(
     <>
       {/* Backdrop */}
       <div
-        class={`fixed inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
+        class={`fixed inset-0 bg-qr-scrim/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
           isOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"

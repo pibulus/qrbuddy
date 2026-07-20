@@ -117,7 +117,7 @@ export default function GradientCreator(
   if (!isOpen.value) return null;
 
   return (
-    <div class="fixed inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[60] p-0 sm:p-6">
+    <div class="fixed inset-0 bg-qr-scrim/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[60] p-0 sm:p-6">
       <div class="bg-white rounded-t-3xl sm:rounded-chunky sm:border-4 border-black shadow-chunky-hover p-4 sm:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-8 max-w-md w-full max-h-[92dvh] overflow-y-auto animate-slide-up sm:animate-pop-in">
         {/* Header */}
         <div class="flex justify-between items-center mb-4 sm:mb-6">

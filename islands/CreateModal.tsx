@@ -1002,7 +1002,7 @@ export default function CreateModal({
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
-        class="absolute inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm transition-opacity"
+        class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 

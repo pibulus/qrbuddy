@@ -13,7 +13,7 @@ export default function EditPage() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-[#FFF1DE] to-qr-sunset1">
+      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1">
         <main class="w-full max-w-2xl space-y-6">
           {/* Header */}
           <header class="text-center space-y-2">

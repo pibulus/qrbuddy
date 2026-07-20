@@ -230,7 +230,7 @@ export default function StyleSelector(
       {isGalleryOpen && (
         <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
           <div
-            class="absolute inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm animate-fade-in"
+            class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsGalleryOpen(false)}
           />
           <div
