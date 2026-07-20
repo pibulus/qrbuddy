@@ -1,34 +1,70 @@
 # Launch hints for Launch Arsenal.
-# Edit aggressively. These fields should pin the app's real audience, problem, and promise.
+# Human-vetted. The generated marker is gone, so these fields are trusted verbatim.
 name: QRBuddy
 slug: qrbuddy
 app_type: web-app
-audience: people who need QR codes that look good and stay under their control
-problem: Made with ❤️ in Melbourne. No VC funding. No corporate BS.
-promise: "QR codes that spark joy. Drop a link, watch it bloom. \U0001F308"
-cta: Reply if you want the link.
+
+audience: >-
+  small business owners, designers, event organisers and makers who put QR codes on real
+  physical things — menus, stickers, posters, business cards — and refuse to ship an ugly
+  black square or pay $30/mo for a tracking dashboard
+
+problem: >-
+  every QR generator is either a bare-bones ugly tool or an enterprise dashboard that
+  charges monthly to edit a URL you already own
+
+promise: Drop a link. Watch it bloom.
+
+one_liner: Drop a link. Watch it bloom.
+
+cta: Make one at https://qrbuddy.app
+
+voice: juicy
+palette: pastel-punk
+
 differentiators:
-  - "QR codes that spark joy. Drop a link, watch it bloom. \U0001F308"
-  - >-
-      So I built QRBuddy. It’s a tool for humans, not data points. It turns QR
-      codes from boring squares into living, breathing interactions.
-  - QRBuddy - Drop a link. Watch it bloom.
-  - "Dynamic QR Codes \U0001F517 - Privacy-first editable redirects with scan limits (coarse scan stats for the owner dashboard only — no IPs, no user agents)"
+  - Six gradient styles plus a custom creator, so the code looks like a design piece instead of a barcode
+  - Self-destructing codes that work once and then blow up — the already-scanned page is a full KABOOM
+  - Editable dynamic redirects with scan limits, without the surveillance tax that usually comes with them
+  - No enterprise tier, no per-scan pricing, no upsell to teams
+
 proof_points:
-  - "Smart Input - Paste URLs, type text, or drop files - it just works"
-  - "Destructible QRs \U0001F4A3 - One-time QR codes (URLs or files) that self-destruct after 1 scan → KABOOM!"
-  - "Dynamic QR Codes \U0001F517 - Privacy-first editable redirects with scan limits (coarse scan stats for the owner dashboard only — no IPs, no user agents)"
-  - "Scan Limits - Set 1, 5, 10, 100, or unlimited scans before self-destruct"
+  - Paste a URL, type text or drop a file — it works out which one you gave it
+  - Change where a printed code points without reprinting the code
+  - Set a code to die after 1, 5, 10 or 100 scans
+  - WiFi, vCard, SMS and email templates so you never look up an encoding format
+
 objections:
-  - "Still wants a human pass on audience, proof, and the sharpest angle."
+  - >-
+    "why not a free generator?" — most hand you a flat black-and-white square. The
+    aesthetic gap shows up the second you put it on a poster.
+  - >-
+    "will the dynamic links stay up?" — the redirects are as durable as the hosting,
+    and the whole thing is open source if you would rather self-host it.
+  - >-
+    "free with no catch?" — there are no scan analytics to sell, so there is nothing
+    to monetise and nothing to upsell you to.
+
 keywords:
   seed:
-    - QRBuddy
-    - qrbuddy
-    - web app
-  audience: people who need QR codes that look good and stay under their control
+    - QR code generator
+    - gradient QR code
+    - self-destructing QR code
+    - dynamic QR code free
+    - QR code with logo
+    - privacy QR generator
+  audience: small business owners, designers and makers who print QR codes on physical materials
   intent:
-    - launch faster
-    - clearer first draft
-manual_notes:
-  - Edit this aggressively. Keep only the lines that feel native to the app.
+    - make a QR code that looks good
+    - free dynamic QR code no tracking
+    - self-destructing QR code generator
+    - WiFi QR code generator
+
+links:
+  website: https://qrbuddy.app
+  github: https://github.com/pibulus/qrbuddy
+
+notes:
+  - Lead visuals with the gradient codes — the aesthetic gap is the whole pitch
+  - The KABOOM page is the memorable brand moment, worth featuring
+  - Destructible file sharing (not just URLs) widens this past normal QR tools
