@@ -49,6 +49,7 @@ export interface UseModalShellResult {
 }
 
 function prefersReducedMotion(): boolean {
+  // globalThis (not window): Fresh apps lint with Deno's no-window rule.
   if (typeof globalThis.matchMedia !== "function") return false;
   try {
     return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -101,6 +102,7 @@ export function useModalShell(
     };
     if (prefersReducedMotion()) finish();
     else {
+      // as-number cast: Node types leak into Deno/Fresh apps via npm deps.
       closeTimer.current = setTimeout(
         finish,
         resolveCloseMs(),
