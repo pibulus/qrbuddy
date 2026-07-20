@@ -4,8 +4,6 @@ import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
 import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
-import { QR_STYLES } from "../utils/qr-styles.ts";
-import QRCanvas from "./QRCanvas.tsx";
 import WiFiForm from "./templates/WiFiForm.tsx";
 import VCardForm from "./templates/VCardForm.tsx";
 import SMSForm from "./templates/SMSForm.tsx";
@@ -16,16 +14,18 @@ import SocialHubForm from "./templates/SocialHubForm.tsx";
 import MediaHubForm from "./templates/MediaHubForm.tsx";
 import LockerSettings from "./extras/LockerSettings.tsx";
 import BatchSettings from "./extras/BatchSettings.tsx";
-import LogoUploader from "./LogoUploader.tsx";
-import { STYLE_DISPLAY } from "./StyleSelector.tsx";
 import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
 import MultiLinkSettings from "./extras/MultiLinkSettings.tsx";
 import TimeBombSettings from "./extras/TimeBombSettings.tsx";
 import SplashSettings from "./extras/SplashSettings.tsx";
+import ChoiceRow from "./create-modal/ChoiceRow.tsx";
+import DesignTab from "./create-modal/DesignTab.tsx";
+import CompletionState, {
+  type CompletionKind,
+} from "./create-modal/CompletionState.tsx";
 
 type ActiveTab = "type" | "options" | "design";
 type TypeIntent = "qr" | "share-file" | "collect-files";
-type CompletionKind = "share-file" | "collect-files" | "text-card";
 
 interface CreateModalProps {
   isOpen: boolean;
@@ -72,15 +72,6 @@ interface CreateModalProps {
     } | null
   >;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
-}
-
-interface ChoiceRowProps {
-  icon: string;
-  title: string;
-  description: string;
-  active?: boolean;
-  eyebrow?: string;
-  onClick: () => void;
 }
 
 // Frequency-ordered for humans, not enterprises: link and note first, then
@@ -140,45 +131,6 @@ const QR_TYPE_COPY: Partial<
     description: "Dial a number straight from the scan.",
   },
 };
-
-function ChoiceRow(
-  { icon, title, description, active = false, eyebrow, onClick }:
-    ChoiceRowProps,
-) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      class={`group w-full min-h-[64px] rounded-2xl border-3 px-3 py-3 text-left transition-all flex items-center gap-3 ${
-        active
-          ? "border-black bg-qr-cream shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[-1px] translate-y-[-1px]"
-          : "border-gray-200 bg-white hover:border-black hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-      }`}
-    >
-      <span class="w-11 h-11 rounded-xl border-2 border-black bg-white flex items-center justify-center text-xl shrink-0">
-        {icon}
-      </span>
-      <span class="min-w-0 flex-1">
-        <span class="flex items-center gap-2">
-          <span class="font-black text-gray-900 leading-tight">{title}</span>
-          {active && (
-            <span class="rounded-full bg-black px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
-              Active
-            </span>
-          )}
-        </span>
-        <span class="block text-xs sm:text-sm text-gray-600 leading-snug mt-0.5">
-          {description}
-        </span>
-      </span>
-      {eyebrow && (
-        <span class="hidden sm:inline rounded-full bg-gray-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-gray-500">
-          {eyebrow}
-        </span>
-      )}
-    </button>
-  );
-}
 
 export default function CreateModal({
   isOpen,
@@ -467,105 +419,22 @@ export default function CreateModal({
 
   const renderCompletionState = () => {
     if (!completionKind || !bucketUrl.value) return null;
-
-    const isFilePage = completionKind === "share-file";
-    const isTextCard = completionKind === "text-card";
-    const title = isTextCard
-      ? "Text card ready"
-      : isFilePage
-      ? "Download page ready"
-      : "Locker ready to share";
-    const description = isTextCard
-      ? "Send this link or QR so people can read the note on QRBuddy."
-      : isFilePage
-      ? "Send this link or QR so someone can download the file."
-      : "Send this link or QR so people can upload into the locker.";
-    const statusLabel = isTextCard
-      ? "Text card"
-      : isFilePage
-      ? "File page"
-      : "File locker";
-    const completionQrStyle = qrStyle as Signal<
-      keyof typeof QR_STYLES | "custom"
-    >;
-    const canNativeShare = typeof navigator !== "undefined" &&
-      Boolean(navigator.share);
-
     return (
-      <div class="space-y-5 animate-slide-down">
-        <section class="rounded-2xl border-3 border-black bg-qr-cream p-4 sm:p-5 shadow-chunky space-y-4">
-          <div class="flex items-start gap-3">
-            <span class="w-12 h-12 rounded-xl border-2 border-black bg-white flex items-center justify-center text-2xl shrink-0">
-              {isTextCard ? "T" : isFilePage ? "📄" : "🪣"}
-            </span>
-            <div class="min-w-0">
-              <p class="text-xs uppercase tracking-wide text-pink-500 font-black">
-                {statusLabel}
-              </p>
-              <h3 class="text-2xl font-black text-gray-900 leading-tight">
-                {title}
-              </h3>
-              <p class="text-sm text-gray-600 mt-1">
-                {description}
-              </p>
-            </div>
-          </div>
-
-          <div class="mx-auto w-full max-w-[240px] sm:max-w-[280px]">
-            <QRCanvas
-              url={url}
-              style={completionQrStyle}
-              triggerDownload={completionDownload}
-              logoUrl={logoUrl}
-            />
-          </div>
-
-          <div class="rounded-xl border-2 border-black bg-white p-3">
-            <p class="text-[11px] font-black uppercase tracking-wide text-gray-500 mb-1">
-              Share link
-            </p>
-            <p class="text-sm font-bold text-gray-900 break-all">
-              {bucketUrl.value}
-            </p>
-          </div>
-
-          <div class="grid gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => handleCopyResult()}
-              class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
-            >
-              📋 Copy link
-            </button>
-            <button
-              type="button"
-              onClick={handleShareResult}
-              class="min-h-[52px] rounded-xl border-3 border-black bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 px-4 py-3 font-black text-black shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
-            >
-              {canNativeShare ? "📲 Share" : "📋 Copy share link"}
-            </button>
-            <a
-              href={bucketUrl.value}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center"
-            >
-              ↗ Open page
-            </a>
-            <button
-              type="button"
-              onClick={() => {
-                setCompletionKind(null);
-                setActiveTab("design");
-                haptics.light();
-              }}
-              class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
-            >
-              🎨 Edit design
-            </button>
-          </div>
-        </section>
-      </div>
+      <CompletionState
+        completionKind={completionKind}
+        bucketUrl={bucketUrl.value}
+        url={url}
+        qrStyle={qrStyle}
+        logoUrl={logoUrl}
+        completionDownload={completionDownload}
+        onCopy={() => handleCopyResult()}
+        onShare={handleShareResult}
+        onEditDesign={() => {
+          setCompletionKind(null);
+          setActiveTab("design");
+          haptics.light();
+        }}
+      />
     );
   };
 
@@ -830,166 +699,14 @@ export default function CreateModal({
     </div>
   );
 
-  const frameActive = frameConfig?.value?.enabled ?? false;
-
   const renderDesignTab = () => (
-    <div class="space-y-6">
-      <section class="space-y-3">
-        <div>
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Colors
-          </h3>
-          <p class="text-sm text-gray-600">
-            Pick a vibe right here — or build your own gradient.
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
-            <button
-              key={key}
-              type="button"
-              aria-label={`${info.name} style`}
-              title={info.name}
-              onClick={() => {
-                qrStyle.value = key;
-                haptics.light();
-              }}
-              class={`w-11 h-11 rounded-xl border-3 transition-all hover:scale-110 active:scale-95 ${
-                qrStyle.value === key
-                  ? "border-black scale-110 shadow-chunky"
-                  : "border-gray-300"
-              }`}
-              style={{
-                background: `linear-gradient(45deg, ${info.colors.join(", ")})`,
-              }}
-            />
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            globalThis.dispatchEvent(new CustomEvent("open-gradient-creator"));
-            haptics.light();
-          }}
-          class="w-full min-h-[48px] rounded-xl border-3 border-dashed border-gray-400 bg-white px-4 py-2 font-bold text-gray-700 hover:border-black hover:text-black transition-all"
-        >
-          🎨 Build your own gradient
-        </button>
-      </section>
-
-      <section class="space-y-3">
-        <div>
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Logo
-          </h3>
-          <p class="text-sm text-gray-600">
-            Add a center mark to the QR.
-          </p>
-        </div>
-        <div class="bg-gradient-to-r from-[#FFF8F0] to-[#FFE5B4] border-3 border-[#FFE5B4] rounded-xl p-4 shadow-chunky">
-          <LogoUploader logoUrl={logoUrl} />
-        </div>
-      </section>
-
-      {frameConfig && (
-        <section class="space-y-3">
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Frame
-          </h3>
-          <ChoiceRow
-            icon="🖼️"
-            title="Caption frame"
-            description={`A chunky border with a label — "${
-              frameConfig.value?.caption || "SCAN ME"
-            }" baked into the download.`}
-            active={frameActive}
-            onClick={() => {
-              frameConfig.value = frameActive
-                ? null
-                : { enabled: true, caption: "SCAN ME" };
-              haptics.light();
-            }}
-          />
-          {frameActive && (
-            <input
-              type="text"
-              value={frameConfig.value?.caption ?? ""}
-              maxLength={24}
-              onInput={(e) => {
-                frameConfig.value = {
-                  enabled: true,
-                  caption: (e.target as HTMLInputElement).value,
-                };
-              }}
-              placeholder="SCAN ME"
-              class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg font-black uppercase tracking-wide focus:border-black focus:outline-none transition-colors animate-slide-down"
-            />
-          )}
-        </section>
-      )}
-
-      <section class="space-y-3">
-        <div>
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Download
-          </h3>
-          <p class="text-sm text-gray-600">
-            PNG for sharing, SVG for print shops and designers — infinitely
-            scalable, no frame.
-          </p>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              globalThis.dispatchEvent(
-                new CustomEvent("qr-export", { detail: { format: "png" } }),
-              );
-              haptics.medium();
-              addToast("PNG on the way! ⬇");
-            }}
-            class="min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
-          >
-            ⬇ PNG
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              globalThis.dispatchEvent(
-                new CustomEvent("qr-export", { detail: { format: "svg" } }),
-              );
-              haptics.medium();
-              addToast("SVG on the way! ⬇");
-            }}
-            class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
-          >
-            ⬇ SVG
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={async () => {
-            const { qrToTextArt } = await import("../utils/qr-ascii.ts");
-            const art = qrToTextArt(url.value || "https://qrbuddy.app");
-            if (!art) {
-              addToast("Too much data for text art 😅");
-              return;
-            }
-            try {
-              await navigator.clipboard.writeText(art);
-              haptics.success();
-              addToast("Text-art QR copied — paste it anywhere 📋");
-            } catch {
-              addToast("Couldn't reach the clipboard 😞");
-            }
-          }}
-          class="w-full min-h-[48px] rounded-xl border-3 border-dashed border-gray-400 bg-white px-4 py-2 font-bold text-gray-700 hover:border-black hover:text-black transition-all font-mono"
-        >
-          ▀▄█ Copy as text art
-        </button>
-      </section>
-    </div>
+    <DesignTab
+      url={url}
+      qrStyle={qrStyle}
+      logoUrl={logoUrl}
+      frameConfig={frameConfig}
+      onClose={onClose}
+    />
   );
 
   const tabs: Array<{ id: ActiveTab; label: string; icon: string }> = [
