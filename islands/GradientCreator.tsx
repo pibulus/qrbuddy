@@ -3,6 +3,7 @@ import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import type { ColorStop, QRStyle } from "../types/qr-types.ts";
+import { useModalShell } from "./modal/useModalShell.ts";
 
 interface GradientCreatorProps {
   onCustomGradient: (gradient: QRStyle) => void;
@@ -22,6 +23,15 @@ export default function GradientCreator(
     { offset: 0, color: "#FF8C42" },
     { offset: 1, color: "#FF69B4" },
   ]);
+
+  // Escape/scroll-lock/focus/backdrop machinery — the shared modal shell
+  // (this modal used to have none of it: the fleet's drift-bug class).
+  const shell = useModalShell({
+    open: isOpen.value,
+    onClose: () => {
+      isOpen.value = false;
+    },
+  });
 
   const addColorStop = () => {
     const newOffset = colorStops.length > 0
@@ -96,7 +106,7 @@ export default function GradientCreator(
     };
 
     onCustomGradient(customGradient);
-    isOpen.value = false;
+    shell.requestClose();
 
     haptics.success();
     sounds.success();
@@ -114,18 +124,35 @@ export default function GradientCreator(
     }
   };
 
-  if (!isOpen.value) return null;
+  if (!shell.mounted) return null;
 
   return (
-    <div class="fixed inset-0 bg-qr-scrim/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[60] p-0 sm:p-6">
-      <div class="bg-white rounded-t-3xl sm:rounded-chunky sm:border-4 border-black shadow-chunky-hover p-4 sm:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-8 max-w-md w-full max-h-[92dvh] overflow-y-auto animate-slide-up sm:animate-pop-in">
+    <div
+      ref={shell.backdropRef}
+      class="fixed inset-0 bg-qr-scrim/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-[60] p-0 sm:p-6"
+      role="presentation"
+      onClick={shell.onBackdropClick}
+    >
+      <div
+        ref={shell.dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="gradient-creator-title"
+        tabindex={-1}
+        class="bg-white rounded-t-3xl sm:rounded-chunky sm:border-4 border-black shadow-chunky-hover p-4 sm:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-8 max-w-md w-full max-h-[92dvh] overflow-y-auto animate-slide-up sm:animate-pop-in"
+      >
         {/* Header */}
         <div class="flex justify-between items-center mb-4 sm:mb-6">
-          <h2 class="text-xl sm:text-2xl font-chunky">Custom Gradient</h2>
+          <h2
+            id="gradient-creator-title"
+            class="text-xl sm:text-2xl font-chunky"
+          >
+            Custom Gradient
+          </h2>
           <button
             type="button"
             onClick={() => {
-              isOpen.value = false;
+              shell.requestClose();
               haptics.light();
             }}
             class="text-2xl hover:scale-110 active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -246,7 +273,7 @@ export default function GradientCreator(
           <button
             type="button"
             onClick={() => {
-              isOpen.value = false;
+              shell.requestClose();
               haptics.light();
             }}
             class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-black transition-colors"

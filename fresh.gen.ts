@@ -34,6 +34,9 @@ import * as $ShareActions from "./islands/ShareActions.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
+import * as $create_modal_ChoiceRow from "./islands/create-modal/ChoiceRow.tsx";
+import * as $create_modal_CompletionState from "./islands/create-modal/CompletionState.tsx";
+import * as $create_modal_DesignTab from "./islands/create-modal/DesignTab.tsx";
 import * as $edit_qr_AnalyticsDashboard from "./islands/edit-qr/AnalyticsDashboard.tsx";
 import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
 import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
@@ -44,6 +47,8 @@ import * as $extras_LockerSettings from "./islands/extras/LockerSettings.tsx";
 import * as $extras_MultiLinkSettings from "./islands/extras/MultiLinkSettings.tsx";
 import * as $extras_SplashSettings from "./islands/extras/SplashSettings.tsx";
 import * as $extras_TimeBombSettings from "./islands/extras/TimeBombSettings.tsx";
+import * as $modal_ModalShell from "./islands/modal/ModalShell.tsx";
+import * as $modal_useModalShell from "./islands/modal/useModalShell.ts";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
@@ -92,6 +97,9 @@ const manifest = {
     "./islands/SmartInput.tsx": $SmartInput,
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/ToastManager.tsx": $ToastManager,
+    "./islands/create-modal/ChoiceRow.tsx": $create_modal_ChoiceRow,
+    "./islands/create-modal/CompletionState.tsx": $create_modal_CompletionState,
+    "./islands/create-modal/DesignTab.tsx": $create_modal_DesignTab,
     "./islands/edit-qr/AnalyticsDashboard.tsx": $edit_qr_AnalyticsDashboard,
     "./islands/edit-qr/QRStatusCard.tsx": $edit_qr_QRStatusCard,
     "./islands/edit-qr/RoutingConfigForm.tsx": $edit_qr_RoutingConfigForm,
@@ -102,6 +110,8 @@ const manifest = {
     "./islands/extras/MultiLinkSettings.tsx": $extras_MultiLinkSettings,
     "./islands/extras/SplashSettings.tsx": $extras_SplashSettings,
     "./islands/extras/TimeBombSettings.tsx": $extras_TimeBombSettings,
+    "./islands/modal/ModalShell.tsx": $modal_ModalShell,
+    "./islands/modal/useModalShell.ts": $modal_useModalShell,
     "./islands/smart-input/FileUploadOptions.tsx":
       $smart_input_FileUploadOptions,
     "./islands/smart-input/SmartInputToolbar.tsx":

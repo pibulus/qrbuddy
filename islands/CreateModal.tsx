@@ -23,6 +23,7 @@ import DesignTab from "./create-modal/DesignTab.tsx";
 import CompletionState, {
   type CompletionKind,
 } from "./create-modal/CompletionState.tsx";
+import { useModalShell } from "./modal/useModalShell.ts";
 
 type ActiveTab = "type" | "options" | "design";
 type TypeIntent = "qr" | "share-file" | "collect-files";
@@ -196,24 +197,9 @@ export default function CreateModal({
     }
   }, [isOpen]);
 
-  // Dialog behaviour: lock body scroll, close on Escape, and move focus into
-  // the modal on open (mirrors AboutModal, which was the only modal doing this).
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = "hidden";
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleEscape);
-    const firstFocusable = document.querySelector(
-      "[data-create-modal] button",
-    ) as HTMLElement | null;
-    firstFocusable?.focus();
-    return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen]);
+  // Dialog behaviour (Escape, scroll-lock, focus trap, backdrop click) lives
+  // in the shared modal shell.
+  const shell = useModalShell({ open: isOpen, onClose });
 
   useEffect(() => {
     if (completionKind && !bucketUrl.value) {
@@ -221,7 +207,7 @@ export default function CreateModal({
     }
   }, [completionKind, bucketUrl.value]);
 
-  if (!isOpen) return null;
+  if (!shell.mounted) return null;
 
   const activateDynamicBase = () => {
     isDynamic.value = true;
@@ -705,7 +691,7 @@ export default function CreateModal({
       qrStyle={qrStyle}
       logoUrl={logoUrl}
       frameConfig={frameConfig}
-      onClose={onClose}
+      onClose={shell.requestClose}
     />
   );
 
@@ -719,15 +705,17 @@ export default function CreateModal({
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
+        ref={shell.backdropRef}
         class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        onClick={shell.onBackdropClick}
       />
 
       <div
-        data-create-modal
+        ref={shell.dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-modal-title"
+        tabindex={-1}
         class="relative w-full max-w-3xl bg-white sm:border-4 sm:border-black rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
       >
         <div class="flex items-start justify-between gap-3 p-4 sm:p-6 border-b-2 border-gray-100">
@@ -749,7 +737,7 @@ export default function CreateModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={shell.requestClose}
             class="min-w-[44px] min-h-[44px] rounded-full hover:bg-gray-100 transition-colors text-2xl font-black text-gray-500"
             aria-label="Close create modal"
           >
@@ -795,7 +783,7 @@ export default function CreateModal({
         <div class="p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 border-t-2 border-gray-100 bg-gray-50">
           <button
             type="button"
-            onClick={onClose}
+            onClick={shell.requestClose}
             class="w-full min-h-[52px] bg-black text-white text-lg sm:text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             Done

@@ -1,0 +1,150 @@
+/**
+ * modal-shell.css — the ONE canonical modal skeleton + keyframes for the
+ * SoftStack fleet. Referenced by BOTH flavors: ModalShell.svelte imports it,
+ * Fresh apps copy it into static/ (or paste into their global css) and the
+ * ModalShell.tsx classes light up.
+ *
+ * Theme via CSS custom props on any ancestor (all fallbacks are the fleet's
+ * warm palette — NEVER absolute #fff/#000, warm near-white/near-black/cream):
+ *   --charm-modal-z              stacking. Fleet modal scale is 9999.
+ *   --charm-modal-scrim          backdrop wash (warm near-black, never cold)
+ *   --charm-modal-blur           backdrop-filter blur radius
+ *   --charm-modal-bg             card surface — genuinely CREAMY, not white-ish
+ *   --charm-modal-ink            card text color
+ *   --charm-modal-border         the chunky border (warm sepia, not full black)
+ *   --charm-modal-radius / --charm-modal-shadow / --charm-modal-pad
+ *   --charm-modal-open-ms        entrance animation duration
+ *   --charm-modal-close-ms       exit animation duration — the JS reads this
+ *                                token off the card, so there is ONE source of
+ *                                truth for close timing (the old drift bug)
+ *   --charm-modal-ease           entrance spring
+ *   --charm-modal-close-bg / -close-ink / -close-hover-bg   the × button
+ */
+
+.charm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--charm-modal-z, 9999);
+  display: flex;
+  overflow-y: auto;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem
+    max(1rem, env(safe-area-inset-bottom));
+  background: var(--charm-modal-scrim, rgba(30, 23, 20, 0.45));
+  backdrop-filter: blur(var(--charm-modal-blur, 4px));
+  -webkit-backdrop-filter: blur(var(--charm-modal-blur, 4px));
+  animation: charm-modal-fade var(--charm-modal-open-ms, 220ms) ease backwards;
+}
+
+.charm-modal {
+  /* margin:auto (not align/justify center) so a card taller than the
+     viewport scrolls inside the backdrop instead of clipping its top. */
+  margin: auto;
+  position: relative;
+  width: 100%;
+  color: var(--charm-modal-ink, #2b2016);
+  background: var(--charm-modal-bg, #fbf1e4);
+  border: var(--charm-modal-border, 3px solid #3b2e25);
+  border-radius: var(--charm-modal-radius, 24px);
+  box-shadow: var(--charm-modal-shadow, 8px 8px 0 rgba(30, 23, 20, 0.16));
+  padding: var(--charm-modal-pad, 1.5rem);
+  animation: charm-modal-pop var(--charm-modal-open-ms, 220ms)
+    var(--charm-modal-ease, cubic-bezier(0.34, 1.56, 0.64, 1)) backwards;
+}
+
+/* Dialog is focused programmatically for SR/keyboard users — no visible ring
+   on the container itself (its children draw their own focus states). */
+.charm-modal:focus,
+.charm-modal:focus-visible {
+  outline: none;
+}
+
+/* Tall content scrolls inside the card. Pair with .cute-scroll (charm #3). */
+.charm-modal--scrollable {
+  max-height: min(85dvh, 100%);
+  overflow-y: auto;
+}
+
+/* The tucked squishy × — small, top-right, springs on press (design law). */
+.charm-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.85rem;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 999px;
+  background: var(--charm-modal-close-bg, rgba(59, 46, 37, 0.08));
+  color: var(--charm-modal-close-ink, rgba(59, 46, 37, 0.72));
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 140ms cubic-bezier(0.34, 1.8, 0.64, 1),
+    background 140ms ease;
+}
+.charm-modal-close:hover {
+  transform: scale(1.08);
+  background: var(--charm-modal-close-hover-bg, rgba(59, 46, 37, 0.14));
+}
+.charm-modal-close:active {
+  transform: scale(0.88);
+}
+
+/* ─── Closing state (JS adds the modifier, waits close-ms, then unmounts) ── */
+
+.charm-modal-backdrop.charm-modal--closing {
+  animation: charm-modal-fade-out var(--charm-modal-close-ms, 160ms) ease
+    forwards;
+}
+.charm-modal.charm-modal--closing {
+  animation: charm-modal-pop-out var(--charm-modal-close-ms, 160ms) ease
+    forwards;
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────────
+ * ENTRANCES are FROM-only + `backwards` fill. THE LAW (microui juice bug):
+ * `animation-fill-mode: forwards` on an entrance permanently owns `transform`
+ * in the cascade and silently kills every hover/:active transform on that
+ * element forever after. from-only + backwards ends the animation owning
+ * nothing. EXITS are to-only + `forwards` — exempt, because the element
+ * unmounts the moment the animation ends; there is no hover life after. */
+
+@keyframes charm-modal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+}
+@keyframes charm-modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes charm-modal-pop-out {
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+}
+@keyframes charm-modal-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .charm-modal-backdrop,
+  .charm-modal,
+  .charm-modal-backdrop.charm-modal--closing,
+  .charm-modal.charm-modal--closing {
+    animation: none;
+  }
+  .charm-modal-close,
+  .charm-modal-close:hover,
+  .charm-modal-close:active {
+    transition: none;
+    transform: none;
+  }
+}

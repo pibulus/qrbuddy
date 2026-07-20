@@ -7,6 +7,7 @@ import GradientCreator from "./GradientCreator.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
 import { addToast } from "./ToastManager.tsx";
 import { checkBlobScannability } from "../utils/qr-decode.ts";
+import { useModalShell } from "./modal/useModalShell.ts";
 
 const DICE_PROBE_DATA = "https://qrbuddy.app";
 const DICE_MAX_ATTEMPTS = 4;
@@ -106,15 +107,11 @@ export default function StyleSelector(
   const [isRolling, setIsRolling] = useState(false);
   const isCreatorOpen = useSignal(false);
 
-  // Close the style gallery on Escape (matches the other dialogs).
-  useEffect(() => {
-    if (!isGalleryOpen) return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsGalleryOpen(false);
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isGalleryOpen]);
+  // Escape/scroll-lock/focus/backdrop machinery — the shared modal shell.
+  const shell = useModalShell({
+    open: isGalleryOpen,
+    onClose: () => setIsGalleryOpen(false),
+  });
 
   // The Create modal's Design tab can summon the gradient builder from here
   // so brand-minded users never dead-end on a "colors live elsewhere" note.
@@ -133,7 +130,7 @@ export default function StyleSelector(
     style.value = s;
     haptics.light();
     sounds.click();
-    setIsGalleryOpen(false);
+    shell.requestClose();
     addToast(`🎨 ${STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY].name}`);
   };
 
@@ -227,16 +224,19 @@ export default function StyleSelector(
       </div>
 
       {/* Style Gallery — bottom sheet on mobile, centered card on desktop */}
-      {isGalleryOpen && (
+      {shell.mounted && (
         <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
           <div
+            ref={shell.backdropRef}
             class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
-            onClick={() => setIsGalleryOpen(false)}
+            onClick={shell.onBackdropClick}
           />
           <div
+            ref={shell.dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="style-gallery-title"
+            tabindex={-1}
             class="relative z-10 w-full max-w-lg bg-white sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-6 animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto"
           >
             {/* Header */}
@@ -254,7 +254,7 @@ export default function StyleSelector(
               </div>
               <button
                 type="button"
-                onClick={() => setIsGalleryOpen(false)}
+                onClick={shell.requestClose}
                 class="text-3xl font-black text-gray-400 hover:text-gray-900 hover:rotate-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
               >
                 ×
@@ -319,7 +319,7 @@ export default function StyleSelector(
                   isCreatorOpen.value = true;
                   haptics.medium();
                   sounds.click();
-                  setIsGalleryOpen(false);
+                  shell.requestClose();
                 }}
                 class={`
                   col-span-2 relative group overflow-hidden rounded-2xl border-3 border-dashed border-gray-300
@@ -342,7 +342,7 @@ export default function StyleSelector(
             <div class="flex justify-center">
               <button
                 type="button"
-                onClick={() => setIsGalleryOpen(false)}
+                onClick={shell.requestClose}
                 class="px-8 py-3 rounded-xl bg-black text-white font-bold hover:scale-105 transition-transform"
               >
                 Done

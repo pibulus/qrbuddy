@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
 import { decodeQRFromFile, decodeQRFromImageData } from "../utils/qr-decode.ts";
+import { useModalShell } from "./modal/useModalShell.ts";
 
 interface QRReaderProps {
   isOpen: boolean;
@@ -98,6 +99,7 @@ export default function QRReader(
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
+  const shell = useModalShell({ open: isOpen, onClose });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -120,7 +122,8 @@ export default function QRReader(
     }
   }, [isOpen, initialResult]);
 
-  // Dialog behaviour + camera cleanup, mirroring CreateModal.
+  // Camera cleanup + paste-to-decode. Escape/scroll-lock/focus live in the
+  // shared modal shell (useModalShell); only reader-specific behaviour stays.
   useEffect(() => {
     if (!isOpen) {
       stopCamera();
@@ -129,10 +132,6 @@ export default function QRReader(
       setCameraError(null);
       return;
     }
-    document.body.style.overflow = "hidden";
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
     // Cmd/Ctrl+V a screenshot anywhere while the reader is open.
     const handlePaste = (e: ClipboardEvent) => {
       const item = Array.from(e.clipboardData?.items ?? []).find((i) =>
@@ -144,11 +143,8 @@ export default function QRReader(
         void decodeFile(file);
       }
     };
-    document.addEventListener("keydown", handleEscape);
     globalThis.addEventListener("paste", handlePaste);
     return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", handleEscape);
       globalThis.removeEventListener("paste", handlePaste);
       stopCamera();
     };
@@ -240,10 +236,10 @@ export default function QRReader(
     url.value = result.data;
     haptics.success();
     addToast("Reborn as a QRBuddy code ✨");
-    onClose();
+    shell.requestClose();
   };
 
-  if (!isOpen) return null;
+  if (!shell.mounted) return null;
 
   const openableUrl = result ? safeOpenUrl(result.data) : null;
   const parsedRows = result?.type === "wifi"
@@ -255,14 +251,17 @@ export default function QRReader(
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
+        ref={shell.backdropRef}
         class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={shell.onBackdropClick}
       />
 
       <div
+        ref={shell.dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="qr-reader-title"
+        tabindex={-1}
         class="relative w-full max-w-lg bg-white sm:border-4 sm:border-black rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
       >
         <div class="flex items-start justify-between gap-3 p-4 sm:p-6 border-b-2 border-gray-100">
@@ -279,7 +278,7 @@ export default function QRReader(
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={shell.requestClose}
             class="min-w-[44px] min-h-[44px] rounded-full hover:bg-gray-100 transition-colors text-2xl font-black text-gray-500"
             aria-label="Close QR reader"
           >

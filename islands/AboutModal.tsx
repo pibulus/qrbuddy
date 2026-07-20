@@ -1,5 +1,6 @@
 import { useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
+import { useModalShell } from "./modal/useModalShell.ts";
 
 // Global signal for modal state
 export const aboutModalOpen = signal(false);
@@ -34,39 +35,26 @@ export function AboutModal() {
     }
   }, []);
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        closeAboutModal();
-      }
-    };
+  const shell = useModalShell({ open: isOpen, onClose: closeAboutModal });
 
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
+  if (!shell.mounted) return null;
 
   // ─── First-visit poster: mascot, rhyme, three punches, one CTA ───
   if (isIntro) {
     return (
       <div
+        ref={shell.backdropRef}
         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
-        onClick={closeAboutModal}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="intro-title"
+        role="presentation"
+        onClick={shell.onBackdropClick}
       >
         <div
+          ref={shell.dialogRef}
           class="relative w-full max-w-sm bg-qr-cream border-4 border-black rounded-3xl shadow-chunky-hover p-6 sm:p-8 space-y-5 animate-slide-up text-center"
-          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="intro-title"
+          tabindex={-1}
         >
           {/* Mini buddy */}
           <div class="flex justify-center">
@@ -123,7 +111,7 @@ export function AboutModal() {
           <div class="space-y-2 pt-1">
             <button
               type="button"
-              onClick={closeAboutModal}
+              onClick={shell.requestClose}
               class="w-full min-h-[52px] rounded-full border-3 border-black bg-gradient-to-r from-qr-sunset1 via-pink-400 to-purple-400 px-6 py-3 text-lg font-black text-black shadow-chunky hover:scale-[1.02] hover:shadow-chunky-hover active:scale-[0.97] transition-all"
             >
               Make something 🌸
@@ -145,16 +133,19 @@ export function AboutModal() {
     <>
       {/* Backdrop */}
       <div
+        ref={shell.backdropRef}
         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
-        onClick={closeAboutModal}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="about-modal-title"
+        role="presentation"
+        onClick={shell.onBackdropClick}
       >
         {/* Modal */}
         <div
+          ref={shell.dialogRef}
           class="relative w-full max-w-md sm:max-w-2xl max-h-[85vh] overflow-y-auto animate-slide-up"
-          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="about-modal-title"
+          tabindex={-1}
         >
           {/* Header */}
           <div class="p-4 sm:p-6 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 border-4 border-black border-b-0 rounded-t-3xl">
@@ -167,7 +158,7 @@ export function AboutModal() {
               </h2>
               <button
                 type="button"
-                onClick={closeAboutModal}
+                onClick={shell.requestClose}
                 class="text-3xl leading-none font-bold text-black transition-transform hover:scale-110 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Close about dialog"
               >
@@ -245,7 +236,7 @@ export function AboutModal() {
             {/* CTA */}
             <button
               type="button"
-              onClick={closeAboutModal}
+              onClick={shell.requestClose}
               class="w-full min-h-[52px] bg-black text-white text-lg font-black rounded-xl border-3 border-black shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               Make something 🌸
@@ -279,25 +270,6 @@ export function AboutModal() {
           </div>
         </div>
       </div>
-
-      <style>
-        {`
-          @keyframes modal-in {
-            0% {
-              opacity: 0;
-              transform: scale(0.95) translateY(20px);
-            }
-            100% {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-          }
-
-          .animate-modal-in {
-            animation: modal-in 0.3s ease-out forwards;
-          }
-        `}
-      </style>
     </>
   );
 }

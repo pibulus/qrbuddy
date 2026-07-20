@@ -103,3 +103,12 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Chassis ModalShell (islands/modal/) — close timing lives in CSS, the hook
+   reads this token off the dialog card (single source of truth, no JS
+   constant to drift). qrbuddy's modals keep their own Tailwind skeletons via
+   the useModalShell hook flavor and have always closed instantly, hence 0ms.
+   Raise this token to adopt the fleet's exit fade later. */
+:root {
+  --charm-modal-close-ms: 0ms;
+}

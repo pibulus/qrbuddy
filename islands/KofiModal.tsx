@@ -1,5 +1,5 @@
-import { useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
+import { useModalShell } from "./modal/useModalShell.ts";
 
 // Global signal for modal state
 export const kofiModalOpen = signal(false);
@@ -24,48 +24,37 @@ export function KofiModal({
   description = "Keep this free and blooming for everyone! 🌈",
 }: KofiModalProps) {
   const isOpen = kofiModalOpen.value;
+  const shell = useModalShell({ open: isOpen, onClose: closeKofiModal });
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        closeKofiModal();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
+  if (!shell.mounted) return null;
 
   return (
     <>
       {/* Backdrop */}
       <div
+        ref={shell.backdropRef}
         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
-        onClick={closeKofiModal}
+        role="presentation"
+        onClick={shell.onBackdropClick}
       >
         {/* Modal */}
         <div
+          ref={shell.dialogRef}
           class="relative w-full max-w-2xl animate-slide-up"
-          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="kofi-modal-title"
+          tabindex={-1}
         >
           {/* Header */}
           <div class="p-6 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 border-4 border-black border-b-0 rounded-t-3xl">
             <div class="flex items-start justify-between mb-2">
-              <h2 class="text-2xl font-black text-black">
+              <h2 id="kofi-modal-title" class="text-2xl font-black text-black">
                 {title}
               </h2>
               <button
                 type="button"
-                onClick={closeKofiModal}
+                onClick={shell.requestClose}
                 class="text-3xl leading-none font-bold text-black transition-transform hover:scale-110"
                 aria-label="Close"
               >

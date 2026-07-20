@@ -1,7 +1,7 @@
-import { useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { PRICING_TIERS } from "../types/pricing.ts";
 import { addToast } from "./ToastManager.tsx";
+import { useModalShell } from "./modal/useModalShell.ts";
 
 type PricingGlobal = typeof globalThis & {
   __PAYMENT_URL_PRO__?: string;
@@ -30,26 +30,9 @@ export function closePricingModal() {
 
 export function PricingModal() {
   const isOpen = pricingModalOpen.value;
+  const shell = useModalShell({ open: isOpen, onClose: closePricingModal });
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        closePricingModal();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
+  if (!shell.mounted) return null;
 
   const _handleUpgrade = () => {
     // Track conversion intent
@@ -84,16 +67,19 @@ export function PricingModal() {
     <>
       {/* Backdrop */}
       <div
+        ref={shell.backdropRef}
         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
-        onClick={closePricingModal}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="pricing-modal-title"
+        role="presentation"
+        onClick={shell.onBackdropClick}
       >
         {/* Modal */}
         <div
+          ref={shell.dialogRef}
           class="relative w-full max-w-md sm:max-w-2xl lg:max-w-5xl max-h-[90vh] overflow-y-auto animate-slide-up"
-          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pricing-modal-title"
+          tabindex={-1}
         >
           {/* Header */}
           <div class="p-4 sm:p-6 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 border-4 border-black border-b-0 rounded-t-3xl">
@@ -112,7 +98,7 @@ export function PricingModal() {
               </div>
               <button
                 type="button"
-                onClick={closePricingModal}
+                onClick={shell.requestClose}
                 class="text-3xl leading-none font-bold text-black transition-transform hover:scale-110 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
                 aria-label="Close pricing dialog"
               >
