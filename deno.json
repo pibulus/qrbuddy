@@ -15,10 +15,16 @@
   },
   "lint": {
     "rules": {
-      "tags": ["fresh", "recommended"]
+      "tags": [
+        "fresh",
+        "recommended"
+      ]
     }
   },
-  "exclude": ["**/_fresh/*", ".playwright-mcp/"],
+  "exclude": [
+    "**/_fresh/*",
+    ".playwright-mcp/"
+  ],
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
     "preact": "https://esm.sh/preact@10.22.0",
@@ -40,6 +46,11 @@
   },
   "deploy": {
     "org": "pibulus",
-    "app": "qrbuddy"
+    "app": "qrbuddy",
+    "runtime": {
+      "type": "dynamic",
+      "entrypoint": "main.ts"
+    },
+    "//": "`runtime` is REQUIRED unless `framework` is set. Without it, Deploy auto-detects Fresh and runs a bundle step this app does not want \u2014 that is what broke every git-triggered build on promapper while CLI deploys kept reporting success. To skip the build, OMIT the `build` key. Never set it to \"\": the CLI path reads that as 'skip', the git path executes it and dies with \"Error parsing script '': Empty command\". Verified 2026-07-31."
   }
 }
