@@ -51,6 +51,7 @@
       "type": "dynamic",
       "entrypoint": "main.ts"
     },
-    "//": "`runtime` is REQUIRED unless `framework` is set. Without it, Deploy auto-detects Fresh and runs a bundle step this app does not want \u2014 that is what broke every git-triggered build on promapper while CLI deploys kept reporting success. To skip the build, OMIT the `build` key. Never set it to \"\": the CLI path reads that as 'skip', the git path executes it and dies with \"Error parsing script '': Empty command\". Verified 2026-07-31."
+    "//": "THIS APP NEEDS ITS BUILD \u2014 the opposite of promapper. fresh.config.ts uses the tailwind plugin, which requires Fresh's ahead-of-time build; without it every request 500s with \"Ahead of time builds not configured but required by the tailwindcss plugin\". (promapper precompiles Tailwind into a committed CSS file and must NOT build, because its 31-island bundle OOMs the container. Same platform, opposite configs \u2014 do not copy one to the other.) `runtime` is REQUIRED unless `framework` is set; without it Deploy auto-detects Fresh. If a build is ever removed here, OMIT the key \u2014 never `\"build\": \"\"`, which the CLI reads as 'skip' and a git build executes, dying with \"Error parsing script '': Empty command\". Verified 2026-07-31.",
+    "build": "deno task build"
   }
 }
