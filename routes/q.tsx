@@ -165,7 +165,7 @@ export default function SharePage(props: PageProps) {
 
           {/* CTA */}
           <a
-            href="/\?utm_source=share_page&utm_medium=cta"
+            href="/?utm_source=share_page&utm_medium=cta"
             class="block text-center px-4 py-3 bg-black text-white rounded-xl border-3 border-black font-bold shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
           >
             Make your own QR →

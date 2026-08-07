@@ -18,7 +18,12 @@ export default function App({ Component }: PageProps) {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <script defer src="https://fleetcount.pibulus.deno.net/beacon.js" data-site="qrbuddy.app"></script>
+        <script
+          defer
+          src="https://fleetcount.pibulus.deno.net/beacon.js"
+          data-site="qrbuddy.app"
+        >
+        </script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>qrbuddy</title>
         <link rel="stylesheet" href="/styles.css" />
