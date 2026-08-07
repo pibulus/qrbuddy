@@ -218,12 +218,15 @@ export default function CreateModal({
   };
 
   const disableDynamicBase = () => {
+    const hadExtras = isSequential || scanLimit !== null || expiryDate !== "" ||
+      (splashConfig.value?.enabled ?? false);
     isDynamic.value = false;
     setIsSequential(false);
     setIsLimitSettingsOpen(false);
     setScanLimit(null);
     setExpiryDate("");
     splashConfig.value = null;
+    if (hadExtras) addToast("Editable extras cleared");
   };
 
   const handleTemplateSelect = (template: QRTemplateType) => {
@@ -493,6 +496,7 @@ export default function CreateModal({
             const next = !isBatchMode;
             setIsBatchMode(next);
             if (next) {
+              if (lockerActive) addToast("Locker cleared from this QR");
               disableDynamicBase();
               isBucket.value = false;
               bucketUrl.value = "";
@@ -558,6 +562,18 @@ export default function CreateModal({
               </div>
             )}
             {renderTemplateForm()}
+            {selectedTemplate === "url" && !isDynamic.value && (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("options");
+                  haptics.light();
+                }}
+                class="w-full min-h-[44px] mt-3 rounded-xl border-3 border-dashed border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-600 hover:border-black hover:text-black transition-all"
+              >
+                🔗 Want to repoint this after printing?
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -579,6 +595,7 @@ export default function CreateModal({
           description="The QR is the content itself. Works forever, even offline."
           active={!isDynamic.value && !isBatchMode && !lockerActive}
           onClick={() => {
+            if (lockerActive) addToast("Locker cleared from this QR");
             disableDynamicBase();
             setIsBatchMode(false);
             isBucket.value = false;
@@ -622,25 +639,7 @@ export default function CreateModal({
             </p>
           </div>
 
-          <ChoiceRow
-            icon="🔁"
-            title="Link rotation"
-            description="Each scan moves to the next URL in your list."
-            active={isSequential}
-            onClick={() => {
-              setIsSequential(!isSequential);
-              haptics.light();
-            }}
-          />
-          {isSequential && (
-            <MultiLinkSettings
-              sequentialUrls={sequentialUrls}
-              setSequentialUrls={setSequentialUrls}
-              loopSequence={loopSequence}
-              setLoopSequence={setLoopSequence}
-            />
-          )}
-
+          {/* Frequency order: limits are the common ask, rotation the exotic one. */}
           <ChoiceRow
             icon="⏳"
             title="Scan & date limits"
@@ -662,6 +661,25 @@ export default function CreateModal({
               setScanLimit={setScanLimit}
               expiryDate={expiryDate}
               setExpiryDate={setExpiryDate}
+            />
+          )}
+
+          <ChoiceRow
+            icon="🔁"
+            title="Link rotation"
+            description="Each scan moves to the next URL in your list."
+            active={isSequential}
+            onClick={() => {
+              setIsSequential(!isSequential);
+              haptics.light();
+            }}
+          />
+          {isSequential && (
+            <MultiLinkSettings
+              sequentialUrls={sequentialUrls}
+              setSequentialUrls={setSequentialUrls}
+              loopSequence={loopSequence}
+              setLoopSequence={setLoopSequence}
             />
           )}
 

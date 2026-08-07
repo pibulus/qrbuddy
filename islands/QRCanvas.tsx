@@ -499,12 +499,12 @@ export default function QRCanvas(
       }
       <div
         key={url.value ? "chip-live" : "chip-idle"}
-        class={`absolute -bottom-3 -right-3 w-10 h-10 rounded-full bg-white border-2 border-black shadow-chunky flex items-center justify-center text-xl font-black text-black z-10 pointer-events-none select-none transition-opacity ${
+        class={`absolute -bottom-3 -right-3 h-8 px-3 rounded-full bg-white border-2 border-black shadow-chunky flex items-center justify-center gap-1 text-xs font-black text-black z-10 pointer-events-none select-none transition-opacity ${
           url.value ? "animate-bounce-in" : "opacity-60"
         }`}
         aria-hidden="true"
       >
-        ↓
+        ↓ save
       </div>
 
       {/* Destructible badge */}

@@ -81,8 +81,22 @@ export default function EditableLinkSettings({
               Copy
             </button>
           </div>
+          <a
+            href={`mailto:?subject=${
+              encodeURIComponent("Your QRBuddy edit link")
+            }&body=${
+              encodeURIComponent(
+                `Keep this safe — it's the only way to edit your QR later.\n\n${editUrl.value}`,
+              )
+            }`}
+            class="flex items-center justify-center w-full min-h-[44px] rounded-lg border-2 border-[#9370DB] bg-white px-4 py-2 font-bold text-sm text-[#6B46A8] hover:bg-[#F5E6FF] transition-colors"
+            onClick={() => haptics.light()}
+          >
+            📧 Email me this link
+          </a>
           <p class="text-xs text-[#6B46A8]">
-            Bookmark this link—you'll need it to edit your QR later.
+            This link is your key — no account, no recovery. Save it somewhere
+            real.
           </p>
         </div>
       )}

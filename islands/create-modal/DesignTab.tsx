@@ -37,26 +37,38 @@ export default function DesignTab(
             Pick a vibe right here — or build your own gradient.
           </p>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
             <button
               key={key}
               type="button"
               aria-label={`${info.name} style`}
-              title={info.name}
               onClick={() => {
                 qrStyle.value = key;
                 haptics.light();
               }}
-              class={`w-11 h-11 rounded-xl border-3 transition-all hover:scale-110 active:scale-95 ${
-                qrStyle.value === key
-                  ? "border-black scale-110 shadow-chunky"
-                  : "border-gray-300"
-              }`}
-              style={{
-                background: `linear-gradient(45deg, ${info.colors.join(", ")})`,
-              }}
-            />
+              class="flex flex-col items-center gap-1.5 group py-1"
+            >
+              <span
+                class={`w-14 h-14 rounded-xl border-3 transition-all group-hover:scale-110 group-active:scale-95 ${
+                  qrStyle.value === key
+                    ? "border-black scale-110 shadow-chunky"
+                    : "border-gray-300"
+                }`}
+                style={{
+                  background: `linear-gradient(45deg, ${
+                    info.colors.join(", ")
+                  })`,
+                }}
+              />
+              <span
+                class={`text-[11px] font-bold leading-none ${
+                  qrStyle.value === key ? "text-black" : "text-gray-500"
+                }`}
+              >
+                {info.name}
+              </span>
+            </button>
           ))}
         </div>
         <button

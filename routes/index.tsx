@@ -135,7 +135,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
               "name": "Pablo",
             },
             "featureList": [
-              "7 gradient presets (Sunset, Pool, Terminal, Candy, Vapor, Classic, Brutalist)",
+              "6 gradient presets (Sunset, Pool, Matrix, Candy, Vapor, Classic)",
               "Custom gradient creator",
               "QR types for links, WiFi, contact cards, messages, and plain text",
               "File sharing and file lockers",

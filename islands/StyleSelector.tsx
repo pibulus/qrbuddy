@@ -97,7 +97,8 @@ export const STYLE_DISPLAY = {
   candy: { name: "Candy", colors: ["#FF69B4", "#FF8C00", "#2EB5AC"] },
   vapor: { name: "Vapor", colors: ["#E600E6", "#009999"] },
   noir: { name: "Classic", colors: ["#1A1A1A", "#FAFAFA"] },
-  brutalist: { name: "Brutal", colors: ["#000000", "#FFFF00"] },
+  // brutalist left the public gallery (Pablo's call, Aug 2026) but still
+  // renders — the "666" easter egg summons it. Keep utils/qr-styles.ts entry.
 };
 
 export default function StyleSelector(
@@ -181,7 +182,9 @@ export default function StyleSelector(
 
   const currentStyleInfo = style.value === "custom"
     ? { name: "Custom", colors: ["#9370DB", "#FF69B4"] }
-    : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY];
+    : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY] ??
+      // Styles outside the gallery (brutalist via the 666 easter egg).
+      { name: "Brutal", colors: ["#000000", "#FFFF00"] };
 
   const getGradientPreview = (colors: string[]) => {
     return `linear-gradient(45deg, ${colors.join(", ")})`;
@@ -300,7 +303,10 @@ export default function StyleSelector(
                 </button>
               ))}
 
-              {/* Dice — random gradient, stays open for re-rolls */}
+              {
+                /* Dice and Custom fill slots 7 and 8 so the grid stays a
+                clean 2×4 — no full-width stragglers. */
+              }
               <button
                 type="button"
                 onClick={handleDiceRoll}
@@ -312,7 +318,6 @@ export default function StyleSelector(
                 <span class="font-bold text-gray-900">Surprise me</span>
               </button>
 
-              {/* Custom — full-width "build your own" bar closes the grid */}
               <button
                 type="button"
                 onClick={() => {
@@ -322,9 +327,9 @@ export default function StyleSelector(
                   shell.requestClose();
                 }}
                 class={`
-                  col-span-2 relative group overflow-hidden rounded-2xl border-3 border-dashed border-gray-300
-                  hover:border-black hover:border-solid hover:scale-[1.01] hover:shadow-lg transition-all duration-200
-                  bg-gray-50 flex items-center justify-center h-16 gap-2
+                  relative group overflow-hidden rounded-2xl border-3 border-dashed border-gray-300
+                  hover:border-black hover:border-solid hover:scale-[1.02] hover:shadow-lg transition-all duration-200
+                  bg-gray-50 flex flex-col items-center justify-center h-24 gap-1
                   ${
                   style.value === "custom"
                     ? "border-black border-solid shadow-chunky bg-white"
@@ -333,9 +338,7 @@ export default function StyleSelector(
                 `}
               >
                 <span class="text-2xl">🎨</span>
-                <span class="font-bold text-gray-900">
-                  Build your own gradient
-                </span>
+                <span class="font-bold text-gray-900">Build your own</span>
               </button>
             </div>
 
