@@ -1,4 +1,4 @@
-name: Deploy
+name: Build check
 on:
   push:
     branches: main
@@ -6,12 +6,11 @@ on:
     branches: main
 
 jobs:
-  deploy:
-    name: Deploy
+  build:
+    name: Build check
     runs-on: ubuntu-latest
 
     permissions:
-      id-token: write # Needed for auth with Deno Deploy
       contents: read # Needed to clone the repository
 
     steps:
@@ -23,15 +22,10 @@ jobs:
         with:
           deno-version: v2.x
 
+      # Build check only — deploys are owned by Deno Deploy's git auto-build
+      # (repo linked 2026-07-31), which runs deno.json's deploy.build remotely.
+      # A CI `deno deploy` upload honours .gitignore, so _fresh never ships and
+      # the tailwind plugin 500s every route with "Ahead of time builds not
+      # configured". That buildless clobber took prod down 2026-08-07.
       - name: Build step
         run: "deno task build"
-
-      # Classic deployctl died 2026-07-20. New-platform CLI; org/app come
-      # from deno.json's deploy block, env vars live on the app itself
-      # (deno deploy env), auth via DENO_DEPLOY_TOKEN (console.deno.com).
-      # --no-wait: the CLI's build-watcher hangs without a TTY.
-      - name: Upload to Deno Deploy
-        if: github.event_name == 'push'
-        env:
-          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
-        run: deno deploy --prod --non-interactive --no-wait
