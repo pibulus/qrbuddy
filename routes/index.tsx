@@ -78,7 +78,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
           property="og:description"
           content="Free QR code generator with practical QR types, file sharing, custom logos, 7 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
         />
-        <meta property="og:image" content="https://qrbuddy.app/og-image.png" />
+        <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta
@@ -97,7 +97,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
           name="twitter:description"
           content="Free QR code generator with practical QR types, file sharing, custom logos, 7 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
         />
-        <meta name="twitter:image" content="https://qrbuddy.app/og-image.png" />
+        <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
 
         {/* PWA */}
         <link rel="manifest" href="/manifest.json" />
