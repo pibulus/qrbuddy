@@ -43,7 +43,7 @@ export function PricingModal() {
     if (win.umami) {
       win.umami.track("upgrade_clicked", {
         plan: "pro",
-        billing: "lifetime",
+        billing: "year",
       });
     }
 
@@ -143,9 +143,10 @@ export function PricingModal() {
                   <h3 class="text-2xl font-black text-black">Supporter</h3>
                   <div class="text-4xl font-black text-black mt-2">
                     ${PRICING_TIERS.pro.price}
+                    <span class="text-lg font-bold text-gray-600">/year</span>
                   </div>
                   <p class="text-sm text-gray-600 mt-1">
-                    Pay once, keep forever
+                    A year, paid up front. That's it.
                   </p>
                 </div>
 
@@ -175,7 +176,7 @@ export function PricingModal() {
                 )}
 
                 <p class="text-xs text-center text-gray-600 mt-3">
-                  One payment. No subscriptions. Yours forever.
+                  One payment. No auto-renew, no card on file.
                 </p>
               </div>
             </div>
@@ -185,11 +186,12 @@ export function PricingModal() {
               <div class="space-y-2 text-sm">
                 <details class="group">
                   <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    Why one-time instead of subscription?
+                    Is this a subscription?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    Because subscriptions suck. Pay once, keep forever. No
-                    recurring charges, no anxiety.
+                    No. You pay $24, you get a year, and nothing ever charges
+                    you again. If you still love it next year, that's your call
+                    — next year.
                   </p>
                 </details>
                 <details class="group">
@@ -205,7 +207,7 @@ export function PricingModal() {
                     Do I get future features?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    Yep. Any new supporter features we add are yours.
+                    Yep. Anything we add while your year is running is yours.
                   </p>
                 </details>
                 <details class="group">
