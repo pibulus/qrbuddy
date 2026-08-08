@@ -100,6 +100,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
 
         {/* PWA */}
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#FF69B4" />
         <meta name="mobile-web-app-capable" content="yes" />
