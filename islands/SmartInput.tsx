@@ -17,6 +17,7 @@ import {
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import { validateFile } from "../utils/file-validation.ts";
 import { decodeQRFromFile } from "../utils/qr-decode.ts";
+import { looksLikeUrl } from "../utils/url.ts";
 
 // Sub-components
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
@@ -300,16 +301,6 @@ export default function SmartInput(
     }
   }, [url.value, touched, validationState]);
 
-  // Helper to check if string is likely a URL
-  const isValidUrl = (s: string) => {
-    try {
-      const url = new URL(s.startsWith("http") ? s : `https://${s}`);
-      return url.hostname.includes(".");
-    } catch {
-      return false;
-    }
-  };
-
   // Creating an editable QR writes a real server-side row, so it only happens
   // on an explicit button press (CreateModal → Options → "Create editable
   // link"). It used to auto-fire on a 1200ms debounce after toggling Editable,
@@ -317,10 +308,10 @@ export default function SmartInput(
   const handleCreateEditable = () => {
     if (
       url.value && !isCreatingDynamic && !editUrl.value && !isBucket.value &&
-      !isCreatingBucket && isValidUrl(url.value)
+      !isCreatingBucket && looksLikeUrl(url.value)
     ) {
       void createDynamicQR(url.value);
-    } else if (url.value && !isValidUrl(url.value)) {
+    } else if (url.value && !looksLikeUrl(url.value)) {
       addToast("Editable needs a real link — try https://…", 3000);
     }
   };
@@ -761,7 +752,7 @@ export default function SmartInput(
 
         {/* Editable mode needs a URL — plain text stays a static QR */}
         {isDynamic.value && !editUrl.value && !isBucket.value &&
-          url.value.trim() !== "" && !isValidUrl(url.value) && (
+          url.value.trim() !== "" && !looksLikeUrl(url.value) && (
           <p class="text-purple-700 text-xs mt-2 text-center animate-slide-down">
             Editable QRs need a link. This text makes a static QR — for a hosted
             note, use Create → Plain text.

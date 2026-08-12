@@ -220,7 +220,11 @@ export default function StyleSelector(
           <span class="font-bold text-black hidden sm:inline">
             {currentStyleInfo.name}
           </span>
-          <span class="text-sm font-bold hidden sm:inline">
+          {
+            /* The ▼ stays on mobile — a bare swatch reads as decoration,
+            not a menu. */
+          }
+          <span class="text-sm font-bold">
             ▼
           </span>
         </button>
@@ -258,6 +262,7 @@ export default function StyleSelector(
               <button
                 type="button"
                 onClick={shell.requestClose}
+                aria-label="Close style gallery"
                 class="text-3xl font-black text-gray-400 hover:text-gray-900 hover:rotate-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
               >
                 ×

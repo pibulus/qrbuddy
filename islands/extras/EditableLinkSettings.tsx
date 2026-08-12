@@ -1,6 +1,7 @@
 import { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
 import { addToast } from "../ToastManager.tsx";
+import { looksLikeUrl } from "../../utils/url.ts";
 
 interface EditableLinkSettingsProps {
   editUrl: Signal<string>;
@@ -16,7 +17,10 @@ export default function EditableLinkSettings({
   isCreating,
   onCreate,
 }: EditableLinkSettingsProps) {
-  const hasLink = pendingUrl.trim() !== "";
+  const hasContent = pendingUrl.trim() !== "";
+  // Editable QRs wrap links only — WiFi/vCard/text payloads stay static.
+  // Say so here instead of letting the button fail at press-time.
+  const hasLink = hasContent && looksLikeUrl(pendingUrl);
 
   return (
     <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
@@ -32,6 +36,13 @@ export default function EditableLinkSettings({
                 ? (
                   <p class="text-xs text-gray-700 leading-relaxed truncate">
                     Wraps <span class="font-mono">{pendingUrl}</span>
+                  </p>
+                )
+                : hasContent
+                ? (
+                  <p class="text-xs text-gray-700 leading-relaxed">
+                    Editable wraps a link — this content isn't one, so it stays
+                    a static QR.
                   </p>
                 )
                 : (
