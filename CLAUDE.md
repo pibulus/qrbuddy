@@ -330,12 +330,15 @@ adding surfaces:
   cleanup-expired
 - **Database Schema**: Added `dynamic_qr_codes` table with scan limits and
   expiry tracking
-- **Edge Functions**: 13 total Supabase functions:
+- **Edge Functions**: 18 total Supabase functions:
   - Dynamic QRs: create-dynamic-qr, update-dynamic-qr, get-dynamic-qr,
     redirect-qr
   - Destructible files: upload-file, get-file, get-file-metadata
   - File lockers: create-bucket, get-bucket-status, upload-to-bucket,
     download-from-bucket
+  - Supporter pass: create-checkout, square-webhook, get-license
+  - R2 big files (supporter): create-upload-url, finalize-upload — presigned
+    browser→R2 flow, storage paths prefixed `r2/` (see `_shared/r2.ts`)
   - System: health, cleanup-expired
 - **Smart Input Enhancements**: Checkbox + options UI for scan limits
   (1/5/10/100/∞) and expiry dates

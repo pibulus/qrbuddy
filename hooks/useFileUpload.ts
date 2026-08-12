@@ -5,7 +5,13 @@ import { getApiUrl } from "../utils/api.ts";
 import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 import { reportFailure } from "../utils/report-failure.ts";
-import { validateFile } from "../utils/file-validation.ts";
+import {
+  MAX_FILE_SIZE,
+  SUPPORTER_MAX_FILE_SIZE,
+  validateFile,
+} from "../utils/file-validation.ts";
+import { getSupporterPass } from "../utils/supporter-pass.ts";
+import { uploadViaR2 } from "../utils/r2-upload.ts";
 import {
   UNLIMITED_SCANS,
   UNLIMITED_SCANS_TEXT,
@@ -56,6 +62,12 @@ export function useFileUpload(
         : (Array.isArray(input) ? input : [input]);
       const isMulti = files.length > 1;
 
+      // Supporter pass lifts the single-file ceiling (R2-backed, see below).
+      const pass = getSupporterPass();
+      const maxSize = pass && !isMulti
+        ? SUPPORTER_MAX_FILE_SIZE
+        : MAX_FILE_SIZE;
+
       // Validate files
       if (files.length > MAX_SLIDESHOW_FILES) {
         throw new Error(`Max ${MAX_SLIDESHOW_FILES} files allowed per share.`);
@@ -76,35 +88,52 @@ export function useFileUpload(
           }
         }
 
-        const validation = validateFile(file);
+        const validation = validateFile(file, maxSize);
         if (!validation.valid) {
           throw new Error(validation.error);
         }
       }
 
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append("file", file);
-      });
-      formData.append("maxDownloads", maxDownloads.value.toString());
-      if (qrStyle?.value) {
-        formData.append("theme", qrStyle.value);
-      }
-
-      const apiUrl = getApiUrl();
-
-      const data = await apiRequestFormDataWithProgress<{
+      type UploadResponse = {
         success: boolean;
         url: string;
         fileName: string;
         size: number;
         maxDownloads: number;
-      }>(
-        `${apiUrl}/upload-file`,
-        formData,
-        setUploadProgress,
-        "Upload failed",
-      );
+      };
+
+      let data: UploadResponse;
+      if (pass && !isMulti && files[0].size > MAX_FILE_SIZE) {
+        // Big file + pass: presigned browser→R2 upload, finalize-upload
+        // answers with the same shape as upload-file.
+        data = await uploadViaR2<UploadResponse>(
+          {
+            kind: "destructible",
+            max_downloads: maxDownloads.value,
+            theme: qrStyle?.value,
+          },
+          files[0],
+          setUploadProgress,
+        );
+      } else {
+        const formData = new FormData();
+        files.forEach((file) => {
+          formData.append("file", file);
+        });
+        formData.append("maxDownloads", maxDownloads.value.toString());
+        if (qrStyle?.value) {
+          formData.append("theme", qrStyle.value);
+        }
+
+        const apiUrl = getApiUrl();
+
+        data = await apiRequestFormDataWithProgress<UploadResponse>(
+          `${apiUrl}/upload-file`,
+          formData,
+          setUploadProgress,
+          "Upload failed",
+        );
+      }
 
       setUploadProgress(100);
 

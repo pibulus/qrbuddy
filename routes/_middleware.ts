@@ -24,9 +24,15 @@ import { getSupabaseUrl } from "../utils/api.ts";
  *   caught this — docs say api-gateway.umami.dev, the wire says otherwise).
  * - img-src data: blob:: logo uploads + qr-code-styling's export path.
  * - frame-src ko-fi.com: the support widget iframe.
+ * - connect-src R2: supporter big files PUT/GET straight to Cloudflare R2 via
+ *   presigned URLs (utils/r2-upload.ts). The account ID isn't a secret — it's
+ *   in every presigned URL we hand out.
  */
 const SCRIPT_ORIGINS =
   "https://cloud.umami.is https://fleetcount.pibulus.deno.net";
+
+const R2_ORIGIN =
+  "https://c5a72aa2df2ddaa73fe129888a3d3402.r2.cloudflarestorage.com";
 
 function buildCsp(): string {
   const supabase = getSupabaseUrl() ?? "https://*.supabase.co";
@@ -35,7 +41,7 @@ function buildCsp(): string {
     `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${SCRIPT_ORIGINS}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    `connect-src 'self' ${supabase} https://cloud.umami.is https://gateway.umami.is https://fleetcount.pibulus.deno.net`,
+    `connect-src 'self' ${supabase} ${R2_ORIGIN} https://cloud.umami.is https://gateway.umami.is https://fleetcount.pibulus.deno.net`,
     "frame-src https://ko-fi.com",
     "object-src 'none'",
     "base-uri 'self'",

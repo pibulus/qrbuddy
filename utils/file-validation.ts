@@ -35,6 +35,7 @@ export {
   BLOCKED_EXTENSIONS,
   BLOCKED_MIME_TYPES,
   MAX_FILE_SIZE,
+  SUPPORTER_MAX_FILE_SIZE,
 } from "../supabase/functions/_shared/file-validation.ts";
 import {
   BLOCKED_EXTENSIONS,
@@ -68,12 +69,15 @@ export interface FileValidationResult {
  * // Safe to upload
  * ```
  */
-export function validateFile(file: File): FileValidationResult {
-  // Check file size
-  if (file.size > MAX_FILE_SIZE) {
+export function validateFile(
+  file: File,
+  maxSize = MAX_FILE_SIZE,
+): FileValidationResult {
+  // Check file size (supporter flows pass SUPPORTER_MAX_FILE_SIZE)
+  if (file.size > maxSize) {
     return {
       valid: false,
-      error: "File too large (max 50MB)",
+      error: `File too large (max ${Math.round(maxSize / 1024 / 1024)}MB)`,
     };
   }
 

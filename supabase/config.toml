@@ -373,6 +373,13 @@ verify_jwt = false
 [functions.get-license]
 verify_jwt = false
 
+[functions.create-upload-url]
+# Supporter-pass gated in the handler (HMAC x-qrb-pass header, 403 without).
+verify_jwt = false
+
+[functions.finalize-upload]
+verify_jwt = false
+
 [functions.square-webhook]
 # Square's servers call this with only the HMAC signature header — no apikey,
 # no JWT. The signature verification in the handler IS the authorization.

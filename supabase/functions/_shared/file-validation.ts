@@ -16,6 +16,11 @@
 // supporter perk needs Supabase Pro first — $300/yr, 13 passes to break even.
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
+// Supporter big files bypass Supabase storage entirely: browser → Cloudflare
+// R2 via presigned PUT (see _shared/r2.ts). The 500MB ceiling is a product
+// choice, not a platform one — R2 single PUTs go to 5GB if we ever want more.
+export const SUPPORTER_MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+
 export const BLOCKED_EXTENSIONS = [
   "exe",
   "bat",
@@ -81,12 +86,15 @@ export interface FileValidationResult {
   error?: string;
 }
 
-export function validateFile(file: File): FileValidationResult {
-  // Check file size
-  if (file.size > MAX_FILE_SIZE) {
+export function validateFile(
+  file: File,
+  maxSize = MAX_FILE_SIZE,
+): FileValidationResult {
+  // Check file size (supporter flows pass SUPPORTER_MAX_FILE_SIZE)
+  if (file.size > maxSize) {
     return {
       valid: false,
-      error: "File too large (max 50MB)",
+      error: `File too large (max ${Math.round(maxSize / 1024 / 1024)}MB)`,
     };
   }
 
