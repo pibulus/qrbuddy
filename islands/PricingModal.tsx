@@ -179,7 +179,7 @@ export function PricingModal() {
         {/* Modal */}
         <div
           ref={shell.dialogRef}
-          class="relative w-full max-w-md sm:max-w-2xl lg:max-w-5xl max-h-[90vh] overflow-y-auto animate-slide-up"
+          class="relative w-full max-w-md sm:max-w-2xl lg:max-w-3xl max-h-[85vh] overflow-y-auto animate-slide-up"
           role="dialog"
           aria-modal="true"
           aria-labelledby="pricing-modal-title"
@@ -196,8 +196,8 @@ export function PricingModal() {
                   Support
                 </h2>
                 <p class="text-xs sm:text-sm text-purple-900 mt-1">
-                  Free forever. Support to unlock extras and fund more apps like
-                  this.
+                  Free forever. The pass lifts the limits and funds more tools
+                  like this.
                 </p>
               </div>
               <button
@@ -371,13 +371,6 @@ export function PricingModal() {
                 </details>
               </div>
             </div>
-          </div>
-
-          {/* ESC hint */}
-          <div class="text-center mt-4">
-            <p class="text-xs text-gray-400">
-              Press ESC or click outside to close
-            </p>
           </div>
         </div>
       </div>

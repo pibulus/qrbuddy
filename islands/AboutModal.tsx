@@ -261,13 +261,6 @@ export function AboutModal() {
               </div>
             </div>
           </div>
-
-          {/* ESC hint */}
-          <div class="text-center mt-4">
-            <p class="text-xs text-gray-400">
-              Press ESC or click outside to close
-            </p>
-          </div>
         </div>
       </div>
     </>
