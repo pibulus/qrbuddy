@@ -96,7 +96,10 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
         timestamp: new Date().toISOString(),
       });
       setIsCreatingBucket(false);
-      // Don't show toast/error for every keystroke, just log
+      // Only called on an explicit button press now (the old auto-create-on-
+      // keystroke flow is gone), so a failure must be told, not swallowed.
+      addToast("Couldn't create the note page — try again", 3500);
+      haptics.error();
       return null;
     }
   };

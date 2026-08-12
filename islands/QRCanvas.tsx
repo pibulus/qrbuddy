@@ -194,7 +194,8 @@ export default function QRCanvas(
     if (url.value) {
       try {
         await navigator.clipboard.writeText(url.value);
-        addToast("URL copied to clipboard! 📋");
+        // The QR content might be a URL or plain text — don't call it a URL.
+        addToast("Copied to clipboard! 📋");
       } catch (err) {
         console.error("Failed to copy URL:", err);
         addToast("Failed to copy URL ❌");
@@ -493,19 +494,21 @@ export default function QRCanvas(
       {
         /* Empty state is shown, not told: full color always (a faded QR read
           as broken), but the card sits slightly small and grows to full size
-          on the first character. The ⬇ chip is ALWAYS present so first-timers
-          learn the card is a download button — soft while empty, popping to
-          full strength when real content lands. */
+          on the first character. The save pill is ALWAYS present and is a REAL
+          button (regular users don't click posters) — soft while empty,
+          popping to full strength when real content lands. */
       }
-      <div
+      <button
+        type="button"
         key={url.value ? "chip-live" : "chip-idle"}
-        class={`absolute -bottom-3 -right-3 h-8 px-3 rounded-full bg-white border-2 border-black shadow-chunky flex items-center justify-center gap-1 text-xs font-black text-black z-10 pointer-events-none select-none transition-opacity ${
+        onClick={handleDownloadClick}
+        class={`absolute -bottom-4 -right-3 min-h-[44px] px-4 rounded-full bg-white border-3 border-black shadow-chunky flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
           url.value ? "animate-bounce-in" : "opacity-60"
         }`}
-        aria-hidden="true"
+        aria-label="Download QR code as PNG"
       >
-        ↓ save
-      </div>
+        ↓ Save PNG
+      </button>
 
       {/* Destructible badge */}
       {isDestructible?.value && (

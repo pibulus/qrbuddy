@@ -87,6 +87,14 @@ export default function SmartInput(
     onModalStateChange?.(isCreateModalOpen);
   }, [isCreateModalOpen, onModalStateChange]);
 
+  // Snapshot the QR content when the create sheet opens, so closing it can
+  // acknowledge "your QR is ready" — but only when the sheet actually
+  // changed something (repeat open/close stays quiet).
+  const urlAtSheetOpen = useRef("");
+  useEffect(() => {
+    if (isCreateModalOpen) urlAtSheetOpen.current = url.value;
+  }, [isCreateModalOpen]);
+
   // Dynamic QR options
   const [scanLimit, setScanLimit] = useState<number | null>(null); // Default to null (unlimited)
   const [expiryDate, setExpiryDate] = useState<string>("");
@@ -578,7 +586,16 @@ export default function SmartInput(
       {/* Create Modal - Rendered here for mobile layout flow */}
       <CreateModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          // Bridge the "kicked back to the main page" moment: if the sheet
+          // changed the QR, say so and point at the save pill.
+          if (
+            url.value.trim() !== "" && url.value !== urlAtSheetOpen.current
+          ) {
+            addToast("QR ready — tap ↓ Save PNG to keep it");
+          }
+        }}
         selectedTemplate={selectedTemplate}
         onSelectTemplate={(template) => {
           setSelectedTemplate(template);
