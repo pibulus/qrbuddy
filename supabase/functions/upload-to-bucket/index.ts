@@ -262,9 +262,28 @@ serve(async (req) => {
         : null;
       password = typeof body.password === "string" ? body.password : null;
 
-      if (!type || !content) {
+      if (!type || !content || typeof content !== "string") {
         return new Response(
           JSON.stringify({ error: "type and content required" }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 400,
+          },
+        );
+      }
+
+      // Server-side length caps: the client textarea stops at 2,900 chars
+      // (QR capacity), but nothing stopped a raw POST from stuffing megabytes
+      // into content_data. Generous headroom, hard ceiling.
+      const maxLength = type === "link" ? 2048 : 10_000;
+      if (content.length > maxLength) {
+        return new Response(
+          JSON.stringify({
+            error: `Content too long (max ${maxLength} characters)`,
+          }),
           {
             headers: {
               ...getCorsHeaders(req),
