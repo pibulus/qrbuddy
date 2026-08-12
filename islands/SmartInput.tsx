@@ -15,7 +15,12 @@ import {
   useBucketCreator,
 } from "../hooks/useBucketCreator.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
-import { validateFile } from "../utils/file-validation.ts";
+import {
+  MAX_FILE_SIZE,
+  SUPPORTER_MAX_FILE_SIZE,
+  validateFile,
+} from "../utils/file-validation.ts";
+import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { decodeQRFromFile } from "../utils/qr-decode.ts";
 import { looksLikeUrl } from "../utils/url.ts";
 
@@ -359,8 +364,13 @@ export default function SmartInput(
   // (The old flow uploaded on drop, which made the limit picker unreachable.)
   const stageFiles = (fileList: FileList) => {
     const files = Array.from(fileList);
+    // Supporter pass lifts the single-file ceiling (R2-backed) — multi-file
+    // slideshows stay on the Supabase path and its cap.
+    const maxSize = getSupporterPass() && files.length === 1
+      ? SUPPORTER_MAX_FILE_SIZE
+      : MAX_FILE_SIZE;
     for (const file of files) {
-      const validation = validateFile(file);
+      const validation = validateFile(file, maxSize);
       if (!validation.valid) {
         addToast(`❌ ${validation.error}`, 4000);
         haptics.error();

@@ -2,7 +2,12 @@ import { useRef, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
 import { useKeypad } from "../../hooks/useKeypad.ts";
-import { validateFile } from "../../utils/file-validation.ts";
+import {
+  MAX_FILE_SIZE,
+  SUPPORTER_MAX_FILE_SIZE,
+  validateFile,
+} from "../../utils/file-validation.ts";
+import { getSupporterPass } from "../../utils/supporter-pass.ts";
 
 interface Props {
   url: Signal<string>;
@@ -30,7 +35,12 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const selected = input.files[0];
-      const validation = validateFile(selected);
+      // Supporter pass lifts the ceiling — this flow fills a locker via
+      // uploadToBucket, which routes big files through R2.
+      const validation = validateFile(
+        selected,
+        getSupporterPass() ? SUPPORTER_MAX_FILE_SIZE : MAX_FILE_SIZE,
+      );
       if (!validation.valid) {
         setError(validation.error ?? "That file can't be shared.");
         setFile(null);
@@ -77,7 +87,7 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
             haptics.success();
           } else {
             setError(
-              "Couldn't create the file page. Check the file size (max 50MB) and try again.",
+              "Couldn't create the file page. Check the file size and try again.",
             );
             haptics.error();
           }
