@@ -55,9 +55,6 @@ export default function SmartInputToolbar({
           ? "Choose QR type, files, options, and logo (new links waiting)"
           : "Choose QR type, files, options, and logo"}
       >
-        <span class="text-lg group-hover:scale-110 transition-transform">
-          🎯
-        </span>
         <span class="group-hover:text-blue-700">Create</span>
         <span class="hidden sm:inline text-xs text-gray-500 font-black">
           {templateMeta.icon} {templateMeta.label}

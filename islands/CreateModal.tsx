@@ -713,10 +713,12 @@ export default function CreateModal({
     />
   );
 
-  const tabs: Array<{ id: ActiveTab; label: string; icon: string }> = [
-    { id: "type", label: "Type", icon: "🎯" },
-    { id: "options", label: "Options", icon: "⚙️" },
-    { id: "design", label: "Design", icon: "🎨" },
+  // Labels carry the meaning; the emoji were garnish on navigation, which the
+  // footer-charm exception doesn't cover. 🎯 for "Type" was arbitrary anyway.
+  const tabs: Array<{ id: ActiveTab; label: string }> = [
+    { id: "type", label: "Type" },
+    { id: "options", label: "Options" },
+    { id: "design", label: "Design" },
   ];
   const hasCompletion = completionKind !== null && bucketUrl.value !== "";
 
@@ -780,7 +782,6 @@ export default function CreateModal({
                       : "text-gray-600 hover:bg-white"
                   }`}
                 >
-                  <span>{tab.icon}</span>
                   <span>{tab.label}</span>
                 </button>
               ))}
