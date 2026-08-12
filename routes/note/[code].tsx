@@ -6,6 +6,7 @@ interface NotePageData {
   code: string;
   content: string;
   openedLabel: string;
+  unbranded: boolean;
 }
 
 export const handler: Handlers<NotePageData> = {
@@ -34,6 +35,7 @@ export const handler: Handlers<NotePageData> = {
         content_type?: string;
         content?: string;
         metadata?: { created_at?: string; [key: string]: unknown };
+        unbranded?: boolean;
       };
 
       if (data.content_type !== "text" || typeof data.content !== "string") {
@@ -51,6 +53,7 @@ export const handler: Handlers<NotePageData> = {
           month: "short",
           year: "numeric",
         }),
+        unbranded: data.unbranded === true,
       });
     } catch (error) {
       console.error("Note page failed:", error);
@@ -109,12 +112,15 @@ export default function NotePage({ data }: PageProps<NotePageData>) {
 
           <footer class="mt-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-sm text-gray-500">
             <p class="font-mono">Opened {data.openedLabel}</p>
-            <a
-              href="/?utm_source=text_card&utm_medium=note"
-              class="min-h-[44px] inline-flex items-center justify-center rounded-xl border-3 border-black bg-black px-4 py-2 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
-            >
-              Make your own QR
-            </a>
+            {/* Supporter perk: unbranded notes skip the CTA */}
+            {!data.unbranded && (
+              <a
+                href="/?utm_source=text_card&utm_medium=note"
+                class="min-h-[44px] inline-flex items-center justify-center rounded-xl border-3 border-black bg-black px-4 py-2 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
+              >
+                Make your own QR
+              </a>
+            )}
           </footer>
         </article>
       </main>

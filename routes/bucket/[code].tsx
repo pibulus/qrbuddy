@@ -21,6 +21,7 @@ interface BucketData {
   is_reusable: boolean;
   delete_on_download: boolean;
   is_empty: boolean;
+  unbranded?: boolean;
   content_type: string | null;
   content_metadata: BucketContentMetadata | null;
   last_filled_at: string | null;
@@ -173,15 +174,17 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
             )}
           </div>
 
-          {/* Footer */}
-          <footer class="text-center pt-8">
-            <a
-              href="/"
-              class="text-sm text-gray-500 hover:text-pink-600 transition-colors"
-            >
-              ← Make your own locker at QRBuddy
-            </a>
-          </footer>
+          {/* Footer — supporter perk: unbranded lockers skip the CTA */}
+          {!bucket.unbranded && (
+            <footer class="text-center pt-8">
+              <a
+                href="/"
+                class="text-sm text-gray-500 hover:text-pink-600 transition-colors"
+              >
+                ← Make your own locker at QRBuddy
+              </a>
+            </footer>
+          )}
         </div>
       </div>
     </>

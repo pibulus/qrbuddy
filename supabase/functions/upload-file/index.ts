@@ -10,6 +10,8 @@ import {
   getClientIP,
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { requestHasValidPass } from "../_shared/license.ts";
+import { MAX_FILE_SIZE } from "../_shared/file-validation.ts";
 
 const UNLIMITED_DOWNLOADS = 999999;
 const MAX_DOWNLOADS_LIMIT = UNLIMITED_DOWNLOADS;
@@ -27,15 +29,20 @@ serve(async (req) => {
   const uploadedPaths: string[] = [];
 
   try {
+    // Supporter pass lifts the throttles and the size cap.
+    const hasPass = await requestHasValidPass(req);
+
     // Rate limiting: 10 uploads per hour per IP
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
-      windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 10,
-    });
+    if (!hasPass) {
+      const rateLimitResult = checkRateLimit(clientIP, {
+        windowMs: 60 * 60 * 1000, // 1 hour
+        maxRequests: 10,
+      });
 
-    if (rateLimitResult.isLimited) {
-      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+      if (rateLimitResult.isLimited) {
+        return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+      }
     }
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -58,7 +65,7 @@ serve(async (req) => {
       throw new Error("System busy, please try again.");
     }
 
-    if (activeFiles !== null && activeFiles >= 3) {
+    if (!hasPass && activeFiles !== null && activeFiles >= 3) {
       return new Response(
         JSON.stringify({
           error:
@@ -117,8 +124,10 @@ serve(async (req) => {
 
     // Validate each file
     for (const file of files) {
-      // Check file size (5MB limit per file for multi-file, or 50MB for single)
-      const sizeLimit = isMultiFile ? 5 * 1024 * 1024 : 50 * 1024 * 1024;
+      // Check file size (5MB limit per file for multi-file, or 50MB for
+      // single — the free Supabase plan's storage ceiling, see
+      // _shared/file-validation.ts; a pass can't lift what storage rejects)
+      const sizeLimit = isMultiFile ? 5 * 1024 * 1024 : MAX_FILE_SIZE;
       if (file.size > sizeLimit) {
         return new Response(
           JSON.stringify({

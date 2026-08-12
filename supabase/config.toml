@@ -367,6 +367,17 @@ verify_jwt = false
 [functions.health]
 verify_jwt = false
 
+[functions.create-checkout]
+verify_jwt = false
+
+[functions.get-license]
+verify_jwt = false
+
+[functions.square-webhook]
+# Square's servers call this with only the HMAC signature header — no apikey,
+# no JWT. The signature verification in the handler IS the authorization.
+verify_jwt = false
+
 [functions.cleanup-expired]
 # Handler validates CLEANUP_SECRET via the Authorization header itself, so the
 # platform JWT gate must be off (otherwise the gateway rejects the secret as a

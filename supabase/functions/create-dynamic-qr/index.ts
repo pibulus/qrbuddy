@@ -10,6 +10,7 @@ import {
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { validateSplashConfig } from "../_shared/splash-validation.ts";
+import { requestHasValidPass } from "../_shared/license.ts";
 
 // Generate short code (6 chars, URL-safe).
 // Uses crypto.getRandomValues (not Math.random) so codes aren't predictable
@@ -40,15 +41,20 @@ serve(async (req) => {
   }
 
   try {
+    // Supporter pass lifts the throttle (signature-verified, stateless).
+    const hasPass = await requestHasValidPass(req);
+
     // Rate limiting: 10 QR creations per hour per IP
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
-      windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 10,
-    });
+    if (!hasPass) {
+      const rateLimitResult = checkRateLimit(clientIP, {
+        windowMs: 60 * 60 * 1000, // 1 hour
+        maxRequests: 10,
+      });
 
-    if (rateLimitResult.isLimited) {
-      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+      if (rateLimitResult.isLimited) {
+        return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+      }
     }
 
     const supabase = createClient(

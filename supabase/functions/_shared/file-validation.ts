@@ -10,6 +10,10 @@
  * this copy is the canonical one. Edit the lists here and both sides update.
  */
 
+// 50MB is the FREE SUPABASE PLAN's project-level storage ceiling (probed
+// 2026-08-12: a 60MB upload 500s at the storage layer no matter what this
+// says, and PATCHing config/storage demands a paid plan). A "bigger uploads"
+// supporter perk needs Supabase Pro first — $300/yr, 13 passes to break even.
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 export const BLOCKED_EXTENSIONS = [

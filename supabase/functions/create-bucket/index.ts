@@ -9,6 +9,7 @@ import {
   getClientIP,
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { requestHasValidPass } from "../_shared/license.ts";
 
 // Generate short code (6 chars, URL-safe).
 // Uses crypto.getRandomValues (not Math.random) so codes aren't predictable
@@ -41,15 +42,20 @@ serve(async (req) => {
   }
 
   try {
+    // Supporter pass lifts the throttles (signature-verified, stateless).
+    const hasPass = await requestHasValidPass(req);
+
     // Rate limiting: 10 bucket creations per hour per IP
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
-      windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 10,
-    });
+    if (!hasPass) {
+      const rateLimitResult = checkRateLimit(clientIP, {
+        windowMs: 60 * 60 * 1000, // 1 hour
+        maxRequests: 10,
+      });
 
-    if (rateLimitResult.isLimited) {
-      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+      if (rateLimitResult.isLimited) {
+        return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+      }
     }
 
     const supabase = createClient(
@@ -75,7 +81,7 @@ serve(async (req) => {
       throw new Error("System busy, please try again.");
     }
 
-    if (dailyLockers !== null && dailyLockers >= 25) {
+    if (!hasPass && dailyLockers !== null && dailyLockers >= 25) {
       return new Response(
         JSON.stringify({
           error: "Daily locker limit reached. Try again tomorrow.",
@@ -191,6 +197,7 @@ serve(async (req) => {
         delete_on_download,
         is_empty: true,
         creator_ip: clientIP,
+        unbranded: hasPass,
       });
 
     if (insertError) throw insertError;

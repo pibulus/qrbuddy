@@ -289,6 +289,8 @@ serve(async (req) => {
         content_type: bucket.content_type,
         content: bucket.content_data,
         metadata: bucket.content_metadata,
+        // Supporter perk: the note page hides the QRBuddy CTA when true.
+        unbranded: bucket.unbranded === true,
       };
 
       // Empty bucket if not reusable

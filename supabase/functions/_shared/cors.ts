@@ -62,7 +62,7 @@ export function getCorsHeaders(request?: Request): Record<string, string> {
     "Access-Control-Allow-Origin": getAllowedOrigin(request),
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type",
+      "authorization, x-client-info, apikey, content-type, x-qrb-pass",
     "Access-Control-Allow-Credentials": "true",
   };
 }

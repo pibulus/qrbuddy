@@ -1,6 +1,8 @@
 // API URL utilities for Supabase edge functions that work in both
 // server-side (Deno) and client-side (browser) contexts.
 
+import { getSupporterPass } from "./supporter-pass.ts";
+
 declare global {
   interface Window {
     __SUPABASE_URL__?: string;
@@ -112,6 +114,13 @@ export function getAuthHeaders(): Record<string, string> {
   // New Supabase publishable keys are opaque and should only be sent as apikey.
   if (apiKey.split(".").length === 3) {
     headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  // Supporter pass rides along on every API call (browser only — server-side
+  // renders have no localStorage and no business holding a pass).
+  const pass = getSupporterPass();
+  if (pass) {
+    headers["x-qrb-pass"] = pass;
   }
 
   return headers;

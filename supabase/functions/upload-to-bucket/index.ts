@@ -10,6 +10,7 @@ import {
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { validateFile } from "../_shared/file-validation.ts";
+import { requestHasValidPass } from "../_shared/license.ts";
 
 type BucketContentMetadata = Record<string, unknown>;
 type UploadContentType = "file" | "text" | "link";
@@ -57,15 +58,20 @@ serve(async (req) => {
   }
 
   try {
+    // Supporter pass lifts the throttles and the size cap.
+    const hasPass = await requestHasValidPass(req);
+
     // Rate limiting: 15 uploads per hour per IP
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
-      windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 15,
-    });
+    if (!hasPass) {
+      const rateLimitResult = checkRateLimit(clientIP, {
+        windowMs: 60 * 60 * 1000, // 1 hour
+        maxRequests: 15,
+      });
 
-    if (rateLimitResult.isLimited) {
-      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+      if (rateLimitResult.isLimited) {
+        return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+      }
     }
 
     const supabase = createClient(
