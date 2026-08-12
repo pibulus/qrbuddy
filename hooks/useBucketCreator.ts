@@ -6,6 +6,9 @@ import { saveOwnerToken } from "../utils/token-vault.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 import { reportFailure } from "../utils/report-failure.ts";
+import { MAX_FILE_SIZE } from "../utils/file-validation.ts";
+import { getSupporterPass } from "../utils/supporter-pass.ts";
+import { uploadViaR2 } from "../utils/r2-upload.ts";
 
 export interface CreateBucketOptions {
   bucketType?: "file" | "text" | "link";
@@ -176,6 +179,23 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
   ) => {
     try {
       setIsCreatingBucket(true);
+
+      // Big file + supporter pass: presigned browser→R2 flow instead of the
+      // 50MB Supabase path.
+      if (getSupporterPass() && file.size > MAX_FILE_SIZE) {
+        await uploadViaR2(
+          {
+            kind: "bucket",
+            bucket_code: bucketCode,
+            owner_token: ownerToken,
+            ...metadata,
+          },
+          file,
+        );
+        setIsCreatingBucket(false);
+        return true;
+      }
+
       const apiUrl = getApiUrl();
       const formData = new FormData();
       formData.append("file", file);

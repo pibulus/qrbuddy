@@ -6,7 +6,14 @@ import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
 import { getAuthHeaders } from "../utils/api.ts";
 import { useKeypad } from "../hooks/useKeypad.ts";
 import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
-import { formatFileSize, validateFile } from "../utils/file-validation.ts";
+import {
+  formatFileSize,
+  MAX_FILE_SIZE,
+  SUPPORTER_MAX_FILE_SIZE,
+  validateFile,
+} from "../utils/file-validation.ts";
+import { getSupporterPass } from "../utils/supporter-pass.ts";
+import { uploadViaR2 } from "../utils/r2-upload.ts";
 import { addToast } from "./ToastManager.tsx";
 
 interface BucketContentMetadata {
@@ -351,23 +358,44 @@ export default function BucketQR({
       let response: Response | undefined;
 
       if (file) {
-        const validation = validateFile(file);
+        // Supporter pass lifts the size ceiling (R2-backed big files).
+        const pass = getSupporterPass();
+        const validation = validateFile(
+          file,
+          pass ? SUPPORTER_MAX_FILE_SIZE : MAX_FILE_SIZE,
+        );
         if (!validation.valid) {
           throw new Error(validation.error);
         }
 
-        // Upload file
-        const formData = new FormData();
-        formData.append("file", file);
-        if (isPasswordProtected && !ownerToken) {
-          formData.append("password", unlockPassword);
+        if (pass && file.size > MAX_FILE_SIZE) {
+          // Presigned browser→R2 upload with real progress.
+          await uploadViaR2(
+            {
+              kind: "bucket",
+              bucket_code: bucketCode,
+              owner_token: ownerToken ?? undefined,
+              password: isPasswordProtected && !ownerToken
+                ? unlockPassword
+                : undefined,
+            },
+            file,
+            setUploadProgress,
+          );
+        } else {
+          // Upload file
+          const formData = new FormData();
+          formData.append("file", file);
+          if (isPasswordProtected && !ownerToken) {
+            formData.append("password", unlockPassword);
+          }
+          await apiRequestFormDataWithProgress(
+            uploadUrl.toString(),
+            formData,
+            setUploadProgress,
+            "Upload failed",
+          );
         }
-        await apiRequestFormDataWithProgress(
-          uploadUrl.toString(),
-          formData,
-          setUploadProgress,
-          "Upload failed",
-        );
       } else if (text || link) {
         // Upload text or link
         response = await fetch(uploadUrl.toString(), {
@@ -479,14 +507,25 @@ export default function BucketQR({
       }
 
       if (contentType === "file") {
-        // Download file
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = contentMetadata?.filename || "download";
-        a.click();
-        URL.revokeObjectURL(url);
+        const responseMime = response.headers.get("Content-Type") ?? "";
+        if (responseMime.includes("application/json")) {
+          // R2-backed big file: the function answers with a short-lived
+          // presigned URL — the browser downloads straight from R2.
+          const data = await response.json();
+          const a = document.createElement("a");
+          a.href = data.download_url;
+          a.download = contentMetadata?.filename || "download";
+          a.click();
+        } else {
+          // Download file
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = contentMetadata?.filename || "download";
+          a.click();
+          URL.revokeObjectURL(url);
+        }
       } else {
         // Show text/link content
         const data = await response.json();
@@ -572,8 +611,21 @@ export default function BucketQR({
         throw new Error(errorData.error || "Preview failed");
       }
 
-      const mime = response.headers.get("Content-Type") ?? "";
-      const blob = await response.blob();
+      let mime = response.headers.get("Content-Type") ?? "";
+      let blob: Blob;
+      if (mime.includes("application/json")) {
+        // R2-backed big file: fetch the bytes from the presigned URL
+        // (R2 CORS allows GET from our origins).
+        const data = await response.json();
+        const fileResponse = await fetch(data.download_url);
+        if (!fileResponse.ok) {
+          throw new Error("Preview failed");
+        }
+        mime = fileResponse.headers.get("Content-Type") ?? "";
+        blob = await fileResponse.blob();
+      } else {
+        blob = await response.blob();
+      }
 
       if (/^(image|video|audio)\//.test(mime)) {
         setPreviewMime(mime);

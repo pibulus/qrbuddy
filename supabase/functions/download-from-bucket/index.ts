@@ -9,6 +9,7 @@ import {
   getClientIP,
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { isR2Path, presignGet } from "../_shared/r2.ts";
 
 function safeDownloadFilename(filename: unknown): string {
   const fallback = "download";
@@ -231,8 +232,79 @@ serve(async (req) => {
 
     // Handle different content types
     if (bucket.content_type === "file") {
-      // Download file from storage
       const storagePath = bucket.content_metadata.storage_path;
+
+      // R2-backed big file (supporter upload): all auth/claim logic has
+      // passed — answer with a short-lived presigned URL instead of
+      // streaming. Object deletion is deferred to cleanup-expired via the
+      // reap queue so the URL outlives the claim. Bucket bookkeeping is
+      // identical to the streaming branch below.
+      if (isR2Path(storagePath)) {
+        const enqueueReap = async () => {
+          const { error: reapError } = await supabase
+            .from("r2_reap_queue")
+            .upsert({
+              storage_key: storagePath,
+              reap_after: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            });
+          if (reapError) {
+            console.error("R2 reap enqueue failed:", reapError);
+          }
+        };
+
+        if (!bucket.is_reusable) {
+          await enqueueReap();
+          await supabase.from("file_buckets").delete().eq("id", bucket.id);
+        } else if (bucket.delete_on_download) {
+          // Ping Pong Mode: Delete content but keep bucket
+          await enqueueReap();
+          await supabase
+            .from("file_buckets")
+            .update({
+              content_type: null,
+              content_data: null,
+              content_metadata: null,
+              is_empty: true,
+              download_started_at: null,
+              last_emptied_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", bucket.id);
+        } else {
+          await supabase
+            .from("file_buckets")
+            .update({
+              last_accessed_at: new Date().toISOString(),
+            })
+            .eq("id", bucket.id);
+        }
+
+        const downloadUrl = await presignGet(
+          storagePath,
+          60,
+          bucket.content_metadata.filename,
+          bucket.content_metadata.mimetype,
+        );
+
+        responseHeaders["Content-Type"] = "application/json";
+        responseHeaders["X-Bucket-Emptied"] =
+          (!bucket.is_reusable || bucket.delete_on_download).toString();
+        responseHeaders["X-Bucket-Reusable"] = bucket.is_reusable.toString();
+
+        // Delivered: the slot is committed, the catch must not release it.
+        claimedBucketId = null;
+        return new Response(
+          JSON.stringify({
+            success: true,
+            content_type: "file",
+            download_url: downloadUrl,
+            metadata: bucket.content_metadata,
+          }),
+          { headers: responseHeaders },
+        );
+      }
+
+      // Download file from storage
       const { data: fileData, error: downloadError } = await supabase.storage
         .from("qr-files")
         .download(storagePath);

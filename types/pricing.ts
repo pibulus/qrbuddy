@@ -30,6 +30,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     billingPeriod: "year",
     features: [
       "Everything in Free, forever",
+      "Big files — up to 500MB",
       "No QRBuddy branding on note & locker pages",
       "Active-file and daily locker caps lifted",
       "Rate limits lifted — create and upload in bulk",

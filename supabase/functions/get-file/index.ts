@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
 import JSZip from "https://esm.sh/jszip@3.10.1";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { isR2Path, presignGet } from "../_shared/r2.ts";
 
 type StoredFile = {
   path: string;
@@ -196,6 +197,48 @@ serve(async (req) => {
         targetName = subFile.name;
         targetMime = subFile.type;
       }
+    }
+
+    // R2-backed big file (always single — multi-image shares stay in
+    // Supabase storage): all claim logic has passed, so finalize the slot
+    // and hand the browser a short-lived presigned URL. Destructible
+    // semantics are unchanged — the claim RPC still gated this.
+    if (isR2Path(targetPath)) {
+      const { data: r2Finalized, error: r2FinalizeError } = await supabase
+        .rpc("finalize_destructible_file_download", { p_file_id: fileId })
+        .maybeSingle<FinalizedDownload>();
+
+      if (r2FinalizeError || !r2Finalized) {
+        if (r2FinalizeError) {
+          console.error("File finalize error:", r2FinalizeError);
+        }
+        return redirectTo("/boom", req);
+      }
+
+      // Finalized: slot committed, catch must not release it.
+      claimedFileId = null;
+
+      if (r2Finalized.will_expire) {
+        // The presigned URL must outlive the object — deletion is deferred
+        // to cleanup-expired via the reap queue (+1h) instead of inline.
+        const { error: reapError } = await supabase
+          .from("r2_reap_queue")
+          .upsert({
+            storage_key: targetPath,
+            reap_after: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          });
+        if (reapError) {
+          console.error("R2 reap enqueue failed:", reapError);
+        }
+      }
+
+      const signedUrl = await presignGet(
+        targetPath,
+        60,
+        targetName,
+        targetMime,
+      );
+      return redirectTo(signedUrl, req);
     }
 
     // Download file from storage

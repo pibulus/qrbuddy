@@ -5,6 +5,18 @@
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { deleteObjects, isR2Path, r2Configured } from "../_shared/r2.ts";
+
+/** Best-effort R2 deletion — returns the keys actually removed. Skips
+ * quietly when R2 secrets aren't set so the Supabase reaping never breaks. */
+async function reapR2(keys: string[]): Promise<string[]> {
+  if (keys.length === 0) return [];
+  if (!r2Configured()) {
+    console.error("R2 not configured — skipping R2 reap of", keys.length);
+    return [];
+  }
+  return await deleteObjects(keys);
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -86,14 +98,19 @@ serve(async (req) => {
         }
       }
 
-      if (filesToDelete.length > 0) {
+      // r2/ paths live in Cloudflare R2, the rest in Supabase storage.
+      const r2Files = filesToDelete.filter(isR2Path);
+      const supabaseFiles = filesToDelete.filter((p) => !isR2Path(p));
+
+      if (supabaseFiles.length > 0) {
         const { error: storageError } = await supabase.storage
           .from("qr-files")
-          .remove(filesToDelete);
+          .remove(supabaseFiles);
 
         if (storageError) console.error("Storage delete error:", storageError);
-        else deletedFiles = filesToDelete.length;
+        else deletedFiles = supabaseFiles.length;
       }
+      deletedFiles += (await reapR2(r2Files)).length;
 
       // Empty these buckets
       const expiredIds = expiredBuckets.map((b) => b.id);
@@ -157,14 +174,18 @@ serve(async (req) => {
         ),
       );
 
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from("qr-files")
-        .remove(paths);
+      // Delete from storage (Supabase paths) and R2 (r2/ paths)
+      const supabasePaths = paths.filter((p) => !isR2Path(p));
+      if (supabasePaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from("qr-files")
+          .remove(supabasePaths);
 
-      if (storageError) {
-        console.error("Storage delete error (destructible):", storageError);
+        if (storageError) {
+          console.error("Storage delete error (destructible):", storageError);
+        }
       }
+      await reapR2(paths.filter(isR2Path));
 
       // Delete from DB
       const ids = expiredFiles.map((f) => f.id);
@@ -200,6 +221,53 @@ serve(async (req) => {
 
     if (scanLogError) console.error("Scan log pruning error:", scanLogError);
 
+    // 6. Drain the R2 reap queue. Downloads of R2-backed files hand out ~60s
+    // presigned URLs, so objects are queued (+1h) instead of deleted inline.
+    // Failed deletes keep their queue row and retry next run.
+    let reapedR2Objects = 0;
+    const { data: reapRows, error: reapFetchError } = await supabase
+      .from("r2_reap_queue")
+      .select("storage_key")
+      .lt("reap_after", new Date().toISOString());
+
+    if (reapFetchError) {
+      console.error("R2 reap queue fetch error:", reapFetchError);
+    } else if (reapRows && reapRows.length > 0) {
+      const reaped = await reapR2(reapRows.map((r) => r.storage_key));
+      if (reaped.length > 0) {
+        const { error: reapDeleteError } = await supabase
+          .from("r2_reap_queue")
+          .delete()
+          .in("storage_key", reaped);
+        if (reapDeleteError) {
+          console.error("R2 reap queue delete error:", reapDeleteError);
+        }
+      }
+      reapedR2Objects = reaped.length;
+    }
+
+    // 7. Abandoned presigned-upload grants (>24h old, never finalized):
+    // delete any orphaned R2 object, then the grant row.
+    const pendingCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      .toISOString();
+    const { data: stalePending, error: pendingFetchError } = await supabase
+      .from("pending_uploads")
+      .select("id, storage_key")
+      .lt("created_at", pendingCutoff);
+
+    if (pendingFetchError) {
+      console.error("Pending uploads fetch error:", pendingFetchError);
+    } else if (stalePending && stalePending.length > 0) {
+      await reapR2(stalePending.map((p) => p.storage_key));
+      const { error: pendingDeleteError } = await supabase
+        .from("pending_uploads")
+        .delete()
+        .in("id", stalePending.map((p) => p.id));
+      if (pendingDeleteError) {
+        console.error("Pending uploads delete error:", pendingDeleteError);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -209,6 +277,7 @@ serve(async (req) => {
         deleted_buckets: deletedBuckets,
         deactivated_dynamic_qrs: deactivatedQRs ?? 0,
         pruned_scan_logs: prunedScanLogs ?? 0,
+        reaped_r2_objects: reapedR2Objects,
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
