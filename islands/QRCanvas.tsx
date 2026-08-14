@@ -55,6 +55,10 @@ export default function QRCanvas(
   // Decode-check verdict for the current render: silence means scannable.
   const [scanWarning, setScanWarning] = useState(false);
   const scanCheckToken = useRef(0);
+  // True once the client-drawn canvas has painted; until then the SSR'd
+  // default-QR image (static/qr-default.png) covers the card so the page
+  // arrives in one piece instead of text-first, QR-later.
+  const [qrReady, setQrReady] = useState(false);
 
   useEffect(() => {
     if (!url.value) return;
@@ -299,9 +303,17 @@ export default function QRCanvas(
       },
     });
 
-    canvasRef.current.innerHTML = "";
+    // Remove any stale canvas but keep the SSR placeholder <img> (it's Preact's
+    // to remove, via qrReady) — it covers the canvas until drawing settles.
+    canvasRef.current.querySelectorAll("canvas, svg").forEach((n) =>
+      n.remove()
+    );
     qrCode.append(canvasRef.current);
     qrCodeRef.current = qrCode;
+    // ponytail: fixed 300ms handoff — qr-code-styling has no public "painted"
+    // promise; swap to one if the library ever exposes it.
+    const readyTimer = setTimeout(() => setQrReady(true), 300);
+    return () => clearTimeout(readyTimer);
   }, []);
 
   useEffect(() => {
@@ -451,6 +463,7 @@ export default function QRCanvas(
           ${showSuccessFlash ? "border-green-500" : "border-black"}
           shadow-chunky-hover cursor-pointer
           transition-all duration-300
+          relative aspect-square
           w-full flex justify-center items-center
           [&>canvas]:w-full [&>canvas]:h-auto
           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pink-400
@@ -475,7 +488,21 @@ export default function QRCanvas(
         }
         `}
         title="Click to download"
-      />
+      >
+        {
+          /* SSR'd first-paint QR (the default render, pre-baked) — the live
+          canvas is appended underneath and this lifts once it has painted */
+        }
+        {!qrReady && !url.value && (
+          <img
+            src="/qr-default.png"
+            alt=""
+            width={720}
+            height={720}
+            class="absolute inset-0 w-full h-full rounded-lg pointer-events-none"
+          />
+        )}
+      </div>
       <div
         class="absolute -z-10 inset-0 opacity-20 blur-xl rounded-chunky"
         style={{ background: getGlowGradient() }}
@@ -495,15 +522,16 @@ export default function QRCanvas(
         /* Empty state is shown, not told: full color always (a faded QR read
           as broken), but the card sits slightly small and grows to full size
           on the first character. The save pill is ALWAYS present and is a REAL
-          button (regular users don't click posters) — soft while empty,
-          popping to full strength when real content lands. */
+          button (regular users don't click posters) — always a SOLID cream
+          surface (a translucent pill over the QR read as mush), popping in
+          with a bounce when real content lands. */
       }
       <button
         type="button"
         key={url.value ? "chip-live" : "chip-idle"}
         onClick={handleDownloadClick}
-        class={`absolute -bottom-4 -right-3 min-h-[44px] px-4 rounded-full bg-white border-3 border-black shadow-chunky flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
-          url.value ? "animate-bounce-in" : "opacity-60"
+        class={`absolute -bottom-4 -right-3 min-h-[44px] px-4 rounded-full bg-qr-cream border-3 border-black shadow-chunky flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+          url.value ? "animate-bounce-in" : ""
         }`}
         aria-label="Download QR code as PNG"
       >
