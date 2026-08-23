@@ -172,7 +172,7 @@ export default function RoutingConfigForm({
       {routingMode === "time" && (
         <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 space-y-3 animate-slide-down">
           <p class="text-xs text-orange-600 mb-2">
-            Route based on time of day (UTC).
+            Route based on scanner's local time of day.
           </p>
 
           <div class="flex gap-2 items-center">
