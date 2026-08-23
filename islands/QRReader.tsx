@@ -468,18 +468,11 @@ export default function QRReader(
                 <button
                   type="button"
                   onClick={handleCopy}
-                  class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
-                >
-                  📋 Copy
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBloom}
-                  class={`min-h-[52px] rounded-xl border-3 border-black bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 px-4 py-3 font-black text-black shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all ${
+                  class={`min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all ${
                     openableUrl ? "" : "sm:col-span-1"
                   }`}
                 >
-                  ⚡ Make QR from this
+                  📋 Copy
                 </button>
                 <button
                   type="button"
@@ -487,9 +480,9 @@ export default function QRReader(
                     setResult(null);
                     setDecodeError(null);
                   }}
-                  class="min-h-[52px] rounded-xl border-3 border-gray-300 bg-white px-4 py-3 font-bold text-gray-700 hover:border-gray-500 transition-all"
+                  class="sm:col-span-2 min-h-[48px] rounded-xl border-2 border-gray-300 bg-white px-4 py-2.5 font-bold text-gray-600 hover:border-black hover:text-black transition-all"
                 >
-                  Read another
+                  Scan another QR
                 </button>
               </div>
             </div>
