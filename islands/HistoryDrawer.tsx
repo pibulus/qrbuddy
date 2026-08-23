@@ -143,15 +143,25 @@ export default function HistoryDrawer(
                       {getIcon(item.type)}
                     </div>
                     <div class="flex-1 min-w-0">
-                      <div class="flex justify-between items-start">
-                        <p class="font-bold text-sm truncate pr-2">
+                      <div class="flex justify-between items-start gap-1">
+                        <p class="font-bold text-sm truncate pr-1">
                           {item.metadata?.title || item.content}
                         </p>
+                        {item.metadata?.shortCode && (
+                          <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-purple-100 text-purple-900 border border-purple-300 px-1.5 py-0.5 rounded-md">
+                            📊 Analytics
+                          </span>
+                        )}
+                        {item.type === "file" && (
+                          <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-teal-100 text-teal-900 border border-teal-300 px-1.5 py-0.5 rounded-md">
+                            🪣 Locker
+                          </span>
+                        )}
                       </div>
                       <p class="text-[10px] text-gray-500 font-mono mt-1 truncate">
                         {item.type === "file" ? "File Locker" : item.content}
                       </p>
-                      <p class="text-[10px] text-gray-500 mt-1">
+                      <p class="text-[10px] text-gray-400 mt-0.5">
                         {formatDate(item.timestamp)}
                       </p>
                     </div>

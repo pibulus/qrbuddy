@@ -293,7 +293,7 @@ export default function FileSlideshow({
                     >
                       <div class="text-6xl mb-4">🎵</div>
                       <p class="mb-4 font-bold truncate">{displayFileName}</p>
-                      <audio controls class="w-full">
+                      <audio key={currentDownloadUrl} controls class="w-full">
                         <source
                           src={currentDownloadUrl}
                           type={displayMimeType}
@@ -304,6 +304,7 @@ export default function FileSlideshow({
                   )}
                   {isVideo && (
                     <video
+                      key={currentDownloadUrl}
                       controls
                       class="w-full h-full object-contain bg-black rounded-xl"
                     >
