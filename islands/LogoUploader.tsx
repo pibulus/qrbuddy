@@ -28,14 +28,42 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
         throw new Error("Logo must be under 2MB");
       }
 
-      // Convert to data URL for embedding
+      // Convert to data URL and normalize to a centered square
       const reader = new FileReader();
       reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        logoUrl.value = dataUrl;
-        haptics.success();
-        addToast("✅ Logo added to QR!", 2000);
-        setIsUploading(false);
+        const rawDataUrl = e.target?.result as string;
+        const img = new Image();
+        img.onload = () => {
+          const size = 400;
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            logoUrl.value = rawDataUrl;
+            setIsUploading(false);
+            return;
+          }
+
+          // Calculate aspect ratio containment
+          const maxDim = Math.max(img.width, img.height);
+          const scale = size / maxDim;
+          const drawW = img.width * scale;
+          const drawH = img.height * scale;
+          const offsetX = (size - drawW) / 2;
+          const offsetY = (size - drawH) / 2;
+
+          ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+          logoUrl.value = canvas.toDataURL("image/png");
+          haptics.success();
+          addToast("✅ Logo fitted & added to QR!", 2000);
+          setIsUploading(false);
+        };
+        img.onerror = () => {
+          logoUrl.value = rawDataUrl;
+          setIsUploading(false);
+        };
+        img.src = rawDataUrl;
       };
       reader.onerror = () => {
         throw new Error("Failed to read image file");

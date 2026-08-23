@@ -37,6 +37,7 @@ export default function FileSlideshow({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isZipping, setIsZipping] = useState(false);
+  const [isExploding, setIsExploding] = useState(false);
 
   const hasMultipleFiles = files && files.length > 1;
   const currentFile = hasMultipleFiles ? files![currentIndex] : null;
@@ -219,10 +220,36 @@ export default function FileSlideshow({
     }
   };
 
+  const handleDownloadClick = () => {
+    if (!isUnlimited && remainingDownloads <= 1) {
+      setIsExploding(true);
+      setTimeout(() => {
+        globalThis.location.href = "/boom";
+      }, 2000);
+    }
+  };
+
   return (
     <div
       class={`min-h-screen flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden transition-colors duration-500 ${getThemeStyles()}`}
     >
+      {isExploding && (
+        <div class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+          <div class="text-7xl sm:text-9xl animate-bounce mb-4">💥</div>
+          <h2 class="text-3xl sm:text-5xl font-black text-red-500 tracking-tight animate-pulse mb-3">
+            SELF-DESTRUCT INITIATED
+          </h2>
+          <p class="text-base sm:text-lg font-mono text-yellow-300 font-bold max-w-md">
+            Downloading payload & vaporizing link forever...
+          </p>
+          <div class="mt-8 flex gap-3 text-3xl animate-pulse">
+            <span>💣</span>
+            <span>🔥</span>
+            <span>💨</span>
+          </div>
+        </div>
+      )}
+
       {/* Slideshow Container */}
       <div class="w-full max-w-4xl flex flex-col items-center gap-6 animate-fade-in">
         <header class="w-full max-w-md text-center space-y-2">
@@ -353,6 +380,7 @@ export default function FileSlideshow({
             <a
               href={primaryDownloadUrl}
               download={primaryDownloadName}
+              onClick={handleDownloadClick}
               class={`min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl font-black text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
                 isUnlimited
                   ? (theme === "terminal"

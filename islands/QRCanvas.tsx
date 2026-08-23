@@ -257,8 +257,9 @@ export default function QRCanvas(
       },
       imageOptions: {
         hideBackgroundDots: true,
-        imageSize: 0.4,
-        margin: 8,
+        imageSize: 0.25,
+        margin: 6,
+        crossOrigin: "anonymous",
       },
       dotsOptions: {
         type:
@@ -335,6 +336,12 @@ export default function QRCanvas(
         mode: "Byte",
         // A center logo hides modules — bump error correction to compensate.
         errorCorrectionLevel: logoUrl?.value ? "H" : "Q",
+      },
+      imageOptions: {
+        hideBackgroundDots: true,
+        imageSize: 0.25,
+        margin: 6,
+        crossOrigin: "anonymous",
       },
       dotsOptions: {
         type:

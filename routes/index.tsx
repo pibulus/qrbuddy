@@ -196,7 +196,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
             </h1>
             <RotatingTitle />
             <p class="text-[11px] font-black uppercase tracking-wider text-gray-500 pt-1">
-              Zero Subscriptions • No Hostage Links • 100% Free
+              Zero Subscriptions • No Hostage Links • Honest Utility
             </p>
           </header>
 
