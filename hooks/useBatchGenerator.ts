@@ -7,13 +7,16 @@ import { Signal } from "@preact/signals";
 import { addToast } from "../islands/ToastManager.tsx";
 import { reportFailure } from "../utils/report-failure.ts";
 
+import { QR_STYLES } from "../utils/qr-styles.ts";
+
 interface UseBatchGeneratorProps {
   batchUrls: string;
   logoUrl: Signal<string>;
+  qrStyle?: Signal<string>;
 }
 
 export function useBatchGenerator(
-  { batchUrls, logoUrl }: UseBatchGeneratorProps,
+  { batchUrls, logoUrl, qrStyle }: UseBatchGeneratorProps,
 ) {
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
@@ -33,6 +36,9 @@ export function useBatchGenerator(
       setBatchProgress(0);
       haptics.medium();
 
+      const styleKey = (qrStyle?.value as keyof typeof QR_STYLES) || "sunset";
+      const styleConfig = QR_STYLES[styleKey] || QR_STYLES.sunset;
+
       const zip = new JSZip();
       const qrCode = new QRCodeStyling({
         width: 1000,
@@ -40,11 +46,27 @@ export function useBatchGenerator(
         type: "canvas",
         image: logoUrl.value || undefined,
         dotsOptions: {
-          color: "#000000",
           type: "rounded",
+          ...("gradient" in styleConfig.dots
+            ? { gradient: styleConfig.dots.gradient }
+            : { color: styleConfig.dots.color }),
         },
         backgroundOptions: {
-          color: "#ffffff",
+          ...("gradient" in styleConfig.background
+            ? { gradient: styleConfig.background.gradient }
+            : { color: styleConfig.background.color }),
+        },
+        cornersSquareOptions: {
+          type: "extra-rounded",
+          ...("gradient" in styleConfig.cornersSquare
+            ? { gradient: styleConfig.cornersSquare.gradient }
+            : { color: styleConfig.cornersSquare.color }),
+        },
+        cornersDotOptions: {
+          type: "dot",
+          ...("gradient" in styleConfig.cornersDot
+            ? { gradient: styleConfig.cornersDot.gradient }
+            : { color: styleConfig.cornersDot.color }),
         },
         imageOptions: {
           crossOrigin: "anonymous",

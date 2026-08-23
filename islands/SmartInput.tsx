@@ -156,6 +156,7 @@ export default function SmartInput(
     useBatchGenerator({
       batchUrls,
       logoUrl,
+      qrStyle,
     });
 
   const { isCreatingBucket, createTextBucket, createBucket, uploadToBucket } =
