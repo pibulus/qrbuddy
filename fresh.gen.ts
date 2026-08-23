@@ -27,6 +27,7 @@ import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
+import * as $NoteCard from "./islands/NoteCard.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $QRReader from "./islands/QRReader.tsx";
@@ -91,6 +92,7 @@ const manifest = {
     "./islands/HistoryDrawer.tsx": $HistoryDrawer,
     "./islands/KofiModal.tsx": $KofiModal,
     "./islands/LogoUploader.tsx": $LogoUploader,
+    "./islands/NoteCard.tsx": $NoteCard,
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/QRReader.tsx": $QRReader,

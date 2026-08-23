@@ -4,12 +4,12 @@ import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 
 interface ActionButtonsProps {
-  triggerDownload: Signal<boolean>;
+  triggerDownload?: Signal<boolean>;
   url?: Signal<string>;
 }
 
 export default function ActionButtons(
-  { triggerDownload, url }: ActionButtonsProps,
+  { triggerDownload: _triggerDownload, url }: ActionButtonsProps,
 ) {
   const handleDownloadPng = () => {
     haptics.medium();

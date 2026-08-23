@@ -89,6 +89,8 @@
 - `history.ts` - localStorage-backed "Time Machine" of recently created QRs
 - `sounds.ts` - Web Audio click/success/error effects (silently no-op when
   unsupported)
+- `crypto.ts` - Web Crypto AES-GCM-256 with PBKDF2 for zero-knowledge client-side encryption
+- `sync-phrase.ts` - BIP39-inspired 4-word sovereign sync phrase generator and backup packer
 
 ## Hooks
 

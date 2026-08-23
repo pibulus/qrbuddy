@@ -476,6 +476,14 @@ export default function QRReader(
                 </button>
                 <button
                   type="button"
+                  onClick={handleBloom}
+                  class="min-h-[52px] rounded-xl border-3 border-black bg-pink-300 px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>✨</span>
+                  <span>Load in QRBuddy</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setResult(null);
                     setDecodeError(null);

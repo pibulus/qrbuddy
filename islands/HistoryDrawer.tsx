@@ -10,7 +10,7 @@ import {
   generateSyncPhrase,
   importSyncBundle,
 } from "../utils/sync-phrase.ts";
-import { addToast } from "../utils/toast.ts";
+import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 
 interface HistoryDrawerProps {
