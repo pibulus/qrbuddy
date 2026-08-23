@@ -235,7 +235,7 @@ export default function QRReader(
     if (!result) return;
     url.value = result.data;
     haptics.success();
-    addToast("Reborn as a QRBuddy code ✨");
+    addToast("Loaded into QRBuddy ✨");
     shell.requestClose();
   };
 
@@ -267,13 +267,13 @@ export default function QRReader(
         <div class="flex items-start justify-between gap-3 p-4 sm:p-6 border-b-2 border-gray-100">
           <div>
             <p class="text-xs uppercase tracking-wide text-pink-600 font-black">
-              Read
+              Reader
             </p>
             <h2
               id="qr-reader-title"
               class="text-xl sm:text-2xl font-black text-gray-900 leading-tight"
             >
-              What does this QR say?
+              What does this QR do?
             </h2>
           </div>
           <button
@@ -379,31 +379,54 @@ export default function QRReader(
               <section class="rounded-2xl border-3 border-black bg-qr-cream p-4 sm:p-5 shadow-chunky space-y-3">
                 <div class="flex items-center justify-between gap-3">
                   <div class="flex items-center gap-2.5">
-                    <span class="w-11 h-11 rounded-xl border-2 border-black bg-white flex items-center justify-center text-xl shrink-0">
-                      {TYPE_META[result.type].icon}
-                    </span>
+                    {openableUrl
+                      ? (
+                        <img
+                          src={`https://www.google.com/s2/favicons?domain=${
+                            new URL(openableUrl).hostname
+                          }&sz=64`}
+                          alt="Site icon"
+                          class="w-10 h-10 rounded-xl border-2 border-black bg-white object-contain p-1 shrink-0"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+                      )
+                      : (
+                        <span class="w-10 h-10 rounded-xl border-2 border-black bg-white flex items-center justify-center text-xl shrink-0">
+                          {TYPE_META[result.type].icon}
+                        </span>
+                      )}
                     <div>
                       <p class="text-xs uppercase tracking-wide text-pink-600 font-black">
                         {TYPE_META[result.type].label}
                       </p>
                       {openableUrl && (
-                        <p class="text-[11px] font-bold text-gray-500">
-                          🛡️ Safety preview buffer
+                        <p class="text-sm font-black text-gray-900 truncate max-w-[200px]">
+                          {new URL(openableUrl).hostname}
                         </p>
                       )}
                     </div>
                   </div>
-                  {openableUrl && (
-                    <span class="text-xs font-mono font-bold bg-blue-100 text-blue-950 border-2 border-black px-2.5 py-1 rounded-full shadow-sm truncate max-w-[160px]">
-                      {new URL(openableUrl).hostname}
-                    </span>
-                  )}
                 </div>
 
                 {openableUrl && (
-                  <p class="text-xs text-gray-600 bg-white/60 border border-gray-200 rounded-lg p-2 leading-relaxed">
-                    🔒 <strong>Inspected safely:</strong> This link has <em>not</em> been opened or triggered. You can copy, verify, or remake it safely.
-                  </p>
+                  <div class="relative w-full aspect-video rounded-xl overflow-hidden border-2 border-black bg-gray-100 shadow-inner">
+                    <img
+                      src={`https://api.microlink.io/?url=${
+                        encodeURIComponent(openableUrl)
+                      }&screenshot=true&meta=false&embed=screenshot.url`}
+                      alt="Website preview"
+                      class="w-full h-full object-cover object-top"
+                      loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLElement;
+                        if (target.parentElement) {
+                          target.parentElement.style.display = "none";
+                        }
+                      }}
+                    />
+                  </div>
                 )}
 
                 {parsedRows.length > 0
@@ -425,7 +448,7 @@ export default function QRReader(
                     </div>
                   )
                   : (
-                    <p class="rounded-xl border-2 border-black bg-white p-3 text-sm font-bold text-gray-900 break-all whitespace-pre-wrap max-h-40 overflow-y-auto font-mono">
+                    <p class="rounded-xl border-2 border-black bg-white p-3 text-sm font-bold text-gray-900 break-all whitespace-pre-wrap max-h-36 overflow-y-auto font-mono">
                       {result.data}
                     </p>
                   )}
@@ -456,7 +479,7 @@ export default function QRReader(
                     openableUrl ? "" : "sm:col-span-1"
                   }`}
                 >
-                  🌸 Remake it beautiful
+                  ⚡ Make QR from this
                 </button>
                 <button
                   type="button"
