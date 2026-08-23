@@ -430,7 +430,7 @@ export default function CreateModal({
   const renderTypeTab = () => (
     <div class="space-y-5">
       <section class="space-y-3">
-        <div class="space-y-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {QR_TYPE_ORDER.map((key) => {
             const template = QR_TEMPLATES[key];
             const copy = QR_TYPE_COPY[key];
@@ -460,22 +460,24 @@ export default function CreateModal({
         <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
           Files
         </h3>
-        <ChoiceRow
-          icon="📂"
-          title="Share a file"
-          description="A download page for one file, with optional PIN."
-          active={typeIntent === "share-file"}
-          eyebrow="File"
-          onClick={handleShareFileSelect}
-        />
-        <ChoiceRow
-          icon="🪣"
-          title="Collect files"
-          description="A locker QR people can drop files into."
-          active={typeIntent === "collect-files" || lockerActive}
-          eyebrow="Locker"
-          onClick={handleCollectFilesSelect}
-        />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <ChoiceRow
+            icon="📂"
+            title="Share a file"
+            description="A download page for one file, with optional PIN."
+            active={typeIntent === "share-file"}
+            eyebrow="File"
+            onClick={handleShareFileSelect}
+          />
+          <ChoiceRow
+            icon="🪣"
+            title="Collect files"
+            description="A locker QR people can drop files into."
+            active={typeIntent === "collect-files" || lockerActive}
+            eyebrow="Locker"
+            onClick={handleCollectFilesSelect}
+          />
+        </div>
       </section>
 
       {
@@ -716,8 +718,8 @@ export default function CreateModal({
   // Labels carry the meaning; the emoji were garnish on navigation, which the
   // footer-charm exception doesn't cover. 🎯 for "Type" was arbitrary anyway.
   const tabs: Array<{ id: ActiveTab; label: string }> = [
-    { id: "type", label: "Type" },
-    { id: "options", label: "Options" },
+    { id: "type", label: "Content" },
+    { id: "options", label: "Behavior" },
     { id: "design", label: "Design" },
   ];
   const hasCompletion = completionKind !== null && bucketUrl.value !== "";
@@ -803,9 +805,15 @@ export default function CreateModal({
           <button
             type="button"
             onClick={shell.requestClose}
-            class="w-full min-h-[52px] bg-black text-white text-lg sm:text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all"
+            class="w-full min-h-[52px] bg-black text-white text-lg sm:text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
-            Done
+            <span>
+              {hasCompletion
+                ? "Done — Back to Home 🏠"
+                : activeTab === "design"
+                ? "Done — Apply Design 🎨"
+                : "Done — View QR ✨"}
+            </span>
           </button>
         </div>
       </div>

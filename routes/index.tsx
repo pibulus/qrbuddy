@@ -239,7 +239,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
             <div class="flex items-center justify-center gap-4 flex-wrap">
               <PricingLink label="Supporter ✨" />
               <AboutLink />
-              <KofiButton size="sm" />
+              <KofiButton size="sm" label="Tip Jar ☕" />
             </div>
             <p class="text-center text-xs text-gray-500 mt-4 opacity-60">
               <span class="hidden sm:inline">
