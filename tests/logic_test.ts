@@ -269,3 +269,52 @@ Deno.test("validateSplashConfig - rejects array/non-object payloads", () => {
   assertEquals(validateSplashConfig([1, 2, 3]).ok, false);
   assertEquals(validateSplashConfig("a string").ok, false);
 });
+
+// ===========================================================================
+// Crypto & Sync Phrase
+// ===========================================================================
+import { encryptText, decryptText, generateRandomPasskey } from "../utils/crypto.ts";
+import {
+  generateSyncPhrase,
+  normalizeSyncPhrase,
+  isValidSyncPhrase,
+} from "../utils/sync-phrase.ts";
+
+Deno.test("crypto - encryptText and decryptText roundtrip seamlessly", async () => {
+  const secretMessage = "Meet me under the neon clock at midnight 🕰️";
+  const passkey = generateRandomPasskey();
+
+  const encrypted = await encryptText(secretMessage, passkey);
+  assertEquals(encrypted.isEncrypted, true);
+  assert(encrypted.ciphertext.length > 0);
+  assert(encrypted.ciphertext !== secretMessage);
+
+  const decrypted = await decryptText(encrypted, passkey);
+  assertEquals(decrypted, secretMessage);
+});
+
+Deno.test("crypto - wrong passkey fails decryption", async () => {
+  const secretMessage = "Top secret QR payload";
+  const passkey1 = "velvet-sunset-passkey-1";
+  const passkey2 = "wrong-different-passkey-2";
+
+  const encrypted = await encryptText(secretMessage, passkey1);
+
+  let failed = false;
+  try {
+    await decryptText(encrypted, passkey2);
+  } catch {
+    failed = true;
+  }
+  assertEquals(failed, true);
+});
+
+Deno.test("sync-phrase - generates 4-word phrase and normalizes cleanly", () => {
+  const phrase = generateSyncPhrase();
+  assertEquals(isValidSyncPhrase(phrase), true);
+  assertEquals(phrase.split("-").length, 4);
+
+  const messy = "  VELVET   wombat,  waltzes!   SEASIDE   ";
+  assertEquals(normalizeSyncPhrase(messy), "velvet-wombat-waltzes-seaside");
+  assertEquals(isValidSyncPhrase(messy), true);
+});

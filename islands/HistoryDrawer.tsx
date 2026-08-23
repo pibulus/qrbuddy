@@ -5,6 +5,13 @@ import {
   HistoryItem,
   removeFromHistory,
 } from "../utils/history.ts";
+import {
+  exportSyncBundle,
+  generateSyncPhrase,
+  importSyncBundle,
+} from "../utils/sync-phrase.ts";
+import { addToast } from "../utils/toast.ts";
+import { haptics } from "../utils/haptics.ts";
 
 interface HistoryDrawerProps {
   isOpen: boolean;
@@ -16,6 +23,11 @@ export default function HistoryDrawer(
   { isOpen, onClose, onSelect }: HistoryDrawerProps,
 ) {
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [showSync, setShowSync] = useState(false);
+  const [currentPhrase, setCurrentPhrase] = useState(() => generateSyncPhrase());
+  const [importInput, setImportInput] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     // Load initial
@@ -67,6 +79,41 @@ export default function HistoryDrawer(
     }
   };
 
+  const handleCopySyncBackup = async () => {
+    setIsExporting(true);
+    try {
+      const bundle = await exportSyncBundle(currentPhrase);
+      await navigator.clipboard.writeText(bundle);
+      haptics.success();
+      addToast("Encrypted sync backup copied! 📋");
+    } catch {
+      haptics.error();
+      addToast("Couldn't generate sync backup");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportSync = async (e: Event) => {
+    e.preventDefault();
+    if (!importInput.trim()) return;
+
+    setIsImporting(true);
+    try {
+      const result = await importSyncBundle(importInput.trim(), currentPhrase);
+      setHistory(getHistory());
+      haptics.success();
+      addToast(`Synced ${result.mergedHistoryCount} items from other device! ☁️✨`);
+      setImportInput("");
+      setShowSync(false);
+    } catch {
+      haptics.error();
+      addToast("Invalid sync backup or wrong phrase");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -85,28 +132,91 @@ export default function HistoryDrawer(
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-drawer-title"
-        class={`fixed top-0 left-0 h-full w-80 bg-qr-cream shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col border-r-4 border-black ${
+        class={`fixed top-0 left-0 h-full w-84 max-w-[85vw] bg-qr-cream shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col border-r-4 border-black ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Header */}
-        <div class="p-6 border-b-4 border-black bg-yellow-300 flex justify-between items-center">
+        <div class="p-5 sm:p-6 border-b-4 border-black bg-yellow-300 flex justify-between items-center">
           <div>
             <h2 id="history-drawer-title" class="text-2xl font-black italic">
               Time Machine
             </h2>
             <p class="text-xs font-bold opacity-70">Your QR History</p>
           </div>
-          <button
-            type="button"
-            data-history-close
-            onClick={onClose}
-            aria-label="Close history"
-            class="w-11 h-11 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors"
-          >
-            ✕
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowSync(!showSync);
+                haptics.light();
+              }}
+              aria-label="Toggle device sync"
+              title="4-word device sync"
+              class={`w-10 h-10 flex items-center justify-center border-2 border-black rounded-full font-black text-sm transition-all ${
+                showSync ? "bg-black text-white" : "bg-white hover:bg-yellow-100"
+              }`}
+            >
+              ☁️
+            </button>
+            <button
+              type="button"
+              data-history-close
+              onClick={onClose}
+              aria-label="Close history"
+              class="w-10 h-10 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors font-bold"
+            >
+              ✕
+            </button>
+          </div>
         </div>
+
+        {/* Sync View Card */}
+        {showSync && (
+          <div class="p-4 bg-purple-50 border-b-3 border-black space-y-3 animate-slide-down">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black uppercase tracking-wide text-purple-900">
+                🔑 4-Word Sovereign Sync
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPhrase(generateSyncPhrase())}
+                class="text-[11px] font-bold text-purple-700 hover:underline"
+              >
+                🎲 New phrase
+              </button>
+            </div>
+            <div class="p-2.5 bg-white border-2 border-black rounded-xl text-center">
+              <p class="text-xs font-mono font-black text-gray-900 break-words select-all">
+                {currentPhrase}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopySyncBackup}
+              disabled={isExporting}
+              class="w-full py-2 px-3 bg-purple-600 text-white rounded-xl border-2 border-black font-black text-xs shadow-sm hover:bg-purple-700 active:translate-y-0.5 transition-all"
+            >
+              {isExporting ? "Encrypting..." : "📋 Copy Encrypted Backup"}
+            </button>
+            <form onSubmit={handleImportSync} class="space-y-2 pt-1 border-t border-purple-200">
+              <input
+                type="text"
+                value={importInput}
+                onInput={(e) => setImportInput((e.target as HTMLInputElement).value)}
+                placeholder="Paste backup JSON from other phone..."
+                class="w-full px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-gray-300 focus:border-black focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!importInput.trim() || isImporting}
+                class="w-full py-1.5 bg-white text-gray-900 border-2 border-black rounded-lg font-black text-xs hover:bg-black hover:text-white transition-all disabled:opacity-40"
+              >
+                {isImporting ? "Merging..." : "📥 Merge into this device"}
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* List */}
         <div class="flex-1 overflow-y-auto p-4 space-y-3">
@@ -139,7 +249,7 @@ export default function HistoryDrawer(
                   }}
                 >
                   <div class="flex items-start gap-3">
-                    <div class="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-lg border border-black">
+                    <div class="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-lg border border-black shrink-0">
                       {getIcon(item.type)}
                     </div>
                     <div class="flex-1 min-w-0">
@@ -174,7 +284,7 @@ export default function HistoryDrawer(
                       e.stopPropagation();
                       removeFromHistory(item.id);
                     }}
-                    class="absolute -top-2 -right-2 w-10 h-10 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:scale-110"
+                    class="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:scale-110"
                     aria-label="Remove from history"
                     title="Forget this memory"
                   >
@@ -187,7 +297,18 @@ export default function HistoryDrawer(
 
         {/* Footer */}
         {history.length > 0 && (
-          <div class="p-4 border-t-4 border-black bg-gray-50">
+          <div class="p-4 border-t-4 border-black bg-gray-50 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowSync(!showSync);
+                haptics.light();
+              }}
+              class="text-xs font-bold text-purple-700 hover:underline flex items-center gap-1"
+            >
+              <span>☁️</span>
+              <span>Sync Devices</span>
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -199,9 +320,9 @@ export default function HistoryDrawer(
                   clearHistory();
                 }
               }}
-              class="w-full py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg border-2 border-transparent hover:border-red-200 transition-all"
+              class="py-1.5 px-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-all"
             >
-              🗑️ Wipe Memory
+              🗑️ Wipe
             </button>
           </div>
         )}
