@@ -190,11 +190,14 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
         <main id="main-content" class="w-full max-w-md space-y-6 sm:space-y-8">
           {/* Hero Text */}
-          <header class="text-center space-y-2 px-4 mb-2 animate-fade-in">
+          <header class="text-center space-y-1.5 px-4 mb-2 animate-fade-in">
             <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
               QRBuddy
             </h1>
             <RotatingTitle />
+            <p class="text-[11px] font-black uppercase tracking-wider text-gray-500 pt-1">
+              Zero Subscriptions • No Hostage Links • 100% Free
+            </p>
           </header>
 
           {/* QR Code Display - FIRST */}

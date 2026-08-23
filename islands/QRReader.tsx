@@ -377,14 +377,34 @@ export default function QRReader(
           {result && (
             <div class="space-y-4 animate-slide-down">
               <section class="rounded-2xl border-3 border-black bg-qr-cream p-4 sm:p-5 shadow-chunky space-y-3">
-                <div class="flex items-center gap-3">
-                  <span class="w-11 h-11 rounded-xl border-2 border-black bg-white flex items-center justify-center text-xl shrink-0">
-                    {TYPE_META[result.type].icon}
-                  </span>
-                  <p class="text-xs uppercase tracking-wide text-pink-500 font-black">
-                    {TYPE_META[result.type].label}
-                  </p>
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-11 h-11 rounded-xl border-2 border-black bg-white flex items-center justify-center text-xl shrink-0">
+                      {TYPE_META[result.type].icon}
+                    </span>
+                    <div>
+                      <p class="text-xs uppercase tracking-wide text-pink-600 font-black">
+                        {TYPE_META[result.type].label}
+                      </p>
+                      {openableUrl && (
+                        <p class="text-[11px] font-bold text-gray-500">
+                          🛡️ Safety preview buffer
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {openableUrl && (
+                    <span class="text-xs font-mono font-bold bg-blue-100 text-blue-950 border-2 border-black px-2.5 py-1 rounded-full shadow-sm truncate max-w-[160px]">
+                      {new URL(openableUrl).hostname}
+                    </span>
+                  )}
                 </div>
+
+                {openableUrl && (
+                  <p class="text-xs text-gray-600 bg-white/60 border border-gray-200 rounded-lg p-2 leading-relaxed">
+                    🔒 <strong>Inspected safely:</strong> This link has <em>not</em> been opened or triggered. You can copy, verify, or remake it safely.
+                  </p>
+                )}
 
                 {parsedRows.length > 0
                   ? (
@@ -405,7 +425,7 @@ export default function QRReader(
                     </div>
                   )
                   : (
-                    <p class="rounded-xl border-2 border-black bg-white p-3 text-sm font-bold text-gray-900 break-all whitespace-pre-wrap max-h-40 overflow-y-auto">
+                    <p class="rounded-xl border-2 border-black bg-white p-3 text-sm font-bold text-gray-900 break-all whitespace-pre-wrap max-h-40 overflow-y-auto font-mono">
                       {result.data}
                     </p>
                   )}
