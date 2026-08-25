@@ -195,7 +195,7 @@ export function PricingModal() {
                 >
                   Support
                 </h2>
-                <p class="text-xs sm:text-sm text-purple-900 mt-1">
+                <p class="text-xs sm:text-sm text-gray-700 mt-1">
                   Free forever. The pass lifts the limits and funds more tools
                   like this.
                 </p>
@@ -203,10 +203,10 @@ export function PricingModal() {
               <button
                 type="button"
                 onClick={shell.requestClose}
-                class="text-3xl leading-none font-bold text-black transition-transform hover:scale-110 active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+                class="w-7 h-7 rounded-full bg-[#ff6ac2] text-[#fffdf5] flex items-center justify-center font-bold text-sm shadow-[0_2px_8px_rgba(255,106,194,0.35)] transition-transform duration-200 hover:scale-110 hover:rotate-90 active:scale-85 shrink-0"
                 aria-label="Close pricing dialog"
               >
-                ×
+                ✕
               </button>
             </div>
           </div>
@@ -295,7 +295,7 @@ export function PricingModal() {
                       type="button"
                       onClick={handleUpgrade}
                       disabled={isStartingCheckout}
-                      class="w-full mt-8 px-4 py-3 border-3 rounded-xl font-bold shadow-chunky transition-all bg-purple-600 text-white border-black hover:bg-purple-700 hover:scale-[1.02] active:scale-95 disabled:opacity-60"
+                      class="w-full mt-8 px-4 py-3 border-3 rounded-xl font-black shadow-chunky transition-all bg-[#ff6ac2] text-[#fffdf5] border-black hover:bg-[#ff52b6] hover:scale-[1.02] active:scale-95 disabled:opacity-60"
                     >
                       {isStartingCheckout
                         ? "Opening checkout..."
