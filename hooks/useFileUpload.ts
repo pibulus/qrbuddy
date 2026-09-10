@@ -75,15 +75,17 @@ export function useFileUpload(
 
       for (const file of files) {
         if (isMulti) {
-          if (!file.type.startsWith("image/")) {
+          const isImageOrAudio = file.type.startsWith("image/") ||
+            file.type.startsWith("audio/");
+          if (!isImageOrAudio) {
             throw new Error(
-              `File ${file.name} is not an image. Slideshows only support images.`,
+              `File ${file.name} is not supported. Multi-file shares support images (slideshow) and audio tracks (playlist).`,
             );
           }
 
           if (file.size > MAX_SLIDESHOW_FILE_SIZE) {
             throw new Error(
-              `File ${file.name} too large (max 5MB for slideshows)`,
+              `File ${file.name} too large (max 5MB each for multi-file shares)`,
             );
           }
         }
@@ -164,9 +166,17 @@ export function useFileUpload(
 
       let successMessage = "";
       if (isMulti) {
+        const allAudio = files.every((f) => f.type.startsWith("audio/"));
+        const allImages = files.every((f) => f.type.startsWith("image/"));
+        const multiDesc = allAudio
+          ? `${files.length} tracks (playlist 🎵)`
+          : allImages
+          ? `${files.length} images (slideshow 🖼️)`
+          : `${files.length} files`;
+
         successMessage = limitedDownloads
-          ? `✅ ${files.length} files uploaded! Limit: ${scanText}`
-          : `✅ ${files.length} files uploaded! Ready to share ✨`;
+          ? `✅ ${multiDesc} uploaded! Limit: ${scanText}`
+          : `✅ ${multiDesc} uploaded! Ready to share ✨`;
       } else {
         successMessage = limitedDownloads
           ? `✅ ${files[0].name} uploaded! Limit: ${scanText}`

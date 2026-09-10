@@ -84,22 +84,50 @@ export const handler: Handlers = {
 import FileSlideshow from "../../islands/FileSlideshow.tsx";
 
 export default function FilePage({ data }: PageProps<FileData>) {
+  const isAllAudio = Boolean(
+    data.files && data.files.length > 1 &&
+      data.files.every((f) => f.type.startsWith("audio/")),
+  );
+  const isAllImages = Boolean(
+    data.files && data.files.length > 1 &&
+      data.files.every((f) => f.type.startsWith("image/")),
+  );
+  const titleEmoji = isAllAudio
+    ? "🎵 "
+    : isAllImages
+    ? "🖼️ "
+    : data.mimeType?.startsWith("audio/")
+    ? "🎵 "
+    : data.mimeType?.startsWith("image/")
+    ? "🖼️ "
+    : "";
+
+  const pageTitle = `${titleEmoji}${data.fileName} | QRBuddy`;
+
   return (
     <>
       <Head>
-        <title>{data.fileName} | QRBuddy</title>
+        <title>{pageTitle}</title>
         <meta name="robots" content="noindex, nofollow" />
         <meta
           name="description"
-          content={`Download ${data.fileName} from QRBuddy.`}
+          content={isAllAudio
+            ? `Listen to ${data.fileName} on QRBuddy.`
+            : isAllImages
+            ? `View ${data.fileName} on QRBuddy.`
+            : `Download ${data.fileName} from QRBuddy.`}
         />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content={`${data.fileName} | QRBuddy`} />
+        <meta property="og:title" content={pageTitle} />
         <meta
           property="og:description"
           content={data.remainingDownloads >= 999999
-            ? "A shared QRBuddy file is ready to download."
-            : `A limited QRBuddy file is ready. ${data.remainingDownloads} use${
+            ? (isAllAudio
+              ? "A shared QRBuddy mixtape playlist is ready to play."
+              : isAllImages
+              ? "A shared QRBuddy photo slideshow is ready to view."
+              : "A shared QRBuddy file is ready to download.")
+            : `A limited QRBuddy share is ready. ${data.remainingDownloads} use${
               data.remainingDownloads === 1 ? "" : "s"
             } left.`}
         />

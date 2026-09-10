@@ -119,7 +119,7 @@ serve(async (req) => {
       );
     }
 
-    // If multiple files, enforce IMAGES ONLY
+    // If multiple files, enforce images or audio tracks
     const isMultiFile = files.length > 1;
 
     // Validate each file
@@ -132,7 +132,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             error: isMultiFile
-              ? `File ${file.name} too large (max 5MB for slideshows)`
+              ? `File ${file.name} too large (max 5MB each for multi-file shares)`
               : "File too large (max 50MB)",
           }),
           {
@@ -166,12 +166,14 @@ serve(async (req) => {
         );
       }
 
-      // If multi-file, MUST be image
-      if (isMultiFile && !file.type.startsWith("image/")) {
+      // If multi-file, must be image or audio
+      const isImageOrAudio = file.type.startsWith("image/") ||
+        file.type.startsWith("audio/");
+      if (isMultiFile && !isImageOrAudio) {
         return new Response(
           JSON.stringify({
             error:
-              `File ${file.name} is not an image. Slideshows only support images.`,
+              `File ${file.name} is not supported. Multi-file shares support images (slideshow) and audio tracks (playlist).`,
           }),
           {
             headers: {

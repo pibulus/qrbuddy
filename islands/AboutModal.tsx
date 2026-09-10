@@ -94,7 +94,8 @@ export function AboutModal() {
               </span>
               <span class="min-w-0 text-sm text-gray-800 leading-snug">
                 <span class="font-black block">Codes with superpowers</span>
-                Self-destructing files, editable links, PIN'd file lockers.
+                Self-destructing files, auto mixtapes & slideshows, editable
+                links, PIN'd lockers.
               </span>
             </li>
             <li class="flex items-start gap-3">
@@ -200,8 +201,9 @@ export function AboutModal() {
                 </li>
                 <li>
                   <span class="font-bold">💣 A secret:</span>{" "}
-                  Files that self-destruct after 1 download. Notes that live
-                  inside the code itself — no internet needed to read them.
+                  Files that self-destruct after reading, photo slideshows, and
+                  mixtape playlists. Notes that live inside the code itself — no
+                  internet needed to read them.
                 </li>
                 <li>
                   <span class="font-bold">🪣 A mailbox:</span>{" "}

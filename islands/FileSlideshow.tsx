@@ -40,6 +40,12 @@ export default function FileSlideshow({
   const [isExploding, setIsExploding] = useState(false);
 
   const hasMultipleFiles = files && files.length > 1;
+  const isAllAudio = Boolean(
+    hasMultipleFiles && files!.every((f) => f.type.startsWith("audio/")),
+  );
+  const isAllImages = Boolean(
+    hasMultipleFiles && files!.every((f) => f.type.startsWith("image/")),
+  );
   const currentFile = hasMultipleFiles ? files![currentIndex] : null;
 
   // Determine what to show
@@ -68,8 +74,13 @@ export default function FileSlideshow({
   const primaryDownloadUrl = hasMultipleFiles && !isUnlimited
     ? zipDownloadUrl
     : currentDownloadUrl;
+  const defaultZipBaseName = isAllAudio
+    ? "playlist"
+    : isAllImages
+    ? "slideshow"
+    : "files";
   const primaryDownloadName = hasMultipleFiles && !isUnlimited
-    ? `${fileName || "files"}.zip`
+    ? `${fileName || defaultZipBaseName}.zip`
     : displayFileName;
 
   // Helper to determine media type
@@ -256,7 +267,17 @@ export default function FileSlideshow({
           <div
             class={`inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide px-3 py-2 rounded-full border ${getCardStyles()}`}
           >
-            <span>{isUnlimited ? "Shared file" : "Limited share"}</span>
+            <span>
+              {isAllAudio
+                ? "Mixtape Playlist 🎵"
+                : isAllImages
+                ? "Image Slideshow 🖼️"
+                : hasMultipleFiles
+                ? "Multi-File Pack 📦"
+                : isUnlimited
+                ? "Shared file"
+                : "Limited share"}
+            </span>
             {hasMultipleFiles && (
               <>
                 <span class="opacity-40">•</span>
@@ -286,7 +307,7 @@ export default function FileSlideshow({
                 type="button"
                 onClick={prevSlide}
                 class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-qr-scrim/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
-                aria-label="Previous image"
+                aria-label="Previous track or image"
               >
                 ←
               </button>
@@ -294,7 +315,7 @@ export default function FileSlideshow({
                 type="button"
                 onClick={nextSlide}
                 class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-qr-scrim/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
-                aria-label="Next image"
+                aria-label="Next track or image"
               >
                 →
               </button>
@@ -316,17 +337,53 @@ export default function FileSlideshow({
                   )}
                   {isAudio && (
                     <div
-                      class={`w-full max-w-md p-8 rounded-2xl border text-center ${getCardStyles()}`}
+                      class={`w-full max-w-md p-6 sm:p-8 rounded-2xl border text-center space-y-4 ${getCardStyles()}`}
                     >
-                      <div class="text-6xl mb-4">🎵</div>
-                      <p class="mb-4 font-bold truncate">{displayFileName}</p>
-                      <audio key={currentDownloadUrl} controls class="w-full">
+                      <div class="text-5xl sm:text-6xl animate-float">🎵</div>
+                      <div>
+                        <p class="font-black text-lg truncate mb-1">
+                          {displayFileName}
+                        </p>
+                        {hasMultipleFiles && (
+                          <p class="text-xs font-bold opacity-60">
+                            Track {currentIndex + 1} of {files!.length}
+                          </p>
+                        )}
+                      </div>
+                      <audio
+                        key={currentDownloadUrl}
+                        controls
+                        autoPlay={currentIndex > 0}
+                        onEnded={nextSlide}
+                        class="w-full"
+                      >
                         <source
                           src={currentDownloadUrl}
                           type={displayMimeType}
                         />
                         Your browser does not support the audio element.
                       </audio>
+
+                      {/* Track Switcher Pills for Playlists */}
+                      {hasMultipleFiles && (
+                        <div class="flex items-center justify-center gap-1.5 flex-wrap pt-2">
+                          {files!.map((file, idx) => (
+                            <button
+                              type="button"
+                              key={file.id}
+                              onClick={() => setCurrentIndex(idx)}
+                              class={`min-w-[36px] h-9 px-2.5 rounded-lg text-xs font-black transition-all ${
+                                currentIndex === idx
+                                  ? "bg-white text-black scale-105 shadow-sm"
+                                  : "bg-white/10 text-white hover:bg-white/20"
+                              }`}
+                              title={file.name}
+                            >
+                              {idx + 1}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                   {isVideo && (
@@ -443,7 +500,11 @@ export default function FileSlideshow({
               href="/?utm_source=file_download&utm_medium=slideshow"
               class="inline-block text-sm opacity-60 hover:opacity-100 transition-opacity"
             >
-              Create your own slideshow →
+              {isAllAudio
+                ? "Create your own playlist or QR code →"
+                : isAllImages
+                ? "Create your own slideshow or QR code →"
+                : "Create your own QR code →"}
             </a>
           </div>
         </div>

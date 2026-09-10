@@ -172,6 +172,17 @@ Deno.test("validateFile - accepts a normal image", () => {
   );
 });
 
+Deno.test("validateFile - accepts audio files (mp3, wav, flac)", () => {
+  assertEquals(
+    validateFile(fakeFile("track01.mp3", 4 * 1024 * 1024, "audio/mpeg")).valid,
+    true,
+  );
+  assertEquals(
+    validateFile(fakeFile("synth.wav", 2 * 1024 * 1024, "audio/wav")).valid,
+    true,
+  );
+});
+
 Deno.test("validateFile - rejects files over 50MB", () => {
   const r = validateFile(fakeFile("big.jpg", 51 * 1024 * 1024));
   assertEquals(r.valid, false);

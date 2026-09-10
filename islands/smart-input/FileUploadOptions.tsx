@@ -22,15 +22,40 @@ export default function FileUploadOptions(
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const isLimited = maxDownloads.value !== UNLIMITED_SCANS;
 
+  const allAudio = files.length > 1 &&
+    files.every((f) => f.type.startsWith("audio/"));
+  const allImages = files.length > 1 &&
+    files.every((f) => f.type.startsWith("image/"));
+  const isSingleAudio = files.length === 1 &&
+    files[0].type.startsWith("audio/");
+  const isSingleImage = files.length === 1 &&
+    files[0].type.startsWith("image/");
+
+  const iconEmoji = allAudio || isSingleAudio
+    ? "🎵"
+    : allImages || isSingleImage
+    ? "🖼️"
+    : "📄";
+
+  const titleText = files.length === 1
+    ? files[0].name
+    : allAudio
+    ? `${files.length} tracks (playlist 🎵)`
+    : allImages
+    ? `${files.length} images (slideshow 🖼️)`
+    : `${files.length} files (${
+      files.filter((f) => f.type.startsWith("audio/")).length
+    } audio, ${
+      files.filter((f) => f.type.startsWith("image/")).length
+    } images)`;
+
   return (
     <div class="mt-4 bg-gradient-to-r from-blue-50 to-purple-50 border-3 border-blue-300 rounded-xl p-4 space-y-3 animate-slide-down shadow-chunky">
       <div class="flex items-center gap-2">
-        <span class="text-2xl">📄</span>
+        <span class="text-2xl">{iconEmoji}</span>
         <div class="min-w-0 flex-1">
           <p class="text-sm font-bold text-gray-800 truncate">
-            {files.length === 1
-              ? files[0].name
-              : `${files.length} images (slideshow)`}
+            {titleText}
           </p>
           <p class="text-xs text-gray-500">{formatSize(totalSize)}</p>
         </div>
