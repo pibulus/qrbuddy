@@ -26,7 +26,8 @@ export default function BatchSettings({
       </div>
 
       <p class="text-xs text-gray-600">
-        Paste links (one per line). All generated QRs will inherit your active gradient palette & center logo.
+        Paste links (one per line). All generated QRs will inherit your active
+        gradient palette & center logo.
       </p>
 
       <textarea

@@ -12,7 +12,10 @@ interface NoteCardProps {
 function tryParseEncrypted(raw: string): EncryptedPayload | null {
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && parsed.isEncrypted && parsed.ciphertext && parsed.iv && parsed.salt) {
+    if (
+      parsed && parsed.isEncrypted && parsed.ciphertext && parsed.iv &&
+      parsed.salt
+    ) {
       return parsed as EncryptedPayload;
     }
   } catch {
@@ -139,47 +142,58 @@ export default function NoteCard({
 
         {/* Dynamic Text Body or Passkey Prompt */}
         <div class="p-6 sm:p-8 bg-gradient-to-b from-white to-[#FFFDF9] min-h-[180px] flex items-center justify-center">
-          {encryptedPayload && !decryptedText ? (
-            <form onSubmit={handleManualDecrypt} class="w-full max-w-sm space-y-3 text-center">
-              <div class="text-4xl mb-1">🔒</div>
-              <p class="font-black text-gray-900 text-base">
-                Zero-Knowledge Encrypted Note
-              </p>
-              <p class="text-xs text-gray-500">
-                This note was encrypted on the sender's device. Enter the passkey to unlock:
-              </p>
-              <input
-                type="text"
-                value={manualKey}
-                onInput={(e) => setManualKey((e.target as HTMLInputElement).value)}
-                placeholder="Enter passkey or paste #key"
-                class="w-full text-center font-mono text-sm px-3 py-2.5 rounded-xl border-2 border-black focus:outline-none focus:ring-2 focus:ring-purple-400"
-              />
-              {decryptError && (
-                <p class="text-xs font-bold text-red-600 animate-shake">
-                  {decryptError}
-                </p>
-              )}
-              <button
-                type="submit"
-                class="w-full min-h-[44px] rounded-xl border-2 border-black bg-black font-black text-white text-sm hover:bg-gray-800 transition"
+          {encryptedPayload && !decryptedText
+            ? (
+              <form
+                onSubmit={handleManualDecrypt}
+                class="w-full max-w-sm space-y-3 text-center"
               >
-                🔓 Decrypt Note
-              </button>
-            </form>
-          ) : isShort ? (
-            <p class="text-3xl sm:text-5xl font-black leading-tight text-center break-words text-gray-900 tracking-tight py-4">
+                <div class="text-4xl mb-1">🔒</div>
+                <p class="font-black text-gray-900 text-base">
+                  Zero-Knowledge Encrypted Note
+                </p>
+                <p class="text-xs text-gray-500">
+                  This note was encrypted on the sender's device. Enter the
+                  passkey to unlock:
+                </p>
+                <input
+                  type="text"
+                  value={manualKey}
+                  onInput={(e) =>
+                    setManualKey((e.target as HTMLInputElement).value)}
+                  placeholder="Enter passkey or paste #key"
+                  class="w-full text-center font-mono text-sm px-3 py-2.5 rounded-xl border-2 border-black focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                {decryptError && (
+                  <p class="text-xs font-bold text-red-600 animate-shake">
+                    {decryptError}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  class="w-full min-h-[44px] rounded-xl border-2 border-black bg-black font-black text-white text-sm hover:bg-gray-800 transition"
+                >
+                  🔓 Decrypt Note
+                </button>
+              </form>
+            )
+            : isShort
+            ? (
+              <p class="text-3xl sm:text-5xl font-black leading-tight text-center break-words text-gray-900 tracking-tight py-4">
+                {displayText}
+              </p>
+            )
+            : isMedium
+            ? (
+              <p class="text-xl sm:text-2xl font-black leading-snug break-words text-gray-900 text-left py-2">
+                {displayText}
+              </p>
+            )
+            : (
+              <pre class="w-full whitespace-pre-wrap break-words font-mono text-base sm:text-lg leading-relaxed text-gray-900 text-left">
               {displayText}
-            </p>
-          ) : isMedium ? (
-            <p class="text-xl sm:text-2xl font-black leading-snug break-words text-gray-900 text-left py-2">
-              {displayText}
-            </p>
-          ) : (
-            <pre class="w-full whitespace-pre-wrap break-words font-mono text-base sm:text-lg leading-relaxed text-gray-900 text-left">
-              {displayText}
-            </pre>
-          )}
+              </pre>
+            )}
         </div>
       </section>
 

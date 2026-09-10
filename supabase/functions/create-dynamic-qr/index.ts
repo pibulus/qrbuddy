@@ -167,11 +167,20 @@ serve(async (req) => {
       );
     }
 
-    // Helper function to validate URLs
-    // Relaxed validation to allow "weird utility" protocols
+    // Helper function to normalize and validate URLs
+    const normalizeUrl = (url: string): string => {
+      const trimmed = url.trim();
+      if (!trimmed) return "";
+      if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
+        return trimmed;
+      }
+      return `https://${trimmed}`;
+    };
+
     const isValidUrl = (url: string): boolean => {
       try {
-        const parsed = new URL(url);
+        const normalized = normalizeUrl(url);
+        const parsed = new URL(normalized);
         return [
           "http:",
           "https:",
@@ -203,28 +212,49 @@ serve(async (req) => {
       );
     }
 
-    // Validate routing_config URLs if provided
+    const finalDestinationUrl = normalizeUrl(destination_url);
+    let finalRoutingConfig = routing_config;
+
+    // Validate and normalize routing_config URLs if provided
     if (routing_config) {
       try {
         const config = typeof routing_config === "string"
           ? JSON.parse(routing_config)
-          : routing_config;
+          : { ...routing_config };
 
         const urlsToValidate: string[] = [];
 
-        // Sequential mode: validate all URLs in array
+        // Sequential mode: validate and normalize all URLs in array
         if (config.urls && Array.isArray(config.urls)) {
+          config.urls = config.urls.map((u: string) => normalizeUrl(u)).filter(
+            (u: string) => u.trim() !== "",
+          );
           urlsToValidate.push(...config.urls);
         }
 
-        // Device mode: validate ios, android, fallback
-        if (config.ios) urlsToValidate.push(config.ios);
-        if (config.android) urlsToValidate.push(config.android);
-        if (config.fallback) urlsToValidate.push(config.fallback);
+        // Device mode: validate and normalize ios, android, fallback
+        if (config.ios) {
+          config.ios = normalizeUrl(config.ios);
+          urlsToValidate.push(config.ios);
+        }
+        if (config.android) {
+          config.android = normalizeUrl(config.android);
+          urlsToValidate.push(config.android);
+        }
+        if (config.fallback) {
+          config.fallback = normalizeUrl(config.fallback);
+          urlsToValidate.push(config.fallback);
+        }
 
-        // Time mode: validate activeUrl, inactiveUrl
-        if (config.activeUrl) urlsToValidate.push(config.activeUrl);
-        if (config.inactiveUrl) urlsToValidate.push(config.inactiveUrl);
+        // Time mode: validate and normalize activeUrl, inactiveUrl
+        if (config.activeUrl) {
+          config.activeUrl = normalizeUrl(config.activeUrl);
+          urlsToValidate.push(config.activeUrl);
+        }
+        if (config.inactiveUrl) {
+          config.inactiveUrl = normalizeUrl(config.inactiveUrl);
+          urlsToValidate.push(config.inactiveUrl);
+        }
 
         // Check all URLs
         for (const url of urlsToValidate) {
@@ -244,6 +274,8 @@ serve(async (req) => {
             );
           }
         }
+
+        finalRoutingConfig = config;
       } catch (_parseError) {
         return new Response(
           JSON.stringify({
@@ -284,12 +316,12 @@ serve(async (req) => {
       .from("dynamic_qr_codes")
       .insert({
         short_code: shortCode,
-        destination_url,
+        destination_url: finalDestinationUrl,
         max_scans: max_scans || null,
         expires_at: expires_at || null,
         password_hash: password_hash || null,
         routing_mode: routing_mode || "simple",
-        routing_config: routing_config || null,
+        routing_config: finalRoutingConfig || null,
         splash_config: splashCheck.value,
         owner_token: ownerToken,
         is_active: true,

@@ -312,13 +312,23 @@ export default function SmartInput(
   // link"). It used to auto-fire on a 1200ms debounce after toggling Editable,
   // which spent a short code before the user ever consented.
   const handleCreateEditable = () => {
+    let targetUrl = url.value;
+    if ((!targetUrl || !looksLikeUrl(targetUrl)) && isSequential) {
+      const firstValidSeq = sequentialUrls.find((u) => looksLikeUrl(u));
+      if (firstValidSeq) {
+        targetUrl = firstValidSeq;
+      }
+    }
+
     if (
-      url.value && !isCreatingDynamic && !editUrl.value && !isBucket.value &&
-      !isCreatingBucket && looksLikeUrl(url.value)
+      targetUrl && !isCreatingDynamic && !editUrl.value && !isBucket.value &&
+      !isCreatingBucket && looksLikeUrl(targetUrl)
     ) {
-      void createDynamicQR(url.value);
-    } else if (url.value && !looksLikeUrl(url.value)) {
+      void createDynamicQR(targetUrl);
+    } else if (targetUrl && !looksLikeUrl(targetUrl)) {
       addToast("Editable needs a real link — try https://…", 3000);
+    } else if (!targetUrl) {
+      addToast("Add a destination link first", 3000);
     }
   };
 

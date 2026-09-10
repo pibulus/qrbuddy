@@ -312,66 +312,95 @@ serve(async (req) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${safeTitle}</title>
           <style>
+            * {
+              box-sizing: border-box;
+            }
             body {
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-              background-color: #f3f4f6;
+              background: linear-gradient(135deg, #FAF8F5 0%, #FFE5F0 50%, #FFF5EB 100%);
               display: flex;
               align-items: center;
               justify-content: center;
               min-height: 100vh;
               margin: 0;
-              padding: 20px;
+              padding: 24px;
+              color: #111827;
             }
             .card {
               background: white;
-              border-radius: 24px;
-              box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-              padding: 32px;
+              border-radius: 28px;
+              box-shadow: 6px 6px 0px 0px #000;
+              padding: 36px 28px;
               width: 100%;
-              max-width: 400px;
+              max-width: 420px;
               text-align: center;
               border: 4px solid black;
+              position: relative;
             }
             .image-container {
               margin-bottom: 24px;
-              border-radius: 16px;
+              border-radius: 18px;
               overflow: hidden;
               border: 3px solid black;
-              background: #eee;
+              background: #fdf2f8;
+              box-shadow: 3px 3px 0px 0px #000;
             }
             img {
               width: 100%;
               height: auto;
               display: block;
+              max-height: 260px;
+              object-fit: cover;
             }
             h1 {
-              font-size: 24px;
+              font-size: 26px;
               font-weight: 900;
               margin: 0 0 12px 0;
-              color: #111827;
+              color: #000;
+              letter-spacing: -0.02em;
             }
             p {
               color: #4b5563;
-              margin: 0 0 24px 0;
-              line-height: 1.5;
+              margin: 0 0 28px 0;
+              line-height: 1.6;
+              font-size: 15px;
             }
             .btn {
-              display: inline-block;
-              background: black;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #000;
               color: white;
-              font-weight: 700;
-              padding: 16px 32px;
+              font-weight: 800;
+              font-size: 18px;
+              padding: 16px 24px;
               border-radius: 16px;
               text-decoration: none;
-              transition: transform 0.1s;
+              border: 3px solid #000;
+              box-shadow: 4px 4px 0px 0px #FF69B4;
+              transition: transform 0.1s ease, box-shadow 0.1s ease;
               width: 100%;
-              box-sizing: border-box;
-              border: none;
               cursor: pointer;
-              font-size: 18px;
+            }
+            .btn:hover {
+              transform: translate(-1px, -1px);
+              box-shadow: 5px 5px 0px 0px #FF69B4;
             }
             .btn:active {
-              transform: scale(0.98);
+              transform: translate(2px, 2px);
+              box-shadow: 2px 2px 0px 0px #FF69B4;
+            }
+            .footer-tag {
+              margin-top: 24px;
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              color: #9ca3af;
+            }
+            .footer-tag a {
+              color: #6b7280;
+              text-decoration: none;
             }
           </style>
         </head>
@@ -382,7 +411,10 @@ serve(async (req) => {
             ${safeDescription ? `<p>${safeDescription}</p>` : ""}
             <a href="${
         escapeHtml(destinationUrl)
-      }" class="btn">${safeButtonText}</a>
+      }" class="btn">${safeButtonText} →</a>
+            <div class="footer-tag">
+              <a href="https://qrbuddy.app" target="_blank" rel="noopener">Built with QRBuddy</a>
+            </div>
           </div>
         </body>
         </html>

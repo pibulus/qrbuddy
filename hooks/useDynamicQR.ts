@@ -6,6 +6,7 @@ import { saveOwnerToken } from "../utils/token-vault.ts";
 import { apiRequest } from "../utils/api-request.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 import { reportFailure } from "../utils/report-failure.ts";
+import { normalizeUrl } from "../utils/url.ts";
 
 interface UseDynamicQRProps {
   url: Signal<string>;
@@ -42,14 +43,26 @@ export function useDynamicQR(
       haptics.medium();
 
       const apiUrl = getApiUrl();
+      const normalizedDest = normalizeUrl(destinationUrl);
+
+      const normalizedRoutingConfig = routingConfig
+        ? {
+          ...routingConfig,
+          urls: (routingConfig.urls || []).map(normalizeUrl).filter((u) =>
+            u.trim() !== ""
+          ),
+        }
+        : undefined;
 
       const body: Record<string, unknown> = {
-        destination_url: destinationUrl,
+        destination_url: normalizedDest,
       };
       if (scanLimit) body.max_scans = scanLimit;
       if (expiryDate) body.expires_at = new Date(expiryDate).toISOString();
       if (routingMode) body.routing_mode = routingMode;
-      if (routingConfig) body.routing_config = routingConfig;
+      if (normalizedRoutingConfig) {
+        body.routing_config = normalizedRoutingConfig;
+      }
       if (splashConfig && splashConfig.enabled) {
         body.splash_config = splashConfig;
       }

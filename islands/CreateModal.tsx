@@ -626,6 +626,8 @@ export default function CreateModal({
             pendingUrl={url.value}
             isCreating={isCreatingEditable}
             onCreate={onCreateEditable}
+            isSequential={isSequential}
+            sequentialUrls={sequentialUrls}
           />
         )}
       </section>

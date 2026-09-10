@@ -273,11 +273,15 @@ Deno.test("validateSplashConfig - rejects array/non-object payloads", () => {
 // ===========================================================================
 // Crypto & Sync Phrase
 // ===========================================================================
-import { encryptText, decryptText, generateRandomPasskey } from "../utils/crypto.ts";
+import {
+  decryptText,
+  encryptText,
+  generateRandomPasskey,
+} from "../utils/crypto.ts";
 import {
   generateSyncPhrase,
-  normalizeSyncPhrase,
   isValidSyncPhrase,
+  normalizeSyncPhrase,
 } from "../utils/sync-phrase.ts";
 
 Deno.test("crypto - encryptText and decryptText roundtrip seamlessly", async () => {
@@ -317,4 +321,55 @@ Deno.test("sync-phrase - generates 4-word phrase and normalizes cleanly", () => 
   const messy = "  VELVET   wombat,  waltzes!   SEASIDE   ";
   assertEquals(normalizeSyncPhrase(messy), "velvet-wombat-waltzes-seaside");
   assertEquals(isValidSyncPhrase(messy), true);
+});
+
+// ===========================================================================
+// URL Normalization & Detection
+// ===========================================================================
+import { looksLikeUrl, normalizeUrl } from "../utils/url.ts";
+
+Deno.test("normalizeUrl - prepends https:// to bare domains and paths", () => {
+  assertEquals(normalizeUrl("example.com"), "https://example.com");
+  assertEquals(
+    normalizeUrl("qrbuddy.app/gallery"),
+    "https://qrbuddy.app/gallery",
+  );
+  assertEquals(
+    normalizeUrl("  sub.domain.org/path?q=1  "),
+    "https://sub.domain.org/path?q=1",
+  );
+});
+
+Deno.test("normalizeUrl - preserves existing schemes", () => {
+  assertEquals(normalizeUrl("http://old-site.com"), "http://old-site.com");
+  assertEquals(normalizeUrl("https://new-site.com"), "https://new-site.com");
+  assertEquals(
+    normalizeUrl("mailto:pablo@qrbuddy.app"),
+    "mailto:pablo@qrbuddy.app",
+  );
+  assertEquals(normalizeUrl("tel:+61400000000"), "tel:+61400000000");
+  assertEquals(normalizeUrl("sms:+61400000000"), "sms:+61400000000");
+  assertEquals(
+    normalizeUrl("wifi:T:WPA;S:MyNet;P:secret;;"),
+    "wifi:T:WPA;S:MyNet;P:secret;;",
+  );
+  assertEquals(
+    normalizeUrl("facetime:user@example.com"),
+    "facetime:user@example.com",
+  );
+  assertEquals(normalizeUrl(""), "");
+});
+
+Deno.test("looksLikeUrl - detects standard URLs, bare domains, and utility protocols", () => {
+  assertEquals(looksLikeUrl("https://example.com"), true);
+  assertEquals(looksLikeUrl("http://example.com"), true);
+  assertEquals(looksLikeUrl("google.com"), true);
+  assertEquals(looksLikeUrl("my.subdomain.org/path"), true);
+  assertEquals(looksLikeUrl("mailto:test@example.com"), true);
+  assertEquals(looksLikeUrl("tel:12345"), true);
+  assertEquals(looksLikeUrl("sms:12345"), true);
+  assertEquals(looksLikeUrl("wifi:T:WPA;S:Net;P:pass;;"), true);
+  assertEquals(looksLikeUrl("facetime:user@domain.com"), true);
+  assertEquals(looksLikeUrl("not a url"), false);
+  assertEquals(looksLikeUrl(""), false);
 });

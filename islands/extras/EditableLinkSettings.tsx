@@ -9,6 +9,8 @@ interface EditableLinkSettingsProps {
   pendingUrl: string;
   isCreating: boolean;
   onCreate: () => void;
+  isSequential?: boolean;
+  sequentialUrls?: string[];
 }
 
 export default function EditableLinkSettings({
@@ -16,11 +18,15 @@ export default function EditableLinkSettings({
   pendingUrl,
   isCreating,
   onCreate,
+  isSequential,
+  sequentialUrls,
 }: EditableLinkSettingsProps) {
   const hasContent = pendingUrl.trim() !== "";
+  const validSeqCount = isSequential && sequentialUrls
+    ? sequentialUrls.filter((u) => looksLikeUrl(u)).length
+    : 0;
   // Editable QRs wrap links only — WiFi/vCard/text payloads stay static.
-  // Say so here instead of letting the button fail at press-time.
-  const hasLink = hasContent && looksLikeUrl(pendingUrl);
+  const hasLink = (hasContent && looksLikeUrl(pendingUrl)) || validSeqCount > 0;
 
   return (
     <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
@@ -32,7 +38,17 @@ export default function EditableLinkSettings({
               <h4 class="font-bold text-sm text-[#9370DB]">
                 Editable mode is on
               </h4>
-              {hasLink
+              {validSeqCount > 0
+                ? (
+                  <p class="text-xs text-gray-700 leading-relaxed truncate">
+                    Wraps{" "}
+                    <span class="font-semibold">
+                      {validSeqCount} rotating{" "}
+                      {validSeqCount === 1 ? "link" : "links"}
+                    </span>
+                  </p>
+                )
+                : hasLink
                 ? (
                   <p class="text-xs text-gray-700 leading-relaxed truncate">
                     Wraps <span class="font-mono">{pendingUrl}</span>
@@ -47,7 +63,8 @@ export default function EditableLinkSettings({
                 )
                 : (
                   <p class="text-xs text-gray-700 leading-relaxed">
-                    Add a link first — type or paste it in the main input.
+                    Add a link first — type or paste it in the main input or
+                    below.
                   </p>
                 )}
             </div>

@@ -1,6 +1,5 @@
 import { Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
-import { haptics } from "../../utils/haptics.ts";
 
 interface SplashConfig {
   enabled: boolean;
@@ -18,109 +17,84 @@ export default function SplashSettings({ splashConfig }: SplashSettingsProps) {
   // Local state for immediate feedback
   const [localConfig, setLocalConfig] = useState<SplashConfig>(
     splashConfig.value || {
-      enabled: false,
+      enabled: true,
       title: "Welcome!",
       buttonText: "Continue",
     },
   );
 
   const updateConfig = (updates: Partial<SplashConfig>) => {
-    const newConfig = { ...localConfig, ...updates };
+    const newConfig = { ...localConfig, ...updates, enabled: true };
     setLocalConfig(newConfig);
     splashConfig.value = newConfig;
   };
 
   return (
-    <div class="space-y-4 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-      <div class="flex items-center justify-between gap-4">
-        <label class="font-bold text-gray-700">Enable intro page</label>
-        <button
-          type="button"
-          onClick={() => {
-            updateConfig({ enabled: !localConfig.enabled });
-            haptics.light();
-          }}
-          class={`min-w-[64px] min-h-[44px] rounded-full transition-colors relative ${
-            localConfig.enabled ? "bg-green-500" : "bg-gray-300"
-          }`}
-          aria-label="Toggle intro page"
-        >
-          <div
-            class={`absolute top-2.5 left-2.5 w-6 h-6 bg-white rounded-full transition-transform ${
-              localConfig.enabled ? "translate-x-5" : "translate-x-0"
-            }`}
-          />
-        </button>
+    <div class="space-y-3 p-4 bg-white/70 rounded-xl border-2 border-pink-200 animate-slide-down">
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">
+          Page title
+        </label>
+        <input
+          type="text"
+          value={localConfig.title}
+          onInput={(e) =>
+            updateConfig({ title: (e.target as HTMLInputElement).value })}
+          class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none text-sm"
+          placeholder="e.g. Welcome to My Portfolio"
+        />
       </div>
 
-      {localConfig.enabled && (
-        <div class="space-y-3 animate-slide-down">
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1">
-              Page title
-            </label>
-            <input
-              type="text"
-              value={localConfig.title}
-              onInput={(e) =>
-                updateConfig({ title: (e.target as HTMLInputElement).value })}
-              class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-              placeholder="e.g. Welcome to My WiFi"
-            />
-          </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">
+          Button text
+        </label>
+        <input
+          type="text"
+          value={localConfig.buttonText}
+          onInput={(e) =>
+            updateConfig({
+              buttonText: (e.target as HTMLInputElement).value,
+            })}
+          class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none text-sm"
+          placeholder="e.g. Continue to Website"
+        />
+      </div>
 
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1">
-              Button text
-            </label>
-            <input
-              type="text"
-              value={localConfig.buttonText}
-              onInput={(e) =>
-                updateConfig({
-                  buttonText: (e.target as HTMLInputElement).value,
-                })}
-              class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-              placeholder="e.g. Connect Now"
-            />
-          </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">
+          Description (Optional)
+        </label>
+        <textarea
+          value={localConfig.description || ""}
+          onInput={(e) =>
+            updateConfig({
+              description: (e.target as HTMLTextAreaElement).value,
+            })}
+          class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none text-sm resize-none"
+          rows={2}
+          placeholder="Add a friendly welcome note..."
+        />
+      </div>
 
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1">
-              Description (Optional)
-            </label>
-            <textarea
-              value={localConfig.description || ""}
-              onInput={(e) =>
-                updateConfig({
-                  description: (e.target as HTMLTextAreaElement).value,
-                })}
-              class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-              rows={2}
-              placeholder="Add a short message..."
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1">
-              Image URL (Optional)
-            </label>
-            <input
-              type="text"
-              value={localConfig.imageUrl || ""}
-              onInput={(e) =>
-                updateConfig({
-                  imageUrl: (e.target as HTMLInputElement).value,
-                })}
-              class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-black focus:outline-none"
-              placeholder="https://..."
-            />
-            <p class="text-[10px] text-gray-400 mt-1">
-              Paste an image link. Upload coming soon!
-            </p>
-          </div>
-        </div>
-      )}
+      <div>
+        <label class="block text-xs font-bold text-gray-700 mb-1">
+          Header Image URL (Optional)
+        </label>
+        <input
+          type="url"
+          value={localConfig.imageUrl || ""}
+          onInput={(e) =>
+            updateConfig({
+              imageUrl: (e.target as HTMLInputElement).value,
+            })}
+          class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:outline-none text-sm"
+          placeholder="https://example.com/cover.jpg"
+        />
+        <p class="text-[11px] text-gray-400 mt-1">
+          Direct link to a JPEG, PNG, or WebP image
+        </p>
+      </div>
     </div>
   );
 }

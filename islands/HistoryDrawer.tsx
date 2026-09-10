@@ -24,7 +24,9 @@ export default function HistoryDrawer(
 ) {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showSync, setShowSync] = useState(false);
-  const [currentPhrase, setCurrentPhrase] = useState(() => generateSyncPhrase());
+  const [currentPhrase, setCurrentPhrase] = useState(() =>
+    generateSyncPhrase()
+  );
   const [importInput, setImportInput] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -103,7 +105,9 @@ export default function HistoryDrawer(
       const result = await importSyncBundle(importInput.trim(), currentPhrase);
       setHistory(getHistory());
       haptics.success();
-      addToast(`Synced ${result.mergedHistoryCount} items from other device! ☁️✨`);
+      addToast(
+        `Synced ${result.mergedHistoryCount} items from other device! ☁️✨`,
+      );
       setImportInput("");
       setShowSync(false);
     } catch {
@@ -154,7 +158,9 @@ export default function HistoryDrawer(
               aria-label="Toggle device sync"
               title="4-word device sync"
               class={`w-10 h-10 flex items-center justify-center border-2 border-black rounded-full font-black text-sm transition-all ${
-                showSync ? "bg-black text-white" : "bg-white hover:bg-yellow-100"
+                showSync
+                  ? "bg-black text-white"
+                  : "bg-white hover:bg-yellow-100"
               }`}
             >
               ☁️
@@ -199,11 +205,15 @@ export default function HistoryDrawer(
             >
               {isExporting ? "Encrypting..." : "📋 Copy Encrypted Backup"}
             </button>
-            <form onSubmit={handleImportSync} class="space-y-2 pt-1 border-t border-purple-200">
+            <form
+              onSubmit={handleImportSync}
+              class="space-y-2 pt-1 border-t border-purple-200"
+            >
               <input
                 type="text"
                 value={importInput}
-                onInput={(e) => setImportInput((e.target as HTMLInputElement).value)}
+                onInput={(e) =>
+                  setImportInput((e.target as HTMLInputElement).value)}
                 placeholder="Paste backup JSON from other phone..."
                 class="w-full px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-gray-300 focus:border-black focus:outline-none"
               />

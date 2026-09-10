@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { useQRData } from "../hooks/useQRData.ts";
+import { normalizeUrl } from "../utils/url.ts";
 
 // Sub-components
 import AnalyticsDashboard from "./edit-qr/AnalyticsDashboard.tsx";
@@ -90,30 +91,55 @@ export default function EditQRForm() {
   }, [qrData]);
 
   const handleSave = async () => {
+    let resolvedDest = destinationUrl.trim()
+      ? normalizeUrl(destinationUrl)
+      : "";
     let routingConfig = null;
+
     if (routingMode === "sequential") {
+      const validUrls = sequentialUrls
+        .map(normalizeUrl)
+        .filter((u) => u.trim() !== "");
+      if (!resolvedDest && validUrls.length > 0) {
+        resolvedDest = validUrls[0];
+      }
       routingConfig = {
-        urls: sequentialUrls.filter((u) => u.trim() !== ""),
+        urls: validUrls,
         loop: loopSequence,
       };
     } else if (routingMode === "device") {
+      const normIos = iosUrl.trim() ? normalizeUrl(iosUrl) : "";
+      const normAndroid = androidUrl.trim() ? normalizeUrl(androidUrl) : "";
+      const normFallback = fallbackUrl.trim() ? normalizeUrl(fallbackUrl) : "";
+      if (!resolvedDest) {
+        resolvedDest = normFallback || normIos || normAndroid;
+      }
       routingConfig = {
-        ios: iosUrl,
-        android: androidUrl,
-        fallback: fallbackUrl,
+        ios: normIos,
+        android: normAndroid,
+        fallback: normFallback,
       };
     } else if (routingMode === "time") {
+      const normActive = timeActiveUrl.trim()
+        ? normalizeUrl(timeActiveUrl)
+        : "";
+      const normInactive = timeInactiveUrl.trim()
+        ? normalizeUrl(timeInactiveUrl)
+        : "";
+      if (!resolvedDest) {
+        resolvedDest = normActive || normInactive;
+      }
       routingConfig = {
         startHour,
         endHour,
-        activeUrl: timeActiveUrl,
-        inactiveUrl: timeInactiveUrl,
+        activeUrl: normActive,
+        inactiveUrl: normInactive,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
     }
 
     await saveQRData({
-      destination_url: destinationUrl,
+      destination_url: resolvedDest || destinationUrl,
       max_scans: maxScans,
       expires_at: expiryDate ? new Date(expiryDate).toISOString() : null,
       is_active: isActive,
@@ -127,7 +153,9 @@ export default function EditQRForm() {
           ...(splashDescription.trim()
             ? { description: splashDescription.trim() }
             : {}),
-          ...(splashImageUrl.trim() ? { imageUrl: splashImageUrl.trim() } : {}),
+          ...(splashImageUrl.trim()
+            ? { imageUrl: normalizeUrl(splashImageUrl.trim()) }
+            : {}),
         }
         : null,
     });

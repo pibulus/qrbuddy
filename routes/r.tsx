@@ -29,28 +29,80 @@ export const handler: Handlers = {
       });
     }
 
-    const redirectUrl =
-      `${supabaseUrl}/functions/v1/redirect-qr?code=${shortCode}`;
-    const authHeaders = getAuthHeaders();
+    const redirectUrl = `${supabaseUrl}/functions/v1/redirect-qr?code=${
+      encodeURIComponent(shortCode)
+    }`;
+
+    // Forward scanner client headers to edge function so Device Routing (iOS/Android),
+    // Time Routing (local scanner timezone), and IP-based analytics/rate-limiting work accurately.
+    const forwardHeaders: Record<string, string> = {
+      ...getAuthHeaders(),
+    };
+
+    const clientHeaders = [
+      "user-agent",
+      "cf-connecting-ip",
+      "x-forwarded-for",
+      "x-real-ip",
+      "cf-ipcountry",
+      "cf-ipcity",
+      "cf-timezone",
+      "accept-language",
+    ];
+
+    for (const h of clientHeaders) {
+      const val = req.headers.get(h);
+      if (val) forwardHeaders[h] = val;
+    }
 
     try {
-      // Fetch from edge function to get the actual redirect
+      // Fetch with redirect: "manual" so the Fresh server doesn't proxy the third-party
+      // destination website or crash on non-HTTP schemes (mailto:, tel:, sms:, wifi:, etc.)
       const response = await fetch(redirectUrl, {
-        headers: authHeaders,
+        headers: forwardHeaders,
+        redirect: "manual",
       });
 
-      if (response.redirected) {
-        // If edge function redirected, follow it
-        return new Response(null, {
-          status: 302,
-          headers: { Location: response.url },
+      // Handle redirect responses from edge function (301, 302, 307, 308)
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("Location") ||
+          response.headers.get("location");
+        if (location) {
+          return new Response(null, {
+            status: 302,
+            headers: { Location: location },
+          });
+        }
+      }
+
+      // Handle HTML responses (e.g. Intro / Splash Page)
+      if (response.status === 200) {
+        const contentType = response.headers.get("Content-Type") ||
+          "text/html; charset=utf-8";
+        const body = await response.text();
+        return new Response(body, {
+          status: 200,
+          headers: {
+            "Content-Type": contentType,
+          },
         });
       }
 
-      // Otherwise pass through the response
-      return response;
+      // Expired / Limit reached / Inactive / Boom
+      if (response.status === 410 || response.status === 404) {
+        return new Response(null, {
+          status: 302,
+          headers: { Location: "/boom" },
+        });
+      }
+
+      // If we got here with any other status, redirect to home
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/" },
+      });
     } catch (error) {
-      console.error("Redirect error:", error);
+      console.error("[ROUTE:r] Redirect error:", error);
       // On error, redirect to home
       return new Response(null, {
         status: 302,
