@@ -26,7 +26,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
   pro: {
     id: "pro",
     name: "Supporter",
-    price: 24,
+    price: 49,
     billingPeriod: "year",
     features: [
       "Everything in Free, forever",

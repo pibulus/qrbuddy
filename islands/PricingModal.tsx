@@ -317,7 +317,7 @@ export function PricingModal() {
                     Is this a subscription?
                   </summary>
                   <p class="mt-1 text-gray-700 ml-4">
-                    No. You pay $24, you get a year, and nothing ever charges
+                    No. You pay $49, you get a year, and nothing ever charges
                     you again. If you still love it next year, that's your call
                     — next year.
                   </p>
