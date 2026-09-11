@@ -218,7 +218,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
               <KofiButton size="sm" label="Propina ☕" />
             </div>
 
-            {/* Vertical Soluciones */}
+            {/* Vertical Soluciones & Guías */}
             <div class="mt-4 flex items-center justify-center gap-2 flex-wrap text-xs font-bold text-gray-700">
               <span class="text-gray-400 font-normal">Soluciones:</span>
               <a href="/es/menus" class="hover:underline hover:text-black">
@@ -235,6 +235,13 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
               <span class="text-gray-300">•</span>
               <a href="/es/archivos" class="hover:underline hover:text-black">
                 Archivos Secretos 🔐
+              </a>
+              <span class="text-gray-300">•</span>
+              <a
+                href="/es/guia/impresion"
+                class="hover:underline text-indigo-700 font-black"
+              >
+                Calculadora & Guía 📐
               </a>
             </div>
 

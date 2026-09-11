@@ -257,7 +257,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
               <KofiButton size="sm" label="Tip Jar ☕" />
             </div>
 
-            {/* Tailored Use Cases */}
+            {/* Tailored Use Cases & Guides */}
             <div class="mt-4 flex items-center justify-center gap-2 flex-wrap text-xs font-bold text-gray-700">
               <span class="text-gray-400 font-normal">Solutions:</span>
               <a href="/for/menus" class="hover:underline hover:text-black">
@@ -274,6 +274,13 @@ export default function Home({ data }: PageProps<HomeProps>) {
               <span class="text-gray-300">•</span>
               <a href="/for/lockers" class="hover:underline hover:text-black">
                 Secret Drops 🔐
+              </a>
+              <span class="text-gray-300">•</span>
+              <a
+                href="/guide/printing"
+                class="hover:underline text-indigo-700 font-black"
+              >
+                Print Calculator & Guide 📐
               </a>
             </div>
 

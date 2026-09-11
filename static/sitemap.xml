@@ -116,4 +116,28 @@
     <xhtml:link rel="alternate" hreflang="en"
       href="https://qrbuddy.app/for/lockers" />
   </url>
+
+  <!-- QR Print & Anti-Hostage Guide (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/guide/printing</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/guide/printing" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/guia/impresion" />
+  </url>
+
+  <!-- Guía de Impresión QR & Anti-Extorsión (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/guia/impresion</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/guia/impresion" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/guide/printing" />
+  </url>
 </urlset>
