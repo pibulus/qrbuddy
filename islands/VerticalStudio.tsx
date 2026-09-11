@@ -45,6 +45,10 @@ export interface VerticalStudioProps {
   comparisonItems: ComparisonItem[];
   faqItems: FAQItem[];
   ctaLabel?: string;
+  homeUrl?: string;
+  homeLabel?: string;
+  featuresTitle?: string;
+  faqTitle?: string;
 }
 
 export default function VerticalStudio({
@@ -61,6 +65,10 @@ export default function VerticalStudio({
   comparisonItems,
   faqItems,
   ctaLabel = "Get Studio Pass ✨",
+  homeUrl = "/",
+  homeLabel = "← Back to QRBuddy Home",
+  featuresTitle = "Why Professionals Choose QRBuddy",
+  faqTitle = "Frequently Asked Questions",
 }: VerticalStudioProps) {
   const url = useSignal(defaultUrl);
   const style = useSignal<keyof typeof QR_STYLES | "custom">(defaultStyle);
@@ -114,10 +122,10 @@ export default function VerticalStudio({
         {/* Navigation Breadcrumb */}
         <div class="flex items-center justify-between">
           <a
-            href="/"
+            href={homeUrl}
             class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-black rounded-xl text-xs font-black shadow-chunky hover:-translate-y-0.5 transition-transform"
           >
-            ← Back to QRBuddy Home
+            {homeLabel}
           </a>
           <span class="inline-flex items-center gap-1 px-3 py-1 bg-black text-white rounded-full text-xs font-black tracking-wide uppercase">
             {badge}
@@ -176,7 +184,7 @@ export default function VerticalStudio({
         {/* Feature Highlights Grid */}
         <section class="space-y-4 pt-4">
           <h2 class="text-xl sm:text-2xl font-black text-black text-center">
-            Why Professionals Choose QRBuddy
+            {featuresTitle}
           </h2>
           <div class="grid sm:grid-cols-3 gap-4">
             {valueCards.map((card) => (
@@ -243,7 +251,7 @@ export default function VerticalStudio({
         {/* FAQ Accordion */}
         <section class="bg-white/90 border-3 border-black rounded-2xl p-6 shadow-chunky space-y-4">
           <h2 class="text-lg sm:text-xl font-black text-black">
-            Frequently Asked Questions
+            {faqTitle}
           </h2>
           <div class="space-y-3 text-xs sm:text-sm">
             {faqItems.map((faq) => (
