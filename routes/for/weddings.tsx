@@ -94,6 +94,12 @@ export default function WeddingsPage({ data }: PageProps<PageData>) {
         <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="canonical" href={canonicalUrl} />
+        <link rel="alternate" hrefLang="en" href={canonicalUrl} />
+        <link
+          rel="alternate"
+          hrefLang="es"
+          href="https://qrbuddy.app/es/bodas"
+        />
 
         {/* Performance hints */}
         {data?.supabaseUrl && (

@@ -55,8 +55,9 @@ export default function Home({ data }: PageProps<HomeProps>) {
           name="description"
           content="Beautiful QR code generator with 7 gradient styles, QR types for links/WiFi/contact cards/messages, custom logos, file sharing, and editable QR codes. Free, privacy-first, minimal analytics."
         />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="canonical" href="https://qrbuddy.app" />
+        <link rel="alternate" hrefLang="en" href="https://qrbuddy.app" />
+        <link rel="alternate" hrefLang="es" href="https://qrbuddy.app/es" />
 
         {/* Performance hints */}
         {data?.supabaseUrl && (
@@ -186,6 +187,17 @@ export default function Home({ data }: PageProps<HomeProps>) {
             customStyle={customStyle}
             isHidden={isModalOpen}
           />
+        </div>
+
+        {/* Language switcher pill */}
+        <div class="absolute top-7 left-4 sm:top-12 sm:left-6 z-50 animate-fade-in">
+          <a
+            href="/es"
+            class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
+            title="Cambiar a Español"
+          >
+            🇲🇽 Español
+          </a>
         </div>
 
         <main id="main-content" class="w-full max-w-md space-y-6 sm:space-y-8">
