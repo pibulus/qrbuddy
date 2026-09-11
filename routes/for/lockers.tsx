@@ -1,9 +1,21 @@
 import { Head } from "$fresh/runtime.ts";
+import { Handlers, PageProps } from "$fresh/server.ts";
 import VerticalStudio, {
   type ComparisonItem,
   type FAQItem,
   type ValueCard,
 } from "../../islands/VerticalStudio.tsx";
+import { getSupabaseUrl } from "../../utils/api.ts";
+
+interface PageData {
+  supabaseUrl?: string;
+}
+
+export const handler: Handlers<PageData> = {
+  GET(_req, ctx) {
+    return ctx.render({ supabaseUrl: getSupabaseUrl() ?? undefined });
+  },
+};
 
 const VALUE_CARDS: ValueCard[] = [
   {
@@ -68,26 +80,96 @@ const FAQ_ITEMS: FAQItem[] = [
   },
 ];
 
-export default function LockersPage() {
+export default function LockersPage({ data }: PageProps<PageData>) {
+  const canonicalUrl = "https://qrbuddy.app/for/lockers";
+  const title =
+    "Ephemeral File Drops & Destructible QR Codes — Zero Tracking | QRBuddy";
+  const description =
+    "Share private files up to 500MB with self-destructing QR codes. Auto-deletes after 1 scan or 24 hours. Zero logs, encrypted in-flight, no account required.";
+
   return (
     <>
       <Head>
-        <title>
-          Ephemeral File Drops & Destructible QR Codes | QRBuddy
-        </title>
-        <meta
-          name="description"
-          content="Share private files up to 500MB with self-destructing QR codes. Auto-deletes after 1 scan or 24 hours. Zero logs, encrypted in-flight, no account required."
-        />
-        <meta name="canonical" content="https://qrbuddy.app/for/lockers" />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Performance hints */}
+        {data?.supabaseUrl && (
+          <>
+            <link rel="dns-prefetch" href={data.supabaseUrl} />
+            <link rel="preconnect" href={data.supabaseUrl} />
+          </>
+        )}
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="QRBuddy" />
+        <meta property="og:url" content={canonicalUrl} />
         <meta
           property="og:title"
           content="Ephemeral File Drops & Destructible QR Codes — QRBuddy"
         />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta
-          property="og:description"
-          content="Share private files via QR codes that self-destruct upon download. Zero telemetry, zero corporate surveillance."
+          property="og:image:alt"
+          content="QRBuddy - Ephemeral file drops and self-destructing QR codes"
         />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl} />
+        <meta
+          name="twitter:title"
+          content="Ephemeral File Drops & Destructible QR Codes — QRBuddy"
+        />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
+
+        {/* PWA & Icons */}
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#00FF41" />
+
+        {/* JSON-LD Structured Data for Product & FAQ */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebApplication",
+                "name": "QRBuddy Ephemeral Lockers",
+                "url": canonicalUrl,
+                "description": description,
+                "applicationCategory": "SecurityApplication",
+                "operatingSystem": "All",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "49",
+                  "priceCurrency": "USD",
+                  "description":
+                    "Annual Studio Pass with 500MB encrypted ephemeral lockers",
+                },
+              },
+              {
+                "@type": "FAQPage",
+                "mainEntity": FAQ_ITEMS.map((item) => ({
+                  "@type": "Question",
+                  "name": item.q,
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": item.a,
+                  },
+                })),
+              },
+            ],
+          })}
+        </script>
       </Head>
 
       <VerticalStudio

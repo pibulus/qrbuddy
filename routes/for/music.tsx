@@ -1,9 +1,21 @@
 import { Head } from "$fresh/runtime.ts";
+import { Handlers, PageProps } from "$fresh/server.ts";
 import VerticalStudio, {
   type ComparisonItem,
   type FAQItem,
   type ValueCard,
 } from "../../islands/VerticalStudio.tsx";
+import { getSupabaseUrl } from "../../utils/api.ts";
+
+interface PageData {
+  supabaseUrl?: string;
+}
+
+export const handler: Handlers<PageData> = {
+  GET(_req, ctx) {
+    return ctx.render({ supabaseUrl: getSupabaseUrl() ?? undefined });
+  },
+};
 
 const VALUE_CARDS: ValueCard[] = [
   {
@@ -68,26 +80,96 @@ const FAQ_ITEMS: FAQItem[] = [
   },
 ];
 
-export default function MusicPage() {
+export default function MusicPage({ data }: PageProps<PageData>) {
+  const canonicalUrl = "https://qrbuddy.app/for/music";
+  const title =
+    "Music QR Codes — Playable Mixtapes & Merch Audio Drops | QRBuddy";
+  const description =
+    "Create playable QR code mixtapes for physical merch, vinyl inserts, cassette J-cards, and band stickers. Multi-track auto-advance audio player with instant ZIP downloads.";
+
   return (
     <>
       <Head>
-        <title>
-          Music QR Codes — Playable Mixtapes & Merch Audio Drops | QRBuddy
-        </title>
-        <meta
-          name="description"
-          content="Create playable QR code mixtapes for physical merch, vinyl inserts, cassette J-cards, and band stickers. Multi-track auto-advance audio player with instant ZIP downloads."
-        />
-        <meta name="canonical" content="https://qrbuddy.app/for/music" />
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Performance hints */}
+        {data?.supabaseUrl && (
+          <>
+            <link rel="dns-prefetch" href={data.supabaseUrl} />
+            <link rel="preconnect" href={data.supabaseUrl} />
+          </>
+        )}
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="QRBuddy" />
+        <meta property="og:url" content={canonicalUrl} />
         <meta
           property="og:title"
-          content="Music QR Codes — Physical Mixtapes & Merch Audio Drops | QRBuddy"
+          content="Music QR Codes — Playable Mixtapes & Merch Audio Drops | QRBuddy"
         />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta
-          property="og:description"
-          content="Turn any sticker or vinyl record into an interactive cassette player. Multi-track audio streaming and instant ZIP packaging on scan."
+          property="og:image:alt"
+          content="QRBuddy - Playable QR code mixtapes and audio drops for music"
         />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl} />
+        <meta
+          name="twitter:title"
+          content="Music QR Codes — Playable Mixtapes & Merch Audio Drops | QRBuddy"
+        />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
+
+        {/* PWA & Icons */}
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#E600E6" />
+
+        {/* JSON-LD Structured Data for Product & FAQ */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebApplication",
+                "name": "QRBuddy Music Mixtapes",
+                "url": canonicalUrl,
+                "description": description,
+                "applicationCategory": "MultimediaApplication",
+                "operatingSystem": "All",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "49",
+                  "priceCurrency": "USD",
+                  "description":
+                    "Annual Studio Pass with multi-track audio mixtape players and dynamic packaging",
+                },
+              },
+              {
+                "@type": "FAQPage",
+                "mainEntity": FAQ_ITEMS.map((item) => ({
+                  "@type": "Question",
+                  "name": item.q,
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": item.a,
+                  },
+                })),
+              },
+            ],
+          })}
+        </script>
       </Head>
 
       <VerticalStudio

@@ -207,8 +207,8 @@ export default function VerticalStudio({
             </p>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full min-w-[480px] text-left border-collapse text-xs sm:text-sm">
               <thead>
                 <tr class="border-b-3 border-black text-gray-500 font-black uppercase text-[11px] tracking-wider">
                   <th class="py-2.5 px-3">Feature</th>
@@ -251,7 +251,7 @@ export default function VerticalStudio({
                 key={faq.q}
                 class="group border-2 border-gray-200 rounded-xl p-3.5 bg-white open:border-black transition-colors"
               >
-                <summary class="font-bold cursor-pointer text-black flex items-center justify-between list-none select-none">
+                <summary class="font-bold cursor-pointer text-black flex items-center justify-between list-none select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-black rounded-md">
                   <span>{faq.q}</span>
                   <span class="text-gray-400 group-open:rotate-180 transition-transform font-mono">
                     ▼
