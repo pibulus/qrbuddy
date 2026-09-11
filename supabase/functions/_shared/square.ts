@@ -30,7 +30,7 @@ export function isSquareCheckoutConfigured(): boolean {
 
 export function getSupporterPriceMoney() {
   return {
-    amount: Number(Deno.env.get("SUPPORTER_PRICE_CENTS") ?? 2400),
+    amount: Number(Deno.env.get("SUPPORTER_PRICE_CENTS") ?? 4900),
     // Must match the Square location's currency or the API rejects the link.
     currency: Deno.env.get("SUPPORTER_CURRENCY") ?? "AUD",
   };
