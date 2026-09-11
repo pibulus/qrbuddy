@@ -8,6 +8,9 @@
       "Bash(deno eval:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/pabloalvarado/Projects/active"
+    ]
   }
 }

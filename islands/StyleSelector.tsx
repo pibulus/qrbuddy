@@ -93,6 +93,8 @@ export const STYLE_DISPLAY = {
   // keep them in sync so the gallery doesn't lie about the output.
   sunset: { name: "Sunset", colors: ["#FF8C42", "#FF69B4", "#9370DB"] },
   pool: { name: "Pool", colors: ["#4AA8D8", "#2EB5AC"] },
+  blush: { name: "Blush", colors: ["#D48166", "#BA5566", "#8E44AD"] },
+  matcha: { name: "Matcha", colors: ["#2E7D32", "#1B5E20", "#004D40"] },
   terminal: { name: "Matrix", colors: ["#00FF41", "#0A0A0A"] },
   candy: { name: "Candy", colors: ["#FF69B4", "#FF8C00", "#2EB5AC"] },
   vapor: { name: "Vapor", colors: ["#E600E6", "#009999"] },

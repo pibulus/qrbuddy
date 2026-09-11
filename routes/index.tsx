@@ -244,6 +244,27 @@ export default function Home({ data }: PageProps<HomeProps>) {
               <AboutLink />
               <KofiButton size="sm" label="Tip Jar ☕" />
             </div>
+
+            {/* Tailored Use Cases */}
+            <div class="mt-4 flex items-center justify-center gap-2 flex-wrap text-xs font-bold text-gray-700">
+              <span class="text-gray-400 font-normal">Solutions:</span>
+              <a href="/for/menus" class="hover:underline hover:text-black">
+                Restaurant Menus 📜
+              </a>
+              <span class="text-gray-300">•</span>
+              <a href="/for/weddings" class="hover:underline hover:text-black">
+                Weddings & Photo Drops 📸
+              </a>
+              <span class="text-gray-300">•</span>
+              <a href="/for/music" class="hover:underline hover:text-black">
+                Music Mixtapes 📼
+              </a>
+              <span class="text-gray-300">•</span>
+              <a href="/for/lockers" class="hover:underline hover:text-black">
+                Secret Drops 🔐
+              </a>
+            </div>
+
             <p class="text-center text-xs text-gray-500 mt-4 opacity-60">
               <span class="hidden sm:inline">
                 Made by Pablo • Melbourne • Drop a link. Watch it bloom.

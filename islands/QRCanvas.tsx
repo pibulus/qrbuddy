@@ -243,6 +243,26 @@ export default function QRCanvas(
 
     const currentStyle = getCurrentStyle();
 
+    const dotShape = (currentStyle.dots && "shape" in currentStyle.dots &&
+        currentStyle.dots.shape)
+      ? currentStyle.dots.shape
+      : (("type" in currentStyle.dots &&
+          currentStyle.dots.type === "gradient")
+        ? "rounded"
+        : "square");
+
+    const cornerSquareShape = (currentStyle.cornersSquare &&
+        "shape" in currentStyle.cornersSquare &&
+        currentStyle.cornersSquare.shape)
+      ? currentStyle.cornersSquare.shape
+      : "extra-rounded";
+
+    const cornerDotShape =
+      (currentStyle.cornersDot && "shape" in currentStyle.cornersDot &&
+          currentStyle.cornersDot.shape)
+        ? currentStyle.cornersDot.shape
+        : "dot";
+
     const qrCode = new QRCodeStyling({
       width: 1000,
       height: 1000,
@@ -262,10 +282,7 @@ export default function QRCanvas(
         crossOrigin: "anonymous",
       },
       dotsOptions: {
-        type:
-          ("type" in currentStyle.dots && currentStyle.dots.type === "gradient")
-            ? "rounded"
-            : "square",
+        type: dotShape,
         color: "color" in currentStyle.dots
           ? currentStyle.dots.color
           : undefined,
@@ -282,7 +299,7 @@ export default function QRCanvas(
           : undefined,
       },
       cornersSquareOptions: {
-        type: "extra-rounded",
+        type: cornerSquareShape as "dot" | "square" | "extra-rounded",
         color:
           currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
             ? currentStyle.cornersSquare.color
@@ -293,7 +310,7 @@ export default function QRCanvas(
             : undefined,
       },
       cornersDotOptions: {
-        type: "dot",
+        type: cornerDotShape as "dot" | "square",
         color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
           ? currentStyle.cornersDot.color
           : undefined,
@@ -328,6 +345,26 @@ export default function QRCanvas(
 
     const currentStyle = getCurrentStyle();
 
+    const dotShape = (currentStyle.dots && "shape" in currentStyle.dots &&
+        currentStyle.dots.shape)
+      ? currentStyle.dots.shape
+      : (("type" in currentStyle.dots &&
+          currentStyle.dots.type === "gradient")
+        ? "rounded"
+        : "square");
+
+    const cornerSquareShape = (currentStyle.cornersSquare &&
+        "shape" in currentStyle.cornersSquare &&
+        currentStyle.cornersSquare.shape)
+      ? currentStyle.cornersSquare.shape
+      : "extra-rounded";
+
+    const cornerDotShape =
+      (currentStyle.cornersDot && "shape" in currentStyle.cornersDot &&
+          currentStyle.cornersDot.shape)
+        ? currentStyle.cornersDot.shape
+        : "dot";
+
     qrCodeRef.current.update({
       data: url.value || "https://qrbuddy.app",
       image: logoUrl?.value || undefined,
@@ -344,10 +381,7 @@ export default function QRCanvas(
         crossOrigin: "anonymous",
       },
       dotsOptions: {
-        type:
-          ("type" in currentStyle.dots && currentStyle.dots.type === "gradient")
-            ? "rounded"
-            : "square",
+        type: dotShape,
         color: "color" in currentStyle.dots
           ? currentStyle.dots.color
           : undefined,
@@ -364,7 +398,7 @@ export default function QRCanvas(
           : undefined,
       },
       cornersSquareOptions: {
-        type: "extra-rounded",
+        type: cornerSquareShape as "dot" | "square" | "extra-rounded",
         color:
           currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
             ? currentStyle.cornersSquare.color
@@ -375,7 +409,7 @@ export default function QRCanvas(
             : undefined,
       },
       cornersDotOptions: {
-        type: "dot",
+        type: cornerDotShape as "dot" | "square",
         color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
           ? currentStyle.cornersDot.color
           : undefined,

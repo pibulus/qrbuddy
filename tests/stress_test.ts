@@ -2,12 +2,13 @@
 // Run with: deno run -A tests/stress_test.ts [optional-target-url]
 // Example: deno run -A tests/stress_test.ts https://qrbuddy.app
 
-import { normalizeUrl, looksLikeUrl } from "../utils/url.ts";
-import { formatWiFi, formatVCard, formatSMS, formatEmail } from "../types/qr-templates.ts";
+import { looksLikeUrl, normalizeUrl } from "../utils/url.ts";
 import { validateFile } from "../utils/file-validation.ts";
 
 const TARGET_URL = Deno.args[0] || "https://qrbuddy.app";
-console.log(`\n🚀 Starting QRBuddy Stress & Chaos Harness against: ${TARGET_URL}\n`);
+console.log(
+  `\n🚀 Starting QRBuddy Stress & Chaos Harness against: ${TARGET_URL}\n`,
+);
 
 let passedTests = 0;
 let failedTests = 0;
@@ -58,21 +59,38 @@ console.log("\n🔋 [BATTERY 2] Payload Boundaries & Unicode Stress...");
 
 // Max text capacity stress (2900 chars)
 const hugeText = "🌸 " + "A".repeat(2890) + " 🚀";
-assert(hugeText.length <= 3000, `Huge text payload generated (${hugeText.length} chars)`);
+assert(
+  hugeText.length <= 3000,
+  `Huge text payload generated (${hugeText.length} chars)`,
+);
 
 // Unicode and Emoji Filename Handling
-const emojiFile = new File([new Uint8Array(1024)], "🎵-summer-mixtape-café-ñ-2026.mp3", { type: "audio/mpeg" });
+const emojiFile = new File(
+  [new Uint8Array(1024)],
+  "🎵-summer-mixtape-café-ñ-2026.mp3",
+  { type: "audio/mpeg" },
+);
 const emojiValidation = validateFile(emojiFile);
-assert(emojiValidation.valid, "Multi-byte Unicode, accents, and emoji in filenames valid");
+assert(
+  emojiValidation.valid,
+  "Multi-byte Unicode, accents, and emoji in filenames valid",
+);
 
 // File Size Hard Boundary (50MB single limit)
-const underLimitFile = new File([new Uint8Array(1)], "under.jpg", { type: "image/jpeg" });
+const underLimitFile = new File([new Uint8Array(1)], "under.jpg", {
+  type: "image/jpeg",
+});
 Object.defineProperty(underLimitFile, "size", { value: 50 * 1024 * 1024 }); // 50MB exact
 assert(validateFile(underLimitFile).valid, "50MB exact file passes validation");
 
-const overLimitFile = new File([new Uint8Array(1)], "over.jpg", { type: "image/jpeg" });
+const overLimitFile = new File([new Uint8Array(1)], "over.jpg", {
+  type: "image/jpeg",
+});
 Object.defineProperty(overLimitFile, "size", { value: 50 * 1024 * 1024 + 1 }); // 50MB + 1 byte
-assert(!validateFile(overLimitFile).valid, "50MB + 1 byte file correctly rejected");
+assert(
+  !validateFile(overLimitFile).valid,
+  "50MB + 1 byte file correctly rejected",
+);
 
 // Dangerous Extension Neutralization
 const sneakyFiles = [
@@ -82,28 +100,44 @@ const sneakyFiles = [
   "document.pdf.vbs",
   "app.apk",
 ];
-const blockedAll = sneakyFiles.every(f => !validateFile(new File([new Uint8Array(1)], f)).valid);
-assert(blockedAll, "All malicious double extensions & executable payloads blocked");
+const blockedAll = sneakyFiles.every((f) =>
+  !validateFile(new File([new Uint8Array(1)], f)).valid
+);
+assert(
+  blockedAll,
+  "All malicious double extensions & executable payloads blocked",
+);
 
 // -----------------------------------------------------------------------------
 // 3. Network Health & Latency Probe
 // -----------------------------------------------------------------------------
-console.log(`\n🔋 [BATTERY 3] Live Endpoint Health & Concurrency Probe (${TARGET_URL})...`);
+console.log(
+  `\n🔋 [BATTERY 3] Live Endpoint Health & Concurrency Probe (${TARGET_URL})...`,
+);
 
 try {
   const start = performance.now();
-  const res = await fetch(`${TARGET_URL}/`, { headers: { "User-Agent": "QRBuddy-Stress-Tester/1.0" } });
+  const res = await fetch(`${TARGET_URL}/`, {
+    headers: { "User-Agent": "QRBuddy-Stress-Tester/1.0" },
+  });
   const latency = Math.round(performance.now() - start);
-  assert(res.status === 200, `Homepage reachable (status: ${res.status}, latency: ${latency}ms)`);
+  assert(
+    res.status === 200,
+    `Homepage reachable (status: ${res.status}, latency: ${latency}ms)`,
+  );
 } catch (err) {
-  console.warn(`  ⚠️ Live network check skipped or unreachable: ${(err as Error).message}`);
+  console.warn(
+    `  ⚠️ Live network check skipped or unreachable: ${(err as Error).message}`,
+  );
 }
 
 // -----------------------------------------------------------------------------
 // Summary
 // -----------------------------------------------------------------------------
 console.log(`\n═════════════════════════════════════════════════`);
-console.log(`  Stress Test Completed: ${passedTests} Passed | ${failedTests} Failed`);
+console.log(
+  `  Stress Test Completed: ${passedTests} Passed | ${failedTests} Failed`,
+);
 console.log(`═════════════════════════════════════════════════\n`);
 
 if (failedTests > 0) {

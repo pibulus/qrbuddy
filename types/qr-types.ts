@@ -11,8 +11,20 @@ export interface Gradient {
   colorStops: ColorStop[];
 }
 
+export type DotShape =
+  | "rounded"
+  | "dots"
+  | "classy"
+  | "classy-rounded"
+  | "square"
+  | "extra-rounded";
+
+export type CornerSquareShape = "dot" | "square" | "extra-rounded";
+export type CornerDotShape = "dot" | "square";
+
 export interface DotsOptions {
   type?: string;
+  shape?: DotShape;
   color?: string;
   gradient?: Gradient;
 }
@@ -25,6 +37,7 @@ export interface BackgroundOptions {
 
 export interface CornerOptions {
   type?: string;
+  shape?: CornerSquareShape | CornerDotShape;
   color?: string;
   gradient?: Gradient;
 }

@@ -37,7 +37,7 @@ export default function DesignTab(
             Pick a vibe right here — or build your own gradient.
           </p>
         </div>
-        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div class="grid grid-cols-4 sm:grid-cols-4 gap-2">
           {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
             <button
               key={key}
