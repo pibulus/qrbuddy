@@ -1,9 +1,119 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- English Homepage -->
   <url>
     <loc>https://qrbuddy.app/</loc>
-    <lastmod>2025-11-22</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://qrbuddy.app/" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://qrbuddy.app/es" />
+  </url>
+
+  <!-- Spanish Homepage -->
+  <url>
+    <loc>https://qrbuddy.app/es</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://qrbuddy.app/es" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://qrbuddy.app/" />
+  </url>
+
+  <!-- Menus (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/for/menus</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/menus" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/menus" />
+  </url>
+
+  <!-- Menus (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/menus</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/menus" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/menus" />
+  </url>
+
+  <!-- Weddings (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/for/weddings</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/weddings" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/bodas" />
+  </url>
+
+  <!-- Weddings (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/bodas</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/bodas" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/weddings" />
+  </url>
+
+  <!-- Music (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/for/music</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/music" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/musica" />
+  </url>
+
+  <!-- Music (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/musica</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/musica" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/music" />
+  </url>
+
+  <!-- Lockers (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/for/lockers</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/lockers" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/archivos" />
+  </url>
+
+  <!-- Lockers (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/archivos</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/archivos" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/lockers" />
   </url>
 </urlset>
