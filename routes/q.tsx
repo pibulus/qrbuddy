@@ -13,6 +13,22 @@ import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
 
+/**
+ * `URLSearchParams.get()` already percent-decodes. This page's `?d=` links are
+ * minted outside the codebase (nothing here builds one), so we can't know
+ * whether a given link in the wild is single- or double-encoded. Decoding a
+ * second time is therefore kept — it is the long-standing behavior — but a raw
+ * `%` in the target (e.g. `?off=50%`) makes decodeURIComponent throw URIError
+ * mid-render and 500s the whole share page. Fall back to the raw value instead.
+ */
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export default function SharePage(props: PageProps) {
   const urlParams = new URL(props.url).searchParams;
   const sharedData = urlParams.get("d") || "";
@@ -20,10 +36,10 @@ export default function SharePage(props: PageProps) {
     | keyof typeof QR_STYLES
     | "custom";
 
-  const decodedShared = sharedData ? decodeURIComponent(sharedData) : "";
+  const decodedShared = sharedData ? safeDecode(sharedData) : "";
   const pageUrl = props.url;
 
-  const url = useSignal(decodeURIComponent(sharedData));
+  const url = useSignal(decodedShared);
   const style = useSignal<keyof typeof QR_STYLES | "custom">(sharedStyle);
   const customStyle = useSignal<QRStyle | null>(null);
   const triggerDownload = useSignal(false);
