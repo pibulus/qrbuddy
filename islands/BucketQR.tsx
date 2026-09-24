@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import QRCodeStyling from "qr-code-styling";
-import { QR_STYLES } from "../utils/qr-styles.ts";
-import { haptics } from "../utils/haptics.ts";
-import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
-import { getAuthHeaders } from "../utils/api.ts";
+
 import { useKeypad } from "../hooks/useKeypad.ts";
+import { getAuthHeaders } from "../utils/api.ts";
 import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
 import {
   formatFileSize,
@@ -12,8 +10,11 @@ import {
   SUPPORTER_MAX_FILE_SIZE,
   validateFile,
 } from "../utils/file-validation.ts";
-import { getSupporterPass } from "../utils/supporter-pass.ts";
+import { haptics } from "../utils/haptics.ts";
+import { QR_STYLES } from "../utils/qr-styles.ts";
 import { uploadViaR2 } from "../utils/r2-upload.ts";
+import { getSupporterPass } from "../utils/supporter-pass.ts";
+import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
 import { addToast } from "./ToastManager.tsx";
 
 interface BucketContentMetadata {
@@ -192,20 +193,20 @@ export default function BucketQR({
 
       if (!response.ok) return false;
 
-      const data = await response.json() as BucketStatusResponse;
-      if (!data.success || !data.bucket) return false;
+      const statusPayload = await response.json() as BucketStatusResponse;
+      if (!statusPayload.success || !statusPayload.bucket) return false;
 
-      setIsEmpty(data.bucket.is_empty);
-      setContentType(data.bucket.content_type);
+      setIsEmpty(statusPayload.bucket.is_empty);
+      setContentType(statusPayload.bucket.content_type);
       setContentMetadata((currentMetadata) => {
         if (
           options.preserveLocalMetadata &&
-          !data.bucket?.content_metadata &&
+          !statusPayload.bucket?.content_metadata &&
           currentMetadata
         ) {
           return currentMetadata;
         }
-        return data.bucket?.content_metadata ?? null;
+        return statusPayload.bucket?.content_metadata ?? null;
       });
 
       return true;
@@ -511,9 +512,9 @@ export default function BucketQR({
         if (responseMime.includes("application/json")) {
           // R2-backed big file: the function answers with a short-lived
           // presigned URL — the browser downloads straight from R2.
-          const data = await response.json();
+          const presignedDownload = await response.json();
           const a = document.createElement("a");
-          a.href = data.download_url;
+          a.href = presignedDownload.download_url;
           a.download = contentMetadata?.filename || "download";
           a.click();
         } else {
@@ -528,17 +529,17 @@ export default function BucketQR({
         }
       } else {
         // Show text/link content
-        const data = await response.json();
+        const downloadedContent = await response.json();
         // Copy content to clipboard instead of using alert
         try {
-          await navigator.clipboard.writeText(data.content);
+          await navigator.clipboard.writeText(downloadedContent.content);
           haptics.success();
           addToast("✅ Content copied to clipboard!");
         } catch {
           // Fallback: show a preview of the content if clipboard fails
           addToast(
-            "Content: " + data.content.substring(0, 50) +
-              (data.content.length > 50 ? "..." : ""),
+            "Content: " + downloadedContent.content.substring(0, 50) +
+              (downloadedContent.content.length > 50 ? "..." : ""),
             4000,
           );
         }
@@ -616,8 +617,8 @@ export default function BucketQR({
       if (mime.includes("application/json")) {
         // R2-backed big file: fetch the bytes from the presigned URL
         // (R2 CORS allows GET from our origins).
-        const data = await response.json();
-        const fileResponse = await fetch(data.download_url);
+        const presignedPreview = await response.json();
+        const fileResponse = await fetch(presignedPreview.download_url);
         if (!fileResponse.ok) {
           throw new Error("Preview failed");
         }
