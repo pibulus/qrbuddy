@@ -61,7 +61,7 @@ export default function ToastManager() {
       {toasts.map((toast, index) => (
         <div
           key={toast.id}
-          class="bg-black text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pop max-w-full text-center"
+          class="bg-qr-scrim text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pop max-w-full text-center"
           style={{
             animation: `pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)`,
             animationDelay: `${index * 50}ms`,

@@ -24,7 +24,11 @@ export default function PasswordUnlock({
     <div class="space-y-4">
       {!useManualPassword && (
         <div class="space-y-3">
-          <div class="flex justify-center gap-4">
+          <p class="sr-only" role="status" aria-live="polite">
+            {pinDigits.filter(Boolean).length} of {pinDigits.length}{" "}
+            digits entered
+          </p>
+          <div class="flex justify-center gap-4" aria-hidden="true">
             {pinDigits.map((digit, index) => (
               <div
                 key={`pin-${index}`}
@@ -34,7 +38,11 @@ export default function PasswordUnlock({
               </div>
             ))}
           </div>
-          <div class="grid grid-cols-3 gap-3">
+          <div
+            class="grid grid-cols-3 gap-3"
+            role="group"
+            aria-label="PIN keypad"
+          >
             {[
               "1",
               "2",
@@ -59,6 +67,7 @@ export default function PasswordUnlock({
                       : "text-gray-900"
                   }`}
                   onClick={() => onKeypadPress(String(key))}
+                  aria-label={key === "back" ? "Delete last digit" : undefined}
                 >
                   {key === "clear" ? "Clear" : key === "back" ? "⌫" : key}
                 </button>
@@ -75,6 +84,7 @@ export default function PasswordUnlock({
           onInput={(e) =>
             onManualPasswordChange((e.target as HTMLInputElement).value)}
           placeholder="Enter password"
+          aria-label="Locker password"
           class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
         />
       )}

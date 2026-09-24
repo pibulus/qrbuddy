@@ -715,6 +715,9 @@ export default function BucketQR({
                     (useManualPassword
                       ? !manualPassword.trim()
                       : pinValue.length !== 4)}
+                  aria-describedby={(!isReusable || deleteOnDownload)
+                    ? "download-empty-warning"
+                    : undefined}
                   class={BTN_PRIMARY_DOWNLOAD}
                 >
                   {isDownloading
@@ -748,6 +751,9 @@ export default function BucketQR({
                   type="button"
                   onClick={handleDownload}
                   disabled={isDownloading}
+                  aria-describedby={(!isReusable || deleteOnDownload)
+                    ? "download-empty-warning"
+                    : undefined}
                   class={`${BTN_PRIMARY_DOWNLOAD} animate-pulse-glow`}
                 >
                   {isDownloading
@@ -780,7 +786,10 @@ export default function BucketQR({
             )}
 
             {(!isReusable || deleteOnDownload) && (
-              <p class="text-center text-xs text-orange-700 leading-relaxed">
+              <p
+                id="download-empty-warning"
+                class="text-center text-xs text-orange-700 leading-relaxed"
+              >
                 Starting this download empties the locker, even if the browser
                 later cancels the handoff.
               </p>

@@ -95,7 +95,7 @@ export default function RoutingConfigForm({
                   setSequentialUrls(newUrls);
                 }}
                 placeholder={`URL #${index + 1}`}
-                class="flex-1 px-3 py-2 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                class="flex-1 min-h-[44px] px-3 py-2 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
               />
               {sequentialUrls.length > 2 && (
                 <button
@@ -106,7 +106,8 @@ export default function RoutingConfigForm({
                     );
                     setSequentialUrls(newUrls);
                   }}
-                  class="text-red-400 hover:text-red-600 px-2"
+                  class="min-w-[44px] min-h-[44px] rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50 px-1"
+                  aria-label={`Remove step ${index + 1}`}
                 >
                   ×
                 </button>
@@ -117,7 +118,7 @@ export default function RoutingConfigForm({
           <button
             type="button"
             onClick={() => setSequentialUrls([...sequentialUrls, ""])}
-            class="w-full py-2 text-sm font-bold text-purple-600 border-2 border-dashed border-purple-300 rounded-lg hover:bg-purple-100 hover:border-purple-400 transition-colors"
+            class="w-full min-h-[44px] py-2 text-sm font-bold text-purple-600 border-2 border-dashed border-purple-300 rounded-lg hover:bg-purple-100 hover:border-purple-400 transition-colors"
           >
             + Add Step
           </button>

@@ -278,6 +278,7 @@ export default function StyleSelector(
                   type="button"
                   key={key}
                   onClick={() => handleStyleSelect(key)}
+                  aria-pressed={style.value === key}
                   class={`
                     relative group overflow-hidden rounded-2xl border-3 transition-all duration-200
                     ${

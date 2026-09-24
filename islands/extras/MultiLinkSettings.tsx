@@ -50,7 +50,7 @@ export default function MultiLinkSettings({
                 newUrls[index] = (e.target as HTMLInputElement).value;
                 setSequentialUrls(newUrls);
               }}
-              class="flex-1 px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:outline-none"
+              class="flex-1 min-h-[44px] px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:outline-none"
             />
             {sequentialUrls.length > 2 && (
               <button

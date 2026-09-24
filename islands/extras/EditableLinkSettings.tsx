@@ -95,7 +95,7 @@ export default function EditableLinkSettings({
               type="text"
               value={editUrl.value}
               readOnly
-              class="flex-1 px-3 py-2 bg-white border-2 border-[#9370DB] rounded-lg text-xs font-mono"
+              class="flex-1 min-h-[44px] px-3 py-2 bg-white border-2 border-[#9370DB] rounded-lg text-xs font-mono"
             />
             <button
               type="button"
@@ -104,7 +104,7 @@ export default function EditableLinkSettings({
                 haptics.success();
                 addToast("Edit link copied! 📋");
               }}
-              class="px-4 py-2 bg-[#9370DB] text-white rounded-lg font-semibold text-sm hover:bg-[#6B46A8] transition-colors"
+              class="min-h-[44px] px-4 py-2 bg-[#9370DB] text-white rounded-lg font-semibold text-sm hover:bg-[#6B46A8] transition-colors"
             >
               Copy
             </button>
