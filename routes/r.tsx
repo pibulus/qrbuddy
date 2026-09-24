@@ -1,5 +1,9 @@
 import { Handlers } from "$fresh/server.ts";
-import { getAuthHeaders, getSupabaseUrl } from "../utils/api.ts";
+import {
+  fetchWithTimeout,
+  getAuthHeaders,
+  getSupabaseUrl,
+} from "../utils/api.ts";
 
 // This route handles QR code redirects
 // It forwards to the Supabase edge function which manages the actual redirect logic
@@ -50,15 +54,28 @@ export const handler: Handlers = {
       "accept-language",
     ];
 
-    for (const h of clientHeaders) {
-      const val = req.headers.get(h);
-      if (val) forwardHeaders[h] = val;
+    // Cap at a length no legitimate value of any of these headers approaches
+    // (UAs run ~100-300 chars; country/city/timezone are single words) — a
+    // scanner can put anything it wants in a request header, and cf-ipcountry/
+    // cf-ipcity land straight in the scan_logs TEXT columns with no column
+    // limit downstream. Bound here, at the one place these values cross from
+    // "client-supplied" to "forwarded for storage."
+    const MAX_FORWARDED_HEADER_LENGTH = 500;
+
+    for (const headerName of clientHeaders) {
+      const headerValue = req.headers.get(headerName);
+      if (headerValue) {
+        forwardHeaders[headerName] = headerValue.slice(
+          0,
+          MAX_FORWARDED_HEADER_LENGTH,
+        );
+      }
     }
 
     try {
       // Fetch with redirect: "manual" so the Fresh server doesn't proxy the third-party
       // destination website or crash on non-HTTP schemes (mailto:, tel:, sms:, wifi:, etc.)
-      const response = await fetch(redirectUrl, {
+      const response = await fetchWithTimeout(redirectUrl, {
         headers: forwardHeaders,
         redirect: "manual",
       });

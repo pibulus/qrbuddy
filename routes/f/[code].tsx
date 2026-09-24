@@ -1,6 +1,10 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
-import { getAuthHeaders, getSupabaseUrl } from "../../utils/api.ts";
+import {
+  fetchWithTimeout,
+  getAuthHeaders,
+  getSupabaseUrl,
+} from "../../utils/api.ts";
 
 interface FileData {
   fileId: string;
@@ -44,11 +48,16 @@ export const handler: Handlers = {
 
     // Fetch file metadata without downloading yet
     try {
-      const metadataUrl =
-        `${supabaseUrl}/functions/v1/get-file-metadata?id=${code}`;
+      // `code` is a raw URL path segment (Fresh decodes it before ctx.params
+      // sees it) — an attacker can put `&`, `#`, or `=` in it. Unencoded, that
+      // pollutes or truncates this query string. r.tsx already does this for
+      // its own `code` param; this route didn't.
+      const metadataUrl = `${supabaseUrl}/functions/v1/get-file-metadata?id=${
+        encodeURIComponent(code)
+      }`;
       const authHeaders = getAuthHeaders();
 
-      const response = await fetch(metadataUrl, {
+      const response = await fetchWithTimeout(metadataUrl, {
         headers: authHeaders,
       });
 
@@ -131,7 +140,7 @@ export default function FilePage({ data }: PageProps<FileData>) {
               data.remainingDownloads === 1 ? "" : "s"
             } left.`}
         />
-        <meta property="og:image" content="https://qrbuddy.app/og-image.png" />
+        <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
 
@@ -139,30 +148,27 @@ export default function FilePage({ data }: PageProps<FileData>) {
 
       <style>
         {`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          
+          /* animate-scale-in has no Tailwind counterpart (tailwind.config.ts
+             defines fade-in/pulse-glow only) — kept here, feeds
+             FileSlideshow.tsx's image transition. */
           @keyframes scale-in {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
           }
+          .animate-scale-in { animation: scale-in 0.4s ease-out; }
 
+          /* animate-pulse-glow: deliberate override, not drift. Tailwind's
+             global pulse-glow glows PINK (rgba(255,105,180,...)) but both
+             consumers of this class (BucketQR.tsx's CTA and the
+             self-destruct download button below) are red/orange gradients —
+             a pink glow clashes with both. Red keeps the "explosive" file
+             theme intact. If tailwind.config.ts's pulse-glow color is ever
+             corrected to red/orange, delete this block. */
           @keyframes pulse-glow {
             0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
             50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.6); }
           }
-
-          @keyframes bounce-slow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-          }
-
-          .animate-fade-in { animation: fade-in 0.6s ease-out; }
-          .animate-scale-in { animation: scale-in 0.4s ease-out; }
           .animate-pulse-glow { animation: pulse-glow 2s infinite; }
-          .animate-bounce-slow { animation: bounce-slow 3s infinite ease-in-out; }
         `}
       </style>
     </>

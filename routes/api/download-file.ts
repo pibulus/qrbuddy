@@ -47,6 +47,11 @@ export const handler: Handlers = {
         ...(rangeHeader && { "Range": rangeHeader }),
       };
 
+      // Deliberately NOT using utils/api.ts's fetchWithTimeout here: this
+      // fetch's response.body gets streamed straight through to the client
+      // below, so the same AbortSignal would cover the whole download, not
+      // just the connect — a short deadline would kill a legitimate slow/
+      // large file transfer, not just a hung edge function.
       const response = await fetch(downloadUrl.toString(), {
         headers: edgeFunctionHeaders,
         redirect: "manual", // Important: Handle redirects manually
