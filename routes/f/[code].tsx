@@ -91,6 +91,7 @@ export const handler: Handlers = {
 };
 
 import FileSlideshow from "../../islands/FileSlideshow.tsx";
+import ErrorBoundary from "../../islands/ErrorBoundary.tsx";
 
 export default function FilePage({ data }: PageProps<FileData>) {
   const isAllAudio = Boolean(
@@ -144,7 +145,14 @@ export default function FilePage({ data }: PageProps<FileData>) {
         <meta name="twitter:card" content="summary_large_image" />
       </Head>
 
-      <FileSlideshow {...data} />
+      {
+        /* The file-download path had no crash containment while the homepage
+          QR preview had three. A throw here strands someone mid-scan on a
+          link that may be one-shot. */
+      }
+      <ErrorBoundary>
+        <FileSlideshow {...data} />
+      </ErrorBoundary>
 
       <style>
         {`

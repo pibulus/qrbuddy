@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import { getAuthHeaders } from "../utils/api.ts";
+import { fetchWithTimeout, getAuthHeaders } from "../utils/api.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 import type { BucketContentMetadata } from "../types/bucket-types.ts";
 
@@ -47,7 +47,10 @@ export function useBucketStatus(
         statusUrl.searchParams.set("owner_token", ownerToken);
       }
 
-      const response = await fetch(statusUrl.toString(), {
+      // Small JSON status check, not a file transfer — bound it so a dead
+      // connection resolves to "poll failed" instead of a spinner that never
+      // returns.
+      const response = await fetchWithTimeout(statusUrl.toString(), {
         headers: getAuthHeaders(),
       });
 

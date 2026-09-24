@@ -3,7 +3,7 @@ import QRCodeStyling from "qr-code-styling";
 
 import { useBucketStatus } from "../hooks/useBucketStatus.ts";
 import { useLockerUnlock } from "../hooks/useLockerUnlock.ts";
-import { getAuthHeaders } from "../utils/api.ts";
+import { fetchWithTimeout, getAuthHeaders } from "../utils/api.ts";
 import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
 import {
   formatFileSize,
@@ -325,8 +325,10 @@ export default function BucketQR({
           );
         }
       } else if (text || link) {
-        // Upload text or link
-        response = await fetch(uploadUrl.toString(), {
+        // Upload text or link — small JSON body, safe to bound (unlike the
+        // file paths above, which hand off to uploadViaR2/apiRequestFormDataWithProgress
+        // and can legitimately run long on a slow connection).
+        response = await fetchWithTimeout(uploadUrl.toString(), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -413,7 +415,10 @@ export default function BucketQR({
 
       const authHeaders = getAuthHeaders();
 
-      // Use POST with password in body for security (not in URL)
+      // Use POST with password in body for security (not in URL).
+      // Deliberately NOT fetchWithTimeout: for small (non-R2) files this
+      // response IS the file body, same reasoning as routes/api/download-file.ts —
+      // an 8s cap would kill a real download mid-transfer on a slow connection.
       const response = await fetch(downloadUrl, {
         method: "POST",
         headers: {
@@ -516,6 +521,8 @@ export default function BucketQR({
       setIsPreviewLoading(true);
       haptics.light();
 
+      // Same as handleDownload: this can return the raw file body, not just
+      // control-plane JSON — no blanket timeout, see comment there.
       const response = await fetch(`${apiUrl}/download-from-bucket`, {
         method: "POST",
         headers: {
@@ -539,6 +546,7 @@ export default function BucketQR({
         // R2-backed big file: fetch the bytes from the presigned URL
         // (R2 CORS allows GET from our origins).
         const presignedPreview = await response.json();
+        // Real file bytes off R2 — no timeout, same reasoning as above.
         const fileResponse = await fetch(presignedPreview.download_url);
         if (!fileResponse.ok) {
           throw new Error("Preview failed");
