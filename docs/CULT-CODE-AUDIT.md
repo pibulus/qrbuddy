@@ -1,14 +1,15 @@
 # Cult Code audit — 2026-09-24
 
-Two cold `/ritual detective` passes (agent: `rex`), read-only. Every
-file:line below was re-verified by hand afterward — agent line numbers ran
-±3 and are corrected here.
+Two cold `/ritual detective` passes (agent: `rex`), read-only. Every file:line
+below was re-verified by hand afterward — agent line numbers ran ±3 and are
+corrected here.
 
 ---
 
 ## 🔴 1. Checkout currency disagrees with every storefront
 
-**Status: unresolved, needs a dashboard check. This one costs money while it waits.**
+**Status: unresolved, needs a dashboard check. This one costs money while it
+waits.**
 
 `supabase/functions/_shared/square.ts:35`
 
@@ -18,25 +19,25 @@ currency: Deno.env.get("SUPPORTER_CURRENCY") ?? "AUD",
 
 Ten files advertise USD:
 
-| File | Line |
-|---|---|
-| `routes/index.tsx` | 133 |
-| `routes/es/index.tsx` | 117 |
-| `routes/for/{menus,music,lockers,weddings}.tsx` | 160 |
-| `routes/es/{menus,bodas}.tsx` | 154 |
-| `routes/es/musica.tsx` | 155 |
-| `routes/es/archivos.tsx` | 158 |
+| File                                            | Line |
+| ----------------------------------------------- | ---- |
+| `routes/index.tsx`                              | 133  |
+| `routes/es/index.tsx`                           | 117  |
+| `routes/for/{menus,music,lockers,weddings}.tsx` | 160  |
+| `routes/es/{menus,bodas}.tsx`                   | 154  |
+| `routes/es/musica.tsx`                          | 155  |
+| `routes/es/archivos.tsx`                        | 158  |
 
 Plus prose: `routes/es/menus.tsx:45` — `"$49 USD / $499 MXN al año"`.
 
-$49 AUD ≈ $32 USD. Either US customers are charged ~$32 against a $49
-promise, or they're charged $49 AUD and the receipt currency won't match the
-landing page they converted from.
+$49 AUD ≈ $32 USD. Either US customers are charged ~$32 against a $49 promise,
+or they're charged $49 AUD and the receipt currency won't match the landing page
+they converted from.
 
 **`SUPPORTER_CURRENCY` appears exactly once in the entire repo** — that one
-line. No `.env.example`, no deploy script, no doc sets it. So either it's set
-by hand in the Supabase dashboard and the `AUD` default never fires, or it
-isn't and the default is live.
+line. No `.env.example`, no deploy script, no doc sets it. So either it's set by
+hand in the Supabase dashboard and the `AUD` default never fires, or it isn't
+and the default is live.
 
 **→ Check the Supabase function env for `SUPPORTER_CURRENCY` before anything
 else.** Then make the config and the ten files agree, and add it to
@@ -51,13 +52,12 @@ checked the amount, saw it match, and declared the line clean. It isn't.)
 ## 🟡 2. MIME classification written twice
 
 `islands/smart-input/FileUploadOptions.tsx:24-38` and
-`routes/f/[code].tsx:87-101` independently implement the same
-"all audio / all images / single audio / single image" test, then pick an
-emoji from it.
+`routes/f/[code].tsx:87-101` independently implement the same "all audio / all
+images / single audio / single image" test, then pick an emoji from it.
 
-`utils/file-validation.ts` exists and has no audio/image helpers — the
-natural home, skipped. Adding a video type to one side and not the other is
-a one-line drift away.
+`utils/file-validation.ts` exists and has no audio/image helpers — the natural
+home, skipped. Adding a video type to one side and not the other is a one-line
+drift away.
 
 **→ One `classifyFiles()` in `utils/file-validation.ts`; both call sites
 collapse to a line.** (Cult Code: `simplificator` or `the-eliminator`.)
@@ -67,20 +67,20 @@ collapse to a line.** (Cult Code: `simplificator` or `the-eliminator`.)
 ## 🟡 3. Ten landing pages that are one landing page
 
 `routes/for/{menus,weddings,music,lockers}.tsx` and
-`routes/es/{menus,bodas,musica,archivos}.tsx` — ~200 lines each,
-structurally identical once the prose is stripped. Includes ~130 lines of
-Head/meta/OG/Twitter/JSON-LD duplicated verbatim per file, which is how
-finding #1 drifted in the first place: one currency edit needed ten hands.
+`routes/es/{menus,bodas,musica,archivos}.tsx` — ~200 lines each, structurally
+identical once the prose is stripped. Includes ~130 lines of
+Head/meta/OG/Twitter/JSON-LD duplicated verbatim per file, which is how finding
+#1 drifted in the first place: one currency edit needed ten hands.
 
-`utils/i18n.ts` carries 11 keys per locale — nowhere near enough to cover
-these pages, which is *why* they were copied instead of parameterized.
+`utils/i18n.ts` carries 11 keys per locale — nowhere near enough to cover these
+pages, which is _why_ they were copied instead of parameterized.
 
-**→ One `<VerticalLanding locale vertical>` component, the way
-`VerticalStudio` already shares page bodies.** Then a copy pass on the
-Spanish pages: nothing currently tells anyone `/es/menus` is stale when
-`/for/menus` changes. (Cult Code: `deconstructor`, then `cole`.)
+**→ One `<VerticalLanding locale vertical>` component, the way `VerticalStudio`
+already shares page bodies.** Then a copy pass on the Spanish pages: nothing
+currently tells anyone `/es/menus` is stale when `/for/menus` changes. (Cult
+Code: `deconstructor`, then `cole`.)
 
 ---
 
-*Generated by [Cult Code](https://github.com/pibulus/cult-code) — findings
-verified by hand, not taken on the agent's word.*
+_Generated by [Cult Code](https://github.com/pibulus/cult-code) — findings
+verified by hand, not taken on the agent's word._

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import QRCodeStyling from "qr-code-styling";
 
-import { useKeypad } from "../hooks/useKeypad.ts";
+import { useBucketStatus } from "../hooks/useBucketStatus.ts";
+import { useLockerUnlock } from "../hooks/useLockerUnlock.ts";
 import { getAuthHeaders } from "../utils/api.ts";
 import { apiRequestFormDataWithProgress } from "../utils/api-request.ts";
 import {
@@ -15,62 +16,18 @@ import { QR_STYLES } from "../utils/qr-styles.ts";
 import { uploadViaR2 } from "../utils/r2-upload.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
+import type { BucketContentMetadata } from "../types/bucket-types.ts";
+import BucketContentDisplay from "./bucket-qr/BucketContentDisplay.tsx";
+import PasswordUnlock from "./bucket-qr/PasswordUnlock.tsx";
 import { addToast } from "./ToastManager.tsx";
 
-interface BucketContentMetadata {
-  filename?: string;
-  size?: number;
-  mimetype?: string;
-  storage_path?: string;
-  content?: string;
-  [key: string]: unknown;
-}
-
-// Text-card theming keyed to the real QR styles (see utils/qr-styles.ts).
-const TEXT_CARD_THEMES: Record<
-  string,
-  { card: string; bar: string; text?: string }
-> = {
-  sunset: {
-    card: "bg-gradient-to-br from-orange-50 to-pink-50",
-    bar: "bg-gradient-to-r from-yellow-400 to-orange-500",
-  },
-  pool: {
-    card: "bg-gradient-to-br from-blue-50 to-cyan-50",
-    bar: "bg-gradient-to-r from-blue-400 to-cyan-500",
-  },
-  terminal: {
-    card: "bg-gray-900",
-    bar: "bg-gradient-to-r from-green-400 to-emerald-500",
-    text: "text-green-400",
-  },
-  candy: {
-    card: "bg-gradient-to-br from-pink-50 to-purple-50",
-    bar: "bg-gradient-to-r from-pink-400 to-purple-500",
-  },
-  vapor: {
-    card: "bg-gradient-to-br from-purple-50 to-cyan-50",
-    bar: "bg-gradient-to-r from-purple-400 to-cyan-400",
-  },
-  noir: {
-    card: "bg-gray-900",
-    bar: "bg-gradient-to-r from-gray-400 to-white",
-    text: "text-gray-100",
-  },
-  brutalist: {
-    card: "bg-white",
-    bar: "bg-black",
-  },
-};
-
-interface BucketStatusResponse {
-  success: boolean;
-  bucket?: {
-    is_empty: boolean;
-    content_type: string | null;
-    content_metadata: BucketContentMetadata | null;
-  };
-}
+// Repeated chunky-CTA button idioms — used 3x, 3x, and 2x below.
+const BTN_PRIMARY_UPLOAD =
+  "w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50";
+const BTN_PRIMARY_DOWNLOAD =
+  "w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50";
+const BTN_SECONDARY =
+  "w-full min-h-[52px] py-3 bg-white text-gray-900 font-black rounded-xl border-3 border-black shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-50";
 
 interface BucketQRProps {
   bucketUrl: string;
@@ -101,17 +58,23 @@ export default function BucketQR({
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isEmpty, setIsEmpty] = useState(initialIsEmpty);
-  const [contentType, setContentType] = useState(initialContentType);
-  const [contentMetadata, setContentMetadata] = useState<
-    BucketContentMetadata | null
-  >(initialContentMetadata);
+  const {
+    isEmpty,
+    setIsEmpty,
+    contentType,
+    setContentType,
+    contentMetadata,
+    setContentMetadata,
+    refreshBucketStatus,
+  } = useBucketStatus(bucketCode, apiUrl, {
+    isEmpty: initialIsEmpty,
+    contentType: initialContentType,
+    contentMetadata: initialContentMetadata,
+  });
+
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showPasswordInput, setShowPasswordInput] = useState(false);
-  const [useManualPassword, setUseManualPassword] = useState(false);
-  const [manualPassword, setManualPassword] = useState("");
   const [error, setError] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewMime, setPreviewMime] = useState("");
@@ -124,18 +87,22 @@ export default function BucketQR({
     };
   }, [previewUrl]);
 
-  // Use shared keypad hook for PIN entry
+  // Shared PIN/password unlock state — used by upload, download, and preview.
   const {
-    digits: pinDigits,
-    handlePress: handleKeypadPress,
-    reset: resetPinDigits,
-    value: pinValue,
-  } = useKeypad(4);
+    showPasswordInput,
+    setShowPasswordInput,
+    useManualPassword,
+    manualPassword,
+    setManualPassword,
+    pinDigits,
+    handleKeypadPress,
+    pinValue,
+    unlockPassword,
+    hasUnlockInput,
+    toggleManualPassword,
+    resetUnlock,
+  } = useLockerUnlock();
 
-  const unlockPassword = useManualPassword ? manualPassword.trim() : pinValue;
-  const hasUnlockInput = useManualPassword
-    ? manualPassword.trim().length > 0
-    : pinValue.length === 4;
   const uploadStatusText = uploadProgress >= 99
     ? "Processing..."
     : "Uploading...";
@@ -175,46 +142,6 @@ export default function BucketQR({
   const canPreview = contentType === "file" && isReusable &&
     !deleteOnDownload && !isEmpty &&
     (isMediaFile || (isPasswordProtected && !contentMetadata));
-
-  const refreshBucketStatus = async (
-    options: { preserveLocalMetadata?: boolean } = {},
-  ): Promise<boolean> => {
-    try {
-      const ownerToken = await getOwnerToken("bucket", bucketCode);
-      const statusUrl = new URL(`${apiUrl}/get-bucket-status`);
-      statusUrl.searchParams.set("bucket_code", bucketCode);
-      if (ownerToken) {
-        statusUrl.searchParams.set("owner_token", ownerToken);
-      }
-
-      const response = await fetch(statusUrl.toString(), {
-        headers: getAuthHeaders(),
-      });
-
-      if (!response.ok) return false;
-
-      const statusPayload = await response.json() as BucketStatusResponse;
-      if (!statusPayload.success || !statusPayload.bucket) return false;
-
-      setIsEmpty(statusPayload.bucket.is_empty);
-      setContentType(statusPayload.bucket.content_type);
-      setContentMetadata((currentMetadata) => {
-        if (
-          options.preserveLocalMetadata &&
-          !statusPayload.bucket?.content_metadata &&
-          currentMetadata
-        ) {
-          return currentMetadata;
-        }
-        return statusPayload.bucket?.content_metadata ?? null;
-      });
-
-      return true;
-    } catch (err) {
-      console.warn("Failed to refresh bucket status:", err);
-      return false;
-    }
-  };
 
   // Get QR style based on empty/full state
   const getQRStyle = () => {
@@ -438,10 +365,7 @@ export default function BucketQR({
       haptics.success();
       setIsUploading(false);
       setUploadProgress(0);
-      setShowPasswordInput(false);
-      setUseManualPassword(false);
-      setManualPassword("");
-      resetPinDigits();
+      resetUnlock();
     } catch (err) {
       console.error("Upload error:", err);
       await refreshBucketStatus();
@@ -561,10 +485,7 @@ export default function BucketQR({
 
       haptics.success();
       setIsDownloading(false);
-      setShowPasswordInput(false);
-      setUseManualPassword(false);
-      setManualPassword("");
-      resetPinDigits();
+      resetUnlock();
     } catch (err) {
       console.error("Download error:", err);
       await refreshBucketStatus();
@@ -662,100 +583,6 @@ export default function BucketQR({
     }
   };
 
-  const renderPasswordControls = () => (
-    <div class="space-y-4">
-      {!useManualPassword && (
-        <div class="space-y-3">
-          <div class="flex justify-center gap-4">
-            {pinDigits.map((digit, index) => (
-              <div
-                key={`pin-${index}`}
-                class="w-12 h-14 bg-white border-3 border-black rounded-2xl flex items-center justify-center text-3xl font-black"
-              >
-                {digit ? "•" : ""}
-              </div>
-            ))}
-          </div>
-          <div class="grid grid-cols-3 gap-3">
-            {[
-              "1",
-              "2",
-              "3",
-              "4",
-              "5",
-              "6",
-              "7",
-              "8",
-              "9",
-              "clear",
-              "0",
-              "back",
-            ].map(
-              (key) => (
-                <button
-                  key={`keypad-${key}`}
-                  type="button"
-                  class={`min-h-[48px] rounded-2xl text-lg font-black border-3 border-black bg-white hover:-translate-y-0.5 transition ${
-                    key === "clear" || key === "back"
-                      ? "text-gray-600"
-                      : "text-gray-900"
-                  }`}
-                  onClick={() => handleKeypadPress(String(key))}
-                >
-                  {key === "clear" ? "Clear" : key === "back" ? "⌫" : key}
-                </button>
-              ),
-            )}
-          </div>
-        </div>
-      )}
-
-      {useManualPassword && (
-        <input
-          type="password"
-          value={manualPassword}
-          onInput={(e) =>
-            setManualPassword((e.target as HTMLInputElement).value)}
-          placeholder="Enter password"
-          class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
-        />
-      )}
-
-      <div class="flex items-center justify-between text-[11px] text-gray-500">
-        <button
-          type="button"
-          class="min-h-[44px] underline"
-          onClick={() => {
-            setUseManualPassword((prev) => {
-              const next = !prev;
-              if (next) {
-                resetPinDigits();
-              } else {
-                setManualPassword("");
-              }
-              return next;
-            });
-            haptics.light();
-          }}
-        >
-          {useManualPassword ? "Use keypad" : "Use keyboard"}
-        </button>
-        <button
-          type="button"
-          class="min-h-[44px] underline"
-          onClick={() => {
-            setShowPasswordInput(false);
-            setUseManualPassword(false);
-            setManualPassword("");
-            resetPinDigits();
-          }}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div class="space-y-6">
       {/* Status Badge */}
@@ -774,144 +601,19 @@ export default function BucketQR({
         </p>
       </div>
 
-      {/* Content Display (if text and full) */}
-      {!isEmpty && contentType === "text" && contentMetadata && (
-        <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-3 border-pink-300 rounded-xl p-6 shadow-chunky">
-          <p class="text-2xl font-bold text-center break-words">
-            {contentMetadata.content}
-          </p>
-        </div>
-      )}
-
-      {/* Metadata Display (Title, Desc, Creator) */}
-      {!isEmpty && contentMetadata &&
-        (contentMetadata.title || contentMetadata.description ||
-          contentMetadata.creator) &&
-        (
-          <div class="text-center space-y-2 animate-slide-down">
-            {contentMetadata.title && (
-              <h1 class="text-3xl font-black text-gray-900 leading-tight">
-                {contentMetadata.title as string}
-              </h1>
-            )}
-            {contentMetadata.creator && (
-              <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">
-                By {contentMetadata.creator as string}
-              </p>
-            )}
-            {contentMetadata.description && (
-              <p class="text-lg text-gray-700 max-w-md mx-auto leading-relaxed">
-                {contentMetadata.description as string}
-              </p>
-            )}
-          </div>
-        )}
-
-      {/* Media Preview */}
       {!isEmpty && (
-        <div class="space-y-4">
-          {/* Text Preview */}
-          {contentType === "text" && contentMetadata?.content && (
-            <div
-              class={`border-4 border-black rounded-xl p-6 shadow-chunky relative overflow-hidden ${
-                TEXT_CARD_THEMES[style]?.card ?? "bg-white"
-              }`}
-            >
-              <div
-                class={`absolute top-0 left-0 w-full h-2 ${
-                  TEXT_CARD_THEMES[style]?.bar ?? "bg-gray-200"
-                }`}
-              />
-              <div
-                class={`font-mono text-lg md:text-xl whitespace-pre-wrap break-words leading-relaxed ${
-                  TEXT_CARD_THEMES[style]?.text ?? "text-gray-800"
-                }`}
-              >
-                {(!isPasswordProtected ||
-                    (isPasswordProtected && hasUnlockInput))
-                  ? (
-                    contentMetadata.content
-                  )
-                  : (
-                    <div class="text-center py-8 opacity-50">
-                      <span class="text-4xl block mb-2">🔒</span>
-                      Hidden Message
-                    </div>
-                  )}
-              </div>
-            </div>
-          )}
-
-          {/* File Preview (Image/Audio/Video) */}
-          {contentType === "file" && (
-            <div class="space-y-4">
-              {/* If metadata is redacted (null), show generic locked state */}
-              {!contentMetadata && !previewUrl && (
-                <div class="bg-gray-100 border-4 border-black rounded-xl p-8 text-center shadow-chunky">
-                  <span class="text-5xl block mb-4">🔒</span>
-                  <h3 class="text-xl font-bold text-gray-800 mb-2">
-                    Secure File
-                  </h3>
-                  <p class="text-gray-600">
-                    Enter password to view details and download
-                  </p>
-                </div>
-              )}
-
-              {/* Inline media preview (open lockers only — non-destructive) */}
-              {previewUrl && (
-                <div class="bg-white border-4 border-black rounded-xl p-3 shadow-chunky animate-scale-in">
-                  {previewMime.startsWith("image/") && (
-                    <img
-                      src={previewUrl}
-                      alt={contentMetadata?.filename ?? "Shared image"}
-                      class="w-full max-h-[70vh] object-contain rounded-lg"
-                    />
-                  )}
-                  {previewMime.startsWith("video/") && (
-                    <video
-                      controls
-                      src={previewUrl}
-                      class="w-full max-h-[70vh] rounded-lg bg-black"
-                    />
-                  )}
-                  {previewMime.startsWith("audio/") && (
-                    <div class="p-4 text-center space-y-3">
-                      <span class="text-5xl block">🎵</span>
-                      <audio controls src={previewUrl} class="w-full" />
-                    </div>
-                  )}
-                  {contentMetadata?.filename && (
-                    <p class="text-xs text-gray-500 text-center mt-2 truncate">
-                      {contentMetadata.filename}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* File Info Card - shows file details without destructive preview */}
-              {contentMetadata && !previewUrl && (
-                <div class="bg-white border-4 border-black rounded-xl p-6 shadow-chunky text-center">
-                  <span class="text-5xl block mb-3">{bucketFileGlyph}</span>
-                  <p class="text-xs font-black uppercase tracking-wide text-gray-400 mb-1">
-                    {bucketFileKind}
-                  </p>
-                  <p class="font-bold text-lg truncate">
-                    {contentMetadata.filename}
-                  </p>
-                  {bucketFileSizeLabel && (
-                    <p class="text-sm text-gray-500 mt-1">
-                      {bucketFileSizeLabel}
-                    </p>
-                  )}
-                  <p class="text-xs text-gray-400 mt-1">
-                    {contentMetadata.mimetype}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <BucketContentDisplay
+          contentType={contentType}
+          contentMetadata={contentMetadata}
+          style={style}
+          isPasswordProtected={isPasswordProtected}
+          hasUnlockInput={hasUnlockInput}
+          previewUrl={previewUrl}
+          previewMime={previewMime}
+          bucketFileGlyph={bucketFileGlyph}
+          bucketFileKind={bucketFileKind}
+          bucketFileSizeLabel={bucketFileSizeLabel}
+        />
       )}
 
       {/* Action Button */}
@@ -922,7 +624,7 @@ export default function BucketQR({
               <button
                 type="button"
                 onClick={() => setShowPasswordInput(true)}
-                class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
+                class={BTN_PRIMARY_UPLOAD}
               >
                 🔒 Unlock to Upload
               </button>
@@ -930,12 +632,20 @@ export default function BucketQR({
 
             {isPasswordProtected && showPasswordInput && (
               <div class="space-y-4">
-                {renderPasswordControls()}
+                <PasswordUnlock
+                  pinDigits={pinDigits}
+                  onKeypadPress={handleKeypadPress}
+                  useManualPassword={useManualPassword}
+                  manualPassword={manualPassword}
+                  onManualPasswordChange={setManualPassword}
+                  onToggleMode={toggleManualPassword}
+                  onCancel={resetUnlock}
+                />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading || !hasUnlockInput}
-                  class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                  class={BTN_PRIMARY_UPLOAD}
                 >
                   {isUploading ? "Uploading..." : "📤 Upload File"}
                 </button>
@@ -947,7 +657,7 @@ export default function BucketQR({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                class="w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                class={BTN_PRIMARY_UPLOAD}
               >
                 {isUploading ? "Uploading..." : "📤 Upload File"}
               </button>
@@ -980,7 +690,7 @@ export default function BucketQR({
               <button
                 type="button"
                 onClick={() => setShowPasswordInput(true)}
-                class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
+                class={BTN_PRIMARY_DOWNLOAD}
               >
                 🔒 Unlock to View & Download
               </button>
@@ -988,7 +698,15 @@ export default function BucketQR({
 
             {isPasswordProtected && showPasswordInput && (
               <div class="space-y-4">
-                {renderPasswordControls()}
+                <PasswordUnlock
+                  pinDigits={pinDigits}
+                  onKeypadPress={handleKeypadPress}
+                  useManualPassword={useManualPassword}
+                  manualPassword={manualPassword}
+                  onManualPasswordChange={setManualPassword}
+                  onToggleMode={toggleManualPassword}
+                  onCancel={resetUnlock}
+                />
 
                 <button
                   type="button"
@@ -997,7 +715,7 @@ export default function BucketQR({
                     (useManualPassword
                       ? !manualPassword.trim()
                       : pinValue.length !== 4)}
-                  class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                  class={BTN_PRIMARY_DOWNLOAD}
                 >
                   {isDownloading
                     ? "Downloading..."
@@ -1014,7 +732,7 @@ export default function BucketQR({
                       (useManualPassword
                         ? !manualPassword.trim()
                         : pinValue.length !== 4)}
-                    class="w-full min-h-[52px] py-3 bg-white text-gray-900 font-black rounded-xl border-3 border-black shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-50"
+                    class={BTN_SECONDARY}
                   >
                     {isPreviewLoading
                       ? "Loading preview..."
@@ -1030,7 +748,7 @@ export default function BucketQR({
                   type="button"
                   onClick={handleDownload}
                   disabled={isDownloading}
-                  class="w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 animate-pulse-glow"
+                  class={`${BTN_PRIMARY_DOWNLOAD} animate-pulse-glow`}
                 >
                   {isDownloading
                     ? "Downloading..."
@@ -1044,7 +762,7 @@ export default function BucketQR({
                     type="button"
                     onClick={handlePreview}
                     disabled={isPreviewLoading}
-                    class="w-full min-h-[52px] py-3 bg-white text-gray-900 font-black rounded-xl border-3 border-black shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-50"
+                    class={BTN_SECONDARY}
                   >
                     {isPreviewLoading
                       ? "Loading preview..."

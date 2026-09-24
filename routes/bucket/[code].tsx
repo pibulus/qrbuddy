@@ -7,15 +7,7 @@ import {
   getApiUrl,
   getAuthHeaders,
 } from "../../utils/api.ts";
-
-interface BucketContentMetadata {
-  filename?: string;
-  size?: number;
-  mimetype?: string;
-  storage_path?: string;
-  content?: string;
-  [key: string]: unknown;
-}
+import type { BucketContentMetadata } from "../../types/bucket-types.ts";
 
 interface BucketData {
   bucket_code: string;
