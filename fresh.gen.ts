@@ -3,17 +3,35 @@
 // This file is automatically updated during development when running `dev.ts`.
 
 import * as $_404 from "./routes/_404.tsx";
+import * as $_500 from "./routes/_500.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
 import * as $api_download_file from "./routes/api/download-file.ts";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $edit from "./routes/edit.tsx";
+import * as $es_archivos from "./routes/es/archivos.tsx";
+import * as $es_bodas from "./routes/es/bodas.tsx";
+import * as $es_guia_impresion from "./routes/es/guia/impresion.tsx";
+import * as $es_index from "./routes/es/index.tsx";
+import * as $es_menus from "./routes/es/menus.tsx";
+import * as $es_musica from "./routes/es/musica.tsx";
+import * as $es_por_que from "./routes/es/por-que.tsx";
 import * as $f_code_ from "./routes/f/[code].tsx";
+import * as $for_lockers from "./routes/for/lockers.tsx";
+import * as $for_menus from "./routes/for/menus.tsx";
+import * as $for_music from "./routes/for/music.tsx";
+import * as $for_weddings from "./routes/for/weddings.tsx";
+import * as $guide_printing from "./routes/guide/printing.tsx";
 import * as $index from "./routes/index.tsx";
+import * as $lockers from "./routes/lockers.tsx";
+import * as $menus from "./routes/menus.tsx";
+import * as $music from "./routes/music.tsx";
 import * as $note_code_ from "./routes/note/[code].tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
+import * as $weddings from "./routes/weddings.tsx";
+import * as $why from "./routes/why.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $Analytics from "./islands/Analytics.tsx";
@@ -31,11 +49,15 @@ import * as $NoteCard from "./islands/NoteCard.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $QRReader from "./islands/QRReader.tsx";
+import * as $QrPrintGuideIsland from "./islands/QrPrintGuideIsland.tsx";
 import * as $RotatingTitle from "./islands/RotatingTitle.tsx";
 import * as $ShareActions from "./islands/ShareActions.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
+import * as $VerticalStudio from "./islands/VerticalStudio.tsx";
+import * as $bucket_qr_BucketContentDisplay from "./islands/bucket-qr/BucketContentDisplay.tsx";
+import * as $bucket_qr_PasswordUnlock from "./islands/bucket-qr/PasswordUnlock.tsx";
 import * as $create_modal_ChoiceRow from "./islands/create-modal/ChoiceRow.tsx";
 import * as $create_modal_CompletionState from "./islands/create-modal/CompletionState.tsx";
 import * as $create_modal_DesignTab from "./islands/create-modal/DesignTab.tsx";
@@ -66,17 +88,35 @@ import type { Manifest } from "$fresh/server.ts";
 const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
+    "./routes/_500.tsx": $_500,
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
     "./routes/api/download-file.ts": $api_download_file,
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/edit.tsx": $edit,
+    "./routes/es/archivos.tsx": $es_archivos,
+    "./routes/es/bodas.tsx": $es_bodas,
+    "./routes/es/guia/impresion.tsx": $es_guia_impresion,
+    "./routes/es/index.tsx": $es_index,
+    "./routes/es/menus.tsx": $es_menus,
+    "./routes/es/musica.tsx": $es_musica,
+    "./routes/es/por-que.tsx": $es_por_que,
     "./routes/f/[code].tsx": $f_code_,
+    "./routes/for/lockers.tsx": $for_lockers,
+    "./routes/for/menus.tsx": $for_menus,
+    "./routes/for/music.tsx": $for_music,
+    "./routes/for/weddings.tsx": $for_weddings,
+    "./routes/guide/printing.tsx": $guide_printing,
     "./routes/index.tsx": $index,
+    "./routes/lockers.tsx": $lockers,
+    "./routes/menus.tsx": $menus,
+    "./routes/music.tsx": $music,
     "./routes/note/[code].tsx": $note_code_,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
+    "./routes/weddings.tsx": $weddings,
+    "./routes/why.tsx": $why,
   },
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
@@ -96,11 +136,16 @@ const manifest = {
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/QRReader.tsx": $QRReader,
+    "./islands/QrPrintGuideIsland.tsx": $QrPrintGuideIsland,
     "./islands/RotatingTitle.tsx": $RotatingTitle,
     "./islands/ShareActions.tsx": $ShareActions,
     "./islands/SmartInput.tsx": $SmartInput,
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/ToastManager.tsx": $ToastManager,
+    "./islands/VerticalStudio.tsx": $VerticalStudio,
+    "./islands/bucket-qr/BucketContentDisplay.tsx":
+      $bucket_qr_BucketContentDisplay,
+    "./islands/bucket-qr/PasswordUnlock.tsx": $bucket_qr_PasswordUnlock,
     "./islands/create-modal/ChoiceRow.tsx": $create_modal_ChoiceRow,
     "./islands/create-modal/CompletionState.tsx": $create_modal_CompletionState,
     "./islands/create-modal/DesignTab.tsx": $create_modal_DesignTab,

@@ -31,8 +31,15 @@ export function normalizeUrl(s: string): string {
   const trimmed = s.trim();
   if (!trimmed) return "";
 
+  // "example.com:8080" looks like a scheme to the regex below but is a
+  // host:port — a scheme is never followed by only digits. Checked first so
+  // bare host:port still gets https://, while mailto:/tel:/sms: are preserved.
+  const looksLikeHostPort = /^[a-zA-Z][a-zA-Z0-9+.-]*:\d+(?:[/?#]|$)/.test(
+    trimmed,
+  );
+
   // Check if it already has a protocol scheme
-  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
+  if (!looksLikeHostPort && /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
     return trimmed;
   }
 
