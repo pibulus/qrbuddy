@@ -60,10 +60,15 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
           />
           <button
             type="button"
-            onClick={() => {
-              navigator.clipboard.writeText(redirectUrl);
-              haptics.success();
-              addToast("Copied! ✨", 2000);
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(redirectUrl);
+                haptics.success();
+                addToast("Copied! ✨", 2000);
+              } catch {
+                haptics.error();
+                addToast("Couldn't reach the clipboard", 3000);
+              }
             }}
             class="min-h-[44px] px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold text-sm hover:bg-purple-600"
           >

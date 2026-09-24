@@ -99,10 +99,15 @@ export default function EditableLinkSettings({
             />
             <button
               type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(editUrl.value);
-                haptics.success();
-                addToast("Edit link copied! 📋");
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(editUrl.value);
+                  haptics.success();
+                  addToast("Edit link copied! 📋");
+                } catch {
+                  haptics.error();
+                  addToast("Couldn't reach the clipboard", 3000);
+                }
               }}
               class="min-h-[44px] px-4 py-2 bg-[#9370DB] text-white rounded-lg font-semibold text-sm hover:bg-[#6B46A8] transition-colors"
             >
