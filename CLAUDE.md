@@ -344,7 +344,31 @@ adding surfaces:
 
 ## ✅ Recently Completed
 
-### Drop → Slideshow / Mixtape (Latest)
+### "It's mine" — share ownership + stats (Latest)
+
+Every file share (`/f/{code}`) has an owner. `upload-file` mints `owner_token`
+(returned once, kept in the device's token vault under scope `"file"`, never in
+the URL). On the share page, `islands/OwnerStrip.tsx` renders only when the
+vault holds the token; the public never sees it.
+
+- **Stats that help, nothing creepy.** `share-beacon` is called from the browser
+  (a "view" on open, one "engagement" batch on page-hide) so the edge sees the
+  visitor's real headers. `_shared/visitor.ts` turns them into
+  country/city/device/os, a "scan vs shared link" flag (referrer), and a
+  daily-salted hash for uniques/returns — the IP is used and dropped in the same
+  call, never stored. `record_share_activity` (service-role RPC) merges into
+  `destructible_files.stats` (lifetime tallies) and `share_stats_daily` (90-day
+  ledger, pruned by `cleanup-expired`). `utils/share-stats.ts` folds these into
+  the Today / This week / All time trading card. Lifetime shows scans, not
+  people — not honestly knowable.
+- **Edit what it is.** `update-file`: `rename`, `retheme`, `append` (multipart),
+  `remove`. Self-destructing shares are frozen to rename/retheme; append can't
+  change a share's kind; max 10 items.
+- **`SHARE_STATS_SALT`** must be set in edge-function secrets for "people"
+  counts; without it views still count.
+- The Time Machine drawer shows **👑 Manage →** on shares this device owns.
+
+### Drop → Slideshow / Mixtape
 
 The magic path: drop 2+ photos on the input → a shareable slideshow; drop 2+
 audio files → a mixtape. Both live at `/f/{code}` (`FileSlideshow`).
@@ -385,10 +409,11 @@ audio files → a mixtape. Both live at `/f/{code}` (`FileSlideshow`).
   cleanup-expired
 - **Database Schema**: Added `dynamic_qr_codes` table with scan limits and
   expiry tracking
-- **Edge Functions**: 18 total Supabase functions:
+- **Edge Functions**: 20 total Supabase functions:
   - Dynamic QRs: create-dynamic-qr, update-dynamic-qr, get-dynamic-qr,
     redirect-qr
-  - Destructible files: upload-file, get-file, get-file-metadata
+  - Destructible files: upload-file, get-file, get-file-metadata, update-file,
+    share-beacon
   - File lockers: create-bucket, get-bucket-status, upload-to-bucket,
     download-from-bucket
   - Supporter pass: create-checkout, square-webhook, get-license

@@ -2,8 +2,8 @@ import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
 import { addToast } from "../ToastManager.tsx";
 import LogoUploader from "../LogoUploader.tsx";
-import { STYLE_DISPLAY } from "../StyleSelector.tsx";
 import ChoiceRow from "./ChoiceRow.tsx";
+import PalettePills, { PALETTE_PILL, pillState } from "./PalettePills.tsx";
 
 interface FrameConfig {
   enabled: boolean;
@@ -17,9 +17,6 @@ interface DesignTabProps {
   frameConfig?: Signal<FrameConfig | null>;
   onClose: () => void;
 }
-
-const PILL =
-  "min-h-[40px] inline-flex items-center gap-2 rounded-full border-2 px-3 text-sm font-black transition-all hover:scale-105 active:scale-95";
 
 /** CreateModal's "Design" tab: palette pills, center logo, caption frame,
  * and export. Same card language as the other two tabs — no dashed boxes,
@@ -45,55 +42,26 @@ export default function DesignTab(
         <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
           Palette
         </h3>
-        <div class="flex flex-wrap gap-2">
-          {Object.entries(STYLE_DISPLAY).map(([key, info]) => {
-            const active = qrStyle.value === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={active}
-                onClick={() => {
-                  qrStyle.value = key;
-                  haptics.light();
-                }}
-                class={`${PILL} ${
-                  active
-                    ? "border-black bg-amber-200 text-black shadow-chunky"
-                    : "border-black/15 bg-white text-neutral-800 hover:border-black/60"
-                }`}
-              >
-                <span
-                  class="w-4 h-4 rounded-full border-2 border-black shrink-0"
-                  style={{
-                    background: `linear-gradient(135deg, ${
-                      info.colors.join(", ")
-                    })`,
-                  }}
-                />
-                {info.name}
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            aria-pressed={isCustom}
-            onClick={() => {
-              onClose();
-              globalThis.dispatchEvent(
-                new CustomEvent("open-gradient-creator"),
-              );
-              haptics.light();
-            }}
-            class={`${PILL} ${
-              isCustom
-                ? "border-black bg-amber-200 text-black shadow-chunky"
-                : "border-black/15 bg-white text-neutral-800 hover:border-black/60"
-            }`}
-          >
-            🎨 Custom gradient…
-          </button>
-        </div>
+        <PalettePills
+          value={qrStyle.value}
+          onChange={(key) => (qrStyle.value = key)}
+          trailing={
+            <button
+              type="button"
+              aria-pressed={isCustom}
+              onClick={() => {
+                onClose();
+                globalThis.dispatchEvent(
+                  new CustomEvent("open-gradient-creator"),
+                );
+                haptics.light();
+              }}
+              class={`${PALETTE_PILL} ${pillState(isCustom)}`}
+            >
+              🎨 Custom gradient…
+            </button>
+          }
+        />
       </section>
 
       {/* Logo + frame: two cards in the same language as the Content tab */}

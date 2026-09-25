@@ -14,6 +14,10 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const fileId = url.searchParams.get("id");
+    // The owner asks with their token and gets stats + the daily ledger back.
+    // Anyone else gets the public shape. Token in a query param only on this
+    // read, from the vault, over HTTPS — never in the share URL.
+    const ownerToken = url.searchParams.get("owner");
 
     if (!fileId) {
       return new Response(
@@ -63,6 +67,24 @@ serve(async (req) => {
 
     const remainingDownloads = maxDownloads - downloadCount;
 
+    const isOwner = Boolean(ownerToken) && Boolean(file.owner_token) &&
+      ownerToken === file.owner_token;
+
+    let ledger: unknown[] | undefined;
+    if (isOwner) {
+      const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+        .toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("share_stats_daily")
+        .select(
+          "day, views, people, returns, countries, cities, devices, hours, items, dwell_s, dwell_n, completions, shares, downloads, referred",
+        )
+        .eq("file_id", fileId)
+        .gte("day", since)
+        .order("day", { ascending: true });
+      ledger = data ?? [];
+    }
+
     return new Response(
       JSON.stringify({
         fileId: file.id,
@@ -75,6 +97,7 @@ serve(async (req) => {
         downloadCount,
         remainingDownloads,
         isExpired,
+        ...(isOwner ? { isOwner: true, stats: file.stats ?? {}, ledger } : {}),
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

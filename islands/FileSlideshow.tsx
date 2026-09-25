@@ -1,8 +1,10 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 // @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
 import JSZip from "jszip";
 import { formatFileSize } from "../utils/file-validation.ts";
 import { prettyName } from "../utils/image-prep.ts";
+import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
+import OwnerStrip, { type ShareItem } from "./OwnerStrip.tsx";
 
 const SLIDE_MS = 4500;
 
@@ -24,16 +26,22 @@ interface FileSlideshowProps {
 }
 
 export default function FileSlideshow({
-  files,
+  files: initialFiles,
   fileId,
-  fileName,
+  fileName: initialFileName,
   fileSize,
   mimeType,
   maxDownloads,
   remainingDownloads,
-  theme = "sunset",
+  theme: initialTheme = "sunset",
 }: FileSlideshowProps) {
   const isUnlimited = maxDownloads >= 999999;
+
+  // The owner can rename, re-theme and add/remove from the strip below —
+  // the page updates in place, no reload.
+  const [files, setFiles] = useState<ShareItem[] | undefined>(initialFiles);
+  const [fileName, setFileName] = useState(initialFileName);
+  const [theme, setTheme] = useState(initialTheme);
 
   // Slideshow State
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -193,6 +201,67 @@ export default function FileSlideshow({
     return () => clearInterval(t);
   }, [isPlaying, hasMultipleFiles, files]);
 
+  // ── Stats beacons ──────────────────────────────────────────────────────
+  // One "view" when the page opens (from the browser, so the edge sees the
+  // visitor's real country/device), one "engagement" batch when it goes
+  // away: which items got seen/played, how long, did they finish, taps.
+  // Tallies only; nothing that identifies anyone leaves this page.
+  const engagement = useRef({
+    items: {} as Record<string, number>,
+    started: Date.now(),
+    completed: false,
+    shares: 0,
+    downloads: 0,
+    sent: false,
+  });
+
+  const beacon = (body: Record<string, unknown>) => {
+    try {
+      void fetch(`${getApiUrl()}/share-beacon`, {
+        method: "POST",
+        keepalive: true,
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ fileId, ...body }),
+      });
+    } catch {
+      // A beacon that fails is a stat that didn't happen. Fine.
+    }
+  };
+
+  useEffect(() => {
+    beacon({ kind: "view" });
+    const flush = () => {
+      const e = engagement.current;
+      if (e.sent) return;
+      e.sent = true;
+      beacon({
+        kind: "engagement",
+        items: e.items,
+        dwellSeconds: Math.round((Date.now() - e.started) / 1000),
+        completed: e.completed,
+        shares: e.shares,
+        downloads: e.downloads,
+      });
+    };
+    const onHide = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    globalThis.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      globalThis.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onHide);
+    };
+  }, [fileId]);
+
+  // Count the item on screen; reaching the last one counts as finishing.
+  useEffect(() => {
+    if (!currentFile || !showPreview) return;
+    const e = engagement.current;
+    e.items[currentFile.id] = (e.items[currentFile.id] ?? 0) + 1;
+    if (currentIndex === files!.length - 1) e.completed = true;
+  }, [currentIndex, currentFile?.id, showPreview]);
+
   // Keyboard Navigation
   useEffect(() => {
     if (!hasMultipleFiles) return;
@@ -235,6 +304,7 @@ export default function FileSlideshow({
   // Download All Handler
   const handleDownloadAll = async () => {
     if (!files || isZipping) return;
+    engagement.current.downloads += 1;
 
     try {
       setIsZipping(true);
@@ -271,6 +341,7 @@ export default function FileSlideshow({
   };
 
   const handleDownloadClick = () => {
+    engagement.current.downloads += 1;
     if (!isUnlimited && remainingDownloads <= 1) {
       setIsExploding(true);
       setTimeout(() => {
@@ -572,6 +643,29 @@ export default function FileSlideshow({
               <span>Powered by QRBuddy</span>
             </div>
           </div>
+
+          {/* Owner only — renders nothing for everyone else */}
+          {files && (
+            <OwnerStrip
+              fileId={fileId}
+              shareUrl={globalThis.location?.href ?? ""}
+              title={shareTitle}
+              files={files}
+              theme={theme}
+              isLimited={!isUnlimited}
+              kind={isAllAudio
+                ? "playlist"
+                : isAllImages
+                ? "slideshow"
+                : "file"}
+              onTitle={setFileName}
+              onFiles={(next) => {
+                setFiles(next);
+                setCurrentIndex((i) => Math.min(i, next.length - 1));
+              }}
+              onTheme={setTheme}
+            />
+          )}
 
           {/* Create Your Own */}
           <div class="text-center">

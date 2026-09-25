@@ -277,6 +277,16 @@ export default function HistoryDrawer(
                             🪣 Locker
                           </span>
                         )}
+                        {item.metadata?.ownerScope === "file" && (
+                          <a
+                            href={item.content}
+                            onClick={(e) => e.stopPropagation()}
+                            class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-amber-200 text-black border border-black px-1.5 py-0.5 rounded-md hover:scale-105 transition-transform"
+                            title="Open it — it's yours: stats, rename, add, re-vibe"
+                          >
+                            👑 Manage →
+                          </a>
+                        )}
                       </div>
                       <p class="text-[10px] text-gray-500 font-mono mt-1 truncate">
                         {item.type === "file" ? "File Locker" : item.content}

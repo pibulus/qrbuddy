@@ -29,6 +29,7 @@ import * as $FooterDock from "./islands/FooterDock.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $NoteCard from "./islands/NoteCard.tsx";
+import * as $OwnerStrip from "./islands/OwnerStrip.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $QRReader from "./islands/QRReader.tsx";
@@ -40,6 +41,7 @@ import * as $ToastManager from "./islands/ToastManager.tsx";
 import * as $create_modal_ChoiceRow from "./islands/create-modal/ChoiceRow.tsx";
 import * as $create_modal_CompletionState from "./islands/create-modal/CompletionState.tsx";
 import * as $create_modal_DesignTab from "./islands/create-modal/DesignTab.tsx";
+import * as $create_modal_PalettePills from "./islands/create-modal/PalettePills.tsx";
 import * as $edit_qr_AnalyticsDashboard from "./islands/edit-qr/AnalyticsDashboard.tsx";
 import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
 import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
@@ -96,6 +98,7 @@ const manifest = {
     "./islands/KofiModal.tsx": $KofiModal,
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/NoteCard.tsx": $NoteCard,
+    "./islands/OwnerStrip.tsx": $OwnerStrip,
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/QRReader.tsx": $QRReader,
@@ -107,6 +110,7 @@ const manifest = {
     "./islands/create-modal/ChoiceRow.tsx": $create_modal_ChoiceRow,
     "./islands/create-modal/CompletionState.tsx": $create_modal_CompletionState,
     "./islands/create-modal/DesignTab.tsx": $create_modal_DesignTab,
+    "./islands/create-modal/PalettePills.tsx": $create_modal_PalettePills,
     "./islands/edit-qr/AnalyticsDashboard.tsx": $edit_qr_AnalyticsDashboard,
     "./islands/edit-qr/QRStatusCard.tsx": $edit_qr_QRStatusCard,
     "./islands/edit-qr/RoutingConfigForm.tsx": $edit_qr_RoutingConfigForm,

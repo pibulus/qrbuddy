@@ -13,6 +13,9 @@
 - `smart-input/FileUploadOptions` - Staging card: thumbnails/tracklist, title,
   CTA, self-destruct toggle
 - `smart-input/ShareReady` - Post-upload strip: Open / Copy / Sticker
+- `OwnerStrip` - "It's yours" on /f/: stats card, rename, vibe, add/remove,
+  sticker
+- `create-modal/PalettePills` - The one row of preset swatch pills
 - `LogoUploader` - Center-logo row (ChoiceRow language) with inline
   Upload/Remove
 - `ActionButtons` - Download/copy/share triggers tied to signals

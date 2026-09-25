@@ -221,6 +221,14 @@ serve(async (req) => {
 
     if (scanLogError) console.error("Scan log pruning error:", scanLogError);
 
+    // Share stats ledger: same 90-day window. Lifetime tallies on the share
+    // row keep the totals; only the day-by-day detail ages out.
+    const { error: ledgerError } = await supabase
+      .from("share_stats_daily")
+      .delete()
+      .lt("day", scanLogCutoff.slice(0, 10));
+    if (ledgerError) console.error("Share ledger pruning error:", ledgerError);
+
     // 6. Drain the R2 reap queue. Downloads of R2-backed files hand out ~60s
     // presigned URLs, so objects are queued (+1h) instead of deleted inline.
     // Failed deletes keep their queue row and retry next run.

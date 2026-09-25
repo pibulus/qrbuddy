@@ -12,6 +12,7 @@ import {
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
 import { MAX_FILE_SIZE } from "../_shared/file-validation.ts";
+import { generateOwnerToken } from "../_shared/visitor.ts";
 
 const UNLIMITED_DOWNLOADS = 999999;
 const MAX_DOWNLOADS_LIMIT = UNLIMITED_DOWNLOADS;
@@ -299,6 +300,9 @@ serve(async (req) => {
     // Store metadata in database
     // For backward compatibility, store the first file's details in the main columns
     const firstFile = uploadedFiles[0];
+    // The maker owns the share: rename, re-theme, add/remove items later.
+    // Returned once, kept in the device's token vault, never in the URL.
+    const ownerToken = generateOwnerToken();
 
     const { error: dbError } = await supabase
       .from("destructible_files")
@@ -319,6 +323,7 @@ serve(async (req) => {
         mime_type: firstFile.type, // Legacy column
         files: uploadedFiles, // NEW JSON column
         theme: theme,
+        owner_token: ownerToken,
         created_at: new Date().toISOString(),
         accessed: false,
         max_downloads: maxDownloads,
@@ -353,6 +358,7 @@ serve(async (req) => {
           (files.length > 1 ? `${files.length} files` : firstFile.name),
         size: files.reduce((acc, f) => acc + f.size, 0),
         maxDownloads,
+        ownerToken,
         message,
       }),
       {
