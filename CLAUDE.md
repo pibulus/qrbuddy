@@ -247,6 +247,14 @@ adding surfaces:
   border-black sm:rounded-3xl`, `sm:animate-pop-in`);
   `max-h-[92dvh]`; header/body `p-4 sm:p-6`; bottom padding respects the home
   indicator: `pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6`.
+- **CreateModal footprint**: `max-w-lg`, cream card, body fixed at
+  `sm:h-[min(480px,56dvh)]` so the three tabs never change the dialog's height —
+  content scrolls inside. Every selectable is `ChoiceRow` (`rich` variant for
+  the Behavior tab): state by inversion only — active is
+  `bg-amber-200 border-black shadow-chunky`, inactive `border-black/15`. No
+  "Active" pills, no eyebrow tags, no dashed boxes, no tinted wrapper cards, no
+  "what you just picked" header card inside a form. Inputs share one recipe:
+  `border-2 border-black/15 bg-white rounded-2xl focus:border-qr-pop`.
 - **Info dialogs** (About/Kofi/Pricing): always `islands/modal/CardModal.tsx` —
   centered cream card at all sizes, `max-w-[460px]`, `border-4` + `rounded-3xl`,
   mascot badge hanging centered at the top, circular `✕` top-right, same

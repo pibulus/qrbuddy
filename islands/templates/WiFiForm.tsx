@@ -36,16 +36,6 @@ export default function WiFiForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-[#E0FFFF] border-3 border-[#4ECDC4] rounded-xl p-4 shadow-chunky">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-2xl">📶</span>
-          <h3 class="font-black text-[#3AA8A4]">WiFi Network QR</h3>
-        </div>
-        <p class="text-sm text-[#3AA8A4]">
-          Scan to connect instantly—no typing.
-        </p>
-      </div>
-
       {/* Network Name */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -59,7 +49,7 @@ export default function WiFiForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="My WiFi Network"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#4ECDC4] focus:outline-none"
+          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
         />
       </div>
 
@@ -109,7 +99,7 @@ export default function WiFiForm({ url }: Props) {
                 haptics.light();
               }}
               placeholder="Network password"
-              class="w-full px-4 py-3 pr-20 border-3 border-gray-300 rounded-xl text-lg focus:border-[#4ECDC4] focus:outline-none"
+              class="w-full px-4 py-3 pr-20 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
             />
             <button
               type="button"

@@ -10,7 +10,8 @@
 - `StyleSelector` - Gradient picker with quick menu + custom entry point
 - `GradientCreator` - Full modal for custom gradients
 - `CreateModal` - Combined QR type, options, file locker, and design sheet
-- `LogoUploader` - Custom center-logo uploader with previews
+- `LogoUploader` - Center-logo row (ChoiceRow language) with inline
+  Upload/Remove
 - `ActionButtons` - Download/copy/share triggers tied to signals
 - `ShareActions` - Share sheet for QR codes
 - `HistoryDrawer` - QR generation history panel

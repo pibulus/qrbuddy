@@ -101,23 +101,23 @@ const QR_TYPE_COPY: Partial<
 > = {
   url: {
     label: "Link",
-    description: "Send scanners to a website or page.",
+    description: "Website or page.",
   },
   text: {
     label: "Plain text",
-    description: "Show a note, code, or message.",
+    description: "Note, code, or secret.",
   },
   wifi: {
     label: "WiFi",
-    description: "Join a network without typing the password.",
+    description: "Join without typing the password.",
   },
   vcard: {
     label: "Contact card",
-    description: "One scan saves you to their phone — weddings, gigs, stalls.",
+    description: "One scan saves you to their phone.",
   },
   social: {
     label: "Social profile",
-    description: "Point to Instagram, X, YouTube, and more.",
+    description: "Bio links, Instagram, YouTube & more.",
   },
   sms: {
     label: "Text message",
@@ -370,7 +370,7 @@ export default function CreateModal({
               maxLength={2900}
               // deno-lint-ignore jsx-boolean-value
               autoFocus={true}
-              class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-black focus:outline-none transition-colors resize-none font-medium"
+              class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none transition-colors resize-none font-medium"
             />
             {url.value.trim() !== "" && (
               <div class="flex items-center justify-between gap-2 animate-slide-down">
@@ -388,16 +388,13 @@ export default function CreateModal({
               type="button"
               onClick={handleTextCardConfirm}
               disabled={!url.value.trim() || isCreatingLocker}
-              class="w-full min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
+              class="w-full min-h-[48px] rounded-full border-2 border-black bg-white px-4 font-black text-black shadow-chunky hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+              title="A short link and a cleaner read for long text"
             >
               {isCreatingLocker
-                ? "Creating note page..."
+                ? "Creating note page…"
                 : "↗ Host as a note page instead"}
             </button>
-            <p class="text-xs text-center text-gray-500">
-              A note page gives you a short link and a cleaner read for long
-              text.
-            </p>
           </div>
         );
       }
@@ -429,7 +426,10 @@ export default function CreateModal({
 
   const renderTypeTab = () => (
     <div class="space-y-5">
-      <section class="space-y-3">
+      <section class="space-y-2">
+        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+          Core types
+        </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {QR_TYPE_ORDER.map((key) => {
             const template = QR_TEMPLATES[key];
@@ -448,7 +448,7 @@ export default function CreateModal({
           <ChoiceRow
             icon="📲"
             title="Contact me"
-            description="One scan to call, text, or email you — you pick which."
+            description="Call, text, or email you — you pick."
             active={typeIntent === "qr" &&
               CONTACT_TYPES.includes(selectedTemplate)}
             onClick={() => handleTemplateSelect("phone")}
@@ -456,56 +456,48 @@ export default function CreateModal({
         </div>
       </section>
 
-      <section class="space-y-3">
-        <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-          Files
+      {
+        /* Files and bulk are what-am-I-making intents (a page, a locker, many
+          static QRs at once), not per-QR behaviors — they live here with the
+          other top-level intents. */
+      }
+      <section class="space-y-2">
+        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+          Files & drops
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <ChoiceRow
             icon="📂"
             title="Share a file"
-            description="A download page for one file, with optional PIN."
+            description="Download page for one file, optional PIN."
             active={typeIntent === "share-file"}
-            eyebrow="File"
             onClick={handleShareFileSelect}
           />
           <ChoiceRow
             icon="🪣"
             title="Collect files"
-            description="A locker QR people can drop files into."
+            description="A locker people drop files into."
             active={typeIntent === "collect-files" || lockerActive}
-            eyebrow="Locker"
             onClick={handleCollectFilesSelect}
           />
+          <ChoiceRow
+            icon="📦"
+            title="Bulk create"
+            description="Paste links, download a ZIP of QRs."
+            active={isBatchMode}
+            onClick={() => {
+              const next = !isBatchMode;
+              setIsBatchMode(next);
+              if (next) {
+                if (lockerActive) addToast("Locker cleared from this QR");
+                disableDynamicBase();
+                isBucket.value = false;
+                bucketUrl.value = "";
+              }
+              haptics.light();
+            }}
+          />
         </div>
-      </section>
-
-      {
-        /* Bulk is a what-am-I-making intent (many static QRs at once), not a
-          per-QR behavior — it lives here with the other top-level intents. */
-      }
-      <section class="space-y-3">
-        <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-          Bulk
-        </h3>
-        <ChoiceRow
-          icon="📦"
-          title="Bulk create"
-          description="Paste a list of links, download a ZIP of static QRs."
-          active={isBatchMode}
-          eyebrow="Zip"
-          onClick={() => {
-            const next = !isBatchMode;
-            setIsBatchMode(next);
-            if (next) {
-              if (lockerActive) addToast("Locker cleared from this QR");
-              disableDynamicBase();
-              isBucket.value = false;
-              bucketUrl.value = "";
-            }
-            haptics.light();
-          }}
-        />
         {isBatchMode && (
           <BatchSettings
             batchUrls={batchUrls}
@@ -552,10 +544,11 @@ export default function CreateModal({
                       onSelectTemplate(seg.key);
                       haptics.light();
                     }}
-                    class={`min-h-[44px] rounded-xl border-3 px-2 py-2 font-black text-sm transition-all ${
+                    aria-pressed={selectedTemplate === seg.key}
+                    class={`min-h-[44px] rounded-full border-2 px-2 font-black text-sm transition-all ${
                       selectedTemplate === seg.key
-                        ? "border-black bg-black text-white"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-black"
+                        ? "border-black bg-amber-200 text-black shadow-chunky"
+                        : "border-black/15 bg-white text-neutral-700 hover:border-black/60"
                     }`}
                   >
                     {seg.icon} {seg.label}
@@ -571,9 +564,9 @@ export default function CreateModal({
                   setActiveTab("options");
                   haptics.light();
                 }}
-                class="w-full min-h-[44px] mt-3 rounded-xl border-3 border-dashed border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-600 hover:border-black hover:text-black transition-all"
+                class="w-full min-h-[44px] mt-1 text-sm font-bold text-neutral-500 hover:text-qr-pop transition-colors"
               >
-                🔗 Want to repoint this after printing?
+                Want to repoint this after printing? →
               </button>
             )}
           </div>
@@ -583,43 +576,44 @@ export default function CreateModal({
   );
 
   const renderOptionsTab = () => (
-    <div class="space-y-6">
-      <section class="space-y-3">
-        <div>
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Link behavior
-          </h3>
-        </div>
-
-        <ChoiceRow
-          icon="⚡"
-          title="Static"
-          description="The QR is the content itself. Works forever, even offline."
-          active={!isDynamic.value && !isBatchMode && !lockerActive}
-          onClick={() => {
-            if (lockerActive) addToast("Locker cleared from this QR");
-            disableDynamicBase();
-            setIsBatchMode(false);
-            isBucket.value = false;
-            bucketUrl.value = "";
-            haptics.light();
-          }}
-        />
-
-        <ChoiceRow
-          icon="🔗"
-          title="Editable"
-          description="A short link you can repoint anytime — no reprinting."
-          active={isDynamic.value}
-          onClick={() => {
-            if (isDynamic.value) {
+    <div class="space-y-5">
+      <section class="space-y-2">
+        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+          Link behavior
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch">
+          <ChoiceRow
+            rich
+            icon="⚡"
+            title="Static"
+            description="The content lives inside the squares. Works forever, offline, and never touches a server."
+            active={!isDynamic.value && !isBatchMode && !lockerActive}
+            onClick={() => {
+              if (lockerActive) addToast("Locker cleared from this QR");
               disableDynamicBase();
-            } else {
-              activateDynamicBase();
-            }
-            haptics.light();
-          }}
-        />
+              setIsBatchMode(false);
+              isBucket.value = false;
+              bucketUrl.value = "";
+              haptics.light();
+            }}
+          />
+
+          <ChoiceRow
+            rich
+            icon="🔗"
+            title="Editable"
+            description="A short link you can repoint after printing. Coarse scan stats, no IPs, no visitor tracking."
+            active={isDynamic.value}
+            onClick={() => {
+              if (isDynamic.value) {
+                disableDynamicBase();
+              } else {
+                activateDynamicBase();
+              }
+              haptics.light();
+            }}
+          />
+        </div>
         {isDynamic.value && (
           <EditableLinkSettings
             editUrl={editUrl}
@@ -633,15 +627,10 @@ export default function CreateModal({
       </section>
 
       {isDynamic.value && (
-        <section class="space-y-3 animate-slide-down">
-          <div>
-            <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-              Editable extras
-            </h3>
-            <p class="text-sm text-gray-600">
-              Mix and match — they work together.
-            </p>
-          </div>
+        <section class="space-y-2 animate-slide-down">
+          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+            Editable extras
+          </h3>
 
           {/* Frequency order: limits are the common ask, rotation the exotic one. */}
           <ChoiceRow
@@ -740,38 +729,35 @@ export default function CreateModal({
         aria-modal="true"
         aria-labelledby="create-modal-title"
         tabindex={-1}
-        class="relative w-full max-w-3xl bg-white sm:border-4 sm:border-black rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
+        class="relative w-full max-w-lg bg-qr-cream sm:border-4 sm:border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
       >
-        <div class="flex items-start justify-between gap-3 p-4 sm:p-6 border-b-2 border-gray-100">
+        <div class="flex items-start justify-between gap-3 p-4 sm:p-6 pb-2 sm:pb-3">
           <div>
-            <p class="text-xs uppercase tracking-wide text-pink-600 font-black">
-              {hasCompletion ? "Ready" : "Create"}
-            </p>
             <h2
               id="create-modal-title"
-              class="text-xl sm:text-2xl font-black text-gray-900 leading-tight"
+              class="font-black text-2xl tracking-tight text-black leading-tight"
             >
-              {hasCompletion ? "Ready to share" : "What should this QR do?"}
+              {hasCompletion ? "Ready to share." : "Make it do tricks."}
             </h2>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm font-bold text-qr-pop">
               {hasCompletion
                 ? "The QR now points at the new page."
-                : "Pick the type first. Add options only when they help."}
+                : "What it does, how it reacts, how it looks."}
             </p>
           </div>
           <button
             type="button"
             onClick={shell.requestClose}
-            class="min-w-[44px] min-h-[44px] rounded-full hover:bg-gray-100 transition-colors text-2xl font-black text-gray-500"
-            aria-label="Close create modal"
+            class="shrink-0 w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base flex items-center justify-center shadow-chunky transition-transform hover:scale-110 hover:rotate-90 active:scale-90"
+            aria-label="Close"
           >
-            ×
+            ✕
           </button>
         </div>
 
         {!hasCompletion && (
-          <div class="px-4 sm:px-6 pt-3">
-            <div class="grid grid-cols-3 gap-2 rounded-2xl bg-gray-100 p-1 border-2 border-gray-200">
+          <div class="px-4 sm:px-6 pt-2">
+            <div class="grid grid-cols-3 gap-1 rounded-full bg-white p-1 border-2 border-black">
               {tabs.map((tab) => (
                 <button
                   type="button"
@@ -780,10 +766,12 @@ export default function CreateModal({
                     setActiveTab(tab.id);
                     haptics.light();
                   }}
-                  class={`min-h-[44px] rounded-xl text-sm font-black transition-all flex items-center justify-center gap-1 ${
+                  aria-selected={activeTab === tab.id}
+                  role="tab"
+                  class={`min-h-[40px] rounded-full text-sm font-black transition-all flex items-center justify-center ${
                     activeTab === tab.id
-                      ? "bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.25)]"
-                      : "text-gray-600 hover:bg-white"
+                      ? "bg-black text-white"
+                      : "text-neutral-600 hover:bg-amber-100"
                   }`}
                 >
                   <span>{tab.label}</span>
@@ -793,7 +781,7 @@ export default function CreateModal({
           </div>
         )}
 
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 sm:h-[min(480px,56dvh)] sm:flex-none">
           {hasCompletion ? renderCompletionState() : (
             <>
               {activeTab === "type" && renderTypeTab()}
@@ -803,11 +791,11 @@ export default function CreateModal({
           )}
         </div>
 
-        <div class="p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 border-t-2 border-gray-100 bg-gray-50">
+        <div class="p-4 sm:p-6 pt-2 sm:pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6">
           <button
             type="button"
             onClick={shell.requestClose}
-            class="w-full min-h-[52px] bg-black text-white text-lg sm:text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            class="w-full min-h-[52px] rounded-full border-3 border-black bg-qr-pop text-white text-lg font-black shadow-chunky hover:scale-[1.02] hover:bg-qr-popDeep hover:shadow-chunky-hover active:scale-[0.97] transition-all flex items-center justify-center gap-2"
           >
             <span>
               {hasCompletion
