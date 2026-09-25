@@ -9,11 +9,28 @@ import * as $api_download_file from "./routes/api/download-file.ts";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $edit from "./routes/edit.tsx";
+import * as $es_archivos from "./routes/es/archivos.tsx";
+import * as $es_bodas from "./routes/es/bodas.tsx";
+import * as $es_guia_impresion from "./routes/es/guia/impresion.tsx";
+import * as $es_index from "./routes/es/index.tsx";
+import * as $es_menus from "./routes/es/menus.tsx";
+import * as $es_musica from "./routes/es/musica.tsx";
+import * as $es_por_que from "./routes/es/por-que.tsx";
 import * as $f_code_ from "./routes/f/[code].tsx";
+import * as $for_lockers from "./routes/for/lockers.tsx";
+import * as $for_menus from "./routes/for/menus.tsx";
+import * as $for_music from "./routes/for/music.tsx";
+import * as $for_weddings from "./routes/for/weddings.tsx";
+import * as $guide_printing from "./routes/guide/printing.tsx";
 import * as $index from "./routes/index.tsx";
+import * as $lockers from "./routes/lockers.tsx";
+import * as $menus from "./routes/menus.tsx";
+import * as $music from "./routes/music.tsx";
 import * as $note_code_ from "./routes/note/[code].tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
+import * as $weddings from "./routes/weddings.tsx";
+import * as $why from "./routes/why.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $Analytics from "./islands/Analytics.tsx";
@@ -23,9 +40,9 @@ import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $FileSlideshow from "./islands/FileSlideshow.tsx";
+import * as $FooterDock from "./islands/FooterDock.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
-import * as $FooterDock from "./islands/FooterDock.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $NoteCard from "./islands/NoteCard.tsx";
@@ -33,11 +50,13 @@ import * as $OwnerStrip from "./islands/OwnerStrip.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $QRReader from "./islands/QRReader.tsx";
+import * as $QrPrintGuideIsland from "./islands/QrPrintGuideIsland.tsx";
 import * as $RotatingTitle from "./islands/RotatingTitle.tsx";
 import * as $ShareActions from "./islands/ShareActions.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
+import * as $VerticalStudio from "./islands/VerticalStudio.tsx";
 import * as $create_modal_ChoiceRow from "./islands/create-modal/ChoiceRow.tsx";
 import * as $create_modal_CompletionState from "./islands/create-modal/CompletionState.tsx";
 import * as $create_modal_DesignTab from "./islands/create-modal/DesignTab.tsx";
@@ -56,6 +75,7 @@ import * as $modal_CardModal from "./islands/modal/CardModal.tsx";
 import * as $modal_ModalShell from "./islands/modal/ModalShell.tsx";
 import * as $modal_useModalShell from "./islands/modal/useModalShell.ts";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
+import * as $smart_input_ShareReady from "./islands/smart-input/ShareReady.tsx";
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
 import * as $templates_MediaHubForm from "./islands/templates/MediaHubForm.tsx";
@@ -76,11 +96,28 @@ const manifest = {
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/edit.tsx": $edit,
+    "./routes/es/archivos.tsx": $es_archivos,
+    "./routes/es/bodas.tsx": $es_bodas,
+    "./routes/es/guia/impresion.tsx": $es_guia_impresion,
+    "./routes/es/index.tsx": $es_index,
+    "./routes/es/menus.tsx": $es_menus,
+    "./routes/es/musica.tsx": $es_musica,
+    "./routes/es/por-que.tsx": $es_por_que,
     "./routes/f/[code].tsx": $f_code_,
+    "./routes/for/lockers.tsx": $for_lockers,
+    "./routes/for/menus.tsx": $for_menus,
+    "./routes/for/music.tsx": $for_music,
+    "./routes/for/weddings.tsx": $for_weddings,
+    "./routes/guide/printing.tsx": $guide_printing,
     "./routes/index.tsx": $index,
+    "./routes/lockers.tsx": $lockers,
+    "./routes/menus.tsx": $menus,
+    "./routes/music.tsx": $music,
     "./routes/note/[code].tsx": $note_code_,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
+    "./routes/weddings.tsx": $weddings,
+    "./routes/why.tsx": $why,
   },
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
@@ -92,9 +129,9 @@ const manifest = {
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/FileSlideshow.tsx": $FileSlideshow,
+    "./islands/FooterDock.tsx": $FooterDock,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/HistoryDrawer.tsx": $HistoryDrawer,
-    "./islands/FooterDock.tsx": $FooterDock,
     "./islands/KofiModal.tsx": $KofiModal,
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/NoteCard.tsx": $NoteCard,
@@ -102,11 +139,13 @@ const manifest = {
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/QRReader.tsx": $QRReader,
+    "./islands/QrPrintGuideIsland.tsx": $QrPrintGuideIsland,
     "./islands/RotatingTitle.tsx": $RotatingTitle,
     "./islands/ShareActions.tsx": $ShareActions,
     "./islands/SmartInput.tsx": $SmartInput,
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/ToastManager.tsx": $ToastManager,
+    "./islands/VerticalStudio.tsx": $VerticalStudio,
     "./islands/create-modal/ChoiceRow.tsx": $create_modal_ChoiceRow,
     "./islands/create-modal/CompletionState.tsx": $create_modal_CompletionState,
     "./islands/create-modal/DesignTab.tsx": $create_modal_DesignTab,
@@ -126,6 +165,7 @@ const manifest = {
     "./islands/modal/useModalShell.ts": $modal_useModalShell,
     "./islands/smart-input/FileUploadOptions.tsx":
       $smart_input_FileUploadOptions,
+    "./islands/smart-input/ShareReady.tsx": $smart_input_ShareReady,
     "./islands/smart-input/SmartInputToolbar.tsx":
       $smart_input_SmartInputToolbar,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
