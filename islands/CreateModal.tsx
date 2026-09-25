@@ -748,7 +748,7 @@ export default function CreateModal({
           <button
             type="button"
             onClick={shell.requestClose}
-            class="shrink-0 w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base flex items-center justify-center shadow-chunky transition-transform hover:scale-110 hover:rotate-90 active:scale-90"
+            class="shrink-0 w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform hover:scale-110 hover:rotate-90 active:scale-90"
             aria-label="Close"
           >
             ✕
@@ -757,7 +757,7 @@ export default function CreateModal({
 
         {!hasCompletion && (
           <div class="px-4 sm:px-6 pt-2">
-            <div class="grid grid-cols-3 gap-1 rounded-full bg-white p-1 border-2 border-black">
+            <div class="grid grid-cols-3 gap-1 rounded-full bg-amber-50 p-1 border-2 border-black">
               {tabs.map((tab) => (
                 <button
                   type="button"
@@ -781,7 +781,7 @@ export default function CreateModal({
           </div>
         )}
 
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 sm:h-[min(480px,56dvh)] sm:flex-none">
+        <div class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-6 sm:h-[min(480px,56dvh)] sm:flex-none">
           {hasCompletion ? renderCompletionState() : (
             <>
               {activeTab === "type" && renderTypeTab()}

@@ -30,7 +30,7 @@ export default function SplashSettings({ splashConfig }: SplashSettingsProps) {
   };
 
   return (
-    <div class="space-y-3 p-4 bg-white/70 rounded-xl border-2 border-pink-200 animate-slide-down">
+    <div class="space-y-3 bg-white border-2 border-black rounded-2xl p-4 animate-slide-down">
       <div>
         <label class="block text-xs font-bold text-gray-700 mb-1">
           Page title

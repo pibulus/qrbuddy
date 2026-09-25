@@ -52,7 +52,7 @@ export function CardModal({
     >
       <div
         ref={shell.dialogRef}
-        class={`relative w-full ${maxWidthClass} max-h-[92dvh] overflow-y-auto bg-qr-cream border-4 border-black rounded-3xl shadow-chunky-hover ${padClass} animate-slide-up sm:animate-pop-in`}
+        class={`relative w-full ${maxWidthClass} max-h-[92dvh] overflow-y-auto scrollbar-none bg-qr-cream border-4 border-black rounded-3xl shadow-chunky-hover ${padClass} animate-slide-up sm:animate-pop-in`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledby}
@@ -61,7 +61,7 @@ export function CardModal({
         <button
           type="button"
           onClick={shell.requestClose}
-          class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base flex items-center justify-center shadow-chunky transition-transform hover:scale-110 hover:rotate-90 active:scale-90"
+          class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform hover:scale-110 hover:rotate-90 active:scale-90"
           aria-label="Close"
         >
           ✕
