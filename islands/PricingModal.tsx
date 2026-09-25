@@ -2,7 +2,11 @@ import { signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { PRICING_TIERS } from "../types/pricing.ts";
 import { addToast } from "./ToastManager.tsx";
-import { useModalShell } from "./modal/useModalShell.ts";
+import {
+  CardModal,
+  CardPrimaryButton,
+  CardSecondaryButton,
+} from "./modal/CardModal.tsx";
 import { getApiUrl } from "../utils/api.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
 import {
@@ -48,7 +52,6 @@ export function closePricingModal() {
 
 export function PricingModal() {
   const isOpen = pricingModalOpen.value;
-  const shell = useModalShell({ open: isOpen, onClose: closePricingModal });
   const [hasPass, setHasPass] = useState(false);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
   const [pastedPass, setPastedPass] = useState("");
@@ -116,8 +119,6 @@ export function PricingModal() {
     };
   }, []);
 
-  if (!shell.mounted) return null;
-
   const handleUpgrade = async () => {
     trackUmami("upgrade_clicked", { plan: "pro", billing: "year" });
     setIsStartingCheckout(true);
@@ -166,215 +167,153 @@ export function PricingModal() {
   };
 
   const expiry = hasPass ? supporterPassExpiry() : null;
+  // "Everything in Free, forever" is implied by the single-tier card.
+  const perks = PRICING_TIERS.pro.features.filter((f) =>
+    !f.startsWith("Everything in Free")
+  );
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        ref={shell.backdropRef}
-        class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
-        role="presentation"
-        onClick={shell.onBackdropClick}
-      >
-        {/* Modal */}
-        <div
-          ref={shell.dialogRef}
-          class="relative w-full max-w-md sm:max-w-2xl lg:max-w-3xl max-h-[85vh] overflow-y-auto animate-slide-up"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="pricing-modal-title"
-          tabindex={-1}
-        >
-          {/* Header */}
-          <div class="p-4 sm:p-6 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 border-4 border-black border-b-0 rounded-t-3xl">
-            <div class="flex items-start justify-between gap-3 mb-2">
-              <div>
-                <h2
-                  id="pricing-modal-title"
-                  class="text-2xl sm:text-3xl font-black text-black"
-                >
-                  Support
-                </h2>
-                <p class="text-xs sm:text-sm text-gray-700 mt-1">
-                  Free forever. The pass lifts the limits and funds more tools
-                  like this.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={shell.requestClose}
-                class="w-7 h-7 rounded-full bg-[#ff6ac2] text-[#fffdf5] flex items-center justify-center font-bold text-sm shadow-[0_2px_8px_rgba(255,106,194,0.35)] transition-transform duration-200 hover:scale-110 hover:rotate-90 active:scale-85 shrink-0"
-                aria-label="Close pricing dialog"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div class="p-4 sm:p-8 bg-qr-cream border-4 border-black rounded-b-3xl shadow-chunky space-y-6">
-            {/* Pricing Cards */}
-            <div class="grid md:grid-cols-2 gap-6 items-stretch">
-              {/* Free Tier */}
-              <div class="bg-white border-4 border-black rounded-2xl p-6 shadow-chunky flex flex-col h-full">
-                <div class="text-center mb-4">
-                  <h3 class="text-2xl font-black text-black">Free</h3>
-                  <div class="text-4xl font-black text-black mt-2">$0</div>
-                  <p class="text-sm text-gray-600 mt-1">
-                    Make QRs. Keep your data. No strings.
-                  </p>
-                </div>
-
-                <ul class="space-y-3 text-sm flex-grow">
-                  {PRICING_TIERS.free.features.map((feature) => (
-                    <li key={feature} class="flex items-start gap-2">
-                      <span class="text-green-600 font-bold flex-shrink-0">
-                        ✓
-                      </span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Supporter Tier */}
-              <div class="bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-black rounded-2xl p-6 shadow-chunky relative flex flex-col h-full">
-                {hasPass && (
-                  <div class="absolute -top-3 -right-3 bg-green-300 text-black text-xs font-black px-3 py-1 border-3 border-black rounded-full rotate-12 shadow-chunky">
-                    Active 💜
-                  </div>
-                )}
-
-                <div class="text-center mb-4">
-                  <h3 class="text-2xl font-black text-black">Supporter</h3>
-                  <div class="text-4xl font-black text-black mt-2">
-                    ${PRICING_TIERS.pro.price}
-                    <span class="text-lg font-bold text-gray-600">/year</span>
-                  </div>
-                  <p class="text-sm text-gray-600 mt-1">
-                    A year, paid up front. That's it.
-                  </p>
-                </div>
-
-                <ul class="space-y-3 text-sm flex-grow">
-                  {PRICING_TIERS.pro.features.map((feature) => (
-                    <li key={feature} class="flex items-start gap-2">
-                      <span class="text-purple-600 font-bold flex-shrink-0">
-                        ✓
-                      </span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {hasPass
-                  ? (
-                    <div class="mt-8 space-y-2">
-                      <div class="w-full px-4 py-3 border-3 border-black rounded-xl font-bold text-center bg-green-100 text-green-900">
-                        ✓ Pass active{expiry
-                          ? ` until ${
-                            expiry.toLocaleDateString("en-AU", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          }`
-                          : ""}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleCopyPass}
-                        class="w-full min-h-[44px] px-4 py-2 border-3 border-black rounded-xl font-bold bg-white text-gray-900 shadow-chunky hover:-translate-y-0.5 active:translate-y-0 transition-all text-sm"
-                      >
-                        Copy my pass
-                      </button>
-                    </div>
-                  )
-                  : (
-                    <button
-                      type="button"
-                      onClick={handleUpgrade}
-                      disabled={isStartingCheckout}
-                      class="w-full mt-8 px-4 py-3 border-3 rounded-xl font-black shadow-chunky transition-all bg-[#ff6ac2] text-[#fffdf5] border-black hover:bg-[#ff52b6] hover:scale-[1.02] active:scale-95 disabled:opacity-60"
-                    >
-                      {isStartingCheckout
-                        ? "Opening checkout..."
-                        : "Support 💜"}
-                    </button>
-                  )}
-
-                <p class="text-xs text-center text-gray-600 mt-3">
-                  One payment. No auto-renew, no card on file.
-                </p>
-              </div>
-            </div>
-
-            {/* FAQ */}
-            <div class="mt-8 pt-6 border-t-3 border-black">
-              <div class="space-y-2 text-sm">
-                <details class="group">
-                  <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    Is this a subscription?
-                  </summary>
-                  <p class="mt-1 text-gray-700 ml-4">
-                    No. You pay $49, you get a year, and nothing ever charges
-                    you again. If you still love it next year, that's your call
-                    — next year.
-                  </p>
-                </details>
-                <details class="group">
-                  <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    What payment methods?
-                  </summary>
-                  <p class="mt-1 text-gray-700 ml-4">
-                    All major cards, through Square checkout.
-                  </p>
-                </details>
-                <details class="group">
-                  <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    Already have a pass?
-                  </summary>
-                  <div class="mt-2 ml-4 flex gap-2">
-                    <input
-                      type="text"
-                      value={pastedPass}
-                      onInput={(e) =>
-                        setPastedPass((e.target as HTMLInputElement).value)}
-                      placeholder="Paste your supporter pass"
-                      class="flex-1 min-w-0 px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-mono focus:border-black focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={handlePastePass}
-                      disabled={pastedPass.trim() === ""}
-                      class="min-h-[44px] px-4 py-2 bg-black text-white rounded-lg font-bold text-sm hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
-                    >
-                      Restore
-                    </button>
-                  </div>
-                </details>
-                <details class="group">
-                  <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    Do I get future features?
-                  </summary>
-                  <p class="mt-1 text-gray-700 ml-4">
-                    Yep. Anything we add while your year is running is yours.
-                  </p>
-                </details>
-                <details class="group">
-                  <summary class="font-bold cursor-pointer hover:text-purple-600">
-                    Refunds?
-                  </summary>
-                  <p class="mt-1 text-gray-700 ml-4">
-                    30-day no-questions-asked. Email pablo@qrbuddy.app
-                  </p>
-                </details>
-              </div>
-            </div>
-          </div>
+    <CardModal
+      open={isOpen}
+      onClose={closePricingModal}
+      labelledby="pricing-modal-title"
+      badge={hasPass ? "💜" : "✨"}
+      badgeClass="from-pink-300 via-qr-pop to-purple-500"
+    >
+      <div class="text-center space-y-5">
+        <div class="space-y-1.5">
+          <h2
+            id="pricing-modal-title"
+            class="font-black text-2xl sm:text-3xl tracking-tight leading-tight text-black"
+          >
+            {hasPass ? "You're a Supporter." : "Unlock QRBuddy Supporter."}
+          </h2>
+          <p class="text-base font-bold text-qr-pop">
+            {hasPass
+              ? "Thank you. The limits are off."
+              : "One pass lifts the limits. Funds honest tools."}
+          </p>
         </div>
+
+        <ul class="text-left space-y-2 text-base font-medium text-gray-800">
+          {perks.map((perk) => (
+            <li key={perk} class="flex items-start gap-3">
+              <span
+                class="mt-2 w-2 h-2 shrink-0 rounded-full bg-qr-pop"
+                aria-hidden="true"
+              />
+              <span>{perk}</span>
+            </li>
+          ))}
+        </ul>
+
+        {hasPass
+          ? (
+            <div class="space-y-2">
+              <div class="w-full min-h-[52px] flex items-center justify-center rounded-full border-3 border-black bg-green-100 text-green-900 font-black text-base">
+                ✓ Pass active{expiry
+                  ? ` until ${
+                    expiry.toLocaleDateString("en-AU", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  }`
+                  : ""}
+              </div>
+              <div class="flex gap-2">
+                <CardSecondaryButton onClick={handleCopyPass}>
+                  Copy my pass
+                </CardSecondaryButton>
+              </div>
+            </div>
+          )
+          : (
+            <div class="space-y-2">
+              <CardPrimaryButton
+                onClick={handleUpgrade}
+                disabled={isStartingCheckout}
+              >
+                {isStartingCheckout
+                  ? "Opening checkout…"
+                  : `Get Supporter Pass — $${PRICING_TIERS.pro.price}/yr`}
+              </CardPrimaryButton>
+              <p class="text-xs text-gray-500 font-medium">
+                One payment. Lasts a year. No card on file, no auto-renew.
+              </p>
+            </div>
+          )}
+
+        {/* FAQ tucked under one toggle — the card stays a manifesto */}
+        <details class="group text-left pt-2 border-t-2 border-black/10">
+          <summary class="cursor-pointer list-none min-h-[44px] flex items-center justify-center gap-1 text-sm font-bold text-gray-600 hover:text-black transition-colors">
+            Questions, or have a pass already?
+            <span class="transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div class="space-y-3 text-sm pt-1">
+            <details>
+              <summary class="font-bold cursor-pointer hover:text-qr-pop">
+                Is this a subscription?
+              </summary>
+              <p class="mt-1 text-gray-700 ml-4">
+                No. You pay ${PRICING_TIERS.pro.price}, you get a year, and
+                nothing ever charges you again. If you still love it next year,
+                that's your call — next year.
+              </p>
+            </details>
+            <details>
+              <summary class="font-bold cursor-pointer hover:text-qr-pop">
+                What payment methods?
+              </summary>
+              <p class="mt-1 text-gray-700 ml-4">
+                All major cards, through Square checkout.
+              </p>
+            </details>
+            <details>
+              <summary class="font-bold cursor-pointer hover:text-qr-pop">
+                Do I get future features?
+              </summary>
+              <p class="mt-1 text-gray-700 ml-4">
+                Yep. Anything QRBuddy adds while your year is running is yours.
+              </p>
+            </details>
+            <details>
+              <summary class="font-bold cursor-pointer hover:text-qr-pop">
+                Refunds?
+              </summary>
+              <p class="mt-1 text-gray-700 ml-4">
+                30-day no-questions-asked. Email pablo@qrbuddy.app
+              </p>
+            </details>
+            {!hasPass && (
+              <details>
+                <summary class="font-bold cursor-pointer hover:text-qr-pop">
+                  Already have a pass?
+                </summary>
+                <div class="mt-2 ml-4 flex gap-2">
+                  <input
+                    type="text"
+                    value={pastedPass}
+                    onInput={(e) =>
+                      setPastedPass((e.target as HTMLInputElement).value)}
+                    placeholder="Paste your supporter pass"
+                    class="flex-1 min-w-0 px-3 py-2 border-2 border-black rounded-full text-sm font-mono bg-white focus:border-qr-pop focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handlePastePass}
+                    disabled={pastedPass.trim() === ""}
+                    class="min-h-[44px] px-4 bg-black text-white rounded-full font-bold text-sm border-2 border-black hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
+                  >
+                    Restore
+                  </button>
+                </div>
+              </details>
+            )}
+          </div>
+        </details>
       </div>
-    </>
+    </CardModal>
   );
 }
 
@@ -385,14 +324,14 @@ interface PricingLinkProps {
 }
 
 export function PricingLink({
-  label = "Support",
+  label = "Supporter ✨",
   className = "",
 }: PricingLinkProps) {
   return (
     <button
       type="button"
       onClick={openPricingModal}
-      class={`px-4 py-2 text-sm bg-gradient-to-r from-pink-500 to-purple-500 text-white border-3 border-black rounded-xl font-bold shadow-chunky transition-all hover:scale-105 active:scale-95 ${className}`}
+      class={`inline-flex items-center justify-center px-4 min-h-[44px] rounded-full border-2 border-black bg-qr-pop text-white text-sm font-bold shadow-chunky transition-all hover:scale-105 hover:bg-qr-popDeep active:scale-95 ${className}`}
     >
       {label}
     </button>

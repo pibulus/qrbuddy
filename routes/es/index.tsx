@@ -9,9 +9,10 @@ import ErrorBoundary from "../../islands/ErrorBoundary.tsx";
 import ToastManager from "../../islands/ToastManager.tsx";
 import Analytics from "../../islands/Analytics.tsx";
 
-import { AboutLink, AboutModal } from "../../islands/AboutModal.tsx";
-import { KofiButton, KofiModal } from "../../islands/KofiModal.tsx";
-import { PricingLink, PricingModal } from "../../islands/PricingModal.tsx";
+import { AboutModal } from "../../islands/AboutModal.tsx";
+import { KofiModal } from "../../islands/KofiModal.tsx";
+import { PricingModal } from "../../islands/PricingModal.tsx";
+import FooterDock from "../../islands/FooterDock.tsx";
 import { QR_STYLES } from "../../utils/qr-styles.ts";
 import type { QRStyle } from "../../types/qr-types.ts";
 import { getSupabaseUrl } from "../../utils/api.ts";
@@ -124,7 +125,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         </script>
       </Head>
 
-      <div class="min-h-screen flex flex-col items-center justify-start sm:justify-center px-6 pb-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
+      <div class="min-h-[100dvh] flex flex-col items-center justify-start px-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
         <ToastManager />
         <Analytics
           url={url}
@@ -152,14 +153,17 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         <div class="absolute top-7 left-4 sm:top-12 sm:left-6 z-50 animate-fade-in">
           <a
             href="/"
-            class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
+            class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-white border-2 border-black rounded-full text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
             title="Switch to English"
           >
             🇦🇺 English
           </a>
         </div>
 
-        <main id="main-content" class="w-full max-w-md space-y-6 sm:space-y-8">
+        <main
+          id="main-content"
+          class="w-full max-w-md space-y-6 sm:space-y-8 sm:my-auto"
+        >
           {/* Hero Text */}
           <header class="text-center space-y-1.5 px-4 mb-2 animate-fade-in">
             <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
@@ -167,9 +171,6 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
             </h1>
             <p class="text-lg font-bold text-gray-800">
               Deja caer un enlace. Míralo florecer. 🌸
-            </p>
-            <p class="text-[11px] font-black uppercase tracking-wider text-gray-500 pt-1">
-              Sin Suscripciones • Sin Enlaces Rotos • Utilidad Honesta
             </p>
           </header>
 
@@ -209,48 +210,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
           />
         </main>
 
-        {/* Footer */}
-        <footer class="mt-16 py-8 border-t-4 border-black w-full max-w-xl mx-auto">
-          <div class="px-4 text-center space-y-4">
-            <div class="flex items-center justify-center gap-4 flex-wrap">
-              <PricingLink label="Pase de Soporte ✨" />
-              <AboutLink />
-              <KofiButton size="sm" label="Propina ☕" />
-            </div>
-
-            {/* Vertical Soluciones & Guías */}
-            <div class="mt-4 flex items-center justify-center gap-2 flex-wrap text-xs font-bold text-gray-700">
-              <span class="text-gray-400 font-normal">Soluciones:</span>
-              <a href="/es/menus" class="hover:underline hover:text-black">
-                Menús para Restaurantes 📜
-              </a>
-              <span class="text-gray-300">•</span>
-              <a href="/es/bodas" class="hover:underline hover:text-black">
-                Bodas y Fotos 📸
-              </a>
-              <span class="text-gray-300">•</span>
-              <a href="/es/musica" class="hover:underline hover:text-black">
-                Mixtapes y Música 📼
-              </a>
-              <span class="text-gray-300">•</span>
-              <a href="/es/archivos" class="hover:underline hover:text-black">
-                Archivos Secretos 🔐
-              </a>
-              <span class="text-gray-300">•</span>
-              <a
-                href="/es/guia/impresion"
-                class="hover:underline text-indigo-700 font-black"
-              >
-                Calculadora & Guía 📐
-              </a>
-            </div>
-
-            <p class="text-center text-xs text-gray-500 mt-4 opacity-70 font-medium">
-              Hecho por Pablo • Mexicano-Australiano • Software libre de
-              espionaje corporativo.
-            </p>
-          </div>
-        </footer>
+        <FooterDock lang="es" />
       </div>
 
       {/* Modals */}

@@ -20,6 +20,7 @@ nothing outside it is needed. When this golden source improves, re-copy (or
 | `useModalShell.ts`  | Fresh/Preact apps — the machinery as a hook, for modals needing a custom skeleton         |
 | `ModalShell.tsx`    | Fresh/Preact apps — the ready-made skeleton on top of the hook (qrbuddy, stargram…)       |
 | `modal-shell.css`   | The shared skeleton + keyframes BOTH flavors reference                                    |
+| `CardModal.tsx`     | qrbuddy-local: the info-dialog card skin (badge, ✕, pill buttons) on top of the hook      |
 
 ## The contract (identical in both flavors)
 

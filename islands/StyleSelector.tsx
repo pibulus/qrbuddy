@@ -206,29 +206,20 @@ export default function StyleSelector(
           aria-label={`Select QR style, current: ${currentStyleInfo.name}`}
           aria-haspopup="dialog"
           aria-expanded={isGalleryOpen}
-          class="
-            flex items-center gap-2 px-4 py-3
-            bg-white border-3 border-black rounded-xl
-            hover:bg-gray-50
-            transition-all duration-200
-            hover:scale-105 active:scale-95
-            shadow-md hover:shadow-lg
-          "
+          class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-white border-2 border-black rounded-full text-xs font-black text-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
         >
           <div
-            class="w-5 h-5 rounded border-2 border-black"
+            class="w-4 h-4 rounded-full border-2 border-black"
             style={{ background: getGradientPreview(currentStyleInfo.colors) }}
           />
-          <span class="font-bold text-black hidden sm:inline">
+          <span class="hidden sm:inline">
             {currentStyleInfo.name}
           </span>
           {
-            /* The ▼ stays on mobile — a bare swatch reads as decoration,
+            /* The ▾ stays on mobile — a bare swatch reads as decoration,
             not a menu. */
           }
-          <span class="text-sm font-bold">
-            ▼
-          </span>
+          <span aria-hidden="true">▾</span>
         </button>
       </div>
 

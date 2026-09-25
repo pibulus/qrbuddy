@@ -101,7 +101,7 @@ qrbuddy/
 │   ├── f/[code].tsx          # Destructible file download gate
 │   ├── bucket/[code].tsx     # File locker viewer
 │   └── api/download-file.ts  # Server-side file proxy
-├── islands/              # Interactive Preact islands (40 registered)
+├── islands/              # Interactive Preact islands (41 registered)
 │   ├── QRCanvas.tsx          # Core QR rendering + download/copy logic
 │   ├── SmartInput.tsx        # Smart input (URLs/files/text + dynamic settings)
 │   ├── StyleSelector.tsx     # Gradient selector + custom creator entry

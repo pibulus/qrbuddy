@@ -73,7 +73,7 @@ HTML.
 - Orchestrates component layout
 - Handles SEO meta tags
 
-**Islands (Interactive Components - 40 registered)**
+**Islands (Interactive Components - 41 registered)**
 
 See GLOSSARY.md for complete list organized by category. Key islands:
 
@@ -247,8 +247,20 @@ adding surfaces:
   border-black sm:rounded-3xl`, `sm:animate-pop-in`);
   `max-h-[92dvh]`; header/body `p-4 sm:p-6`; bottom padding respects the home
   indicator: `pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6`.
-- **Info dialogs** (About/Kofi/Pricing): centered at all sizes, gradient
-  header + `border-4` card, same backdrop/z as sheets.
+- **Info dialogs** (About/Kofi/Pricing): always `islands/modal/CardModal.tsx` —
+  centered cream card at all sizes, `max-w-[460px]`, `border-4` + `rounded-3xl`,
+  mascot badge hanging centered at the top, circular `✕` top-right, same
+  backdrop/z as sheets. No gradient header bars. Titles are
+  `font-black text-2xl tracking-tight`; the one accent is `qr-pop` pink; primary
+  action is one full-width `rounded-full` pill (`CardPrimaryButton`),
+  secondaries are white bordered pills. Copy is a manifesto, not a spec sheet.
+- **Footer dock**: `islands/FooterDock.tsx` — no divider line, metadata left,
+  utility pills right, Solutions pops upward from the dock. Home routes pin it
+  to the viewport bottom edge (`min-h-[100dvh]` shell, `mt-auto` footer).
+- **Top rail**: language toggle and style picker share one lightweight pill
+  recipe
+  (`min-h-[36px] rounded-full border-2 text-xs font-black shadow-chunky`).
+- **Voice**: QRBuddy is the entity. Never "we"/"us" in UI copy.
 - **Toasts**: bottom snackbar,
   `bottom-[max(1.5rem,env(safe-area-inset-bottom))]`, full-width flex container
   (never `left-1/2` — it caps layout width at 50vw and wraps).
@@ -300,7 +312,7 @@ adding surfaces:
 
 ### Performance Optimizations
 
-- **Islands Architecture**: Only interactive components hydrate (40 islands
+- **Islands Architecture**: Only interactive components hydrate (41 islands
   total)
 - **Signal-Based State**: Efficient reactive updates without re-renders
 - **Lazy QR Updates**: QR regenerates only on url/style change via useEffect
@@ -349,7 +361,7 @@ adding surfaces:
   redirect logic
 - **Visual Indicators**: Purple/pink "editable" badge on dynamic QRs alongside
   destructible badge
-- **40 Interactive Islands**: Complete island architecture with modals, QR
+- **41 Interactive Islands**: Complete island architecture with modals, QR
   types, and feature discovery
 
 ### Previous Features

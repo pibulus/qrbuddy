@@ -25,6 +25,7 @@ import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $FileSlideshow from "./islands/FileSlideshow.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
+import * as $FooterDock from "./islands/FooterDock.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $NoteCard from "./islands/NoteCard.tsx";
@@ -49,6 +50,7 @@ import * as $extras_LockerSettings from "./islands/extras/LockerSettings.tsx";
 import * as $extras_MultiLinkSettings from "./islands/extras/MultiLinkSettings.tsx";
 import * as $extras_SplashSettings from "./islands/extras/SplashSettings.tsx";
 import * as $extras_TimeBombSettings from "./islands/extras/TimeBombSettings.tsx";
+import * as $modal_CardModal from "./islands/modal/CardModal.tsx";
 import * as $modal_ModalShell from "./islands/modal/ModalShell.tsx";
 import * as $modal_useModalShell from "./islands/modal/useModalShell.ts";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
@@ -90,6 +92,7 @@ const manifest = {
     "./islands/FileSlideshow.tsx": $FileSlideshow,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/HistoryDrawer.tsx": $HistoryDrawer,
+    "./islands/FooterDock.tsx": $FooterDock,
     "./islands/KofiModal.tsx": $KofiModal,
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/NoteCard.tsx": $NoteCard,
@@ -114,6 +117,7 @@ const manifest = {
     "./islands/extras/MultiLinkSettings.tsx": $extras_MultiLinkSettings,
     "./islands/extras/SplashSettings.tsx": $extras_SplashSettings,
     "./islands/extras/TimeBombSettings.tsx": $extras_TimeBombSettings,
+    "./islands/modal/CardModal.tsx": $modal_CardModal,
     "./islands/modal/ModalShell.tsx": $modal_ModalShell,
     "./islands/modal/useModalShell.ts": $modal_useModalShell,
     "./islands/smart-input/FileUploadOptions.tsx":

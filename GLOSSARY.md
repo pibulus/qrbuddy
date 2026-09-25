@@ -1,6 +1,6 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components - 40 registered)
+## Islands (Interactive Components - 41 registered)
 
 **Core QR Components:**
 
@@ -22,9 +22,10 @@
 
 **Modals & Overlays:**
 
-- `AboutModal` - Feature overview + release notes
+- `AboutModal` - Manifesto card (first-visit intro poster + about)
 - `KofiModal` - Ko-fi support modal
-- `PricingModal` - Pro tier upsell modal
+- `PricingModal` - Single-tier Supporter unlock card
+- `FooterDock` - Bottom dock: metadata + About/Solutions/Tip Jar/Supporter pills
 
 **Dynamic + Locker Features:**
 
