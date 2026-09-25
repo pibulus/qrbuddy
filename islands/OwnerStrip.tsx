@@ -20,6 +20,7 @@ import {
   type LedgerRow,
   type LifetimeStats,
   type StatsRange,
+  type WeatherBaseline,
 } from "../utils/share-stats.ts";
 import type { QR_STYLES } from "../utils/qr-styles.ts";
 import { addToast } from "./ToastManager.tsx";
@@ -51,6 +52,7 @@ interface OwnerMeta {
   isOwner?: boolean;
   stats?: LifetimeStats;
   ledger?: LedgerRow[];
+  weather?: WeatherBaseline;
   createdAt?: string;
 }
 
@@ -243,7 +245,11 @@ export default function OwnerStrip(
     addToast("Sticker on the way — print it, stick it 🖨️");
   };
 
-  const cards = buildCards(meta.stats ?? {}, meta.ledger ?? []);
+  const cards = buildCards(
+    meta.stats ?? {},
+    meta.ledger ?? [],
+    meta.weather ?? {},
+  );
   const card = cards[range];
   const itemName = (id: string) => {
     const f = files.find((x) => x.id === id);

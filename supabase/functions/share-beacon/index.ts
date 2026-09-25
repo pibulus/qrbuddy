@@ -18,6 +18,7 @@ import {
   describeVisitor,
   visitorDayHash,
 } from "../_shared/visitor.ts";
+import { cellOf, conditionsNow } from "../_shared/conditions.ts";
 
 interface BeaconBody {
   fileId?: string;
@@ -108,6 +109,21 @@ serve(async (req) => {
     // A share that no longer exists (blown up, cleaned) fails the FK — that's
     // fine, and not the visitor's problem.
     if (error) console.error("record_share_activity:", error.message);
+
+    // What the world was like: weather/temp/time-of-day for the scanner's
+    // ~10 km cell (cached; at most one Open-Meteo call per cell per day) and
+    // the moon. Tallied as keys; lift is judged against a baseline later.
+    if (isView && !error) {
+      const cell = cellOf(visitor.lat, visitor.lon);
+      const keys = await conditionsNow(supabase, cell);
+      const { error: condError } = await supabase.rpc(
+        "record_share_conditions",
+        { p_file_id: fileId, p_day: day, p_cell: cell, p_keys: keys },
+      );
+      if (condError) {
+        console.error("record_share_conditions:", condError.message);
+      }
+    }
     return ok(req);
   } catch (error) {
     console.error("share-beacon failed:", error);

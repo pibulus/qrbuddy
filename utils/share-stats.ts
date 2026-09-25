@@ -28,6 +28,22 @@ export interface LedgerRow {
   apps?: Record<string, number>;
   farthest_km?: number;
   farthest_place?: string | null;
+  /** Condition key → views (wx:rain, temp:hot+slot:morning, moon:full…). */
+  conditions?: Record<string, number>;
+  /** ~10 km cell → views, for the weather baseline. */
+  cells?: Record<string, number>;
+}
+
+/** cell → UTC day → condition key → hours (of 24) in that condition. */
+export type WeatherBaseline = Record<
+  string,
+  Record<string, Record<string, number>>
+>;
+
+export interface Pattern {
+  key: string;
+  lift: number;
+  observed: number;
 }
 
 export interface LifetimeStats {
@@ -84,6 +100,149 @@ export interface StatsCard {
   weekendShare: number | null;
   /** iOS share of views with a known OS (lifetime only). */
   iosShare: number | null;
+  /** Conditions that over-index against a fair baseline (lift ≥ 1.5). */
+  patterns: Pattern[];
+}
+
+// ── Patterns ──────────────────────────────────────────────────────────────
+// "Rainy days: 2× the scans" is only true if it wasn't just raining all the
+// time. Observed = views in a condition. Expected = views × how often that
+// condition actually held where those views came from, over the window
+// (from the weather cache, which covers unscanned days too). Moon's
+// baseline is the share of days in each phase. Speak only when the sample
+// is real and the lift is big.
+const MIN_VIEWS = 20;
+const MIN_OBSERVED = 5;
+const MIN_LIFT = 1.5;
+
+function moonOfDay(day: string): string {
+  const SYNODIC = 29.530588853;
+  const REF = Date.UTC(2000, 0, 6, 18, 14);
+  const t = Date.parse(`${day}T12:00:00Z`);
+  const age = (((t - REF) / 86400000) % SYNODIC + SYNODIC) % SYNODIC;
+  if (age < 1.85 || age > 27.68) return "new";
+  if (age >= 12.91 && age <= 16.61) return "full";
+  return age < 12.91 ? "waxing" : "waning";
+}
+
+function patternsFor(
+  rows: LedgerRow[],
+  days: string[],
+  weather: WeatherBaseline,
+): Pattern[] {
+  const observed = sumMaps(rows.map((r) => r.conditions ?? {}));
+  const cellViews = sumMaps(rows.map((r) => r.cells ?? {}));
+  const expected: Record<string, number> = {};
+
+  // Weather-side: per cell, the average share of hours in each condition
+  // over the window's days, weighted by that cell's views.
+  let weatherViews = 0;
+  for (const [cell, views] of Object.entries(cellViews)) {
+    const byDay = weather[cell];
+    if (!byDay) continue;
+    const covered = days.filter((d) => byDay[d]);
+    if (covered.length === 0) continue;
+    weatherViews += views;
+    const frac: Record<string, number> = {};
+    for (const d of covered) {
+      for (const [k, hours] of Object.entries(byDay[d])) {
+        frac[k] = (frac[k] ?? 0) + hours / 24 / covered.length;
+      }
+    }
+    for (const [k, f] of Object.entries(frac)) {
+      expected[k] = (expected[k] ?? 0) + views * f;
+    }
+  }
+
+  // Moon-side: share of the window's days in each phase.
+  const moonViews = Object.entries(observed)
+    .filter(([k]) => k.startsWith("moon:"))
+    .reduce((a, [, v]) => a + v, 0);
+  if (days.length > 0) {
+    const phases: Record<string, number> = {};
+    for (const d of days) {
+      const m = `moon:${moonOfDay(d)}`;
+      phases[m] = (phases[m] ?? 0) + 1;
+    }
+    for (const [k, n] of Object.entries(phases)) {
+      expected[k] = moonViews * (n / days.length);
+    }
+  }
+
+  const out: Pattern[] = [];
+  for (const [key, obs] of Object.entries(observed)) {
+    const isMoon = key.startsWith("moon:");
+    if ((isMoon ? moonViews : weatherViews) < MIN_VIEWS) continue;
+    // Time-of-day alone is already "Busiest …"; only combos use slot.
+    if (key.startsWith("slot:")) continue;
+    const exp = expected[key] ?? 0;
+    if (obs < MIN_OBSERVED || exp <= 0) continue;
+    const lift = obs / exp;
+    if (lift >= MIN_LIFT) out.push({ key, lift, observed: obs });
+  }
+  return out.sort((a, b) => b.lift - a.lift);
+}
+
+const WX_WORD: Record<string, string> = {
+  rain: "Rainy",
+  clear: "Clear",
+  cloud: "Grey",
+  snow: "Snowy",
+  storm: "Stormy",
+};
+const TEMP_WORD: Record<string, string> = {
+  cold: "Cold",
+  mild: "Mild",
+  warm: "Warm",
+  hot: "Hot",
+};
+const SLOT_WORD: Record<string, string> = {
+  morning: "mornings",
+  afternoon: "afternoons",
+  evening: "evenings",
+  night: "nights",
+};
+const EMOJI: Record<string, string> = {
+  rain: "☔",
+  clear: "☀️",
+  cloud: "☁️",
+  snow: "❄️",
+  storm: "⛈",
+  cold: "🧣",
+  hot: "🌡️",
+  warm: "🌤",
+  mild: "🍃",
+  full: "🌕",
+  new: "🌑",
+  waxing: "🌒",
+  waning: "🌘",
+};
+
+export function patternLine(p: Pattern): string {
+  const x = `${p.lift.toFixed(1).replace(/\.0$/, "")}×`;
+  const [a, b] = p.key.split("+");
+  const [kindA, valA] = a.split(":");
+  if (b) {
+    const valB = b.split(":")[1];
+    const word = kindA === "wx" ? WX_WORD[valA] : TEMP_WORD[valA];
+    return `${word} ${SLOT_WORD[valB]} are its thing · ${x} the scans ${
+      EMOJI[valA] ?? ""
+    }`.trim();
+  }
+  if (kindA === "moon") {
+    const name = valA === "full"
+      ? "Full moons"
+      : valA === "new"
+      ? "New moons"
+      : valA === "waxing"
+      ? "Waxing moons"
+      : "Waning moons";
+    return `${name}: ${x} the scans ${EMOJI[valA]}`;
+  }
+  const word = kindA === "wx"
+    ? `${WX_WORD[valA]} days`
+    : `${TEMP_WORD[valA]} weather`;
+  return `${word}: ${x} the scans ${EMOJI[valA] ?? ""}`.trim();
 }
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -257,6 +416,7 @@ function cardFromRows(range: StatsRange, rows: LedgerRow[]): StatsCard {
     nightShare: nightShareOf(hours),
     weekendShare: range === "week" ? weekendShareOf(dowTally) : null,
     iosShare: null,
+    patterns: [],
   };
 }
 
@@ -265,6 +425,7 @@ function cardFromRows(range: StatsRange, rows: LedgerRow[]): StatsCard {
 export function buildCards(
   lifetime: LifetimeStats,
   ledger: LedgerRow[],
+  weather: WeatherBaseline = {},
 ): Record<StatsRange, StatsCard> {
   const byDay = new Map(ledger.map((r) => [r.day, r]));
   const today = todayUtc();
@@ -343,12 +504,29 @@ export function buildCards(
       : null,
     nightShare: nightShareOf(hours),
     weekendShare: weekendShareOf(dowTally),
+    patterns: [],
     iosShare: (() => {
       const os = lifetime.os ?? {};
       const known = (os.ios ?? 0) + (os.android ?? 0);
       return known >= 3 ? (os.ios ?? 0) / known : null;
     })(),
   };
+
+  // Patterns over the week, and over everything the ledger remembers
+  // (90 days) for "All time" — conditions aren't kept past the ledger.
+  weekCard.patterns = patternsFor(weekRows, last7, weather);
+  if (ledger.length > 0) {
+    const first = ledger[0].day;
+    const span = Math.max(
+      1,
+      Math.round((Date.parse(today) - Date.parse(first)) / 86400000) + 1,
+    );
+    const allDays = Array.from(
+      { length: Math.min(span, 90) },
+      (_, i) => daysAgoUtc(Math.min(span, 90) - 1 - i),
+    );
+    allCard.patterns = patternsFor(ledger, allDays, weather);
+  }
 
   return { today: todayCard, week: weekCard, all: allCard };
 }
@@ -456,6 +634,9 @@ export function cardLines(
     const ios = Math.round(card.iosShare * 100);
     lines.push(`iPhone ${ios}% · Android ${100 - ios}%`);
   }
+  // The noticing: at most two conditions that genuinely over-index.
+  for (const p of card.patterns.slice(0, 2)) lines.push(patternLine(p));
+
   if (card.range === "all" && createdAt) {
     const ageDays = Math.floor(
       (Date.now() - new Date(createdAt).getTime()) / 86400000,

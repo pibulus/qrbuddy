@@ -366,6 +366,16 @@ vault holds the token; the public never sees it.
   host), farthest scan (coarse ~10 km lat/lon vs `origin_lat/lon` recorded at
   upload, haversine in SQL), night-owl / weekend reads from the hour/day
   tallies, iPhone vs Android, age + milestones. No horoscopes.
+- **The noticing** (`20260925020000_share_stats_conditions.sql`,
+  `_shared/conditions.ts`): each view tallies condition keys — weather, temp
+  band, local time slot, moon, plus "hot mornings" / "rainy nights" combos.
+  Weather is Open-Meteo (keyless), cached per ~10 km cell per UTC day in
+  `weather_days` with a 7-day backfill (≤1 outbound call per cell per day).
+  `utils/share-stats.ts` `patternsFor` compares observed vs a fair baseline (how
+  often it actually rained where the scanners were; share of days in each moon
+  phase) and only speaks at **≥20 views, ≥5 in the condition, lift ≥1.5×**.
+  "Just Melbourne" stays quiet. Cross-share "Field Notes" (OkTrends-style,
+  `/notes`) is the planned follow-up once real data exists.
 - **Edit what it is.** `update-file`: `rename`, `retheme`, `append` (multipart),
   `remove`. Self-destructing shares are frozen to rename/retheme; append can't
   change a share's kind; max 10 items.
