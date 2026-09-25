@@ -7,7 +7,7 @@ const ENCRYPTED_PREFIX = "enc.";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-export type TokenScope = "qr" | "bucket";
+export type TokenScope = "qr" | "bucket" | "file";
 
 function getStorage(): Storage | null {
   const scope = globalThis as typeof globalThis & { localStorage?: Storage };

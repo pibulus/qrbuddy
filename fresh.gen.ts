@@ -43,9 +43,11 @@ import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $FileSlideshow from "./islands/FileSlideshow.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
+import * as $FooterDock from "./islands/FooterDock.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $NoteCard from "./islands/NoteCard.tsx";
+import * as $OwnerStrip from "./islands/OwnerStrip.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $QRReader from "./islands/QRReader.tsx";
@@ -61,6 +63,7 @@ import * as $bucket_qr_PasswordUnlock from "./islands/bucket-qr/PasswordUnlock.t
 import * as $create_modal_ChoiceRow from "./islands/create-modal/ChoiceRow.tsx";
 import * as $create_modal_CompletionState from "./islands/create-modal/CompletionState.tsx";
 import * as $create_modal_DesignTab from "./islands/create-modal/DesignTab.tsx";
+import * as $create_modal_PalettePills from "./islands/create-modal/PalettePills.tsx";
 import * as $edit_qr_AnalyticsDashboard from "./islands/edit-qr/AnalyticsDashboard.tsx";
 import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
 import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
@@ -71,6 +74,7 @@ import * as $extras_LockerSettings from "./islands/extras/LockerSettings.tsx";
 import * as $extras_MultiLinkSettings from "./islands/extras/MultiLinkSettings.tsx";
 import * as $extras_SplashSettings from "./islands/extras/SplashSettings.tsx";
 import * as $extras_TimeBombSettings from "./islands/extras/TimeBombSettings.tsx";
+import * as $modal_CardModal from "./islands/modal/CardModal.tsx";
 import * as $modal_ModalShell from "./islands/modal/ModalShell.tsx";
 import * as $modal_useModalShell from "./islands/modal/useModalShell.ts";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
@@ -130,9 +134,11 @@ const manifest = {
     "./islands/FileSlideshow.tsx": $FileSlideshow,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/HistoryDrawer.tsx": $HistoryDrawer,
+    "./islands/FooterDock.tsx": $FooterDock,
     "./islands/KofiModal.tsx": $KofiModal,
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/NoteCard.tsx": $NoteCard,
+    "./islands/OwnerStrip.tsx": $OwnerStrip,
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/QRReader.tsx": $QRReader,
@@ -149,6 +155,7 @@ const manifest = {
     "./islands/create-modal/ChoiceRow.tsx": $create_modal_ChoiceRow,
     "./islands/create-modal/CompletionState.tsx": $create_modal_CompletionState,
     "./islands/create-modal/DesignTab.tsx": $create_modal_DesignTab,
+    "./islands/create-modal/PalettePills.tsx": $create_modal_PalettePills,
     "./islands/edit-qr/AnalyticsDashboard.tsx": $edit_qr_AnalyticsDashboard,
     "./islands/edit-qr/QRStatusCard.tsx": $edit_qr_QRStatusCard,
     "./islands/edit-qr/RoutingConfigForm.tsx": $edit_qr_RoutingConfigForm,
@@ -159,6 +166,7 @@ const manifest = {
     "./islands/extras/MultiLinkSettings.tsx": $extras_MultiLinkSettings,
     "./islands/extras/SplashSettings.tsx": $extras_SplashSettings,
     "./islands/extras/TimeBombSettings.tsx": $extras_TimeBombSettings,
+    "./islands/modal/CardModal.tsx": $modal_CardModal,
     "./islands/modal/ModalShell.tsx": $modal_ModalShell,
     "./islands/modal/useModalShell.ts": $modal_useModalShell,
     "./islands/smart-input/FileUploadOptions.tsx":

@@ -14,7 +14,7 @@ export default function TimeBombSettings({
   setExpiryDate,
 }: TimeBombSettingsProps) {
   return (
-    <div class="bg-white/60 rounded-xl p-3 mb-4 border-2 border-red-200 animate-slide-down">
+    <div class="bg-white border-2 border-black rounded-2xl p-4 mb-4 animate-slide-down">
       <div class="space-y-4">
         <div class="space-y-2">
           <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">

@@ -1,8 +1,8 @@
 import { assertEquals } from "$std/assert/mod.ts";
 import {
   getInAppBrowserName,
+  getInAppFeatureWarning,
   getUnsupportedCameraMessage,
-  getInAppFeatureWarning
 } from "../utils/inAppBrowser.ts";
 
 Deno.test("inAppBrowser detects Threads user agent", () => {
@@ -11,7 +11,7 @@ Deno.test("inAppBrowser detects Threads user agent", () => {
   assertEquals(getInAppBrowserName(ua), "Threads");
   assertEquals(
     getUnsupportedCameraMessage(ua),
-    "Threads's built-in browser blocks the camera. Tap ••• and choose \"Open in Safari\" or \"Open in Chrome\"."
+    'Threads\'s built-in browser blocks the camera. Tap ••• and choose "Open in Safari" or "Open in Chrome".',
   );
 });
 
@@ -21,7 +21,7 @@ Deno.test("inAppBrowser detects Discord user agent", () => {
   assertEquals(getInAppBrowserName(ua), "Discord");
   assertEquals(
     getInAppFeatureWarning("file downloads", ua),
-    "Discord's built-in browser may restrict file downloads. For best results, tap ••• and open in Safari or Chrome."
+    "Discord's built-in browser may restrict file downloads. For best results, tap ••• and open in Safari or Chrome.",
   );
 });
 

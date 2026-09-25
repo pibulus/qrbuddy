@@ -12,6 +12,7 @@ import {
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
 import { MAX_FILE_SIZE } from "../_shared/file-validation.ts";
+import { describeVisitor, generateOwnerToken } from "../_shared/visitor.ts";
 
 const UNLIMITED_DOWNLOADS = 999999;
 const MAX_DOWNLOADS_LIMIT = UNLIMITED_DOWNLOADS;
@@ -86,6 +87,12 @@ serve(async (req) => {
       10,
     );
     const theme = (formData.get("theme") as string) || "sunset";
+    // Optional share title ("Summer '26", "Mixtape vol. 3") — shown as the
+    // headline on /f/ instead of the first file's name. Plain text only.
+    const rawTitle = (formData.get("title") as string | null) ?? "";
+    const shareTitle = Array.from(rawTitle)
+      .filter((ch) => ch.charCodeAt(0) >= 32 && ch !== "<" && ch !== ">")
+      .join("").trim().slice(0, 80);
 
     const maxDownloads =
       Number.isFinite(parsedMaxDownloads) && parsedMaxDownloads > 0
@@ -293,17 +300,34 @@ serve(async (req) => {
     // Store metadata in database
     // For backward compatibility, store the first file's details in the main columns
     const firstFile = uploadedFiles[0];
+    // The maker owns the share: rename, re-theme, add/remove items later.
+    // Returned once, kept in the device's token vault, never in the URL.
+    const ownerToken = generateOwnerToken();
+    // Where it was made, to ~10 km — so "farthest scan" has a home.
+    const origin = describeVisitor(req);
 
     const { error: dbError } = await supabase
       .from("destructible_files")
       .insert({
         id: mainId,
         file_name: firstFile.path, // Legacy column
-        original_name: firstFile.name, // Legacy column
+        // Legacy column — doubles as the share headline. A user title wins;
+        // a multi-share without one is named by what it is, not by IMG_2041.
+        original_name: shareTitle ||
+          (uploadedFiles.length > 1
+            ? uploadedFiles.every((f) => f.type.startsWith("audio/"))
+              ? `${uploadedFiles.length} tracks`
+              : uploadedFiles.every((f) => f.type.startsWith("image/"))
+              ? `${uploadedFiles.length} photos`
+              : `${uploadedFiles.length} files`
+            : firstFile.name),
         size: firstFile.size, // Legacy column
         mime_type: firstFile.type, // Legacy column
         files: uploadedFiles, // NEW JSON column
         theme: theme,
+        owner_token: ownerToken,
+        origin_lat: origin.lat,
+        origin_lon: origin.lon,
         created_at: new Date().toISOString(),
         accessed: false,
         max_downloads: maxDownloads,
@@ -334,10 +358,11 @@ serve(async (req) => {
         success: true,
         fileId: mainId,
         url: retrievalUrl,
-        fileName: firstFile.name +
-          (files.length > 1 ? ` + ${files.length - 1} more` : ""),
+        fileName: shareTitle ||
+          (files.length > 1 ? `${files.length} files` : firstFile.name),
         size: files.reduce((acc, f) => acc + f.size, 0),
         maxDownloads,
+        ownerToken,
         message,
       }),
       {

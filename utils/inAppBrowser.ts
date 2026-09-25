@@ -23,7 +23,8 @@ export const IN_APP_BROWSERS = [
  * Return the name of the in-app browser we appear to be running inside, if any.
  */
 export function getInAppBrowserName(userAgent?: string): string | null {
-  const ua = userAgent ?? (typeof navigator === "undefined" ? "" : navigator.userAgent || "");
+  const ua = userAgent ??
+    (typeof navigator === "undefined" ? "" : navigator.userAgent || "");
   if (!ua) return null;
 
   for (const { pattern, name } of IN_APP_BROWSERS) {
@@ -37,7 +38,9 @@ export function getInAppBrowserName(userAgent?: string): string | null {
  */
 export function isCameraUnsupported(): boolean {
   if (typeof navigator === "undefined") return false;
-  const nav = navigator as unknown as { mediaDevices?: { getUserMedia?: unknown } };
+  const nav = navigator as unknown as {
+    mediaDevices?: { getUserMedia?: unknown };
+  };
   return !nav.mediaDevices?.getUserMedia;
 }
 
@@ -54,7 +57,10 @@ export function getUnsupportedCameraMessage(userAgent?: string): string {
 /**
  * Generic helper for any app feature blocked inside an in-app webview.
  */
-export function getInAppFeatureWarning(featureName = "this feature", userAgent?: string): string {
+export function getInAppFeatureWarning(
+  featureName = "this feature",
+  userAgent?: string,
+): string {
   const app = getInAppBrowserName(userAgent);
   return app
     ? `${app}'s built-in browser may restrict ${featureName}. For best results, tap ••• and open in Safari or Chrome.`

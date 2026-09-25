@@ -340,6 +340,12 @@ verify_jwt = false
 [functions.get-file-metadata]
 verify_jwt = false
 
+[functions.share-beacon]
+verify_jwt = false
+
+[functions.update-file]
+verify_jwt = false
+
 [functions.create-bucket]
 verify_jwt = false
 

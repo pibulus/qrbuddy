@@ -27,8 +27,12 @@ import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
 import QRReader from "./QRReader.tsx";
-import FileUploadOptions from "./smart-input/FileUploadOptions.tsx";
 import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
+import FileUploadOptions, {
+  shareKindOf,
+} from "./smart-input/FileUploadOptions.tsx";
+import ShareReady, { type LastShare } from "./smart-input/ShareReady.tsx";
+import { prepImages } from "../utils/image-prep.ts";
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -68,6 +72,11 @@ export default function SmartInput(
   const [stagedFiles, setStagedFiles] = useState<File[] | null>(null);
   const [showReader, setShowReader] = useState(false);
   const [stagedDecoded, setStagedDecoded] = useState<string | null>(null);
+  const [shareTitle, setShareTitle] = useState("");
+  const [isPrepping, setIsPrepping] = useState(false);
+  // The last share that went live — drives the "it's alive" strip until the
+  // QR moves on to something else.
+  const [lastShare, setLastShare] = useState<LastShare | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
 
@@ -389,9 +398,25 @@ export default function SmartInput(
       }
     }
     maxDownloads.value = UNLIMITED_SCANS;
+    setShareTitle("");
     setStagedFiles(files);
     setStagedDecoded(null);
     haptics.medium();
+
+    // A slideshow of phone photos: downscale on the device so the per-file
+    // cap never gets in the way (and iPhone HEIC comes out as JPEG). The
+    // card shows immediately with the raw files; the prepped set swaps in.
+    if (files.length > 1 && files.every((f) => f.type.startsWith("image/"))) {
+      setIsPrepping(true);
+      prepImages(files)
+        .then((prepped) => {
+          setStagedFiles((current) => (current === files ? prepped : current));
+        })
+        .catch(() => {
+          // Prep is a courtesy — the raw files still go through validation.
+        })
+        .finally(() => setIsPrepping(false));
+    }
 
     // If a single dropped image is itself a QR code, quietly decode it and
     // offer to read it instead of sharing the image file.
@@ -407,16 +432,29 @@ export default function SmartInput(
   };
 
   const handleStagedConfirm = () => {
-    if (!stagedFiles) return;
-    uploadFile(stagedFiles).finally(() => {
+    if (!stagedFiles || isPrepping) return;
+    const files = stagedFiles;
+    const kind = shareKindOf(files);
+    const title = shareTitle.trim() ||
+      (kind === "file"
+        ? files[0].name
+        : `${files.length} ${kind === "playlist" ? "tracks" : "photos"}`);
+    uploadFile(files, { title: shareTitle }).finally(() => {
       setStagedFiles(null);
       setStagedDecoded(null);
+      setShareTitle("");
+      // uploadFile points the QR at the share on success; anything else
+      // means it failed and the strip stays quiet.
+      if (url.value.includes("/f/")) {
+        setLastShare({ url: url.value, kind, count: files.length, title });
+      }
     });
   };
 
   const handleStagedCancel = () => {
     setStagedFiles(null);
     setStagedDecoded(null);
+    setShareTitle("");
     maxDownloads.value = UNLIMITED_SCANS;
     if (fileInputRef.current) fileInputRef.current.value = "";
     haptics.light();
@@ -766,10 +804,19 @@ export default function SmartInput(
               files={stagedFiles}
               maxDownloads={maxDownloads}
               isUploading={isUploading}
+              isPrepping={isPrepping}
+              title={shareTitle}
+              setTitle={setShareTitle}
               onConfirm={handleStagedConfirm}
               onCancel={handleStagedCancel}
             />
           </>
+        )}
+
+        {/* It's alive: open it, copy it, sticker it */}
+        {lastShare && !stagedFiles && !isUploading &&
+          url.value === lastShare.url && (
+          <ShareReady share={lastShare} frameConfig={frameConfig} />
         )}
 
         {/* Editable mode needs a URL — plain text stays a static QR */}

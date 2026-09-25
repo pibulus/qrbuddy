@@ -2,8 +2,8 @@ import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
 import { addToast } from "../ToastManager.tsx";
 import LogoUploader from "../LogoUploader.tsx";
-import { STYLE_DISPLAY } from "../StyleSelector.tsx";
 import ChoiceRow from "./ChoiceRow.tsx";
+import PalettePills, { PALETTE_PILL, pillState } from "./PalettePills.tsx";
 
 interface FrameConfig {
   enabled: boolean;
@@ -18,157 +18,112 @@ interface DesignTabProps {
   onClose: () => void;
 }
 
-/** CreateModal's "Design" tab: color/gradient picker, logo upload, optional
- * caption frame, and PNG/SVG/text-art export. Pure props in, no local state
- * shared with the rest of the modal. */
+/** CreateModal's "Design" tab: palette pills, center logo, caption frame,
+ * and export. Same card language as the other two tabs — no dashed boxes,
+ * no tinted wrappers. */
 export default function DesignTab(
   { url, qrStyle, logoUrl, frameConfig, onClose }: DesignTabProps,
 ) {
   const frameActive = frameConfig?.value?.enabled ?? false;
+  const isCustom = qrStyle.value === "custom";
+
+  const exportAs = (format: "png" | "svg") => {
+    globalThis.dispatchEvent(
+      new CustomEvent("qr-export", { detail: { format } }),
+    );
+    haptics.medium();
+    addToast(`${format.toUpperCase()} on the way ⬇`);
+  };
 
   return (
-    <div class="space-y-6">
-      <section class="space-y-3">
-        <div>
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Colors
-          </h3>
-          <p class="text-sm text-gray-600">
-            Pick a vibe right here — or build your own gradient.
-          </p>
-        </div>
-        <div class="grid grid-cols-4 sm:grid-cols-4 gap-2">
-          {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
+    <div class="space-y-5">
+      {/* Palette — one wrapping row of pills, custom rides in the same row */}
+      <section class="space-y-2">
+        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+          Palette
+        </h3>
+        <PalettePills
+          value={qrStyle.value}
+          onChange={(key) => (qrStyle.value = key)}
+          trailing={
             <button
-              key={key}
               type="button"
-              aria-label={`${info.name} style`}
+              aria-pressed={isCustom}
               onClick={() => {
-                qrStyle.value = key;
+                onClose();
+                globalThis.dispatchEvent(
+                  new CustomEvent("open-gradient-creator"),
+                );
                 haptics.light();
               }}
-              class="flex flex-col items-center gap-1.5 group py-1"
+              class={`${PALETTE_PILL} ${pillState(isCustom)}`}
             >
-              <span
-                class={`w-14 h-14 rounded-xl border-3 transition-all group-hover:scale-110 group-active:scale-95 ${
-                  qrStyle.value === key
-                    ? "border-black scale-110 shadow-chunky"
-                    : "border-gray-300"
-                }`}
-                style={{
-                  background: `linear-gradient(45deg, ${
-                    info.colors.join(", ")
-                  })`,
-                }}
-              />
-              <span
-                class={`text-[11px] font-bold leading-none ${
-                  qrStyle.value === key ? "text-black" : "text-gray-500"
-                }`}
-              >
-                {info.name}
-              </span>
+              🎨 Custom gradient…
             </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            onClose();
-            globalThis.dispatchEvent(new CustomEvent("open-gradient-creator"));
-            haptics.light();
-          }}
-          class="w-full min-h-[48px] rounded-xl border-3 border-dashed border-gray-400 bg-white px-4 py-2 font-bold text-gray-700 hover:border-black hover:text-black transition-all"
-        >
-          🎨 Build your own gradient
-        </button>
+          }
+        />
       </section>
 
-      <section class="space-y-3">
-        <div>
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Logo
-          </h3>
-          <p class="text-sm text-gray-600">
-            Add a center mark to the QR.
-          </p>
-        </div>
-        <div class="bg-gradient-to-r from-[#FFF8F0] to-[#FFE5B4] border-3 border-[#FFE5B4] rounded-xl p-4 shadow-chunky">
-          <LogoUploader logoUrl={logoUrl} />
-        </div>
-      </section>
-
-      {frameConfig && (
-        <section class="space-y-3">
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Frame
-          </h3>
-          <ChoiceRow
-            icon="🖼️"
-            title="Caption frame"
-            description={`A chunky border with a label — "${
-              frameConfig.value?.caption || "SCAN ME"
-            }" baked into the download.`}
-            active={frameActive}
-            onClick={() => {
-              frameConfig.value = frameActive
-                ? null
-                : { enabled: true, caption: "SCAN ME" };
-              haptics.light();
-            }}
-          />
-          {frameActive && (
-            <input
-              type="text"
-              value={frameConfig.value?.caption ?? ""}
-              maxLength={24}
-              onInput={(e) => {
-                frameConfig.value = {
-                  enabled: true,
-                  caption: (e.target as HTMLInputElement).value,
-                };
+      {/* Logo + frame: two cards in the same language as the Content tab */}
+      <section class="space-y-2">
+        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+          Extras
+        </h3>
+        <LogoUploader logoUrl={logoUrl} />
+        {frameConfig && (
+          <>
+            <ChoiceRow
+              icon="🔲"
+              title="Print frame"
+              description={`Chunky border with "${
+                frameConfig.value?.caption || "SCAN ME"
+              }" baked into the download.`}
+              active={frameActive}
+              onClick={() => {
+                frameConfig.value = frameActive
+                  ? null
+                  : { enabled: true, caption: "SCAN ME" };
+                haptics.light();
               }}
-              placeholder="SCAN ME"
-              class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg font-black uppercase tracking-wide focus:border-black focus:outline-none transition-colors animate-slide-down"
             />
-          )}
-        </section>
-      )}
+            {frameActive && (
+              <input
+                type="text"
+                value={frameConfig.value?.caption ?? ""}
+                maxLength={24}
+                onInput={(e) => {
+                  frameConfig.value = {
+                    enabled: true,
+                    caption: (e.target as HTMLInputElement).value,
+                  };
+                }}
+                placeholder="SCAN ME"
+                aria-label="Frame caption"
+                class="w-full px-4 py-3 border-2 border-black rounded-2xl bg-white text-lg font-black uppercase tracking-wide focus:border-qr-pop focus:outline-none transition-colors animate-slide-down"
+              />
+            )}
+          </>
+        )}
+      </section>
 
-      <section class="space-y-3">
-        <div>
-          <h3 class="text-sm font-black uppercase tracking-wide text-gray-500">
-            Download
-          </h3>
-          <p class="text-sm text-gray-600">
-            PNG for sharing, SVG for print shops and designers — infinitely
-            scalable, no frame.
-          </p>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
+      {/* Export */}
+      <section class="space-y-2">
+        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+          Download
+        </h3>
+        <div class="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => {
-              globalThis.dispatchEvent(
-                new CustomEvent("qr-export", { detail: { format: "png" } }),
-              );
-              haptics.medium();
-              addToast("PNG on the way! ⬇");
-            }}
-            class="min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+            onClick={() => exportAs("png")}
+            class="min-h-[48px] rounded-full border-2 border-black bg-black px-4 font-black text-white shadow-chunky hover:scale-[1.02] active:scale-95 transition-all"
           >
             ⬇ PNG
           </button>
           <button
             type="button"
-            onClick={() => {
-              globalThis.dispatchEvent(
-                new CustomEvent("qr-export", { detail: { format: "svg" } }),
-              );
-              haptics.medium();
-              addToast("SVG on the way! ⬇");
-            }}
-            class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+            onClick={() => exportAs("svg")}
+            title="Infinitely scalable, no frame — for print shops and designers"
+            class="min-h-[48px] rounded-full border-2 border-black bg-white px-4 font-black text-black shadow-chunky hover:scale-[1.02] active:scale-95 transition-all"
           >
             ⬇ SVG
           </button>
@@ -190,7 +145,7 @@ export default function DesignTab(
               addToast("Couldn't reach the clipboard 😞");
             }
           }}
-          class="w-full min-h-[48px] rounded-xl border-3 border-dashed border-gray-400 bg-white px-4 py-2 font-bold text-gray-700 hover:border-black hover:text-black transition-all font-mono"
+          class="w-full min-h-[44px] rounded-full border-2 border-black/15 bg-white px-4 text-sm font-bold font-mono text-neutral-700 hover:border-black/60 hover:text-black transition-all"
         >
           ▀▄█ Copy as text art
         </button>

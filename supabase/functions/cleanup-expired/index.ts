@@ -221,6 +221,26 @@ serve(async (req) => {
 
     if (scanLogError) console.error("Scan log pruning error:", scanLogError);
 
+    // Share stats ledger: same 90-day window. Lifetime tallies on the share
+    // row keep the totals; only the day-by-day detail ages out.
+    const { error: ledgerError } = await supabase
+      .from("share_stats_daily")
+      .delete()
+      .lt("day", scanLogCutoff.slice(0, 10));
+    if (ledgerError) console.error("Share ledger pruning error:", ledgerError);
+
+    // Weather cache backs the ledger's baseline — same window, plus a week
+    // of slack for the backfill.
+    const weatherCutoff = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000)
+      .toISOString().slice(0, 10);
+    const { error: weatherError } = await supabase
+      .from("weather_days")
+      .delete()
+      .lt("day", weatherCutoff);
+    if (weatherError) {
+      console.error("Weather cache pruning error:", weatherError);
+    }
+
     // 6. Drain the R2 reap queue. Downloads of R2-backed files hand out ~60s
     // presigned URLs, so objects are queued (+1h) instead of deleted inline.
     // Failed deletes keep their queue row and retry next run.

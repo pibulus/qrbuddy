@@ -34,16 +34,6 @@ export default function EmailForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-[#FFF8F0] border-3 border-[#FFE5B4] rounded-xl p-4 shadow-chunky">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-2xl">📧</span>
-          <h3 class="font-black text-[#CC9966]">Email QR</h3>
-        </div>
-        <p class="text-sm text-[#CC9966]">
-          Scan to open pre-filled email.
-        </p>
-      </div>
-
       {/* Email Address */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -57,7 +47,7 @@ export default function EmailForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="contact@example.com"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FFE5B4] focus:outline-none"
+          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
         />
       </div>
 
@@ -74,7 +64,7 @@ export default function EmailForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="Inquiry about..."
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FFE5B4] focus:outline-none"
+          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
         />
       </div>
 
@@ -91,7 +81,7 @@ export default function EmailForm({ url }: Props) {
           }}
           placeholder="Enter your pre-filled message here..."
           rows={4}
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FFE5B4] focus:outline-none resize-none"
+          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none resize-none"
         />
       </div>
     </div>

@@ -9,9 +9,10 @@ import ErrorBoundary from "../islands/ErrorBoundary.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
 import Analytics from "../islands/Analytics.tsx";
 
-import { AboutLink, AboutModal } from "../islands/AboutModal.tsx";
-import { KofiButton, KofiModal } from "../islands/KofiModal.tsx";
-import { PricingLink, PricingModal } from "../islands/PricingModal.tsx";
+import { AboutModal } from "../islands/AboutModal.tsx";
+import { KofiModal } from "../islands/KofiModal.tsx";
+import { PricingModal } from "../islands/PricingModal.tsx";
+import FooterDock from "../islands/FooterDock.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { getSupabaseUrl } from "../utils/api.ts";
@@ -53,7 +54,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <title>QRBuddy - Drop a link. Watch it bloom.</title>
         <meta
           name="description"
-          content="Beautiful QR code generator with 7 gradient styles, QR types for links/WiFi/contact cards/messages, custom logos, file sharing, and editable QR codes. Free, privacy-first, minimal analytics."
+          content="Beautiful QR code generator with 8 gradient styles, QR types for links/WiFi/contact cards/messages, custom logos, file sharing, and editable QR codes. Free, privacy-first, minimal analytics."
         />
         <link rel="canonical" href="https://qrbuddy.app" />
         <link rel="alternate" hrefLang="en" href="https://qrbuddy.app" />
@@ -76,7 +77,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         />
         <meta
           property="og:description"
-          content="Free QR code generator with practical QR types, file sharing, custom logos, 7 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
+          content="Free QR code generator with practical QR types, file sharing, custom logos, 8 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
         />
         <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
         <meta property="og:image:width" content="1200" />
@@ -95,7 +96,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         />
         <meta
           name="twitter:description"
-          content="Free QR code generator with practical QR types, file sharing, custom logos, 7 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
+          content="Free QR code generator with practical QR types, file sharing, custom logos, 8 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
         />
         <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
 
@@ -137,7 +138,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
               "name": "Pablo",
             },
             "featureList": [
-              "6 gradient presets (Sunset, Pool, Matrix, Candy, Vapor, Classic)",
+              "8 gradient presets (Sunset, Candy, Blush, Matcha, Pool, Vapor, Grape, Licorice)",
               "Custom gradient creator",
               "QR types for links, WiFi, contact cards, messages, and plain text",
               "File sharing and file lockers",
@@ -165,7 +166,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         Skip to main content
       </a>
 
-      <div class="min-h-screen flex flex-col items-center justify-start sm:justify-center px-6 pb-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
+      <div class="min-h-[100dvh] flex flex-col items-center justify-start px-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
         <ToastManager />
         <Analytics
           url={url}
@@ -193,23 +194,23 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <div class="absolute top-7 left-4 sm:top-12 sm:left-6 z-50 animate-fade-in">
           <a
             href="/es"
-            class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
+            class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-white border-2 border-black rounded-full text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
             title="Cambiar a Español"
           >
             🇲🇽 Español
           </a>
         </div>
 
-        <main id="main-content" class="w-full max-w-md space-y-6 sm:space-y-8">
+        <main
+          id="main-content"
+          class="w-full max-w-md space-y-6 sm:space-y-8 sm:my-auto"
+        >
           {/* Hero Text */}
           <header class="text-center space-y-1.5 px-4 mb-2 animate-fade-in">
             <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
               QRBuddy
             </h1>
             <RotatingTitle />
-            <p class="text-[11px] font-black uppercase tracking-wider text-gray-500 pt-1">
-              Zero Subscriptions • No Hostage Links • Honest Utility
-            </p>
           </header>
 
           {/* QR Code Display - FIRST */}
@@ -248,50 +249,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
           />
         </main>
 
-        {/* Footer */}
-        <footer class="mt-16 py-8 border-t-4 border-black">
-          <div class="max-w-md mx-auto px-4">
-            <div class="flex items-center justify-center gap-4 flex-wrap">
-              <PricingLink label="Supporter ✨" />
-              <AboutLink />
-              <KofiButton size="sm" label="Tip Jar ☕" />
-            </div>
-
-            {/* Tailored Use Cases & Guides */}
-            <div class="mt-4 flex items-center justify-center gap-2 flex-wrap text-xs font-bold text-gray-700">
-              <span class="text-gray-400 font-normal">Solutions:</span>
-              <a href="/for/menus" class="hover:underline hover:text-black">
-                Restaurant Menus 📜
-              </a>
-              <span class="text-gray-300">•</span>
-              <a href="/for/weddings" class="hover:underline hover:text-black">
-                Weddings & Photo Drops 📸
-              </a>
-              <span class="text-gray-300">•</span>
-              <a href="/for/music" class="hover:underline hover:text-black">
-                Music Mixtapes 📼
-              </a>
-              <span class="text-gray-300">•</span>
-              <a href="/for/lockers" class="hover:underline hover:text-black">
-                Secret Drops 🔐
-              </a>
-              <span class="text-gray-300">•</span>
-              <a
-                href="/guide/printing"
-                class="hover:underline text-indigo-700 font-black"
-              >
-                Print Calculator & Guide 📐
-              </a>
-            </div>
-
-            <p class="text-center text-xs text-gray-500 mt-4 opacity-60">
-              <span class="hidden sm:inline">
-                Made by Pablo • Melbourne • Drop a link. Watch it bloom.
-              </span>
-              <span class="sm:hidden">Made by Pablo • Melbourne</span>
-            </p>
-          </div>
-        </footer>
+        <FooterDock lang="en" />
       </div>
 
       {/* Modals */}

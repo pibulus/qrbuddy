@@ -57,7 +57,7 @@ and Supabase security/RPC behavior should be tested against Supabase.
 
 ### 🎯 What Works Locally
 
-- ✅ **Basic QR Codes** - All 7 gradient styles + custom gradients
+- ✅ **Basic QR Codes** - All 8 gradient styles + custom gradients
 - ✅ **Destructible QRs** - Basic URL/file flows through the local mock API
 - ✅ **Dynamic QR Codes** - Editable redirects with scan limits & expiry (works
   through the local mock API)
@@ -101,7 +101,7 @@ qrbuddy/
 │   ├── f/[code].tsx          # Destructible file download gate
 │   ├── bucket/[code].tsx     # File locker viewer
 │   └── api/download-file.ts  # Server-side file proxy
-├── islands/              # Interactive Preact islands (40 registered)
+├── islands/              # Interactive Preact islands (41 registered)
 │   ├── QRCanvas.tsx          # Core QR rendering + download/copy logic
 │   ├── SmartInput.tsx        # Smart input (URLs/files/text + dynamic settings)
 │   ├── StyleSelector.tsx     # Gradient selector + custom creator entry

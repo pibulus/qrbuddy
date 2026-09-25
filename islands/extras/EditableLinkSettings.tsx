@@ -29,7 +29,7 @@ export default function EditableLinkSettings({
   const hasLink = (hasContent && looksLikeUrl(pendingUrl)) || validSeqCount > 0;
 
   return (
-    <div class="bg-gradient-to-r from-[#FFE5F0] to-[#F5E6FF] border-3 border-[#FF69B4] rounded-xl p-4 space-y-3 shadow-chunky animate-slide-down">
+    <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
       {!editUrl.value && (
         <div class="space-y-3">
           <div class="flex items-start gap-3">
@@ -83,7 +83,7 @@ export default function EditableLinkSettings({
         </div>
       )}
       {editUrl.value && (
-        <div class="bg-gradient-to-r from-[#F5E6FF] to-[#FFE5F0] border-3 border-[#9370DB] rounded-xl p-4 space-y-2 shadow-chunky animate-slide-down">
+        <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-2 animate-slide-down">
           <div class="flex items-center gap-2">
             <span class="text-xl">✨</span>
             <p class="text-sm font-black text-[#6B46A8]">

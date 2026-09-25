@@ -112,3 +112,14 @@ body {
 :root {
   --charm-modal-close-ms: 0ms;
 }
+
+/* Scroll without the native track: a floating OS scrollbar slices through a
+   rounded card corner and breaks the toy. Content still scrolls (wheel,
+   touch, keys) — only the chrome is hidden. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

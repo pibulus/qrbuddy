@@ -73,7 +73,7 @@ HTML.
 - Orchestrates component layout
 - Handles SEO meta tags
 
-**Islands (Interactive Components - 40 registered)**
+**Islands (Interactive Components - 41 registered)**
 
 See GLOSSARY.md for complete list organized by category. Key islands:
 
@@ -224,7 +224,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 - **Chunky borders**: 4px black borders with custom shadow classes
 - **Warm pastels**: Cream backgrounds with gradient accents
 - **Spring animations**: Squish, rotate-shuffle, and pop effects
-- **Gradient themes**: 7 pre-defined gradient styles emphasizing visual delight
+- **Gradient themes**: 8 pre-defined gradient styles emphasizing visual delight
 
 ### Layout & Surface Rules
 
@@ -247,8 +247,43 @@ adding surfaces:
   border-black sm:rounded-3xl`, `sm:animate-pop-in`);
   `max-h-[92dvh]`; header/body `p-4 sm:p-6`; bottom padding respects the home
   indicator: `pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6`.
-- **Info dialogs** (About/Kofi/Pricing): centered at all sizes, gradient
-  header + `border-4` card, same backdrop/z as sheets.
+- **CreateModal footprint**: `max-w-lg`, cream card, body fixed at
+  `sm:h-[min(480px,56dvh)]` so the three tabs never change the dialog's height —
+  content scrolls inside. Every selectable is `ChoiceRow` (`rich` variant for
+  the Behavior tab): state by inversion only — active is
+  `bg-amber-200 border-black shadow-chunky`, inactive `border-black/15`. No
+  "Active" pills, no eyebrow tags, no dashed boxes, no tinted wrapper cards, no
+  "what you just picked" header card inside a form. Inputs share one recipe:
+  `border-2 border-black/15 bg-white rounded-2xl focus:border-qr-pop`. Expanding
+  sub-panels (`islands/extras/*`) are all
+  `bg-white border-2 border-black rounded-2xl p-4` — white on the cream card,
+  never a per-feature tint. Scroll containers inside cards use `scrollbar-none`
+  (styles.css) so the native track never cuts a corner radius. The tab strip is
+  warm milk (`bg-amber-50`), never clinical white.
+- **Info dialogs** (About/Kofi/Pricing): always `islands/modal/CardModal.tsx` —
+  centered cream card at all sizes, `max-w-[460px]`, `border-4` + `rounded-3xl`,
+  mascot badge hanging centered at the top, circular `✕` top-right, same
+  backdrop/z as sheets. No gradient header bars. Titles are
+  `font-black text-2xl tracking-tight`; the one accent is `qr-pop` pink; primary
+  action is one full-width `rounded-full` pill (`CardPrimaryButton`),
+  secondaries are white bordered pills. Copy is a manifesto, not a spec sheet.
+- **Footer dock**: `islands/FooterDock.tsx` — no divider line, metadata left,
+  utility pills right, Solutions pops upward from the dock. Home routes pin it
+  to the viewport bottom edge (`min-h-[100dvh]` shell, `mt-auto` footer).
+- **Top rail**: language toggle and style picker share one lightweight pill
+  recipe
+  (`min-h-[36px] rounded-full border-2 text-xs font-black shadow-chunky`).
+- **Voice**: QRBuddy is the entity. Never "we"/"us" in UI copy.
+- **Palette presets** (`utils/qr-styles.ts` + `STYLE_DISPLAY`): one family —
+  pastel-punk, two-tone, the same 135° diagonal (`DIAGONAL` rad). Scannability
+  floor for any preset or swatch: every dot stop ≤ 0.40 relative luminance and ≥
+  2:1 against its own background. Pretty-but-pale lime/amber stops fail phone
+  cameras on cream paper — don't add them. Swatch previews are always
+  `linear-gradient(135deg, …)` so the grid catches the light uniformly. Gallery
+  tiles are enamel badges: gradient in a black ring with a white bezel, name in
+  black below, active = `bg-amber-200` inversion. Retired styles (terminal,
+  brutalist) stay in `QR_STYLES` for easter eggs and locker pages but leave the
+  public gallery.
 - **Toasts**: bottom snackbar,
   `bottom-[max(1.5rem,env(safe-area-inset-bottom))]`, full-width flex container
   (never `left-1/2` — it caps layout width at 50vw and wraps).
@@ -300,7 +335,7 @@ adding surfaces:
 
 ### Performance Optimizations
 
-- **Islands Architecture**: Only interactive components hydrate (40 islands
+- **Islands Architecture**: Only interactive components hydrate (41 islands
   total)
 - **Signal-Based State**: Efficient reactive updates without re-renders
 - **Lazy QR Updates**: QR regenerates only on url/style change via useEffect
@@ -308,6 +343,65 @@ adding surfaces:
 - **Tailwind CSS**: Utility-first CSS with minimal runtime overhead
 
 ## ✅ Recently Completed
+
+### "It's mine" — share ownership + stats (Latest)
+
+Every file share (`/f/{code}`) has an owner. `upload-file` mints `owner_token`
+(returned once, kept in the device's token vault under scope `"file"`, never in
+the URL). On the share page, `islands/OwnerStrip.tsx` renders only when the
+vault holds the token; the public never sees it.
+
+- **Stats that help, nothing creepy.** `share-beacon` is called from the browser
+  (a "view" on open, one "engagement" batch on page-hide) so the edge sees the
+  visitor's real headers. `_shared/visitor.ts` turns them into
+  country/city/device/os, a "scan vs shared link" flag (referrer), and a
+  daily-salted hash for uniques/returns — the IP is used and dropped in the same
+  call, never stored. `record_share_activity` (service-role RPC) merges into
+  `destructible_files.stats` (lifetime tallies) and `share_stats_daily` (90-day
+  ledger, pruned by `cleanup-expired`). `utils/share-stats.ts` folds these into
+  the Today / This week / All time trading card. Lifetime shows scans, not
+  people — not honestly knowable.
+- **Context that people enjoy** (`20260925010000_share_stats_context.sql`):
+  languages (`accept-language`), which app carried the link (bucketed referrer
+  host), farthest scan (coarse ~10 km lat/lon vs `origin_lat/lon` recorded at
+  upload, haversine in SQL), night-owl / weekend reads from the hour/day
+  tallies, iPhone vs Android, age + milestones. No horoscopes.
+- **The noticing** (`20260925020000_share_stats_conditions.sql`,
+  `_shared/conditions.ts`): each view tallies condition keys — weather, temp
+  band, local time slot, moon, plus "hot mornings" / "rainy nights" combos.
+  Weather is Open-Meteo (keyless), cached per ~10 km cell per UTC day in
+  `weather_days` with a 7-day backfill (≤1 outbound call per cell per day).
+  `utils/share-stats.ts` `patternsFor` compares observed vs a fair baseline (how
+  often it actually rained where the scanners were; share of days in each moon
+  phase) and only speaks at **≥20 views, ≥5 in the condition, lift ≥1.5×**.
+  "Just Melbourne" stays quiet. Cross-share "Field Notes" (OkTrends-style,
+  `/notes`) is the planned follow-up once real data exists.
+- **Edit what it is.** `update-file`: `rename`, `retheme`, `append` (multipart),
+  `remove`. Self-destructing shares are frozen to rename/retheme; append can't
+  change a share's kind; max 10 items.
+- **`SHARE_STATS_SALT`** must be set in edge-function secrets for "people"
+  counts; without it views still count.
+- The Time Machine drawer shows **👑 Manage →** on shares this device owns.
+
+### Drop → Slideshow / Mixtape
+
+The magic path: drop 2+ photos on the input → a shareable slideshow; drop 2+
+audio files → a mixtape. Both live at `/f/{code}` (`FileSlideshow`).
+
+- **`utils/image-prep.ts`**: photos are downscaled on the device (≤2048px JPEG)
+  before upload so the 5MB-per-file multi-share cap never surfaces;
+  Safari-decoded HEIC comes out as JPEG. Non-decodable files pass through.
+- **Staging card** (`smart-input/FileUploadOptions.tsx`): shows the thing —
+  thumbnail strip or tracklist — with an optional title and one CTA ("Make the
+  slideshow ✨"). Self-destruct is tucked under a toggle.
+- **`smart-input/ShareReady.tsx`**: after upload, the "it's alive" strip: Open ↗
+  · Copy · Sticker (turns on the SCAN ME frame and exports the PNG).
+- **Title** travels as a `title` form field to `upload-file`, stored in
+  `original_name`; untitled multi-shares are named "8 photos" / "5 tracks"
+  (legacy "IMG_1.jpg + 7 more" names are read as such on the page).
+- **`/f/` page**: photo slideshows autoplay (4.5s, space to pause, any manual
+  nav stops it) with a dot transport; playlists show a real tracklist with
+  cleaned names (`prettyName`) and auto-advance.
 
 ### File Transfer Hardening (Latest)
 
@@ -330,10 +424,11 @@ adding surfaces:
   cleanup-expired
 - **Database Schema**: Added `dynamic_qr_codes` table with scan limits and
   expiry tracking
-- **Edge Functions**: 18 total Supabase functions:
+- **Edge Functions**: 20 total Supabase functions:
   - Dynamic QRs: create-dynamic-qr, update-dynamic-qr, get-dynamic-qr,
     redirect-qr
-  - Destructible files: upload-file, get-file, get-file-metadata
+  - Destructible files: upload-file, get-file, get-file-metadata, update-file,
+    share-beacon
   - File lockers: create-bucket, get-bucket-status, upload-to-bucket,
     download-from-bucket
   - Supporter pass: create-checkout, square-webhook, get-license
@@ -349,7 +444,7 @@ adding surfaces:
   redirect logic
 - **Visual Indicators**: Purple/pink "editable" badge on dynamic QRs alongside
   destructible badge
-- **40 Interactive Islands**: Complete island architecture with modals, QR
+- **41 Interactive Islands**: Complete island architecture with modals, QR
   types, and feature discovery
 
 ### Previous Features

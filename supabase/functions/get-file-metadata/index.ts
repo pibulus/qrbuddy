@@ -14,6 +14,10 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const fileId = url.searchParams.get("id");
+    // The owner asks with their token and gets stats + the daily ledger back.
+    // Anyone else gets the public shape. Token in a query param only on this
+    // read, from the vault, over HTTPS — never in the share URL.
+    const ownerToken = url.searchParams.get("owner");
 
     if (!fileId) {
       return new Response(
@@ -63,6 +67,53 @@ serve(async (req) => {
 
     const remainingDownloads = maxDownloads - downloadCount;
 
+    const isOwner = Boolean(ownerToken) && Boolean(file.owner_token) &&
+      ownerToken === file.owner_token;
+
+    let ledger: Record<string, unknown>[] | undefined;
+    // Baseline weather for the cells scanners came from: how often it was
+    // actually raining / hot / etc. there over the window. Top 8 cells only.
+    let weather: Record<string, Record<string, Record<string, number>>> = {};
+    if (isOwner) {
+      const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+        .toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("share_stats_daily")
+        .select(
+          "day, views, people, returns, countries, cities, devices, hours, items, dwell_s, dwell_n, completions, shares, downloads, referred, languages, apps, farthest_km, farthest_place, conditions, cells",
+        )
+        .eq("file_id", fileId)
+        .gte("day", since)
+        .order("day", { ascending: true });
+      ledger = data ?? [];
+
+      const cellViews: Record<string, number> = {};
+      for (const row of ledger) {
+        for (
+          const [cell, n] of Object.entries(
+            (row.cells ?? {}) as Record<string, number>,
+          )
+        ) {
+          cellViews[cell] = (cellViews[cell] ?? 0) + n;
+        }
+      }
+      const topCells = Object.entries(cellViews)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([cell]) => cell);
+      if (topCells.length > 0) {
+        const { data: days } = await supabase
+          .from("weather_days")
+          .select("cell, day, counts")
+          .in("cell", topCells)
+          .gte("day", since);
+        weather = {};
+        for (const d of days ?? []) {
+          (weather[d.cell] ??= {})[d.day] = d.counts;
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         fileId: file.id,
@@ -75,6 +126,15 @@ serve(async (req) => {
         downloadCount,
         remainingDownloads,
         isExpired,
+        ...(isOwner
+          ? {
+            isOwner: true,
+            stats: file.stats ?? {},
+            ledger,
+            weather,
+            createdAt: file.created_at,
+          }
+          : {}),
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

@@ -44,22 +44,23 @@ export default function ToastManager() {
     });
 
     const handleToastEvent = (e: Event) => {
-      const customEvent = e as CustomEvent<{ message?: string; duration?: number }>;
-      const msg =
-        customEvent.detail?.message ||
+      const customEvent = e as CustomEvent<
+        { message?: string; duration?: number }
+      >;
+      const msg = customEvent.detail?.message ||
         (typeof customEvent.detail === "string" ? customEvent.detail : "");
       if (msg) {
         addToast(msg, customEvent.detail?.duration ?? 2000);
       }
     };
 
-    window.addEventListener("app:toast", handleToastEvent);
-    window.addEventListener("qrbuddy:toast", handleToastEvent);
+    globalThis.addEventListener("app:toast", handleToastEvent);
+    globalThis.addEventListener("qrbuddy:toast", handleToastEvent);
 
     return () => {
       unsubscribe();
-      window.removeEventListener("app:toast", handleToastEvent);
-      window.removeEventListener("qrbuddy:toast", handleToastEvent);
+      globalThis.removeEventListener("app:toast", handleToastEvent);
+      globalThis.removeEventListener("qrbuddy:toast", handleToastEvent);
     };
   }, []);
 

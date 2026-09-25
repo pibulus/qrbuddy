@@ -90,18 +90,26 @@ interface StyleSelectorProps {
 
 export const STYLE_DISPLAY = {
   // Swatch colors mirror the actual dot gradients in utils/qr-styles.ts —
-  // keep them in sync so the gallery doesn't lie about the output.
+  // keep them in sync so the gallery doesn't lie about the output. Order is
+  // warm → cool → dark; eight presets, one family (pastel-punk, 135° sweep).
   sunset: { name: "Sunset", colors: ["#FF8C42", "#FF69B4", "#9370DB"] },
-  pool: { name: "Pool", colors: ["#4AA8D8", "#2EB5AC"] },
-  blush: { name: "Blush", colors: ["#D48166", "#BA5566", "#8E44AD"] },
-  matcha: { name: "Matcha", colors: ["#2E7D32", "#1B5E20", "#004D40"] },
-  terminal: { name: "Matrix", colors: ["#00FF41", "#0A0A0A"] },
   candy: { name: "Candy", colors: ["#FF69B4", "#FF8C00", "#2EB5AC"] },
-  vapor: { name: "Vapor", colors: ["#E600E6", "#009999"] },
-  noir: { name: "Classic", colors: ["#1A1A1A", "#FAFAFA"] },
-  // brutalist left the public gallery (Pablo's call, Aug 2026) but still
-  // renders — the "666" easter egg summons it. Keep utils/qr-styles.ts entry.
+  blush: { name: "Blush", colors: ["#D48166", "#BA5566", "#8E44AD"] },
+  matcha: { name: "Matcha", colors: ["#65A30D", "#047857"] },
+  pool: { name: "Pool", colors: ["#0EA5E9", "#0D9488"] },
+  vapor: { name: "Vapor", colors: ["#8B5CF6", "#DB2777"] },
+  grape: { name: "Grape", colors: ["#4F46E5", "#9333EA"] },
+  noir: { name: "Licorice", colors: ["#1E1B4B", "#0F172A"] },
 };
+
+// Styles that still render but left the public gallery: brutalist (the 666
+// easter egg), terminal (1337 easter egg + the locker landing pages' default).
+// The trigger pill needs their names too.
+const HIDDEN_STYLE_DISPLAY: Record<string, { name: string; colors: string[] }> =
+  {
+    brutalist: { name: "Brutal", colors: ["#000000", "#FFFF00"] },
+    terminal: { name: "Matrix", colors: ["#00FF41", "#0A0A0A"] },
+  };
 
 export default function StyleSelector(
   { style, customStyle, isHidden }: StyleSelectorProps,
@@ -185,11 +193,11 @@ export default function StyleSelector(
   const currentStyleInfo = style.value === "custom"
     ? { name: "Custom", colors: ["#9370DB", "#FF69B4"] }
     : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY] ??
-      // Styles outside the gallery (brutalist via the 666 easter egg).
-      { name: "Brutal", colors: ["#000000", "#FFFF00"] };
+      HIDDEN_STYLE_DISPLAY[style.value] ??
+      HIDDEN_STYLE_DISPLAY.brutalist;
 
   const getGradientPreview = (colors: string[]) => {
-    return `linear-gradient(45deg, ${colors.join(", ")})`;
+    return `linear-gradient(135deg, ${colors.join(", ")})`;
   };
 
   return (
@@ -206,29 +214,20 @@ export default function StyleSelector(
           aria-label={`Select QR style, current: ${currentStyleInfo.name}`}
           aria-haspopup="dialog"
           aria-expanded={isGalleryOpen}
-          class="
-            flex items-center gap-2 px-4 py-3
-            bg-white border-3 border-black rounded-xl
-            hover:bg-gray-50
-            transition-all duration-200
-            hover:scale-105 active:scale-95
-            shadow-md hover:shadow-lg
-          "
+          class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-white border-2 border-black rounded-full text-xs font-black text-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
         >
           <div
-            class="w-5 h-5 rounded border-2 border-black"
+            class="w-4 h-4 rounded-full border-2 border-black"
             style={{ background: getGradientPreview(currentStyleInfo.colors) }}
           />
-          <span class="font-bold text-black hidden sm:inline">
+          <span class="hidden sm:inline">
             {currentStyleInfo.name}
           </span>
           {
-            /* The ▼ stays on mobile — a bare swatch reads as decoration,
+            /* The ▾ stays on mobile — a bare swatch reads as decoration,
             not a menu. */
           }
-          <span class="text-sm font-bold">
-            ▼
-          </span>
+          <span aria-hidden="true">▾</span>
         </button>
       </div>
 
@@ -246,7 +245,7 @@ export default function StyleSelector(
             aria-modal="true"
             aria-labelledby="style-gallery-title"
             tabindex={-1}
-            class="relative z-10 w-full max-w-lg bg-white sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-6 animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto"
+            class="relative z-10 w-full max-w-lg bg-white sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-6 animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto scrollbar-none"
           >
             {/* Header */}
             <div class="flex items-start justify-between gap-3">
@@ -273,80 +272,73 @@ export default function StyleSelector(
 
             {/* Grid */}
             <div class="grid grid-cols-2 gap-3">
-              {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
-                <button
-                  type="button"
-                  key={key}
-                  onClick={() => handleStyleSelect(key)}
-                  aria-pressed={style.value === key}
-                  class={`
-                    relative group overflow-hidden rounded-2xl border-3 transition-all duration-200
-                    ${
-                    style.value === key
-                      ? "border-black scale-[1.02] shadow-chunky"
-                      : "border-gray-200 hover:border-black hover:scale-[1.02] hover:shadow-lg"
-                  }
-                  `}
-                >
-                  {/* Preview Background */}
-                  <div
-                    class="absolute inset-0 z-0"
-                    style={{ background: getGradientPreview(info.colors) }}
-                  />
-
-                  {/* Content Overlay */}
-                  <div class="relative z-10 p-4 h-24 flex flex-col justify-end">
-                    <span
-                      class="font-black text-white text-xl"
-                      style="text-shadow: 0 1px 4px rgba(0,0,0,0.85), 0 0 8px rgba(0,0,0,0.6)"
-                    >
+              {Object.entries(STYLE_DISPLAY).map(([key, info]) => {
+                const active = style.value === key;
+                return (
+                  <button
+                    type="button"
+                    key={key}
+                    aria-pressed={active}
+                    onClick={() => handleStyleSelect(key)}
+                    class={`group rounded-2xl border-2 p-1.5 text-left transition-all duration-200 ${
+                      active
+                        ? "border-black bg-amber-200 shadow-chunky"
+                        : "border-black/15 bg-white hover:border-black/60 hover:scale-[1.02]"
+                    }`}
+                  >
+                    {/* Enamel badge: gradient inside a black ring with a white bezel */}
+                    <div
+                      class="h-16 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 transition-transform group-active:scale-95"
+                      style={{ background: getGradientPreview(info.colors) }}
+                    />
+                    <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
                       {info.name}
                     </span>
-                    {style.value === key && (
-                      <span class="absolute top-3 right-3 bg-white text-black text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                        Selected
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
 
               {
-                /* Dice and Custom fill slots 7 and 8 so the grid stays a
-                clean 2×4 — no full-width stragglers. */
+                /* Dice and Custom fill the last row so the grid stays an even
+                2×5 — no full-width stragglers. */
               }
               <button
                 type="button"
                 onClick={handleDiceRoll}
-                class="relative group overflow-hidden rounded-2xl border-3 border-gray-200 hover:border-black hover:scale-[1.02] hover:shadow-lg transition-all duration-200 bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-200 flex flex-col items-center justify-center h-24 gap-1"
+                disabled={isRolling}
+                class="group rounded-2xl border-2 border-black/15 bg-white p-1.5 text-left transition-all duration-200 hover:border-black/60 hover:scale-[1.02] disabled:opacity-60"
               >
-                <span class="text-2xl group-hover:rotate-[360deg] transition-transform duration-500">
-                  🎲
+                <div class="h-16 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-200 flex items-center justify-center text-2xl">
+                  <span class="group-hover:rotate-[360deg] transition-transform duration-500">
+                    🎲
+                  </span>
+                </div>
+                <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
+                  Surprise me
                 </span>
-                <span class="font-bold text-gray-900">Surprise me</span>
               </button>
 
               <button
                 type="button"
+                aria-pressed={style.value === "custom"}
                 onClick={() => {
                   isCreatorOpen.value = true;
                   haptics.medium();
                   sounds.click();
                   shell.requestClose();
                 }}
-                class={`
-                  relative group overflow-hidden rounded-2xl border-3 border-dashed border-gray-300
-                  hover:border-black hover:border-solid hover:scale-[1.02] hover:shadow-lg transition-all duration-200
-                  bg-gray-50 flex flex-col items-center justify-center h-24 gap-1
-                  ${
+                class={`group rounded-2xl border-2 p-1.5 text-left transition-all duration-200 ${
                   style.value === "custom"
-                    ? "border-black border-solid shadow-chunky bg-white"
-                    : ""
-                }
-                `}
+                    ? "border-black bg-amber-200 shadow-chunky"
+                    : "border-black/15 bg-white hover:border-black/60 hover:scale-[1.02]"
+                }`}
               >
-                <span class="text-2xl">🎨</span>
-                <span class="font-bold text-gray-900">Build your own</span>
+                <div class="h-16 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 bg-white flex items-center justify-center text-2xl">
+                  🎨
+                </div>
+                <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
+                  Build your own
+                </span>
               </button>
             </div>
 
