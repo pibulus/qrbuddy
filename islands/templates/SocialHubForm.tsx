@@ -143,7 +143,7 @@ export default function SocialHubForm({ url }: Props) {
                 platform !== "linkedin"
                 ? "pl-9"
                 : "px-4"
-            } py-3 border-3 border-black/10 bg-white/50 rounded-xl text-lg focus:bg-white focus:border-black focus:outline-none transition-colors font-bold placeholder-black/30`}
+            } py-3 border-3 border-black/10 bg-white/50 rounded-xl text-lg focus:bg-white focus:border-qr-pop focus:outline-none transition-colors font-bold placeholder-black/30`}
           />
         </div>
         <p class="text-xs mt-2 opacity-70 font-mono truncate">

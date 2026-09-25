@@ -139,21 +139,21 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
           value={title}
           onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
           placeholder="Title (e.g. Project Proposal)"
-          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-black focus:outline-none transition-colors font-bold"
+          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-qr-pop focus:outline-none transition-colors font-bold"
         />
         <textarea
           value={description}
           onInput={(e) => setDescription((e.target as HTMLInputElement).value)}
           placeholder="Description (optional)"
           rows={2}
-          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-black focus:outline-none transition-colors resize-none"
+          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-qr-pop focus:outline-none transition-colors resize-none"
         />
         <input
           type="text"
           value={creator}
           onInput={(e) => setCreator((e.target as HTMLInputElement).value)}
           placeholder="Created by (optional)"
-          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-black focus:outline-none transition-colors"
+          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-qr-pop focus:outline-none transition-colors"
         />
       </div>
 

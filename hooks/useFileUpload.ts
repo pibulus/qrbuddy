@@ -12,6 +12,8 @@ import {
 } from "../utils/file-validation.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { uploadViaR2 } from "../utils/r2-upload.ts";
+import { saveOwnerToken } from "../utils/token-vault.ts";
+import { addToHistory } from "../utils/history.ts";
 import {
   UNLIMITED_SCANS,
   UNLIMITED_SCANS_TEXT,
@@ -47,7 +49,10 @@ export function useFileUpload(
   const [uploadError, setUploadError] = useState<string | null>(null);
   const inFlightRef = useRef(false);
 
-  const uploadFile = async (input: File | FileList | File[]) => {
+  const uploadFile = async (
+    input: File | FileList | File[],
+    options: { title?: string } = {},
+  ) => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
 
@@ -102,6 +107,8 @@ export function useFileUpload(
         fileName: string;
         size: number;
         maxDownloads: number;
+        fileId?: string;
+        ownerToken?: string;
       };
 
       let data: UploadResponse;
@@ -123,6 +130,9 @@ export function useFileUpload(
           formData.append("file", file);
         });
         formData.append("maxDownloads", maxDownloads.value.toString());
+        if (options.title?.trim()) {
+          formData.append("title", options.title.trim());
+        }
         if (qrStyle?.value) {
           formData.append("theme", qrStyle.value);
         }
@@ -138,6 +148,31 @@ export function useFileUpload(
       }
 
       setUploadProgress(100);
+
+      // It's yours: keep the owner token in the vault (this device) and a
+      // "my QRs" entry so the share can be found and managed again.
+      if (data.fileId && data.ownerToken) {
+        await saveOwnerToken("file", data.fileId, data.ownerToken);
+        const allAudio = files.every((f) => f.type.startsWith("audio/"));
+        const allImages = files.every((f) => f.type.startsWith("image/"));
+        addToHistory({
+          type: "media",
+          content: data.url,
+          metadata: {
+            title: options.title?.trim() ||
+              (isMulti
+                ? `${files.length} ${
+                  allAudio ? "tracks" : allImages ? "photos" : "files"
+                }`
+                : files[0].name),
+            ownerScope: "file",
+            ownerId: data.fileId,
+            kind: isMulti
+              ? (allAudio ? "playlist" : allImages ? "slideshow" : "pack")
+              : "file",
+          },
+        });
+      }
 
       // Set the destructible URL
       url.value = data.url;
@@ -168,23 +203,18 @@ export function useFileUpload(
       if (isMulti) {
         const allAudio = files.every((f) => f.type.startsWith("audio/"));
         const allImages = files.every((f) => f.type.startsWith("image/"));
-        const multiDesc = allAudio
-          ? `${files.length} tracks (playlist 🎵)`
+        successMessage = allAudio
+          ? "Mixtape is live 🎵"
           : allImages
-          ? `${files.length} images (slideshow 🖼️)`
-          : `${files.length} files`;
-
-        successMessage = limitedDownloads
-          ? `✅ ${multiDesc} uploaded! Limit: ${scanText}`
-          : `✅ ${multiDesc} uploaded! Ready to share ✨`;
+          ? "Slideshow is live 🖼️"
+          : `${files.length} files are live 📦`;
       } else {
-        successMessage = limitedDownloads
-          ? `✅ ${files[0].name} uploaded! Limit: ${scanText}`
-          : `✅ ${files[0].name} uploaded! Ready to share ✨`;
+        successMessage = "File is live 📄";
       }
-
-      // Append copy notice
-      successMessage += " (Link copied!)";
+      if (limitedDownloads) {
+        successMessage += ` · self-destructs after ${scanText}`;
+      }
+      successMessage += " · link copied";
 
       addToast(successMessage, 3000);
 

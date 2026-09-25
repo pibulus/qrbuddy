@@ -31,16 +31,6 @@ export default function PhoneForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-[#E8F5E9] border-3 border-[#66BB6A] rounded-xl p-4 shadow-chunky">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-2xl">📞</span>
-          <h3 class="font-black text-[#2E7D32]">Phone Call QR</h3>
-        </div>
-        <p class="text-sm text-[#2E7D32]">
-          Scan to dial — great for business cards and flyers.
-        </p>
-      </div>
-
       {/* Phone Number */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -54,7 +44,7 @@ export default function PhoneForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="+1 (555) 123-4567"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#66BB6A] focus:outline-none"
+          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
         />
         <p class="text-xs text-gray-500">
           Include country code (e.g., +61 for Australia)

@@ -1,6 +1,6 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components - 40 registered)
+## Islands (Interactive Components - 41 registered)
 
 **Core QR Components:**
 
@@ -10,7 +10,14 @@
 - `StyleSelector` - Gradient picker with quick menu + custom entry point
 - `GradientCreator` - Full modal for custom gradients
 - `CreateModal` - Combined QR type, options, file locker, and design sheet
-- `LogoUploader` - Custom center-logo uploader with previews
+- `smart-input/FileUploadOptions` - Staging card: thumbnails/tracklist, title,
+  CTA, self-destruct toggle
+- `smart-input/ShareReady` - Post-upload strip: Open / Copy / Sticker
+- `OwnerStrip` - "It's yours" on /f/: stats card, rename, vibe, add/remove,
+  sticker
+- `create-modal/PalettePills` - The one row of preset swatch pills
+- `LogoUploader` - Center-logo row (ChoiceRow language) with inline
+  Upload/Remove
 - `ActionButtons` - Download/copy/share triggers tied to signals
 - `ShareActions` - Share sheet for QR codes
 - `HistoryDrawer` - QR generation history panel
@@ -22,9 +29,10 @@
 
 **Modals & Overlays:**
 
-- `AboutModal` - Feature overview + release notes
+- `AboutModal` - Manifesto card (first-visit intro poster + about)
 - `KofiModal` - Ko-fi support modal
-- `PricingModal` - Pro tier upsell modal
+- `PricingModal` - Single-tier Supporter unlock card
+- `FooterDock` - Bottom dock: metadata + About/Solutions/Tip Jar/Supporter pills
 
 **Dynamic + Locker Features:**
 
@@ -117,7 +125,7 @@
 
 - **Signal-Based State** - Preact signals for reactive updates (url, style,
   triggerDownload, triggerCopy, isDestructible, isDynamic, editUrl)
-- **Gradient QR Codes** - `qr-code-styling` library with 7 pre-defined gradient
+- **Gradient QR Codes** - `qr-code-styling` library with 8 pre-defined gradient
   themes
 - **Island Architecture** - Selective client hydration, server-rendered HTML
 - **Soft Brutal Aesthetic** - Chunky 4px borders, warm pastels, spring

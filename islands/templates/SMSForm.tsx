@@ -33,16 +33,6 @@ export default function SMSForm({ url }: Props) {
 
   return (
     <div class="space-y-4">
-      <div class="bg-[#FFE5F0] border-3 border-[#FF69B4] rounded-xl p-4 shadow-chunky">
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-2xl">💬</span>
-          <h3 class="font-black text-[#D84A94]">SMS Message QR</h3>
-        </div>
-        <p class="text-sm text-[#D84A94]">
-          Scan to send a pre-filled text.
-        </p>
-      </div>
-
       {/* Phone Number */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -56,7 +46,7 @@ export default function SMSForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="+1 (555) 123-4567"
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FF69B4] focus:outline-none"
+          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
         />
         <p class="text-xs text-gray-500">
           Include country code (e.g., +1 for US)
@@ -76,7 +66,7 @@ export default function SMSForm({ url }: Props) {
           }}
           placeholder="Enter your pre-filled message here..."
           rows={4}
-          class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-[#FF69B4] focus:outline-none resize-none"
+          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none resize-none"
         />
         <p class="text-xs text-gray-500">
           {message.length} characters

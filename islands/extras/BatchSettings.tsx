@@ -14,7 +14,7 @@ export default function BatchSettings({
   onGenerateBatch,
 }: BatchSettingsProps) {
   return (
-    <div class="bg-[#F0F7FF] border-3 border-black rounded-2xl p-4 space-y-3 shadow-chunky animate-slide-down">
+    <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
       <div class="flex items-center justify-between mb-1">
         <div class="flex items-center gap-2">
           <span class="text-2xl">📦</span>

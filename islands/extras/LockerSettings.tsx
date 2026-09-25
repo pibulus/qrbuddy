@@ -67,7 +67,7 @@ export default function LockerSettings({
   };
 
   return (
-    <div class="bg-[#F0FFFB] border-3 border-black rounded-2xl p-4 space-y-4 animate-slide-down">
+    <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-4 animate-slide-down">
       {isActive
         ? (
           <div class="space-y-4">
@@ -79,7 +79,7 @@ export default function LockerSettings({
                 Print or send this QR to let people drop files.
               </p>
             </div>
-            <div class="bg-white border-2 border-dashed border-teal-200 rounded-xl p-3 text-xs font-mono break-all text-gray-700">
+            <div class="bg-qr-cream border-2 border-black/15 rounded-xl p-3 text-xs font-mono break-all text-neutral-700">
               {bucketUrl || "Generating URL..."}
             </div>
             <div class="flex flex-wrap gap-2">

@@ -167,6 +167,10 @@ export default {
 
           // Modal backdrop scrim (warm-black, not pure #000)
           scrim: "#2B1A0E",
+
+          // The one pink accent: primary pills, punchlines, bullets
+          pop: "#ff4d8d",
+          popDeep: "#f0427f",
         },
       },
 

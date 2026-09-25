@@ -14,7 +14,7 @@ export default function MultiLinkSettings({
   setLoopSequence,
 }: MultiLinkSettingsProps) {
   return (
-    <div class="bg-white/60 rounded-xl p-3 mb-4 border-2 border-indigo-200 animate-slide-down">
+    <div class="bg-white border-2 border-black rounded-2xl p-4 mb-4 animate-slide-down">
       <div class="flex items-center justify-between mb-2">
         <h4 class="font-bold text-sm text-indigo-900">
           Rotating links
@@ -75,7 +75,7 @@ export default function MultiLinkSettings({
             setSequentialUrls([...sequentialUrls, ""]);
             haptics.light();
           }}
-          class="w-full min-h-[44px] py-2 text-xs font-bold text-indigo-600 border-2 border-dashed border-indigo-300 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 transition-colors"
+          class="w-full min-h-[44px] py-2 text-xs font-bold text-indigo-600 border-2 border-black/15 rounded-full hover:border-black/60 transition-colors"
         >
           + Add Link
         </button>
