@@ -27,18 +27,12 @@ tier+expiry alone. Nobody gets more or less for paying in the wrong currency.
 USD.** Now documented in `.env.example` with the constraint from `square.ts:34`
 (it must match the Square location or the API rejects the payment link).
 
-### 2. `SQUARE_ENVIRONMENT` fails open to live money
+### 2. ~~`SQUARE_ENVIRONMENT` fails open to live money~~ (Fixed ✅)
 
-`supabase/functions/_shared/square.ts:10`:
-
-```ts
-Deno.env.get("SQUARE_ENVIRONMENT") === "sandbox"
-  ? "https://connect.squareupsandbox.com"
-  : "https://connect.squareup.com";
-```
-
-Unset, misspelled, or typo'd means **live Square**. There is no default-safe
-value. Documented in `.env.example`; the code itself still fails open.
+`supabase/functions/_shared/square.ts:10` now requires
+`SQUARE_ENVIRONMENT === "production"` to hit `connect.squareup.com`. Unset,
+misspelled, or `"sandbox"` safely defaults to `connect.squareupsandbox.com`.
+Documented in `.env.example`.
 
 ### 3. Two live forks of auth code across edge functions
 
