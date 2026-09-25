@@ -54,7 +54,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <title>QRBuddy - Drop a link. Watch it bloom.</title>
         <meta
           name="description"
-          content="Beautiful QR code generator with 7 gradient styles, QR types for links/WiFi/contact cards/messages, custom logos, file sharing, and editable QR codes. Free, privacy-first, minimal analytics."
+          content="Beautiful QR code generator with 8 gradient styles, QR types for links/WiFi/contact cards/messages, custom logos, file sharing, and editable QR codes. Free, privacy-first, minimal analytics."
         />
         <link rel="canonical" href="https://qrbuddy.app" />
         <link rel="alternate" hrefLang="en" href="https://qrbuddy.app" />
@@ -77,7 +77,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         />
         <meta
           property="og:description"
-          content="Free QR code generator with practical QR types, file sharing, custom logos, 7 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
+          content="Free QR code generator with practical QR types, file sharing, custom logos, 8 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
         />
         <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
         <meta property="og:image:width" content="1200" />
@@ -96,7 +96,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         />
         <meta
           name="twitter:description"
-          content="Free QR code generator with practical QR types, file sharing, custom logos, 7 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
+          content="Free QR code generator with practical QR types, file sharing, custom logos, 8 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
         />
         <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
 
@@ -138,7 +138,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
               "name": "Pablo",
             },
             "featureList": [
-              "6 gradient presets (Sunset, Pool, Matrix, Candy, Vapor, Classic)",
+              "8 gradient presets (Sunset, Candy, Blush, Matcha, Pool, Vapor, Grape, Licorice)",
               "Custom gradient creator",
               "QR types for links, WiFi, contact cards, messages, and plain text",
               "File sharing and file lockers",

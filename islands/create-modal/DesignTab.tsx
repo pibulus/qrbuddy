@@ -66,7 +66,7 @@ export default function DesignTab(
                 <span
                   class="w-4 h-4 rounded-full border-2 border-black shrink-0"
                   style={{
-                    background: `linear-gradient(45deg, ${
+                    background: `linear-gradient(135deg, ${
                       info.colors.join(", ")
                     })`,
                   }}

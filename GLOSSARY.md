@@ -119,7 +119,7 @@
 
 - **Signal-Based State** - Preact signals for reactive updates (url, style,
   triggerDownload, triggerCopy, isDestructible, isDynamic, editUrl)
-- **Gradient QR Codes** - `qr-code-styling` library with 7 pre-defined gradient
+- **Gradient QR Codes** - `qr-code-styling` library with 8 pre-defined gradient
   themes
 - **Island Architecture** - Selective client hydration, server-rendered HTML
 - **Soft Brutal Aesthetic** - Chunky 4px borders, warm pastels, spring

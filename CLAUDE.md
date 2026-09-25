@@ -224,7 +224,7 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 - **Chunky borders**: 4px black borders with custom shadow classes
 - **Warm pastels**: Cream backgrounds with gradient accents
 - **Spring animations**: Squish, rotate-shuffle, and pop effects
-- **Gradient themes**: 7 pre-defined gradient styles emphasizing visual delight
+- **Gradient themes**: 8 pre-defined gradient styles emphasizing visual delight
 
 ### Layout & Surface Rules
 
@@ -269,6 +269,16 @@ adding surfaces:
   recipe
   (`min-h-[36px] rounded-full border-2 text-xs font-black shadow-chunky`).
 - **Voice**: QRBuddy is the entity. Never "we"/"us" in UI copy.
+- **Palette presets** (`utils/qr-styles.ts` + `STYLE_DISPLAY`): one family —
+  pastel-punk, two-tone, the same 135° diagonal (`DIAGONAL` rad). Scannability
+  floor for any preset or swatch: every dot stop ≤ 0.40 relative luminance and ≥
+  2:1 against its own background. Pretty-but-pale lime/amber stops fail phone
+  cameras on cream paper — don't add them. Swatch previews are always
+  `linear-gradient(135deg, …)` so the grid catches the light uniformly. Gallery
+  tiles are enamel badges: gradient in a black ring with a white bezel, name in
+  black below, active = `bg-amber-200` inversion. Retired styles (terminal,
+  brutalist) stay in `QR_STYLES` for easter eggs and locker pages but leave the
+  public gallery.
 - **Toasts**: bottom snackbar,
   `bottom-[max(1.5rem,env(safe-area-inset-bottom))]`, full-width flex container
   (never `left-1/2` — it caps layout width at 50vw and wraps).

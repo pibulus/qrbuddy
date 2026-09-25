@@ -57,7 +57,7 @@ and Supabase security/RPC behavior should be tested against Supabase.
 
 ### 🎯 What Works Locally
 
-- ✅ **Basic QR Codes** - All 7 gradient styles + custom gradients
+- ✅ **Basic QR Codes** - All 8 gradient styles + custom gradients
 - ✅ **Destructible QRs** - Basic URL/file flows through the local mock API
 - ✅ **Dynamic QR Codes** - Editable redirects with scan limits & expiry (works
   through the local mock API)

@@ -76,7 +76,7 @@ export function AboutModal() {
                 </span>
                 <span class="min-w-0 text-sm text-gray-800 leading-snug">
                   <span class="font-black block">Gorgeous by default</span>
-                  7 gradients, a style dice, printable "SCAN ME" frames.
+                  8 gradients, a style dice, printable "SCAN ME" frames.
                 </span>
               </li>
               <li class="flex items-start gap-3">
