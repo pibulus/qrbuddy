@@ -500,6 +500,7 @@ export default function QRCanvas(
         onDragEnter={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        data-dropzone="true"
         role="button"
         tabIndex={0}
         aria-label="Download QR code as PNG"

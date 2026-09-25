@@ -42,7 +42,25 @@ export default function ToastManager() {
     const unsubscribe = toastQueue.subscribe((value) => {
       setToasts(value);
     });
-    return () => unsubscribe();
+
+    const handleToastEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ message?: string; duration?: number }>;
+      const msg =
+        customEvent.detail?.message ||
+        (typeof customEvent.detail === "string" ? customEvent.detail : "");
+      if (msg) {
+        addToast(msg, customEvent.detail?.duration ?? 2000);
+      }
+    };
+
+    window.addEventListener("app:toast", handleToastEvent);
+    window.addEventListener("qrbuddy:toast", handleToastEvent);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener("app:toast", handleToastEvent);
+      window.removeEventListener("qrbuddy:toast", handleToastEvent);
+    };
   }, []);
 
   if (toasts.length === 0) return null;

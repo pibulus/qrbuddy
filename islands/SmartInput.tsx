@@ -652,6 +652,7 @@ export default function SmartInput(
         {/* URL/File Input - Always visible */}
         <div
           class="relative"
+          data-dropzone="true"
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}

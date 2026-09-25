@@ -4,6 +4,10 @@ import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
 import { decodeQRFromFile, decodeQRFromImageData } from "../utils/qr-decode.ts";
 import { useModalShell } from "./modal/useModalShell.ts";
+import {
+  getInAppBrowserName,
+  getUnsupportedCameraMessage,
+} from "../utils/inAppBrowser.ts";
 
 interface QRReaderProps {
   isOpen: boolean;
@@ -208,8 +212,11 @@ export default function QRReader(
       });
     } catch (err) {
       const name = err instanceof DOMException ? err.name : "";
+      const inApp = getInAppBrowserName();
       setCameraError(
-        name === "NotAllowedError"
+        inApp
+          ? getUnsupportedCameraMessage()
+          : name === "NotAllowedError"
           ? "Camera permission denied — drop an image or paste a screenshot instead."
           : name === "NotFoundError"
           ? "No camera found — drop an image or paste a screenshot instead."
@@ -291,6 +298,7 @@ export default function QRReader(
             <>
               {/* Drop / pick zone */}
               <div
+                data-dropzone="true"
                 class={`border-3 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
                   isDragging
                     ? "border-purple-500 bg-purple-50 scale-[1.02]"
