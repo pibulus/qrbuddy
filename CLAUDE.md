@@ -254,7 +254,12 @@ adding surfaces:
   `bg-amber-200 border-black shadow-chunky`, inactive `border-black/15`. No
   "Active" pills, no eyebrow tags, no dashed boxes, no tinted wrapper cards, no
   "what you just picked" header card inside a form. Inputs share one recipe:
-  `border-2 border-black/15 bg-white rounded-2xl focus:border-qr-pop`.
+  `border-2 border-black/15 bg-white rounded-2xl focus:border-qr-pop`. Expanding
+  sub-panels (`islands/extras/*`) are all
+  `bg-white border-2 border-black rounded-2xl p-4` — white on the cream card,
+  never a per-feature tint. Scroll containers inside cards use `scrollbar-none`
+  (styles.css) so the native track never cuts a corner radius. The tab strip is
+  warm milk (`bg-amber-50`), never clinical white.
 - **Info dialogs** (About/Kofi/Pricing): always `islands/modal/CardModal.tsx` —
   centered cream card at all sizes, `max-w-[460px]`, `border-4` + `rounded-3xl`,
   mascot badge hanging centered at the top, circular `✕` top-right, same
