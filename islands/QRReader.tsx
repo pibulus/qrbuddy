@@ -38,13 +38,13 @@ const TYPE_META: Record<DecodedType, { icon: string; label: string }> = {
 };
 
 function detectType(data: string): DecodedType {
-  const d = data.trim();
-  if (/^https?:\/\//i.test(d)) return "url";
-  if (/^WIFI:/i.test(d)) return "wifi";
-  if (/^BEGIN:VCARD/i.test(d)) return "vcard";
-  if (/^(SMSTO:|sms:)/i.test(d)) return "sms";
-  if (/^(mailto:|MATMSG:)/i.test(d)) return "email";
-  if (/^tel:/i.test(d)) return "tel";
+  const trimmed = data.trim();
+  if (/^https?:\/\//i.test(trimmed)) return "url";
+  if (/^WIFI:/i.test(trimmed)) return "wifi";
+  if (/^BEGIN:VCARD/i.test(trimmed)) return "vcard";
+  if (/^(SMSTO:|sms:)/i.test(trimmed)) return "sms";
+  if (/^(mailto:|MATMSG:)/i.test(trimmed)) return "email";
+  if (/^tel:/i.test(trimmed)) return "tel";
   return "text";
 }
 

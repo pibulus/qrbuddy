@@ -245,7 +245,7 @@ export default function FileSlideshow({
       class={`min-h-screen flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden transition-colors duration-500 ${getThemeStyles()}`}
     >
       {isExploding && (
-        <div class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+        <div class="fixed inset-0 z-[100] bg-qr-scrim/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in">
           <div class="text-7xl sm:text-9xl animate-bounce mb-4">💥</div>
           <h2 class="text-3xl sm:text-5xl font-black text-red-500 tracking-tight animate-pulse mb-3">
             SELF-DESTRUCT INITIATED

@@ -1,4 +1,5 @@
 import { Component, ComponentChildren } from "preact";
+import { ApiError } from "../utils/api-request.ts";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -45,8 +46,9 @@ export default class ErrorBoundary extends Component<
             Oops! QR Machine Broke
           </h3>
           <p class="text-red-600 mb-4">
-            {this.state.error.message ||
-              "Something went wonky with the QR generator"}
+            {this.state.error instanceof ApiError && this.state.error.message
+              ? this.state.error.message
+              : "Something went wonky with the QR generator"}
           </p>
           <button
             type="button"

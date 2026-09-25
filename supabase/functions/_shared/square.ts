@@ -7,9 +7,9 @@ import { timingSafeEqual } from "https://deno.land/std@0.216.0/crypto/timing_saf
 const DEFAULT_SQUARE_VERSION = "2026-01-22";
 
 function getSquareBaseUrl(): string {
-  return Deno.env.get("SQUARE_ENVIRONMENT") === "sandbox"
-    ? "https://connect.squareupsandbox.com"
-    : "https://connect.squareup.com";
+  return Deno.env.get("SQUARE_ENVIRONMENT") === "production"
+    ? "https://connect.squareup.com"
+    : "https://connect.squareupsandbox.com";
 }
 
 export function getSquareConfig() {

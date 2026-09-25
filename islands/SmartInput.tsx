@@ -1,34 +1,34 @@
 import { Signal, useSignal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { haptics } from "../utils/haptics.ts";
-import { addToast } from "./ToastManager.tsx";
-import { QRTemplateType } from "../types/qr-templates.ts";
-import CreateModal from "./CreateModal.tsx";
-import HistoryDrawer from "./HistoryDrawer.tsx";
-import { addToHistory, HistoryItem } from "../utils/history.ts";
-import { getOwnerToken } from "../utils/token-vault.ts";
-import { useDynamicQR } from "../hooks/useDynamicQR.ts";
-import { useFileUpload } from "../hooks/useFileUpload.ts";
+
 import { useBatchGenerator } from "../hooks/useBatchGenerator.ts";
 import {
   type CreateBucketOptions,
   useBucketCreator,
 } from "../hooks/useBucketCreator.ts";
+import { useDynamicQR } from "../hooks/useDynamicQR.ts";
+import { useFileUpload } from "../hooks/useFileUpload.ts";
+import { QRTemplateType } from "../types/qr-templates.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import {
   MAX_FILE_SIZE,
   SUPPORTER_MAX_FILE_SIZE,
   validateFile,
 } from "../utils/file-validation.ts";
-import { getSupporterPass } from "../utils/supporter-pass.ts";
+import { haptics } from "../utils/haptics.ts";
+import { addToHistory, HistoryItem } from "../utils/history.ts";
 import { decodeQRFromFile } from "../utils/qr-decode.ts";
+import { getSupporterPass } from "../utils/supporter-pass.ts";
+import { getOwnerToken } from "../utils/token-vault.ts";
 import { looksLikeUrl } from "../utils/url.ts";
+import CreateModal from "./CreateModal.tsx";
+import HistoryDrawer from "./HistoryDrawer.tsx";
+import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
-import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
-
-import FileUploadOptions from "./smart-input/FileUploadOptions.tsx";
 import QRReader from "./QRReader.tsx";
+import FileUploadOptions from "./smart-input/FileUploadOptions.tsx";
+import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
 
 interface SmartInputProps {
   url: Signal<string>;

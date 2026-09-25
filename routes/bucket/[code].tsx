@@ -1,17 +1,14 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
 import BucketQR from "../../islands/BucketQR.tsx";
+import ErrorBoundary from "../../islands/ErrorBoundary.tsx";
 import ToastManager from "../../islands/ToastManager.tsx";
-import { getApiUrl, getAuthHeaders } from "../../utils/api.ts";
-
-interface BucketContentMetadata {
-  filename?: string;
-  size?: number;
-  mimetype?: string;
-  storage_path?: string;
-  content?: string;
-  [key: string]: unknown;
-}
+import {
+  fetchWithTimeout,
+  getApiUrl,
+  getAuthHeaders,
+} from "../../utils/api.ts";
+import type { BucketContentMetadata } from "../../types/bucket-types.ts";
 
 interface BucketData {
   bucket_code: string;
@@ -42,46 +39,61 @@ export const handler: Handlers<BucketPageData> = {
 
     // Fetch bucket status
     const ownerToken = ctx.url.searchParams.get("owner_token");
+    // Same unencoded-path-segment-into-query-string gap as f/[code].tsx —
+    // `code` can contain `&`/`#`/`=` once Fresh decodes the URL segment.
     const statusUrl = new URL(
-      `${apiUrl}/get-bucket-status?bucket_code=${code}`,
+      `${apiUrl}/get-bucket-status?bucket_code=${encodeURIComponent(code)}`,
     );
     if (ownerToken) {
       statusUrl.searchParams.set("owner_token", ownerToken);
     }
 
     const authHeaders = getAuthHeaders();
-    const response = await fetch(statusUrl.toString(), {
-      headers: authHeaders,
-    });
 
-    if (!response.ok) {
+    // Network down, DNS blip, or a non-JSON body (proxy error page, empty
+    // response) all throw here — this fetch+parse pair was the one bucket
+    // route with no boundary. Every sibling route (note, f, r) already
+    // wraps this same shape.
+    try {
+      const response = await fetchWithTimeout(statusUrl.toString(), {
+        headers: authHeaders,
+      });
+
+      if (!response.ok) {
+        return new Response(null, {
+          status: 302,
+          headers: { Location: "/boom" },
+        });
+      }
+
+      const statusResult = await response.json();
+
+      if (!statusResult.success || !statusResult.bucket) {
+        return new Response(null, {
+          status: 302,
+          headers: { Location: "/boom" },
+        });
+      }
+
+      const bucketUrl = `${
+        Deno.env.get("APP_URL") ||
+        (Deno.env.get("DENO_DEPLOYMENT_ID")
+          ? "https://qrbuddy.app"
+          : "http://localhost:8000")
+      }/bucket/${code}`;
+
+      return ctx.render({
+        bucket: statusResult.bucket,
+        bucketUrl,
+        apiUrl,
+      });
+    } catch (error) {
+      console.error("[ROUTE:bucket] status fetch failed:", error);
       return new Response(null, {
         status: 302,
         headers: { Location: "/boom" },
       });
     }
-
-    const data = await response.json();
-
-    if (!data.success) {
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/boom" },
-      });
-    }
-
-    const bucketUrl = `${
-      Deno.env.get("APP_URL") ||
-      (Deno.env.get("DENO_DEPLOYMENT_ID")
-        ? "https://qrbuddy.app"
-        : "http://localhost:8000")
-    }/bucket/${code}`;
-
-    return ctx.render({
-      bucket: data.bucket,
-      bucketUrl,
-      apiUrl,
-    });
   },
 };
 
@@ -131,13 +143,13 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
         <meta name="apple-mobile-web-app-title" content="File Locker" />
       </Head>
 
-      <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1">
+      <main class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1">
         <ToastManager />
         <div class="w-full max-w-lg space-y-6">
           {/* Header */}
           <header class="text-center space-y-2">
             <h1 class="text-4xl font-black text-black tracking-tight">
-              {stateEmoji} File Locker
+              <span aria-hidden="true">{stateEmoji}</span> File Locker
             </h1>
             <p class="text-sm text-gray-600">
               {bucket.is_reusable ? "Persistent" : "One-time"} • {stateText}
@@ -145,18 +157,25 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           </header>
 
           {/* Giant Interactive QR Code */}
-          <BucketQR
-            bucketUrl={bucketUrl}
-            bucketCode={bucket.bucket_code}
-            style={bucket.style}
-            isEmpty={bucket.is_empty}
-            contentType={bucket.content_type}
-            contentMetadata={bucket.content_metadata}
-            isPasswordProtected={bucket.is_password_protected}
-            isReusable={bucket.is_reusable}
-            deleteOnDownload={bucket.delete_on_download}
-            apiUrl={apiUrl}
-          />
+          {
+            /* Upload + download + payment path, and the app's largest island.
+              It had no crash containment while the homepage QR preview had
+              three. A throw here strands someone holding a locker code. */
+          }
+          <ErrorBoundary>
+            <BucketQR
+              bucketUrl={bucketUrl}
+              bucketCode={bucket.bucket_code}
+              style={bucket.style}
+              isEmpty={bucket.is_empty}
+              contentType={bucket.content_type}
+              contentMetadata={bucket.content_metadata}
+              isPasswordProtected={bucket.is_password_protected}
+              isReusable={bucket.is_reusable}
+              deleteOnDownload={bucket.delete_on_download}
+              apiUrl={apiUrl}
+            />
+          </ErrorBoundary>
 
           {/* Info */}
           <div class="text-center space-y-2">
@@ -186,7 +205,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
             </footer>
           )}
         </div>
-      </div>
+      </main>
     </>
   );
 }

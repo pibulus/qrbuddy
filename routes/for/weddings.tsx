@@ -1,10 +1,10 @@
-import { Head } from "$fresh/runtime.ts";
 import { Handlers, PageProps } from "$fresh/server.ts";
 import VerticalStudio, {
   type ComparisonItem,
   type FAQItem,
   type ValueCard,
 } from "../../islands/VerticalStudio.tsx";
+import VerticalLandingHead from "../../components/VerticalLandingHead.tsx";
 import { getSupabaseUrl } from "../../utils/api.ts";
 
 interface PageData {
@@ -89,94 +89,23 @@ export default function WeddingsPage({ data }: PageProps<PageData>) {
 
   return (
     <>
-      <Head>
-        <title>{title}</title>
-        <meta name="description" content={description} />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="canonical" href={canonicalUrl} />
-        <link rel="alternate" hrefLang="en" href={canonicalUrl} />
-        <link
-          rel="alternate"
-          hrefLang="es"
-          href="https://qrbuddy.app/es/bodas"
-        />
-
-        {/* Performance hints */}
-        {data?.supabaseUrl && (
-          <>
-            <link rel="dns-prefetch" href={data.supabaseUrl} />
-            <link rel="preconnect" href={data.supabaseUrl} />
-          </>
-        )}
-
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="QRBuddy" />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta
-          property="og:title"
-          content="Wedding QR Codes for Guest Photos & Audio Stories — QRBuddy"
-        />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta
-          property="og:image:alt"
-          content="QRBuddy - Beautiful wedding QR codes for photo drops and audio"
-        />
-
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content={canonicalUrl} />
-        <meta
-          name="twitter:title"
-          content="Wedding QR Codes for Guest Photos & Audio Stories — QRBuddy"
-        />
-        <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
-
-        {/* PWA & Icons */}
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#BA5566" />
-
-        {/* JSON-LD Structured Data for Product & FAQ */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "WebApplication",
-                "name": "QRBuddy Weddings",
-                "url": canonicalUrl,
-                "description": description,
-                "applicationCategory": "LifestyleApplication",
-                "operatingSystem": "All",
-                "offers": {
-                  "@type": "Offer",
-                  "price": "19",
-                  "priceCurrency": "USD",
-                  "description":
-                    "1-Year Wedding Event Drop Pass with full-res guest photo locker",
-                },
-              },
-              {
-                "@type": "FAQPage",
-                "mainEntity": FAQ_ITEMS.map((item) => ({
-                  "@type": "Question",
-                  "name": item.q,
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": item.a,
-                  },
-                })),
-              },
-            ],
-          })}
-        </script>
-      </Head>
+      <VerticalLandingHead
+        lang="en"
+        canonicalUrl={canonicalUrl}
+        title={title}
+        description={description}
+        altLang="es"
+        altHref="https://qrbuddy.app/es/bodas"
+        ogTitle="Wedding QR Codes for Guest Photos & Audio Stories — QRBuddy"
+        ogImageAlt="QRBuddy - Beautiful wedding QR codes for photo drops and audio"
+        themeColor="#BA5566"
+        supabaseUrl={data?.supabaseUrl}
+        jsonLdName="QRBuddy Weddings"
+        applicationCategory="LifestyleApplication"
+        price="19"
+        offerDescription="1-Year Wedding Event Drop Pass with full-res guest photo locker"
+        faqItems={FAQ_ITEMS}
+      />
 
       <VerticalStudio
         badge="Weddings & Celebrations"

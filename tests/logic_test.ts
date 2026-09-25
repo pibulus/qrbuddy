@@ -351,6 +351,23 @@ Deno.test("normalizeUrl - prepends https:// to bare domains and paths", () => {
   );
 });
 
+Deno.test("normalizeUrl - bare host:port is a host, not a scheme", () => {
+  // Found by feeding the real function garbage: the scheme regex cannot tell
+  // "https:" from "example.com:" so host:port survived unchanged and saved an
+  // unusable destination into dynamic-QR routing. A scheme is never followed
+  // by only digits.
+  assertEquals(normalizeUrl("example.com:8080"), "https://example.com:8080");
+  assertEquals(normalizeUrl("localhost:3000"), "https://localhost:3000");
+  assertEquals(
+    normalizeUrl("myapp.io:3000/path?q=1"),
+    "https://myapp.io:3000/path?q=1",
+  );
+  // ...while real schemeless schemes must still survive untouched.
+  assertEquals(normalizeUrl("mailto:a@b.com"), "mailto:a@b.com");
+  assertEquals(normalizeUrl("tel:+61400000000"), "tel:+61400000000");
+  assertEquals(normalizeUrl("geo:37.78,-122.4"), "geo:37.78,-122.4");
+});
+
 Deno.test("normalizeUrl - preserves existing schemes", () => {
   assertEquals(normalizeUrl("http://old-site.com"), "http://old-site.com");
   assertEquals(normalizeUrl("https://new-site.com"), "https://new-site.com");

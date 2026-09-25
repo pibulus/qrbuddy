@@ -230,12 +230,16 @@ export default function QRCanvas(
     return "linear-gradient(135deg, #FF8C42, #FF69B4, #9370DB)";
   };
 
-  // Helper function to get the current style object
+  // Helper function to get the current style object. `style.value` can arrive
+  // as anything (URL param, EasterEggs, an older shared link) — an unknown key
+  // used to return `undefined` here, then blow up 4 lines later at `.dots`.
+  // Falls back to "sunset", the app's own default (routes/index.tsx).
   const getCurrentStyle = () => {
     if (style.value === "custom" && customStyle?.value) {
       return customStyle.value;
     }
-    return QR_STYLES[style.value as keyof typeof QR_STYLES];
+    return QR_STYLES[style.value as keyof typeof QR_STYLES] ??
+      QR_STYLES.sunset;
   };
 
   useEffect(() => {

@@ -1,6 +1,11 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
-import { getApiUrl, getAuthHeaders } from "../../utils/api.ts";
+import {
+  fetchWithTimeout,
+  getApiUrl,
+  getAuthHeaders,
+} from "../../utils/api.ts";
+import NoteCard from "../../islands/NoteCard.tsx";
 
 interface NotePageData {
   code: string;
@@ -15,14 +20,17 @@ export const handler: Handlers<NotePageData> = {
     const apiUrl = getApiUrl();
 
     try {
-      const response = await fetch(`${apiUrl}/download-from-bucket`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
+      const response = await fetchWithTimeout(
+        `${apiUrl}/download-from-bucket`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({ bucket_code: code }),
         },
-        body: JSON.stringify({ bucket_code: code }),
-      });
+      );
 
       if (!response.ok) {
         return new Response(null, {
@@ -31,14 +39,17 @@ export const handler: Handlers<NotePageData> = {
         });
       }
 
-      const data = await response.json() as {
+      const bucketResponse = await response.json() as {
         content_type?: string;
         content?: string;
         metadata?: { created_at?: string; [key: string]: unknown };
         unbranded?: boolean;
       };
 
-      if (data.content_type !== "text" || typeof data.content !== "string") {
+      if (
+        bucketResponse.content_type !== "text" ||
+        typeof bucketResponse.content !== "string"
+      ) {
         return new Response(null, {
           status: 302,
           headers: { Location: `/bucket/${code}` },
@@ -47,13 +58,13 @@ export const handler: Handlers<NotePageData> = {
 
       return ctx.render({
         code,
-        content: data.content,
+        content: bucketResponse.content,
         openedLabel: new Date().toLocaleDateString("en-AU", {
           day: "2-digit",
           month: "short",
           year: "numeric",
         }),
-        unbranded: data.unbranded === true,
+        unbranded: bucketResponse.unbranded === true,
       });
     } catch (error) {
       console.error("Note page failed:", error);
@@ -64,8 +75,6 @@ export const handler: Handlers<NotePageData> = {
     }
   },
 };
-
-import NoteCard from "../../islands/NoteCard.tsx";
 
 export default function NotePage({ data }: PageProps<NotePageData>) {
   const preview = data.content.length > 120

@@ -1,10 +1,10 @@
-import { Head } from "$fresh/runtime.ts";
 import { Handlers, PageProps } from "$fresh/server.ts";
 import VerticalStudio, {
   type ComparisonItem,
   type FAQItem,
   type ValueCard,
 } from "../../islands/VerticalStudio.tsx";
+import VerticalLandingHead from "../../components/VerticalLandingHead.tsx";
 import { getSupabaseUrl } from "../../utils/api.ts";
 
 interface PageData {
@@ -38,6 +38,9 @@ const VALUE_CARDS: ValueCard[] = [
   },
 ];
 
+// ⚠️ "$49 USD" below is asserted, not verified — see the currency note in
+// components/VerticalLandingHead.tsx (SUPPORTER_CURRENCY is undeclared
+// outside supabase/functions/_shared/square.ts:35 and may default to AUD).
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
     feature: "Precio Anual",
@@ -89,88 +92,22 @@ export default function MenusEspanolPage({ data }: PageProps<PageData>) {
 
   return (
     <>
-      <Head>
-        <title>{title}</title>
-        <meta name="description" content={description} />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="canonical" href={canonicalUrl} />
-        <link rel="alternate" hrefLang="es" href={canonicalUrl} />
-        <link
-          rel="alternate"
-          hrefLang="en"
-          href="https://qrbuddy.app/for/menus"
-        />
-
-        {/* Performance hints */}
-        {data?.supabaseUrl && (
-          <>
-            <link rel="dns-prefetch" href={data.supabaseUrl} />
-            <link rel="preconnect" href={data.supabaseUrl} />
-          </>
-        )}
-
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="QRBuddy" />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta
-          property="og:image:alt"
-          content="QRBuddy - Menús QR dinámicos para restaurantes"
-        />
-
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content={canonicalUrl} />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
-
-        {/* PWA */}
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#2E7D32" />
-
-        {/* JSON-LD Schema */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "WebApplication",
-                "name": "QRBuddy Menús para Restaurantes",
-                "url": canonicalUrl,
-                "description": description,
-                "applicationCategory": "BusinessApplication",
-                "operatingSystem": "All",
-                "offers": {
-                  "@type": "Offer",
-                  "price": "49",
-                  "priceCurrency": "USD",
-                  "description":
-                    "Pase Studio Anual con códigos QR dinámicos ilimitados",
-                },
-              },
-              {
-                "@type": "FAQPage",
-                "mainEntity": FAQ_ITEMS.map((item) => ({
-                  "@type": "Question",
-                  "name": item.q,
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": item.a,
-                  },
-                })),
-              },
-            ],
-          })}
-        </script>
-      </Head>
+      <VerticalLandingHead
+        lang="es"
+        canonicalUrl={canonicalUrl}
+        title={title}
+        description={description}
+        altLang="en"
+        altHref="https://qrbuddy.app/for/menus"
+        ogImageAlt="QRBuddy - Menús QR dinámicos para restaurantes"
+        themeColor="#2E7D32"
+        supabaseUrl={data?.supabaseUrl}
+        jsonLdName="QRBuddy Menús para Restaurantes"
+        applicationCategory="BusinessApplication"
+        price="49"
+        offerDescription="Pase Studio Anual con códigos QR dinámicos ilimitados"
+        faqItems={FAQ_ITEMS}
+      />
 
       <VerticalStudio
         badge="Restaurantes y Cafeterías"

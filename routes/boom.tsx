@@ -12,22 +12,45 @@ export default function Boom() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-400 via-red-400 to-yellow-400 relative overflow-hidden">
-        {/* Emoji rain */}
-        <div class="emoji-rain emoji-1 absolute text-4xl animate-fall">💥</div>
-        <div class="emoji-rain emoji-2 absolute text-4xl animate-fall">🔥</div>
-        <div class="emoji-rain emoji-3 absolute text-4xl animate-fall">💣</div>
-        <div class="emoji-rain emoji-4 absolute text-4xl animate-fall">✨</div>
-        <div class="emoji-rain emoji-5 absolute text-4xl animate-fall">💥</div>
-        <div class="emoji-rain emoji-6 absolute text-4xl animate-fall">🎆</div>
-        <div class="emoji-rain emoji-7 absolute text-4xl animate-fall">💢</div>
-        <div class="emoji-rain emoji-8 absolute text-4xl animate-fall">🔥</div>
-        <div class="emoji-rain emoji-9 absolute text-4xl animate-fall">💥</div>
+      <main class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-400 via-red-400 to-yellow-400 relative overflow-hidden">
+        {/* Emoji rain — decorative only, the h1/paragraph below carry the actual message */}
+        <div aria-hidden="true">
+          <div class="emoji-rain emoji-1 absolute text-4xl animate-fall">
+            💥
+          </div>
+          <div class="emoji-rain emoji-2 absolute text-4xl animate-fall">
+            🔥
+          </div>
+          <div class="emoji-rain emoji-3 absolute text-4xl animate-fall">
+            💣
+          </div>
+          <div class="emoji-rain emoji-4 absolute text-4xl animate-fall">
+            ✨
+          </div>
+          <div class="emoji-rain emoji-5 absolute text-4xl animate-fall">
+            💥
+          </div>
+          <div class="emoji-rain emoji-6 absolute text-4xl animate-fall">
+            🎆
+          </div>
+          <div class="emoji-rain emoji-7 absolute text-4xl animate-fall">
+            💢
+          </div>
+          <div class="emoji-rain emoji-8 absolute text-4xl animate-fall">
+            🔥
+          </div>
+          <div class="emoji-rain emoji-9 absolute text-4xl animate-fall">
+            💥
+          </div>
+        </div>
 
         <div class="explosion-container max-w-2xl w-full animate-shake-once">
-          <div class="bg-black border-8 border-yellow-300 rounded-3xl p-12 md:p-16 text-center shadow-[12px_12px_0_rgba(255,107,107,0.5),24px_24px_0_rgba(255,230,109,0.3)] animate-explode">
-            {/* ASCII Explosion */}
-            <pre class="font-mono text-2xl text-yellow-300 mb-8 animate-float whitespace-pre">
+          <div class="bg-black border-8 border-yellow-300 rounded-3xl p-6 md:p-16 text-center shadow-[12px_12px_0_rgba(255,107,107,0.5),24px_24px_0_rgba(255,230,109,0.3)] animate-explode">
+            {/* ASCII Explosion — decorative, duplicates the KABOOM! heading below */}
+            <pre
+              class="font-mono text-2xl text-yellow-300 mb-8 animate-float whitespace-pre"
+              aria-hidden="true"
+            >
               {`     \\  |  /
       \\ | /
     -- BOOM --
@@ -35,7 +58,7 @@ export default function Boom() {
      /  |  \\`}
             </pre>
 
-            <h1 class="text-7xl md:text-8xl font-black text-yellow-300 mb-6 drop-shadow-[3px_3px_0_#FF6B6B]">
+            <h1 class="text-5xl md:text-8xl font-black text-yellow-300 mb-6 drop-shadow-[3px_3px_0_#FF6B6B]">
               KABOOM!
             </h1>
 
@@ -68,7 +91,7 @@ export default function Boom() {
         <footer class="mt-16 text-center text-black opacity-70">
           Made by Pablo • Melbourne
         </footer>
-      </div>
+      </main>
 
       <style>
         {`

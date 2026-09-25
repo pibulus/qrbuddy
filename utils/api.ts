@@ -98,6 +98,30 @@ export function getSupabaseAnonKey(): string | null {
 }
 
 /**
+ * fetch() with a hard timeout. Four of the five server-side routes that call
+ * a Supabase edge function (r, f/[code], bucket/[code], note/[code]) used a
+ * bare `fetch()` with no deadline — a hung edge function hung the page render
+ * forever, with no error boundary able to save it because the `await` never
+ * returns. One AbortSignal covers all four.
+ *
+ * `api/download-file.ts` is the fifth call site and deliberately does NOT use
+ * this: it streams `response.body` straight through to the client, so the
+ * same AbortSignal would cover the whole download, not just the connect — a
+ * timeout there would kill a legitimate slow/large file transfer, not just a
+ * hang. See the comment at that call site.
+ */
+export async function fetchWithTimeout(
+  url: string | URL,
+  options: RequestInit = {},
+  timeoutMs = 8000,
+): Promise<Response> {
+  return await fetch(url, {
+    ...options,
+    signal: options.signal ?? AbortSignal.timeout(timeoutMs),
+  });
+}
+
+/**
  * Get authorization headers for Supabase edge function requests
  */
 export function getAuthHeaders(): Record<string, string> {

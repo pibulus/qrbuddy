@@ -95,6 +95,14 @@ export default function VerticalStudio({
 
   return (
     <div class="min-h-screen flex flex-col items-center justify-start px-4 pb-12 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative selection:bg-pink-300 selection:text-black">
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded"
+      >
+        Skip to main content
+      </a>
+
       <ToastManager />
       <Analytics
         url={url}
@@ -118,7 +126,7 @@ export default function VerticalStudio({
         />
       </div>
 
-      <div class="w-full max-w-2xl space-y-8 sm:space-y-10">
+      <main id="main-content" class="w-full max-w-2xl space-y-8 sm:space-y-10">
         {/* Navigation Breadcrumb */}
         <div class="flex items-center justify-between">
           <a
@@ -299,7 +307,7 @@ export default function VerticalStudio({
             personality.
           </p>
         </footer>
-      </div>
+      </main>
 
       {/* Modals */}
       <PricingModal />

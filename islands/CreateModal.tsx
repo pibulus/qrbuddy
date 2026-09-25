@@ -1,29 +1,30 @@
 import { type Signal, useSignal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
+
+import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
 import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import { haptics } from "../utils/haptics.ts";
-import { addToast } from "./ToastManager.tsx";
-import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
-import WiFiForm from "./templates/WiFiForm.tsx";
-import VCardForm from "./templates/VCardForm.tsx";
-import SMSForm from "./templates/SMSForm.tsx";
-import PhoneForm from "./templates/PhoneForm.tsx";
-import EmailForm from "./templates/EmailForm.tsx";
-import WebsiteForm from "./templates/WebsiteForm.tsx";
-import SocialHubForm from "./templates/SocialHubForm.tsx";
-import MediaHubForm from "./templates/MediaHubForm.tsx";
-import LockerSettings from "./extras/LockerSettings.tsx";
-import BatchSettings from "./extras/BatchSettings.tsx";
-import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
-import MultiLinkSettings from "./extras/MultiLinkSettings.tsx";
-import TimeBombSettings from "./extras/TimeBombSettings.tsx";
-import SplashSettings from "./extras/SplashSettings.tsx";
 import ChoiceRow from "./create-modal/ChoiceRow.tsx";
-import DesignTab from "./create-modal/DesignTab.tsx";
 import CompletionState, {
   type CompletionKind,
 } from "./create-modal/CompletionState.tsx";
+import DesignTab from "./create-modal/DesignTab.tsx";
+import BatchSettings from "./extras/BatchSettings.tsx";
+import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
+import LockerSettings from "./extras/LockerSettings.tsx";
+import MultiLinkSettings from "./extras/MultiLinkSettings.tsx";
+import SplashSettings from "./extras/SplashSettings.tsx";
+import TimeBombSettings from "./extras/TimeBombSettings.tsx";
 import { useModalShell } from "./modal/useModalShell.ts";
+import EmailForm from "./templates/EmailForm.tsx";
+import MediaHubForm from "./templates/MediaHubForm.tsx";
+import PhoneForm from "./templates/PhoneForm.tsx";
+import SMSForm from "./templates/SMSForm.tsx";
+import SocialHubForm from "./templates/SocialHubForm.tsx";
+import VCardForm from "./templates/VCardForm.tsx";
+import WebsiteForm from "./templates/WebsiteForm.tsx";
+import WiFiForm from "./templates/WiFiForm.tsx";
+import { addToast } from "./ToastManager.tsx";
 
 type ActiveTab = "type" | "options" | "design";
 type TypeIntent = "qr" | "share-file" | "collect-files";

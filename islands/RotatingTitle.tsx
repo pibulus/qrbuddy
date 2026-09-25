@@ -14,6 +14,13 @@ export default function RotatingTitle() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    // Word-cycling is decorative motion, not essential — honor the OS
+    // preference instead of forcing it on everyone (WCAG 2.3.3).
+    const reducedMotion = globalThis.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (reducedMotion) return;
+
     const interval = setInterval(() => {
       setIsVisible(false);
       setTimeout(() => {

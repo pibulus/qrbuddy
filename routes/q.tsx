@@ -29,12 +29,30 @@ function safeDecode(value: string): string {
   }
 }
 
+const VALID_STYLE_KEYS = new Set<string>([
+  ...Object.keys(QR_STYLES),
+  "custom",
+]);
+
+/**
+ * `?s=` arrives as an arbitrary string from a URL someone else typed or a
+ * scanner decoded — `as keyof typeof QR_STYLES` only tells the compiler what
+ * to assume, it checks nothing at runtime. An unrecognized value reaches
+ * `QRCanvas.getCurrentStyle()` (islands/QRCanvas.tsx:238), which does
+ * `QR_STYLES[style]` with no fallback and throws on the next line reading
+ * `.dots` off `undefined` — a 500 on every share link with a typo'd or
+ * tampered `s` param. Validate at the boundary instead.
+ */
+function safeStyleKey(value: string | null): keyof typeof QR_STYLES | "custom" {
+  if (value && VALID_STYLE_KEYS.has(value)) {
+    return value as keyof typeof QR_STYLES | "custom";
+  }
+  return "sunset";
+}
 export default function SharePage(props: PageProps) {
   const urlParams = new URL(props.url).searchParams;
   const sharedData = urlParams.get("d") || "";
-  const sharedStyle = (urlParams.get("s") || "sunset") as
-    | keyof typeof QR_STYLES
-    | "custom";
+  const sharedStyle = safeStyleKey(urlParams.get("s"));
 
   const decodedShared = sharedData ? safeDecode(sharedData) : "";
   const pageUrl = props.url;
@@ -81,7 +99,7 @@ export default function SharePage(props: PageProps) {
             ? "Scan to open this shared QR instantly."
             : "Drop a link. Watch it bloom. Create stunning gradient QR codes in seconds."}
         />
-        <meta property="og:image" content="https://qrbuddy.app/og-image.png" />
+        <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
 
@@ -99,7 +117,7 @@ export default function SharePage(props: PageProps) {
             ? "Scan this shared QR in a single tap."
             : "Drop a link. Watch it bloom. Create stunning gradient QR codes in seconds."}
         />
-        <meta name="twitter:image" content="https://qrbuddy.app/og-image.png" />
+        <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
       </Head>
 
       <div class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative">
