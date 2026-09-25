@@ -691,7 +691,12 @@ export default function CreateModal({
               haptics.light();
             }}
           />
-          {splashActive && <SplashSettings splashConfig={splashConfig} />}
+          {splashActive && (
+            <SplashSettings
+              splashConfig={splashConfig}
+              destinationUrl={url.value}
+            />
+          )}
         </section>
       )}
     </div>

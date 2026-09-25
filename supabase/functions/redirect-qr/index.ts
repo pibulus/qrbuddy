@@ -322,6 +322,7 @@ serve(async (req) => {
               align-items: center;
               justify-content: center;
               min-height: 100vh;
+              min-height: 100dvh;
               margin: 0;
               padding: 24px;
               color: #111827;
@@ -358,12 +359,16 @@ serve(async (req) => {
               margin: 0 0 12px 0;
               color: #000;
               letter-spacing: -0.02em;
+              word-break: break-word;
+              overflow-wrap: break-word;
             }
             p {
               color: #4b5563;
               margin: 0 0 28px 0;
               line-height: 1.6;
               font-size: 15px;
+              word-break: break-word;
+              overflow-wrap: break-word;
             }
             .btn {
               display: flex;
@@ -392,15 +397,53 @@ serve(async (req) => {
             }
             .footer-tag {
               margin-top: 24px;
-              font-size: 11px;
-              font-weight: 700;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-              color: #9ca3af;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
-            .footer-tag a {
-              color: #6b7280;
+            .footer-pill {
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              background: #fdf2f8;
+              border: 2px solid #000;
+              padding: 6px 14px;
+              border-radius: 999px;
+              font-size: 11px;
+              font-weight: 800;
+              color: #000;
               text-decoration: none;
+              box-shadow: 2px 2px 0px 0px #000;
+              transition: transform 0.1s ease, box-shadow 0.1s ease;
+            }
+            .footer-pill:hover {
+              transform: translate(-1px, -1px);
+              box-shadow: 3px 3px 0px 0px #000;
+            }
+            .footer-pill:active {
+              transform: translate(1px, 1px);
+              box-shadow: 1px 1px 0px 0px #000;
+            }
+            @media (max-width: 480px) {
+              body {
+                padding: 16px;
+              }
+              .card {
+                padding: 28px 18px;
+                border-radius: 22px;
+              }
+              h1 {
+                font-size: 22px;
+              }
+              .btn {
+                font-size: 16px;
+                padding: 14px 20px;
+              }
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .btn, .footer-pill {
+                transition: none !important;
+              }
             }
           </style>
         </head>
@@ -413,7 +456,10 @@ serve(async (req) => {
         escapeHtml(destinationUrl)
       }" class="btn">${safeButtonText} →</a>
             <div class="footer-tag">
-              <a href="https://qrbuddy.app" target="_blank" rel="noopener">Built with QRBuddy</a>
+              <a href="https://qrbuddy.app" target="_blank" rel="noopener" class="footer-pill">
+                <span>⚡</span>
+                <span>Built with <strong>QRBuddy</strong> · Free forever</span>
+              </a>
             </div>
           </div>
         </body>

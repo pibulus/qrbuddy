@@ -42,6 +42,9 @@ export default function EditQRForm() {
   const [splashButtonText, setSplashButtonText] = useState("Continue");
   const [splashDescription, setSplashDescription] = useState("");
   const [splashImageUrl, setSplashImageUrl] = useState("");
+  const [splashPreviewTab, setSplashPreviewTab] = useState<"edit" | "preview">(
+    "edit",
+  );
 
   // Initialize form when data loads
   useEffect(() => {
@@ -290,41 +293,127 @@ export default function EditQRForm() {
             Show a short landing page before redirecting
           </p>
           {splashEnabled && (
-            <div class="ml-8 space-y-2 animate-slide-down">
-              <input
-                type="text"
-                value={splashTitle}
-                onInput={(e) =>
-                  setSplashTitle((e.target as HTMLInputElement).value)}
-                placeholder="Page title"
-                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
-              />
-              <input
-                type="text"
-                value={splashButtonText}
-                onInput={(e) =>
-                  setSplashButtonText((e.target as HTMLInputElement).value)}
-                placeholder="Button text"
-                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
-              />
-              <textarea
-                value={splashDescription}
-                onInput={(e) =>
-                  setSplashDescription(
-                    (e.target as HTMLTextAreaElement).value,
-                  )}
-                placeholder="Description (optional)"
-                rows={2}
-                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none resize-none"
-              />
-              <input
-                type="text"
-                value={splashImageUrl}
-                onInput={(e) =>
-                  setSplashImageUrl((e.target as HTMLInputElement).value)}
-                placeholder="Image URL (optional)"
-                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
-              />
+            <div class="ml-8 space-y-3 bg-white border-2 border-black rounded-2xl p-4 shadow-sm animate-slide-down">
+              <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                <span class="text-xs font-black uppercase text-pink-600">
+                  Cover Card
+                </span>
+                <div class="flex bg-gray-100 p-0.5 rounded-lg border border-black">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSplashPreviewTab("edit");
+                      haptics.light();
+                    }}
+                    class={`px-2.5 py-0.5 rounded text-xs font-bold transition-all ${
+                      splashPreviewTab === "edit"
+                        ? "bg-white text-black shadow-xs"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSplashPreviewTab("preview");
+                      haptics.light();
+                    }}
+                    class={`px-2.5 py-0.5 rounded text-xs font-bold transition-all ${
+                      splashPreviewTab === "preview"
+                        ? "bg-black text-white shadow-xs"
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    👁️ Preview
+                  </button>
+                </div>
+              </div>
+
+              {splashPreviewTab === "edit"
+                ? (
+                  <div class="space-y-2">
+                    <input
+                      type="text"
+                      maxLength={100}
+                      value={splashTitle}
+                      onInput={(e) =>
+                        setSplashTitle((e.target as HTMLInputElement).value)}
+                      placeholder="Page title (e.g. Welcome!)"
+                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-bold focus:border-pink-500 focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      maxLength={50}
+                      value={splashButtonText}
+                      onInput={(e) =>
+                        setSplashButtonText(
+                          (e.target as HTMLInputElement).value,
+                        )}
+                      placeholder="Button text (e.g. Continue)"
+                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-bold focus:border-pink-500 focus:outline-none"
+                    />
+                    <textarea
+                      maxLength={500}
+                      value={splashDescription}
+                      onInput={(e) =>
+                        setSplashDescription(
+                          (e.target as HTMLTextAreaElement).value,
+                        )}
+                      placeholder="Description (optional greeting or details)"
+                      rows={2}
+                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none resize-none"
+                    />
+                    <input
+                      type="url"
+                      value={splashImageUrl}
+                      onInput={(e) =>
+                        setSplashImageUrl((e.target as HTMLInputElement).value)}
+                      placeholder="Header image URL (optional)"
+                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-xs font-mono focus:border-pink-500 focus:outline-none"
+                    />
+                  </div>
+                )
+                : (
+                  <div class="py-2 animate-pop-in">
+                    <div class="rounded-xl border-2 border-black bg-[#FAF8F5] p-4 shadow-[3px_3px_0px_0px_#000] text-center max-w-xs mx-auto space-y-2.5">
+                      {splashImageUrl && (
+                        <div class="rounded-lg border-2 border-black overflow-hidden bg-pink-50 max-h-36">
+                          <img
+                            src={splashImageUrl}
+                            alt="Cover image"
+                            class="w-full h-28 object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
+                      <h5 class="text-base font-black text-gray-900 leading-tight">
+                        {splashTitle || "Welcome!"}
+                      </h5>
+                      {splashDescription && (
+                        <p class="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed line-clamp-3">
+                          {splashDescription}
+                        </p>
+                      )}
+                      <div class="pt-1">
+                        <div class="w-full min-h-[38px] rounded-lg border-2 border-black bg-black text-white font-black text-xs py-2 px-3 shadow-[2px_2px_0px_0px_#FF69B4] flex items-center justify-center gap-1 cursor-default">
+                          <span>{splashButtonText || "Continue"}</span>
+                          <span>→</span>
+                        </div>
+                      </div>
+                      <div class="pt-2 border-t border-gray-200 flex items-center justify-center">
+                        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-black bg-pink-100 text-[9px] font-black text-gray-900">
+                          <span>⚡</span>
+                          <span>
+                            Built with <strong>QRBuddy</strong>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
             </div>
           )}
         </div>
