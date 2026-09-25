@@ -77,7 +77,7 @@ serve(async (req) => {
       const { data } = await supabase
         .from("share_stats_daily")
         .select(
-          "day, views, people, returns, countries, cities, devices, hours, items, dwell_s, dwell_n, completions, shares, downloads, referred",
+          "day, views, people, returns, countries, cities, devices, hours, items, dwell_s, dwell_n, completions, shares, downloads, referred, languages, apps, farthest_km, farthest_place",
         )
         .eq("file_id", fileId)
         .gte("day", since)
@@ -97,7 +97,14 @@ serve(async (req) => {
         downloadCount,
         remainingDownloads,
         isExpired,
-        ...(isOwner ? { isOwner: true, stats: file.stats ?? {}, ledger } : {}),
+        ...(isOwner
+          ? {
+            isOwner: true,
+            stats: file.stats ?? {},
+            ledger,
+            createdAt: file.created_at,
+          }
+          : {}),
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

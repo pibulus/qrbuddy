@@ -51,6 +51,7 @@ interface OwnerMeta {
   isOwner?: boolean;
   stats?: LifetimeStats;
   ledger?: LedgerRow[];
+  createdAt?: string;
 }
 
 const PILL =
@@ -250,7 +251,7 @@ export default function OwnerStrip(
     const idx = files.indexOf(f);
     return kind === "playlist" ? prettyName(f.name) : `Photo ${idx + 1}`;
   };
-  const lines = cardLines(card, itemName, kind);
+  const lines = cardLines(card, itemName, kind, meta.createdAt);
   const canEditPayload = !isLimited && kind !== "file";
 
   return (

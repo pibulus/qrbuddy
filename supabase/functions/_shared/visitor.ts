@@ -13,6 +13,51 @@ export interface Visitor {
   device: "mobile" | "tablet" | "desktop" | "bot";
   os: "ios" | "android" | "macos" | "windows" | "linux" | "other";
   referred: boolean;
+  /** Primary language tag, e.g. "es", "en". */
+  lang: string | null;
+  /** Which app carried the link here (bucketed referrer host). */
+  app: string | null;
+  /** Rounded to 1 decimal (~10 km) — coarse on purpose. */
+  lat: number | null;
+  lon: number | null;
+}
+
+// Referrer host → the app people would recognise. Anything else is "web";
+// QRBuddy itself (the maker clicking Open) doesn't count.
+const APP_HOSTS: [RegExp, string][] = [
+  [/whatsapp/, "WhatsApp"],
+  [/instagram/, "Instagram"],
+  [/facebook|fb\.com|fbcdn/, "Facebook"],
+  [/messenger/, "Messenger"],
+  [/t\.me|telegram/, "Telegram"],
+  [/twitter|x\.com|t\.co/, "X"],
+  [/tiktok/, "TikTok"],
+  [/discord/, "Discord"],
+  [/slack/, "Slack"],
+  [/reddit/, "Reddit"],
+  [/linkedin/, "LinkedIn"],
+  [/snapchat/, "Snapchat"],
+  [/mail\.google|outlook|mail\.yahoo|protonmail/, "Email"],
+  [/google\./, "Google"],
+];
+
+function bucketApp(referer: string | null): string | null {
+  if (!referer) return null;
+  let host = "";
+  try {
+    host = new URL(referer).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  if (host.includes("qrbuddy")) return null;
+  for (const [re, name] of APP_HOSTS) if (re.test(host)) return name;
+  return "Web";
+}
+
+function coarse(v: string | null): number | null {
+  if (!v) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.round(n * 10) / 10 : null;
 }
 
 export function describeVisitor(req: Request): Visitor {
@@ -36,7 +81,10 @@ export function describeVisitor(req: Request): Visitor {
   const city = req.headers.get("cf-ipcity");
   // A QR scan opens the page with no referrer; a pasted/forwarded link
   // usually carries one. Free and honest "scan vs share" signal.
-  const referred = Boolean(req.headers.get("referer"));
+  const referer = req.headers.get("referer");
+  const referred = Boolean(referer);
+  const lang = (req.headers.get("accept-language") || "")
+    .split(",")[0].trim().split("-")[0].toLowerCase() || null;
 
   return {
     country: country && country !== "XX" ? country : null,
@@ -44,6 +92,10 @@ export function describeVisitor(req: Request): Visitor {
     device,
     os,
     referred,
+    lang: lang && /^[a-z]{2,3}$/.test(lang) ? lang : null,
+    app: bucketApp(referer),
+    lat: coarse(req.headers.get("cf-iplatitude")),
+    lon: coarse(req.headers.get("cf-iplongitude")),
   };
 }
 

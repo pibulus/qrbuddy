@@ -24,6 +24,10 @@ export interface LedgerRow {
   shares: number;
   downloads: number;
   referred: number;
+  languages?: Record<string, number>;
+  apps?: Record<string, number>;
+  farthest_km?: number;
+  farthest_place?: string | null;
 }
 
 export interface LifetimeStats {
@@ -33,6 +37,10 @@ export interface LifetimeStats {
   cities?: Record<string, number>;
   devices?: Record<string, number>;
   os?: Record<string, number>;
+  languages?: Record<string, number>;
+  apps?: Record<string, number>;
+  farthest_km?: number;
+  farthest_place?: string | null;
   hours?: Record<string, number>;
   days?: Record<string, number>;
   items?: Record<string, number>;
@@ -66,6 +74,16 @@ export interface StatsCard {
   spark: number[];
   /** Week over previous week, as a ratio delta (0.4 = +40%). null if no base. */
   trend: number | null;
+  /** Which app carried the link, top one + share of referred views. */
+  topApp: { name: string; share: number } | null;
+  languages: number;
+  topLang: string | null;
+  farthest: { km: number; place: string } | null;
+  /** Share of views after 9pm / before 6am local-ish (UTC-shifted). */
+  nightShare: number | null;
+  weekendShare: number | null;
+  /** iOS share of views with a known OS (lifetime only). */
+  iosShare: number | null;
 }
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -128,6 +146,56 @@ function busiestLabel(
   return dayOfWeek ? `${dayOfWeek} ${band}` : band;
 }
 
+const LANG_NAMES: Record<string, string> = {
+  en: "English",
+  es: "Spanish",
+  fr: "French",
+  de: "German",
+  it: "Italian",
+  pt: "Portuguese",
+  ja: "Japanese",
+  ko: "Korean",
+  zh: "Chinese",
+  ar: "Arabic",
+  hi: "Hindi",
+  id: "Indonesian",
+  vi: "Vietnamese",
+  th: "Thai",
+  tr: "Turkish",
+  nl: "Dutch",
+  ru: "Russian",
+  pl: "Polish",
+  sv: "Swedish",
+  el: "Greek",
+};
+
+function nightShareOf(hours: number[]): number | null {
+  const total = hours.reduce((a, b) => a + b, 0);
+  if (total < 3) return null;
+  const offset = -new Date().getTimezoneOffset() / 60;
+  let night = 0;
+  hours.forEach((v, h) => {
+    const local = (((h + offset) % 24) + 24) % 24;
+    if (local >= 21 || local < 6) night += v;
+  });
+  return night / total;
+}
+
+function weekendShareOf(dow: Record<string, number>): number | null {
+  const total = Object.values(dow).reduce((a, b) => a + b, 0);
+  if (total < 3) return null;
+  return ((dow.Sat ?? 0) + (dow.Sun ?? 0)) / total;
+}
+
+function appOf(
+  apps: Record<string, number>,
+  referred: number,
+): StatsCard["topApp"] {
+  const t = top(apps);
+  if (!t || referred === 0) return null;
+  return { name: t[0], share: t[1] / referred };
+}
+
 function cardFromRows(range: StatsRange, rows: LedgerRow[]): StatsCard {
   const views = rows.reduce((a, r) => a + (r.views ?? 0), 0);
   const people = rows.reduce((a, r) => a + (r.people ?? 0), 0);
@@ -144,6 +212,14 @@ function cardFromRows(range: StatsRange, rows: LedgerRow[]): StatsCard {
   const cities = sumMaps(rows.map((r) => r.cities));
   const devices = sumMaps(rows.map((r) => r.devices));
   const items = sumMaps(rows.map((r) => r.items));
+  const languages = sumMaps(rows.map((r) => r.languages ?? {}));
+  const apps = sumMaps(rows.map((r) => r.apps ?? {}));
+  let farthest: StatsCard["farthest"] = null;
+  for (const r of rows) {
+    if ((r.farthest_km ?? 0) > (farthest?.km ?? 0) && r.farthest_place) {
+      farthest = { km: r.farthest_km!, place: r.farthest_place };
+    }
+  }
   const dwellS = rows.reduce((a, r) => a + (r.dwell_s ?? 0), 0);
   const dwellN = rows.reduce((a, r) => a + (r.dwell_n ?? 0), 0);
   const completions = rows.reduce((a, r) => a + (r.completions ?? 0), 0);
@@ -174,6 +250,13 @@ function cardFromRows(range: StatsRange, rows: LedgerRow[]): StatsCard {
     downloads: rows.reduce((a, r) => a + (r.downloads ?? 0), 0),
     spark: rows.map((r) => r.views ?? 0),
     trend: null,
+    topApp: appOf(apps, referred),
+    languages: Object.keys(languages).length,
+    topLang: top(languages)?.[0] ?? null,
+    farthest,
+    nightShare: nightShareOf(hours),
+    weekendShare: range === "week" ? weekendShareOf(dowTally) : null,
+    iosShare: null,
   };
 }
 
@@ -252,6 +335,19 @@ export function buildCards(
     downloads: lifetime.downloads ?? 0,
     spark: ledger.map((r) => r.views ?? 0),
     trend: null,
+    topApp: appOf(lifetime.apps ?? {}, lifetime.referred ?? 0),
+    languages: Object.keys(lifetime.languages ?? {}).length,
+    topLang: top(lifetime.languages)?.[0] ?? null,
+    farthest: (lifetime.farthest_km ?? 0) > 0 && lifetime.farthest_place
+      ? { km: lifetime.farthest_km!, place: lifetime.farthest_place }
+      : null,
+    nightShare: nightShareOf(hours),
+    weekendShare: weekendShareOf(dowTally),
+    iosShare: (() => {
+      const os = lifetime.os ?? {};
+      const known = (os.ios ?? 0) + (os.android ?? 0);
+      return known >= 3 ? (os.ios ?? 0) / known : null;
+    })(),
   };
 
   return { today: todayCard, week: weekCard, all: allCard };
@@ -262,6 +358,7 @@ export function cardLines(
   card: StatsCard,
   itemName: (id: string) => string,
   kind: "slideshow" | "playlist" | "file",
+  createdAt?: string,
 ): string[] {
   const lines: string[] = [];
   if (card.views === 0) return lines;
@@ -320,6 +417,60 @@ export function cardLines(
     lines.push(bits.join(" · "));
   } else if (card.shared > 0) {
     lines.push(`${card.scans} from scans · ${card.shared} from links`);
+  }
+
+  // The ones people actually enjoy: where it travelled, who carried it,
+  // when it lives, which phones. Each only speaks when there's a real read.
+  if (card.topApp && card.shared >= 3) {
+    lines.push(
+      `Travels mostly by ${card.topApp.name} · ${
+        Math.round(card.topApp.share * 100)
+      }% of shared links`,
+    );
+  }
+  if (card.farthest && card.farthest.km >= 50) {
+    const km = card.farthest.km >= 1000
+      ? `${(card.farthest.km / 1000).toFixed(1).replace(/\.0$/, "")}k km`
+      : `${card.farthest.km} km`;
+    lines.push(`Farthest scan: ${card.farthest.place}, ${km} away 🌏`);
+  }
+  if (card.languages >= 2 && card.topLang) {
+    const name = LANG_NAMES[card.topLang] ?? card.topLang.toUpperCase();
+    lines.push(`Scanned in ${card.languages} languages · ${name} mostly`);
+  }
+  if (card.nightShare !== null && card.nightShare >= 0.5) {
+    lines.push(
+      `A night-time ${kind === "playlist" ? "mixtape" : "thing"} · ${
+        Math.round(card.nightShare * 100)
+      }% of scans after 9pm 🦉`,
+    );
+  } else if (card.nightShare !== null && card.nightShare <= 0.1) {
+    lines.push("Strictly daytime ☀️");
+  }
+  if (card.weekendShare !== null && card.weekendShare >= 0.6) {
+    lines.push(
+      `A weekend thing · ${Math.round(card.weekendShare * 100)}% Sat–Sun`,
+    );
+  }
+  if (card.iosShare !== null) {
+    const ios = Math.round(card.iosShare * 100);
+    lines.push(`iPhone ${ios}% · Android ${100 - ios}%`);
+  }
+  if (card.range === "all" && createdAt) {
+    const ageDays = Math.floor(
+      (Date.now() - new Date(createdAt).getTime()) / 86400000,
+    );
+    const milestone = [1000, 500, 100, 50, 10].find((m) => card.views >= m);
+    const age = ageDays < 1
+      ? "made today"
+      : ageDays === 1
+      ? "1 day old"
+      : ageDays < 60
+      ? `${ageDays} days old`
+      : `${Math.floor(ageDays / 30)} months old`;
+    lines.push(
+      milestone ? `${age} · past ${milestone} scans 🎉` : age,
+    );
   }
   return lines;
 }

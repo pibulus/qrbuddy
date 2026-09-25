@@ -12,7 +12,7 @@ import {
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
 import { MAX_FILE_SIZE } from "../_shared/file-validation.ts";
-import { generateOwnerToken } from "../_shared/visitor.ts";
+import { describeVisitor, generateOwnerToken } from "../_shared/visitor.ts";
 
 const UNLIMITED_DOWNLOADS = 999999;
 const MAX_DOWNLOADS_LIMIT = UNLIMITED_DOWNLOADS;
@@ -303,6 +303,8 @@ serve(async (req) => {
     // The maker owns the share: rename, re-theme, add/remove items later.
     // Returned once, kept in the device's token vault, never in the URL.
     const ownerToken = generateOwnerToken();
+    // Where it was made, to ~10 km — so "farthest scan" has a home.
+    const origin = describeVisitor(req);
 
     const { error: dbError } = await supabase
       .from("destructible_files")
@@ -324,6 +326,8 @@ serve(async (req) => {
         files: uploadedFiles, // NEW JSON column
         theme: theme,
         owner_token: ownerToken,
+        origin_lat: origin.lat,
+        origin_lon: origin.lon,
         created_at: new Date().toISOString(),
         accessed: false,
         max_downloads: maxDownloads,

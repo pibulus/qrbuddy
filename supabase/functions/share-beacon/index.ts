@@ -99,6 +99,10 @@ serve(async (req) => {
       p_completed: isView ? false : Boolean(body.completed),
       p_shares: isView ? 0 : clampCount(body.shares),
       p_downloads: isView ? 0 : clampCount(body.downloads),
+      p_lang: isView ? visitor.lang : null,
+      p_app: isView ? visitor.app : null,
+      p_lat: isView ? visitor.lat : null,
+      p_lon: isView ? visitor.lon : null,
     });
 
     // A share that no longer exists (blown up, cleaned) fails the FK — that's

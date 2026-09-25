@@ -361,6 +361,11 @@ vault holds the token; the public never sees it.
   ledger, pruned by `cleanup-expired`). `utils/share-stats.ts` folds these into
   the Today / This week / All time trading card. Lifetime shows scans, not
   people — not honestly knowable.
+- **Context that people enjoy** (`20260925010000_share_stats_context.sql`):
+  languages (`accept-language`), which app carried the link (bucketed referrer
+  host), farthest scan (coarse ~10 km lat/lon vs `origin_lat/lon` recorded at
+  upload, haversine in SQL), night-owl / weekend reads from the hour/day
+  tallies, iPhone vs Android, age + milestones. No horoscopes.
 - **Edit what it is.** `update-file`: `rename`, `retheme`, `append` (multipart),
   `remove`. Self-destructing shares are frozen to rename/retheme; append can't
   change a share's kind; max 10 items.
