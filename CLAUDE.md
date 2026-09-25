@@ -344,6 +344,26 @@ adding surfaces:
 
 ## ✅ Recently Completed
 
+### Drop → Slideshow / Mixtape (Latest)
+
+The magic path: drop 2+ photos on the input → a shareable slideshow; drop 2+
+audio files → a mixtape. Both live at `/f/{code}` (`FileSlideshow`).
+
+- **`utils/image-prep.ts`**: photos are downscaled on the device (≤2048px JPEG)
+  before upload so the 5MB-per-file multi-share cap never surfaces;
+  Safari-decoded HEIC comes out as JPEG. Non-decodable files pass through.
+- **Staging card** (`smart-input/FileUploadOptions.tsx`): shows the thing —
+  thumbnail strip or tracklist — with an optional title and one CTA ("Make the
+  slideshow ✨"). Self-destruct is tucked under a toggle.
+- **`smart-input/ShareReady.tsx`**: after upload, the "it's alive" strip: Open ↗
+  · Copy · Sticker (turns on the SCAN ME frame and exports the PNG).
+- **Title** travels as a `title` form field to `upload-file`, stored in
+  `original_name`; untitled multi-shares are named "8 photos" / "5 tracks"
+  (legacy "IMG_1.jpg + 7 more" names are read as such on the page).
+- **`/f/` page**: photo slideshows autoplay (4.5s, space to pause, any manual
+  nav stops it) with a dot transport; playlists show a real tracklist with
+  cleaned names (`prettyName`) and auto-advance.
+
 ### File Transfer Hardening (Latest)
 
 - **Atomic Destructible Downloads**: File claims/finalization run through

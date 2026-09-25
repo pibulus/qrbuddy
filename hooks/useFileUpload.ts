@@ -47,7 +47,10 @@ export function useFileUpload(
   const [uploadError, setUploadError] = useState<string | null>(null);
   const inFlightRef = useRef(false);
 
-  const uploadFile = async (input: File | FileList | File[]) => {
+  const uploadFile = async (
+    input: File | FileList | File[],
+    options: { title?: string } = {},
+  ) => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
 
@@ -123,6 +126,9 @@ export function useFileUpload(
           formData.append("file", file);
         });
         formData.append("maxDownloads", maxDownloads.value.toString());
+        if (options.title?.trim()) {
+          formData.append("title", options.title.trim());
+        }
         if (qrStyle?.value) {
           formData.append("theme", qrStyle.value);
         }
@@ -168,23 +174,18 @@ export function useFileUpload(
       if (isMulti) {
         const allAudio = files.every((f) => f.type.startsWith("audio/"));
         const allImages = files.every((f) => f.type.startsWith("image/"));
-        const multiDesc = allAudio
-          ? `${files.length} tracks (playlist 🎵)`
+        successMessage = allAudio
+          ? "Mixtape is live 🎵"
           : allImages
-          ? `${files.length} images (slideshow 🖼️)`
-          : `${files.length} files`;
-
-        successMessage = limitedDownloads
-          ? `✅ ${multiDesc} uploaded! Limit: ${scanText}`
-          : `✅ ${multiDesc} uploaded! Ready to share ✨`;
+          ? "Slideshow is live 🖼️"
+          : `${files.length} files are live 📦`;
       } else {
-        successMessage = limitedDownloads
-          ? `✅ ${files[0].name} uploaded! Limit: ${scanText}`
-          : `✅ ${files[0].name} uploaded! Ready to share ✨`;
+        successMessage = "File is live 📄";
       }
-
-      // Append copy notice
-      successMessage += " (Link copied!)";
+      if (limitedDownloads) {
+        successMessage += ` · self-destructs after ${scanText}`;
+      }
+      successMessage += " · link copied";
 
       addToast(successMessage, 3000);
 

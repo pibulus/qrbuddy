@@ -2,6 +2,9 @@ import { useEffect, useState } from "preact/hooks";
 // @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
 import JSZip from "jszip";
 import { formatFileSize } from "../utils/file-validation.ts";
+import { prettyName } from "../utils/image-prep.ts";
+
+const SLIDE_MS = 4500;
 
 interface FileSlideshowProps {
   files?: Array<{
@@ -47,6 +50,18 @@ export default function FileSlideshow({
     hasMultipleFiles && files!.every((f) => f.type.startsWith("image/")),
   );
   const currentFile = hasMultipleFiles ? files![currentIndex] : null;
+
+  // A photo slideshow plays itself; any hand on the wheel stops it.
+  const [isPlaying, setIsPlaying] = useState(isAllImages && isUnlimited);
+
+  // The share's own name. Legacy multi-shares were named "IMG_1.jpg + 7 more"
+  // by the server — read those as what they are.
+  const legacyMulti = /^(.*) \+ (\d+) more$/.exec(fileName);
+  const shareTitle = hasMultipleFiles && legacyMulti
+    ? `${files!.length} ${
+      isAllAudio ? "tracks" : isAllImages ? "photos" : "files"
+    }`
+    : fileName;
 
   // Determine what to show
   const displayFileName = currentFile ? currentFile.name : fileName;
@@ -158,13 +173,37 @@ export default function FileSlideshow({
     setCurrentIndex((prev) => (prev - 1 + files!.length) % files!.length);
   };
 
+  // Manual navigation takes the wheel from autoplay.
+  const goNext = () => {
+    setIsPlaying(false);
+    nextSlide();
+  };
+  const goPrev = () => {
+    setIsPlaying(false);
+    prevSlide();
+  };
+  const goTo = (idx: number) => {
+    setIsPlaying(false);
+    setCurrentIndex(idx);
+  };
+
+  useEffect(() => {
+    if (!isPlaying || !hasMultipleFiles) return;
+    const t = setInterval(nextSlide, SLIDE_MS);
+    return () => clearInterval(t);
+  }, [isPlaying, hasMultipleFiles, files]);
+
   // Keyboard Navigation
   useEffect(() => {
     if (!hasMultipleFiles) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight") nextSlide();
-      if (e.key === "ArrowLeft") prevSlide();
+      if (e.key === "ArrowRight") goNext();
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === " " && isAllImages) {
+        e.preventDefault();
+        setIsPlaying((p) => !p);
+      }
     };
 
     globalThis.addEventListener("keydown", handleKeyDown);
@@ -189,8 +228,8 @@ export default function FileSlideshow({
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe) nextSlide();
-    if (isRightSwipe) prevSlide();
+    if (isLeftSwipe) goNext();
+    if (isRightSwipe) goPrev();
   };
 
   // Download All Handler
@@ -286,10 +325,12 @@ export default function FileSlideshow({
             )}
           </div>
           <h1 class="text-2xl sm:text-3xl font-black leading-tight break-words">
-            {displayFileName}
+            {shareTitle}
           </h1>
           <p class="text-sm opacity-60">
-            {fileKindLabel} • {fileSizeLabel}
+            {hasMultipleFiles
+              ? prettyName(displayFileName)
+              : `${fileKindLabel} • ${fileSizeLabel}`}
           </p>
         </header>
 
@@ -305,7 +346,7 @@ export default function FileSlideshow({
             <>
               <button
                 type="button"
-                onClick={prevSlide}
+                onClick={goPrev}
                 class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-qr-scrim/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
                 aria-label="Previous track or image"
               >
@@ -313,7 +354,7 @@ export default function FileSlideshow({
               </button>
               <button
                 type="button"
-                onClick={nextSlide}
+                onClick={goNext}
                 class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-qr-scrim/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
                 aria-label="Next track or image"
               >
@@ -364,25 +405,34 @@ export default function FileSlideshow({
                         Your browser does not support the audio element.
                       </audio>
 
-                      {/* Track Switcher Pills for Playlists */}
+                      {/* Tracklist — names, not numbers */}
                       {hasMultipleFiles && (
-                        <div class="flex items-center justify-center gap-1.5 flex-wrap pt-2">
-                          {files!.map((file, idx) => (
-                            <button
-                              type="button"
-                              key={file.id}
-                              onClick={() => setCurrentIndex(idx)}
-                              class={`min-w-[36px] h-9 px-2.5 rounded-lg text-xs font-black transition-all ${
-                                currentIndex === idx
-                                  ? "bg-white text-black scale-105 shadow-sm"
-                                  : "bg-white/10 text-white hover:bg-white/20"
-                              }`}
-                              title={file.name}
-                            >
-                              {idx + 1}
-                            </button>
-                          ))}
-                        </div>
+                        <ol class="text-left space-y-0.5 pt-2 max-h-44 overflow-y-auto scrollbar-none">
+                          {files!.map((file, idx) => {
+                            const active = currentIndex === idx;
+                            return (
+                              <li key={file.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => goTo(idx)}
+                                  aria-current={active ? "true" : undefined}
+                                  class={`w-full min-h-[40px] px-3 rounded-xl flex items-center gap-3 text-sm font-bold transition-all ${
+                                    active
+                                      ? "bg-white text-black"
+                                      : "text-white/80 hover:bg-white/10"
+                                  }`}
+                                >
+                                  <span class="w-5 text-xs font-black opacity-60 text-right">
+                                    {active ? "▶" : idx + 1}
+                                  </span>
+                                  <span class="truncate">
+                                    {prettyName(file.name)}
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ol>
                       )}
                     </div>
                   )}
@@ -416,18 +466,47 @@ export default function FileSlideshow({
           </div>
         </div>
 
+        {/* Slideshow transport: dots + play/pause */}
+        {isAllImages && showPreview && (
+          <div class="flex items-center justify-center gap-3 -mt-2">
+            <button
+              type="button"
+              onClick={() => setIsPlaying((p) => !p)}
+              aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
+              class="min-h-[44px] min-w-[44px] rounded-full bg-white/15 hover:bg-white/30 text-white text-base font-black flex items-center justify-center transition-colors"
+            >
+              {isPlaying ? "❚❚" : "▶"}
+            </button>
+            <div class="flex items-center gap-1.5">
+              {files!.map((file, idx) => (
+                <button
+                  type="button"
+                  key={file.id}
+                  onClick={() => goTo(idx)}
+                  aria-label={`Photo ${idx + 1}`}
+                  class={`h-2 rounded-full transition-all ${
+                    currentIndex === idx
+                      ? "w-6 bg-white"
+                      : "w-2 bg-white/40 hover:bg-white/70"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* File Details & Actions */}
         <div class="w-full max-w-md space-y-4">
           <div
             class={`rounded-2xl p-5 sm:p-6 space-y-4 border ${getCardStyles()}`}
           >
             <div class="flex items-start justify-between gap-3">
-              <h1
+              <h2
                 class="text-lg sm:text-xl font-bold break-words flex-1"
-                title={displayFileName}
+                title={hasMultipleFiles ? shareTitle : displayFileName}
               >
-                {displayFileName}
-              </h1>
+                {hasMultipleFiles ? shareTitle : displayFileName}
+              </h2>
               <span class="text-xs sm:text-sm opacity-60 whitespace-nowrap pt-1">
                 {fileSizeLabel}
               </span>

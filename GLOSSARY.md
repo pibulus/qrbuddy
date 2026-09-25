@@ -10,6 +10,9 @@
 - `StyleSelector` - Gradient picker with quick menu + custom entry point
 - `GradientCreator` - Full modal for custom gradients
 - `CreateModal` - Combined QR type, options, file locker, and design sheet
+- `smart-input/FileUploadOptions` - Staging card: thumbnails/tracklist, title,
+  CTA, self-destruct toggle
+- `smart-input/ShareReady` - Post-upload strip: Open / Copy / Sticker
 - `LogoUploader` - Center-logo row (ChoiceRow language) with inline
   Upload/Remove
 - `ActionButtons` - Download/copy/share triggers tied to signals
