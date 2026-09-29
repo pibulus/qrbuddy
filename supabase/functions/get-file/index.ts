@@ -49,9 +49,25 @@ function redirectTo(path: string, request?: Request, status = 302) {
     status,
     headers: {
       ...getCorsHeaders(request),
+      "Cache-Control": "no-store, max-age=0",
       "Location": path,
     },
   });
+}
+
+function retryableFailure(request: Request) {
+  return new Response(
+    "This download couldn't start. Please try again shortly.",
+    {
+      status: 503,
+      headers: {
+        ...getCorsHeaders(request),
+        "Content-Type": "text/plain; charset=utf-8",
+        "Retry-After": "5",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    },
+  );
 }
 
 serve(async (req) => {
@@ -88,8 +104,9 @@ serve(async (req) => {
         .eq("id", fileId)
         .maybeSingle<StoredFileMetadata>();
 
+      if (metadataError) throw metadataError;
+
       if (
-        metadataError ||
         !metadata?.files?.some((file) => file.path === requestedPath)
       ) {
         return redirectTo("/boom", req);
@@ -108,7 +125,7 @@ serve(async (req) => {
 
     if (claimError) {
       console.error("File claim error:", claimError);
-      return redirectTo("/boom", req);
+      return retryableFailure(req);
     }
 
     if (!file) {
@@ -148,7 +165,7 @@ serve(async (req) => {
         if (finalizeError) {
           console.error("File finalize error:", finalizeError);
         }
-        return redirectTo("/boom", req);
+        throw new Error("File download finalization failed");
       }
 
       // Finalized: the slot is committed (finalize nulls download_started_at
@@ -245,7 +262,7 @@ serve(async (req) => {
       if (finalizeError) {
         console.error("File finalize error:", finalizeError);
       }
-      return redirectTo("/boom", req);
+      throw new Error("File download finalization failed");
     }
 
     // Finalized: slot committed, catch must not release it.
@@ -344,6 +361,6 @@ serve(async (req) => {
         console.error("Failed to release claim slot:", releaseErr);
       }
     }
-    return redirectTo("/boom", req);
+    return retryableFailure(req);
   }
 });

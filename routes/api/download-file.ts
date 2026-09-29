@@ -1,6 +1,20 @@
 import { Handlers } from "$fresh/server.ts";
 import { getAuthHeaders, getSupabaseUrl } from "../../utils/api.ts";
 
+function downloadUnavailable(retryAfter = "5") {
+  return new Response(
+    "This download couldn't start. Please try again shortly.",
+    {
+      status: 503,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Retry-After": retryAfter,
+        "Cache-Control": "no-store, max-age=0",
+      },
+    },
+  );
+}
+
 // API route to download file and redirect to boom page
 export const handler: Handlers = {
   async GET(req) {
@@ -19,10 +33,7 @@ export const handler: Handlers = {
     const supabaseUrl = getSupabaseUrl();
 
     if (!supabaseUrl) {
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/" },
-      });
+      return downloadUnavailable();
     }
 
     // Download from edge function
@@ -62,15 +73,22 @@ export const handler: Handlers = {
         const location = response.headers.get("Location");
         return new Response(null, {
           status: 302,
-          headers: { Location: location || "/boom" },
+          headers: {
+            Location: location || "/boom",
+            "Cache-Control": "no-store, max-age=0",
+          },
         });
       }
 
       if (!response.ok) {
-        // File doesn't exist or already exploded
+        if (response.status === 429 || response.status >= 500) {
+          return downloadUnavailable(
+            response.headers.get("Retry-After") ?? "5",
+          );
+        }
         return new Response(null, {
           status: 302,
-          headers: { Location: "/boom" },
+          headers: { Location: "/boom", "Cache-Control": "no-store" },
         });
       }
 
@@ -83,6 +101,11 @@ export const handler: Handlers = {
       const headers = new Headers();
       headers.set("Content-Type", contentType);
       headers.set("Content-Disposition", contentDisposition);
+      headers.set(
+        "Cache-Control",
+        response.headers.get("Cache-Control") ??
+          "no-cache, no-store, must-revalidate",
+      );
 
       // Add Content-Length header for proper media playback and download progress
       const contentLength = response.headers.get("Content-Length");
@@ -114,10 +137,7 @@ export const handler: Handlers = {
       return new Response(response.body, { headers });
     } catch (error) {
       console.error("Download error:", error);
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/boom" },
-      });
+      return downloadUnavailable();
     }
   },
 };
