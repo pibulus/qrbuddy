@@ -40,6 +40,7 @@ function redirectWithCors(path: string, request?: Request, status = 302) {
     status,
     headers: {
       ...getCorsHeaders(request),
+      "Cache-Control": "no-store, max-age=0",
       "Location": path,
     },
   });
@@ -161,6 +162,7 @@ serve(async (req) => {
               ...getCorsHeaders(req),
               "Content-Type": "application/json",
               "Retry-After": "5",
+              "Cache-Control": "no-store, max-age=0",
             },
           },
         );
@@ -188,6 +190,7 @@ serve(async (req) => {
               ...getCorsHeaders(req),
               "Content-Type": "application/json",
               "Retry-After": "5",
+              "Cache-Control": "no-store, max-age=0",
             },
           },
         );
@@ -534,6 +537,7 @@ serve(async (req) => {
       return new Response(html, {
         headers: {
           "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store, max-age=0",
           ...getCorsHeaders(req),
         },
       });

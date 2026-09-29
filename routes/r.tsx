@@ -87,7 +87,10 @@ export const handler: Handlers = {
         if (location) {
           return new Response(null, {
             status: 302,
-            headers: { Location: location },
+            headers: {
+              Location: location,
+              "Cache-Control": "no-store, max-age=0",
+            },
           });
         }
       }
@@ -101,6 +104,8 @@ export const handler: Handlers = {
           status: 200,
           headers: {
             "Content-Type": contentType,
+            "Cache-Control": response.headers.get("Cache-Control") ??
+              "no-store, max-age=0",
           },
         });
       }
@@ -109,7 +114,10 @@ export const handler: Handlers = {
       if (response.status === 410 || response.status === 404) {
         return new Response(null, {
           status: 302,
-          headers: { Location: "/boom" },
+          headers: {
+            Location: "/boom",
+            "Cache-Control": "no-store, max-age=0",
+          },
         });
       }
 
@@ -121,6 +129,7 @@ export const handler: Handlers = {
             headers: {
               "Content-Type": "text/plain; charset=utf-8",
               "Retry-After": response.headers.get("Retry-After") ?? "5",
+              "Cache-Control": "no-store, max-age=0",
             },
           },
         );
