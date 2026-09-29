@@ -20,6 +20,42 @@ function toLocalDateTimeInput(value: string): string {
   return localDate.toISOString().slice(0, 16);
 }
 
+function parseRoutingConfig(value: unknown): Record<string, unknown> | null {
+  let parsed = value;
+  if (typeof parsed === "string") {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return null;
+    }
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return null;
+  }
+  return parsed as Record<string, unknown>;
+}
+
+function stringField(config: Record<string, unknown>, key: string): string {
+  return typeof config[key] === "string" ? config[key] as string : "";
+}
+
+function hourField(
+  value: unknown,
+  fallback: string,
+  maximum: number,
+): string {
+  if (
+    typeof value !== "string" &&
+    !(typeof value === "number" && Number.isInteger(value))
+  ) return fallback;
+  const raw = String(value);
+  if (!/^\d{1,2}$/.test(raw)) return fallback;
+  const hour = Number(raw);
+  return hour >= 0 && hour <= maximum
+    ? String(hour).padStart(2, "0")
+    : fallback;
+}
+
 export default function EditQRForm() {
   const { loading, error, qrData, isSaving, saveQRData } = useQRData();
 
@@ -66,7 +102,12 @@ export default function EditQRForm() {
         qrData.expires_at ? toLocalDateTimeInput(qrData.expires_at) : "",
       );
       setIsActive(qrData.is_active);
-      setRoutingMode(qrData.routing_mode || "simple");
+      const mode = ["simple", "sequential", "device", "time"].includes(
+          qrData.routing_mode,
+        )
+        ? qrData.routing_mode
+        : "simple";
+      setRoutingMode(mode);
 
       const splash = qrData.splash_config;
       setSplashEnabled(splash?.enabled ?? false);
@@ -75,29 +116,34 @@ export default function EditQRForm() {
       setSplashDescription(splash?.description ?? "");
       setSplashImageUrl(splash?.imageUrl ?? "");
 
-      // Handle routing config
-      if (qrData.routing_config) {
-        try {
-          const config = typeof qrData.routing_config === "string"
-            ? JSON.parse(qrData.routing_config)
-            : qrData.routing_config;
+      // Start from a valid empty form, then hydrate only fields that match the
+      // stored schema so old malformed records cannot break the editor.
+      setSequentialUrls(["", ""]);
+      setLoopSequence(false);
+      setIosUrl("");
+      setAndroidUrl("");
+      setFallbackUrl("");
+      setStartHour("09");
+      setEndHour("17");
+      setTimeActiveUrl("");
+      setTimeInactiveUrl("");
 
-          if (qrData.routing_mode === "sequential") {
-            setSequentialUrls(config.urls || ["", ""]);
-            setLoopSequence(config.loop || false);
-          } else if (qrData.routing_mode === "device") {
-            setIosUrl(config.ios || "");
-            setAndroidUrl(config.android || "");
-            setFallbackUrl(config.fallback || "");
-          } else if (qrData.routing_mode === "time") {
-            setStartHour(config.startHour || "09");
-            setEndHour(config.endHour || "17");
-            setTimeActiveUrl(config.activeUrl || "");
-            setTimeInactiveUrl(config.inactiveUrl || "");
-          }
-        } catch (e) {
-          console.error("Error parsing routing config:", e);
-        }
+      const config = parseRoutingConfig(qrData.routing_config);
+      if (config && mode === "sequential") {
+        const urls = Array.isArray(config.urls)
+          ? config.urls.filter((url): url is string => typeof url === "string")
+          : [];
+        setSequentialUrls(urls.length ? urls : ["", ""]);
+        setLoopSequence(config.loop === true);
+      } else if (config && mode === "device") {
+        setIosUrl(stringField(config, "ios"));
+        setAndroidUrl(stringField(config, "android"));
+        setFallbackUrl(stringField(config, "fallback"));
+      } else if (config && mode === "time") {
+        setStartHour(hourField(config.startHour, "09", 23));
+        setEndHour(hourField(config.endHour, "17", 24));
+        setTimeActiveUrl(stringField(config, "activeUrl"));
+        setTimeInactiveUrl(stringField(config, "inactiveUrl"));
       }
     }
   }, [qrData]);

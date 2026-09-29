@@ -10,6 +10,7 @@ import {
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { validateSplashConfig } from "../_shared/splash-validation.ts";
+import { validateRoutingConfig } from "../_shared/routing-config.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
 
 // Generate short code (6 chars, URL-safe).
@@ -120,26 +121,7 @@ serve(async (req) => {
         },
       );
     }
-    if (
-      routing_mode &&
-      !["simple", "sequential", "device", "time"].includes(routing_mode)
-    ) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "Invalid routing_mode — must be simple, sequential, device, or time",
-        }),
-        {
-          headers: {
-            ...getCorsHeaders(req),
-            "Content-Type": "application/json",
-          },
-          status: 400,
-        },
-      );
-    }
-
-    if (!destination_url) {
+    if (typeof destination_url !== "string" || !destination_url.trim()) {
       return new Response(
         JSON.stringify({ error: "destination_url is required" }),
         {
@@ -213,83 +195,21 @@ serve(async (req) => {
     }
 
     const finalDestinationUrl = normalizeUrl(destination_url);
-    let finalRoutingConfig = routing_config;
-
-    // Validate and normalize routing_config URLs if provided
-    if (routing_config) {
-      try {
-        const config = typeof routing_config === "string"
-          ? JSON.parse(routing_config)
-          : { ...routing_config };
-
-        const urlsToValidate: string[] = [];
-
-        // Sequential mode: validate and normalize all URLs in array
-        if (config.urls && Array.isArray(config.urls)) {
-          config.urls = config.urls.map((u: string) => normalizeUrl(u)).filter(
-            (u: string) => u.trim() !== "",
-          );
-          urlsToValidate.push(...config.urls);
-        }
-
-        // Device mode: validate and normalize ios, android, fallback
-        if (config.ios) {
-          config.ios = normalizeUrl(config.ios);
-          urlsToValidate.push(config.ios);
-        }
-        if (config.android) {
-          config.android = normalizeUrl(config.android);
-          urlsToValidate.push(config.android);
-        }
-        if (config.fallback) {
-          config.fallback = normalizeUrl(config.fallback);
-          urlsToValidate.push(config.fallback);
-        }
-
-        // Time mode: validate and normalize activeUrl, inactiveUrl
-        if (config.activeUrl) {
-          config.activeUrl = normalizeUrl(config.activeUrl);
-          urlsToValidate.push(config.activeUrl);
-        }
-        if (config.inactiveUrl) {
-          config.inactiveUrl = normalizeUrl(config.inactiveUrl);
-          urlsToValidate.push(config.inactiveUrl);
-        }
-
-        // Check all URLs
-        for (const url of urlsToValidate) {
-          if (url && !isValidUrl(url)) {
-            return new Response(
-              JSON.stringify({
-                error:
-                  `Invalid URL in routing config: ${url}. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.`,
-              }),
-              {
-                headers: {
-                  ...getCorsHeaders(req),
-                  "Content-Type": "application/json",
-                },
-                status: 400,
-              },
-            );
-          }
-        }
-
-        finalRoutingConfig = config;
-      } catch (_parseError) {
-        return new Response(
-          JSON.stringify({
-            error: "Invalid routing_config format",
-          }),
-          {
-            headers: {
-              ...getCorsHeaders(req),
-              "Content-Type": "application/json",
-            },
-            status: 400,
+    const routingCheck = validateRoutingConfig(
+      routing_mode ?? "simple",
+      routing_config,
+    );
+    if (!routingCheck.ok) {
+      return new Response(
+        JSON.stringify({ error: routingCheck.error }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
           },
-        );
-      }
+          status: 400,
+        },
+      );
     }
 
     // Generate unique short code
@@ -320,8 +240,8 @@ serve(async (req) => {
         max_scans: max_scans || null,
         expires_at: expires_at || null,
         password_hash: password_hash || null,
-        routing_mode: routing_mode || "simple",
-        routing_config: finalRoutingConfig || null,
+        routing_mode: routingCheck.mode,
+        routing_config: routingCheck.value,
         splash_config: splashCheck.value,
         owner_token: ownerToken,
         is_active: true,

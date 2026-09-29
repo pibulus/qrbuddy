@@ -13,19 +13,22 @@ export interface QRData {
   scan_count: number;
   is_active: boolean;
   routing_mode: string;
-  routing_config: {
-    urls?: string[];
-    loop?: boolean;
-    ios?: string;
-    android?: string;
-    fallback?: string;
-    startHour?: string;
-    endHour?: string;
-    activeUrl?: string;
-    inactiveUrl?: string;
-    timezone?: string;
-    timezoneOffset?: number;
-  } | null;
+  routing_config:
+    | {
+      urls?: string[];
+      loop?: boolean;
+      ios?: string;
+      android?: string;
+      fallback?: string;
+      startHour?: string;
+      endHour?: string;
+      activeUrl?: string;
+      inactiveUrl?: string;
+      timezone?: string;
+      timezoneOffset?: number;
+    }
+    | string
+    | null;
   splash_config?: {
     enabled: boolean;
     title: string;

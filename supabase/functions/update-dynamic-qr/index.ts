@@ -10,6 +10,7 @@ import {
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { validateSplashConfig } from "../_shared/splash-validation.ts";
+import { validateRoutingConfig } from "../_shared/routing-config.ts";
 
 serve(async (req) => {
   // Handle CORS
@@ -92,25 +93,6 @@ serve(async (req) => {
         },
       );
     }
-    if (
-      routing_mode &&
-      !["simple", "sequential", "device", "time"].includes(routing_mode)
-    ) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "Invalid routing_mode — must be simple, sequential, device, or time",
-        }),
-        {
-          headers: {
-            ...getCorsHeaders(req),
-            "Content-Type": "application/json",
-          },
-          status: 400,
-        },
-      );
-    }
-
     if (!owner_token) {
       return new Response(
         JSON.stringify({ error: "owner_token is required" }),
@@ -174,7 +156,7 @@ serve(async (req) => {
 
     let finalDestinationUrl: string | undefined = undefined;
     if (destination_url !== undefined) {
-      if (!isValidUrl(destination_url)) {
+      if (typeof destination_url !== "string" || !isValidUrl(destination_url)) {
         return new Response(
           JSON.stringify({
             error:
@@ -192,74 +174,25 @@ serve(async (req) => {
       finalDestinationUrl = normalizeUrl(destination_url);
     }
 
-    let finalRoutingConfig = routing_config;
-    // Validate routing_config URLs if provided
-    if (routing_config !== undefined && routing_config !== null) {
-      try {
-        const config = typeof routing_config === "string"
-          ? JSON.parse(routing_config)
-          : { ...routing_config };
+    const routingFieldsTouched = routing_mode !== undefined ||
+      routing_config !== undefined;
+    let routingCheck: ReturnType<typeof validateRoutingConfig> | null = null;
+    if (routingFieldsTouched) {
+      const nextMode = routing_mode === undefined
+        ? existing.routing_mode ?? "simple"
+        : routing_mode;
+      let nextConfig = routing_config === undefined
+        ? existing.routing_config
+        : routing_config;
+      // Switching back to simple mode intentionally discards advanced settings.
+      if (routing_mode === "simple" && routing_config === undefined) {
+        nextConfig = null;
+      }
 
-        // Validate all URLs in routing config
-        const urlsToValidate: string[] = [];
-
-        // Sequential mode: validate and normalize all URLs in array
-        if (config.urls && Array.isArray(config.urls)) {
-          config.urls = config.urls.map((u: string) => normalizeUrl(u)).filter(
-            (u: string) => u.trim() !== "",
-          );
-          urlsToValidate.push(...config.urls);
-        }
-
-        // Device mode: validate and normalize ios, android, fallback
-        if (config.ios) {
-          config.ios = normalizeUrl(config.ios);
-          urlsToValidate.push(config.ios);
-        }
-        if (config.android) {
-          config.android = normalizeUrl(config.android);
-          urlsToValidate.push(config.android);
-        }
-        if (config.fallback) {
-          config.fallback = normalizeUrl(config.fallback);
-          urlsToValidate.push(config.fallback);
-        }
-
-        // Time mode: validate and normalize activeUrl, inactiveUrl
-        if (config.activeUrl) {
-          config.activeUrl = normalizeUrl(config.activeUrl);
-          urlsToValidate.push(config.activeUrl);
-        }
-        if (config.inactiveUrl) {
-          config.inactiveUrl = normalizeUrl(config.inactiveUrl);
-          urlsToValidate.push(config.inactiveUrl);
-        }
-
-        // Check all URLs
-        for (const url of urlsToValidate) {
-          if (url && !isValidUrl(url)) {
-            return new Response(
-              JSON.stringify({
-                error:
-                  `Invalid URL in routing config: ${url}. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.`,
-              }),
-              {
-                headers: {
-                  ...getCorsHeaders(req),
-                  "Content-Type": "application/json",
-                },
-                status: 400,
-              },
-            );
-          }
-        }
-
-        finalRoutingConfig = config;
-      } catch (_parseError) {
+      routingCheck = validateRoutingConfig(nextMode, nextConfig);
+      if (!routingCheck.ok) {
         return new Response(
-          JSON.stringify({
-            error: "Invalid routing_config format",
-          }),
+          JSON.stringify({ error: routingCheck.error }),
           {
             headers: {
               ...getCorsHeaders(req),
@@ -298,9 +231,9 @@ serve(async (req) => {
     if (max_scans !== undefined) updates.max_scans = max_scans;
     if (expires_at !== undefined) updates.expires_at = expires_at;
     if (is_active !== undefined) updates.is_active = is_active;
-    if (routing_mode !== undefined) updates.routing_mode = routing_mode;
-    if (routing_config !== undefined) {
-      updates.routing_config = finalRoutingConfig;
+    if (routingCheck?.ok) {
+      updates.routing_mode = routingCheck.mode;
+      updates.routing_config = routingCheck.value;
     }
     if (splash_config !== undefined) updates.splash_config = validatedSplash;
 
