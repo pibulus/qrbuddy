@@ -105,8 +105,12 @@ export default function HistoryDrawer(
       const result = await importSyncBundle(importInput.trim(), currentPhrase);
       setHistory(getHistory());
       haptics.success();
+      const manageLinks = result.ownerTokensRestored
+        ? " · restored " + result.ownerTokensRestored + " manage links"
+        : "";
       addToast(
-        `Synced ${result.mergedHistoryCount} items from other device! ☁️✨`,
+        "Synced " + result.mergedHistoryCount + " items" + manageLinks +
+          " from other device! ☁️✨",
       );
       setImportInput("");
       setShowSync(false);

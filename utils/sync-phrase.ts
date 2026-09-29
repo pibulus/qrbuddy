@@ -7,6 +7,11 @@
 import { decryptText, encryptText } from "./crypto.ts";
 import { getHistory, HistoryItem, mergeHistory } from "./history.ts";
 import { getSupporterPass, setSupporterPass } from "./supporter-pass.ts";
+import {
+  exportOwnerTokens,
+  importOwnerTokens,
+  OwnerTokenRecord,
+} from "./token-vault.ts";
 
 const ADJECTIVES = [
   "neon",
@@ -198,10 +203,11 @@ export function isValidSyncPhrase(value: string, numWords = 4): boolean {
 }
 
 export interface SyncBundle {
-  version: 1;
+  version: 1 | 2;
   timestamp: number;
   history: HistoryItem[];
   supporterPass: string | null;
+  ownerTokens?: OwnerTokenRecord[];
 }
 
 /**
@@ -209,10 +215,11 @@ export interface SyncBundle {
  */
 export async function exportSyncBundle(phrase: string): Promise<string> {
   const bundle: SyncBundle = {
-    version: 1,
+    version: 2,
     timestamp: Date.now(),
     history: getHistory(),
     supporterPass: getSupporterPass(),
+    ownerTokens: await exportOwnerTokens(),
   };
 
   const json = JSON.stringify(bundle);
@@ -226,16 +233,24 @@ export async function exportSyncBundle(phrase: string): Promise<string> {
 export async function importSyncBundle(
   encryptedJson: string,
   phrase: string,
-): Promise<{ mergedHistoryCount: number; supporterPassRestored: boolean }> {
+): Promise<{
+  mergedHistoryCount: number;
+  supporterPassRestored: boolean;
+  ownerTokensRestored: number;
+}> {
   const payload = JSON.parse(encryptedJson);
   const decryptedJson = await decryptText(payload, normalizeSyncPhrase(phrase));
   const bundle: SyncBundle = JSON.parse(decryptedJson);
 
-  if (bundle.version !== 1 || !Array.isArray(bundle.history)) {
+  if (
+    (bundle.version !== 1 && bundle.version !== 2) ||
+    !Array.isArray(bundle.history)
+  ) {
     throw new Error("Invalid sync bundle format");
   }
 
   const mergedHistoryCount = mergeHistory(bundle.history);
+  const ownerTokensRestored = await importOwnerTokens(bundle.ownerTokens);
 
   // Restore supporter pass if available
   let supporterPassRestored = false;
@@ -244,5 +259,5 @@ export async function importSyncBundle(
     supporterPassRestored = true;
   }
 
-  return { mergedHistoryCount, supporterPassRestored };
+  return { mergedHistoryCount, supporterPassRestored, ownerTokensRestored };
 }

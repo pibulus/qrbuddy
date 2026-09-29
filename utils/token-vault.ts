@@ -9,6 +9,12 @@ const decoder = new TextDecoder();
 
 export type TokenScope = "qr" | "bucket" | "file";
 
+export interface OwnerTokenRecord {
+  scope: TokenScope;
+  identifier: string;
+  token: string;
+}
+
 function getStorage(): Storage | null {
   const scope = globalThis as typeof globalThis & { localStorage?: Storage };
   if (!scope || !scope.localStorage) return null;
@@ -158,4 +164,64 @@ export function removeOwnerToken(scope: TokenScope, identifier: string): void {
   const storage = getStorage();
   if (!storage) return;
   storage.removeItem(storageKey(scope, identifier));
+}
+
+/** Read owner tokens for inclusion in the encrypted cross-device sync bundle. */
+export async function exportOwnerTokens(): Promise<OwnerTokenRecord[]> {
+  const storage = getStorage();
+  if (!storage) return [];
+
+  const prefix = STORAGE_PREFIX + ":";
+  const records: OwnerTokenRecord[] = [];
+
+  try {
+    for (let index = 0; index < storage.length; index++) {
+      const key = storage.key(index);
+      if (!key || !key.startsWith(prefix)) continue;
+
+      const separator = key.indexOf(":", prefix.length);
+      if (separator < 0) continue;
+
+      const scope = key.slice(prefix.length, separator);
+      const identifier = key.slice(separator + 1);
+      if (
+        (scope !== "qr" && scope !== "bucket" && scope !== "file") ||
+        !identifier
+      ) continue;
+
+      const token = await getOwnerToken(scope, identifier);
+      if (token) records.push({ scope, identifier, token });
+    }
+  } catch (error) {
+    console.error("TokenVault: export failed", error);
+  }
+
+  return records;
+}
+
+/** Restore missing owner tokens, encrypting them with this device's vault key. */
+export async function importOwnerTokens(records: unknown): Promise<number> {
+  if (!Array.isArray(records)) return 0;
+
+  let restored = 0;
+  for (const value of records) {
+    if (!value || typeof value !== "object") continue;
+    const record = value as Partial<OwnerTokenRecord>;
+    const { scope, identifier, token } = record;
+    if (
+      (scope !== "qr" && scope !== "bucket" && scope !== "file") ||
+      typeof identifier !== "string" || !identifier ||
+      typeof token !== "string" || !token
+    ) continue;
+
+    try {
+      if (await getOwnerToken(scope, identifier)) continue;
+      await saveOwnerToken(scope, identifier, token);
+      if (await getOwnerToken(scope, identifier) === token) restored++;
+    } catch (error) {
+      console.error("TokenVault: import failed", error);
+    }
+  }
+
+  return restored;
 }
