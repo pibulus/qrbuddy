@@ -5,7 +5,7 @@
 // syncs Time Machine history, edit tokens, and supporter passes across devices.
 
 import { decryptText, encryptText } from "./crypto.ts";
-import { getHistory, HistoryItem } from "./history.ts";
+import { getHistory, HistoryItem, mergeHistory } from "./history.ts";
 import { getSupporterPass, setSupporterPass } from "./supporter-pass.ts";
 
 const ADJECTIVES = [
@@ -235,22 +235,7 @@ export async function importSyncBundle(
     throw new Error("Invalid sync bundle format");
   }
 
-  // Merge history without duplicates
-  const current = getHistory();
-  const existingIds = new Set(current.map((item) => item.id));
-  let mergedHistoryCount = 0;
-
-  for (const item of bundle.history) {
-    if (!existingIds.has(item.id)) {
-      current.unshift(item);
-      mergedHistoryCount++;
-    }
-  }
-
-  if (typeof localStorage !== "undefined") {
-    localStorage.setItem("qrbuddy_history", JSON.stringify(current));
-    globalThis.dispatchEvent(new CustomEvent("history-updated"));
-  }
+  const mergedHistoryCount = mergeHistory(bundle.history);
 
   // Restore supporter pass if available
   let supporterPassRestored = false;

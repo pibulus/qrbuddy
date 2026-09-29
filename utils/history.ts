@@ -64,6 +64,33 @@ export function addToHistory(item: Omit<HistoryItem, "id" | "timestamp">) {
   globalThis.dispatchEvent(new CustomEvent("history-updated"));
 }
 
+/** Merge a synced history into this device and persist it using the canonical key. */
+export function mergeHistory(items: HistoryItem[]): number {
+  if (!IS_BROWSER) return 0;
+
+  const current = getHistory();
+  const currentIds = new Set(current.map((item) => item.id));
+  const seenIds = new Set(currentIds);
+  const additions: HistoryItem[] = [];
+
+  for (const item of items) {
+    if (!seenIds.has(item.id)) {
+      seenIds.add(item.id);
+      additions.push(item);
+    }
+  }
+
+  const incomingIds = new Set(additions.map((item) => item.id));
+  const updated = [...current, ...additions]
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, MAX_ITEMS);
+
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+  globalThis.dispatchEvent(new CustomEvent("history-updated"));
+
+  return updated.filter((item) => incomingIds.has(item.id)).length;
+}
+
 export function removeFromHistory(id: string) {
   if (!IS_BROWSER) return;
   const history = getHistory();
