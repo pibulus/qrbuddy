@@ -352,25 +352,96 @@ serve(async (req) => {
       }
     }
 
-    // 8. Abandoned presigned-upload grants (>24h old, never finalized):
-    // delete any orphaned R2 object, then the grant row.
+    // 8. Retire old presigned-upload grants. Finalized grants already have a
+    // durable share or a queued bucket-conflict reap; unfinalized grants keep
+    // their row until the orphaned R2 object was actually deleted.
     const pendingCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
       .toISOString();
+    let cleanedPendingUploads = 0;
     const { data: stalePending, error: pendingFetchError } = await supabase
       .from("pending_uploads")
-      .select("id, storage_key")
+      .select("id, storage_key, finalized_at")
       .lt("created_at", pendingCutoff);
 
     if (pendingFetchError) {
       console.error("Pending uploads fetch error:", pendingFetchError);
     } else if (stalePending && stalePending.length > 0) {
-      await reapR2(stalePending.map((p) => p.storage_key));
-      const { error: pendingDeleteError } = await supabase
-        .from("pending_uploads")
-        .delete()
-        .in("id", stalePending.map((p) => p.id));
-      if (pendingDeleteError) {
-        console.error("Pending uploads delete error:", pendingDeleteError);
+      const safeToDeleteIds = stalePending
+        .filter((pending) => pending.finalized_at)
+        .map((pending) => pending.id);
+      const unfinalized = stalePending.filter((pending) =>
+        !pending.finalized_at
+      );
+
+      if (unfinalized.length > 0) {
+        const keys = Array.from(
+          new Set(unfinalized.map((pending) => pending.storage_key)),
+        );
+        const [fileReferences, bucketReferences] = await Promise.all([
+          supabase
+            .from("destructible_files")
+            .select("file_name")
+            .in("file_name", keys),
+          supabase
+            .from("file_buckets")
+            .select("content_data")
+            .in("content_data", keys)
+            .eq("is_empty", false),
+        ]);
+
+        if (fileReferences.error || bucketReferences.error) {
+          console.error(
+            "Pending upload reference check failed; keeping grants for retry:",
+            fileReferences.error ?? bucketReferences.error,
+          );
+        } else {
+          const referencedKeys = new Set<string>();
+          for (const row of fileReferences.data ?? []) {
+            if (typeof row.file_name === "string") {
+              referencedKeys.add(row.file_name);
+            }
+          }
+          for (const row of bucketReferences.data ?? []) {
+            if (typeof row.content_data === "string") {
+              referencedKeys.add(row.content_data);
+            }
+          }
+
+          for (const pending of unfinalized) {
+            if (referencedKeys.has(pending.storage_key)) {
+              // Legacy finalizers could create a live record but fail to
+              // delete its grant. Retire that grant without touching the file.
+              safeToDeleteIds.push(pending.id);
+            }
+          }
+
+          const orphaned = unfinalized.filter((pending) =>
+            !referencedKeys.has(pending.storage_key) &&
+            isR2Path(pending.storage_key)
+          );
+          const reapedKeys = new Set(
+            await reapR2(
+              Array.from(new Set(orphaned.map((p) => p.storage_key))),
+            ),
+          );
+          for (const pending of orphaned) {
+            if (reapedKeys.has(pending.storage_key)) {
+              safeToDeleteIds.push(pending.id);
+            }
+          }
+        }
+      }
+
+      if (safeToDeleteIds.length > 0) {
+        const { error: pendingDeleteError, count } = await supabase
+          .from("pending_uploads")
+          .delete({ count: "exact" })
+          .in("id", safeToDeleteIds);
+        if (pendingDeleteError) {
+          console.error("Pending uploads delete error:", pendingDeleteError);
+        } else {
+          cleanedPendingUploads = count ?? safeToDeleteIds.length;
+        }
       }
     }
 
@@ -385,6 +456,7 @@ serve(async (req) => {
         pruned_scan_logs: prunedScanLogs ?? 0,
         reaped_r2_objects: reapedR2Objects,
         reaped_storage_objects: reapedStorageObjects,
+        cleaned_pending_uploads: cleanedPendingUploads,
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

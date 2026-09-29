@@ -9,14 +9,84 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
 import { deleteObjects, headObjectSize } from "../_shared/r2.ts";
+import { generateOwnerToken } from "../_shared/visitor.ts";
 
 const UNLIMITED_DOWNLOADS = 999999;
+const PENDING_UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
+
+type FinalizationResult = {
+  kind?: string;
+  error_code?: string;
+  file_id?: string;
+  owner_token?: string;
+  file_name?: string;
+  size?: number;
+  max_downloads?: number;
+};
 
 function jsonResponse(req: Request, body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     status,
   });
+}
+
+function respondWithFinalization(
+  req: Request,
+  result: FinalizationResult,
+): Response {
+  if (result.error_code === "not_found") {
+    return jsonResponse(req, { error: "Unknown or expired upload" }, 404);
+  }
+  if (result.error_code === "expired") {
+    return jsonResponse(req, { error: "Upload grant expired" }, 410);
+  }
+  if (result.error_code === "bucket_conflict") {
+    return jsonResponse(
+      req,
+      {
+        error:
+          "Bucket was filled by someone else. Download current content first.",
+      },
+      409,
+    );
+  }
+  if (result.kind === "bucket" && result.error_code === undefined) {
+    return jsonResponse(req, {
+      success: true,
+      message: "Content uploaded to bucket",
+      content_type: "file",
+      is_empty: false,
+    });
+  }
+  if (
+    result.kind === "destructible" && result.file_id && result.owner_token &&
+    typeof result.max_downloads === "number"
+  ) {
+    const baseUrl = Deno.env.get("APP_URL") ||
+      (Deno.env.get("DENO_DEPLOYMENT_ID")
+        ? "https://qrbuddy.app"
+        : "http://localhost:8000");
+    const maxDownloads = result.max_downloads;
+    const message = maxDownloads === UNLIMITED_DOWNLOADS
+      ? "Files uploaded! Ready to share — unlimited downloads."
+      : maxDownloads === 1
+      ? "Files uploaded! They will self-destruct after 1 download."
+      : `Files uploaded! They will self-destruct after ${maxDownloads} downloads.`;
+
+    return jsonResponse(req, {
+      success: true,
+      fileId: result.file_id,
+      ownerToken: result.owner_token,
+      url: `${baseUrl}/f/${result.file_id}`,
+      fileName: result.file_name ?? "download",
+      size: result.size ?? 0,
+      maxDownloads,
+      message,
+    });
+  }
+
+  return jsonResponse(req, { error: "Could not finalize this upload" }, 500);
 }
 
 serve(async (req) => {
@@ -61,6 +131,26 @@ serve(async (req) => {
       return jsonResponse(req, { error: "Unknown or expired upload" }, 404);
     }
 
+    // A completed grant retains its response briefly. This makes a retry after
+    // a dropped network response return the same share URL and owner token.
+    if (pending.finalized_at) {
+      if (pending.finalization_result) {
+        return respondWithFinalization(
+          req,
+          pending.finalization_result as FinalizationResult,
+        );
+      }
+      return jsonResponse(req, { error: "Could not recover this upload" }, 500);
+    }
+
+    if (
+      !Number.isFinite(new Date(pending.created_at).getTime()) ||
+      Date.now() - new Date(pending.created_at).getTime() >
+        PENDING_UPLOAD_TTL_MS
+    ) {
+      return jsonResponse(req, { error: "Upload grant expired" }, 410);
+    }
+
     // The calibration check: is the object really there, at the declared size?
     const actualSize = await headObjectSize(pending.storage_key);
     if (actualSize === null) {
@@ -73,8 +163,34 @@ serve(async (req) => {
       );
     }
     if (actualSize !== pending.declared_size) {
-      await deleteObjects([pending.storage_key]);
-      await supabase.from("pending_uploads").delete().eq("id", uploadId);
+      const deleted = await deleteObjects([pending.storage_key]);
+      if (!deleted.includes(pending.storage_key)) {
+        const { error: queueError } = await supabase
+          .from("r2_reap_queue")
+          .upsert({
+            storage_key: pending.storage_key,
+            reap_after: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          });
+        if (queueError) {
+          console.error("Mismatched upload reap enqueue failed:", queueError);
+          return jsonResponse(
+            req,
+            { error: "Could not safely clean up this upload. Please retry." },
+            503,
+          );
+        }
+      }
+
+      const { error: pendingDeleteError } = await supabase
+        .from("pending_uploads")
+        .delete()
+        .eq("id", uploadId);
+      if (pendingDeleteError) {
+        console.error(
+          "Mismatched upload grant cleanup failed:",
+          pendingDeleteError,
+        );
+      }
       return jsonResponse(
         req,
         { error: "Uploaded file doesn't match the declared size." },
@@ -82,130 +198,19 @@ serve(async (req) => {
       );
     }
 
-    if (pending.kind === "destructible") {
-      const params = pending.params as {
-        main_id: string;
-        file_id: string;
-        max_downloads: number;
-        theme: string;
-        creator_ip: string;
-      };
-      const maxDownloads = params.max_downloads ?? UNLIMITED_DOWNLOADS;
-
-      const { error: dbError } = await supabase
-        .from("destructible_files")
-        .insert({
-          id: params.main_id,
-          file_name: pending.storage_key, // Legacy column — the r2/ prefix marks the backend
-          original_name: pending.filename,
-          size: pending.declared_size,
-          mime_type: pending.mimetype,
-          files: [{
-            id: params.file_id,
-            path: pending.storage_key,
-            name: pending.filename,
-            size: pending.declared_size,
-            type: pending.mimetype,
-          }],
-          theme: params.theme,
-          created_at: new Date().toISOString(),
-          accessed: false,
-          max_downloads: maxDownloads,
-          download_count: 0,
-          creator_ip: params.creator_ip,
-        });
-
-      if (dbError) throw dbError;
-
-      await supabase.from("pending_uploads").delete().eq("id", uploadId);
-
-      const baseUrl = Deno.env.get("APP_URL") ||
-        (Deno.env.get("DENO_DEPLOYMENT_ID")
-          ? "https://qrbuddy.app"
-          : "http://localhost:8000");
-
-      const message = maxDownloads === UNLIMITED_DOWNLOADS
-        ? "Files uploaded! Ready to share — unlimited downloads."
-        : maxDownloads === 1
-        ? "Files uploaded! They will self-destruct after 1 download."
-        : `Files uploaded! They will self-destruct after ${maxDownloads} downloads.`;
-
-      // Same response shape as upload-file so the client flow is identical.
-      return jsonResponse(req, {
-        success: true,
-        fileId: params.main_id,
-        url: `${baseUrl}/f/${params.main_id}`,
-        fileName: pending.filename,
-        size: pending.declared_size,
-        maxDownloads,
-        message,
-      });
+    const ownerToken = pending.kind === "destructible"
+      ? generateOwnerToken()
+      : null;
+    const { data: finalized, error: finalizeError } = await supabase.rpc(
+      "finalize_pending_upload",
+      { p_upload_id: uploadId, p_owner_token: ownerToken },
+    );
+    if (finalizeError) throw finalizeError;
+    if (!finalized || typeof finalized !== "object") {
+      throw new Error("Pending upload finalization returned no result");
     }
 
-    // kind === "bucket": fill the locker, atomically (same .eq(is_empty)
-    // guard as upload-to-bucket — a concurrent filler wins, we clean up).
-    const params = pending.params as {
-      bucket_id: string;
-      bucket_code: string;
-      title?: string;
-      description?: string;
-      creator?: string;
-    };
-
-    const contentMetadata = {
-      filename: pending.filename,
-      size: pending.declared_size,
-      mimetype: pending.mimetype,
-      storage_path: pending.storage_key,
-      ...(params.title && { title: params.title }),
-      ...(params.description && { description: params.description }),
-      ...(params.creator && { creator: params.creator }),
-    };
-
-    const { data: updatedBucket, error: updateError } = await supabase
-      .from("file_buckets")
-      .update({
-        content_type: "file",
-        content_data: pending.storage_key,
-        content_metadata: contentMetadata,
-        is_empty: false,
-        download_started_at: null,
-        last_filled_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", params.bucket_id)
-      .eq("is_empty", true)
-      .select("id")
-      .maybeSingle();
-
-    if (updateError) throw updateError;
-
-    if (!updatedBucket) {
-      // Someone filled the bucket between presign and finalize — the R2
-      // object is orphaned; queue it for the reaper and tell the client.
-      await supabase.from("r2_reap_queue").upsert({
-        storage_key: pending.storage_key,
-        reap_after: new Date().toISOString(),
-      });
-      await supabase.from("pending_uploads").delete().eq("id", uploadId);
-      return jsonResponse(
-        req,
-        {
-          error:
-            "Bucket was filled by someone else. Download current content first.",
-        },
-        409,
-      );
-    }
-
-    await supabase.from("pending_uploads").delete().eq("id", uploadId);
-
-    return jsonResponse(req, {
-      success: true,
-      message: "Content uploaded to bucket",
-      content_type: "file",
-      is_empty: false,
-    });
+    return respondWithFinalization(req, finalized as FinalizationResult);
   } catch (error) {
     console.error("Finalize upload failed:", error);
     return jsonResponse(
