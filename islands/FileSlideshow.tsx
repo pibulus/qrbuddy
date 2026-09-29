@@ -50,6 +50,7 @@ export default function FileSlideshow({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isZipping, setIsZipping] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
+  const [lastDownloadStarted, setLastDownloadStarted] = useState(false);
 
   const hasMultipleFiles = files && files.length > 1;
   const isAllAudio = Boolean(
@@ -347,10 +348,11 @@ export default function FileSlideshow({
   const handleDownloadClick = () => {
     engagement.current.downloads += 1;
     if (!isUnlimited && remainingDownloads <= 1) {
+      // Let the anchor's default navigation begin before replacing it with
+      // the one-time status message.
+      setTimeout(() => setLastDownloadStarted(true), 0);
       setIsExploding(true);
-      setTimeout(() => {
-        globalThis.location.href = "/boom";
-      }, 2000);
+      setTimeout(() => setIsExploding(false), 2000);
     }
   };
 
@@ -365,7 +367,7 @@ export default function FileSlideshow({
             SELF-DESTRUCT INITIATED
           </h2>
           <p class="text-base sm:text-lg font-mono text-yellow-300 font-bold max-w-md">
-            Downloading payload & vaporizing link forever...
+            Your download is starting. This link has used its final pass.
           </p>
           <div class="mt-8 flex gap-3 text-3xl animate-pulse">
             <span>💣</span>
@@ -588,24 +590,35 @@ export default function FileSlideshow({
             </div>
 
             {/* Download Button */}
-            <a
-              href={primaryDownloadUrl}
-              download={primaryDownloadName}
-              onClick={handleDownloadClick}
-              class={`min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl font-black text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
-                isUnlimited
-                  ? (theme === "terminal"
-                    ? "bg-[#00ff9d] text-black"
-                    : "bg-white text-black hover:bg-gray-200")
-                  : "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
-              }`}
-            >
-              {hasMultipleFiles && !isUnlimited
-                ? "Download All & Destroy (.zip) 💥"
-                : isUnlimited
-                ? `Download ${fileKindLabel} ↓`
-                : "Download & Destroy 💥"}
-            </a>
+            {lastDownloadStarted
+              ? (
+                <p
+                  role="status"
+                  class="min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl bg-red-100 text-red-950 font-bold text-center"
+                >
+                  One-time link used. Your download may take a moment.
+                </p>
+              )
+              : (
+                <a
+                  href={primaryDownloadUrl}
+                  download={primaryDownloadName}
+                  onClick={handleDownloadClick}
+                  class={`min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl font-black text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
+                    isUnlimited
+                      ? (theme === "terminal"
+                        ? "bg-[#00ff9d] text-black"
+                        : "bg-white text-black hover:bg-gray-200")
+                      : "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
+                  }`}
+                >
+                  {hasMultipleFiles && !isUnlimited
+                    ? "Download All & Destroy (.zip) 💥"
+                    : isUnlimited
+                    ? `Download ${fileKindLabel} ↓`
+                    : "Download & Destroy 💥"}
+                </a>
+              )}
 
             {/* Download All Button */}
             {hasMultipleFiles && isUnlimited && (

@@ -79,7 +79,6 @@ export const handler: Handlers = {
         "application/octet-stream";
       const contentDisposition = response.headers.get("Content-Disposition") ||
         "attachment";
-      const downloadsRemaining = response.headers.get("X-Downloads-Remaining");
 
       const headers = new Headers();
       headers.set("Content-Type", contentType);
@@ -109,15 +108,9 @@ export const handler: Handlers = {
         });
       }
 
-      // Add script to redirect to boom after download starts
-      // Only explode if explicitly 0. If null/undefined, assume unlimited/safe.
-      const willExplode = downloadsRemaining === "0";
-
-      if (willExplode) {
-        // Redirect to boom page after download
-        headers.set("Refresh", "1; url=/boom");
-      }
-
+      // Keep the download response free of page-refresh headers. The one-use
+      // link is already consumed server-side; navigating away can interrupt a
+      // slow stream before the browser finishes saving it.
       return new Response(response.body, { headers });
     } catch (error) {
       console.error("Download error:", error);
