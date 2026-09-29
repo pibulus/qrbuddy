@@ -190,8 +190,10 @@ export function useFileUpload(
       setTouched(true);
 
       // Auto-Copy URL
+      let linkCopied = false;
       try {
         await navigator.clipboard.writeText(data.url);
+        linkCopied = true;
       } catch (err) {
         console.warn("Auto-copy failed:", err);
       }
@@ -222,7 +224,9 @@ export function useFileUpload(
       if (limitedDownloads) {
         successMessage += ` · self-destructs after ${scanText}`;
       }
-      successMessage += " · link copied";
+      successMessage += linkCopied
+        ? " · link copied"
+        : " · use Copy below to share it";
       if (!ownerTokenStored) {
         successMessage += " · this device couldn't remember its manage key";
       }

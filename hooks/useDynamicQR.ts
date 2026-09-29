@@ -108,8 +108,10 @@ export function useDynamicQR(
       });
 
       // Auto-Copy URL
+      let linkCopied = false;
       try {
         await navigator.clipboard.writeText(data.redirect_url);
+        linkCopied = true;
       } catch (err) {
         console.warn("Auto-copy failed:", err);
       }
@@ -117,9 +119,14 @@ export function useDynamicQR(
       // Success feedback
       haptics.success();
 
-      let successMessage = ownerTokenStored
-        ? "✅ Dynamic QR created! Link copied 🔗"
-        : "✅ QR is live. Save the edit link below; this device couldn't remember it.";
+      let successMessage = "✅ Dynamic QR created";
+      successMessage += linkCopied
+        ? " · link copied 🔗"
+        : " · scan or save the QR to share it";
+      if (!ownerTokenStored) {
+        successMessage +=
+          " · save the edit link below; this device couldn't remember it";
+      }
       if (!historyStored) successMessage += " · history couldn't be saved";
       addToast(successMessage, ownerTokenStored && historyStored ? 3000 : 6000);
 
