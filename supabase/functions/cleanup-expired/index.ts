@@ -101,32 +101,52 @@ serve(async (req) => {
       // r2/ paths live in Cloudflare R2, the rest in Supabase storage.
       const r2Files = filesToDelete.filter(isR2Path);
       const supabaseFiles = filesToDelete.filter((p) => !isR2Path(p));
+      const failedStoragePaths = new Set<string>();
 
       if (supabaseFiles.length > 0) {
         const { error: storageError } = await supabase.storage
           .from("qr-files")
           .remove(supabaseFiles);
 
-        if (storageError) console.error("Storage delete error:", storageError);
-        else deletedFiles = supabaseFiles.length;
+        if (storageError) {
+          console.error("Storage delete error:", storageError);
+          supabaseFiles.forEach((path) => failedStoragePaths.add(path));
+        } else {
+          deletedFiles = supabaseFiles.length;
+        }
       }
-      deletedFiles += (await reapR2(r2Files)).length;
+      const reapedR2Files = new Set(await reapR2(r2Files));
+      deletedFiles += reapedR2Files.size;
+      r2Files
+        .filter((path) => !reapedR2Files.has(path))
+        .forEach((path) => failedStoragePaths.add(path));
 
-      // Empty these buckets
-      const expiredIds = expiredBuckets.map((b) => b.id);
-      const { error: updateError } = await supabase
-        .from("file_buckets")
-        .update({
-          is_empty: true,
-          content_type: null,
-          content_data: null,
-          content_metadata: null,
-          last_emptied_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+      // Keep metadata for buckets whose object deletion failed so cleanup can
+      // retry with the storage key still available on the next run.
+      const expiredIds = expiredBuckets
+        .filter((bucket) => {
+          const storagePath = bucket.content_type === "file"
+            ? bucket.content_metadata?.storage_path
+            : null;
+          return !storagePath || !failedStoragePaths.has(storagePath);
         })
-        .in("id", expiredIds);
+        .map((bucket) => bucket.id);
 
-      if (updateError) throw updateError;
+      if (expiredIds.length > 0) {
+        const { error: updateError } = await supabase
+          .from("file_buckets")
+          .update({
+            is_empty: true,
+            content_type: null,
+            content_data: null,
+            content_metadata: null,
+            last_emptied_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .in("id", expiredIds);
+
+        if (updateError) throw updateError;
+      }
     }
 
     // 2. Delete abandoned/empty buckets (older than 30 days)
@@ -176,6 +196,7 @@ serve(async (req) => {
 
       // Delete from storage (Supabase paths) and R2 (r2/ paths)
       const supabasePaths = paths.filter((p) => !isR2Path(p));
+      const failedStoragePaths = new Set<string>();
       if (supabasePaths.length > 0) {
         const { error: storageError } = await supabase.storage
           .from("qr-files")
@@ -183,20 +204,42 @@ serve(async (req) => {
 
         if (storageError) {
           console.error("Storage delete error (destructible):", storageError);
+          supabasePaths.forEach((path) => failedStoragePaths.add(path));
         }
       }
-      await reapR2(paths.filter(isR2Path));
+      const r2Paths = paths.filter(isR2Path);
+      const reapedR2Paths = new Set(await reapR2(r2Paths));
+      r2Paths
+        .filter((path) => !reapedR2Paths.has(path))
+        .forEach((path) => failedStoragePaths.add(path));
 
-      // Delete from DB
-      const ids = expiredFiles.map((f) => f.id);
-      const { error: dbDeleteError } = await supabase
-        .from("destructible_files")
-        .delete()
-        .in("id", ids);
+      const pathsForFile = (file: {
+        file_name: string | null;
+        files: Array<{ path?: string }> | null;
+      }) => {
+        const filePaths = file.file_name ? [file.file_name] : [];
+        if (Array.isArray(file.files)) {
+          for (const subFile of file.files) {
+            if (subFile?.path) filePaths.push(subFile.path);
+          }
+        }
+        return filePaths;
+      };
+      const ids = expiredFiles
+        .filter((file) =>
+          pathsForFile(file).every((path) => !failedStoragePaths.has(path))
+        )
+        .map((file) => file.id);
 
-      if (dbDeleteError) throw dbDeleteError;
+      if (ids.length > 0) {
+        const { error: dbDeleteError } = await supabase
+          .from("destructible_files")
+          .delete()
+          .in("id", ids);
 
-      deletedFiles += expiredFiles.length;
+        if (dbDeleteError) throw dbDeleteError;
+        deletedFiles += ids.length;
+      }
     }
 
     // 4. Deactivate expired dynamic QRs.
