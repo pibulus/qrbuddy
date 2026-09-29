@@ -172,32 +172,36 @@ serve(async (req) => {
 
     // ---- remove -----------------------------------------------------------
     if (action === "remove") {
-      const target = items.find((f) => f.id === itemId);
-      if (!target) return json(req, 404, { error: "Item not found" });
-      if (items.length === 1) {
+      const { data: result, error } = await supabase
+        .rpc("remove_destructible_file_item", {
+          p_file_id: fileId,
+          p_owner_token: ownerToken,
+          p_item_id: itemId,
+        })
+        .maybeSingle<{
+          files: StoredItem[] | null;
+          error_code: string | null;
+        }>();
+
+      if (error) throw error;
+      if (!result) throw new Error("File item removal returned no result");
+      if (result.error_code === "not_found") {
+        return json(req, 404, { error: "Item not found" });
+      }
+      if (result.error_code === "last_item") {
         return json(req, 409, {
           error: "That's the last item — a share can't be empty.",
         });
       }
-      const remaining = items.filter((f) => f.id !== itemId);
-      const first = remaining[0];
-      const { error } = await supabase
-        .from("destructible_files")
-        .update({
-          files: remaining,
-          // Legacy single-file columns track the first item.
-          file_name: first.path,
-          size: first.size,
-          mime_type: first.type,
-        })
-        .eq("id", fileId);
-      if (error) throw error;
-      // Blob goes after the row is right; an orphan blob beats a broken share.
-      const { error: rmError } = await supabase.storage
-        .from("qr-files")
-        .remove([target.path]);
-      if (rmError) console.error("remove blob:", rmError.message);
-      return json(req, 200, { success: true, files: remaining });
+      if (result.error_code === "limited") {
+        return json(req, 409, {
+          error: "This share self-destructs, so what's inside is frozen.",
+        });
+      }
+      if (result.error_code || !result.files) {
+        throw new Error("File item removal failed");
+      }
+      return json(req, 200, { success: true, files: result.files });
     }
 
     // ---- append -----------------------------------------------------------

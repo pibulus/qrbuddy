@@ -309,7 +309,50 @@ serve(async (req) => {
       reapedR2Objects = reaped.length;
     }
 
-    // 7. Abandoned presigned-upload grants (>24h old, never finalized):
+    // 7. Drain storage cleanup queued by owner removals. A one-hour delay lets
+    // open previews and short-lived R2 URLs finish; failed deletes keep their
+    // queue row so the next scheduled run can retry.
+    let reapedStorageObjects = 0;
+    const { data: storageReapRows, error: storageReapFetchError } =
+      await supabase
+        .from("file_storage_reap_queue")
+        .select("storage_path")
+        .lt("reap_after", new Date().toISOString());
+
+    if (storageReapFetchError) {
+      console.error("Storage reap queue fetch error:", storageReapFetchError);
+    } else if (storageReapRows && storageReapRows.length > 0) {
+      const paths = storageReapRows.map((row) => row.storage_path);
+      const r2Paths = paths.filter(isR2Path);
+      const supabasePaths = paths.filter((path) => !isR2Path(path));
+      const reapedPaths = new Set(await reapR2(r2Paths));
+
+      if (supabasePaths.length > 0) {
+        const { error: storageReapError } = await supabase.storage
+          .from("qr-files")
+          .remove(supabasePaths);
+
+        if (storageReapError) {
+          console.error("Storage reap failed:", storageReapError);
+        } else {
+          supabasePaths.forEach((path) => reapedPaths.add(path));
+        }
+      }
+
+      if (reapedPaths.size > 0) {
+        const { error: queueDeleteError } = await supabase
+          .from("file_storage_reap_queue")
+          .delete()
+          .in("storage_path", Array.from(reapedPaths));
+        if (queueDeleteError) {
+          console.error("Storage reap queue delete error:", queueDeleteError);
+        } else {
+          reapedStorageObjects = reapedPaths.size;
+        }
+      }
+    }
+
+    // 8. Abandoned presigned-upload grants (>24h old, never finalized):
     // delete any orphaned R2 object, then the grant row.
     const pendingCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
       .toISOString();
@@ -341,6 +384,7 @@ serve(async (req) => {
         deactivated_dynamic_qrs: deactivatedQRs ?? 0,
         pruned_scan_logs: prunedScanLogs ?? 0,
         reaped_r2_objects: reapedR2Objects,
+        reaped_storage_objects: reapedStorageObjects,
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
