@@ -89,15 +89,15 @@ export const handler: Handlers = {
       if (contentLength) {
         headers.set("Content-Length", contentLength);
       }
+      const acceptRanges = response.headers.get("Accept-Ranges");
+      if (acceptRanges) {
+        headers.set("Accept-Ranges", acceptRanges);
+      }
 
       // Handle range requests for video/audio scrubbing (206 Partial Content)
       if (response.status === 206) {
-        const acceptRanges = response.headers.get("Accept-Ranges");
         const contentRange = response.headers.get("Content-Range");
 
-        if (acceptRanges) {
-          headers.set("Accept-Ranges", acceptRanges);
-        }
         if (contentRange) {
           headers.set("Content-Range", contentRange);
         }
