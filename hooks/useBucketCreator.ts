@@ -79,11 +79,17 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       bucketUrl.value = noteUrl;
 
       // Save token
-      await saveOwnerToken(
+      const ownerTokenStored = await saveOwnerToken(
         "bucket",
         bucketData.bucket_code,
         bucketData.owner_token,
       );
+      if (!ownerTokenStored) {
+        addToast(
+          "Note is live, but this device couldn't remember its owner key.",
+          6000,
+        );
+      }
 
       setIsCreatingBucket(false);
       haptics.success();
@@ -150,12 +156,21 @@ export function useBucketCreator({ url, bucketUrl }: UseBucketCreatorProps) {
       bucketUrl.value = data.bucket_url;
 
       // Store owner token securely for future uploads
-      await saveOwnerToken("bucket", data.bucket_code, data.owner_token);
+      const ownerTokenStored = await saveOwnerToken(
+        "bucket",
+        data.bucket_code,
+        data.owner_token,
+      );
 
       // Success feedback
       haptics.success();
 
-      addToast("✅ File Locker created! Scan to upload/download files 🪣");
+      addToast(
+        ownerTokenStored
+          ? "✅ File Locker created! Scan to upload/download files 🪣"
+          : "✅ Locker is live, but this device couldn't remember its owner key.",
+        ownerTokenStored ? 3000 : 6000,
+      );
 
       setIsCreatingBucket(false);
       return { bucket_code: data.bucket_code, owner_token: data.owner_token };

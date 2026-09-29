@@ -151,8 +151,13 @@ export function useFileUpload(
 
       // It's yours: keep the owner token in the vault (this device) and a
       // "my QRs" entry so the share can be found and managed again.
+      let ownerTokenStored = true;
       if (data.fileId && data.ownerToken) {
-        await saveOwnerToken("file", data.fileId, data.ownerToken);
+        ownerTokenStored = await saveOwnerToken(
+          "file",
+          data.fileId,
+          data.ownerToken,
+        );
         const allAudio = files.every((f) => f.type.startsWith("audio/"));
         const allImages = files.every((f) => f.type.startsWith("image/"));
         addToHistory({
@@ -215,8 +220,11 @@ export function useFileUpload(
         successMessage += ` · self-destructs after ${scanText}`;
       }
       successMessage += " · link copied";
+      if (!ownerTokenStored) {
+        successMessage += " · this device couldn't remember its manage key";
+      }
 
-      addToast(successMessage, 3000);
+      addToast(successMessage, ownerTokenStored ? 3000 : 6000);
 
       // Reset progress after a moment
       setTimeout(() => {

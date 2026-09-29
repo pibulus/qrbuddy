@@ -89,7 +89,11 @@ export function useDynamicQR(
       editUrl.value = data.edit_url;
 
       // Store owner token securely for future edits
-      await saveOwnerToken("qr", data.short_code, data.owner_token);
+      const ownerTokenStored = await saveOwnerToken(
+        "qr",
+        data.short_code,
+        data.owner_token,
+      );
 
       // Auto-Copy URL
       try {
@@ -101,7 +105,12 @@ export function useDynamicQR(
       // Success feedback
       haptics.success();
 
-      addToast("✅ Dynamic QR created! Link copied 🔗");
+      addToast(
+        ownerTokenStored
+          ? "✅ Dynamic QR created! Link copied 🔗"
+          : "✅ QR is live. Save the edit link below; this device couldn't remember it.",
+        ownerTokenStored ? 3000 : 6000,
+      );
 
       setIsCreating(false);
     } catch (error) {

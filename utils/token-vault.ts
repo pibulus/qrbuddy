@@ -1,5 +1,5 @@
 // TokenVault: encrypts and stores sensitive owner tokens in localStorage.
-// Falls back to plain storage if Web Crypto or localStorage isn't available.
+// Uses plain storage when Web Crypto is unavailable and reports storage errors.
 
 const STORAGE_PREFIX = "qrbuddy_token";
 const SECRET_KEY_ITEM = "qrbuddy_token_secret";
@@ -16,10 +16,11 @@ export interface OwnerTokenRecord {
 }
 
 function getStorage(): Storage | null {
-  const scope = globalThis as typeof globalThis & { localStorage?: Storage };
-  if (!scope || !scope.localStorage) return null;
   try {
-    return scope.localStorage;
+    const scope = globalThis as typeof globalThis & {
+      localStorage?: Storage;
+    };
+    return scope.localStorage ?? null;
   } catch {
     return null;
   }
@@ -49,11 +50,17 @@ async function getCryptoKey(): Promise<CryptoKey | null> {
     return null;
   }
 
-  let secret = storage.getItem(SECRET_KEY_ITEM);
-  if (!secret) {
-    const secretBytes = crypto.getRandomValues(new Uint8Array(32));
-    secret = bufferToBase64(secretBytes.buffer);
-    storage.setItem(SECRET_KEY_ITEM, secret);
+  let secret: string | null;
+  try {
+    secret = storage.getItem(SECRET_KEY_ITEM);
+    if (!secret) {
+      const secretBytes = crypto.getRandomValues(new Uint8Array(32));
+      secret = bufferToBase64(secretBytes.buffer);
+      storage.setItem(SECRET_KEY_ITEM, secret);
+    }
+  } catch (error) {
+    console.error("TokenVault: storage key unavailable", error);
+    return null;
   }
 
   try {
@@ -122,24 +129,24 @@ export async function saveOwnerToken(
   scope: TokenScope,
   identifier: string,
   token: string,
-): Promise<void> {
+): Promise<boolean> {
   const storage = getStorage();
-  if (!storage) return;
+  if (!storage) return false;
 
+  let encrypted: string | null = null;
   try {
-    const encrypted = await encryptToken(token);
-    if (encrypted) {
-      storage.setItem(storageKey(scope, identifier), encrypted);
-      return;
-    }
+    encrypted = await encryptToken(token);
   } catch (error) {
-    console.error(
-      "TokenVault: save failed, falling back to plain storage",
-      error,
-    );
+    console.error("TokenVault: encryption failed, using plain storage", error);
   }
 
-  storage.setItem(storageKey(scope, identifier), token);
+  try {
+    storage.setItem(storageKey(scope, identifier), encrypted ?? token);
+    return true;
+  } catch (error) {
+    console.error("TokenVault: token could not be stored", error);
+    return false;
+  }
 }
 
 export async function getOwnerToken(
@@ -149,21 +156,31 @@ export async function getOwnerToken(
   const storage = getStorage();
   if (!storage) return null;
 
-  const value = storage.getItem(storageKey(scope, identifier));
-  if (!value) return null;
+  try {
+    const value = storage.getItem(storageKey(scope, identifier));
+    if (!value) return null;
 
-  if (value.startsWith(ENCRYPTED_PREFIX)) {
-    const decrypted = await decryptToken(value);
-    if (decrypted) return decrypted;
+    if (value.startsWith(ENCRYPTED_PREFIX)) {
+      // Never hand ciphertext to callers as though it were a valid owner
+      // token. A sync-phrase restore can replace an unreadable local record.
+      return await decryptToken(value);
+    }
+
+    return value;
+  } catch (error) {
+    console.error("TokenVault: token could not be read", error);
+    return null;
   }
-
-  return value;
 }
 
 export function removeOwnerToken(scope: TokenScope, identifier: string): void {
   const storage = getStorage();
   if (!storage) return;
-  storage.removeItem(storageKey(scope, identifier));
+  try {
+    storage.removeItem(storageKey(scope, identifier));
+  } catch (error) {
+    console.error("TokenVault: token could not be removed", error);
+  }
 }
 
 /** Read owner tokens for inclusion in the encrypted cross-device sync bundle. */
