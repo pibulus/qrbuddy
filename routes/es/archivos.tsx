@@ -43,7 +43,8 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
     feature: "Retención de Datos",
     corporate:
       "Almacenados indefinidamente en servidores corporativos para entrenar IA",
-    qrbuddy: "Autodestrucción automática tras 1 escaneo, 1 hora o 24 horas",
+    qrbuddy:
+      "Límite de descargas opcional; todos los enlaces vencen en 30 días",
   },
   {
     feature: "Registro de Cuentas",
@@ -89,7 +90,7 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
   const title =
     "Envío Efímero de Archivos y Códigos QR Destructibles — QRBuddy";
   const description =
-    "Comparte archivos privados de hasta 500MB con códigos QR que se autodestruyen. Eliminación tras 1 escaneo o 24 horas. Cero registros, cifrado y sin registrar cuentas.";
+    "Comparte archivos privados de hasta 500MB con límites de descarga opcionales. Todos los enlaces vencen en 30 días. Cero registros, cifrado y sin registrar cuentas.";
 
   return (
     <>
@@ -113,8 +114,8 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         badge="Privacidad y Transferencias"
         title="Envío Efímero de Archivos y Códigos QR Destructibles."
-        tagline="Comparte documentos confidenciales, fotos y paquetes de archivos de hasta 500MB que se autodestruyen."
-        subtagline="Borrado automático tras 1 escaneo o 24 horas. Transferencias cifradas, cero rastreadores, sin registrar cuentas."
+        tagline="Comparte documentos confidenciales, fotos y archivos de hasta 500MB con límites de descarga opcionales y vencimiento automático a los 30 días."
+        subtagline="Todos los enlaces vencen en 30 días. Transferencias cifradas, cero rastreadores, sin registrar cuentas."
         defaultStyle="terminal"
         defaultCaption="SECRETO"
         homeUrl="/es"

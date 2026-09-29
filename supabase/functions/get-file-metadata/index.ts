@@ -64,8 +64,13 @@ serve(async (req) => {
     const downloadCount = file.download_count || 0;
 
     // Check if file is expired
+    const expiresAt = file.expires_at ?? null;
+    const expiryTime = typeof expiresAt === "string"
+      ? Date.parse(expiresAt)
+      : Number.NaN;
     const isExpired = file.accessed ||
-      (maxDownloads < 999999 && downloadCount >= maxDownloads);
+      (maxDownloads < 999999 && downloadCount >= maxDownloads) ||
+      (Number.isFinite(expiryTime) && expiryTime <= Date.now());
 
     const remainingDownloads = maxDownloads - downloadCount;
 
@@ -128,6 +133,7 @@ serve(async (req) => {
         downloadCount,
         remainingDownloads,
         isExpired,
+        expiresAt,
         ...(isOwner
           ? {
             isOwner: true,

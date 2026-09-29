@@ -28,6 +28,7 @@ interface FileData {
   downloadCount: number;
   remainingDownloads: number;
   isExpired: boolean;
+  expiresAt?: string | null;
   mimeType?: string;
   theme?: string;
   files?: Array<{

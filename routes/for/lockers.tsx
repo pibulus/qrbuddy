@@ -42,7 +42,7 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
   {
     feature: "Data Retention",
     corporate: "Kept forever on corporate servers and scanned by AI",
-    qrbuddy: "Auto-destructs after 1 scan, 1 hour, or 24 hours",
+    qrbuddy: "Optional download limit; every link expires after 30 days",
   },
   {
     feature: "Account Requirement",
@@ -85,7 +85,7 @@ export default function LockersPage({ data }: PageProps<PageData>) {
   const title =
     "Ephemeral File Drops & Destructible QR Codes — Zero Tracking | QRBuddy";
   const description =
-    "Share private files up to 500MB with self-destructing QR codes. Auto-deletes after 1 scan or 24 hours. Zero logs, encrypted in-flight, no account required.";
+    "Share private files up to 500MB with optional download limits. Every link expires after 30 days. Zero logs, encrypted in-flight, no account required.";
 
   return (
     <>
@@ -110,8 +110,8 @@ export default function LockersPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         badge="Security & Privacy"
         title="Ephemeral File Drops & Destructible QRs."
-        tagline="Share sensitive documents, firmware, and media files that self-destruct immediately after download."
-        subtagline="One-time scan burns, finite expiry, and encrypted transfers up to 500MB. Zero accounts, zero tracking."
+        tagline="Share sensitive documents, firmware, and media with optional download limits and automatic 30-day expiry."
+        subtagline="Every link expires after 30 days. Transfers are encrypted in-flight, up to 500MB. Zero accounts, zero tracking."
         defaultStyle="terminal"
         defaultCaption="SECRET DROP"
         valueCards={VALUE_CARDS}

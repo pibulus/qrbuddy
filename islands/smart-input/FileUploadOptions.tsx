@@ -165,6 +165,9 @@ export default function FileUploadOptions(
       >
         {isUploading ? "Uploading…" : isPrepping ? "Prepping…" : meta.cta}
       </button>
+      <p class="-mt-2 text-center text-xs text-neutral-500">
+        Link expires after 30 days. Download limit is separate.
+      </p>
 
       {/* Self-destruct lives under a toggle: it's the exception, not the form */}
       <details class="group" open={isLimited}>

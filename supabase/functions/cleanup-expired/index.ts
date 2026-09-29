@@ -1,6 +1,5 @@
 // Edge Function: Cleanup Expired Files
-// Deletes files and buckets that are older than 24 hours (or other retention policy)
-// Should be scheduled to run periodically (e.g., every hour)
+// Reaps expired shares, stale uploads, and old buckets on a periodic schedule.
 
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -46,13 +45,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // 1. Find expired buckets (older than 24 hours)
-    // We define "expired" as created_at < 24 hours ago AND is_reusable = true (persistent)
-    // One-time buckets are deleted upon download, but maybe we should clean up abandoned ones too?
-    // Let's say ALL buckets expire after 24 hours for now, based on the proposal.
-
-    // 1. Find expired buckets (older than 30 days if unused)
-    // "Free can only have a limited amount of saved files and they die after 30 days if unused"
+    // 1. Expire reusable buckets after 30 days without access.
 
     const retentionDays = 30;
     const cutoffTime = new Date(
@@ -165,13 +158,14 @@ serve(async (req) => {
     if (deleteError) throw deleteError;
     deletedBuckets = count || 0;
 
-    // 3. Delete expired destructible_files (older than 30 days)
-    // These are single-use files that were never downloaded.
+    // 3. Reap expired file shares after a one-hour grace period. Includes
+    // consumed shares so a previous storage deletion failure can retry here.
+    const shareCleanupCutoff = new Date(Date.now() - 60 * 60 * 1000)
+      .toISOString();
     const { data: expiredFiles, error: fetchFilesError } = await supabase
       .from("destructible_files")
       .select("id, file_name, files")
-      .lt("created_at", abandonedCutoff)
-      .eq("accessed", false);
+      .lt("expires_at", shareCleanupCutoff);
 
     if (fetchFilesError) throw fetchFilesError;
 

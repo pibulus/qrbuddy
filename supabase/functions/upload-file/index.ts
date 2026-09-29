@@ -17,6 +17,7 @@ import { describeVisitor, generateOwnerToken } from "../_shared/visitor.ts";
 const UNLIMITED_DOWNLOADS = 999999;
 const MAX_DOWNLOADS_LIMIT = UNLIMITED_DOWNLOADS;
 const DEFAULT_MAX_DOWNLOADS = UNLIMITED_DOWNLOADS;
+const SHARE_RETENTION_DAYS = 30;
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -305,6 +306,10 @@ serve(async (req) => {
     const ownerToken = generateOwnerToken();
     // Where it was made, to ~10 km — so "farthest scan" has a home.
     const origin = describeVisitor(req);
+    const createdAt = new Date();
+    const expiresAt = new Date(
+      createdAt.getTime() + SHARE_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
 
     const { error: dbError } = await supabase
       .from("destructible_files")
@@ -328,7 +333,8 @@ serve(async (req) => {
         owner_token: ownerToken,
         origin_lat: origin.lat,
         origin_lon: origin.lon,
-        created_at: new Date().toISOString(),
+        created_at: createdAt.toISOString(),
+        expires_at: expiresAt,
         accessed: false,
         max_downloads: maxDownloads,
         download_count: 0,
@@ -363,6 +369,7 @@ serve(async (req) => {
         size: files.reduce((acc, f) => acc + f.size, 0),
         maxDownloads,
         ownerToken,
+        expiresAt,
         message,
       }),
       {

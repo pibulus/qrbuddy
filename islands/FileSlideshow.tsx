@@ -24,7 +24,15 @@ interface FileSlideshowProps {
   mimeType?: string;
   maxDownloads: number;
   remainingDownloads: number;
+  expiresAt?: string | null;
   theme?: string;
+}
+
+function formatExpiry(value?: string | null): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  return `${date.toISOString().slice(0, 16).replace("T", " ")} UTC`;
 }
 
 export default function FileSlideshow({
@@ -35,9 +43,11 @@ export default function FileSlideshow({
   mimeType,
   maxDownloads,
   remainingDownloads,
+  expiresAt,
   theme: initialTheme = "sunset",
 }: FileSlideshowProps) {
   const isUnlimited = maxDownloads >= 999999;
+  const formattedExpiry = formatExpiry(expiresAt);
 
   // The owner can rename, re-theme and add/remove from the strip below —
   // the page updates in place, no reload.
@@ -623,6 +633,11 @@ export default function FileSlideshow({
                 {fileSizeLabel}
               </span>
             </div>
+            {formattedExpiry && (
+              <p class="-mt-2 text-xs opacity-60">
+                Link expires {formattedExpiry}
+              </p>
+            )}
 
             {/* Download Button */}
             {lastDownloadStarted
