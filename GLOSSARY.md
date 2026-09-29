@@ -99,8 +99,8 @@
   unsupported)
 - `crypto.ts` - Web Crypto AES-GCM-256 with PBKDF2 for zero-knowledge
   client-side encryption
-- `sync-phrase.ts` - BIP39-inspired 4-word sovereign sync phrase generator and
-  backup packer
+- `sync-phrase.ts` - BIP39-inspired four-part sovereign sync phrase
+  generator and backup packer
 
 ## Hooks
 

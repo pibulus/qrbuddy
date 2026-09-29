@@ -162,7 +162,7 @@ export default function HistoryDrawer(
                 haptics.light();
               }}
               aria-label="Toggle device sync"
-              title="4-word device sync"
+              title="Four-part device sync"
               class={`w-10 h-10 flex items-center justify-center border-2 border-black rounded-full font-black text-sm transition-all ${
                 showSync
                   ? "bg-black text-white"
@@ -188,7 +188,7 @@ export default function HistoryDrawer(
           <div class="p-4 bg-purple-50 border-b-3 border-black space-y-3 animate-slide-down">
             <div class="flex items-center justify-between">
               <span class="text-xs font-black uppercase tracking-wide text-purple-900">
-                🔑 4-Word Sovereign Sync
+                🔑 Four-Part Sovereign Sync
               </span>
               <button
                 type="button"

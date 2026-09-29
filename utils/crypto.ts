@@ -2,7 +2,7 @@
 // ZERO-KNOWLEDGE CLIENT-SIDE ENCRYPTION (Web Crypto API)
 // ===================================================================
 // Encrypts notes & sync payloads in-browser. Keys live ONLY in URL hash
-// fragments (#key=...) or 4-word phrases, never sent to backend servers.
+// fragments (#key=...) or memorable sync phrases, never sent to backend servers.
 
 const PBKDF2_ITERATIONS = 100_000;
 

@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// 🔑 sync-phrase — sovereign 4-word device sync for QRBuddy
+// 🔑 sync-phrase — sovereign device sync for QRBuddy
 // ═══════════════════════════════════════════════════════════════════════════
-// No accounts, no email, no passwords. A sovereign 4-word memory card phrase
-// syncs Time Machine history, edit tokens, and supporter passes across devices.
+// No accounts, no email, no passwords. A memorable phrase syncs Time Machine
+// history, edit tokens, and supporter passes across devices.
 
 import { decryptText, encryptText } from "./crypto.ts";
 import { getHistory, HistoryItem, mergeHistory } from "./history.ts";
@@ -169,7 +169,8 @@ const PLACES = [
   "hillside",
 ];
 
-const DEFAULT_BANKS = [ADJECTIVES, NOUNS, VERBS, PLACES];
+const LEGACY_SYNC_WORDS = 4;
+const CURRENT_SYNC_WORDS = 12;
 
 function pick(bank: string[]): string {
   const max = Math.floor(0xffffffff / bank.length) * bank.length;
@@ -182,8 +183,20 @@ function pick(bank: string[]): string {
   return bank[value % bank.length];
 }
 
+function compound(first: string, second: string, third: string): string {
+  return `${first}_${second}_${third}`;
+}
+
 export function generateSyncPhrase(): string {
-  return DEFAULT_BANKS.map(pick).join("-");
+  // Each hyphenated part contains three independently chosen words. Four
+  // parts preserve the easy-to-share shape while raising the search space
+  // from about 21 bits to about 62 bits for offline bundle attacks.
+  return [
+    compound(pick(ADJECTIVES), pick(NOUNS), pick(VERBS)),
+    compound(pick(NOUNS), pick(VERBS), pick(PLACES)),
+    compound(pick(VERBS), pick(PLACES), pick(ADJECTIVES)),
+    compound(pick(PLACES), pick(ADJECTIVES), pick(NOUNS)),
+  ].join("-");
 }
 
 export function normalizeSyncPhrase(value: string): string {
@@ -197,9 +210,14 @@ export function normalizeSyncPhrase(value: string): string {
     .join("-");
 }
 
-export function isValidSyncPhrase(value: string, numWords = 4): boolean {
+export function isValidSyncPhrase(
+  value: string,
+  numWords?: number,
+): boolean {
   const words = normalizeSyncPhrase(value).split("-").filter(Boolean);
-  return words.length === numWords;
+  return numWords === undefined
+    ? words.length === LEGACY_SYNC_WORDS || words.length === CURRENT_SYNC_WORDS
+    : words.length === numWords;
 }
 
 export interface SyncBundle {
