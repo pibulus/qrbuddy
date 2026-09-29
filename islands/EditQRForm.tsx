@@ -9,6 +9,16 @@ import QRStatusCard from "./edit-qr/QRStatusCard.tsx";
 import RoutingModeSelector from "./edit-qr/RoutingModeSelector.tsx";
 import RoutingConfigForm from "./edit-qr/RoutingConfigForm.tsx";
 
+function toLocalDateTimeInput(value: string): string {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+
+  const localDate = new Date(
+    date.getTime() - date.getTimezoneOffset() * 60_000,
+  );
+  return localDate.toISOString().slice(0, 16);
+}
+
 export default function EditQRForm() {
   const { loading, error, qrData, isSaving, saveQRData } = useQRData();
 
@@ -52,9 +62,7 @@ export default function EditQRForm() {
       setDestinationUrl(qrData.destination_url);
       setMaxScans(qrData.max_scans);
       setExpiryDate(
-        qrData.expires_at
-          ? new Date(qrData.expires_at).toISOString().slice(0, 16)
-          : "",
+        qrData.expires_at ? toLocalDateTimeInput(qrData.expires_at) : "",
       );
       setIsActive(qrData.is_active);
       setRoutingMode(qrData.routing_mode || "simple");
