@@ -507,7 +507,7 @@ export default function FileSlideshow({
                                   type="button"
                                   onClick={() => goTo(idx)}
                                   aria-current={active ? "true" : undefined}
-                                  class={`w-full min-h-[40px] px-3 rounded-xl flex items-center gap-3 text-sm font-bold transition-all ${
+                                  class={`w-full min-h-[44px] px-3 rounded-xl flex items-center gap-3 text-sm font-bold transition-all ${
                                     active
                                       ? "bg-white text-black"
                                       : "text-white/80 hover:bg-white/10"
@@ -568,19 +568,24 @@ export default function FileSlideshow({
             >
               {isPlaying ? "❚❚" : "▶"}
             </button>
-            <div class="flex items-center gap-1.5">
+            <div class="max-w-[calc(100vw-7rem)] sm:max-w-[480px] flex flex-wrap items-center justify-center gap-1.5">
               {files!.map((file, idx) => (
                 <button
                   type="button"
                   key={file.id}
                   onClick={() => goTo(idx)}
                   aria-label={`Photo ${idx + 1}`}
-                  class={`h-2 rounded-full transition-all ${
-                    currentIndex === idx
-                      ? "w-6 bg-white"
-                      : "w-2 bg-white/40 hover:bg-white/70"
-                  }`}
-                />
+                  aria-current={currentIndex === idx ? "step" : undefined}
+                  class="min-h-[44px] min-w-[44px] flex items-center justify-center"
+                >
+                  <span
+                    class={`block h-2 rounded-full transition-all ${
+                      currentIndex === idx
+                        ? "w-6 bg-white"
+                        : "w-2 bg-white/40 hover:bg-white/70"
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           </div>
