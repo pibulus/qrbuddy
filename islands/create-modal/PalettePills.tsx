@@ -3,7 +3,7 @@ import { haptics } from "../../utils/haptics.ts";
 import { STYLE_DISPLAY } from "../StyleSelector.tsx";
 
 export const PALETTE_PILL =
-  "min-h-[40px] inline-flex items-center gap-2 rounded-full border-2 px-3 text-sm font-black transition-all hover:scale-105 active:scale-95";
+  "min-h-[44px] inline-flex items-center gap-2 rounded-full border-2 px-3 text-sm font-black transition-all hover:scale-105 active:scale-95";
 
 export const pillState = (active: boolean) =>
   active
@@ -13,6 +13,7 @@ export const pillState = (active: boolean) =>
 interface PalettePillsProps {
   value: string;
   onChange: (key: string) => void;
+  disabled?: boolean;
   /** Extra pill(s) after the presets — e.g. the custom-gradient entry. */
   trailing?: ComponentChildren;
 }
@@ -20,7 +21,7 @@ interface PalettePillsProps {
 /** The one row of preset swatch pills — CreateModal's Design tab and the
  * share page's owner strip pick from the same eight. */
 export default function PalettePills(
-  { value, onChange, trailing }: PalettePillsProps,
+  { value, onChange, disabled = false, trailing }: PalettePillsProps,
 ) {
   return (
     <div class="flex flex-wrap gap-2">
@@ -29,6 +30,7 @@ export default function PalettePills(
           key={key}
           type="button"
           aria-pressed={value === key}
+          disabled={disabled}
           onClick={() => {
             onChange(key);
             haptics.light();

@@ -57,7 +57,7 @@ interface OwnerMeta {
 }
 
 const PILL =
-  "min-h-[40px] inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-black px-3 text-xs font-black shadow-chunky transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100";
+  "min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-black px-3 text-xs font-black shadow-chunky transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100";
 
 const RANGES: { id: StatsRange; label: string }[] = [
   { id: "today", label: "Today" },
@@ -103,6 +103,8 @@ export default function OwnerStrip(
   const [busy, setBusy] = useState<string | null>(null);
   const [showVibe, setShowVibe] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const mutationLock = useRef(false);
+  const cancelRenameOnBlur = useRef(false);
 
   // Sticker: a QR of this share, framed SCAN ME, exported on demand.
   const qrUrl = useSignal(shareUrl);
@@ -154,6 +156,18 @@ export default function OwnerStrip(
       fail,
     );
 
+  const beginMutation = (action: string) => {
+    if (mutationLock.current) return false;
+    mutationLock.current = true;
+    setBusy(action);
+    return true;
+  };
+
+  const endMutation = () => {
+    mutationLock.current = false;
+    setBusy(null);
+  };
+
   const saveTitle = async () => {
     const clean = draft.trim();
     setEditing(false);
@@ -161,7 +175,10 @@ export default function OwnerStrip(
       setDraft(title);
       return;
     }
-    setBusy("rename");
+    if (!beginMutation("rename")) {
+      setDraft(title);
+      return;
+    }
     try {
       const r = await post<{ fileName: string }>(
         { action: "rename", title: clean },
@@ -173,13 +190,12 @@ export default function OwnerStrip(
       addToast(e instanceof Error ? e.message : "Couldn't rename it", 3000);
       setDraft(title);
     } finally {
-      setBusy(null);
+      endMutation();
     }
   };
 
   const retheme = async (key: string) => {
-    if (key === theme) return;
-    setBusy("theme");
+    if (key === theme || !beginMutation("theme")) return;
     try {
       await post({ action: "retheme", theme: key }, "Couldn't change the vibe");
       onTheme(key);
@@ -189,13 +205,14 @@ export default function OwnerStrip(
         3000,
       );
     } finally {
-      setBusy(null);
+      endMutation();
     }
   };
 
   const removeItem = async (item: ShareItem) => {
+    if (mutationLock.current) return;
     if (!confirm(`Remove "${prettyName(item.name)}"?`)) return;
-    setBusy(item.id);
+    if (!beginMutation(item.id)) return;
     try {
       const r = await post<{ files: ShareItem[] }>(
         { action: "remove", itemId: item.id },
@@ -206,13 +223,12 @@ export default function OwnerStrip(
     } catch (e) {
       addToast(e instanceof Error ? e.message : "Couldn't remove it", 3000);
     } finally {
-      setBusy(null);
+      endMutation();
     }
   };
 
   const appendFiles = async (picked: File[]) => {
-    if (picked.length === 0) return;
-    setBusy("append");
+    if (picked.length === 0 || !beginMutation("append")) return;
     try {
       const ready = kind === "slideshow" ? await prepImages(picked) : picked;
       const form = new FormData();
@@ -234,7 +250,7 @@ export default function OwnerStrip(
     } catch (e) {
       addToast(e instanceof Error ? e.message : "Couldn't add those", 4000);
     } finally {
-      setBusy(null);
+      endMutation();
       if (fileInput.current) fileInput.current.value = "";
     }
   };
@@ -259,6 +275,7 @@ export default function OwnerStrip(
   };
   const lines = cardLines(card, itemName, kind, meta.createdAt);
   const canEditPayload = !isLimited && kind !== "file";
+  const mutationBusy = busy !== null;
 
   return (
     <section
@@ -283,26 +300,36 @@ export default function OwnerStrip(
                 // deno-lint-ignore jsx-boolean-value
                 autoFocus={true}
                 onInput={(e) => setDraft((e.target as HTMLInputElement).value)}
-                onBlur={saveTitle}
+                onBlur={() => {
+                  if (cancelRenameOnBlur.current) {
+                    cancelRenameOnBlur.current = false;
+                    return;
+                  }
+                  void saveTitle();
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                   if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancelRenameOnBlur.current = true;
+                    (e.currentTarget as HTMLInputElement).blur();
                     setDraft(title);
                     setEditing(false);
                   }
                 }}
                 aria-label="Share name"
-                class="w-full px-3 py-1.5 border-2 border-black/15 bg-white rounded-2xl text-base font-black focus:border-qr-pop focus:outline-none"
+                class="w-full min-h-[44px] px-3 py-1.5 border-2 border-black/15 bg-white rounded-2xl text-base font-black focus:border-qr-pop focus:outline-none"
               />
             )
             : (
               <button
                 type="button"
+                disabled={mutationBusy}
                 onClick={() => {
                   setDraft(title);
                   setEditing(true);
                 }}
-                class="text-left font-black text-lg leading-tight hover:text-qr-pop transition-colors truncate max-w-full"
+                class="min-h-[44px] text-left font-black text-lg leading-tight hover:text-qr-pop transition-colors truncate max-w-full disabled:opacity-50"
                 title="Rename"
               >
                 {title} <span class="text-xs opacity-50">✎</span>
@@ -324,7 +351,7 @@ export default function OwnerStrip(
               role="tab"
               aria-selected={range === r.id}
               onClick={() => setRange(r.id)}
-              class={`min-h-[36px] rounded-full text-xs font-black transition-all ${
+              class={`min-h-[44px] rounded-full text-xs font-black transition-all ${
                 range === r.id
                   ? "bg-black text-white"
                   : "text-neutral-600 hover:bg-amber-100"
@@ -370,7 +397,7 @@ export default function OwnerStrip(
             <button
               type="button"
               onClick={() => fileInput.current?.click()}
-              disabled={busy === "append" || files.length >= 10}
+              disabled={mutationBusy || files.length >= 10}
               class={`${PILL} bg-black text-white`}
               title={files.length >= 10 ? "A share holds up to 10 items" : ""}
             >
@@ -398,6 +425,7 @@ export default function OwnerStrip(
           type="button"
           onClick={() => setShowVibe((v) => !v)}
           aria-expanded={showVibe}
+          disabled={mutationBusy}
           class={`${PILL} ${showVibe ? "bg-amber-200" : "bg-white"}`}
         >
           Vibe ▾
@@ -416,6 +444,7 @@ export default function OwnerStrip(
         class="hidden"
         multiple
         accept={kind === "playlist" ? "audio/*" : "image/*"}
+        disabled={mutationBusy}
         onChange={(e) => {
           const list = (e.target as HTMLInputElement).files;
           if (list) void appendFiles(Array.from(list));
@@ -424,7 +453,11 @@ export default function OwnerStrip(
 
       {showVibe && (
         <div class="animate-slide-down">
-          <PalettePills value={theme} onChange={(k) => void retheme(k)} />
+          <PalettePills
+            value={theme}
+            onChange={(k) => void retheme(k)}
+            disabled={mutationBusy}
+          />
         </div>
       )}
 
@@ -434,7 +467,7 @@ export default function OwnerStrip(
           {files.map((f, i) => (
             <li
               key={f.id}
-              class="flex items-center gap-2 min-h-[36px] text-sm font-bold"
+              class="flex items-center gap-2 min-h-[44px] text-sm font-bold"
             >
               <span class="w-5 text-xs font-black text-neutral-400 text-right">
                 {i + 1}
@@ -445,9 +478,9 @@ export default function OwnerStrip(
               <button
                 type="button"
                 onClick={() => void removeItem(f)}
-                disabled={busy === f.id}
+                disabled={mutationBusy}
                 aria-label={`Remove ${prettyName(f.name)}`}
-                class="w-8 h-8 rounded-full border-2 border-black/15 hover:border-black text-xs font-black transition-colors disabled:opacity-50"
+                class="min-w-[44px] min-h-[44px] rounded-full border-2 border-black/15 hover:border-black text-xs font-black transition-colors disabled:opacity-50"
               >
                 ✕
               </button>
