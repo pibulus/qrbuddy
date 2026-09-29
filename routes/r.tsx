@@ -113,6 +113,19 @@ export const handler: Handlers = {
         });
       }
 
+      if (response.status === 429 || response.status >= 500) {
+        return new Response(
+          "QRBuddy couldn't route this code right now. Please try again shortly.",
+          {
+            status: response.status,
+            headers: {
+              "Content-Type": "text/plain; charset=utf-8",
+              "Retry-After": response.headers.get("Retry-After") ?? "5",
+            },
+          },
+        );
+      }
+
       // If we got here with any other status, redirect to home
       return new Response(null, {
         status: 302,

@@ -118,17 +118,47 @@ serve(async (req) => {
     // increment_scan_count now uses SELECT ... FOR UPDATE to serialise
     // concurrent scans, checks max_scans internally, and returns -1 if
     // the limit has already been reached.
-    const { data: newScanCount } = await supabase
+    const { data: newScanCount, error: scanCountError } = await supabase
       .rpc("increment_scan_count", { p_short_code: shortCode });
 
-    if (newScanCount === null || newScanCount === -1) {
-      // QR doesn't exist, is inactive, or scan limit already reached.
-      // Mark inactive so future scans also hit /boom.
+    if (scanCountError) {
+      console.error("Scan counter RPC failed:", scanCountError.message);
+      return new Response(
+        JSON.stringify({ error: "Temporary redirect failure. Please retry." }),
+        {
+          status: 503,
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+            "Retry-After": "5",
+          },
+        },
+      );
+    }
+
+    if (newScanCount === -1) {
+      // The QR is missing, inactive, or its scan limit has been reached.
+      // Marking it inactive is safe only for this explicit denied result.
       await supabase
         .from("dynamic_qr_codes")
         .update({ is_active: false })
         .eq("short_code", shortCode);
       return redirectWithCors("/boom", req);
+    }
+
+    if (!Number.isInteger(newScanCount) || newScanCount < 1) {
+      console.error("Unexpected scan counter result:", newScanCount);
+      return new Response(
+        JSON.stringify({ error: "Temporary redirect failure. Please retry." }),
+        {
+          status: 503,
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+            "Retry-After": "5",
+          },
+        },
+      );
     }
 
     // The scan index for routing is the pre-increment value (0-based)
