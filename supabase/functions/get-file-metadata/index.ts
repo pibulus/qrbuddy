@@ -27,6 +27,7 @@ serve(async (req) => {
           headers: {
             ...getCorsHeaders(req),
             "Content-Type": "application/json",
+            "Cache-Control": "no-store, max-age=0",
           },
         },
       );
@@ -52,6 +53,7 @@ serve(async (req) => {
           headers: {
             ...getCorsHeaders(req),
             "Content-Type": "application/json",
+            "Cache-Control": "no-store, max-age=0",
           },
         },
       );
@@ -137,7 +139,11 @@ serve(async (req) => {
           : {}),
       }),
       {
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: {
+          ...getCorsHeaders(req),
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, max-age=0",
+        },
       },
     );
   } catch (error) {
@@ -148,7 +154,11 @@ serve(async (req) => {
       }),
       {
         status: 500,
-        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        headers: {
+          ...getCorsHeaders(req),
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, max-age=0",
+        },
       },
     );
   }

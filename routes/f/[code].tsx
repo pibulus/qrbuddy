@@ -101,7 +101,9 @@ export const handler: Handlers = {
         });
       }
 
-      return ctx.render(fileData);
+      const page = await ctx.render(fileData);
+      page.headers.set("Cache-Control", "no-store, max-age=0");
+      return page;
     } catch (error) {
       console.error("File metadata error:", error);
       return metadataUnavailable();
