@@ -21,6 +21,20 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#x27;");
 }
 
+function hourInTimeZone(date: Date, timeZone: string): number | null {
+  try {
+    const hourText = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(date).find((part) => part.type === "hour")?.value;
+    const hour = Number(hourText);
+    return Number.isInteger(hour) && hour >= 0 && hour <= 23 ? hour : null;
+  } catch {
+    return null;
+  }
+}
+
 function redirectWithCors(path: string, request?: Request, status = 302) {
   return new Response(null, {
     status,
@@ -282,13 +296,14 @@ serve(async (req) => {
           ? JSON.parse(qr.routing_config)
           : qr.routing_config;
 
-        const tz = req.headers.get("cf-timezone") ||
-          config.timezone ||
-          "UTC";
-        const scannerTime = new Date(
-          new Date().toLocaleString("en-US", { timeZone: tz }),
-        );
-        const localHour = scannerTime.getHours();
+        const now = new Date();
+        const scannerTimezone = req.headers.get("cf-timezone");
+        const configuredTimezone = typeof config.timezone === "string"
+          ? config.timezone
+          : "UTC";
+        const localHour =
+          (scannerTimezone ? hourInTimeZone(now, scannerTimezone) : null) ??
+            hourInTimeZone(now, configuredTimezone) ?? now.getUTCHours();
 
         // Fall back to business hours when config holds garbage — NaN
         // comparisons would otherwise silently route every scan inactive.
