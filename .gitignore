@@ -8,6 +8,9 @@
 # Fresh build directory
 _fresh/
 
+# generated at build time by scripts/stamp-version.ts
+static/version.json
+
 # npm dependencies
 node_modules/
 

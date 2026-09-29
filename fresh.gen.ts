@@ -7,6 +7,7 @@ import * as $_500 from "./routes/_500.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
 import * as $api_download_file from "./routes/api/download-file.ts";
+import * as $api_peek from "./routes/api/peek.ts";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $edit from "./routes/edit.tsx";
@@ -41,9 +42,9 @@ import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $FileSlideshow from "./islands/FileSlideshow.tsx";
+import * as $FooterDock from "./islands/FooterDock.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
-import * as $FooterDock from "./islands/FooterDock.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $NoteCard from "./islands/NoteCard.tsx";
@@ -78,6 +79,7 @@ import * as $modal_CardModal from "./islands/modal/CardModal.tsx";
 import * as $modal_ModalShell from "./islands/modal/ModalShell.tsx";
 import * as $modal_useModalShell from "./islands/modal/useModalShell.ts";
 import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
+import * as $smart_input_ShareReady from "./islands/smart-input/ShareReady.tsx";
 import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
 import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
 import * as $templates_MediaHubForm from "./islands/templates/MediaHubForm.tsx";
@@ -96,6 +98,7 @@ const manifest = {
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
     "./routes/api/download-file.ts": $api_download_file,
+    "./routes/api/peek.ts": $api_peek,
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/edit.tsx": $edit,
@@ -132,9 +135,9 @@ const manifest = {
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/FileSlideshow.tsx": $FileSlideshow,
+    "./islands/FooterDock.tsx": $FooterDock,
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/HistoryDrawer.tsx": $HistoryDrawer,
-    "./islands/FooterDock.tsx": $FooterDock,
     "./islands/KofiModal.tsx": $KofiModal,
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/NoteCard.tsx": $NoteCard,
@@ -171,6 +174,7 @@ const manifest = {
     "./islands/modal/useModalShell.ts": $modal_useModalShell,
     "./islands/smart-input/FileUploadOptions.tsx":
       $smart_input_FileUploadOptions,
+    "./islands/smart-input/ShareReady.tsx": $smart_input_ShareReady,
     "./islands/smart-input/SmartInputToolbar.tsx":
       $smart_input_SmartInputToolbar,
     "./islands/templates/EmailForm.tsx": $templates_EmailForm,
