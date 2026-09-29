@@ -187,7 +187,11 @@ export default function FileSlideshow({
   };
 
   const handleTrackEnded = () => {
-    if (!hasMultipleFiles || currentIndex >= files!.length - 1) return;
+    if (!hasMultipleFiles) return;
+    if (currentIndex >= files!.length - 1) {
+      if (isAllAudio) engagement.current.completed = true;
+      return;
+    }
     setCurrentIndex((index) => index + 1);
   };
 
@@ -272,8 +276,10 @@ export default function FileSlideshow({
     if (!currentFile || !showPreview) return;
     const e = engagement.current;
     e.items[currentFile.id] = (e.items[currentFile.id] ?? 0) + 1;
-    if (currentIndex === files!.length - 1) e.completed = true;
-  }, [currentIndex, currentFile?.id, showPreview]);
+    if (isAllImages && currentIndex === files!.length - 1) {
+      e.completed = true;
+    }
+  }, [currentIndex, currentFile?.id, showPreview, isAllImages]);
 
   // Keyboard Navigation
   useEffect(() => {
