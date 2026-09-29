@@ -81,6 +81,32 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
   const uploadedPaths: string[] = [];
+  const cleanupUploadedPaths = async () => {
+    if (uploadedPaths.length === 0) return;
+
+    try {
+      const { error: removeError } = await supabase.storage
+        .from("qr-files")
+        .remove(uploadedPaths);
+      if (!removeError) return;
+
+      console.error("Rejected upload cleanup failed:", removeError);
+      const reapAfter = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      const { error: queueError } = await supabase
+        .from("file_storage_reap_queue")
+        .upsert(
+          uploadedPaths.map((storage_path) => ({
+            storage_path,
+            reap_after: reapAfter,
+          })),
+        );
+      if (queueError) {
+        console.error("Rejected upload reap enqueue failed:", queueError);
+      }
+    } catch (error) {
+      console.error("Rejected upload cleanup threw:", error);
+    }
+  };
 
   try {
     // Both JSON (rename/retheme/remove) and multipart (append) arrive here.
@@ -264,28 +290,44 @@ serve(async (req) => {
         });
       }
 
-      const files = [...items, ...added];
-      // Untitled shares are named by what they are — keep that true.
-      const autoNamed = /^\d+ (photos|tracks|files)$/.test(
-        share.original_name ?? "",
-      );
-      const kind = kindOf(files);
-      const update: Record<string, unknown> = { files };
-      if (autoNamed) {
-        update.original_name = `${files.length} ${
-          kind === "audio" ? "tracks" : kind === "image" ? "photos" : "files"
-        }`;
-      }
-      const { error } = await supabase
-        .from("destructible_files")
-        .update(update)
-        .eq("id", fileId);
+      const { data: result, error } = await supabase
+        .rpc("append_destructible_file_items", {
+          p_file_id: fileId,
+          p_owner_token: ownerToken,
+          p_new_files: added,
+        })
+        .maybeSingle<{
+          files: StoredItem[] | null;
+          file_name: string | null;
+          error_code: string | null;
+        }>();
+
       if (error) throw error;
+      if (!result) throw new Error("File item append returned no result");
+      if (result.error_code) {
+        await cleanupUploadedPaths();
+        uploadedPaths.length = 0;
+
+        const status = result.error_code === "not_found" ? 404 : 409;
+        const message = result.error_code === "max_items"
+          ? `A share holds up to ${MAX_ITEMS} items.`
+          : result.error_code === "kind_mismatch"
+          ? currentKind === "audio"
+            ? "Tracks only — it's a mixtape."
+            : "Photos only — it's a slideshow."
+          : result.error_code === "not_slideshow"
+          ? "This share isn't a slideshow or mixtape."
+          : result.error_code === "limited"
+          ? "This share self-destructs, so what's inside is frozen."
+          : "The share changed while you were adding files. Please try again.";
+        return json(req, status, { error: message });
+      }
+      if (!result.files) throw new Error("File item append returned no files");
 
       return json(req, 200, {
         success: true,
-        files,
-        fileName: update.original_name ?? share.original_name,
+        files: result.files,
+        fileName: result.file_name ?? share.original_name,
       });
     }
 
@@ -293,7 +335,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("update-file failed:", error);
     if (uploadedPaths.length > 0) {
-      await supabase.storage.from("qr-files").remove(uploadedPaths);
+      await cleanupUploadedPaths();
     }
     return json(req, 500, { error: "Couldn't update the share. Try again." });
   }
