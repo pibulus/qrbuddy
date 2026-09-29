@@ -275,7 +275,9 @@ export default function HistoryDrawer(
                         </p>
                         {item.metadata?.shortCode && (
                           <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-purple-100 text-purple-900 border border-purple-300 px-1.5 py-0.5 rounded-md">
-                            📊 Analytics
+                            {item.metadata.ownerScope === "qr"
+                              ? "📊 Manage"
+                              : "⚡ Dynamic"}
                           </span>
                         )}
                         {item.type === "file" && (

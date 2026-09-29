@@ -550,7 +550,7 @@ export default function SmartInput(
           globalThis.location.href = `/edit?token=${token}`;
         } else {
           addToast(
-            "Owner token not found. Re-create this QR to edit it.",
+            "Edit key isn't on this device. Use your backup or the saved edit link.",
             4000,
           );
         }
@@ -568,29 +568,7 @@ export default function SmartInput(
 
   // Effect to save to history when a QR is successfully generated/updated
   useEffect(() => {
-    if (editUrl.value && url.value && !isCreatingDynamic) {
-      // url.value is only a QR link right after creation — if the user types
-      // free text while editUrl is still set, new URL() would throw and each
-      // keystroke would pollute history. Skip anything that doesn't parse.
-      let shortCode = "";
-      try {
-        shortCode = new URL(url.value).searchParams.get("code") || "";
-      } catch {
-        return;
-      }
-      addToHistory({
-        type: selectedTemplate,
-        content: url.value,
-        metadata: {
-          title: url.value.length > 30
-            ? url.value.substring(0, 30) + "..."
-            : url.value,
-          shortCode,
-        },
-      });
-    } else if (
-      isBucket.value && bucketUrl.value && url.value && !isCreatingBucket
-    ) {
+    if (isBucket.value && bucketUrl.value && url.value && !isCreatingBucket) {
       addToHistory({
         type: "file",
         content: url.value,
@@ -603,13 +581,10 @@ export default function SmartInput(
       });
     }
   }, [
-    editUrl.value,
     bucketUrl.value,
     url.value,
-    isCreatingDynamic,
     isCreatingBucket,
     isBucket.value,
-    selectedTemplate,
   ]);
 
   return (

@@ -7,6 +7,7 @@ import { apiRequest } from "../utils/api-request.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 import { reportFailure } from "../utils/report-failure.ts";
 import { normalizeUrl } from "../utils/url.ts";
+import { addToHistory } from "../utils/history.ts";
 
 interface UseDynamicQRProps {
   url: Signal<string>;
@@ -94,6 +95,17 @@ export function useDynamicQR(
         data.short_code,
         data.owner_token,
       );
+      const historyStored = addToHistory({
+        type: "dynamic",
+        content: data.redirect_url,
+        metadata: {
+          title: data.redirect_url.length > 30
+            ? data.redirect_url.substring(0, 30) + "..."
+            : data.redirect_url,
+          shortCode: data.short_code,
+          ...(ownerTokenStored ? { ownerScope: "qr" } : {}),
+        },
+      });
 
       // Auto-Copy URL
       try {
@@ -105,12 +117,11 @@ export function useDynamicQR(
       // Success feedback
       haptics.success();
 
-      addToast(
-        ownerTokenStored
-          ? "✅ Dynamic QR created! Link copied 🔗"
-          : "✅ QR is live. Save the edit link below; this device couldn't remember it.",
-        ownerTokenStored ? 3000 : 6000,
-      );
+      let successMessage = ownerTokenStored
+        ? "✅ Dynamic QR created! Link copied 🔗"
+        : "✅ QR is live. Save the edit link below; this device couldn't remember it.";
+      if (!historyStored) successMessage += " · history couldn't be saved";
+      addToast(successMessage, ownerTokenStored && historyStored ? 3000 : 6000);
 
       setIsCreating(false);
     } catch (error) {
