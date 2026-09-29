@@ -173,7 +173,8 @@ export default function RoutingConfigForm({
       {routingMode === "time" && (
         <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 space-y-3 animate-slide-down">
           <p class="text-xs text-orange-600 mb-2">
-            Route based on scanner's local time of day.
+            Uses the scanner's time zone when available; otherwise uses the time
+            zone from the device that last saved this QR.
           </p>
 
           <div class="flex gap-2 items-center">
