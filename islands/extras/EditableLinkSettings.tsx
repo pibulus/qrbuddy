@@ -25,8 +25,11 @@ export default function EditableLinkSettings({
   const validSeqCount = isSequential && sequentialUrls
     ? sequentialUrls.filter((u) => looksLikeUrl(u)).length
     : 0;
+  const hasSequentialRoutes = validSeqCount >= 2;
   // Editable QRs wrap links only — WiFi/vCard/text payloads stay static.
-  const hasLink = (hasContent && looksLikeUrl(pendingUrl)) || validSeqCount > 0;
+  const hasLink = isSequential
+    ? hasSequentialRoutes
+    : hasContent && looksLikeUrl(pendingUrl);
 
   return (
     <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
@@ -38,15 +41,24 @@ export default function EditableLinkSettings({
               <h4 class="font-bold text-sm text-[#9370DB]">
                 Editable mode is on
               </h4>
-              {validSeqCount > 0
+              {isSequential
                 ? (
-                  <p class="text-xs text-gray-700 leading-relaxed truncate">
-                    Wraps{" "}
-                    <span class="font-semibold">
-                      {validSeqCount} rotating{" "}
-                      {validSeqCount === 1 ? "link" : "links"}
-                    </span>
-                  </p>
+                  hasSequentialRoutes
+                    ? (
+                      <p class="text-xs text-gray-700 leading-relaxed truncate">
+                        Wraps{" "}
+                        <span class="font-semibold">
+                          {validSeqCount} rotating links
+                        </span>
+                      </p>
+                    )
+                    : (
+                      <p class="text-xs text-gray-700 leading-relaxed">
+                        Add {validSeqCount === 1 ? "one more" : "at least two"}
+                        {" "}
+                        valid links below to make this sequence rotate.
+                      </p>
+                    )
                 )
                 : hasLink
                 ? (

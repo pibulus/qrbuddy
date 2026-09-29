@@ -2,6 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { useQRData } from "../hooks/useQRData.ts";
 import { normalizeUrl } from "../utils/url.ts";
+import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
 import AnalyticsDashboard from "./edit-qr/AnalyticsDashboard.tsx";
@@ -102,6 +103,15 @@ export default function EditQRForm() {
   }, [qrData]);
 
   const handleSave = async () => {
+    if (
+      routingMode === "sequential" &&
+      sequentialUrls.filter((url) => normalizeUrl(url).trim() !== "").length <
+        2
+    ) {
+      addToast("Add at least two URLs to the sequence before saving", 3500);
+      return;
+    }
+
     let resolvedDest = destinationUrl.trim()
       ? normalizeUrl(destinationUrl)
       : "";
