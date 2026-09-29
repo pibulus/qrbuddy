@@ -200,10 +200,17 @@ serve(async (req) => {
     }
 
     // R2-backed big file (always single — multi-image shares stay in
-    // Supabase storage): all claim logic has passed, so finalize the slot
-    // and hand the browser a short-lived presigned URL. Destructible
-    // semantics are unchanged — the claim RPC still gated this.
+    // Supabase storage): mint the short-lived URL before committing the use.
+    // If signing or finalization fails, the catch path can release the claim
+    // so a finite share does not lose a use without delivering a URL.
     if (isR2Path(targetPath)) {
+      const signedUrl = await presignGet(
+        targetPath,
+        60,
+        targetName,
+        targetMime,
+      );
+
       const { data: r2Finalized, error: r2FinalizeError } = await supabase
         .rpc("finalize_destructible_file_download", { p_file_id: fileId })
         .maybeSingle<FinalizedDownload>();
@@ -212,7 +219,7 @@ serve(async (req) => {
         if (r2FinalizeError) {
           console.error("File finalize error:", r2FinalizeError);
         }
-        return redirectTo("/boom", req);
+        throw new Error("R2 download finalization failed");
       }
 
       // Finalized: slot committed, catch must not release it.
@@ -232,12 +239,6 @@ serve(async (req) => {
         }
       }
 
-      const signedUrl = await presignGet(
-        targetPath,
-        60,
-        targetName,
-        targetMime,
-      );
       return redirectTo(signedUrl, req);
     }
 
