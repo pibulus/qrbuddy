@@ -176,6 +176,11 @@ export default function FileSlideshow({
     setCurrentIndex((prev) => (prev + 1) % files!.length);
   };
 
+  const handleTrackEnded = () => {
+    if (!hasMultipleFiles || currentIndex >= files!.length - 1) return;
+    setCurrentIndex((index) => index + 1);
+  };
+
   const prevSlide = () => {
     if (!hasMultipleFiles) return;
     setCurrentIndex((prev) => (prev - 1 + files!.length) % files!.length);
@@ -466,7 +471,7 @@ export default function FileSlideshow({
                         key={currentDownloadUrl}
                         controls
                         autoPlay={currentIndex > 0}
-                        onEnded={nextSlide}
+                        onEnded={handleTrackEnded}
                         class="w-full"
                       >
                         <source
