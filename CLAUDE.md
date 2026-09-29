@@ -184,9 +184,15 @@ if (maxDownloads === 999999) {
 - **Deno Deploy alias**: https://qrbuddy.pibulus.deno.net
 - **Supabase project ref**: `aqydpibnvlhcjcwosrti`
 
-The new platform uploads source and builds remotely (Fresh preset auto-detected)
-rather than uploading a prebuilt `_fresh` bundle. `node_modules` is excluded by
-default — hence no `include` allowlist in `deno.json`.
+Production is connected to GitHub. Pushing `main` triggers Deno Deploy's Git
+build, which runs `deno task build` from `deno.json` before routing. The
+workflow in `.github/workflows/deploy.yml` runs checks; it does not deploy.
+
+Do not run `deno deploy` from a local checkout for production. Its direct upload
+can skip Fresh's ahead-of-time build, while `_fresh/` is gitignored. That routes
+an app which returns HTTP 500 on every page because the Tailwind plugin has no
+build manifest. Use the Deno Deploy console's **Deploy Default Branch** action
+to redeploy the current `main` without a new commit.
 
 #### Deployment Commands
 
@@ -200,8 +206,9 @@ default — hence no `include` allowlist in `deno.json`.
 #   deno deploy env add SUPABASE_ANON_KEY "<anon key>" --secret --org pibulus --app qrbuddy
 # Only pass public/client-safe Supabase config here.
 
-# Deploy Fresh production:
-DENO_DEPLOY_TOKEN="$DENO_DEPLOY_TOKEN_NEW" deno deploy --prod --org pibulus --app qrbuddy --non-interactive
+# Deploy Fresh production by pushing main; the GitHub integration runs
+# `deno task build` and deploys the resulting AOT bundle.
+git push origin main
 
 # Deploy all Supabase edge functions when backend code changes (skip _shared).
 # NOTE: new code can take several minutes to serve — warm edge isolates keep
