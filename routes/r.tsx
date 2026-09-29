@@ -5,6 +5,20 @@ import {
   getSupabaseUrl,
 } from "../utils/api.ts";
 
+function routingUnavailable() {
+  return new Response(
+    "QRBuddy couldn't reach the routing service. Please try again shortly.",
+    {
+      status: 503,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Retry-After": "5",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    },
+  );
+}
+
 // This route handles QR code redirects
 // It forwards to the Supabase edge function which manages the actual redirect logic
 
@@ -26,11 +40,7 @@ export const handler: Handlers = {
 
     if (!supabaseUrl) {
       console.error("SUPABASE_URL not configured");
-      // Redirect to home if Supabase not configured
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/" },
-      });
+      return routingUnavailable();
     }
 
     const redirectUrl = `${supabaseUrl}/functions/v1/redirect-qr?code=${
@@ -142,11 +152,7 @@ export const handler: Handlers = {
       });
     } catch (error) {
       console.error("[ROUTE:r] Redirect error:", error);
-      // On error, redirect to home
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/" },
-      });
+      return routingUnavailable();
     }
   },
 };
