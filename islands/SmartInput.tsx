@@ -439,15 +439,13 @@ export default function SmartInput(
       (kind === "file"
         ? files[0].name
         : `${files.length} ${kind === "playlist" ? "tracks" : "photos"}`);
-    uploadFile(files, { title: shareTitle }).finally(() => {
+    void uploadFile(files, { title: shareTitle }).then((uploadedUrl) => {
+      if (!uploadedUrl) return;
+
       setStagedFiles(null);
       setStagedDecoded(null);
       setShareTitle("");
-      // uploadFile points the QR at the share on success; anything else
-      // means it failed and the strip stays quiet.
-      if (url.value.includes("/f/")) {
-        setLastShare({ url: url.value, kind, count: files.length, title });
-      }
+      setLastShare({ url: uploadedUrl, kind, count: files.length, title });
     });
   };
 

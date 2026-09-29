@@ -52,8 +52,8 @@ export function useFileUpload(
   const uploadFile = async (
     input: File | FileList | File[],
     options: { title?: string } = {},
-  ) => {
-    if (inFlightRef.current) return;
+  ): Promise<string | null> => {
+    if (inFlightRef.current) return null;
     inFlightRef.current = true;
 
     try {
@@ -224,6 +224,7 @@ export function useFileUpload(
         setIsUploading(false);
         setUploadProgress(0);
       }, UPLOAD_RESET_DELAY_MS);
+      return data.url;
     } catch (error) {
       const errorMessage = reportFailure(
         "[HOOK:useFileUpload] Upload failed",
@@ -234,6 +235,7 @@ export function useFileUpload(
       inFlightRef.current = false;
       setIsUploading(false);
       setUploadProgress(0);
+      return null;
     }
   };
 
