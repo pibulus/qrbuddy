@@ -235,6 +235,7 @@ export async function importSyncBundle(
   phrase: string,
 ): Promise<{
   mergedHistoryCount: number;
+  historySaved: boolean;
   supporterPassRestored: boolean;
   ownerTokensRestored: number;
 }> {
@@ -249,7 +250,7 @@ export async function importSyncBundle(
     throw new Error("Invalid sync bundle format");
   }
 
-  const mergedHistoryCount = mergeHistory(bundle.history);
+  const historyMerge = mergeHistory(bundle.history);
   const ownerTokensRestored = await importOwnerTokens(bundle.ownerTokens);
 
   // Restore supporter pass if available
@@ -259,5 +260,10 @@ export async function importSyncBundle(
     supporterPassRestored = true;
   }
 
-  return { mergedHistoryCount, supporterPassRestored, ownerTokensRestored };
+  return {
+    mergedHistoryCount: historyMerge.mergedCount,
+    historySaved: historyMerge.saved,
+    supporterPassRestored,
+    ownerTokensRestored,
+  };
 }

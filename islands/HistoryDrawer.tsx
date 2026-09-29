@@ -109,8 +109,10 @@ export default function HistoryDrawer(
         ? " · restored " + result.ownerTokensRestored + " manage links"
         : "";
       addToast(
-        "Synced " + result.mergedHistoryCount + " items" + manageLinks +
-          " from other device! ☁️✨",
+        result.historySaved
+          ? "Synced " + result.mergedHistoryCount + " items" + manageLinks +
+            " from other device! ☁️✨"
+          : "Couldn't save synced history on this device" + manageLinks,
       );
       setImportInput("");
       setShowSync(false);
