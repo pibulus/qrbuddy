@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import { formatFileSize } from "../utils/file-validation.ts";
 import { prettyName } from "../utils/image-prep.ts";
 import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
+import { safeZipEntryNames } from "../utils/zip-names.ts";
 import OwnerStrip, { type ShareItem } from "./OwnerStrip.tsx";
 import ShareActions from "./ShareActions.tsx";
 
@@ -340,15 +341,16 @@ export default function FileSlideshow({
     try {
       setIsZipping(true);
       const zip = new JSZip();
+      const entryNames = safeZipEntryNames(files.map((file) => file.name));
 
       // Fetch all files
-      const promises = files.map(async (file) => {
+      const promises = files.map(async (file, index) => {
         const response = await fetch(getDownloadUrl(file.path));
         if (!response.ok) {
           throw new Error(`Failed to download ${file.name}`);
         }
         const blob = await response.blob();
-        zip.file(file.name, blob);
+        zip.file(entryNames[index], blob);
       });
 
       await Promise.all(promises);

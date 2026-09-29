@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import JSZip from "https://esm.sh/jszip@3.10.1";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { isR2Path, presignGet } from "../_shared/r2.ts";
+import { safeZipEntryNames } from "../../../utils/zip-names.ts";
 
 type StoredFile = {
   path: string;
@@ -41,12 +42,6 @@ function safeDownloadFilename(filename: unknown): string {
   const fallback = "download";
   if (typeof filename !== "string" || filename.trim() === "") return fallback;
   return filename.replace(/[\r\n"\\]/g, "_");
-}
-
-function safeZipEntryName(filename: unknown, index: number): string {
-  const fallback = `file-${index + 1}`;
-  if (typeof filename !== "string" || filename.trim() === "") return fallback;
-  return filename.replace(/[/\\\0\r\n]/g, "_");
 }
 
 function redirectTo(path: string, request?: Request, status = 302) {
@@ -125,6 +120,9 @@ serve(async (req) => {
 
     if (wantsZip && file.files && file.files.length > 1) {
       const zip = new JSZip();
+      const entryNames = safeZipEntryNames(
+        file.files.map((storedFile) => storedFile.name),
+      );
 
       for (const [index, storedFile] of file.files.entries()) {
         const { data: storedFileData, error: storedFileError } = await supabase
@@ -135,7 +133,7 @@ serve(async (req) => {
         if (storedFileError) throw storedFileError;
 
         zip.file(
-          safeZipEntryName(storedFile.name, index),
+          entryNames[index],
           await storedFileData.arrayBuffer(),
         );
       }
