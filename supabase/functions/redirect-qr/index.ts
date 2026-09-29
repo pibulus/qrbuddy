@@ -114,60 +114,78 @@ serve(async (req) => {
       }
     }
 
-    // Atomically increment scan count and get the new value.
-    // increment_scan_count now uses SELECT ... FOR UPDATE to serialise
-    // concurrent scans, checks max_scans internally, and returns -1 if
-    // the limit has already been reached.
-    const { data: newScanCount, error: scanCountError } = await supabase
-      .rpc("increment_scan_count", { p_short_code: shortCode });
-
-    if (scanCountError) {
-      console.error("Scan counter RPC failed:", scanCountError.message);
-      return new Response(
-        JSON.stringify({ error: "Temporary redirect failure. Please retry." }),
-        {
-          status: 503,
-          headers: {
-            ...getCorsHeaders(req),
-            "Content-Type": "application/json",
-            "Retry-After": "5",
-          },
-        },
+    const userAgent = req.headers.get("user-agent") || "";
+    const isPreviewBot =
+      /(?:bot|crawler|spider|facebookexternalhit|preview|linkpreview)/i.test(
+        userAgent,
       );
-    }
 
-    if (newScanCount === -1) {
-      // The QR is missing, inactive, or its scan limit has been reached.
-      // Marking it inactive is safe only for this explicit denied result.
-      await supabase
-        .from("dynamic_qr_codes")
-        .update({ is_active: false })
-        .eq("short_code", shortCode);
-      return redirectWithCors("/boom", req);
-    }
+    let scanIndex: number;
+    if (isPreviewBot) {
+      // Link unfurlers should see the upcoming route without spending a use.
+      // Use the fetched count as the next scan's 0-based sequence index.
+      const currentCount = Number(qr.scan_count) || 0;
+      if (qr.max_scans !== null && currentCount >= qr.max_scans) {
+        return redirectWithCors("/boom", req);
+      }
+      scanIndex = currentCount;
+    } else {
+      // Atomically increment scan count and get the new value.
+      // increment_scan_count serializes concurrent scans and enforces limits.
+      const { data: newScanCount, error: scanCountError } = await supabase
+        .rpc("increment_scan_count", { p_short_code: shortCode });
 
-    if (!Number.isInteger(newScanCount) || newScanCount < 1) {
-      console.error("Unexpected scan counter result:", newScanCount);
-      return new Response(
-        JSON.stringify({ error: "Temporary redirect failure. Please retry." }),
-        {
-          status: 503,
-          headers: {
-            ...getCorsHeaders(req),
-            "Content-Type": "application/json",
-            "Retry-After": "5",
+      if (scanCountError) {
+        console.error("Scan counter RPC failed:", scanCountError.message);
+        return new Response(
+          JSON.stringify({
+            error: "Temporary redirect failure. Please retry.",
+          }),
+          {
+            status: 503,
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+              "Retry-After": "5",
+            },
           },
-        },
-      );
-    }
+        );
+      }
 
-    // The scan index for routing is the pre-increment value (0-based)
-    const scanIndex = newScanCount - 1;
+      if (newScanCount === -1) {
+        // The QR is missing, inactive, or its scan limit has been reached.
+        // Marking it inactive is safe only for this explicit denied result.
+        await supabase
+          .from("dynamic_qr_codes")
+          .update({ is_active: false })
+          .eq("short_code", shortCode);
+        return redirectWithCors("/boom", req);
+      }
+
+      if (!Number.isInteger(newScanCount) || newScanCount < 1) {
+        console.error("Unexpected scan counter result:", newScanCount);
+        return new Response(
+          JSON.stringify({
+            error: "Temporary redirect failure. Please retry.",
+          }),
+          {
+            status: 503,
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+              "Retry-After": "5",
+            },
+          },
+        );
+      }
+
+      // The scan index for routing is the pre-increment value (0-based).
+      scanIndex = newScanCount - 1;
+    }
 
     // --------------------------------------------------------------------------
     // 1. ANALYTICS LOGGING (Fire and Forget)
     // --------------------------------------------------------------------------
-    const userAgent = req.headers.get("user-agent") || "";
     const country = req.headers.get("cf-ipcountry") || "Unknown"; // Cloudflare header
     const city = req.headers.get("cf-ipcity") || "Unknown";
 
@@ -200,19 +218,21 @@ serve(async (req) => {
     else if (ua.includes("edge")) browser = "edge";
 
     // Log scan analytics (fire and forget - don't block redirect)
-    supabase
-      .from("scan_logs")
-      .insert({
-        qr_id: qr.id,
-        device_type: deviceType,
-        os: os,
-        browser: browser,
-        country: country,
-        city: city,
-      })
-      .then(({ error }) => {
-        if (error) console.error("Scan log insert failed:", error.message);
-      });
+    if (!isPreviewBot) {
+      supabase
+        .from("scan_logs")
+        .insert({
+          qr_id: qr.id,
+          device_type: deviceType,
+          os: os,
+          browser: browser,
+          country: country,
+          city: city,
+        })
+        .then(({ error }) => {
+          if (error) console.error("Scan log insert failed:", error.message);
+        });
+    }
 
     // --------------------------------------------------------------------------
     // 2. SMART ROUTING ENGINE
