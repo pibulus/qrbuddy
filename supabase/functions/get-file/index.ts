@@ -212,7 +212,10 @@ serve(async (req) => {
       );
 
       const { data: r2Finalized, error: r2FinalizeError } = await supabase
-        .rpc("finalize_destructible_file_download", { p_file_id: fileId })
+        .rpc("finalize_r2_destructible_file_download", {
+          p_file_id: fileId,
+          p_storage_key: targetPath,
+        })
         .maybeSingle<FinalizedDownload>();
 
       if (r2FinalizeError || !r2Finalized) {
@@ -224,20 +227,6 @@ serve(async (req) => {
 
       // Finalized: slot committed, catch must not release it.
       claimedFileId = null;
-
-      if (r2Finalized.will_expire) {
-        // The presigned URL must outlive the object — deletion is deferred
-        // to cleanup-expired via the reap queue (+1h) instead of inline.
-        const { error: reapError } = await supabase
-          .from("r2_reap_queue")
-          .upsert({
-            storage_key: targetPath,
-            reap_after: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-          });
-        if (reapError) {
-          console.error("R2 reap enqueue failed:", reapError);
-        }
-      }
 
       return redirectTo(signedUrl, req);
     }
