@@ -151,14 +151,16 @@ export function useFileUpload(
 
       // It's yours: keep the owner token in the vault (this device) and a
       // "my QRs" entry so the share can be found and managed again.
-      let ownerTokenStored = true;
-      let historyStored = true;
-      if (data.fileId && data.ownerToken) {
-        ownerTokenStored = await saveOwnerToken(
-          "file",
-          data.fileId,
-          data.ownerToken,
-        );
+      let ownerTokenStored = false;
+      let historyStored = false;
+      if (data.fileId) {
+        if (data.ownerToken) {
+          ownerTokenStored = await saveOwnerToken(
+            "file",
+            data.fileId,
+            data.ownerToken,
+          );
+        }
         const allAudio = files.every((f) => f.type.startsWith("audio/"));
         const allImages = files.every((f) => f.type.startsWith("image/"));
         historyStored = addToHistory({
@@ -171,7 +173,7 @@ export function useFileUpload(
                   allAudio ? "tracks" : allImages ? "photos" : "files"
                 }`
                 : files[0].name),
-            ownerScope: "file",
+            ...(ownerTokenStored ? { ownerScope: "file" } : {}),
             ownerId: data.fileId,
             kind: isMulti
               ? (allAudio ? "playlist" : allImages ? "slideshow" : "pack")
