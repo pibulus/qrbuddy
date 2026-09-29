@@ -264,9 +264,11 @@ serve(async (req) => {
     // Finalized: slot committed, catch must not release it.
     claimedFileId = null;
 
-    // Check if client is requesting a byte range (for video/audio scrubbing)
+    // Range requests are supported for unlimited shares. Finite shares return
+    // the complete file so each chunk of one transfer cannot spend another use.
     const rangeHeader = req.headers.get("Range");
     const fileSize = fileData.size;
+    const supportsRanges = finalizedDownload.max_downloads >= 999999;
 
     // Delete file from storage if limit reached
     if (finalizedDownload.will_expire) {
@@ -285,7 +287,9 @@ serve(async (req) => {
     }
 
     // Handle range requests for video/audio scrubbing
-    if (rangeHeader && rangeHeader.startsWith("bytes=")) {
+    if (
+      supportsRanges && rangeHeader && rangeHeader.startsWith("bytes=")
+    ) {
       const parts = rangeHeader.substring(6).split("-");
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
@@ -318,7 +322,7 @@ serve(async (req) => {
         safeDownloadFilename(targetName)
       }"`,
       "Content-Length": String(fileSize),
-      "Accept-Ranges": "bytes",
+      "Accept-Ranges": supportsRanges ? "bytes" : "none",
       "Cache-Control": "no-cache, no-store, must-revalidate",
       "X-Destructible": "true",
       "X-Downloads-Remaining": String(
