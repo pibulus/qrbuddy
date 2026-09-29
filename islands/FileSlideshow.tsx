@@ -5,6 +5,7 @@ import { formatFileSize } from "../utils/file-validation.ts";
 import { prettyName } from "../utils/image-prep.ts";
 import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
 import OwnerStrip, { type ShareItem } from "./OwnerStrip.tsx";
+import ShareActions from "./ShareActions.tsx";
 
 const SLIDE_MS = 4500;
 
@@ -215,7 +216,6 @@ export default function FileSlideshow({
     items: {} as Record<string, number>,
     started: Date.now(),
     completed: false,
-    shares: 0,
     downloads: 0,
     sent: false,
   });
@@ -244,7 +244,6 @@ export default function FileSlideshow({
         items: e.items,
         dwellSeconds: Math.round((Date.now() - e.started) / 1000),
         completed: e.completed,
-        shares: e.shares,
         downloads: e.downloads,
       });
     };
@@ -630,6 +629,12 @@ export default function FileSlideshow({
                 the trip. Starting the download consumes one use.
               </p>
             )}
+
+            <ShareActions
+              shareUrl={globalThis.location?.href ?? ""}
+              shareText={`Check out ${shareTitle} on QRBuddy.`}
+              onShared={() => beacon({ kind: "engagement", shares: 1 })}
+            />
 
             {!isUnlimited && !hasMultipleFiles && (
               <p class="text-xs text-center text-orange-200 leading-relaxed">

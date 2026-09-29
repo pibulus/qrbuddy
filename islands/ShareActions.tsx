@@ -4,16 +4,19 @@ import { addToast } from "./ToastManager.tsx";
 interface ShareActionsProps {
   shareUrl: string;
   sharedTarget?: string;
+  shareText?: string;
+  onShared?: () => void;
 }
 
 export default function ShareActions(
-  { shareUrl, sharedTarget }: ShareActionsProps,
+  { shareUrl, sharedTarget, shareText, onShared }: ShareActionsProps,
 ) {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       haptics.copy();
       addToast("Share link copied! 📋", 2500);
+      onShared?.();
     } catch (error) {
       console.error("Copy share link failed:", error);
       addToast("Couldn't copy link", 3000);
@@ -30,12 +33,14 @@ export default function ShareActions(
     try {
       await navigator.share({
         title: "QRBuddy Share",
-        text: sharedTarget
-          ? `Scan this QR for ${sharedTarget}`
-          : "Check out this QRBuddy code",
+        text: shareText ??
+          (sharedTarget
+            ? `Scan this QR for ${sharedTarget}`
+            : "Check out this QRBuddy code"),
         url: shareUrl,
       });
       haptics.medium();
+      onShared?.();
     } catch (error) {
       if ((error as DOMException).name === "AbortError") return;
       console.error("Native share failed:", error);
