@@ -51,6 +51,7 @@ export default function FileSlideshow({
   const [isZipping, setIsZipping] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const [lastDownloadStarted, setLastDownloadStarted] = useState(false);
+  const [trackSelected, setTrackSelected] = useState(false);
 
   const hasMultipleFiles = files && files.length > 1;
   const isAllAudio = Boolean(
@@ -71,6 +72,14 @@ export default function FileSlideshow({
 
   // A photo slideshow plays itself; any hand on the wheel stops it.
   const [isPlaying, setIsPlaying] = useState(isAllImages && isUnlimited);
+  const wasAllImages = useRef(isAllImages);
+
+  useEffect(() => {
+    if (!wasAllImages.current && isAllImages && isUnlimited) {
+      setIsPlaying(true);
+    }
+    wasAllImages.current = isAllImages;
+  }, [isAllImages, isUnlimited]);
 
   // The share's own name. Legacy multi-shares were named "IMG_1.jpg + 7 more"
   // by the server — read those as what they are.
@@ -203,14 +212,17 @@ export default function FileSlideshow({
   // Manual navigation takes the wheel from autoplay.
   const goNext = () => {
     setIsPlaying(false);
+    setTrackSelected(true);
     nextSlide();
   };
   const goPrev = () => {
     setIsPlaying(false);
+    setTrackSelected(true);
     prevSlide();
   };
   const goTo = (idx: number) => {
     setIsPlaying(false);
+    setTrackSelected(true);
     setCurrentIndex(idx);
   };
 
@@ -485,7 +497,7 @@ export default function FileSlideshow({
                       <audio
                         key={currentDownloadUrl}
                         controls
-                        autoPlay={currentIndex > 0}
+                        autoPlay={currentIndex > 0 || trackSelected}
                         onEnded={handleTrackEnded}
                         class="w-full"
                       >
