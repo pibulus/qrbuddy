@@ -104,7 +104,7 @@ serve(async (req) => {
     if (qr.expires_at) {
       const now = new Date();
       const expiry = new Date(qr.expires_at);
-      if (now > expiry) {
+      if (now >= expiry) {
         // Mark as inactive and redirect to KABOOM
         await supabase
           .from("dynamic_qr_codes")
