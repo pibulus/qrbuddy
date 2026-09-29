@@ -168,7 +168,7 @@ export default function FileUploadOptions(
 
       {/* Self-destruct lives under a toggle: it's the exception, not the form */}
       <details class="group" open={isLimited}>
-        <summary class="list-none cursor-pointer min-h-[36px] flex items-center justify-center gap-1 text-xs font-bold text-neutral-500 hover:text-black transition-colors select-none">
+        <summary class="list-none cursor-pointer min-h-[44px] flex items-center justify-center gap-1 text-xs font-bold text-neutral-500 hover:text-black transition-colors select-none">
           {isLimited
             ? `💣 Self-destructs after ${maxDownloads.value} ${
               maxDownloads.value === 1 ? "download" : "downloads"
@@ -189,7 +189,7 @@ export default function FileUploadOptions(
                   maxDownloads.value = value;
                   haptics.light();
                 }}
-                class={`min-w-[44px] min-h-[40px] px-3 rounded-full border-2 font-black text-sm transition-all ${
+                class={`min-w-[44px] min-h-[44px] px-3 rounded-full border-2 font-black text-sm transition-all ${
                   active
                     ? "border-black bg-amber-200 text-black shadow-chunky"
                     : "border-black/15 bg-white text-neutral-700 hover:border-black/60"
@@ -206,7 +206,7 @@ export default function FileUploadOptions(
         type="button"
         onClick={onCancel}
         disabled={busy}
-        class="w-full min-h-[36px] text-xs font-bold text-neutral-500 hover:text-black transition-colors disabled:opacity-50"
+        class="w-full min-h-[44px] text-xs font-bold text-neutral-500 hover:text-black transition-colors disabled:opacity-50"
       >
         Never mind
       </button>
