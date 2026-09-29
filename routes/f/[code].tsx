@@ -6,6 +6,20 @@ import {
   getSupabaseUrl,
 } from "../../utils/api.ts";
 
+function metadataUnavailable(retryAfter = "5") {
+  return new Response(
+    "QRBuddy couldn't load this share right now. Please try again shortly.",
+    {
+      status: 503,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Retry-After": retryAfter,
+        "Cache-Control": "no-store, max-age=0",
+      },
+    },
+  );
+}
+
 interface FileData {
   fileId: string;
   fileName: string;
@@ -40,10 +54,7 @@ export const handler: Handlers = {
 
     if (!supabaseUrl) {
       console.error("Supabase not configured");
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/" },
-      });
+      return metadataUnavailable();
     }
 
     // Fetch file metadata without downloading yet
@@ -62,10 +73,21 @@ export const handler: Handlers = {
       });
 
       if (!response.ok) {
-        // File doesn't exist or already exploded
+        if (response.status === 404) {
+          return new Response(null, {
+            status: 302,
+            headers: { Location: "/boom", "Cache-Control": "no-store" },
+          });
+        }
+        if (response.status === 429 || response.status >= 500) {
+          return metadataUnavailable(
+            response.headers.get("Retry-After") ?? "5",
+          );
+        }
+        // Invalid or unavailable share metadata
         return new Response(null, {
           status: 302,
-          headers: { Location: "/boom" },
+          headers: { Location: "/boom", "Cache-Control": "no-store" },
         });
       }
 
@@ -75,17 +97,14 @@ export const handler: Handlers = {
       if (fileData.isExpired || fileData.remainingDownloads <= 0) {
         return new Response(null, {
           status: 302,
-          headers: { Location: "/boom" },
+          headers: { Location: "/boom", "Cache-Control": "no-store" },
         });
       }
 
       return ctx.render(fileData);
     } catch (error) {
       console.error("File metadata error:", error);
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/boom" },
-      });
+      return metadataUnavailable();
     }
   },
 };
