@@ -174,7 +174,9 @@ export default function RoutingConfigForm({
         <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 space-y-3 animate-slide-down">
           <p class="text-xs text-orange-600 mb-2">
             Uses the scanner's time zone when available; otherwise uses the time
-            zone from the device that last saved this QR.
+            zone from the device that last saved this QR. If the end is earlier
+            than the start, the active window continues overnight. Choose
+            00:00–24:00 for a full-day window.
           </p>
 
           <div class="flex gap-2 items-center">
@@ -185,7 +187,7 @@ export default function RoutingConfigForm({
               <select
                 value={startHour}
                 onChange={(e) => setStartHour(e.currentTarget.value)}
-                class="w-full px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
+                class="w-full min-h-[44px] px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
               >
                 {Array.from(
                   { length: 24 },
@@ -203,13 +205,15 @@ export default function RoutingConfigForm({
               <select
                 value={endHour}
                 onChange={(e) => setEndHour(e.currentTarget.value)}
-                class="w-full px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
+                class="w-full min-h-[44px] px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
               >
                 {Array.from(
-                  { length: 24 },
+                  { length: 25 },
                   (_, i) => (
                     <option key={i} value={i.toString().padStart(2, "0")}>
-                      {i.toString().padStart(2, "0")}:00
+                      {i === 24
+                        ? "24:00 (midnight)"
+                        : `${i.toString().padStart(2, "0")}:00`}
                     </option>
                   ),
                 )}

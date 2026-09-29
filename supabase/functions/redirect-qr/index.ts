@@ -321,7 +321,12 @@ serve(async (req) => {
             ? parsedEnd
             : 17;
 
-        if (localHour >= startHour && localHour < endHour) {
+        const isWithinActiveHours = startHour < endHour
+          ? localHour >= startHour && localHour < endHour
+          : startHour > endHour &&
+            (localHour >= startHour || localHour < endHour);
+
+        if (isWithinActiveHours) {
           if (config.activeUrl) destinationUrl = config.activeUrl;
         } else {
           if (config.inactiveUrl) destinationUrl = config.inactiveUrl;
