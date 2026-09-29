@@ -364,7 +364,9 @@ export default function FileSlideshow({
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Let browsers (especially Safari) begin consuming the download before
+      // releasing its backing Blob URL.
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) {
       console.error("Failed to zip files:", error);
       alert("Failed to create zip file. Please try downloading individually.");
