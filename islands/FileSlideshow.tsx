@@ -59,6 +59,14 @@ export default function FileSlideshow({
   const isAllImages = Boolean(
     hasMultipleFiles && files!.every((f) => f.type.startsWith("image/")),
   );
+  let ownerKind: "playlist" | "slideshow" | "file" = "file";
+  if (files?.length && files.every((f) => f.type.startsWith("audio/"))) {
+    ownerKind = "playlist";
+  } else if (
+    files?.length && files.every((f) => f.type.startsWith("image/"))
+  ) {
+    ownerKind = "slideshow";
+  }
   const currentFile = hasMultipleFiles ? files![currentIndex] : null;
 
   // A photo slideshow plays itself; any hand on the wheel stops it.
@@ -676,11 +684,7 @@ export default function FileSlideshow({
               files={files}
               theme={theme}
               isLimited={!isUnlimited}
-              kind={isAllAudio
-                ? "playlist"
-                : isAllImages
-                ? "slideshow"
-                : "file"}
+              kind={ownerKind}
               onTitle={setFileName}
               onFiles={(next) => {
                 setFiles(next);
