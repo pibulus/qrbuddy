@@ -325,6 +325,9 @@ serve(async (req) => {
           expires_at: data.expires_at,
           is_active: data.is_active,
           created_at: data.created_at,
+          routing_mode: data.routing_mode,
+          routing_config: data.routing_config,
+          splash_config: data.splash_config ?? null,
         },
       }),
       {

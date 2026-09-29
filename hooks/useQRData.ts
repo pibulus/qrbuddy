@@ -123,7 +123,9 @@ export function useQRData() {
         "Failed to update QR",
       );
 
-      setQrData(result.data);
+      setQrData((current) =>
+        current ? { ...current, ...result.data } : result.data
+      );
 
       // Success feedback
       haptics.success();
