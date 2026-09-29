@@ -524,6 +524,11 @@ export default function SmartInput(
   };
 
   const handleHistorySelect = (item: HistoryItem) => {
+    if (item.type === "media") {
+      globalThis.location.href = item.content;
+      return;
+    }
+
     if (item.type === "file" && item.metadata?.bucketCode) {
       const bucketCode = item.metadata.bucketCode;
       getOwnerToken("bucket", bucketCode).then((token) => {
@@ -532,6 +537,11 @@ export default function SmartInput(
         }`;
         globalThis.location.href = historyUrl;
       });
+      return;
+    }
+
+    if (item.type === "file") {
+      globalThis.location.href = item.content;
       return;
     }
 
