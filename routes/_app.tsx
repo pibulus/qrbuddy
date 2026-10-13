@@ -1,4 +1,5 @@
 import { type PageProps } from "$fresh/server.ts";
+import { asset } from "$fresh/runtime.ts";
 import { getSupabaseUrl } from "../utils/api.ts";
 
 export default function App({ Component, url }: PageProps) {
@@ -26,7 +27,7 @@ export default function App({ Component, url }: PageProps) {
         </script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>qrbuddy</title>
-        <link rel="stylesheet" href="/styles.css" />
+        <link rel="stylesheet" href={asset("/styles.css")} />
         <script
           // deno-lint-ignore react-no-danger
           dangerouslySetInnerHTML={{ __html: envScript }}
