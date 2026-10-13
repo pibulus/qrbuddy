@@ -19,78 +19,72 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "💣",
-    title: "Autodestrucción al Descargar",
+    icon: "📤",
+    title: "Comparte un archivo con un QR",
     desc:
-      "Configura tu buzón en modo 'Quemado en 1 Escaneo'. Una vez que el destinatario descarga el archivo, la información se borra permanentemente del servidor sin dejar rastro.",
+      "Sube un archivo y comparte su enlace o código QR. Los destinatarios lo abren en su navegador.",
   },
   {
-    icon: "🔐",
-    title: "Cifrado de Extremo a Extremo",
+    icon: "⏳",
+    title: "Enlaces temporales",
     desc:
-      "Archivos protegidos en tránsito con claves criptográficas. Contraseñas opcionales de 4 palabras para mantener tus entregas totalmente confidenciales.",
+      "Los enlaces para compartir archivos vencen a los 30 días. El contenido de un baúl reutilizable se limpia después de 30 días sin actividad.",
   },
   {
-    icon: "📁",
-    title: "Transferencias de Archivos Grandes",
+    icon: "📦",
+    title: "Subidas individuales más grandes",
     desc:
-      "Comparte entregables de diseño confidenciales, firmware, fotos privadas o paquetes de contratos de hasta 500MB sin registros corporativos.",
+      "El límite gratuito es de 50 MB por archivo. El Pase Supporter amplía el límite de un archivo individual a 500 MB.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Retención de Datos",
-    corporate:
-      "Almacenados indefinidamente en servidores corporativos para entrenar IA",
-    qrbuddy:
-      "Límite de descargas opcional; todos los enlaces vencen en 30 días",
+    feature: "Códigos QR estáticos",
+    free: "Ilimitados; el destino queda codificado en el QR",
+    supporter: "Incluidos",
   },
   {
-    feature: "Registro de Cuentas",
-    corporate:
-      "Obliga a registrarse con correo electrónico, teléfono y verificación 2FA",
-    qrbuddy: "Cero cuentas — escaneas el código, descargas el archivo y listo",
+    feature: "Subida de un archivo",
+    free: "Hasta 50 MB",
+    supporter: "Un archivo de hasta 500 MB",
   },
   {
-    feature: "Vigilancia y Registros",
-    corporate:
-      "Rastrea dirección IP, huellas del dispositivo y geolocalización",
-    qrbuddy:
-      "Cero rastreo, cero analíticas en buzones, cero registros de acceso",
+    feature: "Vencimiento del enlace del archivo",
+    free: "30 días",
+    supporter: "30 días",
   },
   {
-    feature: "Seguridad de Descarga",
-    corporate: "Enlaces públicos indexados por motores de búsqueda",
-    qrbuddy: "Buzones cifrados con límite estricto de descargas",
+    feature: "Pase Supporter",
+    free: "No hace falta comprarlo",
+    supporter: "A$49 por 365 días; un pago, sin renovación automática",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "¿Cómo funciona la autodestrucción de archivos?",
-    a: "Arrastras tus archivos a QRBuddy y activas la opción 'Destructible'. Se genera un código QR. En cuanto el destinatario escanea y descarga el archivo, este se elimina definitivamente del servidor.",
+    q: "¿Qué tamaño de archivo puedo subir?",
+    a: "Las subidas gratuitas permiten archivos de hasta 50 MB. El Pase Supporter amplía el límite a 500 MB para un solo archivo; no añade subidas de archivos comprimidos con varios elementos.",
   },
   {
-    q: "¿Quién puede acceder a mis archivos?",
-    a: "Únicamente quien posea el código QR exacto (o el token de destino). QRBuddy no indexa ni cataloga los buzones de archivos.",
+    q: "¿Cuánto tiempo se guardan los archivos?",
+    a: "Los enlaces para compartir archivos vencen a los 30 días. El contenido de un baúl reutilizable se limpia después de 30 días sin actividad. La limpieza se ejecuta a diario y puede tardar más; consulta el aviso de privacidad.",
   },
   {
-    q: "¿Cuál es el tamaño máximo de archivo?",
-    a: "Los usuarios gratuitos pueden transferir archivos de hasta 50MB. Con el Pase de Estudio puedes compartir archivos individuales o carpetas comprimidas de hasta 500MB.",
+    q: "¿Los destinatarios necesitan una cuenta?",
+    a: "Pueden abrir un enlace en el navegador. Quien tenga el enlace podría acceder al contenido compartido, así que compártelo solo con las personas indicadas.",
   },
   {
-    q: "¿Puedo proteger mi buzón con contraseña?",
-    a: "Sí, puedes habilitar protección por clave de paso para que quien escanee deba ingresar la contraseña o frase de 4 palabras antes de iniciar la descarga.",
+    q: "¿Qué incluye el Pase Supporter?",
+    a: "Cuesta A$49 por un pago y dura 365 días, sin renovación automática. Amplía algunos límites de creación y subida; siguen aplicando controles de uso.",
   },
 ];
 
 export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/es/archivos";
-  const title =
-    "Envío Efímero de Archivos y Códigos QR Destructibles — QRBuddy";
+  const title = "Comparte Archivos Temporales con un Código QR | QRBuddy";
   const description =
-    "Comparte archivos privados de hasta 500MB con límites de descarga opcionales. Todos los enlaces vencen en 30 días. Cero registros, cifrado y sin registrar cuentas.";
+    "Comparte archivos con un enlace o código QR de QRBuddy. El límite gratuito es de 50 MB; el Pase Supporter amplía el límite individual a 500 MB. Los enlaces vencen a los 30 días.";
 
   return (
     <>
@@ -101,33 +95,35 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="en"
         altHref="https://qrbuddy.app/for/lockers"
-        ogImageAlt="QRBuddy - Envío efímero de archivos y códigos QR destructibles"
-        themeColor="#00FF41"
+        ogImageAlt="Compartir archivos temporales con un código QR de QRBuddy"
+        themeColor="#00A84F"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy Buzones Efímeros"
-        applicationCategory="SecurityApplication"
+        jsonLdName="Compartir archivos con QRBuddy"
+        applicationCategory="UtilitiesApplication"
         price="49"
-        offerDescription="Pase de Estudio Anual con buzones efímeros cifrados de hasta 500MB"
+        priceCurrency="AUD"
+        offerDescription="Pase Supporter: A$49 por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
-        badge="Privacidad y Transferencias"
-        title="Envío Efímero de Archivos y Códigos QR Destructibles."
-        tagline="Comparte documentos confidenciales, fotos y archivos de hasta 500MB con límites de descarga opcionales y vencimiento automático a los 30 días."
-        subtagline="Todos los enlaces vencen en 30 días. Transferencias cifradas, cero rastreadores, sin registrar cuentas."
+        lang="es"
+        badge="Compartir archivos"
+        title="Un código QR para compartir archivos temporalmente."
+        tagline="Sube un archivo y comparte su enlace o código QR con las personas que lo necesitan."
+        subtagline="Los enlaces vencen a los 30 días. La limpieza es diaria y puede tardar más; consulta el aviso de privacidad."
         defaultStyle="terminal"
-        defaultCaption="SECRETO"
+        defaultCaption="ABRIR ARCHIVO"
         homeUrl="/es"
         homeLabel="← Volver al inicio"
-        featuresTitle="¿Por Qué Elegir QRBuddy para Transferencias Seguras?"
-        faqTitle="Preguntas Frecuentes sobre Archivos Efímeros"
+        featuresTitle="Comparte archivos por QR"
+        faqTitle="Preguntas frecuentes"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy vs Gigantes de Almacenamiento en la Nube"
-        comparisonSubtitle="Por qué periodistas y defensores de la privacidad usan buzones efímeros"
+        comparisonTitle="QRBuddy gratis y el Pase Supporter"
+        comparisonSubtitle="Límites de tamaño y tiempo de conservación"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Obtener Pase de Privacidad ($49/año) 🛡️"
+        ctaLabel="Obtener Pase Supporter 🛡️"
       />
     </>
   );

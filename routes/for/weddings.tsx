@@ -19,73 +19,77 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "📸",
-    title: "Instant Guest Photo Drop",
+    icon: "📍",
+    title: "Make a photo slideshow QR",
     desc:
-      "Guests scan table cards and upload full-resolution photos directly to your private locker. No apps to download, no account required.",
+      "Share a QRBuddy slideshow with up to 10 photos. Owners can manage items on editable shares; guests can view or download them.",
   },
   {
-    icon: "🎵",
-    title: "Playable Audio Story",
+    icon: "🔗",
+    title: "Add a hosted playlist",
     desc:
-      "Embed your first-dance song, vows, or curated playlist. When guests scan, it opens a gorgeous retro player that auto-advances tracks.",
+      "Make a browser playlist from up to 10 audio tracks. The page can advance between tracks; file shares expire after 30 days.",
   },
   {
     icon: "🌸",
-    title: "Blush Pastel Aesthetic",
+    title: "Share the event details",
     desc:
-      "Custom rose-gold, blush, and cream gradients that complement your floral arrangements, signage, and wedding stationery.",
+      "Make a QR for directions, the schedule, RSVP details, or your wedding website. Download a PNG or SVG for your stationery.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Active Duration",
-    corporate: "Deleted after 7–30 days unless you pay $25/month",
-    qrbuddy: "Active for a full 365 days with our 1-Year Pass",
+    feature: "Static QR codes",
+    free: "Unlimited; destination is encoded in the QR",
+    supporter: "Included",
   },
   {
-    feature: "Guest Experience",
-    corporate: "Forces guests to download an app and create accounts",
-    qrbuddy: "Zero app download — opens instantly in mobile Safari/Chrome",
+    feature: "Editable QRs",
+    free: "Available within free-tier limits",
+    supporter: "Higher creation limits",
   },
   {
-    feature: "Audio & Playlist",
-    corporate: "Photos only, zero sound",
-    qrbuddy: "Integrated multi-track audio player with auto-advance",
+    feature: "Photo slideshow or playlist",
+    free: "Up to 10 photos or tracks; audio files up to 5 MB each",
+    supporter: "Same limit; 500 MB applies to a single file",
   },
   {
-    feature: "Photo Quality",
-    corporate: "Compressed down to low-res thumbnails",
-    qrbuddy: "Original full-res uploads packaged into an instant ZIP",
+    feature: "File-share expiry",
+    free: "30 days",
+    supporter: "30 days",
+  },
+  {
+    feature: "Supporter Pass",
+    free: "No purchase required",
+    supporter: "A$49 once for 365 days; no automatic renewal",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "How do guests upload their photos?",
-    a: "Guests point their phone camera at the table QR code. It opens a private upload screen where they can drag or tap to add photos from their camera roll. No app download needed.",
+    q: "Can guests upload photos to a shared wedding album?",
+    a: "QRBuddy doesn't provide a multi-guest upload album. You can create and manage a slideshow share of up to 10 photos, then give guests its link or QR to view or download the photos.",
   },
   {
-    q: "How do we download all the photos after the wedding?",
-    a: "From your organizer link, click 'Download All' to get a single clean ZIP archive with every guest photo at full camera resolution.",
+    q: "Can I make a photo slideshow or music playlist?",
+    a: "Yes. A share can contain up to 10 photos or up to 10 audio tracks. Audio files are limited to 5 MB each; large photos may be resized before sharing. Shares expire after 30 days.",
   },
   {
-    q: "Can we print the QR code on our table cards and invitations?",
-    a: "Yes! Download the QR code as a high-resolution PNG or vector SVG with a custom 'PHOTO DROP' or 'SCAN ME' frame ready for your stationer or Canva.",
+    q: "Can I change an event link after printing?",
+    a: "Yes, if you create an editable QR and keep its private edit link. A static QR cannot be changed because its destination is encoded in the image.",
   },
   {
-    q: "How long does the wedding QR code stay active?",
-    a: "Your code and private locker stay active for a full 12 months, so you and your guests can revisit memories well after the honeymoon.",
+    q: "How long are shared photos and audio available?",
+    a: "File shares expire after 30 days. Deletion runs on a daily cleanup schedule and may take longer; see the privacy notice for details.",
   },
 ];
 
 export default function WeddingsPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/weddings";
-  const title =
-    "Wedding QR Codes — Guest Photo Drops & Audio Playlists | QRBuddy";
+  const title = "Wedding QR Codes for Event Details and Media | QRBuddy";
   const description =
-    "Beautiful wedding QR codes for guest photo uploads, table stationery, and first-dance audio playlists. Lasts a full year, no guest app download required.";
+    "Create QR codes for wedding websites and event details, plus temporary QRBuddy photo slideshow and music playlist shares. Download PNG or SVG designs for stationery.";
 
   return (
     <>
@@ -96,31 +100,32 @@ export default function WeddingsPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="es"
         altHref="https://qrbuddy.app/es/bodas"
-        ogTitle="Wedding QR Codes for Guest Photos & Audio Stories — QRBuddy"
-        ogImageAlt="QRBuddy - Beautiful wedding QR codes for photo drops and audio"
+        ogTitle="Wedding QR Codes for Event Details — QRBuddy"
+        ogImageAlt="Styled QR codes for wedding event details"
         themeColor="#BA5566"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy Weddings"
+        jsonLdName="QRBuddy Wedding QR Codes"
         applicationCategory="LifestyleApplication"
-        price="19"
-        offerDescription="1-Year Wedding Event Drop Pass with full-res guest photo locker"
+        price="49"
+        priceCurrency="AUD"
+        offerDescription="Supporter Pass: A$49 for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         badge="Weddings & Celebrations"
-        title="Wedding QR Codes for Photos & Love Stories."
-        tagline="Replace $400 audio guestbook rentals and expiring photo apps with one gorgeous table QR code."
-        subtagline="Guests scan, drop full-res photos straight to your private locker, and listen to your wedding playlist. Active for 1 full year."
+        title="Wedding QR Codes for the Moments You Want to Share."
+        tagline="Share your event details, a small photo slideshow, or a music playlist from one easy scan."
+        subtagline="Photo and audio shares hold up to 10 items and expire after 30 days. Audio tracks are limited to 5 MB each; large photos may be resized. Guests view or download the share; they don't upload into it."
         defaultStyle="blush"
         defaultUrl="https://ourwedding.love"
-        defaultCaption="PHOTO DROP"
+        defaultCaption="OUR DAY"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy vs Disposable Wedding Apps"
-        comparisonSubtitle="Why modern couples love the 1-year private photo drop"
+        comparisonTitle="Free QRBuddy and the Supporter Pass"
+        comparisonSubtitle="A clear look at file limits and share duration"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Get Wedding Pass ($19) 💜"
+        ctaLabel="Get Supporter Pass 💜"
       />
     </>
   );

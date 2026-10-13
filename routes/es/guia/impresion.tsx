@@ -3,10 +3,9 @@ import QrPrintGuideIsland from "../../../islands/QrPrintGuideIsland.tsx";
 
 export default function GuiaImpresionPage() {
   const canonicalUrl = "https://qrbuddy.app/es/guia/impresion";
-  const title =
-    "Calculadora de Tamaño de Impresión QR y Guía Anti-Extorsión (2026) | QRBuddy";
+  const title = "Calculadora de Tamaño QR y Guía de Impresión (2026) | QRBuddy";
   const description =
-    "Calcula el tamaño exacto para imprimir códigos QR en menús, calcomanías y lonas. Descubre la regla óptica 10:1 y por qué los generadores gratis rompen tus códigos impresos.";
+    "Estima el tamaño de tus QR para menús, calcomanías y lonas. Revisa contraste, formato, destino y escaneo en teléfonos reales antes de imprimir.";
 
   return (
     <>
@@ -46,8 +45,7 @@ export default function GuiaImpresionPage() {
             "@graph": [
               {
                 "@type": "TechArticle",
-                headline:
-                  "Calculadora de Tamaño de Impresión QR y Guía Anti-Extorsión",
+                headline: "Calculadora de Tamaño QR y Guía de Impresión",
                 url: canonicalUrl,
                 image: "https://qrbuddy.app/og-card.png",
                 description: description,
@@ -73,7 +71,7 @@ export default function GuiaImpresionPage() {
                     acceptedAnswer: {
                       "@type": "Answer",
                       text:
-                        "La norma óptica estándar es Tamaño = Distancia de Escaneo ÷ 10. Para un menú de mesa visto a 0.5 metros, el tamaño mínimo es de 5 cm. Para iluminación tenue o URLs largas, se recomienda Distancia ÷ 8 (6.25 cm).",
+                        "Dividir la distancia entre 10 da una estimación inicial, no un mínimo garantizado. A 0.5 metros sugiere 5 cm. Usa un código mayor para contenido denso o poca luz y prueba una muestra impresa con los teléfonos previstos.",
                     },
                   },
                   {
@@ -83,7 +81,7 @@ export default function GuiaImpresionPage() {
                     acceptedAnswer: {
                       "@type": "Answer",
                       text:
-                        "Muchos generadores codifican su propio servidor de redirección intermedio, ofrecen una prueba de 14 días y luego secuestran el enlace exigiendo $15 a $30 USD al mes para no romper el código impreso con un error 404.",
+                        "La imagen de un QR estático no vence por sí sola, pero su destino puede desaparecer. Los QR editables dependen del servicio de redirección y de sus límites o vencimiento. Revisa las condiciones antes de imprimir.",
                     },
                   },
                   {
@@ -92,7 +90,7 @@ export default function GuiaImpresionPage() {
                     acceptedAnswer: {
                       "@type": "Answer",
                       text:
-                        "Siempre exporta en archivo vectorial SVG para impresión profesional. El formato SVG se escala matemáticamente a cualquier resolución sin perder nitidez ni pixelarse.",
+                        "SVG permite cambiar el tamaño sin pixelación y es útil para diseños impresos. PNG también sirve si tiene suficientes píxeles para el tamaño final. Prueba la impresión antes de una tirada grande.",
                     },
                   },
                 ],

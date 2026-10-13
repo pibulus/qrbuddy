@@ -114,7 +114,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
             "offers": {
               "@type": "Offer",
               "price": "0",
-              "priceCurrency": "USD",
+              "priceCurrency": "AUD",
             },
             "creator": {
               "@type": "Person",

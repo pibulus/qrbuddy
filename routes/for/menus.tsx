@@ -20,72 +20,72 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📜",
-    title: "Never Reprint Again",
+    title: "A QR for your menu link",
     desc:
-      "Update your PDF, daily specials, or website link instantly. Your printed table cards and window stickers stay working forever.",
+      "Make a static QR for a menu PDF or website, or use an editable QR when you want to change its destination later.",
   },
   {
-    icon: "🛡️",
-    title: "Zero Hostage Links",
+    icon: "🔗",
+    title: "Choose the kind of link",
     desc:
-      "Corporate QR apps charge $300/yr and break your printed menus if you cancel. With QRBuddy, your printed codes will never 404.",
+      "Static QRs encode the destination directly. Editable QRs use QRBuddy's redirect service and can have scan or date limits.",
   },
   {
     icon: "🎨",
-    title: "Branded Aesthetic",
+    title: "Make it fit your venue",
     desc:
-      "Match your venue's interior with organic matcha greens, golden sunsets, or minimal monochrome. No ugly pixelated black squares.",
+      "Choose a gradient, add a logo, and export a PNG or SVG for table cards and window signs.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Pricing Model",
-    corporate: "$300 – $450/year (Sneaky monthly recurring)",
-    qrbuddy: "$49/year flat Studio Pass or 100% Free Static",
+    feature: "Static QR codes",
+    free: "Unlimited; destination is encoded in the QR",
+    supporter: "Included",
   },
   {
-    feature: "Cancellation Policy",
-    corporate: "Immediately breaks printed QR codes into 404 errors",
-    qrbuddy: "Codes stay active and freeze to last destination gracefully",
+    feature: "Editable QRs",
+    free: "Available within fair-use limits",
+    supporter: "Higher creation limits",
   },
   {
-    feature: "Customer Privacy",
-    corporate: "Harvests patron IPs, device identifiers & tracking cookies",
-    qrbuddy: "Zero tracking, zero cookies, GDPR/privacy native",
+    feature: "File sharing",
+    free: "Free-tier size and use limits; shares expire after 30 days",
+    supporter:
+      "Single-file uploads up to 500 MB; shares still expire after 30 days",
   },
   {
-    feature: "Design & Colors",
-    corporate: "Boring black/white or watermarked logos",
-    qrbuddy: "Pastel gradients, custom shapes, center logos, frames",
+    feature: "Supporter Pass",
+    free: "No purchase required",
+    supporter: "A$49 once for 365 days; no automatic renewal",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "Can I update my menu link without reprinting my QR codes?",
-    a: "Yes! With a dynamic QR code on QRBuddy, you can switch your PDF menu, online ordering link, or Instagram page whenever you want from your private edit link.",
+    q: "Can I update my menu link without reprinting the QR?",
+    a: "Yes. Create an editable QR and keep its private edit link. You can change its destination while the code remains active. A static QR cannot be edited because its destination is encoded directly.",
   },
   {
-    q: "What happens if I don't renew next year?",
-    a: "Unlike Bitly or Beaconstac which extort you by breaking your printed table tents, QRBuddy never breaks your active codes. They simply freeze at their current destination.",
+    q: "What happens when the Supporter Pass expires?",
+    a: "The pass ends after 365 days and does not renew automatically. Free features remain available. Editable QRs follow their own scan and expiry settings and depend on the QRBuddy redirect service.",
   },
   {
     q: "Does this work with online PDF menus and Square/Toast ordering?",
     a: "Absolutely. Point your QR directly to your PDF file on Google Drive, Dropbox, your website, or your Square/Toast online ordering page.",
   },
   {
-    q: "Are there scan limits on restaurant table menus?",
-    a: "No scan limits. Whether 50 or 50,000 customers scan your menu, it works seamlessly.",
+    q: "Can I set scan or date limits?",
+    a: "Editable QRs can have a scan limit or expiry date. The redirect service also applies abuse controls; QRBuddy does not promise unlimited scans.",
   },
 ];
 
 export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/menus";
-  const title =
-    "Restaurant & Cafe QR Code Menus — Dynamic, Anti-Hostage | QRBuddy";
+  const title = "Restaurant & Cafe Menu QR Codes | QRBuddy";
   const description =
-    "Dynamic QR code menus for restaurants, cafes, and bars. Update your PDF or link anytime without reprinting. $49/year flat, no monthly extortion, zero customer tracking.";
+    "Create styled static or editable QR codes for restaurant menus, ordering pages, and websites. Free features are available; the Supporter Pass raises selected limits.";
 
   return (
     <>
@@ -96,31 +96,32 @@ export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="es"
         altHref="https://qrbuddy.app/es/menus"
-        ogTitle="Anti-Hostage QR Code Menus for Restaurants & Cafes — QRBuddy"
-        ogImageAlt="QRBuddy - Beautiful anti-hostage QR menus for restaurants"
+        ogTitle="Restaurant Menu QR Codes — QRBuddy"
+        ogImageAlt="Styled QR codes for restaurant menus"
         themeColor="#2E7D32"
         supabaseUrl={data?.supabaseUrl}
         jsonLdName="QRBuddy Restaurant Menus"
         applicationCategory="BusinessApplication"
         price="49"
-        offerDescription="Annual Studio Pass with unlimited dynamic QR code redirects"
+        priceCurrency="AUD"
+        offerDescription="QRBuddy Supporter Pass, A$49 for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         badge="Hospitality & Dining"
-        title="The QR Menu That Never Breaks."
-        tagline="Dynamic QR codes for cafes, bars, and restaurants without the $300/year corporate hostage pricing."
-        subtagline="Update your PDF menu or online ordering link whenever your chef changes a dish. Your printed table stickers keep working."
+        title="Menu QR Codes That Are Easy to Update."
+        tagline="Create styled static codes or editable links for restaurant menus and ordering pages."
+        subtagline="Keep the private edit link for an editable QR so you can change its destination without reprinting."
         defaultStyle="matcha"
         defaultUrl="https://your-cafe.com/menu.pdf"
         defaultCaption="MENU"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy vs Corporate QR SaaS"
-        comparisonSubtitle="Why 500+ independent venues switched from Bitly & Beaconstac"
+        comparisonTitle="Free QRBuddy and the Supporter Pass"
+        comparisonSubtitle="A clear look at included features and higher limits"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Get Menu Pass ($49/yr) ✨"
+        ctaLabel="Get Supporter Pass ✨"
       />
     </>
   );

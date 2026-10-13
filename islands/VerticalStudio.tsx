@@ -22,8 +22,8 @@ export interface ValueCard {
 
 export interface ComparisonItem {
   feature: string;
-  corporate: string;
-  qrbuddy: string;
+  free: string;
+  supporter: string;
 }
 
 export interface FAQItem {
@@ -45,6 +45,7 @@ export interface VerticalStudioProps {
   comparisonItems: ComparisonItem[];
   faqItems: FAQItem[];
   ctaLabel?: string;
+  lang?: "en" | "es";
   homeUrl?: string;
   homeLabel?: string;
   featuresTitle?: string;
@@ -64,12 +65,14 @@ export default function VerticalStudio({
   comparisonSubtitle,
   comparisonItems,
   faqItems,
-  ctaLabel = "Get Studio Pass ✨",
+  ctaLabel,
+  lang = "en",
   homeUrl = "/",
   homeLabel = "← Back to QRBuddy Home",
   featuresTitle = "Why Professionals Choose QRBuddy",
   faqTitle = "Frequently Asked Questions",
 }: VerticalStudioProps) {
+  const isSpanish = lang === "es";
   const url = useSignal(defaultUrl);
   const style = useSignal<keyof typeof QR_STYLES | "custom">(defaultStyle);
   const customStyle = useSignal<QRStyle | null>(null);
@@ -227,11 +230,15 @@ export default function VerticalStudio({
             <table class="w-full min-w-[480px] text-left border-collapse text-xs sm:text-sm">
               <thead>
                 <tr class="border-b-3 border-black text-gray-500 font-black uppercase text-[11px] tracking-wider">
-                  <th class="py-2.5 px-3">Feature</th>
-                  <th class="py-2.5 px-3 text-red-600">
-                    Typical Corporate SaaS
+                  <th class="py-2.5 px-3">
+                    {isSpanish ? "Función" : "Feature"}
                   </th>
-                  <th class="py-2.5 px-3 text-purple-700">QRBuddy Studio</th>
+                  <th class="py-2.5 px-3 text-gray-600">
+                    {isSpanish ? "Gratis" : "Free"}
+                  </th>
+                  <th class="py-2.5 px-3 text-purple-700">
+                    {isSpanish ? "Pase Supporter" : "Supporter Pass"}
+                  </th>
                 </tr>
               </thead>
               <tbody class="divide-y-2 divide-gray-200 font-medium">
@@ -243,11 +250,11 @@ export default function VerticalStudio({
                     <td class="py-3 px-3 font-bold text-black">
                       {item.feature}
                     </td>
-                    <td class="py-3 px-3 text-red-700 bg-red-50/50">
-                      {item.corporate}
+                    <td class="py-3 px-3 text-gray-700 bg-gray-50/50">
+                      {item.free}
                     </td>
                     <td class="py-3 px-3 text-purple-900 font-bold bg-purple-50/50">
-                      {item.qrbuddy}
+                      {item.supporter}
                     </td>
                   </tr>
                 ))}
@@ -284,33 +291,66 @@ export default function VerticalStudio({
         {/* Bottom CTA Banner */}
         <div class="bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 border-4 border-black rounded-3xl p-6 sm:p-8 shadow-chunky text-center space-y-4">
           <h2 class="text-2xl sm:text-3xl font-black text-white drop-shadow">
-            Ready to upgrade your QR codes?
+            {isSpanish
+              ? "¿Quieres más margen para crear y compartir?"
+              : "Need more room to create and share?"}
           </h2>
           <p class="text-sm font-bold text-white/95 max-w-md mx-auto">
-            Free static codes forever. Get the Studio Pass ($49/yr USD) for
-            dynamic links, audio streaming, and unlimited custom branding.
+            {isSpanish
+              ? "Los códigos estáticos y las funciones gratuitas siguen disponibles. El Pase Supporter cuesta A$49 por 365 días, en un solo pago y sin renovación automática."
+              : "Free features stay available. The Supporter Pass is A$49 for 365 days, paid once with no automatic renewal."}
           </p>
           <div class="pt-2 flex justify-center gap-3">
-            <PricingLink label={ctaLabel} className="text-base px-6 py-3" />
+            <PricingLink
+              label={ctaLabel ?? (isSpanish
+                ? "Obtener Pase Supporter ✨"
+                : "Get Supporter Pass ✨")}
+              className="text-base px-6 py-3"
+            />
           </div>
         </div>
 
         {/* Footer */}
         <footer class="pt-8 pb-4 border-t-4 border-black text-center space-y-4">
           <div class="flex items-center justify-center gap-4 flex-wrap">
-            <PricingLink label="Supporter Pass ✨" />
-            <AboutLink />
-            <KofiButton size="sm" label="Tip Jar ☕" />
+            <PricingLink
+              label={isSpanish ? "Pase Supporter ✨" : "Supporter Pass ✨"}
+            />
+            <AboutLink label={isSpanish ? "Acerca de" : "About"} />
+            <KofiButton
+              size="sm"
+              label={isSpanish ? "Propina ☕" : "Tip Jar ☕"}
+            />
           </div>
           <p class="text-xs text-gray-600 font-medium">
-            Made by Pablo • Melbourne • Anti-scale, privacy-first software with
-            personality.
+            {isSpanish
+              ? "Hecho por Pablo • Melbourne • QR útiles con personalidad."
+              : "Made by Pablo • Melbourne • Useful QRs with personality."}
           </p>
+          <nav
+            class="flex justify-center gap-4 text-xs font-bold"
+            aria-label={isSpanish
+              ? "Información del sitio"
+              : "Site information"}
+          >
+            <a
+              href={isSpanish ? "/privacy?lang=es" : "/privacy"}
+              class="underline underline-offset-2 hover:text-qr-pop"
+            >
+              {isSpanish ? "Privacidad" : "Privacy"}
+            </a>
+            <a
+              href={isSpanish ? "/terms?lang=es" : "/terms"}
+              class="underline underline-offset-2 hover:text-qr-pop"
+            >
+              {isSpanish ? "Condiciones" : "Terms"}
+            </a>
+          </nav>
         </footer>
       </main>
 
       {/* Modals */}
-      <PricingModal />
+      <PricingModal lang={lang} />
       <AboutModal />
       <KofiModal kofiUsername="madebypablo" />
     </div>

@@ -129,18 +129,18 @@ export default function QrPrintGuideIsland(
         <header class="text-center space-y-4">
           <div class="inline-block bg-[#E5F9FF] border-2 border-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_#000]">
             {isSpanish
-              ? "📐 Guía de Impresión & Anti-Extorsión 2026"
-              : "📐 QR Print Spec & Anti-Hostage Field Manual"}
+              ? "📐 Guía de Impresión QR 2026"
+              : "📐 QR Print Guide & Field Manual"}
           </div>
           <h1 class="text-3xl sm:text-5xl font-black text-black tracking-tight leading-tight">
             {isSpanish
-              ? "¿Por Qué Dejan de Funcionar los Códigos QR y Cómo Imprimirlos sin Fallas?"
-              : "Why Free QR Codes Stop Working (And How to Print Flawless Codes That Never 404)"}
+              ? "Cómo Imprimir Códigos QR y Elegir Enlaces que Sigan Funcionando"
+              : "How to Print QR Codes and Keep Their Links Working"}
           </h1>
           <p class="text-base sm:text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed">
             {isSpanish
-              ? "La regla matemática 10:1 para calcular el tamaño exacto, la verdad sobre la estafa de las suscripciones de $300/año y las 5 reglas de oro para vinil, papel y menús."
-              : "The 10:1 optical scan formula, the truth behind $300/year redirect hostage scams, and the 5 golden rules for printing on vinyl, beer mats, and restaurant menus."}
+              ? "Usa la calculadora de tamaño y revisa el destino, los límites y la caducidad antes de imprimir en vinil, papel o menús."
+              : "Use the size calculator, then check the destination, limits, and expiry before printing on vinyl, paper, or menus."}
           </p>
         </header>
 
@@ -279,8 +279,8 @@ export default function QrPrintGuideIsland(
               </div>
               <div class="text-[11px] text-gray-600 font-medium">
                 {isSpanish
-                  ? "Regla ISO 10:1 (Distancia ÷ 10)"
-                  : "ISO 10:1 Ratio (Distance ÷ 10)"}
+                  ? "Regla práctica 10:1 (distancia ÷ 10)"
+                  : "Practical 10:1 guide (distance ÷ 10)"}
               </div>
             </div>
 
@@ -321,44 +321,26 @@ export default function QrPrintGuideIsland(
           </div>
         </section>
 
-        {/* SECTION 2: THE ANTI-HOSTAGE TEARDOWN */}
+        {/* SECTION 2: STATIC CODES AND HOSTED REDIRECTS */}
         <section class="bg-[#FFF4E8] border-4 border-black rounded-3xl p-6 sm:p-8 shadow-[8px_8px_0_#000] space-y-6">
           <div class="space-y-2">
             <div class="inline-block bg-red-100 text-red-800 border-2 border-black px-3 py-0.5 rounded-full text-xs font-black uppercase">
               {isSpanish
-                ? "⚠️ La Trampa de las Suscripciones"
-                : "⚠️ The $300/yr Redirect Hostage Scam"}
+                ? "⚠️ Códigos estáticos y redirecciones alojadas"
+                : "⚠️ Static Codes and Hosted Redirects"}
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-black tracking-tight">
               {isSpanish
-                ? "¿Por Qué Dejan de Funcionar los Códigos QR 'Gratis'?"
-                : "Why Did Your Printed QR Code Suddenly Stop Working?"}
+                ? "¿Qué Puede Hacer que un QR Impreso Deje de Funcionar?"
+                : "What Can Make a Printed QR Stop Working?"}
             </h2>
           </div>
 
           <div class="prose max-w-none text-sm sm:text-base text-gray-800 leading-relaxed space-y-4">
             <p>
               {isSpanish
-                ? (
-                  <>
-                    Si alguna vez imprimiste 5,000 menús o calcomanías con un
-                    generador "gratuito" de Google y dos semanas después tus
-                    clientes vieron una pantalla de{" "}
-                    <strong>"Error 404: Suscripción Expirada"</strong>, fuiste
-                    víctima de la clásica trampa del{" "}
-                    <em>proxy secuestrador</em>.
-                  </>
-                )
-                : (
-                  <>
-                    If you’ve ever printed 5,000 restaurant menus or product
-                    stickers from a "free" top-ranking QR site, only to find
-                    them redirecting to a{" "}
-                    <strong>"Subscription Expired: Pay $15/Month"</strong>{" "}
-                    screen 14 days later, you’ve been hit by the{" "}
-                    <em>redirect hostage racket</em>.
-                  </>
-                )}
+                ? "Un QR estático contiene el destino directamente, así que no depende de una redirección de QRBuddy. Aun así, el sitio de destino puede cambiar o dejar de estar disponible. Un QR editable sí depende del servicio de redirección que lo mantiene."
+                : "A static QR contains its destination directly, so it does not depend on a QRBuddy redirect. The destination site can still change or go offline. An editable QR depends on the redirect service that hosts it."}
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
@@ -367,30 +349,30 @@ export default function QrPrintGuideIsland(
                   <span>❌</span>
                   <span>
                     {isSpanish
-                      ? "El Esquema Corporativo"
-                      : "Corporate Venture Apps"}
+                      ? "Revisa el servicio de redirección"
+                      : "Check the Redirect Service"}
                   </span>
                 </div>
                 <ul class="text-xs text-gray-700 space-y-1.5 list-disc list-inside">
                   <li>
                     {isSpanish
-                      ? "Codifican la URL de sus propios servidores intermedios."
-                      : "Encode their own intermediary redirect server into the QR."}
+                      ? "El QR contiene una URL del proveedor que redirige al destino."
+                      : "The QR contains a provider URL that redirects to your destination."}
                   </li>
                   <li>
                     {isSpanish
-                      ? "Te dan 14 días de prueba y luego apagan tu código impreso."
-                      : "Give a 14-day 'free trial' then shut off the destination."}
+                      ? "El proveedor controla si esa redirección sigue activa."
+                      : "The provider controls whether that redirect stays active."}
                   </li>
                   <li>
                     {isSpanish
-                      ? "Cobran $300–$450/año para mantener tus menús vivos."
-                      : "Demand $300–$450/yr just to prevent a 404 on printed paper."}
+                      ? "Revisa los límites, la caducidad y el precio de renovación."
+                      : "Check usage limits, expiry, and renewal pricing."}
                   </li>
                   <li>
                     {isSpanish
-                      ? "Rastrean las IPs y datos personales de tus clientes."
-                      : "Track and harvest your customers' IP addresses and cookies."}
+                      ? "Lee qué datos de visitas recopila el servicio."
+                      : "Read what visit data the service collects."}
                   </li>
                 </ul>
               </div>
@@ -399,31 +381,29 @@ export default function QrPrintGuideIsland(
                 <div class="font-black text-green-900 flex items-center gap-1.5 text-sm">
                   <span>✅</span>
                   <span>
-                    {isSpanish
-                      ? "El Modelo Soberano QRBuddy"
-                      : "QRBuddy Sovereign Standard"}
+                    {isSpanish ? "Opciones de QRBuddy" : "QRBuddy Options"}
                   </span>
                 </div>
                 <ul class="text-xs text-gray-700 space-y-1.5 list-disc list-inside">
                   <li>
                     {isSpanish
-                      ? "Códigos Estáticos 100% directos en tu navegador (gratis para siempre)."
-                      : "Static QR codes run 100% client-side direct to your URL (free forever)."}
+                      ? "Los QR estáticos se generan en tu navegador y codifican el destino; generarlos no requiere un Pase Supporter."
+                      : "Static QRs are generated in your browser and encode the destination; making them does not require a Supporter Pass."}
                   </li>
                   <li>
                     {isSpanish
-                      ? "Cero servidores intermediarios para códigos estándar: jamás pueden expirar."
-                      : "Zero middleman servers for standard QRs: physically impossible to expire."}
+                      ? "La imagen del QR estático no caduca, pero el sitio enlazado puede cambiar o dejar de funcionar."
+                      : "The static QR image does not expire, but its linked site can change or stop working."}
                   </li>
                   <li>
                     {isSpanish
-                      ? "Códigos Dinámicos con Pase de $49/año: si cancelas, se congelan en su destino final sin jamás romperse en 404."
-                      : "Dynamic Studio Pass ($49/yr flat): if you cancel, codes freeze at last URL instead of 404 extortion."}
+                      ? "Los QR editables están disponibles gratis dentro de límites de uso, escaneos y caducidad."
+                      : "Editable QRs are available free within usage, scan, and expiry limits."}
                   </li>
                   <li>
                     {isSpanish
-                      ? "Privacidad absoluta: cero cookies, cero venta de datos."
-                      : "Absolute privacy: zero tracking cookies, zero surveillance."}
+                      ? "El Pase Supporter de A$49 dura 365 días y amplía algunos límites; no se renueva automáticamente."
+                      : "The A$49 Supporter Pass lasts 365 days and raises selected limits; it does not renew automatically."}
                   </li>
                 </ul>
               </div>
@@ -486,14 +466,14 @@ export default function QrPrintGuideIsland(
                 </span>
                 <span>
                   {isSpanish
-                    ? "Exporta en Vector (SVG / PDF)"
-                    : "Always Print from Vector (SVG / PDF)"}
+                    ? "Exporta en SVG para imprimir"
+                    : "Export SVG for Print"}
                 </span>
               </div>
               <p class="text-xs text-gray-700 leading-relaxed">
                 {isSpanish
-                  ? "Un archivo PNG a 72 DPI se pixela al imprimir en gran formato. Descarga siempre en formato SVG para que la imprenta escale a 1200+ DPI con bordes nítidos."
-                  : "A 72 DPI PNG file gets blurry when enlarged by printers. Always export vector SVG from QRBuddy so the printer gets crisp, mathematically sharp paths."}
+                  ? "El PNG es una imagen rasterizada y puede verse borroso si se amplía mucho. El SVG se escala sin perder nitidez; QRBuddy permite descargar ambos formatos."
+                  : "PNG is a raster image and can look blurry when enlarged a lot. SVG scales cleanly; QRBuddy lets you download both formats."}
               </p>
             </div>
 
@@ -504,14 +484,14 @@ export default function QrPrintGuideIsland(
                 </span>
                 <span>
                   {isSpanish
-                    ? "Nivel de Corrección de Error Adecuado"
-                    : "Error Correction Level (M vs H)"}
+                    ? "Corrección de errores del QRBuddy"
+                    : "QRBuddy's Error Correction"}
                 </span>
               </div>
               <p class="text-xs text-gray-700 leading-relaxed">
                 {isSpanish
-                  ? "Usa Nivel M (15%) para URLs limpias, o Nivel H (30%) si vas a colocar tu logotipo en el centro para que el código soporte ser tapado parcialmente."
-                  : "Use Level M (15%) for normal clean links, and Level H (30%) when inserting a custom center logo so the code remains readable even with visual obstruction."}
+                  ? "QRBuddy usa nivel Q por defecto y H con un logotipo. La corrección ayuda, pero no garantiza que un QR con poco contraste o muy cubierto se pueda leer; prueba la impresión."
+                  : "QRBuddy uses level Q by default and H with a logo. Error correction helps, but cannot guarantee that a low-contrast or heavily covered QR will scan; test the print."}
               </p>
             </div>
           </div>
@@ -539,13 +519,13 @@ export default function QrPrintGuideIsland(
         <section class="bg-[#FFE5EC] border-4 border-black rounded-3xl p-8 shadow-[8px_8px_0_#000] text-center space-y-4">
           <h3 class="text-2xl sm:text-3xl font-black text-black">
             {isSpanish
-              ? "¿Listo para Generar Códigos QR Soberanos?"
-              : "Ready to Generate Sovereign, Permanent QR Codes?"}
+              ? "¿Listo para Preparar un Código QR para Imprimir?"
+              : "Ready to Make a QR Code for Print?"}
           </h3>
           <p class="text-sm sm:text-base text-gray-800 max-w-xl mx-auto">
             {isSpanish
-              ? "Crea códigos estáticos gratis para siempre o activa códigos dinámicos editables con el Pase Anual sin trampas ni suscripciones abusivas."
-              : "Generate 100% free static vector codes that never expire, or create dynamic editable links with our flat Studio Pass."}
+              ? "Genera un QR estático que contiene directamente el destino o un QR editable, disponible gratis dentro de sus límites. El Pase Supporter cuesta A$49 por 365 días y amplía algunos límites, sin renovación automática."
+              : "Make a static QR that contains its destination directly, or an editable QR available free within its limits. The A$49 Supporter Pass lasts 365 days and raises selected limits, with no automatic renewal."}
           </p>
           <div class="pt-2">
             <a

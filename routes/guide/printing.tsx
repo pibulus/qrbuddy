@@ -4,9 +4,9 @@ import QrPrintGuideIsland from "../../islands/QrPrintGuideIsland.tsx";
 export default function GuidePrintingPage() {
   const canonicalUrl = "https://qrbuddy.app/guide/printing";
   const title =
-    "QR Code Print Size Calculator & Anti-Hostage Guide (2026) | QRBuddy";
+    "QR Code Print Size Calculator & Printing Guide (2026) | QRBuddy";
   const description =
-    "Calculate exact optical QR print dimensions for restaurant menus, stickers, and banners. Discover the 10:1 distance formula and why free QR generators break printed codes.";
+    "Estimate QR print sizes for menus, stickers, and banners. Check contrast, export format, destination availability, and real-device scanning before printing.";
 
   return (
     <>
@@ -46,7 +46,7 @@ export default function GuidePrintingPage() {
             "@graph": [
               {
                 "@type": "TechArticle",
-                headline: "QR Code Print Size Calculator & Anti-Hostage Guide",
+                headline: "QR Code Print Size Calculator & Printing Guide",
                 url: canonicalUrl,
                 image: "https://qrbuddy.app/og-card.png",
                 description: description,
@@ -72,7 +72,7 @@ export default function GuidePrintingPage() {
                     acceptedAnswer: {
                       "@type": "Answer",
                       text:
-                        "The optical scanning standard is Size = Distance ÷ 10. For a table menu scanned from 0.5 meters, the minimum size is 5 cm (2 inches). For dense URLs or dim lighting, Distance ÷ 8 (6.25 cm) is recommended.",
+                        "Distance divided by 10 is a starting estimate, not a guaranteed minimum. At 0.5 meters it suggests 5 cm. Use a larger code for dense content or dim light, then test a printed sample with the intended phones.",
                     },
                   },
                   {
@@ -81,7 +81,7 @@ export default function GuidePrintingPage() {
                     acceptedAnswer: {
                       "@type": "Answer",
                       text:
-                        "Venture-backed QR code generators encode an intermediary redirect server into the code, offer a 14-day trial, and then hold the destination hostage behind a $15–$30/month subscription.",
+                        "A static QR image has no expiry of its own, but its destination can disappear. Editable QRs depend on a redirect service and its limits or expiry. Check the provider's terms before printing.",
                     },
                   },
                   {
@@ -91,7 +91,7 @@ export default function GuidePrintingPage() {
                     acceptedAnswer: {
                       "@type": "Answer",
                       text:
-                        "Always export vector SVG files for physical printing. SVG paths scale infinitely without pixelation, whereas 72 DPI PNG images become blurry and unreadable when enlarged.",
+                        "SVG scales without pixelation and is useful for print layouts. PNG also works when it has enough pixels for the final print size. Test the actual printed output before a large run.",
                     },
                   },
                 ],

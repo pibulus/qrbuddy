@@ -29,8 +29,10 @@ import * as $lockers from "./routes/lockers.tsx";
 import * as $menus from "./routes/menus.tsx";
 import * as $music from "./routes/music.tsx";
 import * as $note_code_ from "./routes/note/[code].tsx";
+import * as $privacy from "./routes/privacy.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
+import * as $terms from "./routes/terms.tsx";
 import * as $weddings from "./routes/weddings.tsx";
 import * as $why from "./routes/why.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
@@ -120,8 +122,10 @@ const manifest = {
     "./routes/menus.tsx": $menus,
     "./routes/music.tsx": $music,
     "./routes/note/[code].tsx": $note_code_,
+    "./routes/privacy.tsx": $privacy,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
+    "./routes/terms.tsx": $terms,
     "./routes/weddings.tsx": $weddings,
     "./routes/why.tsx": $why,
   },

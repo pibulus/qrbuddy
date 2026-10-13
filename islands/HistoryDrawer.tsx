@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import {
   clearHistory,
   getHistory,
@@ -30,6 +30,8 @@ export default function HistoryDrawer(
   const [importInput, setImportInput] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     // Load initial
@@ -41,18 +43,50 @@ export default function HistoryDrawer(
     return () => globalThis.removeEventListener("history-updated", handler);
   }, []);
 
-  // Dialog behaviour: close on Escape and move focus into the drawer on open.
+  // Keep keyboard focus inside the modal drawer, then return it to the opener.
   useEffect(() => {
     if (!isOpen) return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+    const active = document.activeElement;
+    returnFocusRef.current = active instanceof HTMLElement ? active : null;
+    const drawer = drawerRef.current;
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !drawer) return;
+
+      const focusable = drawer.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable.length) {
+        e.preventDefault();
+        drawer.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const focusIsInside = drawer.contains(document.activeElement);
+      if (e.shiftKey && (!focusIsInside || document.activeElement === first)) {
+        e.preventDefault();
+        last.focus();
+      } else if (
+        !e.shiftKey && (!focusIsInside || document.activeElement === last)
+      ) {
+        e.preventDefault();
+        first.focus();
+      }
     };
-    document.addEventListener("keydown", handleEscape);
-    const closeBtn = document.querySelector(
-      "[data-history-drawer] [data-history-close]",
-    ) as HTMLElement | null;
+    document.addEventListener("keydown", handleKeydown);
+    const closeBtn = drawer?.querySelector<HTMLElement>("[data-history-close]");
     closeBtn?.focus();
-    return () => document.removeEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("keydown", handleKeydown);
+      const opener = returnFocusRef.current;
+      returnFocusRef.current = null;
+      if (opener?.isConnected) opener.focus();
+    };
   }, [isOpen]);
 
   const formatDate = (ts: number) => {
@@ -128,6 +162,7 @@ export default function HistoryDrawer(
     <>
       {/* Backdrop */}
       <div
+        aria-hidden={!isOpen}
         class={`fixed inset-0 bg-qr-scrim/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
           isOpen
             ? "opacity-100 pointer-events-auto"
@@ -138,11 +173,15 @@ export default function HistoryDrawer(
 
       {/* Drawer (Left Side) */}
       <div
+        ref={drawerRef}
         data-history-drawer
+        inert={!isOpen}
+        aria-hidden={!isOpen}
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-drawer-title"
-        class={`fixed top-0 left-0 h-full w-84 max-w-[85vw] bg-qr-cream shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col border-r-4 border-black ${
+        tabIndex={-1}
+        class={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-qr-cream shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col border-r-4 border-black ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -163,7 +202,7 @@ export default function HistoryDrawer(
               }}
               aria-label="Toggle device sync"
               title="Four-part device sync"
-              class={`w-10 h-10 flex items-center justify-center border-2 border-black rounded-full font-black text-sm transition-all ${
+              class={`w-11 h-11 flex items-center justify-center border-2 border-black rounded-full font-black text-sm transition-all ${
                 showSync
                   ? "bg-black text-white"
                   : "bg-white hover:bg-yellow-100"
@@ -176,7 +215,7 @@ export default function HistoryDrawer(
               data-history-close
               onClick={onClose}
               aria-label="Close history"
-              class="w-10 h-10 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors font-bold"
+              class="w-11 h-11 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors font-bold"
             >
               ✕
             </button>
@@ -193,7 +232,7 @@ export default function HistoryDrawer(
               <button
                 type="button"
                 onClick={() => setCurrentPhrase(generateSyncPhrase())}
-                class="text-[11px] font-bold text-purple-700 hover:underline"
+                class="min-h-[44px] px-2 inline-flex items-center text-[11px] font-bold text-purple-700 hover:underline"
               >
                 🎲 New phrase
               </button>
@@ -207,7 +246,7 @@ export default function HistoryDrawer(
               type="button"
               onClick={handleCopySyncBackup}
               disabled={isExporting}
-              class="w-full py-2 px-3 bg-purple-600 text-white rounded-xl border-2 border-black font-black text-xs shadow-sm hover:bg-purple-700 active:translate-y-0.5 transition-all"
+              class="w-full min-h-[44px] py-2 px-3 bg-purple-600 text-white rounded-xl border-2 border-black font-black text-xs shadow-sm hover:bg-purple-700 active:translate-y-0.5 transition-all"
             >
               {isExporting ? "Encrypting..." : "📋 Copy Encrypted Backup"}
             </button>
@@ -221,12 +260,12 @@ export default function HistoryDrawer(
                 onInput={(e) =>
                   setImportInput((e.target as HTMLInputElement).value)}
                 placeholder="Paste backup JSON from other phone..."
-                class="w-full px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-gray-300 focus:border-black focus:outline-none"
+                class="w-full min-h-[44px] px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-gray-300 focus:border-black focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={!importInput.trim() || isImporting}
-                class="w-full py-1.5 bg-white text-gray-900 border-2 border-black rounded-lg font-black text-xs hover:bg-black hover:text-white transition-all disabled:opacity-40"
+                class="w-full min-h-[44px] py-1.5 bg-white text-gray-900 border-2 border-black rounded-lg font-black text-xs hover:bg-black hover:text-white transition-all disabled:opacity-40"
               >
                 {isImporting ? "Merging..." : "📥 Merge into this device"}
               </button>
@@ -289,7 +328,7 @@ export default function HistoryDrawer(
                           <a
                             href={item.content}
                             onClick={(e) => e.stopPropagation()}
-                            class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-amber-200 text-black border border-black px-1.5 py-0.5 rounded-md hover:scale-105 transition-transform"
+                            class="shrink-0 min-h-[44px] px-2 inline-flex items-center justify-center text-[10px] font-black uppercase tracking-wide bg-amber-200 text-black border border-black rounded-md hover:scale-105 transition-transform"
                             title="Open it — it's yours: stats, rename, add, re-vibe"
                           >
                             👑 Manage →
@@ -312,7 +351,7 @@ export default function HistoryDrawer(
                       e.stopPropagation();
                       removeFromHistory(item.id);
                     }}
-                    class="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:scale-110"
+                    class="absolute -top-2 -right-2 w-11 h-11 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:scale-110"
                     aria-label="Remove from history"
                     title="Forget this memory"
                   >
@@ -332,7 +371,7 @@ export default function HistoryDrawer(
                 setShowSync(!showSync);
                 haptics.light();
               }}
-              class="text-xs font-bold text-purple-700 hover:underline flex items-center gap-1"
+              class="min-h-[44px] px-2 text-xs font-bold text-purple-700 hover:underline flex items-center gap-1"
             >
               <span>☁️</span>
               <span>Sync Devices</span>
@@ -348,7 +387,7 @@ export default function HistoryDrawer(
                   clearHistory();
                 }
               }}
-              class="py-1.5 px-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              class="min-h-[44px] px-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-all"
             >
               🗑️ Wipe
             </button>

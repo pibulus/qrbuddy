@@ -18,6 +18,8 @@ const COPY = {
     made: "Made by Pablo",
     solutions: "Solutions",
     about: "About",
+    privacy: "Privacy",
+    terms: "Terms",
     tip: "Tip Jar ☕",
     supporter: "Supporter ✨",
     links: [
@@ -32,6 +34,8 @@ const COPY = {
     made: "Hecho por Pablo",
     solutions: "Soluciones",
     about: "Acerca de",
+    privacy: "Privacidad",
+    terms: "Términos",
     tip: "Propina ☕",
     supporter: "Apoya ✨",
     links: [
@@ -76,9 +80,9 @@ export default function FooterDock({ lang = "en" }: { lang?: Lang }) {
 
   return (
     <footer class="w-full mt-auto pt-16 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-5">
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5">
         <nav
-          class="inline-flex items-center p-1 rounded-full border-2 border-black bg-white shadow-chunky"
+          class="inline-flex items-center gap-1 p-1 rounded-full border-2 border-black bg-white shadow-chunky"
           aria-label="Site"
         >
           <button type="button" onClick={() => openAboutModal()} class={ITEM}>
@@ -132,18 +136,29 @@ export default function FooterDock({ lang = "en" }: { lang?: Lang }) {
           </button>
         </nav>
 
-        <p class="sm:order-first text-xs font-bold text-gray-600">
-          © {year} QRBuddy ·{" "}
+        <div class="order-2 sm:order-first flex flex-wrap items-center justify-center gap-x-2 text-xs font-bold text-gray-600">
+          <span>© {year} QRBuddy ·</span>
           <a
             href={MAKER_URL}
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center min-h-[44px] underline decoration-2 decoration-qr-pop/40 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
           >
-            {t.made}
-          </a>{" "}
-          💖
-        </p>
+            {t.made} 💖
+          </a>
+          <a
+            href={lang === "es" ? "/privacy?lang=es" : "/privacy"}
+            class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
+          >
+            {t.privacy}
+          </a>
+          <a
+            href={lang === "es" ? "/terms?lang=es" : "/terms"}
+            class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
+          >
+            {t.terms}
+          </a>
+        </div>
       </div>
     </footer>
   );

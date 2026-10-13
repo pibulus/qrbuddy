@@ -589,7 +589,7 @@ export default function QRReader(
                     class="min-h-[50px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-[3px_3px_0px_0px_#FF69B4] hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2"
                   >
                     <span>🛡️</span>
-                    <span>Visit Safely ↗</span>
+                    <span>Open link ↗</span>
                   </a>
                 )}
                 <button

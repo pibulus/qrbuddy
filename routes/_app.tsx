@@ -1,7 +1,10 @@
 import { type PageProps } from "$fresh/server.ts";
 import { getSupabaseUrl } from "../utils/api.ts";
 
-export default function App({ Component }: PageProps) {
+export default function App({ Component, url }: PageProps) {
+  const isSpanish = /^\/es(?:\/|$)/.test(url.pathname) ||
+    (["/privacy", "/terms"].includes(url.pathname) &&
+      url.searchParams.get("lang") === "es");
   // Injected on every route so islands on /edit, /q, etc. can reach Supabase —
   // not just the home page (see utils/api.ts resolveSupabaseUrl fallback chain).
   const envScript = `
@@ -12,7 +15,7 @@ export default function App({ Component }: PageProps) {
   `;
 
   return (
-    <html lang="en">
+    <html lang={isSpanish ? "es" : "en"}>
       <head>
         <meta charSet="utf-8" />
         <script

@@ -19,73 +19,77 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "📼",
-    title: "Playable Mixtapes on Scan",
+    icon: "🎧",
+    title: "Share a hosted mixtape",
     desc:
-      "Upload up to 10 audio tracks. When fans scan your sticker or vinyl insert, it launches an instant web cassette player that auto-advances tracks.",
+      "Upload up to 10 audio tracks, up to 5 MB each, for a QRBuddy playlist page with browser playback and track controls.",
   },
   {
-    icon: "📦",
-    title: "Instant ZIP Downloads",
+    icon: "🔗",
+    title: "Update an editable QR",
     desc:
-      "Fans can stream the tracks directly in browser or hit 'Download All' to get the entire EP, stems, or art booklet packaged cleanly as a ZIP.",
+      "Change an editable QR's destination after printing. Static QRs keep their original destination. Playlist shares expire after 30 days.",
   },
   {
-    icon: "⚡",
-    title: "Merch & Vinyl Native",
+    icon: "🎨",
+    title: "Design for physical media",
     desc:
-      "Print vector SVGs directly on t-shirts, cassette J-cards, tour posters, and record labels. Looks stunning in neon vapor or retro candy.",
+      "Choose a color style, add a logo, and download a PNG or SVG for stickers, sleeves, and posters.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Streaming Experience",
-    corporate: "Points to generic streaming platforms with third-party ads",
-    qrbuddy: "Dedicated branded mixtape player with onEnded auto-advance",
+    feature: "Static QR codes",
+    free: "Unlimited; destination is encoded in the QR",
+    supporter: "Included",
   },
   {
-    feature: "File Downloads",
-    corporate: "Links only, zero audio packaging",
-    qrbuddy: "Direct browser streaming + full ZIP release packaging",
+    feature: "Editable QRs",
+    free: "Available within free-tier limits",
+    supporter: "Higher creation limits",
   },
   {
-    feature: "Fan Privacy",
-    corporate: "Profiles listeners with advertising pixels and trackers",
-    qrbuddy: "100% private, zero telemetry, direct connection with fans",
+    feature: "Single-file uploads",
+    free: "Up to 50 MB; share expires after 30 days",
+    supporter: "Up to 500 MB; share expires after 30 days",
   },
   {
-    feature: "Cost for Artists",
-    corporate: "$20 – $40/month per link campaign",
-    qrbuddy: "$49/year Studio Pass with unlimited dynamic drops",
+    feature: "Multi-track playlist share",
+    free: "Up to 10 audio tracks, up to 5 MB each",
+    supporter: "Same limit; 500 MB applies to a single file",
+  },
+  {
+    feature: "Supporter Pass",
+    free: "No purchase required",
+    supporter: "A$49 once for 365 days; no automatic renewal",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "How does the mixtape player work?",
-    a: "Upload your MP3, WAV, or FLAC audio files (up to 10 tracks). QRBuddy creates a dedicated player page with track selector pills, play/pause controls, auto-play progression, and a one-tap ZIP download.",
+    q: "How does a QRBuddy playlist work?",
+    a: "Upload up to 10 audio files, up to 5 MB each. QRBuddy hosts a page where listeners can play tracks in the browser and move between them. The share expires after 30 days.",
   },
   {
-    q: "Can I put this on band merch and tour stickers?",
-    a: "Yes! Download the QR code as a high-res SVG or PNG. Print it on stickers, cassette sleeves, vinyl record jackets, or gig posters.",
+    q: "Can I change the destination after printing?",
+    a: "Yes, with an editable QR and its private edit link. A static QR cannot be changed because the destination is encoded in the image.",
   },
   {
-    q: "Can I update the audio or tracklist after printing?",
-    a: "With a dynamic QR code on QRBuddy, you can update your release URL or point to bonus material even after stickers have been distributed.",
+    q: "Can I use the QR on stickers and sleeves?",
+    a: "Download the QR as a PNG or SVG for your design. Scan a test print at its intended size before producing a larger run. You can also link directly to a release page on another service.",
   },
   {
-    q: "Is there any audio compression?",
-    a: "Your audio files are delivered directly to listeners in their original format with zero transcoding degradation.",
+    q: "What does the Supporter Pass include?",
+    a: "It costs A$49 once and lasts 365 days, with no automatic renewal. It raises selected limits and allows a single file up to 500 MB. Multi-track playlists remain limited to 10 audio files of up to 5 MB each.",
   },
 ];
 
 export default function MusicPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/music";
-  const title =
-    "Music QR Codes — Playable Mixtapes & Merch Audio Drops | QRBuddy";
+  const title = "Music QR Codes and Hosted Mixtape Playlists | QRBuddy";
   const description =
-    "Create playable QR code mixtapes for physical merch, vinyl inserts, cassette J-cards, and band stickers. Multi-track auto-advance audio player with instant ZIP downloads.";
+    "Create a QRBuddy mixtape playlist with up to 10 audio files, or link a QR code to a release page. Download PNG or SVG designs for physical releases.";
 
   return (
     <>
@@ -96,31 +100,32 @@ export default function MusicPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="es"
         altHref="https://qrbuddy.app/es/musica"
-        ogTitle="Music QR Codes — Playable Mixtapes & Merch Audio Drops | QRBuddy"
-        ogImageAlt="QRBuddy - Playable QR code mixtapes and audio drops for music"
+        ogTitle="Music QR Codes for Releases and Merch — QRBuddy"
+        ogImageAlt="QR code for a music release"
         themeColor="#E600E6"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy Music Mixtapes"
+        jsonLdName="QRBuddy Music QR Codes"
         applicationCategory="MultimediaApplication"
         price="49"
-        offerDescription="Annual Studio Pass with multi-track audio mixtape players and dynamic packaging"
+        priceCurrency="AUD"
+        offerDescription="Supporter Pass: A$49 for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         badge="Musicians & Labels"
-        title="Physical Mixtapes & Merch Audio Drops."
-        tagline="Turn physical stickers, cassette tapes, and vinyl inserts into playable multi-track audio experiences on scan."
-        subtagline="Upload up to 10 tracks. Fans scan to stream with auto-advancing audio or download the whole package as a ZIP."
+        title="Put Your Mixtape One Scan Away."
+        tagline="Upload up to 10 audio tracks for a hosted QRBuddy playlist, or link to your release page."
+        subtagline="Tracks play in the browser and can advance automatically. File shares expire after 30 days."
         defaultStyle="vapor"
         defaultUrl="https://bandcamp.com/album"
         defaultCaption="LISTEN NOW"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy vs Standard Music Links"
-        comparisonSubtitle="Why indie labels and Bandcamp artists use QRBuddy for physical drops"
+        comparisonTitle="Free QRBuddy and the Supporter Pass"
+        comparisonSubtitle="A clear look at included features and higher limits"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Get Artist Pass ($49/yr) 🎵"
+        ctaLabel="Get Supporter Pass 🎵"
       />
     </>
   );

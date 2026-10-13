@@ -19,73 +19,72 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "💣",
-    title: "Self-Destruct on Scan",
+    icon: "📤",
+    title: "Share a file by QR",
     desc:
-      "Set your locker to '1-Scan Burn'. Once the recipient downloads the file, the data is permanently erased from the server with zero traces.",
+      "Upload a file and share its page as a link or QR code. Recipients open it in their browser.",
   },
   {
-    icon: "🔐",
-    title: "End-to-End Encryption",
+    icon: "⏳",
+    title: "Temporary file shares",
     desc:
-      "Files are protected in-flight and stored with cryptographic keys. Optional 4-word passphrases keep sensitive drops private.",
+      "QRBuddy file shares expire after 30 days. Reusable locker content is cleared after 30 days without activity.",
   },
   {
-    icon: "📁",
-    title: "Large File Transfers",
+    icon: "📦",
+    title: "Larger single-file uploads",
     desc:
-      "Share confidential design deliverables, firmware, private photos, or contract bundles up to 500MB with zero corporate logging.",
+      "Free uploads support files up to 50 MB. The Supporter Pass raises the limit for a single file to 500 MB.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Data Retention",
-    corporate: "Kept forever on corporate servers and scanned by AI",
-    qrbuddy: "Optional download limit; every link expires after 30 days",
+    feature: "Static QR codes",
+    free: "Unlimited; destination is encoded in the QR",
+    supporter: "Included",
   },
   {
-    feature: "Account Requirement",
-    corporate: "Forces account registration, email collection & 2FA spam",
-    qrbuddy: "Zero accounts — scan the QR, grab the file, walk away",
+    feature: "File uploads",
+    free: "Up to 50 MB",
+    supporter: "Single file up to 500 MB",
   },
   {
-    feature: "Surveillance & Logs",
-    corporate: "Tracks IP, device fingerprints, and location telemetry",
-    qrbuddy: "Zero tracking, zero analytics on lockers, zero logging",
+    feature: "File-share expiry",
+    free: "30 days",
+    supporter: "30 days",
   },
   {
-    feature: "File Security",
-    corporate: "Open links indexed by scrapers",
-    qrbuddy: "Encrypted lockers with finite download allowances",
+    feature: "Supporter Pass",
+    free: "No purchase required",
+    supporter: "A$49 once for 365 days; no automatic renewal",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "How does a self-destructing file drop work?",
-    a: "Drag and drop your files into QRBuddy and toggle 'Destructible'. A QR code is generated. Once the code is scanned and the file is downloaded, it is permanently wiped from the storage bucket.",
+    q: "What file sizes are supported?",
+    a: "Free uploads support files up to 50 MB. The Supporter Pass raises the limit to 500 MB for a single file. It does not add multi-file archive uploads.",
   },
   {
-    q: "Who can access my files?",
-    a: "Only someone with the exact QR code (or destination token). QRBuddy does not index or catalog file lockers.",
+    q: "How long are files kept?",
+    a: "File-share links expire after 30 days. Reusable locker content is cleared after 30 days without activity. Cleanup runs daily, so deletion may happen after that point; see the privacy notice for details.",
   },
   {
-    q: "What is the maximum file size?",
-    a: "Free users can transfer files up to 50MB. Supporter Pass holders can drop single or multi-file archives up to 500MB.",
+    q: "Do I need an account to receive a file?",
+    a: "Recipients can open a share link in a browser. Anyone who has the link may be able to access the shared content, so share it only with the people you intend.",
   },
   {
-    q: "Can I password-protect my locker?",
-    a: "Yes, you can enable passkey encryption so scanners must enter the 4-word sync key or password to unlock the download.",
+    q: "What does the Supporter Pass include?",
+    a: "It costs A$49 once and lasts 365 days, with no automatic renewal. It raises selected creation and upload limits. Abuse controls still apply.",
   },
 ];
 
 export default function LockersPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/lockers";
-  const title =
-    "Ephemeral File Drops & Destructible QR Codes — Zero Tracking | QRBuddy";
+  const title = "Temporary File Sharing by QR Code | QRBuddy";
   const description =
-    "Share private files up to 500MB with optional download limits. Every link expires after 30 days. Zero logs, encrypted in-flight, no account required.";
+    "Share a file through a QRBuddy link or QR code. Free uploads support up to 50 MB; the Supporter Pass raises the single-file limit to 500 MB. Shares expire after 30 days.";
 
   return (
     <>
@@ -96,30 +95,31 @@ export default function LockersPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="es"
         altHref="https://qrbuddy.app/es/archivos"
-        ogTitle="Ephemeral File Drops & Destructible QR Codes — QRBuddy"
-        ogImageAlt="QRBuddy - Ephemeral file drops and self-destructing QR codes"
-        themeColor="#00FF41"
+        ogTitle="Temporary File Sharing by QR Code — QRBuddy"
+        ogImageAlt="QRBuddy temporary file sharing by QR code"
+        themeColor="#00A84F"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy Ephemeral Lockers"
-        applicationCategory="SecurityApplication"
+        jsonLdName="QRBuddy File Sharing"
+        applicationCategory="UtilitiesApplication"
         price="49"
-        offerDescription="Annual Studio Pass with 500MB encrypted ephemeral lockers"
+        priceCurrency="AUD"
+        offerDescription="Supporter Pass: A$49 for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
-        badge="Security & Privacy"
-        title="Ephemeral File Drops & Destructible QRs."
-        tagline="Share sensitive documents, firmware, and media with optional download limits and automatic 30-day expiry."
-        subtagline="Every link expires after 30 days. Transfers are encrypted in-flight, up to 500MB. Zero accounts, zero tracking."
+        badge="File Sharing"
+        title="A QR Code for a Temporary File Share."
+        tagline="Upload a file, then share its link or QR code with the people who need it."
+        subtagline="Shares expire after 30 days. Deletion runs on a daily cleanup schedule and may take longer; see the privacy notice."
         defaultStyle="terminal"
-        defaultCaption="SECRET DROP"
+        defaultCaption="OPEN FILE"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy vs Cloud Storage Giants"
-        comparisonSubtitle="Why privacy advocates and journalists use QRBuddy for dead drops"
+        comparisonTitle="Free QRBuddy and the Supporter Pass"
+        comparisonSubtitle="A clear look at file-size limits and retention"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Get Privacy Pass ($49/yr) 🛡️"
+        ctaLabel="Get Supporter Pass 🛡️"
       />
     </>
   );

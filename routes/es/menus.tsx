@@ -20,75 +20,71 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📜",
-    title: "Nunca Vuelvas a Reimprimir",
+    title: "Un QR para el menú",
     desc:
-      "Actualiza tu menú en PDF, especiales del día o carta de bebidas al instante. Tus códigos impresos en las mesas y stickers siguen funcionando siempre.",
+      "Crea un QR estático para un PDF o sitio web, o usa un QR editable si quieres poder cambiar el destino.",
   },
   {
-    icon: "🛡️",
-    title: "Cero Enlaces Rotos",
+    icon: "🔗",
+    title: "Elige cómo funciona el enlace",
     desc:
-      "Las apps corporativas cobran hasta $300 USD al año y rompen tus menús si dejas de pagar. Con QRBuddy, tus códigos nunca dan error 404.",
+      "Los QR estáticos codifican el destino directamente. Los editables usan el servicio de redirección de QRBuddy y pueden tener límites de escaneos o vencimiento.",
   },
   {
     icon: "🎨",
-    title: "Estética y Colores de tu Local",
+    title: "Combínalo con tu local",
     desc:
-      "Combina con la decoración de tu cafetería o restaurante: tonos matcha, atardecer cálido o minimalista. Sin cuadros negros aburridos.",
+      "Elige colores, añade un logo y descarga un PNG o SVG para mesas y ventanas.",
   },
 ];
 
-// ⚠️ "$49 USD" below is asserted, not verified — see the currency note in
-// components/VerticalLandingHead.tsx (SUPPORTER_CURRENCY is undeclared
-// outside supabase/functions/_shared/square.ts:35 and may default to AUD).
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Precio Anual",
-    corporate: "$300 a $450 USD/año (Cobros mensuales ocultos)",
-    qrbuddy: "$49 USD / $499 MXN al año (Pase Studio) o 100% Gratis",
+    feature: "Códigos QR estáticos",
+    free: "Ilimitados; el destino queda codificado en el QR",
+    supporter: "Incluidos",
   },
   {
-    feature: "Si Cancelas",
-    corporate: "Rompen tus códigos impresos con error 404 al instante",
-    qrbuddy: "Tus códigos se congelan a su destino y siguen funcionando",
+    feature: "Códigos QR editables",
+    free: "Disponibles dentro de los límites gratuitos",
+    supporter: "Límites de creación más amplios",
   },
   {
-    feature: "Privacidad de tus Clientes",
-    corporate: "Rastrean IPs, dispositivos y venden datos de consumo",
-    qrbuddy: "Cero rastreo, cero cookies, 100% privado y ético",
+    feature: "Subida de archivos",
+    free: "Hasta 50 MB por archivo; los enlaces vencen a los 30 días",
+    supporter: "Hasta 500 MB por archivo; los enlaces vencen a los 30 días",
   },
   {
-    feature: "Diseño y Logo",
-    corporate: "Cuadros negros con marcas de agua feas",
-    qrbuddy: "Gradientes personalizados, logo al centro y marcos claros",
+    feature: "Pase Supporter",
+    free: "No hace falta comprarlo",
+    supporter: "A$49 por 365 días; un pago, sin renovación automática",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "¿Puedo cambiar el PDF de mi menú sin tener que reimprimir los códigos?",
-    a: "¡Sí! Con un código QR dinámico en QRBuddy, puedes cambiar el archivo PDF, tu página web o tu Instagram cuando quieras desde tu enlace privado de edición.",
+    q: "¿Puedo cambiar el enlace del menú sin reimprimir el QR?",
+    a: "Sí, si creas un QR editable y conservas su enlace privado de edición. Un QR estático no se puede cambiar porque el destino está codificado en la imagen.",
   },
   {
-    q: "¿Qué pasa si no renuevo el pase el próximo año?",
-    a: "A diferencia de servicios como Bitly o Beaconstac que rompen tus códigos impresos para obligarte a pagar, QRBuddy jamás rompe tus enlaces. Simplemente quedan fijos en su último destino.",
+    q: "¿Qué pasa cuando vence el Pase Supporter?",
+    a: "El pase termina después de 365 días y no se renueva automáticamente. Las funciones gratuitas siguen disponibles. Los QR editables tienen sus propios límites de escaneos y vencimiento, y dependen del servicio de redirección de QRBuddy.",
   },
   {
-    q: "¿Funciona con PDFs de Google Drive, Canva o páginas web?",
-    a: "Totalmente. Puedes apuntar tu código QR directamente a un PDF en Drive, Dropbox, tu propia web o sistemas de pedidos como Clip o Square.",
+    q: "¿Puedo enlazar un PDF, sitio web o página de pedidos?",
+    a: "Sí. Puedes enlazar directamente a un archivo PDF, tu sitio web o la página de pedidos que uses.",
   },
   {
-    q: "¿Hay límite de escaneos en las mesas?",
-    a: "Sin límite de escaneos. Ya sea que lo escaneen 10 o 50,000 comensales, funciona sin interrupciones.",
+    q: "¿Puedo limitar los escaneos o fijar una fecha de vencimiento?",
+    a: "Los QR editables permiten configurar un límite de escaneos o una fecha de vencimiento. El servicio de redirección también aplica controles de uso; QRBuddy no promete escaneos ilimitados.",
   },
 ];
 
 export default function MenusEspanolPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/es/menus";
-  const title =
-    "Menús QR para Restaurantes y Cafeterías — Dinámicos y Sin Extorsión | QRBuddy";
+  const title = "Códigos QR para Menús de Restaurantes | QRBuddy";
   const description =
-    "Códigos QR dinámicos para menús de restaurantes, cafeterías y bares en México y Latinoamérica. Actualiza tu PDF en cualquier momento sin reimprimir. Sin suscripciones forzadas.";
+    "Crea códigos QR con estilo para menús, pedidos y sitios web. Elige un QR estático o un enlace editable. Hay funciones gratuitas; el Pase Supporter amplía algunos límites.";
 
   return (
     <>
@@ -99,34 +95,37 @@ export default function MenusEspanolPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="en"
         altHref="https://qrbuddy.app/for/menus"
-        ogImageAlt="QRBuddy - Menús QR dinámicos para restaurantes"
+        ogTitle="Códigos QR para Menús — QRBuddy"
+        ogImageAlt="Códigos QR con estilo para menús de restaurantes"
         themeColor="#2E7D32"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy Menús para Restaurantes"
+        jsonLdName="QRBuddy para Menús de Restaurantes"
         applicationCategory="BusinessApplication"
         price="49"
-        offerDescription="Pase Studio Anual con códigos QR dinámicos ilimitados"
+        priceCurrency="AUD"
+        offerDescription="Pase Supporter: A$49 por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
-        badge="Restaurantes y Cafeterías"
-        title="El Menú QR Que Nunca Falla."
-        tagline="Códigos QR dinámicos para restaurantes y cafeterías sin pagar $300 USD al año a empresas abusivas."
-        subtagline="Actualiza tu carta o enlace en PDF cada vez que cambies un platillo. Tus stickers en mesa siguen funcionando."
+        lang="es"
+        badge="Restaurantes y cafeterías"
+        title="Códigos QR para menús fáciles de actualizar."
+        tagline="Crea códigos con estilo o enlaces editables para menús y pedidos en línea."
+        subtagline="Guarda el enlace privado de edición del QR editable para cambiar el destino sin reimprimir."
         defaultStyle="matcha"
         defaultUrl="https://tu-restaurante.com/menu.pdf"
         defaultCaption="MENÚ"
         homeUrl="/es"
         homeLabel="← Volver al inicio"
-        featuresTitle="¿Por Qué Elegir QRBuddy para tu Restaurante?"
-        faqTitle="Preguntas Frecuentes sobre Menús QR"
+        featuresTitle="Códigos QR para tu restaurante"
+        faqTitle="Preguntas frecuentes sobre menús QR"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy vs Servicios Corporativos de QR"
-        comparisonSubtitle="Por qué cientos de negocios independientes cambiaron a QRBuddy"
+        comparisonTitle="QRBuddy gratis y el Pase Supporter"
+        comparisonSubtitle="Funciones incluidas y límites más amplios"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Obtener Pase de Menús ✨"
+        ctaLabel="Obtener Pase Supporter ✨"
       />
     </>
   );

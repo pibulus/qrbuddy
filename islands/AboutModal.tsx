@@ -69,13 +69,43 @@ export function AboutModal() {
   const isIntro = aboutModalMode.value === "intro";
 
   // First visit: open once as the intro poster, after the page has had its
-  // bloom-in moment. Never again after that.
+  // bloom-in moment, but don't interrupt someone who's already using the page.
   useEffect(() => {
     try {
       if (localStorage.getItem(INTRO_SEEN_KEY)) return;
-      localStorage.setItem(INTRO_SEEN_KEY, "1");
-      const t = setTimeout(() => openAboutModal("intro"), 1200);
-      return () => clearTimeout(t);
+      let hasInteracted = false;
+      const markInteracted = () => {
+        hasInteracted = true;
+      };
+      document.addEventListener("pointerdown", markInteracted, { once: true });
+      document.addEventListener("keydown", markInteracted, { once: true });
+      const t = setTimeout(() => {
+        const activeDialog = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            '[role="dialog"][aria-modal="true"]',
+          ),
+        ).some((dialog) =>
+          !dialog.hasAttribute("inert") &&
+          dialog.getAttribute("aria-hidden") !== "true"
+        );
+        const activeElement = document.activeElement;
+        const focusIsEngaged = activeElement &&
+          activeElement !== document.body &&
+          activeElement !== document.documentElement;
+        if (hasInteracted || activeDialog || focusIsEngaged) return;
+
+        try {
+          localStorage.setItem(INTRO_SEEN_KEY, "1");
+        } catch {
+          // Showing the intro should not depend on persisting the seen flag.
+        }
+        openAboutModal("intro");
+      }, 1200);
+      return () => {
+        clearTimeout(t);
+        document.removeEventListener("pointerdown", markInteracted);
+        document.removeEventListener("keydown", markInteracted);
+      };
     } catch {
       // localStorage unavailable — skip the intro, never block the app.
     }

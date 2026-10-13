@@ -114,6 +114,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
           defer
           src="https://cloud.umami.is/script.js"
           data-website-id="280ec8ac-9eb5-4d06-89fe-369960e40b5d"
+          data-exclude-search="true"
+          data-exclude-hash="true"
         >
         </script>
 
@@ -130,7 +132,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
             "offers": {
               "@type": "Offer",
               "price": "0",
-              "priceCurrency": "USD",
+              "priceCurrency": "AUD",
             },
             "creator": {
               "@type": "Person",
@@ -148,7 +150,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
               "Copy to clipboard",
               "Download PNG",
               "Mobile-first responsive design",
-              "Privacy-first (minimal analytics, respects Do Not Track)",
+              "Coarse share statistics described in the privacy notice",
             ],
             "operatingSystem": "Any (Web-based)",
             "browserRequirements":

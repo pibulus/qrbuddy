@@ -108,9 +108,9 @@ export default function QRCanvas(
   // download the result — the "SCAN ME" table-tent look, baked into the file.
   const downloadFramedPng = async (caption: string) => {
     const qr = qrCodeRef.current;
-    if (!qr) return;
+    if (!qr) throw new Error("QR code is not ready");
     const raw = await qr.getRawData("png");
-    if (!raw) return;
+    if (!raw) throw new Error("QR image could not be created");
     const img = await createImageBitmap(raw as Blob);
 
     const pad = 64;
@@ -120,7 +120,8 @@ export default function QRCanvas(
     const canvas = document.createElement("canvas");
     canvas.width = img.width + pad * 2;
     canvas.height = img.height + pad * 2 + capH;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas is unavailable");
 
     // Cream card with a fat black border, soft-brutal style.
     const r = 56;
@@ -156,12 +157,28 @@ export default function QRCanvas(
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, "image/png")
     );
-    if (!blob) return;
+    if (!blob) throw new Error("Framed PNG could not be created");
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    const objectUrl = URL.createObjectURL(blob);
+    a.href = objectUrl;
     a.download = `qrbuddy-${style.value}-framed-${Date.now()}.png`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  };
+
+  const downloadPng = async () => {
+    const qr = qrCodeRef.current;
+    if (!qr) throw new Error("QR code is not ready");
+
+    if (frameConfig?.value?.enabled) {
+      await downloadFramedPng(frameConfig.value.caption);
+      return;
+    }
+
+    await qr.download({
+      name: `qrbuddy-${style.value}-${Date.now()}`,
+      extension: "png",
+    });
   };
 
   const handleDownloadClick = async () => {
@@ -171,43 +188,36 @@ export default function QRCanvas(
     setIsClicking(true);
     setTimeout(() => setIsClicking(false), 150);
 
-    // Trigger download — framed composite when a frame is on
-    if (frameConfig?.value?.enabled) {
-      await downloadFramedPng(frameConfig.value.caption);
-    } else {
-      qrCodeRef.current.download({
-        name: `qrbuddy-${style.value}-${Date.now()}`,
-        extension: "png",
-      });
+    // Start the download — framed composite when a frame is on.
+    try {
+      await downloadPng();
+    } catch (err) {
+      console.error("Failed to start PNG download:", err);
+      haptics.error();
+      addToast("Couldn't start PNG download ❌");
+      return;
     }
 
     // Save to history (Time Machine)
     if (url.value) {
-      addToHistory({
-        type: "url", // Generic type for static QRs
-        content: url.value,
-        metadata: {
-          title: url.value.length > 30
-            ? url.value.substring(0, 30) + "..."
-            : url.value,
-        },
-      });
-    }
-
-    // Copy URL to clipboard
-    if (url.value) {
       try {
-        await navigator.clipboard.writeText(url.value);
-        // The QR content might be a URL or plain text — don't call it a URL.
-        addToast("Copied to clipboard! 📋");
+        addToHistory({
+          type: "url", // Generic type for static QRs
+          content: url.value,
+          metadata: {
+            title: url.value.length > 30
+              ? url.value.substring(0, 30) + "..."
+              : url.value,
+          },
+        });
       } catch (err) {
-        console.error("Failed to copy URL:", err);
-        addToast("Failed to copy URL ❌");
+        console.error("Failed to save QR to history:", err);
       }
     }
 
-    // Show success flash + close the loop physically
+    // The browser accepted the download request; the user chooses where it lands.
     haptics.success();
+    addToast("PNG download started! 🖼️");
     setShowSuccessFlash(true);
     setTimeout(() => setShowSuccessFlash(false), 600);
   };
@@ -445,9 +455,11 @@ export default function QRCanvas(
 
   useEffect(() => {
     if (triggerDownload.value && qrCodeRef.current) {
-      qrCodeRef.current.download({
-        name: `qrbuddy-${style.value}-${Date.now()}`,
-        extension: "png",
+      void downloadPng().then(() => {
+        addToast("PNG download started! 🖼️");
+      }).catch((err) => {
+        console.error("Failed to start PNG download:", err);
+        addToast("Couldn't start PNG download ❌");
       });
       triggerDownload.value = false;
     }
@@ -466,12 +478,12 @@ export default function QRCanvas(
           name: `qrbuddy-${style.value}-${Date.now()}`,
           extension: "svg",
         });
-      } else if (frameConfig?.value?.enabled) {
-        void downloadFramedPng(frameConfig.value.caption);
       } else {
-        qr.download({
-          name: `qrbuddy-${style.value}-${Date.now()}`,
-          extension: "png",
+        void downloadPng().then(() => {
+          addToast("PNG download started! 🖼️");
+        }).catch((err) => {
+          console.error("Failed to start PNG download:", err);
+          addToast("Couldn't start PNG download ❌");
         });
       }
     };

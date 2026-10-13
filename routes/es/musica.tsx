@@ -19,74 +19,77 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "📼",
-    title: "Reproductor de Casete al Escanear",
+    icon: "🎧",
+    title: "Comparte una playlist alojada",
     desc:
-      "Sube hasta 10 pistas de audio. Cuando tus fans escaneen tu calcomanía o inserto de vinilo, se abre un reproductor web interactivo con avance automático.",
+      "Sube hasta 10 pistas de audio de hasta 5 MB cada una para una página de QRBuddy con reproducción y controles en el navegador.",
   },
   {
-    icon: "📦",
-    title: "Descarga de EP Completo en ZIP",
+    icon: "🔗",
+    title: "Cambia un QR editable",
     desc:
-      "Tus oyentes pueden escuchar las canciones en streaming directo o presionar 'Descargar Todo' para obtener el EP, stems o arte gráfico en un archivo ZIP limpio.",
+      "Actualiza el destino de un QR editable después de imprimirlo. Los QR estáticos conservan su destino. Las playlists vencen a los 30 días.",
   },
   {
-    icon: "⚡",
-    title: "Nativo para Merch y Vinilo",
+    icon: "🎨",
+    title: "Diseño para medios físicos",
     desc:
-      "Descarga archivos SVG vectoriales listos para serigrafía en camisetas, portadas de casetes J-card, pósters de gira o galletas de vinilo.",
+      "Elige colores, añade un logo y descarga un PNG o SVG para calcomanías, fundas y carteles.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Experiencia de Audio",
-    corporate:
-      "Redirige a plataformas con anuncios de terceros y suscripciones",
-    qrbuddy: "Reproductor web dedicado con avance automático de canciones",
+    feature: "Códigos QR estáticos",
+    free: "Ilimitados; el destino queda codificado en el QR",
+    supporter: "Incluidos",
   },
   {
-    feature: "Descargas Directas",
-    corporate: "Solo enlaces simples, cero empaquetado de archivos",
-    qrbuddy: "Streaming directo en navegador + descarga de álbum en ZIP",
+    feature: "Códigos QR editables",
+    free: "Disponibles dentro de los límites gratuitos",
+    supporter: "Límites de creación más amplios",
   },
   {
-    feature: "Privacidad de tus Fans",
-    corporate: "Rastrea a tus oyentes con píxeles publicitarios y telemetría",
-    qrbuddy: "100% privado, cero rastreadores, conexión directa con tus fans",
+    feature: "Subida de un archivo",
+    free: "Hasta 50 MB; vence a los 30 días",
+    supporter: "Hasta 500 MB; vence a los 30 días",
   },
   {
-    feature: "Costo para Artistas",
-    corporate: "$20 – $40 USD/mes por campaña de enlaces",
-    qrbuddy: "$49 USD/año con lanzamientos dinámicos ilimitados",
+    feature: "Playlist de varias pistas",
+    free: "Hasta 10 pistas de hasta 5 MB cada una",
+    supporter: "Mismo límite; 500 MB aplica a un solo archivo",
+  },
+  {
+    feature: "Pase Supporter",
+    free: "No hace falta comprarlo",
+    supporter: "A$49 por 365 días; un pago, sin renovación automática",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "¿Cómo funciona el reproductor de mixtape en el QR?",
-    a: "Subes tus archivos de audio en formato MP3, WAV o FLAC (hasta 10 canciones). QRBuddy genera una página de reproductor personalizada con controles táctiles, avance automático y botón de descarga ZIP.",
+    q: "¿Cómo funciona una playlist de QRBuddy?",
+    a: "Sube hasta 10 archivos de audio de hasta 5 MB cada uno. QRBuddy aloja una página donde se pueden escuchar y seleccionar las pistas en el navegador. El enlace vence a los 30 días.",
   },
   {
-    q: "¿Puedo poner el código QR en mercancía y stickers de gira?",
-    a: "¡Totalmente! Descarga el código QR en formato SVG vectorial o PNG de alta resolución. Queda perfecto impreso en calcomanías, ropa, estuches de casetes y pósters.",
+    q: "¿Puedo cambiar el destino después de imprimir el QR?",
+    a: "Sí, con un QR editable y su enlace privado de edición. Un QR estático no se puede cambiar porque el destino está codificado en la imagen.",
   },
   {
-    q: "¿Puedo cambiar las canciones después de imprimir los stickers?",
-    a: "Sí. Con un código QR dinámico en QRBuddy, puedes actualizar el enlace de destino o agregar material adicional incluso después de haber repartido las calcomanías.",
+    q: "¿Puedo usar el QR en calcomanías y fundas?",
+    a: "Descárgalo como PNG o SVG para tu diseño. Prueba el código impreso en su tamaño final. También puedes enlazar directamente a una página de lanzamiento en otro servicio.",
   },
   {
-    q: "¿Se comprime o pierde calidad el audio?",
-    a: "Tus archivos de audio se entregan directamente en su formato original sin recodificación destructiva ni pérdida de calidad.",
+    q: "¿Qué incluye el Pase Supporter?",
+    a: "Cuesta A$49 por un pago y dura 365 días, sin renovación automática. Amplía algunos límites y permite subir un archivo individual de hasta 500 MB. Las playlists siguen limitadas a 10 audios de hasta 5 MB cada uno.",
   },
 ];
 
 export default function MusicaEspanolPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/es/musica";
-  const title =
-    "Códigos QR para Música — Mixtapes Físicos y Lanzamientos | QRBuddy";
+  const title = "Códigos QR para Música y Playlists Alojadas | QRBuddy";
   const description =
-    "Crea mixtapes en códigos QR para casetes, vinilos, calcomanías y mercancía oficial de bandas en México, España y Latinoamérica. Reproductor web multitrack con descarga ZIP.";
+    "Crea una playlist de QRBuddy con hasta 10 pistas de audio o enlaza un QR a tu página de lanzamiento. Descarga diseños PNG o SVG para tus lanzamientos físicos.";
 
   return (
     <>
@@ -97,34 +100,36 @@ export default function MusicaEspanolPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="en"
         altHref="https://qrbuddy.app/for/music"
-        ogImageAlt="QRBuddy - Códigos QR interactivos para música y mixtapes"
+        ogImageAlt="Código QR para una playlist alojada de QRBuddy"
         themeColor="#E600E6"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy para Música y Mixtapes"
+        jsonLdName="QRBuddy para Música"
         applicationCategory="MultimediaApplication"
         price="49"
-        offerDescription="Pase de Estudio Anual con reproductores multitrack interactivos y descargas ZIP"
+        priceCurrency="AUD"
+        offerDescription="Pase Supporter: A$49 por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
-        badge="Músicos y Sellos Discográficos"
-        title="Mixtapes Físicos y Lanzamientos en QR."
-        tagline="Convierte calcomanías, casetes y vinilos en reproductores de audio interactivos multitrack al escanear."
-        subtagline="Sube hasta 10 canciones. Tus fans escanean para escuchar con avance automático o descargar el EP completo en un archivo ZIP."
+        lang="es"
+        badge="Músicos y sellos"
+        title="Lleva tu playlist a cada escaneo."
+        tagline="Sube hasta 10 pistas para una playlist alojada por QRBuddy o enlaza a tu página de lanzamiento."
+        subtagline="Las pistas se reproducen en el navegador y pueden avanzar automáticamente. Los enlaces para compartir archivos vencen a los 30 días."
         defaultStyle="vapor"
         defaultUrl="https://bandcamp.com/album"
         defaultCaption="ESCUCHAR"
         homeUrl="/es"
         homeLabel="← Volver al inicio"
-        featuresTitle="¿Por Qué los Músicos Eligen QRBuddy?"
-        faqTitle="Preguntas Frecuentes sobre QR para Música"
+        featuresTitle="QR para compartir música"
+        faqTitle="Preguntas frecuentes"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy vs Enlaces de Música Tradicionales"
-        comparisonSubtitle="Por qué sellos independientes y artistas eligen QRBuddy para lanzamientos físicos"
+        comparisonTitle="QRBuddy gratis y el Pase Supporter"
+        comparisonSubtitle="Funciones incluidas y límites de archivo"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Obtener Pase de Artista ($49/año) 🎵"
+        ctaLabel="Obtener Pase Supporter 🎵"
       />
     </>
   );
