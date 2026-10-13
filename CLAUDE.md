@@ -464,3 +464,12 @@ audio files → a mixtape. Both live at `/f/{code}` (`FileSlideshow`).
   notifications
 - **Mobile Dev Config**: Added --host 0.0.0.0 flag for mobile testing on local
   network
+
+## Delegating substantial work
+
+Pablo's preference (13 October 2026): before substantial new implementation,
+provide paste-ready prompts and commands for his own external `agy` or `claude`
+sessions. Specify the repo/branch, file ownership, acceptance checks, and the
+commit/diff/evidence to return. Keep this session focused on coordination,
+review, and release judgment. Do not present in-session sub-agents as a separate
+quota pool. Avoid overlapping edits between sessions.

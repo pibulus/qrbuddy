@@ -127,3 +127,23 @@ scripts. They are review evidence, not fixtures to keep online.
 - Real Square purchase → pass issuance → restore, cancellation/refund handling
   and support email delivery remain required before enabling sales. Checkout
   stays disabled; this feature pass performed no charge.
+
+## Release verification
+
+Application changes committed and pushed as `7238849`. GitHub Actions
+`38367164702` passed. Production Deno Git build `cpg7ksqj325n` served the
+matching source hash
+`c8bf4445ee159a9ee429780cc612dd97c745afa04b406e73306fd42c8adf2cc6`. The build
+reports no Git SHA; the source digest is the verified identity.
+
+The final **production** Chromium pass repeated owner rename/keyboard
+navigation, actual ZIP and sticker downloads, injected stats failure/Retry,
+playlist playback through the final track, 320/375/1440-width overflow checks,
+media history and unsupported-batch rejection. No browser page errors in that
+pass. Screenshots: `live-owner-photo.png` and `live-owner-track.png` in the
+artifact directory above.
+
+All three audit shares/QRs, media objects and associated scan logs were removed;
+storage prefixes were checked empty. Audit credentials were removed from the
+fixture manifests. Request counters expire normally. The checkout gate remains
+closed. The only branch is `main`; deployment used Git, not direct upload.
