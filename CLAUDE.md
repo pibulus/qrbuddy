@@ -269,17 +269,26 @@ adding surfaces:
   warm milk (`bg-amber-50`), never clinical white.
 - **Info dialogs** (About/Kofi/Pricing): always `islands/modal/CardModal.tsx` —
   centered cream card at all sizes, `max-w-[460px]`, `border-4` + `rounded-3xl`,
-  mascot badge hanging centered at the top, circular `✕` top-right, same
-  backdrop/z as sheets. No gradient header bars. Titles are
-  `font-black text-2xl tracking-tight`; the one accent is `qr-pop` pink; primary
-  action is one full-width `rounded-full` pill (`CardPrimaryButton`),
-  secondaries are white bordered pills. Copy is a manifesto, not a spec sheet.
-- **Footer dock**: `islands/FooterDock.tsx` — no divider line, metadata left,
-  utility pills right, Solutions pops upward from the dock. Home routes pin it
-  to the viewport bottom edge (`min-h-[100dvh]` shell, `mt-auto` footer).
-- **Top rail**: language toggle and style picker share one lightweight pill
-  recipe
-  (`min-h-[36px] rounded-full border-2 text-xs font-black shadow-chunky`).
+  mascot badge hanging half over the top edge (tilted sticker), circular `✕`
+  top-right with a 44px hit area, same backdrop/z as sheets. The dialog is a
+  non-scrolling frame and the card scrolls inside it, so the badge never clips
+  and the `✕` stays put. No gradient header bars. Titles are
+  `font-black text-2xl tracking-tight`, two lines max, second line `qr-pop`
+  pink; primary action is one full-width `rounded-full` pill
+  (`CardPrimaryButton`), secondaries are white bordered pills. Copy is a
+  manifesto, not a spec sheet. The first-visit intro asks for nothing (no
+  Supporter/tip buttons); every face ends in the "Made by Pablo" signature
+  (`MAKER_URL`).
+- **Footer dock**: `islands/FooterDock.tsx` — one white capsule (About ·
+  Solutions · pink bordered Supporter pill inset), never a wrap of loose pills.
+  Item padding/type are `clamp()`ed so it stays one line down to 320px in both
+  languages. Maker line ("Made by Pablo" → `MAKER_URL`) sits under it on phones,
+  left of it on desktop. Solutions pops upward and light-dismisses. Tip Jar is
+  parked (commented out). Home routes pin it to the viewport bottom edge
+  (`min-h-[100dvh]` shell, `mt-auto` footer).
+- **Top rail**: just the style picker pill
+  (`min-h-[36px] rounded-full border-2 text-xs font-black shadow-chunky`). No
+  language toggle — `/es` is reached via hreflang/search, not a switch.
 - **Voice**: QRBuddy is the entity. Never "we"/"us" in UI copy.
 - **Palette presets** (`utils/qr-styles.ts` + `STYLE_DISPLAY`): one family —
   pastel-punk, two-tone, the same 135° diagonal (`DIAGONAL` rad). Scannability

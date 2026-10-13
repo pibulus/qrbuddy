@@ -2,6 +2,16 @@
 // Centralizes magic numbers for maintainability and consistency
 
 // ============================================================================
+// Maker Credit
+// ============================================================================
+
+/**
+ * Where every "Made by Pablo" credit points (footer + About card).
+ * GitHub profile for now; swap here when the personal site lands.
+ */
+export const MAKER_URL = "https://github.com/pibulus";
+
+// ============================================================================
 // File Upload Constants
 // ============================================================================
 

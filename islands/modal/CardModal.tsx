@@ -2,11 +2,15 @@
  * CardModal — QRBuddy's one info-dialog skin on top of useModalShell.
  *
  * The floating cream card: chunky black border, squircle radius, a mascot
- * badge hanging centered at the top, circular × tucked top-right. Every
- * info dialog (About, Supporter, Tip Jar) renders through this so they read
- * as one app, not three. Interactive sheets (CreateModal, style gallery,
- * GradientCreator) keep their bottom-sheet skeleton — this is for reading,
- * not working.
+ * badge hanging over the top edge like a slapped-on sticker, circular ×
+ * tucked top-right. Every info dialog (About, Supporter, Tip Jar) renders
+ * through this so they read as one app, not three. Interactive sheets
+ * (CreateModal, style gallery, GradientCreator) keep their bottom-sheet
+ * skeleton — this is for reading, not working.
+ *
+ * Structure: the dialog is a non-scrolling frame; the card inside it
+ * scrolls. That lets the badge hang outside the card without being clipped
+ * and keeps the × pinned while long content (FAQ, Ko-fi) scrolls.
  *
  * Lifecycle contract is the shell's: the parent owns `open` and flips it
  * false inside `onClose`.
@@ -52,33 +56,55 @@ export function CardModal({
     >
       <div
         ref={shell.dialogRef}
-        class={`relative w-full ${maxWidthClass} max-h-[92dvh] overflow-y-auto scrollbar-none bg-qr-cream border-4 border-black rounded-3xl shadow-chunky-hover ${padClass} animate-slide-up sm:animate-pop-in`}
+        class={`relative w-full ${maxWidthClass} ${
+          badge ? "mt-8" : ""
+        } outline-none animate-slide-up sm:animate-pop-in`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledby}
         tabindex={-1}
       >
+        {/* 44px hit area, 36px visual — pinned to the frame, not the scroll */}
         <button
           type="button"
           onClick={shell.requestClose}
-          class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform hover:scale-110 hover:rotate-90 active:scale-90"
+          class="group absolute z-10 top-2.5 right-2.5 w-11 h-11 rounded-full flex items-center justify-center"
           aria-label="Close"
         >
-          ✕
+          <span
+            class="w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
+            aria-hidden="true"
+          >
+            ✕
+          </span>
         </button>
 
         {badge && (
-          <div class="flex justify-center mb-4">
-            <div
-              class={`w-16 h-16 rounded-2xl border-3 border-black bg-gradient-to-br ${badgeClass} shadow-chunky animate-float flex items-center justify-center text-3xl select-none`}
-              aria-hidden="true"
-            >
-              {badge}
+          // Half on, half off the top edge. Tilt and float live on separate
+          // elements so the float keyframes don't wipe the tilt. The strip is
+          // click-through so it never shadows the ×; the tile itself isn't,
+          // so tapping the mascot can't fall through to the backdrop.
+          <div
+            class="absolute z-10 inset-x-0 top-0 -translate-y-1/2 flex justify-center select-none pointer-events-none"
+            aria-hidden="true"
+          >
+            <div class="-rotate-6 pointer-events-auto">
+              <div
+                class={`w-16 h-16 rounded-2xl border-3 border-black bg-gradient-to-br ${badgeClass} shadow-chunky animate-float flex items-center justify-center text-3xl`}
+              >
+                {badge}
+              </div>
             </div>
           </div>
         )}
 
-        {children}
+        <div
+          class={`max-h-[calc(92dvh-2rem)] overflow-y-auto scrollbar-none bg-qr-cream border-4 border-black rounded-3xl shadow-chunky-hover ${padClass} ${
+            badge ? "pt-12 sm:pt-14" : ""
+          }`}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

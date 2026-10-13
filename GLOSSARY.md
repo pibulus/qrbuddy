@@ -32,7 +32,8 @@
 - `AboutModal` - Manifesto card (first-visit intro poster + about)
 - `KofiModal` - Ko-fi support modal
 - `PricingModal` - Single-tier Supporter unlock card
-- `FooterDock` - Bottom dock: metadata + About/Solutions/Tip Jar/Supporter pills
+- `FooterDock` - Bottom dock: one capsule (About/Solutions/Supporter) + "Made by
+  Pablo" maker line; Tip Jar parked
 
 **Dynamic + Locker Features:**
 

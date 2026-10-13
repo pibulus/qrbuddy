@@ -10,7 +10,6 @@ import ToastManager from "../islands/ToastManager.tsx";
 import Analytics from "../islands/Analytics.tsx";
 
 import { AboutModal } from "../islands/AboutModal.tsx";
-import { KofiModal } from "../islands/KofiModal.tsx";
 import { PricingModal } from "../islands/PricingModal.tsx";
 import FooterDock from "../islands/FooterDock.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
@@ -190,17 +189,6 @@ export default function Home({ data }: PageProps<HomeProps>) {
           />
         </div>
 
-        {/* Language switcher pill */}
-        <div class="absolute top-7 left-4 sm:top-12 sm:left-6 z-50 animate-fade-in">
-          <a
-            href="/es"
-            class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-white border-2 border-black rounded-full text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
-            title="Cambiar a Español"
-          >
-            🇲🇽 Español
-          </a>
-        </div>
-
         <main
           id="main-content"
           class="w-full max-w-md space-y-6 sm:space-y-8 sm:my-auto"
@@ -255,7 +243,10 @@ export default function Home({ data }: PageProps<HomeProps>) {
       {/* Modals */}
       <PricingModal />
       <AboutModal />
-      <KofiModal kofiUsername="madebypablo" />
+      {
+        /* Tip Jar parked: re-mount <KofiModal kofiUsername="madebypablo" />
+          alongside its FooterDock pill to bring it back. */
+      }
     </>
   );
 }
