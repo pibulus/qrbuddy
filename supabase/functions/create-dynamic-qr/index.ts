@@ -42,20 +42,18 @@ serve(async (req) => {
   }
 
   try {
-    // Supporter pass lifts the throttle (signature-verified, stateless).
+    // Supporter pass raises the request ceiling (signature-verified, stateless).
     const hasPass = await requestHasValidPass(req);
 
-    // Rate limiting: 10 QR creations per hour per IP
+    // Free: 10/hour; supporter pass: 100/hour per IP.
     const clientIP = getClientIP(req);
-    if (!hasPass) {
-      const rateLimitResult = checkRateLimit(clientIP, {
-        windowMs: 60 * 60 * 1000, // 1 hour
-        maxRequests: 10,
-      });
-
-      if (rateLimitResult.isLimited) {
-        return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
-      }
+    const rateLimitResult = await checkRateLimit(clientIP, {
+      scope: "create-dynamic-qr",
+      windowMs: 60 * 60 * 1000, // 1 hour
+      maxRequests: hasPass ? 100 : 10,
+    });
+    if (rateLimitResult.isLimited) {
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
     }
 
     const supabase = createClient(

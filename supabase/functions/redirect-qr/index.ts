@@ -10,6 +10,10 @@ import {
   createRateLimitResponse,
   getClientIP,
 } from "../_shared/rate-limit.ts";
+import {
+  createNeutralFiniteQrPreviewResponse,
+  isLinkPreviewBot,
+} from "../_shared/dynamic-qr-preview.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 
 function escapeHtml(str: string): string {
@@ -76,7 +80,8 @@ serve(async (req) => {
   try {
     // Rate limiting: 100 redirects per minute per IP
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
+    const rateLimitResult = await checkRateLimit(clientIP, {
+      scope: "redirect-qr",
       windowMs: 60 * 1000, // 1 minute
       maxRequests: 100,
     });
@@ -130,15 +135,15 @@ serve(async (req) => {
     }
 
     const userAgent = req.headers.get("user-agent") || "";
-    const isPreviewBot =
-      /(?:bot|crawler|spider|facebookexternalhit|preview|linkpreview)/i.test(
-        userAgent,
-      );
+    const isPreviewBot = isLinkPreviewBot(userAgent);
+
+    if (isPreviewBot && qr.max_scans !== null) {
+      return createNeutralFiniteQrPreviewResponse(getCorsHeaders(req));
+    }
 
     let scanIndex: number;
     if (isPreviewBot) {
-      // Link unfurlers should see the upcoming route without spending a use.
-      // Use the fetched count as the next scan's 0-based sequence index.
+      // Unlimited QRs have no protected scan allowance to consume.
       const currentCount = Number(qr.scan_count) || 0;
       if (qr.max_scans !== null && currentCount >= qr.max_scans) {
         return redirectWithCors("/boom", req);

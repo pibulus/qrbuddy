@@ -19,7 +19,8 @@ serve(async (req) => {
   try {
     // Rate limiting: 30 requests per hour per IP
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
+    const rateLimitResult = await checkRateLimit(clientIP, {
+      scope: "get-dynamic-qr",
       windowMs: 60 * 60 * 1000,
       maxRequests: 30,
     });

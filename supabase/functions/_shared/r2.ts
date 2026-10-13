@@ -67,6 +67,7 @@ async function presign(
   key: string,
   expiresSec: number,
   extraParams: Record<string, string> = {},
+  headers: Record<string, string> = {},
 ): Promise<string> {
   const config = getR2Config();
   const url = objectUrl(config, key);
@@ -75,16 +76,26 @@ async function presign(
     url.searchParams.set(param, value);
   }
   const signed = await r2Client(config).sign(
-    new Request(url, { method }),
-    { aws: { signQuery: true } },
+    new Request(url, { method, headers }),
+    { aws: { signQuery: true, allHeaders: true } },
   );
   return signed.url;
 }
 
-/** Presigned browser→R2 upload URL. Size is enforced at finalize (HEAD check),
- * not here — Content-Length can't be trusted into a presigned PUT anyway. */
-export function presignPut(key: string, expiresSec = 3600): Promise<string> {
-  return presign("PUT", key, expiresSec);
+/** Bind the grant to the exact byte length. The browser supplies Content-Length
+ * from the File body; a different length fails R2 signature verification before
+ * an oversized object is accepted. Finalization still checks the stored size. */
+export function presignPut(
+  key: string,
+  size: number,
+  expiresSec = 3600,
+): Promise<string> {
+  if (!Number.isSafeInteger(size) || size <= 0 || size > 500 * 1024 * 1024) {
+    throw new Error("Upload size must be between 1 byte and 500MB");
+  }
+  return presign("PUT", key, expiresSec, {}, {
+    "Content-Length": String(size),
+  });
 }
 
 /** Presigned download URL with a friendly filename + content type. Keep the

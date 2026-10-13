@@ -142,7 +142,8 @@ serve(async (req) => {
     }
 
     // 60 edits/hour per token: plenty for a human, a wall for a script.
-    const rl = checkRateLimit(`update-file:${ownerToken}`, {
+    const rl = await checkRateLimit(ownerToken, {
+      scope: "update-file-owner-token",
       windowMs: 60 * 60 * 1000,
       maxRequests: 60,
     });

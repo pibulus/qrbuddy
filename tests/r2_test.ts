@@ -4,6 +4,7 @@
 import {
   assert,
   assertEquals,
+  assertThrows,
 } from "https://deno.land/std@0.216.0/assert/mod.ts";
 import { isR2Path } from "../supabase/functions/_shared/r2.ts";
 import {
@@ -59,7 +60,7 @@ Deno.test("presign mints SigV4 query URLs against the R2 endpoint", async () => 
     "../supabase/functions/_shared/r2.ts"
   );
 
-  const putUrl = new URL(await presignPut("r2/main/file.mp4", 3600));
+  const putUrl = new URL(await presignPut("r2/main/file.mp4", 1024, 3600));
   assertEquals(
     putUrl.hostname,
     "testaccount.r2.cloudflarestorage.com",
@@ -67,6 +68,18 @@ Deno.test("presign mints SigV4 query URLs against the R2 endpoint", async () => 
   assertEquals(putUrl.pathname, "/qrbuddy-files/r2/main/file.mp4");
   assertEquals(putUrl.searchParams.get("X-Amz-Expires"), "3600");
   assert(putUrl.searchParams.get("X-Amz-Signature"));
+  assertEquals(
+    putUrl.searchParams.get("X-Amz-SignedHeaders"),
+    "content-length;host",
+  );
+  const otherSize = new URL(await presignPut("r2/main/file.mp4", 1025, 3600));
+  assert(
+    putUrl.searchParams.get("X-Amz-Signature") !==
+      otherSize.searchParams.get("X-Amz-Signature"),
+  );
+  for (const size of [0, -1, 1.5, Number.NaN, SUPPORTER_MAX_FILE_SIZE + 1]) {
+    assertThrows(() => presignPut("r2/main/file.mp4", size));
+  }
 
   const getUrl = new URL(
     await presignGet("r2/main/file.mp4", 60, "holiday video.mp4", "video/mp4"),

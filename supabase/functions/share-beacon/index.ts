@@ -44,7 +44,8 @@ serve(async (req) => {
   try {
     // Beacons are cheap but a loop could spam them — 120/min per IP is
     // generous for humans and a wall for scripts.
-    const rl = checkRateLimit(`beacon:${getClientIP(req)}`, {
+    const rl = await checkRateLimit(getClientIP(req), {
+      scope: "share-beacon",
       windowMs: 60 * 1000,
       maxRequests: 120,
     });

@@ -10,6 +10,7 @@
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
+  checkBucketPinRateLimit,
   checkRateLimit,
   createRateLimitResponse,
   getClientIP,
@@ -78,7 +79,8 @@ serve(async (req) => {
 
   try {
     // The pass IS the product gate — no pass, no big files.
-    if (!(await requestHasValidPass(req))) {
+    const hasPass = await requestHasValidPass(req);
+    if (!hasPass) {
       return jsonResponse(
         req,
         { error: "Supporter pass required for big files" },
@@ -89,12 +91,23 @@ serve(async (req) => {
     // Supporters skip the free-tier throttles, but presign minting still gets
     // a generous ceiling so a leaked pass can't script-mint forever.
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
+    const rateLimitResult = await checkRateLimit(clientIP, {
+      scope: "create-upload-url-ip",
       windowMs: 60 * 60 * 1000, // 1 hour
       maxRequests: 100,
     });
     if (rateLimitResult.isLimited) {
       return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+    }
+
+    const pass = req.headers.get("x-qrb-pass") ?? "";
+    const passRateLimitResult = await checkRateLimit(pass, {
+      scope: "create-upload-url-pass",
+      windowMs: 24 * 60 * 60 * 1000,
+      maxRequests: 100,
+    });
+    if (passRateLimitResult.isLimited) {
+      return createRateLimitResponse(passRateLimitResult, getCorsHeaders(req));
     }
 
     let body: Record<string, unknown>;
@@ -161,15 +174,20 @@ serve(async (req) => {
         if (!(await verifyOwnerToken(bucket.owner_token, ownerToken))) {
           return jsonResponse(req, { error: "Invalid owner token" }, 403);
         }
-      } else if (
-        bucket.is_password_protected &&
-        !(await verifyPassword(bucket.password_hash, password))
-      ) {
-        return jsonResponse(
-          req,
-          { error: "Locker PIN required or invalid" },
-          401,
-        );
+      } else if (bucket.is_password_protected) {
+        if (password) {
+          const pinLimit = await checkBucketPinRateLimit(bucketCode, clientIP);
+          if (pinLimit) {
+            return createRateLimitResponse(pinLimit, getCorsHeaders(req));
+          }
+        }
+        if (!(await verifyPassword(bucket.password_hash, password))) {
+          return jsonResponse(
+            req,
+            { error: "Locker PIN required or invalid" },
+            401,
+          );
+        }
       }
 
       storageKey = `r2/bucket-${bucketCode}-${crypto.randomUUID()}`;
@@ -233,7 +251,7 @@ serve(async (req) => {
 
     // 1h to start the PUT — signature validity is checked at request start,
     // so slow uplinks finishing after expiry are fine.
-    const uploadUrl = await presignPut(storageKey, 3600);
+    const uploadUrl = await presignPut(storageKey, size as number, 3600);
 
     return jsonResponse(req, {
       success: true,

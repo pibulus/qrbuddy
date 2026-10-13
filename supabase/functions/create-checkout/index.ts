@@ -23,12 +23,32 @@ serve(async (req) => {
   const jsonHeaders = {
     ...getCorsHeaders(req),
     "Content-Type": "application/json",
+    "Cache-Control": "no-store",
   };
+
+  if (req.method === "GET") {
+    return new Response(
+      JSON.stringify({ available: isSquareCheckoutConfigured() }),
+      {
+        headers: jsonHeaders,
+      },
+    );
+  }
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Use POST to start checkout" }),
+      {
+        status: 405,
+        headers: { ...jsonHeaders, Allow: "GET, POST, OPTIONS" },
+      },
+    );
+  }
 
   try {
     // Payments are deliberate acts — 5 checkout starts per 15 minutes is
     // plenty for a human and boring for a bot.
-    const rateLimitResult = checkRateLimit(getClientIP(req), {
+    const rateLimitResult = await checkRateLimit(getClientIP(req), {
+      scope: "create-checkout",
       windowMs: 15 * 60 * 1000,
       maxRequests: 5,
     });

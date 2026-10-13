@@ -9,6 +9,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   extractSquarePayment,
   getSquareConfig,
+  paymentMatchesCheckout,
   verifySquareWebhookSignature,
 } from "../_shared/square.ts";
 import { issueSupporterToken } from "../_shared/license.ts";
@@ -69,6 +70,29 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
+
+    const { data: checkout, error: lookupError } = await supabase
+      .from("supporter_checkouts")
+      .select("amount, currency, license")
+      .eq("provider_order_id", payment.order_id)
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+    // This Square application may also serve TalkType. Only fulfill QRBuddy
+    // orders, for the exact amount/currency and the configured merchant location.
+    if (!checkout || checkout.license) {
+      return new Response(JSON.stringify({ received: true, ignored: true }), {
+        headers: jsonHeaders,
+      });
+    }
+    if (!paymentMatchesCheckout(payment, checkout)) {
+      console.error(
+        "[SquareWebhook] Payment does not match checkout amount/currency/location",
+      );
+      return new Response(JSON.stringify({ error: "Payment mismatch" }), {
+        status: 400,
+        headers: jsonHeaders,
+      });
+    }
 
     const license = await issueSupporterToken();
 

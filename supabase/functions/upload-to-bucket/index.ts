@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
+  checkBucketPinRateLimit,
   checkRateLimit,
   createRateLimitResponse,
   getClientIP,
@@ -58,20 +59,18 @@ serve(async (req) => {
   }
 
   try {
-    // Supporter pass lifts the throttles and the size cap.
+    // Supporter pass raises the request ceiling and file size cap.
     const hasPass = await requestHasValidPass(req);
 
-    // Rate limiting: 15 uploads per hour per IP
+    // Free: 15/hour; supporter pass: 100/hour per IP.
     const clientIP = getClientIP(req);
-    if (!hasPass) {
-      const rateLimitResult = checkRateLimit(clientIP, {
-        windowMs: 60 * 60 * 1000, // 1 hour
-        maxRequests: 15,
-      });
-
-      if (rateLimitResult.isLimited) {
-        return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
-      }
+    const rateLimitResult = await checkRateLimit(clientIP, {
+      scope: "upload-to-bucket",
+      windowMs: 60 * 60 * 1000, // 1 hour
+      maxRequests: hasPass ? 100 : 15,
+    });
+    if (rateLimitResult.isLimited) {
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
     }
 
     const supabase = createClient(
@@ -158,20 +157,25 @@ serve(async (req) => {
             },
           );
         }
-      } else if (
-        bucket.is_password_protected &&
-        !(await verifyPassword(bucket.password_hash, password))
-      ) {
-        return new Response(
-          JSON.stringify({ error: "Locker PIN required or invalid" }),
-          {
-            headers: {
-              ...getCorsHeaders(req),
-              "Content-Type": "application/json",
+      } else if (bucket.is_password_protected) {
+        if (password) {
+          const pinLimit = await checkBucketPinRateLimit(bucketCode, clientIP);
+          if (pinLimit) {
+            return createRateLimitResponse(pinLimit, getCorsHeaders(req));
+          }
+        }
+        if (!(await verifyPassword(bucket.password_hash, password))) {
+          return new Response(
+            JSON.stringify({ error: "Locker PIN required or invalid" }),
+            {
+              headers: {
+                ...getCorsHeaders(req),
+                "Content-Type": "application/json",
+              },
+              status: 401,
             },
-            status: 401,
-          },
-        );
+          );
+        }
       }
 
       return null;

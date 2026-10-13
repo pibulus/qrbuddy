@@ -23,12 +23,14 @@ serve(async (req) => {
   const jsonHeaders = {
     ...getCorsHeaders(req),
     "Content-Type": "application/json",
+    "Cache-Control": "no-store",
   };
 
   try {
     // Generous — the client polls every few seconds while Square's webhook
     // lands, but a scanner brute-forcing uuids gets nowhere fast.
-    const rateLimitResult = checkRateLimit(getClientIP(req), {
+    const rateLimitResult = await checkRateLimit(getClientIP(req), {
+      scope: "get-license",
       windowMs: 5 * 60 * 1000,
       maxRequests: 60,
     });

@@ -1,5 +1,5 @@
 // Square payment provider, ported from TalkType's squareProvider.js to Deno.
-// One product: the $24/yr Supporter Pass. Payment links are created per
+// One product: the A$49 annual Supporter Pass. Payment links are created per
 // checkout (idempotent on checkout_id); the webhook confirms payment.
 
 import { timingSafeEqual } from "https://deno.land/std@0.216.0/crypto/timing_safe_equal.ts";
@@ -20,20 +20,29 @@ export function getSquareConfig() {
       DEFAULT_SQUARE_VERSION,
     webhookSignatureKey: Deno.env.get("SQUARE_WEBHOOK_SIGNATURE_KEY")?.trim() ??
       "",
+    notificationUrl: Deno.env.get("SQUARE_WEBHOOK_NOTIFICATION_URL")?.trim() ??
+      "",
   };
 }
 
 export function isSquareCheckoutConfigured(): boolean {
   const config = getSquareConfig();
-  return Boolean(config.accessToken && config.locationId);
+  return Deno.env.get("SQUARE_CHECKOUT_ENABLED") === "true" &&
+    Boolean(
+      config.accessToken && config.locationId &&
+        config.webhookSignatureKey && config.notificationUrl,
+    );
 }
 
 export function getSupporterPriceMoney() {
-  return {
-    amount: Number(Deno.env.get("SUPPORTER_PRICE_CENTS") ?? 4900),
-    // Must match the Square location's currency or the API rejects the link.
-    currency: Deno.env.get("SUPPORTER_CURRENCY") ?? "AUD",
-  };
+  // Keep the public offer and provider aligned. A different offer requires a
+  // reviewed product change, not an invisible environment-only price change.
+  const amount = Number(Deno.env.get("SUPPORTER_PRICE_CENTS") ?? 4900);
+  const currency = Deno.env.get("SUPPORTER_CURRENCY") ?? "AUD";
+  if (amount !== 4900 || currency !== "AUD") {
+    throw new Error("Supporter checkout must match the A$49 offer");
+  }
+  return { amount, currency };
 }
 
 export async function createSquareCheckout(
@@ -45,6 +54,25 @@ export async function createSquareCheckout(
   }
 
   const priceMoney = getSupporterPriceMoney();
+  const locationResponse = await fetch(
+    `${getSquareBaseUrl()}/v2/locations/${
+      encodeURIComponent(config.locationId)
+    }`,
+    {
+      headers: {
+        Authorization: `Bearer ${config.accessToken}`,
+        "Square-Version": config.apiVersion,
+      },
+      signal: AbortSignal.timeout(10000),
+    },
+  );
+  const location = (await locationResponse.json().catch(() => ({}))).location;
+  if (
+    !locationResponse.ok || location?.status !== "ACTIVE" ||
+    location?.currency !== priceMoney.currency
+  ) {
+    throw new Error("Square location does not match the active AUD offer");
+  }
   const response = await fetch(
     `${getSquareBaseUrl()}/v2/online-checkout/payment-links`,
     {
@@ -67,6 +95,7 @@ export async function createSquareCheckout(
         },
         payment_note: `QRBuddy supporter checkout ${checkoutId}`,
       }),
+      signal: AbortSignal.timeout(15000),
     },
   );
 
@@ -130,4 +159,16 @@ export function extractSquarePayment(event: any) {
     return null;
   }
   return payment;
+}
+
+export function paymentMatchesCheckout(
+  payment: {
+    amount_money?: { amount?: number; currency?: string };
+    location_id?: string;
+  },
+  checkout: { amount: number; currency: string },
+): boolean {
+  return payment.amount_money?.amount === checkout.amount &&
+    payment.amount_money?.currency === checkout.currency &&
+    payment.location_id === getSquareConfig().locationId;
 }

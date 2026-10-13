@@ -22,7 +22,8 @@ serve(async (req) => {
     // Rate limiting: 30 updates per hour per IP
     // Owner token required, but rate limit prevents token brute-force
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
+    const rateLimitResult = await checkRateLimit(clientIP, {
+      scope: "update-dynamic-qr",
       windowMs: 60 * 60 * 1000, // 1 hour
       maxRequests: 30,
     });

@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
+  checkBucketPinRateLimit,
   checkRateLimit,
   createRateLimitResponse,
   getClientIP,
@@ -56,7 +57,8 @@ serve(async (req) => {
   try {
     // Rate limiting: 50 downloads per hour per IP
     const clientIP = getClientIP(req);
-    const rateLimitResult = checkRateLimit(clientIP, {
+    const rateLimitResult = await checkRateLimit(clientIP, {
+      scope: "download-from-bucket",
       windowMs: 60 * 60 * 1000, // 1 hour
       maxRequests: 50,
     });
@@ -172,6 +174,11 @@ serve(async (req) => {
             status: 401,
           },
         );
+      }
+
+      const pinLimit = await checkBucketPinRateLimit(bucketCode, clientIP);
+      if (pinLimit) {
+        return createRateLimitResponse(pinLimit, getCorsHeaders(req));
       }
 
       if (!(await verifyPassword(bucketAuth.password_hash, password))) {
