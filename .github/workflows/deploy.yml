@@ -1,4 +1,4 @@
-name: Build check
+name: Check, unit tests, and build
 on:
   push:
     branches: main
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build check
+    name: Check, unit tests, and build
     runs-on: ubuntu-latest
 
     permissions:
@@ -22,10 +22,14 @@ jobs:
         with:
           deno-version: v2.x
 
-      # Build check only — deploys are owned by Deno Deploy's git auto-build
-      # (repo linked 2026-07-31), which runs deno.json's deploy.build remotely.
-      # A CI `deno deploy` upload honours .gitignore, so _fresh never ships and
-      # the tailwind plugin 500s every route with "Ahead of time builds not
-      # configured". That buildless clobber took prod down 2026-08-07.
-      - name: Build step
-        run: "deno task build"
+      # Keep these steps sequential: the Fresh check and build share generated
+      # state, while the explicit unit list has no network permission.
+      - name: Format, lint, and type check
+        run: deno task check
+
+      - name: Offline unit tests
+        run: deno task test:unit
+
+      # Production deployment is owned by Deno Deploy's Git-connected build.
+      - name: Build Fresh
+        run: deno task build

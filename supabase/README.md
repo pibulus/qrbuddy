@@ -9,27 +9,35 @@ Functions.
 
 - Project ref in production: `aqydpibnvlhcjcwosrti`
 - Private storage bucket: `qr-files`
-- Bootstrap schema/RPC script: `supabase/setup.sql`
-- Incremental schema history: `supabase/migrations/`
-- Edge functions: 13 in `supabase/functions/`
+- Schema source of truth: ordered migrations in `supabase/migrations/`
+- `supabase/setup.sql`: historical one-shot snapshot; do not use it to bootstrap
+  or update production
+- Edge function entry points: `supabase/functions/*/index.ts`; `_shared/` holds
+  helper modules and is not deployable as a function
 
 Functions:
 
-- `upload-file`, `get-file`, `get-file-metadata`
-- `create-bucket`, `get-bucket-status`, `upload-to-bucket`,
+- Shares: `upload-file`, `get-file`, `get-file-metadata`, `update-file`,
+  `share-beacon`
+- Lockers: `create-bucket`, `get-bucket-status`, `upload-to-bucket`,
   `download-from-bucket`
-- `create-dynamic-qr`, `get-dynamic-qr`, `update-dynamic-qr`, `redirect-qr`
-- `cleanup-expired`, `health`
+- Dynamic QRs: `create-dynamic-qr`, `get-dynamic-qr`, `update-dynamic-qr`,
+  `redirect-qr`
+- Supporter passes: `create-checkout`, `square-webhook`, `get-license`
+- R2 uploads: `create-upload-url`, `finalize-upload`
+- Operations: `cleanup-expired`, `health`
 
 ## Setup
 
 ```bash
 supabase link --project-ref YOUR_PROJECT_REF
 
-# New project bootstrap:
-# Run supabase/setup.sql in the SQL Editor, or use migrations when the remote
-# history is aligned with this repo.
-supabase db push
+# Review which migrations are applied, then preview pending changes.
+supabase migration list --linked
+supabase db push --linked --dry-run
+
+# Apply only after confirming the linked project is the intended target.
+supabase db push --linked --yes
 
 supabase secrets set \
   SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co \
@@ -45,15 +53,23 @@ Deploy one function while iterating:
 supabase functions deploy get-file --project-ref YOUR_PROJECT_REF
 ```
 
-Deploy all QRBuddy functions. Public product functions have `verify_jwt = false`
-in `supabase/config.toml`; keep those blocks in place so browser publishable
-keys can call the functions.
+Deploy all QRBuddy functions, skipping `_shared`. Public product functions have
+`verify_jwt = false` in `supabase/config.toml`; keep those blocks in place so
+browser publishable keys can call the functions.
 
 ```bash
-for func in supabase/functions/*/; do
-  supabase functions deploy "$(basename "$func")" --project-ref YOUR_PROJECT_REF
+PROJECT_REF=YOUR_PROJECT_REF
+for directory in supabase/functions/*/; do
+  name=$(basename "$directory")
+  [ "$name" = "_shared" ] && continue
+  supabase functions deploy "$name" --project-ref "$PROJECT_REF"
 done
 ```
+
+Production `cleanup-expired` currently runs daily at **17:00 UTC**. The
+checked-in `supabase/cron.sql` is an older hourly example, not the live
+schedule; confirm the actual scheduler on each operations review. Cleanup is
+eventually consistent, so deletion timing depends on the last successful run.
 
 ## Auth Boundary
 
@@ -85,8 +101,9 @@ curl "https://YOUR_PROJECT_REF.supabase.co/functions/v1/health" \
   -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
   -H "apikey: $SUPABASE_ANON_KEY"
 
-# Integration tests, when env is configured
-deno task test
+# Offline unit tests; this task has no network permission.
+deno task test:unit
 ```
 
-See `tests/README.md` for the current test files and caveats.
+See `tests/README.md` for the offline suite, opt-in live integration tests, and
+their project/credential boundaries.

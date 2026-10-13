@@ -20,6 +20,9 @@ deno fmt && deno lint
 # Full check (format, lint, type check)
 deno task check
 
+# Explicit offline unit suite (no network permission)
+deno task test:unit
+
 # Build for production
 deno task build
 
@@ -61,8 +64,9 @@ HTML.
   advanced styling options
 - **Styling**: Tailwind CSS with custom theme configuration in
   `tailwind.config.ts`
-- **No Build Step**: Fresh's JIT compilation means no bundler configuration
-  needed
+- **Build**: No separate bundler configuration is needed. Development uses the
+  Fresh dev server; production and preview require the Fresh AOT build from
+  `deno task build`.
 - **Type Safety**: TypeScript throughout with Deno's built-in type checking
 
 ### Component Responsibilities
@@ -73,7 +77,7 @@ HTML.
 - Orchestrates component layout
 - Handles SEO meta tags
 
-**Islands (Interactive Components - 41 registered)**
+**Islands (Interactive Components)**
 
 See GLOSSARY.md for complete list organized by category. Key islands:
 
@@ -91,7 +95,7 @@ See GLOSSARY.md for complete list organized by category. Key islands:
 - `CreateModal`: Combined QR type, options, file locker, and design sheet
 - `AboutModal`/`KofiModal`/`PricingModal`: Feature discovery
 - `ErrorBoundary`: Error handling
-- `Analytics`: PostHog integration
+- `Analytics`: Umami event tracking
 
 **Utils**
 
@@ -175,54 +179,31 @@ if (maxDownloads === 999999) {
 
 ### Deployment
 
-- **Primary**: Deno Deploy — the NEW platform (console.deno.com). Classic Deno
-  Deploy (dash.deno.com) and `deployctl` are dead as of July 2026; classic
-  tokens no longer authenticate.
-- **Alternative**: Any Deno-compatible host via `deno run -A main.ts`
-- **Deno Deploy org/app**: `pibulus` / `qrbuddy` (set in `deno.json` `deploy`)
-- **Live URL**: https://qrbuddy.app
+- **Production app**: https://qrbuddy.app
 - **Deno Deploy alias**: https://qrbuddy.pibulus.deno.net
 - **Supabase project ref**: `aqydpibnvlhcjcwosrti`
 
-Production is connected to GitHub. Pushing `main` triggers Deno Deploy's Git
-build, which runs `deno task build` from `deno.json` before routing. The
-workflow in `.github/workflows/deploy.yml` runs checks; it does not deploy.
+Fresh production uses the Git-connected Deno Deploy build. An authorized push to
+`main` runs `deno task build`, which stamps the source and generates the Fresh
+AOT manifest before routing. CI runs `deno task check`, the explicit offline
+`deno task test:unit` suite, and the build; it does not deploy. `/version.json`
+includes `commit`, `buildId`, and a deterministic `sourceHash`; the source hash
+identifies the built source even when Git metadata is missing.
 
-Do not run `deno deploy` from a local checkout for production. Its direct upload
-can skip Fresh's ahead-of-time build, while `_fresh/` is gitignored. That routes
-an app which returns HTTP 500 on every page because the Tailwind plugin has no
-build manifest. Use the Deno Deploy console's **Deploy Default Branch** action
-to redeploy the current `main` without a new commit.
+Do not upload a local checkout with `deployctl` or `deno deploy`: `_fresh/` is
+generated and ignored by Git, and the Fresh Tailwind plugin requires its AOT
+manifest. Keep `APP_URL`, `SUPABASE_URL`, and `SUPABASE_ANON_KEY` in the Deno
+Deploy app configuration. `SUPABASE_SERVICE_ROLE_KEY` belongs only in Supabase
+function secrets.
 
-#### Deployment Commands
+Supabase schema and function operations are separate from the Fresh app. Use the
+migration preflight and function deployment commands in
+[`supabase/README.md`](./supabase/README.md); skip the `_shared` helper folder
+when deploying functions.
 
-```bash
-# Auth: DENO_DEPLOY_TOKEN must be the new `ddo_` token
-# (stored as DENO_DEPLOY_TOKEN_NEW in ~/.config/api_keys).
-# The CLI has no --env flag anymore — env vars are app-level, set once via
-# `deno deploy env add` (they persist across deploys; verified set 2026-07-17):
-#   deno deploy env add SUPABASE_URL "https://aqydpibnvlhcjcwosrti.supabase.co" --org pibulus --app qrbuddy
-#   deno deploy env add APP_URL "https://qrbuddy.app" --org pibulus --app qrbuddy
-#   deno deploy env add SUPABASE_ANON_KEY "<anon key>" --secret --org pibulus --app qrbuddy
-# Only pass public/client-safe Supabase config here.
-
-# Deploy Fresh production by pushing main; the GitHub integration runs
-# `deno task build` and deploys the resulting AOT bundle.
-git push origin main
-
-# Deploy all Supabase edge functions when backend code changes (skip _shared).
-# NOTE: new code can take several minutes to serve — warm edge isolates keep
-# answering with the old bundle. Verify with a header probe, not hope.
-PROJECT_REF=aqydpibnvlhcjcwosrti
-for func in supabase/functions/*/; do
-  name=$(basename "$func")
-  [ "$name" = "_shared" ] && continue
-  supabase functions deploy "$name" --project-ref "$PROJECT_REF"
-done
-```
-
-Never pass `SUPABASE_SERVICE_ROLE_KEY` to Deno Deploy. It belongs only in
-Supabase edge function secrets.
+The [13 October launch audit](./docs/LAUNCH-READINESS-2026-10-13.md) is a dated
+evidence snapshot. Use the [release record](./docs/RELEASE-2026-10-13.md) for
+the latest verified payment and deployment state.
 
 ## 🎨 Design System
 
@@ -351,8 +332,8 @@ adding surfaces:
 
 ### Performance Optimizations
 
-- **Islands Architecture**: Only interactive components hydrate (41 islands
-  total)
+- **Islands Architecture**: Only interactive components hydrate; Fresh's build
+  manifest is the current count source.
 - **Signal-Based State**: Efficient reactive updates without re-renders
 - **Lazy QR Updates**: QR regenerates only on url/style change via useEffect
   dependencies
@@ -440,7 +421,7 @@ audio files → a mixtape. Both live at `/f/{code}` (`FileSlideshow`).
   cleanup-expired
 - **Database Schema**: Added `dynamic_qr_codes` table with scan limits and
   expiry tracking
-- **Edge Functions**: 20 total Supabase functions:
+- **Edge Functions**:
   - Dynamic QRs: create-dynamic-qr, update-dynamic-qr, get-dynamic-qr,
     redirect-qr
   - Destructible files: upload-file, get-file, get-file-metadata, update-file,
@@ -460,8 +441,9 @@ audio files → a mixtape. Both live at `/f/{code}` (`FileSlideshow`).
   redirect logic
 - **Visual Indicators**: Purple/pink "editable" badge on dynamic QRs alongside
   destructible badge
-- **41 Interactive Islands**: Complete island architecture with modals, QR
-  types, and feature discovery
+- **Interactive Islands**: Complete island architecture with modals, QR types,
+  and feature discovery. See `GLOSSARY.md`; use the Fresh build manifest for the
+  current generated count.
 
 ### Previous Features
 

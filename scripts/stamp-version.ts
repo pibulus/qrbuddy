@@ -10,11 +10,9 @@
 //
 // Fresh serves static/ at the root, so this lands at /version.json.
 //
-// ⚠️ Deno Deploy does NOT set COMMIT_REF the way Netlify does. If git is not
-// available in the build container this falls back to DENO_DEPLOYMENT_ID,
-// which is NOT a git sha — fleet-check will then read it as a mismatch rather
-// than silently claiming currency. That is the correct failure direction:
-// loudly unknown beats quietly wrong.
+// GitHub source archives on Deno Deploy may omit .git. Always include a
+// deterministic digest of the shipped source, so a local build can be matched
+// to production without guessing a commit from a branch that can move.
 
 async function gitSha(): Promise<string | null> {
   try {
@@ -31,14 +29,84 @@ async function gitSha(): Promise<string | null> {
   }
 }
 
-const fromEnv = Deno.env.get("COMMIT_REF")?.trim();
-const deploymentId = Deno.env.get("DENO_DEPLOYMENT_ID")?.trim();
+async function sourceHash(): Promise<string> {
+  const files: string[] = [];
+  async function walk(path: string) {
+    for await (const entry of Deno.readDir(path)) {
+      const child = `${path}/${entry.name}`;
+      if (child === "static/version.json") continue;
+      if (entry.isDirectory) await walk(child);
+      else if (entry.isFile) files.push(child);
+    }
+  }
+  for (
+    const dir of [
+      "routes",
+      "islands",
+      "components",
+      "hooks",
+      "utils",
+      "types",
+      "static",
+      "scripts",
+    ]
+  ) {
+    try {
+      await walk(dir);
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) throw error;
+    }
+  }
+  for (
+    const file of [
+      "deno.json",
+      "deno.lock",
+      "fresh.config.ts",
+      "main.ts",
+      "dev.ts",
+      "tailwind.config.ts",
+    ]
+  ) {
+    try {
+      await Deno.stat(file);
+      files.push(file);
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) throw error;
+    }
+  }
+  const hex = (bytes: ArrayBuffer) =>
+    Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  const manifest: string[] = [];
+  for (const file of files.sort()) {
+    manifest.push(
+      `${file}\0${
+        hex(await crypto.subtle.digest("SHA-256", await Deno.readFile(file)))
+      }`,
+    );
+  }
+  return hex(
+    await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(manifest.join("\n")),
+    ),
+  );
+}
 
-const commit = fromEnv?.slice(0, 7) ??
-  (await gitSha()) ??
-  (deploymentId ? `deno:${deploymentId.slice(0, 12)}` : "unknown");
+const fromEnv = (Deno.env.get("COMMIT_REF") || Deno.env.get("GITHUB_SHA"))
+  ?.trim();
+const buildId = Deno.env.get("DENO_DEPLOY_BUILD_ID")?.trim() ?? null;
 
-const stamp = { commit, built: new Date().toISOString() };
+const commit =
+  (fromEnv && /^[0-9a-f]{7,40}$/i.test(fromEnv) ? fromEnv.slice(0, 7) : null) ??
+    (await gitSha());
+
+const stamp = {
+  commit,
+  buildId,
+  sourceHash: await sourceHash(),
+  built: new Date().toISOString(),
+};
 
 await Deno.mkdir("static", { recursive: true });
 await Deno.writeTextFile(

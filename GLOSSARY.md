@@ -1,6 +1,6 @@
 # Glossary - QRBuddy
 
-## Islands (Interactive Components - 41 registered)
+## Islands (Interactive Components)
 
 **Core QR Components:**
 
@@ -32,8 +32,8 @@
 - `AboutModal` - Manifesto card (first-visit intro poster + about)
 - `KofiModal` - Ko-fi support modal
 - `PricingModal` - Single-tier Supporter unlock card
-- `FooterDock` - Bottom dock: one capsule (About/Solutions/Supporter) + "Made by
-  Pablo" maker line; Tip Jar parked
+- `FooterDock` - Bottom capsule (About/Solutions/Supporter) with maker, Privacy,
+  and Terms links in its metadata line; Tip Jar parked
 
 **Dynamic + Locker Features:**
 
@@ -126,8 +126,8 @@
 
 - **Signal-Based State** - Preact signals for reactive updates (url, style,
   triggerDownload, triggerCopy, isDestructible, isDynamic, editUrl)
-- **Gradient QR Codes** - `qr-code-styling` library with 8 pre-defined gradient
-  themes
+- **Gradient QR Codes** - `qr-code-styling` library with the public presets in
+  `utils/qr-styles.ts`
 - **Island Architecture** - Selective client hydration, server-rendered HTML
 - **Soft Brutal Aesthetic** - Chunky 4px borders, warm pastels, spring
   animations

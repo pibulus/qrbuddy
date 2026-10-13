@@ -25,7 +25,7 @@ gradient art pieces with that soft brutal aesthetic.
   Brutalist themes
 - **Custom Gradient Creator** - Build your own gradient QR codes
 - **Instant Generation** - <100ms QR generation with no loading states
-- **Download & Copy** - Save PNGs or copy to clipboard with one click
+- **Download & Copy** - Save PNG/SVG files or copy text with a separate action
 - **Mobile First** - Responsive design that works beautifully on all devices
 - **Soft Brutal Design** - Chunky borders, hard shadows, pastel colors
 - **Error Handling** - Graceful degradation with helpful error messages
@@ -64,19 +64,18 @@ and Supabase security/RPC behavior should be tested against Supabase.
 - ✅ **KABOOM Page** - Epic explosion when already accessed
 - ⚠️ **File Locker** - Requires Supabase edge functions for realistic testing
 
-### 🚀 Production Deployment (Supabase)
+### Production Setup
 
-For production deployment with Supabase backend, see
-**[Deployment Guide](./docs/SUPABASE_DEPLOYMENT_GUIDE.md)**.
+Supabase schema and function operations are documented in
+[supabase/README.md](./supabase/README.md). Use the ordered migrations as the
+schema source of truth; `supabase/setup.sql` is a historical snapshot, not a
+production bootstrap path. Supabase deployment is separate from the Fresh app.
 
-**TL;DR:**
-
-1. Create/link Supabase project
-2. Apply `supabase/setup.sql` or run the migrations with `supabase db push`
-3. Deploy all 13 edge functions
-4. Set Supabase secrets (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `APP_URL`)
-5. Deploy Fresh to Deno Deploy with `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and
-   `APP_URL`
+Fresh production deploys use the Git-connected Deno Deploy build: pushing the
+authorized `main` commit triggers `deno task build` before the app is routed. Do
+not upload a local build with `deployctl` or `deno deploy`; `_fresh/` is
+generated and ignored by Git. See [CLAUDE.md](./CLAUDE.md) for the release
+contract and current audit links.
 
 ## 🛠 Tech Stack
 
@@ -101,8 +100,8 @@ qrbuddy/
 │   ├── f/[code].tsx          # Destructible file download gate
 │   ├── bucket/[code].tsx     # File locker viewer
 │   └── api/download-file.ts  # Server-side file proxy
-├── islands/              # Interactive Preact islands (41 registered)
-│   ├── QRCanvas.tsx          # Core QR rendering + download/copy logic
+├── islands/              # Interactive Preact islands
+│   ├── QRCanvas.tsx          # Core QR rendering + PNG/SVG export
 │   ├── SmartInput.tsx        # Smart input (URLs/files/text + dynamic settings)
 │   ├── StyleSelector.tsx     # Gradient selector + custom creator entry
 │   ├── GradientCreator.tsx   # Custom gradient builder modal
@@ -115,7 +114,7 @@ qrbuddy/
 │   ├── EasterEggs.tsx        # Hidden interactions
 │   ├── ToastManager.tsx      # Notification stack
 │   ├── ErrorBoundary.tsx     # QR error guard
-│   ├── Analytics.tsx         # PostHog wiring
+│   ├── Analytics.tsx         # Umami event tracking
 │   ├── edit-qr/             # Dynamic QR edit sub-islands (4)
 │   ├── extras/              # Options/design sub-islands (7)
 │   ├── smart-input/         # Input toolbar sub-islands (2)
@@ -123,9 +122,9 @@ qrbuddy/
 ├── local-api/            # Local mock Supabase edge function server
 │   └── server.ts             # Upload + dynamic QR emulator for dev
 ├── supabase/             # Production schema + edge functions
-│   ├── setup.sql             # Current one-shot schema/RPC bootstrap
+│   ├── setup.sql             # Historical one-shot schema snapshot
 │   ├── migrations/           # Historical + incremental production migrations
-│   └── functions/            # 13 edge functions
+│   └── functions/            # Edge function entry points + shared helpers
 ├── utils/                # Shared utilities
 │   ├── api.ts                # SUPABASE_URL + auth header helpers
 │   ├── api-request.ts        # Shared JSON/FormData request helpers
@@ -136,7 +135,7 @@ qrbuddy/
 │   └── sounds.ts             # UI soundboard
 ├── types/                # Shared ambient/runtime type declarations
 ├── static/               # Icons, manifest, robots, sitemap, CSS
-├── tests/                # Edge function integration tests
+├── tests/                # Offline unit tests + opt-in edge integrations
 └── tailwind.config.ts    # Tailwind design tokens/theme
 ```
 
@@ -162,6 +161,9 @@ deno lint
 # Type check
 deno check **/*.ts **/*.tsx
 
+# Run explicit offline unit tests (no network permission)
+deno task test:unit
+
 # Build for production
 deno task build
 ```
@@ -177,24 +179,20 @@ deno task build
 
 ## 🚢 Deployment
 
-QRBuddy can be deployed to any platform that supports Deno:
+QRBuddy production is connected to the Deno Deploy Git build. An authorized push
+to `main` runs the configured Fresh AOT build and deploys its output. Keep
+`APP_URL`, `SUPABASE_URL`, and `SUPABASE_ANON_KEY` in the Deno Deploy app
+configuration. Keep the service-role key only in Supabase function secrets.
 
-### Deno Deploy (Recommended)
-
-1. Push to GitHub
-2. Connect to [Deno Deploy](https://deno.com/deploy)
-3. Deploy project `qrbuddy` with `APP_URL`, `SUPABASE_URL`, and
-   `SUPABASE_ANON_KEY`
-
-Do not deploy `SUPABASE_SERVICE_ROLE_KEY` to Fresh/Deno Deploy; keep it in
-Supabase edge function secrets only.
-
-### Self-Hosted
+For a self-hosted deployment, build Fresh before starting the server:
 
 ```bash
 deno task build
 deno run -A main.ts
 ```
+
+Do not upload a local checkout directly with `deployctl` or `deno deploy`; the
+production Git integration supplies the generated Fresh manifest.
 
 ## 📝 License
 

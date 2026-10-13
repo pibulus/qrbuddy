@@ -1,5 +1,10 @@
 # 🚀 QRBuddy Competitive Features Summary
 
+> Historical feature/market notes. Pricing, readiness and competitor claims
+> below are not current sales copy. See
+> [the release record](./RELEASE-2026-10-13.md) and
+> [payment operations](./ETHICAL_PAYMENT_SETUP.md) for the current offer.
+
 **Date**: 2025-11-10 **Status**: ✅ **Production Ready with Premium Features**
 
 ---

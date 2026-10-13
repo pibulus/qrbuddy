@@ -1,57 +1,47 @@
 # QRBuddy Tests
 
-Integration tests for QRBuddy Supabase Edge Functions.
+## Offline unit suite
 
-## Running Tests
-
-Configure environment variables first:
+Run the deterministic, local-only tests with:
 
 ```bash
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-
-# Optional, only used by cleanup helpers. Do not expose this to the Fresh app.
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+deno task test:unit
 ```
 
-Run all tests:
+This explicit file list has no network permission and does not load `.env`. CI
+runs this suite. It covers QR payload and file validation, license signing,
+in-app browser detection, URL-peek rejection, R2 signing, durable rate-limit
+logic, dynamic QR preview responses, and Square checkout/webhook logic.
+
+## Opt-in integration and stress tests
+
+`edge-functions_test.ts` and `remediation_test.ts` call live Supabase functions.
+Use a disposable staging/test project and configure its URL and anon key in the
+shell. Do not point these tests at production. The cleanup-backed checks may
+also need a service-role key, which must remain outside the Fresh app.
 
 ```bash
-deno task test
+deno test --allow-net --allow-env --allow-read \
+  tests/edge-functions_test.ts tests/remediation_test.ts
 ```
 
-Run a specific file:
+`deno task test` scans every test file and grants network access. Use it only
+with disposable test credentials after reviewing the stress suite; prefer the
+explicit commands above.
 
-```bash
-deno test --allow-net --allow-env --allow-read tests/edge-functions_test.ts
-deno test --allow-net --allow-env --allow-read tests/remediation_test.ts
-```
+`stress_test.ts` is a separate opt-in load test. Review its target and workload
+before running; it is excluded from CI and `test:unit`.
 
-## Test Files
+## Files
 
-- `edge-functions_test.ts` - Dynamic QR validation, upload-file validation, and
-  basic redirect/get-dynamic checks. Tests auto-skip when `SUPABASE_URL` or
-  `SUPABASE_ANON_KEY` is missing.
-- `remediation_test.ts` - Locker security regression flow: password bucket
-  creation, owner-token upload, invalid-token rejection, blocked file upload,
-  POST-only protected download, and metadata redaction. If functions are not
-  reachable, the setup step logs and exits early.
-- `logic_test.ts` - 23 offline pure-logic tests (QR payload formatting,
-  validation, file checks, splash config) — no network or env needed.
-
-## Notes
-
-- These are integration tests against real edge functions, not unit tests.
-- Rate limiting tests are marked ignored because remote/serverless timing makes
-  them flaky.
-- Be careful running cleanup-backed tests against production projects; prefer a
-  test Supabase project when service-role cleanup is enabled.
-
-## Future Improvements
-
-- [ ] Add E2E tests with Playwright
-- [ ] Add unit tests for utility functions
-- [ ] Add full destructible file lifecycle tests, including finite multi-file
-      zip behavior
-- [ ] Mock Supabase for faster unit tests
-- [ ] Add CI/CD integration with GitHub Actions
+- `logic_test.ts` — QR payloads, validation, file checks, and splash config.
+- `license_test.ts` — supporter token signing and verification.
+- `inAppBrowser_test.ts` — supported in-app browser detection and messages.
+- `peek_test.ts` — rejects missing, invalid, internal, and private URLs.
+- `r2_test.ts` — offline R2 path validation, file caps, and SigV4 URL shape.
+- `rate_limit_test.ts` — injected-RPC rate-limit decisions and failure modes.
+- `dynamic_qr_preview_test.ts` — neutral responses for link-preview bots.
+- `square_test.ts` — payment configuration, amount checks, and webhook logic.
+- `edge-functions_test.ts`, `remediation_test.ts` — opt-in live Supabase
+  regressions.
+- `stress_test.ts` — opt-in load testing.

@@ -1,5 +1,9 @@
 # Cult Code audit — qrbuddy
 
+> Historical audit snapshot. Findings may already be resolved; use the
+> [current release record](./RELEASE-2026-10-13.md) for verified deployment and
+> payment state.
+
 Three passes of `/ritual`, ~25 agent runs, one night. Every file:line below was
 re-verified by hand after the agent reported it; agent line numbers drifted ±3
 and are corrected here. Branch: `cult/full-ritual`.

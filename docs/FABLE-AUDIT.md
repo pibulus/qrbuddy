@@ -1,5 +1,11 @@
 # 🔥 Fable Audit — 2026-07-06
 
+> Historical audit snapshot. Deployment commands and LOCAL ONLY notices below
+> describe that session. Current Fresh production uses the Git-connected AOT
+> build, not direct `deployctl`. See
+> [the release record](./RELEASE-2026-10-13.md) and [CLAUDE.md](../CLAUDE.md)
+> for current instructions.
+
 Final-quality launch-readiness pass on branch `fable-audit-2026-07-06` (5
 commits on top of `main`@`c5093c0`). Verified after every commit: `deno fmt` ✓ ·
 `deno lint` ✓ · `deno check` ✓ (0 errors) · tests 23/23 ✓ · `deno task build` ✓.

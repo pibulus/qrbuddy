@@ -57,7 +57,7 @@ qrbuddy/
 │   ├── BucketQR.tsx        # File locker QR display
 │   ├── EditQRForm.tsx      # Dynamic QR editing
 │   ├── ToastManager.tsx    # Notifications
-│   └── Analytics.tsx       # PostHog wiring
+│   └── Analytics.tsx       # Umami event tracking
 ├── utils/
 │   ├── api.ts              # SUPABASE_URL + anon auth helpers
 │   ├── api-request.ts      # Shared fetch helpers
@@ -247,29 +247,17 @@ deno task start
 
 ---
 
-## 🚦 DEPLOYMENT - SHIP IT
+## 🚦 DEPLOYMENT
 
-### One-Liner Deploy
+Fresh production is connected to the Git build in Deno Deploy. An authorized
+push to `main` runs `deno task build` and deploys the generated Fresh manifest.
+Do not upload a local checkout with `deployctl` or `deno deploy`; `_fresh/` is
+generated and ignored by Git. Verify the deployed source/build identity at
+`/version.json`.
 
-```bash
-# Deno Deploy project is "qrbuddy" in deno.json.
-# Only pass public/client-safe Supabase config here.
-PROJECT_REF=aqydpibnvlhcjcwosrti
-deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN \
-  --env="SUPABASE_URL=https://${PROJECT_REF}.supabase.co" \
-  --env="APP_URL=https://qrbuddy.app" \
-  --env="SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
-```
-
-### Manual Deploy Steps
-
-1. Build it: `deno task build`
-2. Test it: `deno task preview`
-3. Push it: `git push origin main`
-4. Deploy: `deployctl deploy --prod`
-
-**Note**: `SUPABASE_SERVICE_ROLE_KEY` is only for Supabase edge functions. Do
-not pass it to Deno Deploy.
+Supabase is deployed separately. Use `supabase/README.md` for migration
+preflight, secret boundaries, and the function loop that skips `_shared`.
+`SUPABASE_SERVICE_ROLE_KEY` belongs only in Supabase function secrets.
 
 ---
 
@@ -310,7 +298,8 @@ colors.
 - **QR library**: `qr-code-styling@1.6.0-rc.1` (supports gradients!)
 - **Animations**: Custom Tailwind keyframes (lines 28-88 in tailwind.config.ts)
   - squish, rotate-shuffle, float, pop, shake, etc.
-- **No build step**: Fresh uses JIT compilation
+- **Build**: Fresh dev uses JIT; production needs `deno task build` for its AOT
+  manifest
 - **PWA ready**: manifest.json in static/
 
 ### Pablo's Project Quirks:
@@ -336,8 +325,9 @@ deno task start
 # Change copy/text
 # Edit: routes/index.tsx (line 25+)
 
-# Ship it
-deployctl deploy --prod --token=$DENO_DEPLOY_TOKEN
+# Production Fresh deploys happen through the authorized Git-connected build.
+# Review and release through main; don't upload the ignored local _fresh/ tree.
+git push origin main
 
 # When broken
 rm -rf _fresh deno.lock
