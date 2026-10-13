@@ -15,6 +15,7 @@ interface FileUploadOptionsProps {
   setTitle: (title: string) => void;
   onConfirm: () => void;
   onCancel: () => void;
+  onReorderFiles?: (files: File[]) => void;
 }
 
 function formatSize(bytes: number): string {
@@ -71,6 +72,7 @@ export default function FileUploadOptions(
     setTitle,
     onConfirm,
     onCancel,
+    onReorderFiles,
   }: FileUploadOptionsProps,
 ) {
   const kind = shareKindOf(files);
@@ -78,6 +80,17 @@ export default function FileUploadOptions(
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const isLimited = maxDownloads.value !== UNLIMITED_SCANS;
   const busy = isUploading || isPrepping;
+
+  const moveFile = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= files.length) return;
+    const reordered = [...files];
+    const temp = reordered[index];
+    reordered[index] = reordered[target];
+    reordered[target] = temp;
+    onReorderFiles?.(reordered);
+    haptics.light();
+  };
 
   // Object URLs for the thumbnail strip — revoked when the files change.
   const thumbs = useMemo(
@@ -117,29 +130,77 @@ export default function FileUploadOptions(
 
       {/* Show the thing: a strip of photos, or the tracklist */}
       {kind === "slideshow" && (
-        <div class="flex gap-1.5 overflow-x-auto scrollbar-none -mx-1 px-1 py-1">
+        <div class="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 py-1">
           {thumbs.map((src, i) => (
-            <img
+            <div
               key={src}
-              src={src}
-              alt=""
-              class="w-16 h-16 shrink-0 object-cover rounded-xl border-2 border-black bg-neutral-100"
-              style={{ transform: `rotate(${(i % 3) - 1}deg)` }}
-            />
+              class="relative shrink-0 flex flex-col items-center gap-1"
+            >
+              <img
+                src={src}
+                alt=""
+                class="w-16 h-16 object-cover rounded-xl border-2 border-black bg-neutral-100"
+                style={{ transform: `rotate(${(i % 3) - 1}deg)` }}
+              />
+              {onReorderFiles && files.length > 1 && (
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => moveFile(i, -1)}
+                    disabled={i === 0 || busy}
+                    aria-label={`Move photo ${i + 1} left`}
+                    class="w-6 h-6 flex items-center justify-center rounded-md border border-black/20 bg-white text-[10px] font-black hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    ←
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveFile(i, 1)}
+                    disabled={i === files.length - 1 || busy}
+                    aria-label={`Move photo ${i + 1} right`}
+                    class="w-6 h-6 flex items-center justify-center rounded-md border border-black/20 bg-white text-[10px] font-black hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    →
+                  </button>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
       {kind === "playlist" && (
-        <ol class="space-y-1 max-h-40 overflow-y-auto scrollbar-none">
+        <ol class="space-y-1.5 max-h-48 overflow-y-auto scrollbar-none">
           {files.map((f, i) => (
             <li
               key={`${f.name}-${i}`}
-              class="flex items-center gap-2 text-sm font-bold text-black min-h-[32px]"
+              class="flex items-center gap-2 text-sm font-bold text-black min-h-[36px] bg-neutral-50 px-2.5 py-1 rounded-xl border border-black/10"
             >
               <span class="w-6 text-xs font-black text-neutral-400 text-right">
                 {i + 1}
               </span>
-              <span class="truncate">{prettyName(f.name)}</span>
+              <span class="truncate flex-1">{prettyName(f.name)}</span>
+              {onReorderFiles && files.length > 1 && (
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => moveFile(i, -1)}
+                    disabled={i === 0 || busy}
+                    aria-label={`Move track ${i + 1} up`}
+                    class="w-7 h-7 flex items-center justify-center rounded-lg border border-black/20 bg-white text-xs font-black hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveFile(i, 1)}
+                    disabled={i === files.length - 1 || busy}
+                    aria-label={`Move track ${i + 1} down`}
+                    class="w-7 h-7 flex items-center justify-center rounded-lg border border-black/20 bg-white text-xs font-black hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    ↓
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ol>

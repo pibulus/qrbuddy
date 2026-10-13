@@ -12,6 +12,7 @@ import Analytics from "../../islands/Analytics.tsx";
 import { AboutModal } from "../../islands/AboutModal.tsx";
 import { PricingModal } from "../../islands/PricingModal.tsx";
 import FooterDock from "../../islands/FooterDock.tsx";
+import DesignPreferencesSync from "../../islands/DesignPreferencesSync.tsx";
 import { QR_STYLES } from "../../utils/qr-styles.ts";
 import type { QRStyle } from "../../types/qr-types.ts";
 import { getSupabaseUrl } from "../../utils/api.ts";
@@ -43,6 +44,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
   const frameConfig = useSignal<{ enabled: boolean; caption: string } | null>(
     null,
   );
+  const pngSize = useSignal<1000 | 2000 | 3000>(1000);
 
   const title = "QRBuddy — Generador de Códigos QR Hermosos y Éticos";
   const description =
@@ -135,6 +137,13 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         />
 
         <EasterEggs url={url} style={style} />
+        <DesignPreferencesSync
+          style={style}
+          customStyle={customStyle}
+          logoUrl={logoUrl}
+          frameConfig={frameConfig}
+          pngSize={pngSize}
+        />
 
         {/* Style Selector */}
         <div
@@ -193,6 +202,8 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
             bucketUrl={bucketUrl}
             logoUrl={logoUrl}
             qrStyle={style}
+            customStyle={customStyle}
+            pngSize={pngSize}
             frameConfig={frameConfig}
             onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
           />

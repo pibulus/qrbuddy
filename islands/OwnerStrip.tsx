@@ -23,6 +23,7 @@ import {
   type WeatherBaseline,
 } from "../utils/share-stats.ts";
 import type { QR_STYLES } from "../utils/qr-styles.ts";
+import { updateHistoryItem } from "../utils/history.ts";
 import { addToast } from "./ToastManager.tsx";
 import PalettePills from "./create-modal/PalettePills.tsx";
 import QRCanvas from "./QRCanvas.tsx";
@@ -196,6 +197,19 @@ export default function OwnerStrip(
         "Couldn't rename it",
       );
       onTitle(r.fileName);
+      updateHistoryItem(
+        (item) =>
+          item.metadata?.ownerId === fileId ||
+          item.content === shareUrl ||
+          item.content.includes(`/f/${fileId}`),
+        (item) => ({
+          ...item,
+          metadata: {
+            ...item.metadata,
+            title: r.fileName,
+          },
+        }),
+      );
       haptics.success();
     } catch (e) {
       addToast(e instanceof Error ? e.message : "Couldn't rename it", 3000);

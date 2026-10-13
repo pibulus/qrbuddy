@@ -1,8 +1,9 @@
 import { type Signal, useSignal } from "@preact/signals";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
 import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
+import type { QRStyle } from "../types/qr-types.ts";
 import { haptics } from "../utils/haptics.ts";
 import ChoiceRow from "./create-modal/ChoiceRow.tsx";
 import CompletionState, {
@@ -74,6 +75,9 @@ interface CreateModalProps {
     } | null
   >;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
+  customStyle?: Signal<QRStyle | null>;
+  pngSize?: Signal<1000 | 2000 | 3000>;
+  onStageMedia?: (files: File[]) => void;
 }
 
 // Frequency-ordered for humans, not enterprises: link and note first, then
@@ -171,7 +175,23 @@ export default function CreateModal({
   isCreatingEditable,
   splashConfig,
   frameConfig,
+  customStyle,
+  pngSize,
+  onStageMedia,
 }: CreateModalProps) {
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoSelect = () => {
+    photoInputRef.current?.click();
+    haptics.light();
+  };
+
+  const handleAudioSelect = () => {
+    audioInputRef.current?.click();
+    haptics.light();
+  };
+
   const [activeTab, setActiveTab] = useState<ActiveTab>("type");
   const [typeIntent, setTypeIntent] = useState<TypeIntent>("qr");
   const [completionKind, setCompletionKind] = useState<CompletionKind | null>(
@@ -470,6 +490,20 @@ export default function CreateModal({
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <ChoiceRow
+            icon="🖼️"
+            title="Photo slideshow"
+            description="Up to 10 photos, auto-advancing gallery (≤5MB each)."
+            active={false}
+            onClick={handlePhotoSelect}
+          />
+          <ChoiceRow
+            icon="🎵"
+            title="Audio playlist"
+            description="Up to 10 tracks, mixtape player (≤5MB each)."
+            active={false}
+            onClick={handleAudioSelect}
+          />
+          <ChoiceRow
             icon="📂"
             title="Share a file"
             description="Download page for one file, optional PIN."
@@ -501,6 +535,38 @@ export default function CreateModal({
             }}
           />
         </div>
+        <input
+          ref={photoInputRef}
+          type="file"
+          multiple
+          accept="image/*"
+          class="hidden"
+          aria-hidden="true"
+          tabIndex={-1}
+          onChange={(e) => {
+            const files = (e.target as HTMLInputElement).files;
+            if (files && files.length > 0) {
+              onStageMedia?.(Array.from(files));
+              onClose();
+            }
+          }}
+        />
+        <input
+          ref={audioInputRef}
+          type="file"
+          multiple
+          accept="audio/*"
+          class="hidden"
+          aria-hidden="true"
+          tabIndex={-1}
+          onChange={(e) => {
+            const files = (e.target as HTMLInputElement).files;
+            if (files && files.length > 0) {
+              onStageMedia?.(Array.from(files));
+              onClose();
+            }
+          }}
+        />
         {isBatchMode && (
           <BatchSettings
             batchUrls={batchUrls}
@@ -710,6 +776,8 @@ export default function CreateModal({
       qrStyle={qrStyle}
       logoUrl={logoUrl}
       frameConfig={frameConfig}
+      customStyle={customStyle}
+      pngSize={pngSize}
       onClose={shell.requestClose}
     />
   );

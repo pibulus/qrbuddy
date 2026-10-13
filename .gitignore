@@ -19,3 +19,10 @@ node_modules/
 
 # Playwright MCP session artifacts
 .playwright-mcp/
+
+# Local generator-review captures and environment-specific scratch harnesses
+/docs/verification-artifacts-2026-10-13/
+/scratch/verify_generator_polish.js
+/scratch/verify_review_correction.js
+/scratch/decode_artifacts.ts
+/scratch/decode_review_artifacts.ts

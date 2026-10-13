@@ -50,10 +50,14 @@ export default function RoutingConfigForm({
       {/* Dynamic Routing Config UI */}
       {routingMode === "simple" && (
         <div class="space-y-2 animate-slide-down">
-          <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
+          <label
+            htmlFor="destination-url"
+            class="text-sm font-bold text-gray-700 uppercase tracking-wide"
+          >
             Destination URL
           </label>
           <input
+            id="destination-url"
             type="text"
             value={destinationUrl}
             onInput={(e) =>
@@ -67,9 +71,9 @@ export default function RoutingConfigForm({
       {routingMode === "sequential" && (
         <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 space-y-3 animate-slide-down">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-bold text-purple-700 uppercase tracking-wide">
+            <span class="text-xs font-bold text-purple-700 uppercase tracking-wide">
               URL Sequence
-            </label>
+            </span>
             <label class="flex items-center gap-2 text-xs font-bold text-purple-700 cursor-pointer">
               <input
                 type="checkbox"
@@ -87,6 +91,7 @@ export default function RoutingConfigForm({
                 {index + 1}.
               </span>
               <input
+                id={`seq-url-${index}`}
                 type="url"
                 value={seqUrl}
                 onInput={(e) => {
@@ -95,6 +100,7 @@ export default function RoutingConfigForm({
                   setSequentialUrls(newUrls);
                 }}
                 placeholder={`URL #${index + 1}`}
+                aria-label={`URL step ${index + 1}`}
                 class="flex-1 min-h-[44px] px-3 py-2 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
               />
               {sequentialUrls.length > 2 && (
@@ -132,10 +138,14 @@ export default function RoutingConfigForm({
           </p>
 
           <div class="space-y-1">
-            <label class="text-xs font-bold text-blue-700">
+            <label
+              htmlFor="routing-ios-url"
+              class="text-xs font-bold text-blue-700"
+            >
               iOS (iPhone/iPad)
             </label>
             <input
+              id="routing-ios-url"
               type="url"
               value={iosUrl}
               onInput={(e) => setIosUrl(e.currentTarget.value)}
@@ -145,8 +155,14 @@ export default function RoutingConfigForm({
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-bold text-blue-700">Android</label>
+            <label
+              htmlFor="routing-android-url"
+              class="text-xs font-bold text-blue-700"
+            >
+              Android
+            </label>
             <input
+              id="routing-android-url"
               type="url"
               value={androidUrl}
               onInput={(e) => setAndroidUrl(e.currentTarget.value)}
@@ -156,10 +172,14 @@ export default function RoutingConfigForm({
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-bold text-blue-700">
+            <label
+              htmlFor="routing-fallback-url"
+              class="text-xs font-bold text-blue-700"
+            >
               Fallback (Desktop/Other)
             </label>
             <input
+              id="routing-fallback-url"
               type="url"
               value={fallbackUrl}
               onInput={(e) => setFallbackUrl(e.currentTarget.value)}
@@ -181,10 +201,14 @@ export default function RoutingConfigForm({
 
           <div class="flex gap-2 items-center">
             <div class="flex-1">
-              <label class="text-xs font-bold text-orange-700">
+              <label
+                htmlFor="routing-start-hour"
+                class="text-xs font-bold text-orange-700"
+              >
                 Start Hour
               </label>
               <select
+                id="routing-start-hour"
                 value={startHour}
                 onChange={(e) => setStartHour(e.currentTarget.value)}
                 class="w-full min-h-[44px] px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
@@ -201,8 +225,14 @@ export default function RoutingConfigForm({
             </div>
             <span class="text-orange-400 font-bold">to</span>
             <div class="flex-1">
-              <label class="text-xs font-bold text-orange-700">End Hour</label>
+              <label
+                htmlFor="routing-end-hour"
+                class="text-xs font-bold text-orange-700"
+              >
+                End Hour
+              </label>
               <select
+                id="routing-end-hour"
                 value={endHour}
                 onChange={(e) => setEndHour(e.currentTarget.value)}
                 class="w-full min-h-[44px] px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
@@ -222,10 +252,14 @@ export default function RoutingConfigForm({
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-bold text-orange-700">
+            <label
+              htmlFor="routing-active-url"
+              class="text-xs font-bold text-orange-700"
+            >
               Active URL (During Hours)
             </label>
             <input
+              id="routing-active-url"
               type="url"
               value={timeActiveUrl}
               onInput={(e) => setTimeActiveUrl(e.currentTarget.value)}
@@ -235,10 +269,14 @@ export default function RoutingConfigForm({
           </div>
 
           <div class="space-y-1">
-            <label class="text-xs font-bold text-orange-700">
+            <label
+              htmlFor="routing-inactive-url"
+              class="text-xs font-bold text-orange-700"
+            >
               Inactive URL (After Hours)
             </label>
             <input
+              id="routing-inactive-url"
               type="url"
               value={timeInactiveUrl}
               onInput={(e) => setTimeInactiveUrl(e.currentTarget.value)}

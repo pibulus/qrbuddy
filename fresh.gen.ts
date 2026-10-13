@@ -40,6 +40,7 @@ import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $Analytics from "./islands/Analytics.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
 import * as $CreateModal from "./islands/CreateModal.tsx";
+import * as $DesignPreferencesSync from "./islands/DesignPreferencesSync.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
@@ -135,6 +136,7 @@ const manifest = {
     "./islands/Analytics.tsx": $Analytics,
     "./islands/BucketQR.tsx": $BucketQR,
     "./islands/CreateModal.tsx": $CreateModal,
+    "./islands/DesignPreferencesSync.tsx": $DesignPreferencesSync,
     "./islands/EasterEggs.tsx": $EasterEggs,
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,

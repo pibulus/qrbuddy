@@ -12,7 +12,7 @@
     "preview": "deno run -A main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "test": "deno test --allow-net --allow-env --allow-read",
-    "test:unit": "deno test --allow-env tests/logic_test.ts tests/license_test.ts tests/inAppBrowser_test.ts tests/peek_test.ts tests/r2_test.ts tests/rate_limit_test.ts tests/dynamic_qr_preview_test.ts tests/square_test.ts",
+    "test:unit": "deno test --allow-env tests/logic_test.ts tests/license_test.ts tests/inAppBrowser_test.ts tests/peek_test.ts tests/r2_test.ts tests/rate_limit_test.ts tests/dynamic_qr_preview_test.ts tests/square_test.ts tests/generator_polish_test.ts",
     "stamp": "deno run --allow-run --allow-read --allow-write --allow-env scripts/stamp-version.ts"
   },
   "lint": {

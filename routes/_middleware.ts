@@ -41,7 +41,7 @@ function buildCsp(): string {
     `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${SCRIPT_ORIGINS}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    `connect-src 'self' ${supabase} ${R2_ORIGIN} https://cloud.umami.is https://gateway.umami.is https://fleetcount.pibulus.deno.net`,
+    `connect-src 'self' data: blob: ${supabase} ${R2_ORIGIN} https://cloud.umami.is https://gateway.umami.is https://fleetcount.pibulus.deno.net`,
     "frame-src https://ko-fi.com",
     "object-src 'none'",
     "base-uri 'self'",

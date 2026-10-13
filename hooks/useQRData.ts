@@ -3,6 +3,7 @@ import { getSupabaseUrl } from "../utils/api.ts";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
+import { updateHistoryItem } from "../utils/history.ts";
 
 export interface QRData {
   short_code: string;
@@ -130,6 +131,19 @@ export function useQRData() {
       setQrData((current) =>
         current ? { ...current, ...result.data } : result.data
       );
+
+      if (result.data?.destination_url) {
+        updateHistoryItem(
+          (item) => item.metadata?.shortCode === result.data.short_code,
+          (item) => ({
+            ...item,
+            metadata: {
+              ...item.metadata,
+              title: result.data.destination_url,
+            },
+          }),
+        );
+      }
 
       // Success feedback
       haptics.success();

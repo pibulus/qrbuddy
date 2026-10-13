@@ -20,6 +20,7 @@ import {
 } from "../types/qr-templates.ts";
 
 import { formatFileSize, validateFile } from "../utils/file-validation.ts";
+import { shareKindOf } from "../islands/smart-input/FileUploadOptions.tsx";
 
 import { validateSplashConfig } from "../supabase/functions/_shared/splash-validation.ts";
 
@@ -400,4 +401,39 @@ Deno.test("looksLikeUrl - detects standard URLs, bare domains, and utility proto
   assertEquals(looksLikeUrl("facetime:user@domain.com"), true);
   assertEquals(looksLikeUrl("not a url"), false);
   assertEquals(looksLikeUrl(""), false);
+});
+
+Deno.test("shareKindOf - classifies files correctly into file, slideshow, playlist, or pack", () => {
+  assertEquals(
+    shareKindOf([fakeFile("single.png", 1024, "image/png")]),
+    "file",
+  );
+  assertEquals(
+    shareKindOf([
+      fakeFile("photo1.jpg", 1024, "image/jpeg"),
+      fakeFile("photo2.png", 1024, "image/png"),
+    ]),
+    "slideshow",
+  );
+  assertEquals(
+    shareKindOf([
+      fakeFile("track1.mp3", 1024, "audio/mpeg"),
+      fakeFile("track2.wav", 1024, "audio/wav"),
+    ]),
+    "playlist",
+  );
+  assertEquals(
+    shareKindOf([
+      fakeFile("photo.jpg", 1024, "image/jpeg"),
+      fakeFile("song.mp3", 1024, "audio/mpeg"),
+    ]),
+    "pack",
+  );
+  assertEquals(
+    shareKindOf([
+      fakeFile("document.pdf", 1024, "application/pdf"),
+      fakeFile("notes.txt", 1024, "text/plain"),
+    ]),
+    "pack",
+  );
 });

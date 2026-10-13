@@ -8,6 +8,7 @@ import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import { addToHistory } from "../utils/history.ts";
 import { haptics } from "../utils/haptics.ts";
 import { checkQRScannability } from "../utils/qr-decode.ts";
+import { createFramedSvg, measureCaptionWidth } from "../utils/svg-export.ts";
 
 interface QRCanvasProps {
   url: Signal<string>;
@@ -104,27 +105,169 @@ export default function QRCanvas(
     }
   };
 
+  // Helper function to get the current style object. `style.value` can arrive
+  // as anything (URL param, EasterEggs, an older shared link) — an unknown key
+  // used to return `undefined` here, then blow up 4 lines later at `.dots`.
+  // Falls back to "sunset", the app's own default (routes/index.tsx).
+  const getCurrentStyle = () => {
+    if (style.value === "custom" && customStyle?.value) {
+      return customStyle.value;
+    }
+    return QR_STYLES[style.value as keyof typeof QR_STYLES] ??
+      QR_STYLES.sunset;
+  };
+
+  const getQrOptions = (renderSize: number) => {
+    const currentStyle = getCurrentStyle();
+
+    const dotShape = (currentStyle.dots && "shape" in currentStyle.dots &&
+        currentStyle.dots.shape)
+      ? currentStyle.dots.shape
+      : (("type" in currentStyle.dots &&
+          currentStyle.dots.type === "gradient")
+        ? "rounded"
+        : "square");
+
+    const cornerSquareShape = (currentStyle.cornersSquare &&
+        "shape" in currentStyle.cornersSquare &&
+        currentStyle.cornersSquare.shape)
+      ? currentStyle.cornersSquare.shape
+      : "extra-rounded";
+
+    const cornerDotShape =
+      (currentStyle.cornersDot && "shape" in currentStyle.cornersDot &&
+          currentStyle.cornersDot.shape)
+        ? currentStyle.cornersDot.shape
+        : "dot";
+
+    const scaleFactor = renderSize / 1000;
+
+    return {
+      width: renderSize,
+      height: renderSize,
+      data: url.value || "https://qrbuddy.app",
+      margin: Math.max(1, Math.round(20 * scaleFactor)),
+      image: logoUrl?.value || undefined,
+      qrOptions: {
+        typeNumber: 0 as const,
+        mode: "Byte" as const,
+        // A center logo hides modules — bump error correction to compensate.
+        errorCorrectionLevel: logoUrl?.value ? ("H" as const) : ("Q" as const),
+      },
+      imageOptions: {
+        hideBackgroundDots: true,
+        imageSize: 0.25,
+        margin: Math.max(1, Math.round(6 * scaleFactor)),
+        crossOrigin: "anonymous",
+      },
+      dotsOptions: {
+        type: dotShape as
+          | "rounded"
+          | "dots"
+          | "classy"
+          | "classy-rounded"
+          | "square"
+          | "extra-rounded",
+        color: "color" in currentStyle.dots
+          ? currentStyle.dots.color
+          : undefined,
+        gradient: "gradient" in currentStyle.dots
+          ? currentStyle.dots.gradient
+          : undefined,
+      },
+      backgroundOptions: {
+        color: "color" in currentStyle.background
+          ? currentStyle.background.color
+          : undefined,
+        gradient: "gradient" in currentStyle.background
+          ? currentStyle.background.gradient
+          : undefined,
+      },
+      cornersSquareOptions: {
+        type: cornerSquareShape as "dot" | "square" | "extra-rounded",
+        color:
+          currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
+            ? currentStyle.cornersSquare.color
+            : undefined,
+        gradient:
+          currentStyle.cornersSquare && "gradient" in currentStyle.cornersSquare
+            ? currentStyle.cornersSquare.gradient
+            : undefined,
+      },
+      cornersDotOptions: {
+        type: cornerDotShape as "dot" | "square",
+        color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
+          ? currentStyle.cornersDot.color
+          : undefined,
+        gradient:
+          currentStyle.cornersDot && "gradient" in currentStyle.cornersDot
+            ? currentStyle.cornersDot.gradient
+            : undefined,
+      },
+    };
+  };
+
   // Composite the QR onto a chunky-bordered card with a caption strip and
   // download the result — the "SCAN ME" table-tent look, baked into the file.
-  const downloadFramedPng = async (caption: string) => {
-    const qr = qrCodeRef.current;
-    if (!qr) throw new Error("QR code is not ready");
-    const raw = await qr.getRawData("png");
+  // Proportional scaling ensures 1000, 2000, or 3000px longest edge.
+  const downloadFramedPng = async ({
+    caption,
+    targetSize = 1000,
+  }: {
+    caption: string;
+    targetSize?: 1000 | 2000 | 3000;
+  }) => {
+    const captionText = caption.trim().toUpperCase();
+    const hasCaption = captionText.length > 0;
+
+    const baseWidth = 1128;
+    const baseHeight = hasCaption ? 1298 : 1128;
+    const baseLongest = Math.max(baseWidth, baseHeight);
+    const scale = targetSize / baseLongest;
+
+    let canvasWidth: number;
+    let canvasHeight: number;
+    if (baseHeight >= baseWidth) {
+      canvasHeight = targetSize;
+      canvasWidth = Math.round(baseWidth * scale);
+    } else {
+      canvasWidth = targetSize;
+      canvasHeight = Math.round(baseHeight * scale);
+    }
+
+    const pad = Math.round(64 * scale);
+    const border = Math.max(2, Math.round(20 * scale));
+    const qrSize = canvasWidth - pad * 2;
+    const capH = hasCaption ? (canvasHeight - pad * 2 - qrSize) : 0;
+    const r = Math.round(56 * scale);
+
+    const baseFontSize = 92;
+    const maxTextWidth = canvasWidth - pad * 2;
+    const measuredWidth = measureCaptionWidth(
+      captionText,
+      baseFontSize * scale,
+    );
+    const fontSize = measuredWidth > maxTextWidth
+      ? Math.max(
+        Math.round(38 * scale),
+        Math.floor(baseFontSize * scale * (maxTextWidth / measuredWidth)),
+      )
+      : Math.round(baseFontSize * scale);
+
+    // Render the QR code directly at target qrSize
+    const qrOptions = getQrOptions(qrSize);
+    const exportQr = new QRCodeStyling(qrOptions);
+    const raw = await exportQr.getRawData("png");
     if (!raw) throw new Error("QR image could not be created");
     const img = await createImageBitmap(raw as Blob);
 
-    const pad = 64;
-    const border = 20;
-    const captionText = caption.trim().toUpperCase();
-    const capH = captionText ? 170 : 0;
     const canvas = document.createElement("canvas");
-    canvas.width = img.width + pad * 2;
-    canvas.height = img.height + pad * 2 + capH;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas is unavailable");
 
     // Cream card with a fat black border, soft-brutal style.
-    const r = 56;
     ctx.fillStyle = "#FFFBF5";
     ctx.beginPath();
     ctx.roundRect(
@@ -139,18 +282,19 @@ export default function QRCanvas(
     ctx.strokeStyle = "#000000";
     ctx.stroke();
 
-    ctx.drawImage(img, pad, pad);
+    ctx.drawImage(img, pad, pad, qrSize, qrSize);
 
-    if (captionText) {
+    if (hasCaption) {
       ctx.fillStyle = "#000000";
-      ctx.font = "900 92px 'Inter Black', Inter, system-ui, sans-serif";
+      ctx.font =
+        `900 ${fontSize}px 'Inter Black', Inter, system-ui, -apple-system, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(
         captionText,
         canvas.width / 2,
-        img.height + pad + capH / 2 + 12,
-        canvas.width - pad * 2,
+        pad + qrSize + capH / 2 + Math.round(12 * scale),
+        maxTextWidth,
       );
     }
 
@@ -166,19 +310,77 @@ export default function QRCanvas(
     setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   };
 
-  const downloadPng = async () => {
-    const qr = qrCodeRef.current;
-    if (!qr) throw new Error("QR code is not ready");
+  const downloadPng = async ({
+    size = 1000,
+    frame,
+  }: {
+    size?: 1000 | 2000 | 3000;
+    frame?: { enabled: boolean; caption: string } | null;
+  } = {}) => {
+    const isFramed = frame !== undefined
+      ? (frame?.enabled ?? false)
+      : (frameConfig?.value?.enabled ?? false);
+    const effectiveCaption = frame !== undefined
+      ? (frame?.caption ?? "")
+      : (frameConfig?.value?.caption ?? "");
 
-    if (frameConfig?.value?.enabled) {
-      await downloadFramedPng(frameConfig.value.caption);
+    if (isFramed) {
+      await downloadFramedPng({
+        caption: effectiveCaption,
+        targetSize: size,
+      });
       return;
     }
 
-    await qr.download({
-      name: `qrbuddy-${style.value}-${Date.now()}`,
-      extension: "png",
+    const qrOptions = getQrOptions(size);
+    const exportQr = new QRCodeStyling(qrOptions);
+    const raw = await exportQr.getRawData("png");
+    if (!raw) throw new Error("QR image could not be created");
+
+    const a = document.createElement("a");
+    const objectUrl = URL.createObjectURL(raw as Blob);
+    a.href = objectUrl;
+    a.download = `qrbuddy-${style.value}-${Date.now()}.png`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  };
+
+  const downloadSvg = async ({
+    frame,
+  }: {
+    frame?: { enabled: boolean; caption: string } | null;
+  } = {}) => {
+    const isFramed = frame !== undefined
+      ? (frame?.enabled ?? false)
+      : (frameConfig?.value?.enabled ?? false);
+    const effectiveCaption = frame !== undefined
+      ? (frame?.caption ?? "")
+      : (frameConfig?.value?.caption ?? "");
+
+    const qrOptions = getQrOptions(1000);
+    const exportQr = new QRCodeStyling(qrOptions);
+    const raw = await exportQr.getRawData("svg");
+    if (!raw) throw new Error("SVG raw data could not be generated");
+    const rawText = await (raw as Blob).text();
+
+    let finalSvgText = rawText;
+    let fileName = `qrbuddy-${style.value}-${Date.now()}.svg`;
+
+    if (isFramed) {
+      // The helper normalizes the caption before measuring the text it exports.
+      finalSvgText = createFramedSvg(rawText, effectiveCaption);
+      fileName = `qrbuddy-${style.value}-framed-${Date.now()}.svg`;
+    }
+
+    const blob = new Blob([finalSvgText], {
+      type: "image/svg+xml;charset=utf-8",
     });
+    const a = document.createElement("a");
+    const objectUrl = URL.createObjectURL(blob);
+    a.href = objectUrl;
+    a.download = fileName;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   };
 
   const handleDownloadClick = async () => {
@@ -191,6 +393,10 @@ export default function QRCanvas(
     // Start the download — framed composite when a frame is on.
     try {
       await downloadPng();
+      haptics.success();
+      addToast("PNG download started! 🖼️");
+      setShowSuccessFlash(true);
+      setTimeout(() => setShowSuccessFlash(false), 600);
     } catch (err) {
       console.error("Failed to start PNG download:", err);
       haptics.error();
@@ -214,12 +420,6 @@ export default function QRCanvas(
         console.error("Failed to save QR to history:", err);
       }
     }
-
-    // The browser accepted the download request; the user chooses where it lands.
-    haptics.success();
-    addToast("PNG download started! 🖼️");
-    setShowSuccessFlash(true);
-    setTimeout(() => setShowSuccessFlash(false), 600);
   };
 
   // Derive the ambient-glow gradient from the ACTIVE style's dot colors so the
@@ -240,100 +440,10 @@ export default function QRCanvas(
     return "linear-gradient(135deg, #FF8C42, #FF69B4, #9370DB)";
   };
 
-  // Helper function to get the current style object. `style.value` can arrive
-  // as anything (URL param, EasterEggs, an older shared link) — an unknown key
-  // used to return `undefined` here, then blow up 4 lines later at `.dots`.
-  // Falls back to "sunset", the app's own default (routes/index.tsx).
-  const getCurrentStyle = () => {
-    if (style.value === "custom" && customStyle?.value) {
-      return customStyle.value;
-    }
-    return QR_STYLES[style.value as keyof typeof QR_STYLES] ??
-      QR_STYLES.sunset;
-  };
-
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    const currentStyle = getCurrentStyle();
-
-    const dotShape = (currentStyle.dots && "shape" in currentStyle.dots &&
-        currentStyle.dots.shape)
-      ? currentStyle.dots.shape
-      : (("type" in currentStyle.dots &&
-          currentStyle.dots.type === "gradient")
-        ? "rounded"
-        : "square");
-
-    const cornerSquareShape = (currentStyle.cornersSquare &&
-        "shape" in currentStyle.cornersSquare &&
-        currentStyle.cornersSquare.shape)
-      ? currentStyle.cornersSquare.shape
-      : "extra-rounded";
-
-    const cornerDotShape =
-      (currentStyle.cornersDot && "shape" in currentStyle.cornersDot &&
-          currentStyle.cornersDot.shape)
-        ? currentStyle.cornersDot.shape
-        : "dot";
-
-    const qrCode = new QRCodeStyling({
-      width: 1000,
-      height: 1000,
-      data: url.value || "https://qrbuddy.app",
-      margin: 20,
-      image: logoUrl?.value || undefined,
-      qrOptions: {
-        typeNumber: 0,
-        mode: "Byte",
-        // A center logo hides modules — bump error correction to compensate.
-        errorCorrectionLevel: logoUrl?.value ? "H" : "Q",
-      },
-      imageOptions: {
-        hideBackgroundDots: true,
-        imageSize: 0.25,
-        margin: 6,
-        crossOrigin: "anonymous",
-      },
-      dotsOptions: {
-        type: dotShape,
-        color: "color" in currentStyle.dots
-          ? currentStyle.dots.color
-          : undefined,
-        gradient: "gradient" in currentStyle.dots
-          ? currentStyle.dots.gradient
-          : undefined,
-      },
-      backgroundOptions: {
-        color: "color" in currentStyle.background
-          ? currentStyle.background.color
-          : undefined,
-        gradient: "gradient" in currentStyle.background
-          ? currentStyle.background.gradient
-          : undefined,
-      },
-      cornersSquareOptions: {
-        type: cornerSquareShape as "dot" | "square" | "extra-rounded",
-        color:
-          currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
-            ? currentStyle.cornersSquare.color
-            : undefined,
-        gradient:
-          currentStyle.cornersSquare && "gradient" in currentStyle.cornersSquare
-            ? currentStyle.cornersSquare.gradient
-            : undefined,
-      },
-      cornersDotOptions: {
-        type: cornerDotShape as "dot" | "square",
-        color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
-          ? currentStyle.cornersDot.color
-          : undefined,
-        gradient:
-          currentStyle.cornersDot && "gradient" in currentStyle.cornersDot
-            ? currentStyle.cornersDot.gradient
-            : undefined,
-      },
-    });
+    const qrCode = new QRCodeStyling(getQrOptions(1000));
 
     // Remove any stale canvas but keep the SSR placeholder <img> (it's Preact's
     // to remove, via qrReady) — it covers the canvas until drawing settles.
@@ -357,82 +467,7 @@ export default function QRCanvas(
       return;
     }
 
-    const currentStyle = getCurrentStyle();
-
-    const dotShape = (currentStyle.dots && "shape" in currentStyle.dots &&
-        currentStyle.dots.shape)
-      ? currentStyle.dots.shape
-      : (("type" in currentStyle.dots &&
-          currentStyle.dots.type === "gradient")
-        ? "rounded"
-        : "square");
-
-    const cornerSquareShape = (currentStyle.cornersSquare &&
-        "shape" in currentStyle.cornersSquare &&
-        currentStyle.cornersSquare.shape)
-      ? currentStyle.cornersSquare.shape
-      : "extra-rounded";
-
-    const cornerDotShape =
-      (currentStyle.cornersDot && "shape" in currentStyle.cornersDot &&
-          currentStyle.cornersDot.shape)
-        ? currentStyle.cornersDot.shape
-        : "dot";
-
-    qrCodeRef.current.update({
-      data: url.value || "https://qrbuddy.app",
-      image: logoUrl?.value || undefined,
-      qrOptions: {
-        typeNumber: 0,
-        mode: "Byte",
-        // A center logo hides modules — bump error correction to compensate.
-        errorCorrectionLevel: logoUrl?.value ? "H" : "Q",
-      },
-      imageOptions: {
-        hideBackgroundDots: true,
-        imageSize: 0.25,
-        margin: 6,
-        crossOrigin: "anonymous",
-      },
-      dotsOptions: {
-        type: dotShape,
-        color: "color" in currentStyle.dots
-          ? currentStyle.dots.color
-          : undefined,
-        gradient: "gradient" in currentStyle.dots
-          ? currentStyle.dots.gradient
-          : undefined,
-      },
-      backgroundOptions: {
-        color: "color" in currentStyle.background
-          ? currentStyle.background.color
-          : undefined,
-        gradient: "gradient" in currentStyle.background
-          ? currentStyle.background.gradient
-          : undefined,
-      },
-      cornersSquareOptions: {
-        type: cornerSquareShape as "dot" | "square" | "extra-rounded",
-        color:
-          currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
-            ? currentStyle.cornersSquare.color
-            : undefined,
-        gradient:
-          currentStyle.cornersSquare && "gradient" in currentStyle.cornersSquare
-            ? currentStyle.cornersSquare.gradient
-            : undefined,
-      },
-      cornersDotOptions: {
-        type: cornerDotShape as "dot" | "square",
-        color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
-          ? currentStyle.cornersDot.color
-          : undefined,
-        gradient:
-          currentStyle.cornersDot && "gradient" in currentStyle.cornersDot
-            ? currentStyle.cornersDot.gradient
-            : undefined,
-      },
-    });
+    qrCodeRef.current.update(getQrOptions(1000));
   }, [url.value, style.value, customStyle?.value, logoUrl?.value]);
 
   // The honesty check: after each render settles, machine-decode the actual
@@ -456,35 +491,49 @@ export default function QRCanvas(
   useEffect(() => {
     if (triggerDownload.value && qrCodeRef.current) {
       void downloadPng().then(() => {
+        haptics.success();
         addToast("PNG download started! 🖼️");
       }).catch((err) => {
         console.error("Failed to start PNG download:", err);
+        haptics.error();
         addToast("Couldn't start PNG download ❌");
       });
       triggerDownload.value = false;
     }
   }, [triggerDownload.value]);
 
-  // Global export requests (from the Create modal's Design tab).
+  // Global export requests (from the Create modal's Design tab or ShareReady sticker).
   useEffect(() => {
     if (!listenForExportEvents) return;
-    const handleExport = (event: Event) => {
-      const format = (event as CustomEvent<{ format?: string }>).detail
-        ?.format;
-      const qr = qrCodeRef.current;
-      if (!qr) return;
-      if (format === "svg") {
-        qr.download({
-          name: `qrbuddy-${style.value}-${Date.now()}`,
-          extension: "svg",
-        });
-      } else {
-        void downloadPng().then(() => {
+    const handleExport = async (event: Event) => {
+      const handledEvent = event as Event & { _handled?: boolean };
+      if (handledEvent.defaultPrevented || handledEvent._handled) return;
+      handledEvent._handled = true;
+      handledEvent.preventDefault();
+
+      const detail = (event as CustomEvent<{
+        format?: string;
+        size?: 1000 | 2000 | 3000;
+        frameOverride?: { enabled: boolean; caption: string } | null;
+      }>).detail;
+      const format = detail?.format ?? "png";
+      const exportSize = detail?.size ?? 1000;
+      const effectiveFrame = detail?.frameOverride ?? frameConfig?.value;
+
+      try {
+        if (format === "svg") {
+          await downloadSvg({ frame: effectiveFrame });
+          haptics.success();
+          addToast("SVG download started! 📐");
+        } else {
+          await downloadPng({ size: exportSize, frame: effectiveFrame });
+          haptics.success();
           addToast("PNG download started! 🖼️");
-        }).catch((err) => {
-          console.error("Failed to start PNG download:", err);
-          addToast("Couldn't start PNG download ❌");
-        });
+        }
+      } catch (err) {
+        console.error(`Failed to start ${format.toUpperCase()} download:`, err);
+        haptics.error();
+        addToast(`Couldn't start ${format.toUpperCase()} download ❌`);
       }
     };
     globalThis.addEventListener("qr-export", handleExport as EventListener);

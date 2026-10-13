@@ -28,7 +28,9 @@ const PILL =
 
 /** The "it's alive" strip under the input once a share has uploaded: open
  * it, copy it, or stamp a SCAN ME sticker — the three things people do next. */
-export default function ShareReady({ share, frameConfig }: ShareReadyProps) {
+export default function ShareReady(
+  { share, frameConfig: _frameConfig }: ShareReadyProps,
+) {
   const copy = KIND_COPY[share.kind];
 
   const handleCopy = async () => {
@@ -42,19 +44,19 @@ export default function ShareReady({ share, frameConfig }: ShareReadyProps) {
   };
 
   const handleSticker = () => {
-    // A sticker is the QR in a chunky SCAN ME frame — turn the frame on
-    // (if it isn't already) and pull the framed PNG.
-    if (frameConfig && !frameConfig.value?.enabled) {
-      frameConfig.value = { enabled: true, caption: "SCAN ME" };
-    }
-    // Let the canvas redraw with the frame before exporting.
-    setTimeout(() => {
-      globalThis.dispatchEvent(
-        new CustomEvent("qr-export", { detail: { format: "png" } }),
-      );
-    }, 120);
+    // A sticker is the QR in a chunky SCAN ME frame — export with a framed
+    // override so the download gets the sticker frame without overwriting
+    // the user's saved presentation preferences.
+    globalThis.dispatchEvent(
+      new CustomEvent("qr-export", {
+        detail: {
+          format: "png",
+          frameOverride: { enabled: true, caption: "SCAN ME" },
+          isSticker: true,
+        },
+      }),
+    );
     haptics.medium();
-    addToast("Sticker on the way — print it, stick it 🖨️");
   };
 
   return (
@@ -89,6 +91,18 @@ export default function ShareReady({ share, frameConfig }: ShareReadyProps) {
         >
           Sticker
         </button>
+      </div>
+      <div class="rounded-xl border border-black/10 bg-amber-50/70 p-2.5 text-xs font-medium text-neutral-700 flex items-start gap-2">
+        <span class="text-sm shrink-0">👑</span>
+        <div class="leading-snug">
+          <p class="font-bold text-black">
+            Managed in this browser · 30-day share
+          </p>
+          <p class="text-[11px] text-neutral-600 mt-0.5">
+            Your owner key stays in this browser. Sync or export in History (☁️)
+            to keep control across devices.
+          </p>
+        </div>
       </div>
     </div>
   );

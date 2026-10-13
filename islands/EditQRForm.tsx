@@ -325,10 +325,14 @@ export default function EditQRForm() {
 
         {/* Expiry Date */}
         <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
+          <label
+            htmlFor="qr-expiry-date"
+            class="text-sm font-bold text-gray-700 uppercase tracking-wide"
+          >
             Expiry Date (Optional)
           </label>
           <input
+            id="qr-expiry-date"
             type="datetime-local"
             value={expiryDate}
             onChange={(e) =>

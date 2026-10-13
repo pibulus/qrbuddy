@@ -170,3 +170,24 @@ export function clearHistory() {
     console.error("History: local clear failed", error);
   }
 }
+
+/** Update matching history items locally and emit a change event. */
+export function updateHistoryItem(
+  matcher: (item: HistoryItem) => boolean,
+  updater: (item: HistoryItem) => HistoryItem,
+): boolean {
+  if (!IS_BROWSER) return false;
+  const history = getHistory();
+  let changed = false;
+  const updated = history.map((item) => {
+    if (matcher(item)) {
+      changed = true;
+      return updater(item);
+    }
+    return item;
+  });
+  if (changed) {
+    return persistHistory(updated);
+  }
+  return false;
+}

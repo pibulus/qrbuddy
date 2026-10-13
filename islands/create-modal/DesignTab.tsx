@@ -4,6 +4,8 @@ import { addToast } from "../ToastManager.tsx";
 import LogoUploader from "../LogoUploader.tsx";
 import ChoiceRow from "./ChoiceRow.tsx";
 import PalettePills, { PALETTE_PILL, pillState } from "./PalettePills.tsx";
+import type { QRStyle } from "../../types/qr-types.ts";
+import { resetDesignPreferences } from "../../utils/design-preferences.ts";
 
 interface FrameConfig {
   enabled: boolean;
@@ -15,24 +17,52 @@ interface DesignTabProps {
   qrStyle: Signal<string>;
   logoUrl: Signal<string>;
   frameConfig?: Signal<FrameConfig | null>;
+  customStyle?: Signal<QRStyle | null>;
+  pngSize?: Signal<1000 | 2000 | 3000>;
   onClose: () => void;
 }
 
 /** CreateModal's "Design" tab: palette pills, center logo, caption frame,
- * and export. Same card language as the other two tabs — no dashed boxes,
+ * export options, and reset. Same card language as the other two tabs — no dashed boxes,
  * no tinted wrappers. */
 export default function DesignTab(
-  { url, qrStyle, logoUrl, frameConfig, onClose }: DesignTabProps,
+  {
+    url,
+    qrStyle,
+    logoUrl,
+    frameConfig,
+    customStyle,
+    pngSize,
+    onClose,
+  }: DesignTabProps,
 ) {
   const frameActive = frameConfig?.value?.enabled ?? false;
   const isCustom = qrStyle.value === "custom";
+  const currentPngSize = pngSize?.value ?? 1000;
 
   const exportAs = (format: "png" | "svg") => {
     globalThis.dispatchEvent(
-      new CustomEvent("qr-export", { detail: { format } }),
+      new CustomEvent("qr-export", {
+        detail: {
+          format,
+          size: currentPngSize,
+        },
+      }),
     );
     haptics.medium();
-    addToast(`${format.toUpperCase()} on the way ⬇`);
+  };
+
+  const handleResetDesign = () => {
+    qrStyle.value = "sunset";
+    if (customStyle) customStyle.value = null;
+    logoUrl.value = "";
+    if (frameConfig) frameConfig.value = null;
+    if (pngSize) pngSize.value = 1000;
+
+    resetDesignPreferences();
+    globalThis.dispatchEvent(new CustomEvent("qr-design-reset"));
+    haptics.light();
+    addToast("Design reset to default ↺");
   };
 
   return (
@@ -108,9 +138,37 @@ export default function DesignTab(
 
       {/* Export */}
       <section class="space-y-2">
-        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-          Download
-        </h3>
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+            Download
+          </h3>
+          {/* PNG Size selector */}
+          <div
+            class="flex items-center gap-1 bg-amber-50 p-1 rounded-full border-2 border-black/15"
+            role="group"
+            aria-label="PNG export size"
+          >
+            {([1000, 2000, 3000] as const).map((size) => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => {
+                  if (pngSize) pngSize.value = size;
+                  haptics.light();
+                }}
+                aria-pressed={currentPngSize === size}
+                class={`px-2.5 py-1 rounded-full text-xs font-black transition-all ${
+                  currentPngSize === size
+                    ? "bg-amber-200 border-2 border-black text-black shadow-chunky"
+                    : "text-neutral-600 hover:text-black border-2 border-transparent"
+                }`}
+              >
+                {size}px
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-2">
           <button
             type="button"
@@ -122,7 +180,6 @@ export default function DesignTab(
           <button
             type="button"
             onClick={() => exportAs("svg")}
-            title="Infinitely scalable, no frame — for print shops and designers"
             class="min-h-[48px] rounded-full border-2 border-black bg-white px-4 font-black text-black shadow-chunky hover:scale-[1.02] active:scale-95 transition-all"
           >
             ⬇ SVG
@@ -149,6 +206,18 @@ export default function DesignTab(
         >
           ▀▄█ Copy as text art
         </button>
+
+        {/* Reset design action */}
+        <div class="pt-2 flex justify-center">
+          <button
+            type="button"
+            onClick={handleResetDesign}
+            class="min-h-[44px] px-4 py-2 rounded-full border-2 border-black/15 bg-white text-xs font-black text-neutral-600 hover:border-black/60 hover:text-black active:scale-95 transition-all flex items-center justify-center gap-1.5"
+            aria-label="Reset design to default"
+          >
+            ↺ Reset design
+          </button>
+        </div>
       </section>
     </div>
   );

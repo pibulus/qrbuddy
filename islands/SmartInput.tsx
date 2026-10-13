@@ -33,6 +33,7 @@ import FileUploadOptions, {
 } from "./smart-input/FileUploadOptions.tsx";
 import ShareReady, { type LastShare } from "./smart-input/ShareReady.tsx";
 import { prepImages } from "../utils/image-prep.ts";
+import type { QRStyle } from "../types/qr-types.ts";
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -44,6 +45,8 @@ interface SmartInputProps {
   bucketUrl: Signal<string>;
   logoUrl: Signal<string>;
   qrStyle: Signal<string>;
+  customStyle?: Signal<QRStyle | null>;
+  pngSize?: Signal<1000 | 2000 | 3000>;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
   onModalStateChange?: (isOpen: boolean) => void;
 }
@@ -59,6 +62,8 @@ export default function SmartInput(
     bucketUrl,
     logoUrl,
     qrStyle,
+    customStyle,
+    pngSize,
     frameConfig,
     onModalStateChange,
   }: SmartInputProps,
@@ -386,7 +391,7 @@ export default function SmartInput(
 
   // Stage files first so the user can pick a download limit before upload.
   // (The old flow uploaded on drop, which made the limit picker unreachable.)
-  const stageFiles = (fileList: FileList) => {
+  const stageFiles = (fileList: FileList | File[]) => {
     if (isUploading || stagedUploadLock.current) {
       addToast("Let this upload finish before choosing more files", 3000);
       return;
@@ -712,6 +717,9 @@ export default function SmartInput(
         isCreatingEditable={isCreatingDynamic}
         splashConfig={splashConfig}
         frameConfig={frameConfig}
+        customStyle={customStyle}
+        pngSize={pngSize}
+        onStageMedia={stageFiles}
       />
 
       <div class="relative group">
@@ -839,6 +847,7 @@ export default function SmartInput(
               setTitle={setShareTitle}
               onConfirm={handleStagedConfirm}
               onCancel={handleStagedCancel}
+              onReorderFiles={(newFiles) => setStagedFiles(newFiles)}
             />
           </>
         )}

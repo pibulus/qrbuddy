@@ -8,6 +8,7 @@ import { safeZipEntryNames } from "../utils/zip-names.ts";
 import OwnerStrip, { type ShareItem } from "./OwnerStrip.tsx";
 import ShareActions from "./ShareActions.tsx";
 import { addToast } from "./ToastManager.tsx";
+import { haptics } from "../utils/haptics.ts";
 
 const SLIDE_MS = 4500;
 
@@ -65,6 +66,8 @@ export default function FileSlideshow({
   const [isExploding, setIsExploding] = useState(false);
   const [lastDownloadStarted, setLastDownloadStarted] = useState(false);
   const [trackSelected, setTrackSelected] = useState(false);
+  const [mediaErrorKey, setMediaErrorKey] = useState<string | null>(null);
+  const [zipError, setZipError] = useState<string | null>(null);
 
   const hasMultipleFiles = files && files.length > 1;
   const isAllAudio = Boolean(
@@ -225,11 +228,13 @@ export default function FileSlideshow({
   const goNext = () => {
     setIsPlaying(false);
     setTrackSelected(true);
+    setMediaErrorKey(null);
     nextSlide();
   };
   const goPrev = () => {
     setIsPlaying(false);
     setTrackSelected(true);
+    setMediaErrorKey(null);
     prevSlide();
   };
   const goTo = (idx: number) => {
@@ -242,6 +247,7 @@ export default function FileSlideshow({
     }
     setIsPlaying(false);
     setTrackSelected(true);
+    setMediaErrorKey(null);
     setCurrentIndex(idx);
   };
 
@@ -392,9 +398,12 @@ export default function FileSlideshow({
       // Let browsers (especially Safari) begin consuming the download before
       // releasing its backing Blob URL.
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setZipError(null);
     } catch (error) {
       console.error("Failed to zip files:", error);
-      alert("Failed to create zip file. Please try downloading individually.");
+      const msg = "Failed to create ZIP. Try downloading files individually.";
+      setZipError(msg);
+      addToast(msg, 4000);
     } finally {
       setIsZipping(false);
     }
@@ -503,12 +512,34 @@ export default function FileSlideshow({
               ? (
                 <>
                   {isImage && (
-                    <img
-                      key={currentDownloadUrl} // Force re-render on change
-                      src={currentDownloadUrl}
-                      alt={displayFileName}
-                      class="w-full h-full object-contain animate-scale-in"
-                    />
+                    mediaErrorKey === currentDownloadUrl
+                      ? (
+                        <div class="flex flex-col items-center justify-center p-6 text-center space-y-3 bg-black/40 rounded-2xl border border-white/20">
+                          <span class="text-4xl">⚠️</span>
+                          <p class="font-bold text-sm text-white">
+                            Couldn't load photo
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaErrorKey(null);
+                              haptics.light();
+                            }}
+                            class="min-h-[44px] px-4 py-2 rounded-full border-2 border-white bg-white text-black font-black text-xs hover:bg-amber-200 transition-all shadow-sm"
+                          >
+                            🔄 Retry photo
+                          </button>
+                        </div>
+                      )
+                      : (
+                        <img
+                          key={currentDownloadUrl} // Force re-render on change
+                          src={currentDownloadUrl}
+                          alt={displayFileName}
+                          onError={() => setMediaErrorKey(currentDownloadUrl)}
+                          class="w-full h-full object-contain animate-scale-in"
+                        />
+                      )
                   )}
                   {isAudio && (
                     <div
@@ -530,6 +561,7 @@ export default function FileSlideshow({
                         key={currentDownloadUrl}
                         controls
                         autoPlay={currentIndex > 0 || trackSelected}
+                        onError={() => setMediaErrorKey(currentDownloadUrl)}
                         onPlay={() => {
                           if (currentFile) {
                             engagement.current.items[currentFile.id] =
@@ -546,6 +578,22 @@ export default function FileSlideshow({
                         />
                         Your browser does not support the audio element.
                       </audio>
+                      {mediaErrorKey === currentDownloadUrl && (
+                        <div class="p-2.5 rounded-xl border border-red-300 bg-red-950/60 text-xs font-bold text-red-200 flex items-center justify-between gap-2 animate-slide-down">
+                          <span>Audio failed to load.</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaErrorKey(null);
+                              audioRef.current?.load();
+                              haptics.light();
+                            }}
+                            class="min-h-[36px] px-3 py-1 rounded-lg border border-white bg-white text-black font-black text-xs hover:bg-amber-100"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      )}
 
                       {/* Tracklist — names, not numbers */}
                       {hasMultipleFiles && (
@@ -709,6 +757,15 @@ export default function FileSlideshow({
               >
                 {isZipping ? "Zipping..." : "Download All (.zip)"}
               </button>
+            )}
+
+            {zipError && (
+              <p
+                role="alert"
+                class="text-xs text-center text-red-300 font-bold bg-red-950/70 p-2.5 rounded-xl border border-red-400/40 animate-slide-down"
+              >
+                {zipError}
+              </p>
             )}
 
             {hasMultipleFiles && !isUnlimited && (

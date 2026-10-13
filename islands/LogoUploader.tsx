@@ -1,5 +1,5 @@
 import { Signal } from "@preact/signals";
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
 
@@ -11,9 +11,22 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadGenRef = useRef(0);
+
+  useEffect(() => {
+    const handleReset = () => {
+      uploadGenRef.current++;
+      setIsUploading(false);
+      setError(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    globalThis.addEventListener("qr-design-reset", handleReset);
+    return () => globalThis.removeEventListener("qr-design-reset", handleReset);
+  }, []);
 
   const handleFileSelect = (file: File) => {
     try {
+      const currentGen = ++uploadGenRef.current;
       setIsUploading(true);
       setError(null);
       haptics.medium();
@@ -31,9 +44,11 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
       // Convert to data URL and normalize to a centered square
       const reader = new FileReader();
       reader.onload = (e) => {
+        if (currentGen !== uploadGenRef.current) return;
         const rawDataUrl = e.target?.result as string;
         const img = new Image();
         img.onload = () => {
+          if (currentGen !== uploadGenRef.current) return;
           const size = 400;
           const canvas = document.createElement("canvas");
           canvas.width = size;
@@ -60,12 +75,14 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
           setIsUploading(false);
         };
         img.onerror = () => {
+          if (currentGen !== uploadGenRef.current) return;
           logoUrl.value = rawDataUrl;
           setIsUploading(false);
         };
         img.src = rawDataUrl;
       };
       reader.onerror = () => {
+        if (currentGen !== uploadGenRef.current) return;
         throw new Error("Failed to read image file");
       };
       reader.readAsDataURL(file);
@@ -92,6 +109,7 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
   };
 
   const handleRemoveLogo = () => {
+    uploadGenRef.current++;
     logoUrl.value = "";
     haptics.light();
     addToast("Logo removed", 2000);

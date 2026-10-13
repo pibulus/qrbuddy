@@ -12,6 +12,7 @@ import Analytics from "../islands/Analytics.tsx";
 import { AboutModal } from "../islands/AboutModal.tsx";
 import { PricingModal } from "../islands/PricingModal.tsx";
 import FooterDock from "../islands/FooterDock.tsx";
+import DesignPreferencesSync from "../islands/DesignPreferencesSync.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { getSupabaseUrl } from "../utils/api.ts";
@@ -46,6 +47,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
   const frameConfig = useSignal<{ enabled: boolean; caption: string } | null>(
     null,
   );
+  const pngSize = useSignal<1000 | 2000 | 3000>(1000);
 
   return (
     <>
@@ -178,6 +180,13 @@ export default function Home({ data }: PageProps<HomeProps>) {
         />
 
         <EasterEggs url={url} style={style} />
+        <DesignPreferencesSync
+          style={style}
+          customStyle={customStyle}
+          logoUrl={logoUrl}
+          frameConfig={frameConfig}
+          pngSize={pngSize}
+        />
 
         {/* Style Selector - aligned with the title line */}
         <div
@@ -234,6 +243,8 @@ export default function Home({ data }: PageProps<HomeProps>) {
             bucketUrl={bucketUrl}
             logoUrl={logoUrl}
             qrStyle={style}
+            customStyle={customStyle}
+            pngSize={pngSize}
             frameConfig={frameConfig}
             onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
           />
