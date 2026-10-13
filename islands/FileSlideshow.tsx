@@ -7,6 +7,7 @@ import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
 import { safeZipEntryNames } from "../utils/zip-names.ts";
 import OwnerStrip, { type ShareItem } from "./OwnerStrip.tsx";
 import ShareActions from "./ShareActions.tsx";
+import { addToast } from "./ToastManager.tsx";
 
 const SLIDE_MS = 4500;
 
@@ -57,6 +58,7 @@ export default function FileSlideshow({
 
   // Slideshow State
   const [currentIndex, setCurrentIndex] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isZipping, setIsZipping] = useState(false);
@@ -79,7 +81,7 @@ export default function FileSlideshow({
   ) {
     ownerKind = "slideshow";
   }
-  const currentFile = hasMultipleFiles ? files![currentIndex] : null;
+  const currentFile = files?.[currentIndex] ?? null;
 
   // A photo slideshow plays itself; any hand on the wheel stops it.
   const [isPlaying, setIsPlaying] = useState(isAllImages && isUnlimited);
@@ -207,12 +209,11 @@ export default function FileSlideshow({
   };
 
   const handleTrackEnded = () => {
-    if (!hasMultipleFiles) return;
-    if (currentIndex >= files!.length - 1) {
-      if (isAllAudio) engagement.current.completed = true;
+    if (isAudio && (!hasMultipleFiles || currentIndex >= files!.length - 1)) {
+      engagement.current.completed = true;
       return;
     }
-    setCurrentIndex((index) => index + 1);
+    if (hasMultipleFiles) setCurrentIndex((index) => index + 1);
   };
 
   const prevSlide = () => {
@@ -232,6 +233,13 @@ export default function FileSlideshow({
     prevSlide();
   };
   const goTo = (idx: number) => {
+    // Changing autoPlay on an already mounted audio element does not start it.
+    // Start the selected track in this tap's user gesture, including a replay.
+    if (idx === currentIndex && audioRef.current) {
+      void audioRef.current.play().catch(() => {
+        addToast("Couldn't start this track. Try its Play control.", 4000);
+      });
+    }
     setIsPlaying(false);
     setTrackSelected(true);
     setCurrentIndex(idx);
@@ -263,7 +271,7 @@ export default function FileSlideshow({
         keepalive: true,
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify({ fileId, ...body }),
-      });
+      }).catch(() => {/* Best-effort telemetry. */});
     } catch {
       // A beacon that fails is a stat that didn't happen. Fine.
     }
@@ -296,7 +304,7 @@ export default function FileSlideshow({
 
   // Count the item on screen; reaching the last one counts as finishing.
   useEffect(() => {
-    if (!currentFile || !showPreview) return;
+    if (!currentFile || !showPreview || isAudio) return;
     const e = engagement.current;
     e.items[currentFile.id] = (e.items[currentFile.id] ?? 0) + 1;
     if (isAllImages && currentIndex === files!.length - 1) {
@@ -309,6 +317,12 @@ export default function FileSlideshow({
     if (!hasMultipleFiles) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey ||
+        (e.target instanceof Element && e.target.closest(
+          'input, textarea, select, button, a, audio, video, summary, [contenteditable]:not([contenteditable="false"]), [role="button"], [role="tab"]',
+        ))
+      ) return;
       if (e.key === "ArrowRight") goNext();
       if (e.key === "ArrowLeft") goPrev();
       if (e.key === " " && isAllImages) {
@@ -319,12 +333,13 @@ export default function FileSlideshow({
 
     globalThis.addEventListener("keydown", handleKeyDown);
     return () => globalThis.removeEventListener("keydown", handleKeyDown);
-  }, [hasMultipleFiles, files]);
+  }, [hasMultipleFiles, files, isAllImages]);
 
   // Touch Navigation
   const minSwipeDistance = 50;
 
   const onTouchStart = (e: TouchEvent) => {
+    if (isAudio) return;
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
@@ -334,7 +349,7 @@ export default function FileSlideshow({
   };
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (isAudio || touchStart === null || touchEnd === null) return;
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
@@ -453,13 +468,15 @@ export default function FileSlideshow({
 
         {/* Main Content Card */}
         <div
-          class={`relative w-full aspect-[4/3] md:aspect-video rounded-3xl overflow-hidden border group ${getCardStyles()}`}
+          class={`relative w-full ${
+            isAudio && showPreview ? "" : "aspect-[4/3] md:aspect-video"
+          } rounded-3xl overflow-hidden border group ${getCardStyles()}`}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          {/* Navigation Arrows (Desktop) */}
-          {hasMultipleFiles && (
+          {/* Audio has a tracklist; overlay arrows would cover native controls. */}
+          {hasMultipleFiles && !isAudio && (
             <>
               <button
                 type="button"
@@ -509,9 +526,17 @@ export default function FileSlideshow({
                         )}
                       </div>
                       <audio
+                        ref={audioRef}
                         key={currentDownloadUrl}
                         controls
                         autoPlay={currentIndex > 0 || trackSelected}
+                        onPlay={() => {
+                          if (currentFile) {
+                            engagement.current.items[currentFile.id] =
+                              (engagement.current.items[currentFile.id] ?? 0) +
+                              1;
+                          }
+                        }}
                         onEnded={handleTrackEnded}
                         class="w-full"
                       >

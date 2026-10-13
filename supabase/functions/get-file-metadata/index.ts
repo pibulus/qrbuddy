@@ -43,13 +43,17 @@ serve(async (req) => {
       .from("destructible_files")
       .select("*")
       .eq("id", fileId)
-      .single();
+      .maybeSingle();
 
     if (fetchError || !file) {
       return new Response(
-        JSON.stringify({ error: "File not found or already destroyed" }),
+        JSON.stringify({
+          error: fetchError
+            ? "Share details temporarily unavailable"
+            : "File not found or already destroyed",
+        }),
         {
-          status: 404,
+          status: fetchError ? 503 : 404,
           headers: {
             ...getCorsHeaders(req),
             "Content-Type": "application/json",
@@ -84,7 +88,7 @@ serve(async (req) => {
     if (isOwner) {
       const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
         .toISOString().slice(0, 10);
-      const { data } = await supabase
+      const { data, error: ledgerError } = await supabase
         .from("share_stats_daily")
         .select(
           "day, views, people, returns, countries, cities, devices, hours, items, dwell_s, dwell_n, completions, shares, downloads, referred, languages, apps, farthest_km, farthest_place, conditions, cells",
@@ -92,6 +96,7 @@ serve(async (req) => {
         .eq("file_id", fileId)
         .gte("day", since)
         .order("day", { ascending: true });
+      if (ledgerError) throw new Error("Share stats temporarily unavailable");
       ledger = data ?? [];
 
       const cellViews: Record<string, number> = {};

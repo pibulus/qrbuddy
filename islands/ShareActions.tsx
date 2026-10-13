@@ -56,21 +56,23 @@ export default function ShareActions(
         type="button"
         onClick={handleCopyLink}
         aria-label="Copy share link"
-        class="w-full min-h-[52px] px-4 py-3 bg-white border-3 border-black rounded-xl font-bold flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
+        class="w-full min-h-[52px] px-4 py-3 bg-white text-black border-3 border-black rounded-xl font-bold flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
       >
         <span>📋</span>
         Copy share link
       </button>
 
-      <button
-        type="button"
-        onClick={handleNativeShare}
-        aria-label={canWebShare ? "Share QR link" : "Copy share link"}
-        class="w-full min-h-[52px] px-4 py-3 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 text-black border-3 border-black rounded-xl font-bold flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
-      >
-        <span>{canWebShare ? "📲" : "↗"}</span>
-        {canWebShare ? "Share" : "Copy share link"}
-      </button>
+      {canWebShare && (
+        <button
+          type="button"
+          onClick={handleNativeShare}
+          aria-label={canWebShare ? "Share QR link" : "Copy share link"}
+          class="w-full min-h-[52px] px-4 py-3 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 text-black border-3 border-black rounded-xl font-bold flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
+        >
+          <span>{canWebShare ? "📲" : "↗"}</span>
+          {canWebShare ? "Share" : "Copy share link"}
+        </button>
+      )}
     </div>
   );
 }

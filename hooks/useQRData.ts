@@ -37,6 +37,7 @@ export interface QRData {
     description?: string;
   } | null;
   analytics?: {
+    available?: boolean;
     sparkline: number[];
     last_scan: string | null;
     devices: { ios: number; android: number; desktop: number; other: number };

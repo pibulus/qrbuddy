@@ -240,6 +240,7 @@ export default function CreateModal({
   };
 
   const handleShareFileSelect = () => {
+    disableDynamicBase();
     setTypeIntent("share-file");
     setCompletionKind(null);
     setIsBatchMode(false);
@@ -248,6 +249,7 @@ export default function CreateModal({
   };
 
   const handleCollectFilesSelect = () => {
+    disableDynamicBase();
     setTypeIntent("collect-files");
     setCompletionKind(null);
     setShowLockerSettings(true);
@@ -791,7 +793,13 @@ export default function CreateModal({
           {hasCompletion ? renderCompletionState() : (
             <>
               {activeTab === "type" && renderTypeTab()}
-              {activeTab === "options" && renderOptionsTab()}
+              {activeTab === "options" && (typeIntent === "qr"
+                ? renderOptionsTab()
+                : (
+                  <p class="text-sm font-bold text-neutral-600">
+                    File options live in Content. Use Design to style the QR.
+                  </p>
+                ))}
               {activeTab === "design" && renderDesignTab()}
             </>
           )}

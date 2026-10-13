@@ -23,6 +23,9 @@ instructions.
 - [`RELEASE-2026-10-13.md`](./RELEASE-2026-10-13.md) - Current release and
   deployment record; update it with each release review.
 
+- [`FEATURE-FLOWS-2026-10-13.md`](./FEATURE-FLOWS-2026-10-13.md) - Dynamic QR,
+  slideshow, playlist, owner/stats audit; repaired flows and remaining UX work.
+
 ## Reference / Historical Docs
 
 - [`SUPABASE_DEPLOYMENT_GUIDE.md`](./SUPABASE_DEPLOYMENT_GUIDE.md) - Generic

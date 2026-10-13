@@ -105,7 +105,7 @@ export interface StatsCard {
 }
 
 // ── Patterns ──────────────────────────────────────────────────────────────
-// "Rainy days: 2× the scans" is only true if it wasn't just raining all the
+// "Rainy days: 2× the opens" is only true if it wasn't just raining all the
 // time. Observed = views in a condition. Expected = views × how often that
 // condition actually held where those views came from, over the window
 // (from the weather cache, which covers unscanned days too). Moon's
@@ -225,7 +225,7 @@ export function patternLine(p: Pattern): string {
   if (b) {
     const valB = b.split(":")[1];
     const word = kindA === "wx" ? WX_WORD[valA] : TEMP_WORD[valA];
-    return `${word} ${SLOT_WORD[valB]} are its thing · ${x} the scans ${
+    return `${word} ${SLOT_WORD[valB]} are its thing · ${x} the opens ${
       EMOJI[valA] ?? ""
     }`.trim();
   }
@@ -237,12 +237,12 @@ export function patternLine(p: Pattern): string {
       : valA === "waxing"
       ? "Waxing moons"
       : "Waning moons";
-    return `${name}: ${x} the scans ${EMOJI[valA]}`;
+    return `${name}: ${x} the opens ${EMOJI[valA]}`;
   }
   const word = kindA === "wx"
     ? `${WX_WORD[valA]} days`
     : `${TEMP_WORD[valA]} weather`;
-  return `${word}: ${x} the scans ${EMOJI[valA] ?? ""}`.trim();
+  return `${word}: ${x} the opens ${EMOJI[valA] ?? ""}`.trim();
 }
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -541,12 +541,14 @@ export function cardLines(
   const lines: string[] = [];
   if (card.views === 0) return lines;
 
-  const parts = [`${card.views} ${card.views === 1 ? "scan" : "scans"}`];
+  const parts = [
+    `${card.views} ${card.views === 1 ? "page open" : "page opens"}`,
+  ];
   if (card.people !== null && card.people > 0) {
-    parts.push(`${card.people} ${card.people === 1 ? "person" : "people"}`);
+    if (card.range === "today") parts.push(`~${card.people} daily visitors`);
   }
   if (card.returns !== null && card.returns > 0) {
-    parts.push(`${card.returns} came back`);
+    parts.push(`${card.returns} same-day repeat opens`);
   }
   if (card.trend !== null && Math.abs(card.trend) >= 0.1) {
     parts.push(
@@ -569,11 +571,9 @@ export function cardLines(
     lines.push(`${Math.round(card.phoneShare * 100)}% on phones`);
   }
   if (card.topItem && kind !== "file") {
-    const verb = kind === "playlist" ? "played" : "looked at";
+    const verb = kind === "playlist" ? "play starts" : "displays";
     lines.push(
-      `${
-        itemName(card.topItem.id)
-      } is the hit · ${verb} ${card.topItem.plays}×`,
+      `${itemName(card.topItem.id)} · ${card.topItem.plays} ${verb}`,
     );
   }
   if (card.avgDwellSeconds !== null && card.avgDwellSeconds >= 5) {
@@ -582,45 +582,39 @@ export function cardLines(
     const stay = m > 0 ? `${m}m ${s}s` : `${s}s`;
     const finish = card.completionRate !== null && kind !== "file"
       ? ` · ${Math.round(card.completionRate * 100)}% ${
-        kind === "playlist" ? "hear the whole thing" : "see every photo"
+        kind === "playlist"
+          ? "reached the last track’s end"
+          : "reached the last photo"
       }`
       : "";
-    lines.push(`People stay ~${stay}${finish}`);
+    lines.push(`Page open ~${stay} on average${finish}`);
   }
   if (card.shares > 0 || card.downloads > 0) {
     const bits = [];
-    if (card.shared > 0) bits.push(`${card.shared} via shared links`);
-    if (card.shares > 0) bits.push(`shared onward ${card.shares}×`);
-    if (card.downloads > 0) bits.push(`downloaded ${card.downloads}×`);
+    if (card.shares > 0) bits.push(`${card.shares} share actions`);
+    if (card.downloads > 0) bits.push(`${card.downloads} download requests`);
     lines.push(bits.join(" · "));
-  } else if (card.shared > 0) {
-    lines.push(`${card.scans} from scans · ${card.shared} from links`);
   }
 
-  // The ones people actually enjoy: where it travelled, who carried it,
-  // when it lives, which phones. Each only speaks when there's a real read.
-  if (card.topApp && card.shared >= 3) {
-    lines.push(
-      `Travels mostly by ${card.topApp.name} · ${
-        Math.round(card.topApp.share * 100)
-      }% of shared links`,
-    );
-  }
+  // Arrival source is unavailable: the cross-origin beacon's Referer is
+  // the share-page origin, not the visitor's navigation source.
   if (card.farthest && card.farthest.km >= 50) {
     const km = card.farthest.km >= 1000
       ? `${(card.farthest.km / 1000).toFixed(1).replace(/\.0$/, "")}k km`
       : `${card.farthest.km} km`;
-    lines.push(`Farthest scan: ${card.farthest.place}, ${km} away 🌏`);
+    lines.push(`Farthest open: ${card.farthest.place}, ${km} away 🌏`);
   }
   if (card.languages >= 2 && card.topLang) {
     const name = LANG_NAMES[card.topLang] ?? card.topLang.toUpperCase();
-    lines.push(`Scanned in ${card.languages} languages · ${name} mostly`);
+    lines.push(
+      `Opened in ${card.languages} browser languages · ${name} mostly`,
+    );
   }
   if (card.nightShare !== null && card.nightShare >= 0.5) {
     lines.push(
       `A night-time ${kind === "playlist" ? "mixtape" : "thing"} · ${
         Math.round(card.nightShare * 100)
-      }% of scans after 9pm 🦉`,
+      }% of opens at night 🦉`,
     );
   } else if (card.nightShare !== null && card.nightShare <= 0.1) {
     lines.push("Strictly daytime ☀️");
@@ -650,7 +644,7 @@ export function cardLines(
       ? `${ageDays} days old`
       : `${Math.floor(ageDays / 30)} months old`;
     lines.push(
-      milestone ? `${age} · past ${milestone} scans 🎉` : age,
+      milestone ? `${age} · past ${milestone} opens 🎉` : age,
     );
   }
   return lines;

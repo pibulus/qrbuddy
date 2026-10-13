@@ -61,7 +61,7 @@ const PILL =
 
 const RANGES: { id: StatsRange; label: string }[] = [
   { id: "today", label: "Today" },
-  { id: "week", label: "This week" },
+  { id: "week", label: "7 days" },
   { id: "all", label: "All time" },
 ];
 
@@ -97,6 +97,9 @@ export default function OwnerStrip(
 ) {
   const [token, setToken] = useState<string | null>(null);
   const [meta, setMeta] = useState<OwnerMeta | null>(null);
+  const [statsError, setStatsError] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsRevision, setStatsRevision] = useState(0);
   const [range, setRange] = useState<StatsRange>("week");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
@@ -126,22 +129,30 @@ export default function OwnerStrip(
     getOwnerToken("file", fileId).then(async (t) => {
       if (cancelled || !t) return;
       setToken(t);
+      setStatsLoading(true);
+      setStatsError(false);
       try {
         const data = await apiRequest<OwnerMeta>(
           `${getApiUrl()}/get-file-metadata?id=${fileId}&owner=${t}`,
           { method: "GET" },
           "Couldn't load your stats",
         );
-        if (!cancelled && data.isOwner) setMeta(data);
+        if (!data.isOwner) throw new Error("Owner stats unavailable");
+        if (!cancelled) setMeta(data);
       } catch {
         // Stats are a nicety; the controls still work without them.
-        if (!cancelled) setMeta({ isOwner: true });
+        if (!cancelled) {
+          setStatsError(true);
+          setMeta({ isOwner: true });
+        }
+      } finally {
+        if (!cancelled) setStatsLoading(false);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [fileId]);
+  }, [fileId, statsRevision]);
 
   if (!token || !meta) return null;
 
@@ -361,12 +372,23 @@ export default function OwnerStrip(
             </button>
           ))}
         </div>
-        {lines.length === 0
+        {statsError || statsLoading
+          ? (
+            <p
+              class="text-sm font-bold text-neutral-500 text-center py-2"
+              role="status"
+            >
+              {statsLoading
+                ? "Loading stats…"
+                : "Stats are unavailable right now."}
+            </p>
+          )
+          : lines.length === 0
           ? (
             <p class="text-sm font-bold text-neutral-500 text-center py-2">
               {range === "today"
-                ? "No scans yet today."
-                : "No scans yet — stick it somewhere 🌸"}
+                ? "No page opens yet today."
+                : "No page opens yet — stick it somewhere 🌸"}
             </p>
           )
           : (
@@ -385,9 +407,22 @@ export default function OwnerStrip(
               ))}
             </ul>
           )}
-        {range !== "today" && card.spark.some((v) => v > 0) && (
-          <Spark values={card.spark} />
-        )}
+        {!statsError && !statsLoading && range !== "today" &&
+          card.spark.some((v) => v > 0) && <Spark values={card.spark} />}
+        <div class="flex items-center gap-3">
+          <p class="flex-1 text-xs text-neutral-500">
+            Includes your own opens. Daily visitors are estimates by network;
+            days use UTC. Playback and downloads are best-effort events.
+          </p>
+          <button
+            type="button"
+            class={PILL}
+            disabled={statsLoading}
+            onClick={() => setStatsRevision((n) => n + 1)}
+          >
+            {statsError ? "Retry stats" : "Refresh stats"}
+          </button>
+        </div>
       </div>
 
       {/* Verbs */}

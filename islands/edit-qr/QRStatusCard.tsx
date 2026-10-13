@@ -14,8 +14,22 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
     : "https://qrbuddy.app";
   const redirectUrl = `${baseUrl}/r?code=${qrData.short_code}`;
   const scansRemaining = qrData.max_scans
-    ? qrData.max_scans - qrData.scan_count
+    ? Math.max(0, qrData.max_scans - qrData.scan_count)
     : "∞";
+
+  const exhausted = qrData.max_scans !== null &&
+    qrData.scan_count >= qrData.max_scans;
+  const expired = Boolean(
+    qrData.expires_at && Date.parse(qrData.expires_at) <= Date.now(),
+  );
+  const active = qrData.is_active && !exhausted && !expired;
+  const status = exhausted
+    ? "Exhausted"
+    : expired
+    ? "Expired"
+    : active
+    ? "Active ✓"
+    : "Inactive ✗";
 
   return (
     <div class="bg-gradient-to-r from-purple-50 to-pink-50 border-4 border-purple-400 rounded-2xl p-6 space-y-3">
@@ -39,11 +53,9 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
         <div>
           <span class="text-gray-600 font-semibold">Status:</span>
           <p
-            class={`font-bold ${
-              qrData.is_active ? "text-green-600" : "text-red-600"
-            }`}
+            class={`font-bold ${active ? "text-green-600" : "text-red-600"}`}
           >
-            {qrData.is_active ? "Active ✓" : "Inactive ✗"}
+            {status}
           </p>
         </div>
       </div>

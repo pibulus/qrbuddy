@@ -29,7 +29,7 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
     handlePress: handleKeypadPress,
     reset: resetPin,
     value: pinValue,
-  } = useKeypad(4);
+  } = useKeypad(4, isPasswordProtected);
 
   const handleFileSelect = (e: Event) => {
     const input = e.target as HTMLInputElement;
@@ -235,8 +235,8 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
       </button>
 
       <p class="text-xs text-center text-gray-400">
-        Makes a download page that stays up. One file per page — create a new QR
-        to share a different file.
+        One file per page. Files expire after 30 days without a download. Create
+        a new QR to share a different file.
       </p>
     </div>
   );

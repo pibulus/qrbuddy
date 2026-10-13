@@ -108,9 +108,20 @@ serve(async (req) => {
       .from("dynamic_qr_codes")
       .select("*")
       .eq("short_code", shortCode)
-      .single();
+      .maybeSingle();
 
-    if (fetchError || !qr) {
+    if (fetchError) {
+      console.error("QR lookup failed:", fetchError.message);
+      return new Response("Temporary redirect failure. Please retry.", {
+        status: 503,
+        headers: {
+          ...getCorsHeaders(req),
+          "Retry-After": "5",
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+    if (!qr) {
       // QR doesn't exist - redirect to home
       return redirectWithCors("/", req);
     }

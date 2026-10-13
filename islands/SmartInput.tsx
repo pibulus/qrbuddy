@@ -74,6 +74,8 @@ export default function SmartInput(
   const [stagedDecoded, setStagedDecoded] = useState<string | null>(null);
   const [shareTitle, setShareTitle] = useState("");
   const [isPrepping, setIsPrepping] = useState(false);
+  const selectionGeneration = useRef(0);
+  const stagedUploadLock = useRef(false);
   // The last share that went live — drives the "it's alive" strip until the
   // QR moves on to something else.
   const [lastShare, setLastShare] = useState<LastShare | null>(null);
@@ -265,6 +267,8 @@ export default function SmartInput(
 
           if (success) {
             isBucket.value = true;
+            isDynamic.value = false;
+            editUrl.value = "";
             setCreateHasUpdates(true);
           }
         }
@@ -383,7 +387,27 @@ export default function SmartInput(
   // Stage files first so the user can pick a download limit before upload.
   // (The old flow uploaded on drop, which made the limit picker unreachable.)
   const stageFiles = (fileList: FileList) => {
+    if (isUploading || stagedUploadLock.current) {
+      addToast("Let this upload finish before choosing more files", 3000);
+      return;
+    }
     const files = Array.from(fileList);
+    if (!files.length) return;
+    const batchError = files.length > 10
+      ? "Choose up to 10 photos or audio tracks per share."
+      : files.length > 1 && files.some((f) => !/^(image|audio)\//.test(f.type))
+      ? "Multi-file shares support photos and audio. Share other files one at a time."
+      : files.length > 1 &&
+          files.some((f) =>
+            f.type.startsWith("audio/") && f.size > 5 * 1024 * 1024
+          )
+      ? "Audio tracks must be 5 MB or smaller in a multi-file share."
+      : null;
+    if (batchError) {
+      addToast(batchError, 4000);
+      haptics.error();
+      return;
+    }
     // Supporter pass lifts the single-file ceiling (R2-backed) — multi-file
     // slideshows stay on the Supabase path and its cap.
     const maxSize = getSupporterPass() && files.length === 1
@@ -397,6 +421,8 @@ export default function SmartInput(
         return;
       }
     }
+    const generation = ++selectionGeneration.current;
+    setIsPrepping(false);
     maxDownloads.value = UNLIMITED_SCANS;
     setShareTitle("");
     setStagedFiles(files);
@@ -410,12 +436,16 @@ export default function SmartInput(
       setIsPrepping(true);
       prepImages(files)
         .then((prepped) => {
-          setStagedFiles((current) => (current === files ? prepped : current));
+          if (generation === selectionGeneration.current) {
+            setStagedFiles(prepped);
+          }
         })
         .catch(() => {
           // Prep is a courtesy — the raw files still go through validation.
         })
-        .finally(() => setIsPrepping(false));
+        .finally(() => {
+          if (generation === selectionGeneration.current) setIsPrepping(false);
+        });
     }
 
     // If a single dropped image is itself a QR code, quietly decode it and
@@ -423,7 +453,9 @@ export default function SmartInput(
     if (files.length === 1 && files[0].type.startsWith("image/")) {
       decodeQRFromFile(files[0])
         .then((data) => {
-          if (data) setStagedDecoded(data);
+          if (data && generation === selectionGeneration.current) {
+            setStagedDecoded(data);
+          }
         })
         .catch(() => {
           // Not decodable — it's just a regular image, carry on.
@@ -432,7 +464,10 @@ export default function SmartInput(
   };
 
   const handleStagedConfirm = () => {
-    if (!stagedFiles || isPrepping) return;
+    if (!stagedFiles || isPrepping || isUploading || stagedUploadLock.current) {
+      return;
+    }
+    stagedUploadLock.current = true;
     const files = stagedFiles;
     const kind = shareKindOf(files);
     const title = shareTitle.trim() ||
@@ -442,14 +477,24 @@ export default function SmartInput(
     void uploadFile(files, { title: shareTitle }).then((uploadedUrl) => {
       if (!uploadedUrl) return;
 
+      selectionGeneration.current++;
+      isDynamic.value = false;
+      editUrl.value = "";
+      isBucket.value = false;
+      bucketUrl.value = "";
       setStagedFiles(null);
       setStagedDecoded(null);
       setShareTitle("");
       setLastShare({ url: uploadedUrl, kind, count: files.length, title });
+    }).finally(() => {
+      stagedUploadLock.current = false;
     });
   };
 
   const handleStagedCancel = () => {
+    if (isUploading || stagedUploadLock.current) return;
+    selectionGeneration.current++;
+    setIsPrepping(false);
     setStagedFiles(null);
     setStagedDecoded(null);
     setShareTitle("");
@@ -771,7 +816,9 @@ export default function SmartInput(
               <button
                 type="button"
                 onClick={() => {
-                  // They chose reading over sharing — drop the staged upload.
+                  // Preserve decoded data for the reader, but invalidate pending prep.
+                  if (isUploading || stagedUploadLock.current) return;
+                  selectionGeneration.current++;
                   setStagedFiles(null);
                   maxDownloads.value = UNLIMITED_SCANS;
                   if (fileInputRef.current) fileInputRef.current.value = "";

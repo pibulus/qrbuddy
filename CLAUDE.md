@@ -204,7 +204,9 @@ when deploying functions.
 
 The [13 October launch audit](./docs/LAUNCH-READINESS-2026-10-13.md) is a dated
 evidence snapshot. Use the [release record](./docs/RELEASE-2026-10-13.md) for
-the latest verified payment and deployment state.
+the latest verified payment and deployment state. The
+[feature-flow follow-up](./docs/FEATURE-FLOWS-2026-10-13.md) records real media
+delivery/playback, owner controls, dynamic routing and remaining UX work.
 
 ## 🎨 Design System
 
@@ -352,16 +354,20 @@ vault holds the token; the public never sees it.
 - **Stats that help, nothing creepy.** `share-beacon` is called from the browser
   (a "view" on open, one "engagement" batch on page-hide) so the edge sees the
   visitor's real headers. `_shared/visitor.ts` turns them into
-  country/city/device/os, a "scan vs shared link" flag (referrer), and a
-  daily-salted hash for uniques/returns — the IP is used and dropped in the same
-  call, never stored. `record_share_activity` (service-role RPC) merges into
+  country/city/device/os and a daily-salted network hash for daily visitor
+  estimates/repeat opens — the IP is used and dropped in the same call, never
+  stored. `record_share_activity` (service-role RPC) merges into
   `destructible_files.stats` (lifetime tallies) and `share_stats_daily` (90-day
   ledger, pruned by `cleanup-expired`). `utils/share-stats.ts` folds these into
-  the Today / This week / All time trading card. Lifetime shows scans, not
-  people — not honestly knowable.
+  the Today / 7 days / All time trading card. Show page opens (including owner
+  opens); daily visitor estimates only on Today. Weekly sums are not unique
+  people. Referrer/app-source fields are not displayed: a cross-origin beacon
+  sees the share page origin, not the original arrival source. Playback counts
+  play starts, completion means reaching the last item, downloads are requests.
+  Stats load errors show Retry; Refresh fetches current owner metadata.
 - **Context that people enjoy** (`20260925010000_share_stats_context.sql`):
-  languages (`accept-language`), which app carried the link (bucketed referrer
-  host), farthest scan (coarse ~10 km lat/lon vs `origin_lat/lon` recorded at
+  languages (`accept-language`), legacy app-referrer fields (not displayed),
+  farthest page open (coarse ~10 km lat/lon vs `origin_lat/lon` recorded at
   upload, haversine in SQL), night-owl / weekend reads from the hour/day
   tallies, iPhone vs Android, age + milestones. No horoscopes.
 - **The noticing** (`20260925020000_share_stats_conditions.sql`,

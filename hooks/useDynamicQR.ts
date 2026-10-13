@@ -1,5 +1,5 @@
 import { Signal } from "@preact/signals";
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
@@ -37,8 +37,11 @@ export function useDynamicQR(
   }: UseDynamicQRProps,
 ) {
   const [isCreating, setIsCreating] = useState(false);
+  const creating = useRef(false);
 
   const createDynamicQR = async (destinationUrl: string) => {
+    if (creating.current) return;
+    creating.current = true;
     try {
       setIsCreating(true);
       haptics.medium();
@@ -99,9 +102,7 @@ export function useDynamicQR(
         type: "dynamic",
         content: data.redirect_url,
         metadata: {
-          title: data.redirect_url.length > 30
-            ? data.redirect_url.substring(0, 30) + "..."
-            : data.redirect_url,
+          title: normalizedDest,
           shortCode: data.short_code,
           ...(ownerTokenStored ? { ownerScope: "qr" } : {}),
         },
@@ -138,6 +139,9 @@ export function useDynamicQR(
         error,
         "❌ Failed to create dynamic QR",
       );
+    } finally {
+      creating.current = false;
+      setIsCreating(false);
     }
   };
 
