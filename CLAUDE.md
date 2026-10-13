@@ -184,11 +184,12 @@ if (maxDownloads === 999999) {
 - **Supabase project ref**: `aqydpibnvlhcjcwosrti`
 
 Fresh production uses the Git-connected Deno Deploy build. An authorized push to
-`main` runs `deno task build`, which stamps the source and generates the Fresh
-AOT manifest before routing. CI runs `deno task check`, the explicit offline
-`deno task test:unit` suite, and the build; it does not deploy. `/version.json`
-includes `commit`, `buildId`, and a deterministic `sourceHash`; the source hash
-identifies the built source even when Git metadata is missing.
+`main` runs checks, the offline unit suite, then `deno task build`, which stamps
+the source and generates the Fresh AOT manifest before routing. The deployment
+build stops if any of those steps fail. CI also runs `deno task check`, the
+explicit offline `deno task test:unit` suite, and the build; it does not deploy.
+`/version.json` includes `commit`, `buildId`, and a deterministic `sourceHash`;
+the source hash identifies the built source even when Git metadata is missing.
 
 Do not upload a local checkout with `deployctl` or `deno deploy`: `_fresh/` is
 generated and ignored by Git, and the Fresh Tailwind plugin requires its AOT
