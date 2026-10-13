@@ -72,10 +72,11 @@ schema source of truth; `supabase/setup.sql` is a historical snapshot, not a
 production bootstrap path. Supabase deployment is separate from the Fresh app.
 
 Fresh production deploys use the Git-connected Deno Deploy build: pushing the
-authorized `main` commit triggers `deno task build` before the app is routed. Do
-not upload a local build with `deployctl` or `deno deploy`; `_fresh/` is
-generated and ignored by Git. See [CLAUDE.md](./CLAUDE.md) for the release
-contract and current audit links.
+authorized `main` commit runs checks, offline unit tests, and `deno task build`
+before the app is routed. Any failure stops that deployment. Do not upload a
+local build with `deployctl` or `deno deploy`; `_fresh/` is generated and
+ignored by Git. See [CLAUDE.md](./CLAUDE.md) for the release contract and
+current audit links.
 
 ## 🛠 Tech Stack
 
