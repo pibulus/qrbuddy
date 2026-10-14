@@ -31,9 +31,29 @@ export async function getAuthenticatedUser(
   req: Request,
   adminClient?: SupabaseClient,
 ): Promise<{ user: User | null; error: string | null }> {
+  // 1. Sovereign QRBuddy Passport check
+  const passportId = req.headers.get("x-passport-id")?.trim();
+  if (passportId) {
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        .test(passportId);
+    if (!isUuid) {
+      return { user: null, error: "Invalid Passport ID format. Must be UUID." };
+    }
+    const passportUser = {
+      id: passportId,
+      app_metadata: { provider: "passport" },
+      user_metadata: {},
+      aud: "authenticated",
+      created_at: new Date().toISOString(),
+    } as unknown as User;
+    return { user: passportUser, error: null };
+  }
+
+  // 2. Standard Supabase Auth Bearer JWT check
   const authHeader = req.headers.get("authorization");
   if (!authHeader) {
-    return { user: null, error: "Missing Authorization header" };
+    return { user: null, error: "Missing Authorization or Passport header" };
   }
 
   const match = authHeader.match(/^Bearer\s+(.+)$/i);

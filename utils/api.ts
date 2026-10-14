@@ -2,6 +2,7 @@
 // server-side (Deno) and client-side (browser) contexts.
 
 import { getSupporterPass } from "./supporter-pass.ts";
+import { getStoredPassport } from "./passport.ts";
 
 declare global {
   interface Window {
@@ -165,6 +166,14 @@ export function getUserAuthHeaders(
 
   if (userToken) {
     headers["Authorization"] = `Bearer ${userToken}`;
+  }
+
+  const passport = getStoredPassport();
+  if (passport) {
+    headers["x-passport-id"] = passport.id;
+    if (!userToken) {
+      headers["Authorization"] = `Bearer ${passport.secret}`;
+    }
   }
 
   const pass = getSupporterPass();

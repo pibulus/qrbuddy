@@ -3,13 +3,9 @@ import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { addToast } from "../ToastManager.tsx";
 import { looksLikeUrl } from "../../utils/url.ts";
-import {
-  getCurrentSession,
-  isPlusLibraryEnabled,
-  sendEmailOtp,
-  verifyEmailOtp,
-} from "../../utils/auth.ts";
+import { isPlusLibraryEnabled } from "../../utils/auth.ts";
 import { fetchLibraryQuota, LibraryQuota } from "../../utils/library.ts";
+import { getOrCreatePassport, QRBuddyPassport } from "../../utils/passport.ts";
 
 interface EditableLinkSettingsProps {
   editUrl: Signal<string>;
@@ -30,93 +26,38 @@ export default function EditableLinkSettings({
   sequentialUrls,
 }: EditableLinkSettingsProps) {
   const [libraryEnabled] = useState(() => isPlusLibraryEnabled());
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [passport, setPassport] = useState<QRBuddyPassport | null>(null);
   const [quota, setQuota] = useState<LibraryQuota | null>(null);
-  const [emailInput, setEmailInput] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpInput, setOtpInput] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState("");
 
   useEffect(() => {
     if (!libraryEnabled) return;
 
     let mounted = true;
-    getCurrentSession().then((sess) => {
-      if (!mounted) return;
-      if (sess?.user) {
-        setUser({ id: sess.user.id, email: sess.user.email });
-        fetchLibraryQuota().then((q) => {
-          if (mounted) setQuota(q);
-        }).catch(() => {});
-      } else {
-        setUser(null);
-      }
-    });
+    const p = getOrCreatePassport();
+    setPassport(p);
 
-    const onAuth = () => {
-      getCurrentSession().then((sess) => {
-        if (!mounted) return;
-        if (sess?.user) {
-          setUser({ id: sess.user.id, email: sess.user.email });
-          fetchLibraryQuota().then((q) => {
-            if (mounted) setQuota(q);
-          }).catch(() => {});
-        } else {
-          setUser(null);
-          setQuota(null);
-        }
-      });
+    fetchLibraryQuota().then((q) => {
+      if (mounted) setQuota(q);
+    }).catch(() => {});
+
+    const onPassport = () => {
+      if (!mounted) return;
+      const updated = getOrCreatePassport();
+      setPassport(updated);
+      fetchLibraryQuota().then((q) => {
+        if (mounted) setQuota(q);
+      }).catch(() => {});
     };
 
-    globalThis.addEventListener("qrb-auth-changed", onAuth);
+    globalThis.addEventListener("qrb-passport-changed", onPassport);
+    globalThis.addEventListener("qrb-passport-synced", onPassport);
+
     return () => {
       mounted = false;
-      globalThis.removeEventListener("qrb-auth-changed", onAuth);
+      globalThis.removeEventListener("qrb-passport-changed", onPassport);
+      globalThis.removeEventListener("qrb-passport-synced", onPassport);
     };
   }, [libraryEnabled]);
-
-  const handleSendCode = async () => {
-    if (!emailInput.trim()) return;
-    setAuthLoading(true);
-    setAuthError("");
-    haptics.light();
-    const res = await sendEmailOtp(emailInput);
-    setAuthLoading(false);
-    if (res.success) {
-      setOtpSent(true);
-      haptics.medium();
-      addToast("Code sent to your email! ✉️", 3000);
-    } else {
-      setAuthError(res.error || "Failed to send code");
-      haptics.error();
-    }
-  };
-
-  const handleVerifyCode = async () => {
-    if (!otpInput.trim() || otpInput.trim().length < 6) return;
-    setAuthLoading(true);
-    setAuthError("");
-    haptics.light();
-    const res = await verifyEmailOtp(emailInput, otpInput);
-    setAuthLoading(false);
-    if (res.success && res.session?.user) {
-      setUser({ id: res.session.user.id, email: res.session.user.email });
-      setOtpSent(false);
-      setOtpInput("");
-      haptics.success();
-      addToast("Signed in! Ready to create editable link ✨", 3000);
-      try {
-        const q = await fetchLibraryQuota();
-        setQuota(q);
-      } catch {
-        // Ignore
-      }
-    } else {
-      setAuthError(res.error || "Invalid code");
-      haptics.error();
-    }
-  };
 
   const hasContent = pendingUrl.trim() !== "";
   const validSeqCount = isSequential && sequentialUrls
@@ -128,9 +69,8 @@ export default function EditableLinkSettings({
     ? hasSequentialRoutes
     : hasContent && looksLikeUrl(pendingUrl);
 
-  const isOverQuota = libraryEnabled && user && quota && !quota.can_create;
-  const canSubmit = hasLink && !isCreating &&
-    (!libraryEnabled || (user && !isOverQuota));
+  const isOverQuota = libraryEnabled && quota && !quota.can_create;
+  const canSubmit = hasLink && !isCreating && !isOverQuota;
 
   return (
     <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
@@ -183,77 +123,34 @@ export default function EditableLinkSettings({
             </div>
           </div>
 
-          {/* Library Authentication / Quota helper when enabled */}
-          {libraryEnabled && !user && (
-            <div class="bg-amber-50 border-2 border-black rounded-xl p-3 space-y-2 animate-slide-down">
-              <p class="text-xs font-bold text-neutral-800">
-                Sign in with email to save & update this QR code:
-              </p>
-              {!otpSent
-                ? (
-                  <div class="flex gap-2">
-                    <input
-                      type="email"
-                      value={emailInput}
-                      onInput={(e) =>
-                        setEmailInput((e.target as HTMLInputElement).value)}
-                      placeholder="you@example.com"
-                      class="flex-1 px-3 py-2 text-xs border-2 border-black/20 rounded-xl bg-white focus:border-black focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      disabled={authLoading || !emailInput.trim()}
-                      onClick={handleSendCode}
-                      class="px-3 py-2 text-xs font-black rounded-xl border-2 border-black bg-amber-300 hover:bg-amber-400 active:scale-95 disabled:opacity-50 transition-transform"
-                    >
-                      {authLoading ? "..." : "Send code"}
-                    </button>
-                  </div>
-                )
-                : (
-                  <div class="flex gap-2">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={otpInput}
-                      onInput={(e) =>
-                        setOtpInput((e.target as HTMLInputElement).value)}
-                      placeholder="6-digit code"
-                      class="flex-1 px-3 py-2 text-xs font-black tracking-widest text-center border-2 border-black rounded-xl bg-white focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      disabled={authLoading || otpInput.trim().length < 6}
-                      onClick={handleVerifyCode}
-                      class="px-3 py-2 text-xs font-black rounded-xl border-2 border-black bg-emerald-300 hover:bg-emerald-400 active:scale-95 disabled:opacity-50 transition-transform"
-                    >
-                      {authLoading ? "..." : "Verify"}
-                    </button>
-                  </div>
-                )}
-              {authError && (
-                <p class="text-[11px] font-bold text-rose-700">{authError}</p>
-              )}
-            </div>
-          )}
-
-          {libraryEnabled && user && (
-            <div class="flex items-center justify-between text-xs px-1 text-neutral-600">
-              <span class="font-bold truncate mr-2">
-                {user.email}
-              </span>
-              <span
-                class={`font-bold px-2 py-0.5 rounded border border-black/15 ${
-                  isOverQuota
-                    ? "bg-rose-100 text-rose-800"
-                    : "bg-neutral-100 text-neutral-800"
-                }`}
+          {/* Library / Passport Status when enabled */}
+          {libraryEnabled && (
+            <div class="bg-amber-50 border-2 border-black rounded-xl p-3 flex items-center justify-between gap-2 animate-slide-down">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="text-xl shrink-0">
+                  {passport?.avatarEmoji || "🦎"}
+                </span>
+                <div class="min-w-0">
+                  <p class="text-xs font-black text-neutral-900 truncate">
+                    {passport?.name || "QRBuddy Passport"}
+                  </p>
+                  <p class="text-[11px] text-neutral-600">
+                    {quota
+                      ? (quota.can_create
+                        ? `${quota.used_count} of ${quota.total_allowed} codes used`
+                        : `Limit reached (${quota.used_count}/${quota.total_allowed}) · Upgrade to Plus for 100`)
+                      : "Sovereign Passport active"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  globalThis.dispatchEvent(new CustomEvent("qrb-open-library"))}
+                class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black bg-white hover:bg-neutral-100 active:scale-95 transition-transform shrink-0"
               >
-                {quota
-                  ? `${quota.used_count} of ${quota.total_allowed} used`
-                  : "Signed in"}
-              </span>
+                View Library ↗
+              </button>
             </div>
           )}
 
