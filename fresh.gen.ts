@@ -49,6 +49,7 @@ import * as $FooterDock from "./islands/FooterDock.tsx";
 import * as $GradientCreator from "./islands/GradientCreator.tsx";
 import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
 import * as $KofiModal from "./islands/KofiModal.tsx";
+import * as $LibraryDrawer from "./islands/LibraryDrawer.tsx";
 import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $NoteCard from "./islands/NoteCard.tsx";
 import * as $OwnerStrip from "./islands/OwnerStrip.tsx";
@@ -145,6 +146,7 @@ const manifest = {
     "./islands/GradientCreator.tsx": $GradientCreator,
     "./islands/HistoryDrawer.tsx": $HistoryDrawer,
     "./islands/KofiModal.tsx": $KofiModal,
+    "./islands/LibraryDrawer.tsx": $LibraryDrawer,
     "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/NoteCard.tsx": $NoteCard,
     "./islands/OwnerStrip.tsx": $OwnerStrip,

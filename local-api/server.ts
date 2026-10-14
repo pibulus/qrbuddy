@@ -697,6 +697,101 @@ function handler(req: Request): Promise<Response> {
     return handleRenderQR(req);
   }
 
+  if (url.pathname === "/library/quota" && req.method === "GET") {
+    return Promise.resolve(
+      new Response(
+        JSON.stringify({
+          success: true,
+          quota: {
+            tier: "free",
+            is_active_plus: false,
+            paid_through: null,
+            total_allowed: 5,
+            used_count: 0,
+            legacy_count: 0,
+            can_create: true,
+          },
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      ),
+    );
+  }
+
+  if (url.pathname === "/library/claim-legacy" && req.method === "POST") {
+    return req.json().then(async (body) => {
+      const db = await loadDB();
+      const code = db.dynamic_qr_codes.find((c) =>
+        c.owner_token === body.owner_token
+      );
+      if (!code) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "NOT_FOUND",
+            message: "Invalid owner token",
+          }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          success: true,
+          claimed: true,
+          short_code: code.short_code,
+          destination_url: code.destination_url,
+          is_legacy: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    });
+  }
+
+  if (url.pathname === "/library" && req.method === "GET") {
+    return loadDB().then((db) => {
+      const search = url.searchParams.get("search")?.toLowerCase().trim() || "";
+      const filtered = db.dynamic_qr_codes
+        .filter((c) => {
+          if (!search) return true;
+          return c.destination_url.toLowerCase().includes(search) ||
+            c.short_code.toLowerCase().includes(search);
+        })
+        .map((c) => ({
+          id: c.id,
+          short_code: c.short_code,
+          destination_url: c.destination_url,
+          title: c.destination_url,
+          created_at: c.created_at,
+          expires_at: c.expires_at,
+          max_scans: c.max_scans,
+          scan_count: c.scan_count,
+          is_active: c.is_active,
+          is_legacy: false,
+          routing_mode: "simple",
+          redirect_url: `http://localhost:8000/r?code=${c.short_code}`,
+        }));
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          codes: filtered,
+          quota: {
+            tier: "free",
+            is_active_plus: false,
+            paid_through: null,
+            total_allowed: 5,
+            used_count: filtered.length,
+            legacy_count: 0,
+            can_create: filtered.length < 5,
+          },
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    });
+  }
+
   return Promise.resolve(
     new Response("QRBuddy Local API Server - Not Found", { status: 404 }),
   );

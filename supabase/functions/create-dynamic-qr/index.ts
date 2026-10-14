@@ -12,6 +12,7 @@ import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { validateSplashConfig } from "../_shared/splash-validation.ts";
 import { validateRoutingConfig } from "../_shared/routing-config.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
+import { getAuthenticatedUser, isPlusLibraryEnabled } from "../_shared/auth.ts";
 
 // Generate short code (6 chars, URL-safe).
 // Uses crypto.getRandomValues (not Math.random) so codes aren't predictable
@@ -229,25 +230,93 @@ serve(async (req) => {
 
     const ownerToken = generateOwnerToken();
 
-    // Create dynamic QR record
-    const { error: insertError } = await supabase
-      .from("dynamic_qr_codes")
-      .insert({
-        short_code: shortCode,
-        destination_url: finalDestinationUrl,
-        max_scans: max_scans || null,
-        expires_at: expires_at || null,
-        password_hash: password_hash || null,
-        routing_mode: routingCheck.mode,
-        routing_config: routingCheck.value,
-        splash_config: splashCheck.value,
-        owner_token: ownerToken,
-        is_active: true,
-      })
-      .select()
-      .single();
+    if (isPlusLibraryEnabled()) {
+      const { user, error: authError } = await getAuthenticatedUser(
+        req,
+        supabase,
+      );
+      if (!user) {
+        return new Response(
+          JSON.stringify({
+            error: "SIGNIN_REQUIRED",
+            message:
+              "Sign in with email to create and manage editable QR codes.",
+            details: authError,
+          }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 401,
+          },
+        );
+      }
 
-    if (insertError) throw insertError;
+      // Use atomic RPC to enforce quota (5 free / 100 plus) and insert code
+      const { data: createResult, error: rpcError } = await supabase.rpc(
+        "create_library_dynamic_qr",
+        {
+          p_user_id: user.id,
+          p_short_code: shortCode,
+          p_destination_url: finalDestinationUrl,
+          p_owner_token: ownerToken,
+          p_title: body.title || null,
+          p_max_scans: max_scans || null,
+          p_expires_at: expires_at || null,
+          p_routing_mode: routingCheck.mode,
+          p_routing_config: routingCheck.value,
+          p_splash_config: splashCheck.value,
+        },
+      );
+
+      if (rpcError) throw rpcError;
+
+      if (!createResult?.success) {
+        if (createResult?.error === "QUOTA_EXCEEDED") {
+          return new Response(
+            JSON.stringify({
+              error: "QUOTA_EXCEEDED",
+              message:
+                `Limit reached (${createResult.used_count} of ${createResult.total_allowed} editable codes). Upgrade to Plus for up to 100 editable codes.`,
+              total_allowed: createResult.total_allowed,
+              used_count: createResult.used_count,
+              tier: createResult.tier,
+            }),
+            {
+              headers: {
+                ...getCorsHeaders(req),
+                "Content-Type": "application/json",
+              },
+              status: 402,
+            },
+          );
+        }
+        throw new Error(
+          createResult?.message || "Failed to create dynamic QR in library",
+        );
+      }
+    } else {
+      // Create dynamic QR record (flag off / legacy flow)
+      const { error: insertError } = await supabase
+        .from("dynamic_qr_codes")
+        .insert({
+          short_code: shortCode,
+          destination_url: finalDestinationUrl,
+          max_scans: max_scans || null,
+          expires_at: expires_at || null,
+          password_hash: password_hash || null,
+          routing_mode: routingCheck.mode,
+          routing_config: routingCheck.value,
+          splash_config: splashCheck.value,
+          owner_token: ownerToken,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+    }
 
     // Use APP_URL from environment, fallback to localhost for dev
     const baseUrl = Deno.env.get("APP_URL") ||

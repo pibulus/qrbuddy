@@ -23,6 +23,7 @@ import { getOwnerToken } from "../utils/token-vault.ts";
 import { looksLikeUrl } from "../utils/url.ts";
 import CreateModal from "./CreateModal.tsx";
 import HistoryDrawer from "./HistoryDrawer.tsx";
+import LibraryDrawer from "./LibraryDrawer.tsx";
 import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
@@ -103,6 +104,15 @@ export default function SmartInput(
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createHasUpdates, setCreateHasUpdates] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+
+  // Listen for open library requests
+  useEffect(() => {
+    const handleOpenLibrary = () => setShowLibrary(true);
+    globalThis.addEventListener("qrb-open-library", handleOpenLibrary);
+    return () =>
+      globalThis.removeEventListener("qrb-open-library", handleOpenLibrary);
+  }, []);
 
   // Report modal state changes
   useEffect(() => {
@@ -643,6 +653,11 @@ export default function SmartInput(
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
         onSelect={handleHistorySelect}
+      />
+
+      <LibraryDrawer
+        isOpen={showLibrary}
+        onClose={() => setShowLibrary(false)}
       />
 
       {/* Toolbar */}

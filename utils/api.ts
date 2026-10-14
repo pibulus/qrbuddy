@@ -149,3 +149,28 @@ export function getAuthHeaders(): Record<string, string> {
 
   return headers;
 }
+
+/**
+ * Get authorization headers for deliberate authenticated user requests
+ */
+export function getUserAuthHeaders(
+  userToken?: string | null,
+): Record<string, string> {
+  const apiKey = getSupabaseAnonKey();
+  const headers: Record<string, string> = {};
+
+  if (apiKey) {
+    headers["apikey"] = apiKey;
+  }
+
+  if (userToken) {
+    headers["Authorization"] = `Bearer ${userToken}`;
+  }
+
+  const pass = getSupporterPass();
+  if (pass) {
+    headers["x-qrb-pass"] = pass;
+  }
+
+  return headers;
+}

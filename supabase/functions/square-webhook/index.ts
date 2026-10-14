@@ -73,7 +73,7 @@ serve(async (req) => {
 
     const { data: checkout, error: lookupError } = await supabase
       .from("supporter_checkouts")
-      .select("amount, currency, license")
+      .select("checkout_id, user_id, amount, currency, license")
       .eq("provider_order_id", payment.order_id)
       .maybeSingle();
     if (lookupError) throw lookupError;
@@ -108,10 +108,28 @@ serve(async (req) => {
       })
       .eq("provider_order_id", payment.order_id)
       .is("license", null)
-      .select("checkout_id")
+      .select("checkout_id, user_id")
       .maybeSingle();
 
     if (updateError) throw updateError;
+
+    // Fulfill stable library entitlement if bound to an authenticated user
+    if (updated && checkout.user_id) {
+      const { error: fulfillError } = await supabase.rpc(
+        "fulfill_supporter_entitlement",
+        {
+          p_user_id: checkout.user_id,
+          p_checkout_id: checkout.checkout_id,
+          p_duration_days: 365,
+        },
+      );
+      if (fulfillError) {
+        console.error(
+          `[SquareWebhook] Failed to fulfill entitlement for user ${checkout.user_id}:`,
+          fulfillError,
+        );
+      }
+    }
 
     if (!updated) {
       // Either already licensed (retry) or an order that isn't ours.

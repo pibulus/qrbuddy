@@ -60,6 +60,7 @@ export function useDynamicQR(
 
       const body: Record<string, unknown> = {
         destination_url: normalizedDest,
+        title: normalizedDest,
       };
       if (scanLimit) body.max_scans = scanLimit;
       if (expiryDate) body.expires_at = new Date(expiryDate).toISOString();
@@ -71,7 +72,7 @@ export function useDynamicQR(
         body.splash_config = splashConfig;
       }
 
-      // Use shared API helper (automatically includes auth headers)
+      // Use shared API helper (automatically includes auth headers and user session if signed in)
       const data = await apiRequest<{
         success: boolean;
         short_code: string;
@@ -84,6 +85,7 @@ export function useDynamicQR(
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
+          useUserAuth: true,
         },
         "Failed to create dynamic QR",
       );

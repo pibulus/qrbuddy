@@ -397,6 +397,11 @@ verify_jwt = false
 # malformed JWT before the handler runs).
 verify_jwt = false
 
+[functions.library]
+# Handler validates user JWT via Supabase Auth in the handler, so the platform
+# JWT gate is off to accept incoming auth headers consistently.
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

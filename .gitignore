@@ -26,3 +26,5 @@ node_modules/
 /scratch/verify_review_correction.js
 /scratch/decode_artifacts.ts
 /scratch/decode_review_artifacts.ts
+/scratch/verify_package_1.ts
+/scratch/verify_browser_library.js

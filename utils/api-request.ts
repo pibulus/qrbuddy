@@ -62,11 +62,15 @@
  * ```
  */
 
-import { getAuthHeaders } from "./api.ts";
+import { getAuthHeaders, getUserAuthHeaders } from "./api.ts";
+import { getUserAccessToken } from "./auth.ts";
 
 export interface ApiRequestOptions extends RequestInit {
   // Allow override of headers
   headers?: HeadersInit;
+  // Use deliberate authenticated user session if present
+  useUserAuth?: boolean;
+  userToken?: string | null;
 }
 
 /**
@@ -104,7 +108,13 @@ export async function apiRequest<T = unknown>(
   options: ApiRequestOptions = {},
   errorMessage = "Request failed",
 ): Promise<T> {
-  const authHeaders = getAuthHeaders();
+  let authHeaders = getAuthHeaders();
+  if (options.useUserAuth || options.userToken) {
+    const token = options.userToken !== undefined
+      ? options.userToken
+      : await getUserAccessToken();
+    authHeaders = getUserAuthHeaders(token);
+  }
 
   // Merge auth headers with any provided headers
   const headers = new Headers(options.headers);

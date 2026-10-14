@@ -12,6 +12,7 @@ import {
 } from "../utils/sync-phrase.ts";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
+import { isPlusLibraryEnabled } from "../utils/auth.ts";
 
 interface HistoryDrawerProps {
   isOpen: boolean;
@@ -194,6 +195,21 @@ export default function HistoryDrawer(
             <p class="text-xs font-bold opacity-70">Your QR History</p>
           </div>
           <div class="flex items-center gap-2">
+            {isPlusLibraryEnabled() && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  globalThis.dispatchEvent(new CustomEvent("qrb-open-library"));
+                  haptics.light();
+                }}
+                aria-label="Open Recoverable Library"
+                title="Recoverable Library"
+                class="w-11 h-11 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-amber-100 transition-colors font-bold text-sm"
+              >
+                📚
+              </button>
+            )}
             <button
               type="button"
               onClick={() => {

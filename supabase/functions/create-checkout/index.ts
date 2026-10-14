@@ -14,6 +14,7 @@ import {
   createSquareCheckout,
   isSquareCheckoutConfigured,
 } from "../_shared/square.ts";
+import { getAuthenticatedUser } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -74,6 +75,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
+
+    const { user } = await getAuthenticatedUser(req, supabase);
+
     const { error: insertError } = await supabase
       .from("supporter_checkouts")
       .insert({
@@ -81,6 +85,7 @@ serve(async (req) => {
         provider_order_id: checkout.providerOrderId,
         amount: checkout.amount,
         currency: checkout.currency,
+        user_id: user?.id ?? null,
       });
     if (insertError) throw insertError;
 
