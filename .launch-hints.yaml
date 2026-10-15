@@ -26,6 +26,7 @@ differentiators:
   - Six gradient styles plus a custom creator, so the code looks like a design piece instead of a barcode
   - Self-destructing codes that work once and then blow up — the already-scanned page is a full KABOOM
   - Editable dynamic redirects with scan limits, without the surveillance tax that usually comes with them
+  - Sovereign Passport sync — carry your dynamic locker across phone and desktop with a holographic card, 4-word human passkey, or camera QR scan (zero email/password accounts)
   - No enterprise tier, no per-scan pricing, no upsell to teams
 
 proof_points:

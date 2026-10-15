@@ -410,6 +410,22 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                     ? (isSpanish ? "Copiado ✓" : "Copied ✓")
                     : (isSpanish ? "Copiar mi pase" : "Copy my pass")}
                 </CardSecondaryButton>
+                <CardSecondaryButton
+                  onClick={() => {
+                    closePricingModal();
+                    setTimeout(
+                      () =>
+                        globalThis.dispatchEvent(
+                          new CustomEvent("qrb-open-library"),
+                        ),
+                      60,
+                    );
+                  }}
+                >
+                  {isSpanish
+                    ? "Pasaporte y Biblioteca 📚"
+                    : "Passport & Library 📚"}
+                </CardSecondaryButton>
               </div>
               <p class="text-xs text-gray-600 font-medium">
                 {isSpanish
@@ -442,6 +458,22 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                     ? `Obtener Pase Supporter — ${price} / 365 días`
                     : `Get Supporter Pass — ${price} / 365 days`)}
               </CardPrimaryButton>
+              <CardSecondaryButton
+                onClick={() => {
+                  closePricingModal();
+                  setTimeout(
+                    () =>
+                      globalThis.dispatchEvent(
+                        new CustomEvent("qrb-open-library"),
+                      ),
+                    60,
+                  );
+                }}
+              >
+                {isSpanish
+                  ? "Abrir Pasaporte y Biblioteca 📚"
+                  : "Open Passport & Library 📚"}
+              </CardSecondaryButton>
               {checkoutAvailability === "unavailable" && (
                 <p class="text-sm text-gray-700 font-medium" role="status">
                   {isSpanish
