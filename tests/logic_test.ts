@@ -632,3 +632,37 @@ Deno.test("cardKpis - builds 3-tile KPI header for Today, 7 days, and All time",
   assertEquals(allFileKpis[2].label, "Downloads");
   assertEquals(allFileKpis[2].value, "7");
 });
+
+// ===========================================================================
+// i18n: getClientLocale & getLanguageSwitchHref
+// ===========================================================================
+import { getClientLocale, getLanguageSwitchHref } from "../utils/i18n.ts";
+
+Deno.test("getClientLocale - respects explicit lang and falls back cleanly on server", () => {
+  assertEquals(getClientLocale("es"), "es");
+  assertEquals(getClientLocale("en"), "en");
+  assertEquals(getClientLocale(undefined), "en");
+});
+
+Deno.test("getLanguageSwitchHref - maps home and vertical routes symmetrically between EN and ES", () => {
+  assertEquals(getLanguageSwitchHref("/", "es"), "/es");
+  assertEquals(getLanguageSwitchHref("/es", "en"), "/");
+  assertEquals(getLanguageSwitchHref("/for/menus", "es"), "/es/menus");
+  assertEquals(getLanguageSwitchHref("/es/menus", "en"), "/for/menus");
+  assertEquals(getLanguageSwitchHref("/for/weddings", "es"), "/es/bodas");
+  assertEquals(getLanguageSwitchHref("/es/bodas", "en"), "/for/weddings");
+  assertEquals(getLanguageSwitchHref("/for/music", "es"), "/es/musica");
+  assertEquals(getLanguageSwitchHref("/es/musica", "en"), "/for/music");
+  assertEquals(getLanguageSwitchHref("/for/lockers", "es"), "/es/archivos");
+  assertEquals(getLanguageSwitchHref("/es/archivos", "en"), "/for/lockers");
+  assertEquals(getLanguageSwitchHref("/why", "es"), "/es/por-que");
+  assertEquals(getLanguageSwitchHref("/es/por-que", "en"), "/why");
+  assertEquals(
+    getLanguageSwitchHref("/guide/printing", "es"),
+    "/es/guia/impresion",
+  );
+  assertEquals(
+    getLanguageSwitchHref("/es/guia/impresion", "en"),
+    "/guide/printing",
+  );
+});

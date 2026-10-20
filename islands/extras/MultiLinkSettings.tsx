@@ -1,10 +1,12 @@
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface MultiLinkSettingsProps {
   sequentialUrls: string[];
   setSequentialUrls: (urls: string[]) => void;
   loopSequence: boolean;
   setLoopSequence: (loop: boolean) => void;
+  lang?: Locale;
 }
 
 export default function MultiLinkSettings({
@@ -12,12 +14,14 @@ export default function MultiLinkSettings({
   setSequentialUrls,
   loopSequence,
   setLoopSequence,
+  lang,
 }: MultiLinkSettingsProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   return (
     <div class="bg-white border-2 border-black rounded-2xl p-4 mb-4 animate-slide-down">
       <div class="flex items-center justify-between mb-2">
         <h4 class="font-bold text-sm text-indigo-900">
-          Rotating links
+          {isSpanish ? "Rotación de links" : "Rotating links"}
         </h4>
         <button
           type="button"
@@ -31,7 +35,9 @@ export default function MultiLinkSettings({
               : "bg-white text-gray-500 border-gray-300"
           }`}
         >
-          {loopSequence ? "Looping 🔄" : "Loop: Off"}
+          {loopSequence
+            ? (isSpanish ? "En bucle 🔄" : "Looping 🔄")
+            : (isSpanish ? "Bucle: No" : "Loop: Off")}
         </button>
       </div>
 
@@ -62,7 +68,9 @@ export default function MultiLinkSettings({
                   haptics.medium();
                 }}
                 class="min-w-[44px] min-h-[44px] rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50 px-1"
-                aria-label={`Remove link ${index + 1}`}
+                aria-label={isSpanish
+                  ? `Quitar link ${index + 1}`
+                  : `Remove link ${index + 1}`}
               >
                 ×
               </button>
@@ -77,7 +85,7 @@ export default function MultiLinkSettings({
           }}
           class="w-full min-h-[44px] py-2 text-xs font-bold text-indigo-600 border-2 border-black/15 rounded-full hover:border-black/60 transition-colors"
         >
-          + Add Link
+          {isSpanish ? "+ Agregar link" : "+ Add Link"}
         </button>
       </div>
     </div>

@@ -20,21 +20,21 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📍",
-    title: "Comparte una presentación de fotos",
+    title: "Galería de fotos del gran día",
     desc:
-      "Comparte una presentación de QRBuddy con hasta 10 fotos. El dueño puede gestionar los elementos en enlaces editables; los invitados pueden verlos o descargarlos.",
+      "Arma una galería en QRBuddy con hasta 10 fotos. Tus invitados la ven o descargan al instante desde su celular sin instalar nada.",
   },
   {
     icon: "🔗",
-    title: "Añade una playlist alojada",
+    title: "Mixtape de audio para la fiesta",
     desc:
-      "Crea una playlist web con hasta 10 pistas de audio. Puede avanzar entre canciones; los enlaces vencen a los 30 días.",
+      "Sube hasta 10 canciones para compartir las rolas de la boda en un reproductor web bonito. Los links duran 30 días.",
   },
   {
     icon: "🌸",
-    title: "Comparte los detalles del evento",
+    title: "Ubicación, horarios y mesa de regalos",
     desc:
-      "Crea un QR para indicaciones, horarios, confirmaciones o el sitio de la boda. Descarga un PNG o SVG para tu papelería.",
+      "Crea un QR para el mapa del salón, el itinerario o las confirmaciones. Descárgalo en PNG o SVG listo para tus invitaciones.",
   },
 ];
 

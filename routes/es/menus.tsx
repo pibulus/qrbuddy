@@ -20,21 +20,21 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📜",
-    title: "Un QR para el menú",
+    title: "Tu menú en cada mesa",
     desc:
-      "Crea un QR estático para un PDF o sitio web, o usa un QR editable si quieres poder cambiar el destino.",
+      "Crea un QR fijo para tu PDF o sitio web, o usa un link editable si quieres cambiar el menú del día sin volver a imprimir.",
   },
   {
     icon: "🔗",
-    title: "Elige cómo funciona el enlace",
+    title: "Cambia el destino cuando quieras",
     desc:
-      "Los QR estáticos codifican el destino directamente. Los editables usan el servicio de redirección de QRBuddy y pueden tener límites de escaneos o vencimiento.",
+      "Los QRs fijos guardan el link directo en la imagen. Los editables pasan por QRBuddy para que puedas actualizarlos o ponerles fecha límite.",
   },
   {
     icon: "🎨",
-    title: "Combínalo con tu local",
+    title: "Con la vibra de tu local",
     desc:
-      "Elige colores, añade un logo y descarga un PNG o SVG para mesas y ventanas.",
+      "Elige una paleta pastel-punk, pon tu logo al centro y descarga en PNG o SVG listo para imprenta, mesas y vitrinas.",
   },
 ];
 

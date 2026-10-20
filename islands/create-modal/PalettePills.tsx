@@ -1,5 +1,6 @@
 import type { ComponentChildren } from "preact";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { STYLE_DISPLAY } from "../StyleSelector.tsx";
 
 export const PALETTE_PILL =
@@ -16,13 +17,15 @@ interface PalettePillsProps {
   disabled?: boolean;
   /** Extra pill(s) after the presets — e.g. the custom-gradient entry. */
   trailing?: ComponentChildren;
+  lang?: Locale;
 }
 
 /** The one row of preset swatch pills — CreateModal's Design tab and the
  * share page's owner strip pick from the same eight. */
 export default function PalettePills(
-  { value, onChange, disabled = false, trailing }: PalettePillsProps,
+  { value, onChange, disabled = false, trailing, lang }: PalettePillsProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   return (
     <div class="flex flex-wrap gap-2">
       {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
@@ -43,7 +46,7 @@ export default function PalettePills(
               background: `linear-gradient(135deg, ${info.colors.join(", ")})`,
             }}
           />
-          {info.name}
+          {isSpanish ? (info.nameEs ?? info.name) : info.name}
         </button>
       ))}
       {trailing}

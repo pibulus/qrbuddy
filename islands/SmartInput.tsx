@@ -21,6 +21,7 @@ import { decodeQRFromFile } from "../utils/qr-decode.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 import { looksLikeUrl } from "../utils/url.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import CreateModal from "./CreateModal.tsx";
 import HistoryDrawer from "./HistoryDrawer.tsx";
 import LibraryDrawer from "./LibraryDrawer.tsx";
@@ -50,6 +51,7 @@ interface SmartInputProps {
   pngSize?: Signal<1000 | 2000 | 3000>;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
   onModalStateChange?: (isOpen: boolean) => void;
+  lang?: Locale;
 }
 
 export default function SmartInput(
@@ -67,8 +69,11 @@ export default function SmartInput(
     pngSize,
     frameConfig,
     onModalStateChange,
+    lang,
   }: SmartInputProps,
 ) {
+  const locale = getClientLocale(lang);
+  const isSpanish = locale === "es";
   const [validationState, setValidationState] = useState<
     "idle" | "valid" | "invalid"
   >("idle");
@@ -243,7 +248,12 @@ export default function SmartInput(
     bucketUrl.value = "";
     url.value = "";
 
-    addToast("Locker disconnected. Drop a new link to continue.", 3000);
+    addToast(
+      isSpanish
+        ? "Buzón desconectado. Pega un nuevo link para continuar."
+        : "Locker disconnected. Drop a new link to continue.",
+      3000,
+    );
   };
 
   // Handle Smart Media Creation (from MediaHubForm)
@@ -354,9 +364,19 @@ export default function SmartInput(
     ) {
       void createDynamicQR(targetUrl);
     } else if (targetUrl && !looksLikeUrl(targetUrl)) {
-      addToast("Editable needs a real link — try https://…", 3000);
+      addToast(
+        isSpanish
+          ? "Un QR editable necesita un link real — prueba con https://…"
+          : "Editable needs a real link — try https://…",
+        3000,
+      );
     } else if (!targetUrl) {
-      addToast("Add a destination link first", 3000);
+      addToast(
+        isSpanish
+          ? "Agrega un link de destino primero"
+          : "Add a destination link first",
+        3000,
+      );
     }
   };
 
@@ -403,20 +423,31 @@ export default function SmartInput(
   // (The old flow uploaded on drop, which made the limit picker unreachable.)
   const stageFiles = (fileList: FileList | File[]) => {
     if (isUploading || stagedUploadLock.current) {
-      addToast("Let this upload finish before choosing more files", 3000);
+      addToast(
+        isSpanish
+          ? "Espera a que termine esta subida antes de elegir más archivos"
+          : "Let this upload finish before choosing more files",
+        3000,
+      );
       return;
     }
     const files = Array.from(fileList);
     if (!files.length) return;
     const batchError = files.length > 10
-      ? "Choose up to 10 photos or audio tracks per share."
+      ? (isSpanish
+        ? "Elige hasta 10 fotos o pistas de audio por envío."
+        : "Choose up to 10 photos or audio tracks per share.")
       : files.length > 1 && files.some((f) => !/^(image|audio)\//.test(f.type))
-      ? "Multi-file shares support photos and audio. Share other files one at a time."
+      ? (isSpanish
+        ? "Los envíos múltiples aceptan fotos y audio. Comparte otros archivos uno por uno."
+        : "Multi-file shares support photos and audio. Share other files one at a time.")
       : files.length > 1 &&
           files.some((f) =>
             f.type.startsWith("audio/") && f.size > 5 * 1024 * 1024
           )
-      ? "Audio tracks must be 5 MB or smaller in a multi-file share."
+      ? (isSpanish
+        ? "Las pistas de audio deben pesar 5 MB o menos en un mixtape."
+        : "Audio tracks must be 5 MB or smaller in a multi-file share.")
       : null;
     if (batchError) {
       addToast(batchError, 4000);
@@ -544,8 +575,8 @@ export default function SmartInput(
   };
 
   const uploadStatusText = uploadProgress >= 99
-    ? "Processing..."
-    : "Uploading...";
+    ? (isSpanish ? "Procesando..." : "Processing...")
+    : (isSpanish ? "Subiendo..." : "Uploading...");
 
   const getInputClass = () => {
     const hasValidBadge = touched && validationState === "valid" &&
@@ -613,7 +644,9 @@ export default function SmartInput(
           globalThis.location.href = `/edit?token=${token}`;
         } else {
           addToast(
-            "Edit key isn't on this device. Use your backup or the saved edit link.",
+            isSpanish
+              ? "La llave de edición no está en este dispositivo. Usa tu respaldo o tu link guardado."
+              : "Edit key isn't on this device. Use your backup or the saved edit link.",
             4000,
           );
         }
@@ -656,11 +689,13 @@ export default function SmartInput(
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
         onSelect={handleHistorySelect}
+        lang={locale}
       />
 
       <LibraryDrawer
         isOpen={showLibrary}
         onClose={() => setShowLibrary(false)}
+        lang={locale}
       />
 
       {/* QR Reader - decode images, screenshots, or camera */}
@@ -672,6 +707,7 @@ export default function SmartInput(
         }}
         url={url}
         initialResult={stagedDecoded}
+        lang={locale}
       />
 
       {/* Create Modal - Rendered here for mobile layout flow */}
@@ -684,7 +720,11 @@ export default function SmartInput(
           if (
             url.value.trim() !== "" && url.value !== urlAtSheetOpen.current
           ) {
-            addToast("QR ready — tap ↓ Save PNG to keep it");
+            addToast(
+              isSpanish
+                ? "QR listo — toca ↓ Guardar PNG para descargarlo"
+                : "QR ready — tap ↓ Save PNG to keep it",
+            );
           }
         }}
         selectedTemplate={selectedTemplate}
@@ -728,6 +768,7 @@ export default function SmartInput(
         customStyle={customStyle}
         pngSize={pngSize}
         onStageMedia={stageFiles}
+        lang={locale}
       />
 
       <div class="relative group">
@@ -748,9 +789,13 @@ export default function SmartInput(
             onFocus={handleFocus}
             onBlur={() => setTouched(true)}
             placeholder={isDragging
-              ? "Drop file here..."
-              : "Enter URL, text, or drop a file..."}
-            aria-label="URL, text, or file to encode in QR code"
+              ? (isSpanish ? "Suelta tu archivo aquí..." : "Drop file here...")
+              : (isSpanish
+                ? "Pega un link, escribe algo o suelta un archivo..."
+                : "Enter URL, text, or drop a file...")}
+            aria-label={isSpanish
+              ? "Link, texto o archivo para codificar en QR"
+              : "URL, text, or file to encode in QR code"}
             aria-invalid={validationState === "invalid"}
             aria-describedby={validationState === "invalid"
               ? "input-error"
@@ -777,8 +822,8 @@ export default function SmartInput(
               class="absolute right-3 top-1/2 transform -translate-y-1/2
                    w-11 h-11 flex items-center justify-center rounded-lg
                    text-2xl hover:bg-gray-100 hover:scale-110 transition-all"
-              aria-label="Upload file"
-              title="Upload file"
+              aria-label={isSpanish ? "Subir archivo" : "Upload file"}
+              title={isSpanish ? "Subir archivo" : "Upload file"}
             >
               📎
             </button>
@@ -811,7 +856,9 @@ export default function SmartInput(
               class="text-red-600 text-sm mt-2 text-center animate-slide-down"
               role="alert"
             >
-              Enter any text, URL, or drop a file
+              {isSpanish
+                ? "Pega un link, escribe algo o suelta un archivo"
+                : "Enter any text, URL, or drop a file"}
             </p>
           )}
 
@@ -843,7 +890,9 @@ export default function SmartInput(
                 }}
                 class="w-full mt-4 min-h-[48px] rounded-xl border-3 border-purple-400 bg-purple-50 px-4 py-3 text-sm font-black text-purple-800 shadow-chunky hover:-translate-y-0.5 transition animate-slide-down"
               >
-                🔍 This image is a QR code — read it instead
+                {isSpanish
+                  ? "🔍 Esta imagen es un código QR — leerlo en su lugar"
+                  : "🔍 This image is a QR code — read it instead"}
               </button>
             )}
             <FileUploadOptions
@@ -856,6 +905,7 @@ export default function SmartInput(
               onConfirm={handleStagedConfirm}
               onCancel={handleStagedCancel}
               onReorderFiles={(newFiles) => setStagedFiles(newFiles)}
+              lang={locale}
             />
           </>
         )}
@@ -863,15 +913,20 @@ export default function SmartInput(
         {/* It's alive: open it, copy it, sticker it */}
         {lastShare && !stagedFiles && !isUploading &&
           url.value === lastShare.url && (
-          <ShareReady share={lastShare} frameConfig={frameConfig} />
+          <ShareReady
+            share={lastShare}
+            frameConfig={frameConfig}
+            lang={locale}
+          />
         )}
 
         {/* Editable mode needs a URL — plain text stays a static QR */}
         {isDynamic.value && !editUrl.value && !isBucket.value &&
           url.value.trim() !== "" && !looksLikeUrl(url.value) && (
           <p class="text-purple-700 text-xs mt-2 text-center animate-slide-down">
-            Editable QRs need a link. This text makes a static QR — for a hosted
-            note, use Customize → Plain text.
+            {isSpanish
+              ? "Los QRs editables necesitan un link. Este texto crea un QR estático — para alojar una nota, usa Personalizar → Texto."
+              : "Editable QRs need a link. This text makes a static QR — for a hosted note, use Customize → Plain text."}
           </p>
         )}
 
@@ -879,8 +934,13 @@ export default function SmartInput(
         {isDestructible.value && !isUploading && !stagedFiles &&
           maxDownloads.value !== UNLIMITED_SCANS && (
           <p class="text-orange-700 text-sm mt-2 text-center font-semibold animate-slide-down">
-            💣 This file will self-destruct after {maxDownloads.value}{" "}
-            {maxDownloads.value === 1 ? "download" : "downloads"}
+            💣 {isSpanish
+              ? `Este archivo se autodestruirá después de ${maxDownloads.value} ${
+                maxDownloads.value === 1 ? "descarga" : "descargas"
+              }`
+              : `This file will self-destruct after ${maxDownloads.value} ${
+                maxDownloads.value === 1 ? "download" : "downloads"
+              }`}
           </p>
         )}
 
@@ -900,6 +960,7 @@ export default function SmartInput(
         createHasUpdates={createHasUpdates}
         onShowHistory={() => setShowHistory(true)}
         onShowReader={() => setShowReader(true)}
+        lang={locale}
       />
     </div>
   );

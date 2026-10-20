@@ -5,13 +5,18 @@
  * No divider line: the dock is the page's bottom edge, not a fence across
  * the canvas.
  */
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { openAboutModal } from "./AboutModal.tsx";
 // import { KofiButton } from "./KofiModal.tsx"; — Tip Jar parked, see below.
 import { openPricingModal } from "./PricingModal.tsx";
 import { MAKER_URL } from "../utils/constants.ts";
+import {
+  getClientLocale,
+  getLanguageSwitchHref,
+  type Locale,
+} from "../utils/i18n.ts";
 
-type Lang = "en" | "es";
+type Lang = Locale;
 
 const COPY = {
   en: {
@@ -22,28 +27,34 @@ const COPY = {
     terms: "Terms",
     tip: "Tip Jar ☕",
     supporter: "Supporter ✨",
+    switchLabel: "🇲🇽 ES",
+    switchAria: "Cambiar idioma a español (México / LatAm)",
     links: [
       { href: "/for/menus", label: "Restaurant Menus 📜" },
       { href: "/for/weddings", label: "Weddings & Photo Drops 📸" },
       { href: "/for/music", label: "Music Mixtapes 📼" },
       { href: "/for/lockers", label: "Secret Drops 🔐" },
       { href: "/guide/printing", label: "Print Calculator & Guide 📐" },
+      { href: "/why", label: "Why QRBuddy? 💡" },
     ],
   },
   es: {
     made: "Hecho por Pablo",
-    solutions: "Soluciones",
-    about: "Acerca de",
+    solutions: "Usos",
+    about: "Qué es",
     privacy: "Privacidad",
     terms: "Términos",
     tip: "Propina ☕",
-    supporter: "Apoya ✨",
+    supporter: "Pase Supporter ✨",
+    switchLabel: "EN",
+    switchAria: "Switch language to English",
     links: [
       { href: "/es/menus", label: "Menús para Restaurantes 📜" },
-      { href: "/es/bodas", label: "Bodas y Fotos 📸" },
+      { href: "/es/bodas", label: "Bodas y Álbum de Fotos 📸" },
       { href: "/es/musica", label: "Mixtapes y Música 📼" },
-      { href: "/es/archivos", label: "Archivos Secretos 🔐" },
-      { href: "/es/guia/impresion", label: "Calculadora & Guía 📐" },
+      { href: "/es/archivos", label: "Buzón de Archivos 🔐" },
+      { href: "/es/guia/impresion", label: "Calculadora de Impresión 📐" },
+      { href: "/es/por-que", label: "¿Por qué QRBuddy? 💡" },
     ],
   },
 } as const;
@@ -52,12 +63,30 @@ const COPY = {
 // Padding and type flex with the viewport so the dock stays one line down
 // to 320px, in both languages.
 const ITEM =
-  "inline-flex items-center justify-center gap-1 px-[clamp(8px,2.6vw,14px)] min-h-[44px] rounded-full text-[clamp(13px,3.6vw,14px)] font-bold text-black whitespace-nowrap transition-all hover:bg-amber-100 active:scale-95 select-none";
+  "inline-flex items-center justify-center gap-1 px-[clamp(7px,2.2vw,14px)] min-h-[44px] rounded-full text-[clamp(12px,3.4vw,14px)] font-bold text-black whitespace-nowrap transition-all hover:bg-amber-100 active:scale-95 select-none";
 
-export default function FooterDock({ lang = "en" }: { lang?: Lang }) {
-  const t = COPY[lang];
+export default function FooterDock({ lang }: { lang?: Lang }) {
+  const locale = getClientLocale(lang);
+  const t = COPY[locale];
+  const targetLang: Lang = locale === "es" ? "en" : "es";
+  const [switchHref, setSwitchHref] = useState(() =>
+    getLanguageSwitchHref(
+      typeof globalThis.location !== "undefined"
+        ? globalThis.location.pathname
+        : (locale === "es" ? "/es" : "/"),
+      targetLang,
+    )
+  );
   const year = new Date().getFullYear();
   const solutionsRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    if (typeof globalThis.location !== "undefined") {
+      setSwitchHref(
+        getLanguageSwitchHref(globalThis.location.pathname, targetLang),
+      );
+    }
+  }, [targetLang]);
 
   // Light-dismiss for the Solutions pop-up: a tap anywhere else, or Escape,
   // folds it back into the dock.
@@ -130,7 +159,7 @@ export default function FooterDock({ lang = "en" }: { lang?: Lang }) {
           <button
             type="button"
             onClick={openPricingModal}
-            class="inline-flex items-center justify-center px-[clamp(10px,3vw,16px)] min-h-[44px] rounded-full border-2 border-black bg-qr-pop text-white text-[clamp(13px,3.6vw,14px)] font-black whitespace-nowrap transition-all hover:bg-qr-popDeep active:scale-95"
+            class="inline-flex items-center justify-center px-[clamp(8px,2.4vw,16px)] min-h-[44px] rounded-full border-2 border-black bg-qr-pop text-white text-[clamp(12px,3.4vw,14px)] font-black whitespace-nowrap transition-all hover:bg-qr-popDeep active:scale-95"
           >
             {t.supporter}
           </button>
@@ -147,16 +176,23 @@ export default function FooterDock({ lang = "en" }: { lang?: Lang }) {
             {t.made} 💖
           </a>
           <a
-            href={lang === "es" ? "/privacy?lang=es" : "/privacy"}
+            href={locale === "es" ? "/privacy?lang=es" : "/privacy"}
             class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
           >
             {t.privacy}
           </a>
           <a
-            href={lang === "es" ? "/terms?lang=es" : "/terms"}
+            href={locale === "es" ? "/terms?lang=es" : "/terms"}
             class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
           >
             {t.terms}
+          </a>
+          <a
+            href={switchHref}
+            aria-label={t.switchAria}
+            class="inline-flex min-h-[44px] min-w-[44px] px-2 items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
+          >
+            {t.switchLabel}
           </a>
         </div>
       </div>

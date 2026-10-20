@@ -9,6 +9,7 @@ import { addToHistory } from "../utils/history.ts";
 import { haptics } from "../utils/haptics.ts";
 import { checkQRScannability } from "../utils/qr-decode.ts";
 import { createFramedSvg, measureCaptionWidth } from "../utils/svg-export.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface QRCanvasProps {
   url: Signal<string>;
@@ -23,6 +24,7 @@ interface QRCanvasProps {
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
   /** Listen for global "qr-export" events (only the primary canvas should). */
   listenForExportEvents?: boolean;
+  lang?: Locale;
 }
 
 export default function QRCanvas(
@@ -37,8 +39,10 @@ export default function QRCanvas(
     maxDownloads,
     frameConfig,
     listenForExportEvents = false,
+    lang,
   }: QRCanvasProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   const canvasRef = useRef<HTMLDivElement>(null);
   const qrCodeRef = useRef<QRCodeStyling | null>(null);
   // The init effect already renders with the current signal values, so the
@@ -394,13 +398,19 @@ export default function QRCanvas(
     try {
       await downloadPng();
       haptics.success();
-      addToast("PNG download started! 🖼️");
+      addToast(
+        isSpanish ? "¡Descarga PNG iniciada! 🖼️" : "PNG download started! 🖼️",
+      );
       setShowSuccessFlash(true);
       setTimeout(() => setShowSuccessFlash(false), 600);
     } catch (err) {
       console.error("Failed to start PNG download:", err);
       haptics.error();
-      addToast("Couldn't start PNG download ❌");
+      addToast(
+        isSpanish
+          ? "No se pudo descargar el PNG ❌"
+          : "Couldn't start PNG download ❌",
+      );
       return;
     }
 
@@ -492,11 +502,17 @@ export default function QRCanvas(
     if (triggerDownload.value && qrCodeRef.current) {
       void downloadPng().then(() => {
         haptics.success();
-        addToast("PNG download started! 🖼️");
+        addToast(
+          isSpanish ? "¡Descarga PNG iniciada! 🖼️" : "PNG download started! 🖼️",
+        );
       }).catch((err) => {
         console.error("Failed to start PNG download:", err);
         haptics.error();
-        addToast("Couldn't start PNG download ❌");
+        addToast(
+          isSpanish
+            ? "No se pudo descargar el PNG ❌"
+            : "Couldn't start PNG download ❌",
+        );
       });
       triggerDownload.value = false;
     }
@@ -524,16 +540,28 @@ export default function QRCanvas(
         if (format === "svg") {
           await downloadSvg({ frame: effectiveFrame });
           haptics.success();
-          addToast("SVG download started! 📐");
+          addToast(
+            isSpanish
+              ? "¡Descarga SVG iniciada! 📐"
+              : "SVG download started! 📐",
+          );
         } else {
           await downloadPng({ size: exportSize, frame: effectiveFrame });
           haptics.success();
-          addToast("PNG download started! 🖼️");
+          addToast(
+            isSpanish
+              ? "¡Descarga PNG iniciada! 🖼️"
+              : "PNG download started! 🖼️",
+          );
         }
       } catch (err) {
         console.error(`Failed to start ${format.toUpperCase()} download:`, err);
         haptics.error();
-        addToast(`Couldn't start ${format.toUpperCase()} download ❌`);
+        addToast(
+          isSpanish
+            ? `No se pudo descargar el ${format.toUpperCase()} ❌`
+            : `Couldn't start ${format.toUpperCase()} download ❌`,
+        );
       }
     };
     globalThis.addEventListener("qr-export", handleExport as EventListener);
@@ -564,7 +592,9 @@ export default function QRCanvas(
         data-dropzone="true"
         role="button"
         tabIndex={0}
-        aria-label="Download QR code as PNG"
+        aria-label={isSpanish
+          ? "Descargar código QR como PNG"
+          : "Download QR code as PNG"}
         class={`
           bg-white rounded-chunky border-4
           ${showSuccessFlash ? "border-green-500" : "border-black"}
@@ -594,7 +624,7 @@ export default function QRCanvas(
             : ""
         }
         `}
-        title="Click to download"
+        title={isSpanish ? "Clic para descargar" : "Click to download"}
       >
         {
           /* SSR'd first-paint QR (the default render, pre-baked) — the live
@@ -645,9 +675,11 @@ export default function QRCanvas(
               class={`min-h-[44px] px-4 rounded-full bg-qr-cream border-3 border-black shadow-chunky inline-flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
                 url.value ? "animate-bounce-in" : ""
               }`}
-              aria-label="Download QR code as PNG"
+              aria-label={isSpanish
+                ? "Descargar código QR como PNG"
+                : "Download QR code as PNG"}
             >
-              ↓ Save PNG
+              {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
             </button>
           </div>
         )
@@ -659,9 +691,11 @@ export default function QRCanvas(
             class={`absolute -bottom-4 -right-3 min-h-[44px] px-4 rounded-full bg-qr-cream border-3 border-black shadow-chunky flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
               url.value ? "animate-bounce-in" : ""
             }`}
-            aria-label="Download QR code as PNG"
+            aria-label={isSpanish
+              ? "Descargar código QR como PNG"
+              : "Download QR code as PNG"}
           >
-            ↓ Save PNG
+            {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
           </button>
         )}
 
@@ -670,8 +704,9 @@ export default function QRCanvas(
         <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float will-change-transform z-10 pointer-events-none select-none">
           💣 {maxDownloads?.value === UNLIMITED_SCANS
             ? "∞"
-            : maxDownloads?.value || 1}{" "}
-          {maxDownloads?.value === 1 ? "scan" : "scans"}
+            : maxDownloads?.value || 1} {isSpanish
+            ? (maxDownloads?.value === 1 ? "escaneo" : "escaneos")
+            : (maxDownloads?.value === 1 ? "scan" : "scans")}
         </div>
       )}
 
@@ -686,9 +721,11 @@ export default function QRCanvas(
       {scanWarning && (
         <div
           class="absolute -bottom-3 -left-3 bg-gradient-to-r from-amber-400 to-orange-400 text-black px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-bounce-in z-10 pointer-events-none select-none"
-          title="A scanner may struggle with this combo — try darker colors or a shorter link"
+          title={isSpanish
+            ? "Puede costar trabajo escanear esta combinación — prueba colores más oscuros o un link más corto"
+            : "A scanner may struggle with this combo — try darker colors or a shorter link"}
         >
-          ⚠️ hard to scan
+          {isSpanish ? "⚠️ difícil de escanear" : "⚠️ hard to scan"}
         </div>
       )}
     </div>

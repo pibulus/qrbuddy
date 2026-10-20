@@ -9,6 +9,7 @@ import {
 } from "./modal/CardModal.tsx";
 import { getApiUrl } from "../utils/api.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
+import { getClientLocale } from "../utils/i18n.ts";
 import {
   clearPendingCheckout,
   getPendingCheckout,
@@ -62,9 +63,7 @@ type CheckoutAvailability =
   | "error";
 
 export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
-  const isSpanish = lang === "es" || (!lang &&
-    typeof globalThis.location !== "undefined" &&
-    globalThis.location.pathname.startsWith("/es"));
+  const isSpanish = getClientLocale(lang) === "es";
   const isOpen = pricingModalOpen.value;
   const [hasPass, setHasPass] = useState(false);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
@@ -299,11 +298,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
 
   const expiry = hasPass ? supporterPassExpiry() : null;
   const perks = isSpanish
-    ? [
-      "100 Enlaces Dinámicos Editables — cambia a dónde apunta tu QR impreso cuando quieras (vs. 5 gratis)",
-      "Archivos pesados de 500 MB — transferencias de 30 días 10× más grandes (vs. 50 MB gratis)",
-      "Páginas sin marca — elimina el sello de QRBuddy en páginas compatibles de notas y baúles",
-    ]
+    ? (PRICING_TIERS.pro.featuresEs ?? PRICING_TIERS.pro.features)
     : PRICING_TIERS.pro.features;
   const price = formatTierPrice(PRICING_TIERS.pro);
   const privacyHref = isSpanish ? "/privacy?lang=es" : "/privacy";

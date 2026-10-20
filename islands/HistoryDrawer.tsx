@@ -13,16 +13,19 @@ import {
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 import { isPlusLibraryEnabled } from "../utils/auth.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface HistoryDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (item: HistoryItem) => void;
+  lang?: Locale;
 }
 
 export default function HistoryDrawer(
-  { isOpen, onClose, onSelect }: HistoryDrawerProps,
+  { isOpen, onClose, onSelect, lang }: HistoryDrawerProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showSync, setShowSync] = useState(false);
   const [currentPhrase, setCurrentPhrase] = useState(() =>
@@ -91,7 +94,7 @@ export default function HistoryDrawer(
   }, [isOpen]);
 
   const formatDate = (ts: number) => {
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(isSpanish ? "es-MX" : "en-US", {
       month: "short",
       day: "numeric",
       hour: "numeric",
@@ -122,10 +125,18 @@ export default function HistoryDrawer(
       const bundle = await exportSyncBundle(currentPhrase);
       await navigator.clipboard.writeText(bundle);
       haptics.success();
-      addToast("Encrypted sync backup copied! 📋");
+      addToast(
+        isSpanish
+          ? "¡Respaldo cifrado copiado! 📋"
+          : "Encrypted sync backup copied! 📋",
+      );
     } catch {
       haptics.error();
-      addToast("Couldn't generate sync backup");
+      addToast(
+        isSpanish
+          ? "No se pudo generar el respaldo"
+          : "Couldn't generate sync backup",
+      );
     } finally {
       setIsExporting(false);
     }
@@ -141,19 +152,31 @@ export default function HistoryDrawer(
       setHistory(getHistory());
       haptics.success();
       const manageLinks = result.ownerTokensRestored
-        ? " · restored " + result.ownerTokensRestored + " manage links"
+        ? (isSpanish
+          ? " · se restauraron " + result.ownerTokensRestored + " llaves"
+          : " · restored " + result.ownerTokensRestored + " manage links")
         : "";
       addToast(
         result.historySaved
-          ? "Synced " + result.mergedHistoryCount + " items" + manageLinks +
-            " from other device! ☁️✨"
-          : "Couldn't save synced history on this device" + manageLinks,
+          ? (isSpanish
+            ? "¡Se sincronizaron " + result.mergedHistoryCount +
+              " elementos" + manageLinks + "! ☁️✨"
+            : "Synced " + result.mergedHistoryCount + " items" + manageLinks +
+              " from other device! ☁️✨")
+          : (isSpanish
+            ? "No se pudo guardar el historial en este dispositivo" +
+              manageLinks
+            : "Couldn't save synced history on this device" + manageLinks),
       );
       setImportInput("");
       setShowSync(false);
     } catch {
       haptics.error();
-      addToast("Invalid sync backup or wrong phrase");
+      addToast(
+        isSpanish
+          ? "Respaldo inválido o frase incorrecta"
+          : "Invalid sync backup or wrong phrase",
+      );
     } finally {
       setIsImporting(false);
     }
@@ -183,9 +206,11 @@ export default function HistoryDrawer(
         <div class="p-5 sm:p-6 border-b-4 border-black bg-yellow-300 flex justify-between items-center">
           <div>
             <h2 id="history-drawer-title" class="text-2xl font-black italic">
-              Time Machine
+              {isSpanish ? "Máquina del Tiempo" : "Time Machine"}
             </h2>
-            <p class="text-xs font-bold opacity-70">Your QR History</p>
+            <p class="text-xs font-bold opacity-70">
+              {isSpanish ? "Tu Historial de QRs" : "Your QR History"}
+            </p>
           </div>
           <div class="flex items-center gap-2">
             {isPlusLibraryEnabled() && (
@@ -196,8 +221,10 @@ export default function HistoryDrawer(
                   globalThis.dispatchEvent(new CustomEvent("qrb-open-library"));
                   haptics.light();
                 }}
-                aria-label="Open Recoverable Library"
-                title="Recoverable Library"
+                aria-label={isSpanish
+                  ? "Abrir Tu Biblioteca"
+                  : "Open Recoverable Library"}
+                title={isSpanish ? "Tu Biblioteca" : "Recoverable Library"}
                 class="w-11 h-11 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-amber-100 transition-colors font-bold text-sm"
               >
                 📚
@@ -209,8 +236,12 @@ export default function HistoryDrawer(
                 setShowSync(!showSync);
                 haptics.light();
               }}
-              aria-label="Toggle device sync"
-              title="Four-part device sync"
+              aria-label={isSpanish
+                ? "Sincronizar dispositivos"
+                : "Toggle device sync"}
+              title={isSpanish
+                ? "Sincronización entre dispositivos"
+                : "Four-part device sync"}
               class={`w-11 h-11 flex items-center justify-center border-2 border-black rounded-full font-black text-sm transition-all ${
                 showSync
                   ? "bg-black text-white"
@@ -223,7 +254,7 @@ export default function HistoryDrawer(
               type="button"
               data-history-close
               onClick={onClose}
-              aria-label="Close history"
+              aria-label={isSpanish ? "Cerrar historial" : "Close history"}
               class="w-11 h-11 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors font-bold"
             >
               ✕
@@ -236,14 +267,16 @@ export default function HistoryDrawer(
           <div class="p-4 bg-purple-50 border-b-3 border-black space-y-3 animate-slide-down">
             <div class="flex items-center justify-between">
               <span class="text-xs font-black uppercase tracking-wide text-purple-900">
-                🔑 Four-Part Sovereign Sync
+                {isSpanish
+                  ? "🔑 Sincronización Cifrada"
+                  : "🔑 Four-Part Sovereign Sync"}
               </span>
               <button
                 type="button"
                 onClick={() => setCurrentPhrase(generateSyncPhrase())}
                 class="min-h-[44px] px-2 inline-flex items-center text-[11px] font-bold text-purple-700 hover:underline"
               >
-                🎲 New phrase
+                {isSpanish ? "🎲 Nueva frase" : "🎲 New phrase"}
               </button>
             </div>
             <div class="p-2.5 bg-white border-2 border-black rounded-xl text-center">
@@ -257,7 +290,11 @@ export default function HistoryDrawer(
               disabled={isExporting}
               class="w-full min-h-[44px] py-2 px-3 bg-purple-600 text-white rounded-xl border-2 border-black font-black text-xs shadow-sm hover:bg-purple-700 active:translate-y-0.5 transition-all"
             >
-              {isExporting ? "Encrypting..." : "📋 Copy Encrypted Backup"}
+              {isExporting
+                ? (isSpanish ? "Cifrando..." : "Encrypting...")
+                : (isSpanish
+                  ? "📋 Copiar respaldo cifrado"
+                  : "📋 Copy Encrypted Backup")}
             </button>
             <form
               onSubmit={handleImportSync}
@@ -268,7 +305,9 @@ export default function HistoryDrawer(
                 value={importInput}
                 onInput={(e) =>
                   setImportInput((e.target as HTMLInputElement).value)}
-                placeholder="Paste backup JSON from other phone..."
+                placeholder={isSpanish
+                  ? "Pega el respaldo de otro dispositivo..."
+                  : "Paste backup JSON from other phone..."}
                 class="w-full min-h-[44px] px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-gray-300 focus:border-black focus:outline-none"
               />
               <button
@@ -276,7 +315,11 @@ export default function HistoryDrawer(
                 disabled={!importInput.trim() || isImporting}
                 class="w-full min-h-[44px] py-1.5 bg-white text-gray-900 border-2 border-black rounded-lg font-black text-xs hover:bg-black hover:text-white transition-all disabled:opacity-40"
               >
-                {isImporting ? "Merging..." : "📥 Merge into this device"}
+                {isImporting
+                  ? (isSpanish ? "Uniendo..." : "Merging...")
+                  : (isSpanish
+                    ? "📥 Unir en este dispositivo"
+                    : "📥 Merge into this device")}
               </button>
             </form>
           </div>
@@ -288,8 +331,16 @@ export default function HistoryDrawer(
             ? (
               <div class="text-center py-10 opacity-50">
                 <div class="text-6xl mb-4">👻</div>
-                <p class="font-bold">No ghosts here yet.</p>
-                <p class="text-xs">Create some QRs to populate history!</p>
+                <p class="font-bold">
+                  {isSpanish
+                    ? "Aún no hay fantasmas aquí."
+                    : "No ghosts here yet."}
+                </p>
+                <p class="text-xs">
+                  {isSpanish
+                    ? "¡Crea algunos QRs para llenar tu historial!"
+                    : "Create some QRs to populate history!"}
+                </p>
               </div>
             )
             : (
@@ -298,7 +349,9 @@ export default function HistoryDrawer(
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  aria-label={`Open ${item.metadata?.title || item.content}`}
+                  aria-label={`${isSpanish ? "Abrir" : "Open"} ${
+                    item.metadata?.title || item.content
+                  }`}
                   class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
                   onClick={() => {
                     onSelect(item);
@@ -324,13 +377,13 @@ export default function HistoryDrawer(
                         {item.metadata?.shortCode && (
                           <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-purple-100 text-purple-900 border border-purple-300 px-1.5 py-0.5 rounded-md">
                             {item.metadata.ownerScope === "qr"
-                              ? "📊 Manage"
-                              : "⚡ Dynamic"}
+                              ? (isSpanish ? "📊 Editar" : "📊 Manage")
+                              : (isSpanish ? "⚡ Dinámico" : "⚡ Dynamic")}
                           </span>
                         )}
                         {item.type === "file" && (
                           <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-teal-100 text-teal-900 border border-teal-300 px-1.5 py-0.5 rounded-md">
-                            🪣 Locker
+                            {isSpanish ? "🪣 Buzón" : "🪣 Locker"}
                           </span>
                         )}
                         {item.metadata?.ownerScope === "file" && (
@@ -338,14 +391,18 @@ export default function HistoryDrawer(
                             href={item.content}
                             onClick={(e) => e.stopPropagation()}
                             class="shrink-0 min-h-[44px] px-2 inline-flex items-center justify-center text-[10px] font-black uppercase tracking-wide bg-amber-200 text-black border border-black rounded-md hover:scale-105 transition-transform"
-                            title="Open it — it's yours: stats, rename, add, re-vibe"
+                            title={isSpanish
+                              ? "Ábrelo — es tuyo: estadísticas, renombrar, agregar, cambiar estilo"
+                              : "Open it — it's yours: stats, rename, add, re-vibe"}
                           >
-                            👑 Manage →
+                            {isSpanish ? "👑 Editar →" : "👑 Manage →"}
                           </a>
                         )}
                       </div>
                       <p class="text-[10px] text-gray-500 font-mono mt-1 truncate">
-                        {item.type === "file" ? "File Locker" : item.content}
+                        {item.type === "file"
+                          ? (isSpanish ? "Buzón de archivos" : "File Locker")
+                          : item.content}
                       </p>
                       <p class="text-[10px] text-gray-400 mt-0.5">
                         {formatDate(item.timestamp)}
@@ -361,8 +418,12 @@ export default function HistoryDrawer(
                       removeFromHistory(item.id);
                     }}
                     class="absolute -top-2 -right-2 w-11 h-11 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:scale-110"
-                    aria-label="Remove from history"
-                    title="Forget this memory"
+                    aria-label={isSpanish
+                      ? "Quitar del historial"
+                      : "Remove from history"}
+                    title={isSpanish
+                      ? "Olvidar este elemento"
+                      : "Forget this memory"}
                   >
                     ✕
                   </button>
@@ -383,14 +444,18 @@ export default function HistoryDrawer(
               class="min-h-[44px] px-2 text-xs font-bold text-purple-700 hover:underline flex items-center gap-1"
             >
               <span>☁️</span>
-              <span>Sync Devices</span>
+              <span>
+                {isSpanish ? "Sincronizar dispositivos" : "Sync Devices"}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => {
                 if (
                   confirm(
-                    "Are you sure you want to wipe your history? This cannot be undone.",
+                    isSpanish
+                      ? "¿Seguro que quieres borrar todo tu historial? Esto no se puede deshacer."
+                      : "Are you sure you want to wipe your history? This cannot be undone.",
                   )
                 ) {
                   clearHistory();
@@ -398,7 +463,7 @@ export default function HistoryDrawer(
               }}
               class="min-h-[44px] px-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-all"
             >
-              🗑️ Wipe
+              {isSpanish ? "🗑️ Borrar todo" : "🗑️ Wipe"}
             </button>
           </div>
         )}

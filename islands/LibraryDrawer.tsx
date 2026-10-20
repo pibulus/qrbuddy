@@ -18,13 +18,18 @@ import {
 } from "../utils/library.ts";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface LibraryDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  lang?: Locale;
 }
 
-export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
+export default function LibraryDrawer(
+  { isOpen, onClose, lang }: LibraryDrawerProps,
+) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [passport, setPassport] = useState<QRBuddyPassport | null>(null);
   const [loading, setLoading] = useState(false);
   const [codes, setCodes] = useState<LibraryCodeItem[]>([]);
@@ -41,7 +46,12 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
     const synced = parsePassportFromUrl();
     if (synced) {
       setPassport(synced);
-      addToast("✨ Synced with your QRBuddy Passport!", 3500);
+      addToast(
+        isSpanish
+          ? "✨ ¡Sincronizado con tu Pasaporte QRBuddy!"
+          : "✨ Synced with your QRBuddy Passport!",
+        3500,
+      );
     } else {
       const p = getOrCreatePassport();
       setPassport(p);
@@ -90,9 +100,19 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
     const url = buildPassportSyncUrl(passport);
     try {
       await navigator.clipboard.writeText(url);
-      addToast("📋 Sync link copied! Open on any device to pair", 3000);
+      addToast(
+        isSpanish
+          ? "📋 ¡Link de sincronización copiado! Ábrelo en otro dispositivo para vincularlo"
+          : "📋 Sync link copied! Open on any device to pair",
+        3000,
+      );
     } catch {
-      addToast("Could not copy link automatically", 3000);
+      addToast(
+        isSpanish
+          ? "No se pudo copiar el link automáticamente"
+          : "Could not copy link automatically",
+        3000,
+      );
     }
   };
 
@@ -108,7 +128,12 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
     };
     savePassport(updated);
     setPassport(updated);
-    addToast(`🎲 Re-rolled to ${updated.avatarEmoji} ${updated.name}!`, 3000);
+    addToast(
+      isSpanish
+        ? `🎲 ¡Nuevo apodo: ${updated.avatarEmoji} ${updated.name}!`
+        : `🎲 Re-rolled to ${updated.avatarEmoji} ${updated.name}!`,
+      3000,
+    );
   };
 
   const handleClaimLegacy = async (e: Event) => {
@@ -122,18 +147,31 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
       const res = await claimLegacyCode(importToken.trim());
       if (res.success) {
         haptics.success();
-        addToast("✨ Pre-launch QR code claimed into your library!", 4000);
+        addToast(
+          isSpanish
+            ? "✨ ¡QR anterior guardado en tu biblioteca!"
+            : "✨ Pre-launch QR code claimed into your library!",
+          4000,
+        );
         setImportToken("");
         setShowImport(false);
         loadLibraryData();
       } else {
         haptics.error();
-        addToast(res.message || "Failed to claim QR code", 4000);
+        addToast(
+          res.message ||
+            (isSpanish
+              ? "No se pudo reclamar el QR"
+              : "Failed to claim QR code"),
+          4000,
+        );
       }
     } catch (err) {
       haptics.error();
       addToast(
-        err instanceof Error ? err.message : "Failed to claim code",
+        err instanceof Error
+          ? err.message
+          : (isSpanish ? "No se pudo reclamar el QR" : "Failed to claim code"),
         4000,
       );
     } finally {
@@ -149,19 +187,38 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
       if (claimed > 0) {
         haptics.success();
         addToast(
-          `✨ Claimed ${claimed} grandfathered code${
-            claimed === 1 ? "" : "s"
-          } into your library!`,
+          isSpanish
+            ? `✨ ¡Se importaron ${claimed} QR${
+              claimed === 1 ? "" : "s"
+            } a tu biblioteca!`
+            : `✨ Claimed ${claimed} grandfathered code${
+              claimed === 1 ? "" : "s"
+            } into your library!`,
           4000,
         );
         loadLibraryData();
       } else if (attempted > 0) {
-        addToast("All local codes are already in your library", 3000);
+        addToast(
+          isSpanish
+            ? "Todos tus QRs locales ya están en tu biblioteca"
+            : "All local codes are already in your library",
+          3000,
+        );
       } else {
-        addToast("No local dynamic codes found to import", 3000);
+        addToast(
+          isSpanish
+            ? "No encontramos QRs dinámicos locales para importar"
+            : "No local dynamic codes found to import",
+          3000,
+        );
       }
     } catch (err) {
-      addToast(err instanceof Error ? err.message : "Sync failed", 4000);
+      addToast(
+        err instanceof Error
+          ? err.message
+          : (isSpanish ? "Error al sincronizar" : "Sync failed"),
+        4000,
+      );
     } finally {
       setImporting(false);
     }
@@ -190,18 +247,24 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
         {/* Header */}
         <div class="flex items-center justify-between pb-3 border-b-2 border-black/10">
           <div class="flex items-center gap-2">
-            <span class="text-2xl" role="img" aria-label="Library">📚</span>
+            <span
+              class="text-2xl"
+              role="img"
+              aria-label={isSpanish ? "Biblioteca" : "Library"}
+            >
+              📚
+            </span>
             <h2
               id="library-title"
               class="font-black text-xl tracking-tight text-neutral-900"
             >
-              Your Library
+              {isSpanish ? "Tu Biblioteca" : "Your Library"}
             </h2>
           </div>
           <button
             type="button"
             onClick={shell.requestClose}
-            aria-label="Close library"
+            aria-label={isSpanish ? "Cerrar biblioteca" : "Close library"}
             class="group shrink-0 w-11 h-11 -mr-1 rounded-full flex items-center justify-center"
           >
             <span
@@ -231,7 +294,9 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                       <button
                         type="button"
                         onClick={handleRerollMoniker}
-                        title="Roll a new moniker"
+                        title={isSpanish
+                          ? "Tirar otro apodo"
+                          : "Roll a new moniker"}
                         class="text-xs p-1 rounded-md border border-black/20 hover:bg-black/5 active:scale-95"
                       >
                         🎲
@@ -241,14 +306,24 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                       {quota?.is_active_plus
                         ? (
                           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-300 to-pink-300 border border-black">
-                            ✨ Plus Active · 100 codes
+                            {isSpanish
+                              ? "✨ Pasaporte Activo · 100 QRs"
+                              : "✨ Plus Active · 100 codes"}
                           </span>
                         )
                         : (
                           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white border border-black/30 text-neutral-700">
-                            🌸 Free Passport · {quota
-                              ? `${quota.used_count} of ${quota.total_allowed} used`
-                              : "5 codes"}
+                            {isSpanish
+                              ? `🌸 Pasaporte Activo · ${
+                                quota
+                                  ? `${quota.used_count} de ${quota.total_allowed} usados`
+                                  : "5 QRs"
+                              }`
+                              : `🌸 Free Passport · ${
+                                quota
+                                  ? `${quota.used_count} of ${quota.total_allowed} used`
+                                  : "5 codes"
+                              }`}
                           </span>
                         )}
                     </div>
@@ -259,14 +334,20 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                   onClick={handleCopySyncUrl}
                   class="px-3 min-h-[36px] text-xs font-black rounded-full border-2 border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform shadow-chunky"
                 >
-                  📋 Copy Sync Link
+                  {isSpanish
+                    ? "📋 Copiar link de sincronización"
+                    : "📋 Copy Sync Link"}
                 </button>
               </div>
 
               {/* Compact collapsible Cross-Device Pairing & Backup Phrase */}
               <details class="group bg-white rounded-xl border-2 border-black/15">
                 <summary class="cursor-pointer list-none px-3 py-2 flex items-center justify-between text-xs font-black text-neutral-800 select-none">
-                  <span>📲 Pair another device or view recovery phrase</span>
+                  <span>
+                    {isSpanish
+                      ? "📲 Vincular otro dispositivo o ver frase de respaldo"
+                      : "📲 Pair another device or view recovery phrase"}
+                  </span>
                   <span class="transition-transform group-open:rotate-180 text-[10px]">
                     ▾
                   </span>
@@ -280,11 +361,14 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                     />
                     <div class="min-w-0 flex-1 text-center sm:text-left space-y-2">
                       <p class="font-bold text-xs text-neutral-800">
-                        📱 Scan with another device to sync library
+                        {isSpanish
+                          ? "📱 Escanea con otro celular para sincronizar tu biblioteca"
+                          : "📱 Scan with another device to sync library"}
                       </p>
                       <p class="text-[11px] text-neutral-500 leading-tight">
-                        Instant cross-device pairing. Zero accounts, zero
-                        passwords.
+                        {isSpanish
+                          ? "Sincronización al instante. Cero cuentas, cero contraseñas."
+                          : "Instant cross-device pairing. Zero accounts, zero passwords."}
                       </p>
                       <div class="flex flex-wrap gap-1.5 justify-center sm:justify-start">
                         <button
@@ -292,14 +376,20 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                           onClick={handleCopySyncUrl}
                           class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform"
                         >
-                          📋 Copy Link
+                          {isSpanish
+                            ? "📋 Copiar link de sincronización"
+                            : "📋 Copy Link"}
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowPhrase(!showPhrase)}
                           class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black/20 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-transform"
                         >
-                          🔑 {showPhrase ? "Hide Phrase" : "Backup Phrase"}
+                          🔑 {showPhrase
+                            ? (isSpanish ? "Ocultar frase" : "Hide Phrase")
+                            : (isSpanish
+                              ? "Frase de respaldo"
+                              : "Backup Phrase")}
                         </button>
                       </div>
                     </div>
@@ -309,7 +399,9 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                   {showPhrase && (
                     <div class="bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl p-2.5 text-xs text-neutral-700 space-y-1">
                       <p class="font-bold text-[10px] uppercase tracking-wider text-amber-800">
-                        Sovereign Recovery Phrase
+                        {isSpanish
+                          ? "Frase de recuperación"
+                          : "Sovereign Recovery Phrase"}
                       </p>
                       <code class="block font-mono font-bold text-xs bg-white px-2 py-1 rounded border border-amber-200 select-all break-all">
                         {passport.phrase}
@@ -325,9 +417,13 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
           {quota && (
             <div class="bg-white border-2 border-black rounded-2xl p-4 shadow-sm space-y-2">
               <div class="flex items-center justify-between text-xs font-bold">
-                <span class="text-neutral-700">Code Allowance</span>
+                <span class="text-neutral-700">
+                  {isSpanish ? "Tus QRs guardados" : "Code Allowance"}
+                </span>
                 <span class="text-neutral-900">
-                  {quota.used_count} / {quota.total_allowed} used
+                  {isSpanish
+                    ? `${quota.used_count} / ${quota.total_allowed} usados`
+                    : `${quota.used_count} / ${quota.total_allowed} used`}
                 </span>
               </div>
               <div class="w-full h-3 bg-neutral-100 rounded-full border border-black/20 overflow-hidden">
@@ -349,10 +445,13 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
               </div>
               {quota.legacy_count > 0 && (
                 <p class="text-[11px] text-neutral-500 font-medium">
-                  Includes {quota.legacy_count} grandfathered legacy code{quota
-                      .legacy_count === 1
-                    ? ""
-                    : "s"} (exempt from allowance).
+                  {isSpanish
+                    ? `Incluye ${quota.legacy_count} QR${
+                      quota.legacy_count === 1 ? "" : "s"
+                    } anteriores (no cuentan en tu límite).`
+                    : `Includes ${quota.legacy_count} grandfathered legacy code${
+                      quota.legacy_count === 1 ? "" : "s"
+                    } (exempt from allowance).`}
                 </p>
               )}
             </div>
@@ -368,7 +467,9 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                 setSearch(q);
                 loadLibraryData(q);
               }}
-              placeholder="Search your library..."
+              placeholder={isSpanish
+                ? "Buscar en tus QRs guardados..."
+                : "Search your library..."}
               class="w-full px-4 py-2.5 pl-10 rounded-xl border-2 border-black/15 bg-white text-sm font-medium focus:outline-none focus:border-black transition-colors"
             />
             <span class="absolute left-3.5 top-3 text-neutral-400 text-sm">
@@ -380,7 +481,9 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
           {loading && codes.length === 0
             ? (
               <div class="text-center py-8 text-neutral-400 text-sm font-medium">
-                Loading your QR codes...
+                {isSpanish
+                  ? "Cargando tus QRs guardados..."
+                  : "Loading your QR codes..."}
               </div>
             )
             : codes.length === 0
@@ -388,11 +491,14 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
               <div class="text-center py-8 bg-white border-2 border-dashed border-black/20 rounded-2xl p-6 space-y-2">
                 <p class="text-2xl">🌱</p>
                 <p class="font-bold text-sm text-neutral-800">
-                  No editable codes yet
+                  {isSpanish
+                    ? "Tus QRs guardados aparecerán aquí"
+                    : "No editable codes yet"}
                 </p>
                 <p class="text-xs text-neutral-500 max-w-xs mx-auto">
-                  Create an editable QR code in the generator to update its
-                  destination anytime after printing.
+                  {isSpanish
+                    ? "Crea un QR editable en el generador para cambiar a dónde apunta cuando quieras, incluso después de imprimirlo."
+                    : "Create an editable QR code in the generator to update its destination anytime after printing."}
                 </p>
               </div>
             )
@@ -411,7 +517,7 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                           </span>
                           {c.is_legacy && (
                             <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 rounded">
-                              Legacy
+                              {isSpanish ? "Clásico" : "Legacy"}
                             </span>
                           )}
                         </div>
@@ -423,15 +529,20 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                         href={`/edit/${c.short_code}`}
                         class="px-3 py-1.5 rounded-xl border-2 border-black bg-amber-200 text-xs font-bold hover:bg-amber-300 active:scale-95 transition-transform shrink-0"
                       >
-                        Edit ↗
+                        {isSpanish ? "Editar ↗" : "Edit ↗"}
                       </a>
                     </div>
                     <div class="flex items-center justify-between pt-2 border-t border-black/5 text-[11px] text-neutral-400">
                       <span>
-                        {c.scan_count} scan{c.scan_count === 1 ? "" : "s"}
+                        {c.scan_count} {isSpanish
+                          ? (c.scan_count === 1 ? "escaneo" : "escaneos")
+                          : (c.scan_count === 1 ? "scan" : "scans")}
                       </span>
                       <span>
-                        Created {new Date(c.created_at).toLocaleDateString()}
+                        {isSpanish ? "Creado " : "Created "}
+                        {new Date(c.created_at).toLocaleDateString(
+                          isSpanish ? "es-MX" : undefined,
+                        )}
                       </span>
                     </div>
                   </div>
@@ -449,7 +560,9 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                     onClick={() => setShowImport(true)}
                     class="text-xs font-bold text-neutral-600 hover:text-black underline text-left"
                   >
-                    Claim old QR code with token ↗
+                    {isSpanish
+                      ? "Reclamar un QR anterior con su llave ↗"
+                      : "Claim old QR code with token ↗"}
                   </button>
                   <button
                     type="button"
@@ -457,7 +570,11 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                     onClick={handleImportHistory}
                     class="text-xs font-bold text-neutral-600 hover:text-black underline disabled:opacity-50 text-left sm:text-right"
                   >
-                    {importing ? "Importing..." : "Sync from browser history ↺"}
+                    {importing
+                      ? (isSpanish ? "Importando..." : "Importing...")
+                      : (isSpanish
+                        ? "Sincronizar desde el historial ↺"
+                        : "Sync from browser history ↺")}
                   </button>
                 </div>
               )
@@ -468,19 +585,22 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                 >
                   <div class="flex items-center justify-between">
                     <p class="font-bold text-xs text-neutral-900">
-                      Claim Pre-Launch Code
+                      {isSpanish
+                        ? "Reclamar QR anterior"
+                        : "Claim Pre-Launch Code"}
                     </p>
                     <button
                       type="button"
                       onClick={() => setShowImport(false)}
                       class="text-xs font-bold text-neutral-500 hover:text-black"
                     >
-                      Cancel
+                      {isSpanish ? "Cancelar" : "Cancel"}
                     </button>
                   </div>
                   <p class="text-[11px] text-neutral-500 leading-relaxed">
-                    Paste the owner token from a code you created before this
-                    release. Claiming it does not consume your 5-code allowance.
+                    {isSpanish
+                      ? "Pega el token de propietario de un QR que hayas creado antes. Reclamarlo no gasta tus 5 lugares gratis."
+                      : "Paste the owner token from a code you created before this release. Claiming it does not consume your 5-code allowance."}
                   </p>
                   <input
                     type="text"
@@ -496,7 +616,9 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                     disabled={importing || !importToken.trim()}
                     class="w-full py-2 px-3 rounded-xl border-2 border-black bg-amber-300 font-bold text-xs hover:bg-amber-400 active:scale-95 disabled:opacity-50 transition-all"
                   >
-                    {importing ? "Claiming..." : "Claim Code →"}
+                    {importing
+                      ? (isSpanish ? "Reclamando..." : "Claiming...")
+                      : (isSpanish ? "Reclamar QR →" : "Claim Code →")}
                   </button>
                 </form>
               )}

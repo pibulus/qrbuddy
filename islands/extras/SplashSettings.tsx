@@ -1,6 +1,7 @@
 import { Signal } from "@preact/signals";
 import { useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 export interface SplashConfig {
   enabled: boolean;
@@ -13,55 +14,80 @@ export interface SplashConfig {
 interface SplashSettingsProps {
   splashConfig: Signal<SplashConfig | null>;
   destinationUrl?: string;
+  lang?: Locale;
 }
 
 interface Preset {
   label: string;
+  labelEs: string;
   icon: string;
   title: string;
+  titleEs: string;
   buttonText: string;
+  buttonTextEs: string;
   description: string;
+  descriptionEs: string;
   imageUrl?: string;
 }
 
 const PRESETS: Preset[] = [
   {
     label: "Menu & Food",
+    labelEs: "Menú y Comida",
     icon: "🌮",
     title: "Tonight's Specials",
+    titleEs: "Especiales de Hoy",
     buttonText: "View Full Menu & Drinks 🌯",
+    buttonTextEs: "Ver Menú y Bebidas 🌯",
     description:
       "Welcome to our kitchen! Check out our seasonal tacos, warm sides, and cold craft drinks.",
+    descriptionEs:
+      "¡Bienvenidos a nuestra cocina! Checa nuestros tacos de temporada, guarniciones y bebidas bien frías.",
     imageUrl:
       "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80",
   },
   {
     label: "Wedding & Party",
+    labelEs: "Boda y Fiesta",
     icon: "🥂",
     title: "Welcome to Our Big Day! 🥂",
+    titleEs: "¡Bienvenidos a Nuestro Gran Día! 🥂",
     buttonText: "See Timeline & Photos ✨",
+    buttonTextEs: "Ver Itinerario y Fotos ✨",
     description:
       "We're so thrilled you're here to celebrate with us. Tap below to view our day schedule and share your snaps to our album!",
+    descriptionEs:
+      "Qué alegría que estés aquí para celebrar con nosotros. Toca abajo para ver el programa y subir tus fotos al álbum.",
     imageUrl:
       "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
   },
   {
     label: "Music & Beats",
+    labelEs: "Música y Beats",
     icon: "🎧",
     title: "New Track Incoming! 🎧",
+    titleEs: "¡Nuevo Track Recién Salido! 🎧",
     buttonText: "Listen to the Master 🔊",
+    buttonTextEs: "Escuchar el Master 🔊",
     description:
       "Exclusive unreleased master before it hits streaming. Plug in your headphones and turn this all the way up.",
+    descriptionEs:
+      "Master exclusivo antes de salir en plataformas. Ponte los audífonos y súbele todo el volumen.",
     imageUrl:
       "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=800&q=80",
   },
   {
     label: "Art & Studio",
+    labelEs: "Arte y Estudio",
     icon: "🎨",
     title: "Welcome to the Studio ✨",
+    titleEs: "Bienvenidos al Estudio ✨",
     buttonText: "Explore the Gallery 🖼️",
+    buttonTextEs: "Explorar la Galería 🖼️",
     description:
       "Independent craft, designs, and software experiments made with love and caffeine.",
+    descriptionEs:
+      "Diseño independiente, arte y experimentos hechos con cariño y buen café.",
     imageUrl:
       "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&q=80",
   },
@@ -70,39 +96,45 @@ const PRESETS: Preset[] = [
 const CURATED_IMAGES = [
   {
     label: "🌮 Food",
+    labelEs: "🌮 Comida",
     url:
       "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80",
   },
   {
     label: "💐 Floral",
+    labelEs: "💐 Flores",
     url:
       "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
   },
   {
     label: "🎶 Vinyl",
+    labelEs: "🎶 Vinilo",
     url:
       "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=800&q=80",
   },
   {
     label: "🌅 Sunset",
+    labelEs: "🌅 Atardecer",
     url:
       "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
   },
   {
     label: "👾 Cyber",
+    labelEs: "👾 Cyber",
     url:
       "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&q=80",
   },
 ];
 
 export default function SplashSettings(
-  { splashConfig, destinationUrl }: SplashSettingsProps,
+  { splashConfig, destinationUrl, lang }: SplashSettingsProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [localConfig, setLocalConfig] = useState<SplashConfig>(
     splashConfig.value || {
       enabled: true,
-      title: "Welcome!",
-      buttonText: "Continue",
+      title: isSpanish ? "¡Hola!" : "Welcome!",
+      buttonText: isSpanish ? "Continuar" : "Continue",
       description: "",
       imageUrl: "",
     },
@@ -124,9 +156,9 @@ export default function SplashSettings(
     setImageError(false);
     const newConfig: SplashConfig = {
       enabled: true,
-      title: preset.title,
-      buttonText: preset.buttonText,
-      description: preset.description,
+      title: isSpanish ? preset.titleEs : preset.title,
+      buttonText: isSpanish ? preset.buttonTextEs : preset.buttonText,
+      description: isSpanish ? preset.descriptionEs : preset.description,
       imageUrl: preset.imageUrl,
     };
     setLocalConfig(newConfig);
@@ -151,10 +183,14 @@ export default function SplashSettings(
         <div>
           <h3 class="text-sm font-black text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
             <span>✨</span>
-            <span>Cover Page Designer</span>
+            <span>
+              {isSpanish ? "Portada de Bienvenida" : "Cover Page Designer"}
+            </span>
           </h3>
           <p class="text-xs text-gray-500 font-medium mt-0.5">
-            Gives scanners a custom intro card before opening your link.
+            {isSpanish
+              ? "Muestra una tarjeta de bienvenida antes de abrir tu link."
+              : "Gives scanners a custom intro card before opening your link."}
           </p>
         </div>
 
@@ -172,7 +208,7 @@ export default function SplashSettings(
                 : "text-gray-500 hover:text-black"
             }`}
           >
-            ✏️ Edit
+            {isSpanish ? "✏️ Editar" : "✏️ Edit"}
           </button>
           <button
             type="button"
@@ -186,7 +222,7 @@ export default function SplashSettings(
                 : "text-gray-500 hover:text-black"
             }`}
           >
-            👁️ Preview
+            {isSpanish ? "👁️ Vista" : "👁️ Preview"}
           </button>
         </div>
       </div>
@@ -195,9 +231,11 @@ export default function SplashSettings(
       <div>
         <div class="flex items-center justify-between mb-1.5">
           <span class="text-[11px] font-black uppercase tracking-wider text-pink-600">
-            Quick Starters
+            {isSpanish ? "Plantillas Rápidas" : "Quick Starters"}
           </span>
-          <span class="text-[11px] text-gray-400 font-medium">1-tap fill</span>
+          <span class="text-[11px] text-gray-400 font-medium">
+            {isSpanish ? "1 toque" : "1-tap fill"}
+          </span>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {PRESETS.map((preset) => (
@@ -206,12 +244,14 @@ export default function SplashSettings(
               type="button"
               onClick={() => applyPreset(preset)}
               class="flex items-center gap-1 px-1.5 sm:px-2 py-2 min-h-[44px] rounded-xl border-2 border-black bg-pink-50/70 hover:bg-pink-100 hover:-translate-y-0.5 active:translate-y-0 font-black text-[10px] min-[375px]:text-[11px] sm:text-xs tracking-tight sm:tracking-normal text-gray-800 transition-all text-left shadow-sm"
-              title={preset.title}
+              title={isSpanish ? preset.titleEs : preset.title}
             >
               <span class="text-xs min-[375px]:text-sm shrink-0">
                 {preset.icon}
               </span>
-              <span class="truncate">{preset.label}</span>
+              <span class="truncate">
+                {isSpanish ? preset.labelEs : preset.label}
+              </span>
             </button>
           ))}
         </div>
@@ -224,7 +264,7 @@ export default function SplashSettings(
           <div>
             <div class="flex justify-between items-center mb-1">
               <label class="block text-xs font-black uppercase tracking-wide text-gray-700">
-                Headline / Title *
+                {isSpanish ? "Título principal *" : "Headline / Title *"}
               </label>
               <span class="text-[10px] font-bold text-gray-400">
                 {localConfig.title.length}/100
@@ -237,7 +277,9 @@ export default function SplashSettings(
               onInput={(e) =>
                 updateConfig({ title: (e.target as HTMLInputElement).value })}
               class="w-full px-3 py-2 border-2 border-black rounded-xl focus:border-pink-500 focus:outline-none text-sm font-bold bg-white"
-              placeholder="e.g. Welcome to Our Wedding!"
+              placeholder={isSpanish
+                ? "ej. ¡Bienvenidos a Nuestra Boda!"
+                : "e.g. Welcome to Our Wedding!"}
             />
           </div>
 
@@ -245,7 +287,7 @@ export default function SplashSettings(
           <div>
             <div class="flex justify-between items-center mb-1">
               <label class="block text-xs font-black uppercase tracking-wide text-gray-700">
-                Button Text *
+                {isSpanish ? "Texto del botón *" : "Button Text *"}
               </label>
               <span class="text-[10px] font-bold text-gray-400">
                 {localConfig.buttonText.length}/50
@@ -260,7 +302,9 @@ export default function SplashSettings(
                   buttonText: (e.target as HTMLInputElement).value,
                 })}
               class="w-full px-3 py-2 border-2 border-black rounded-xl focus:border-pink-500 focus:outline-none text-sm font-bold bg-white"
-              placeholder="e.g. Continue to Website"
+              placeholder={isSpanish
+                ? "ej. Abrir el sitio"
+                : "e.g. Continue to Website"}
             />
           </div>
 
@@ -268,7 +312,9 @@ export default function SplashSettings(
           <div>
             <div class="flex justify-between items-center mb-1">
               <label class="block text-xs font-black uppercase tracking-wide text-gray-700">
-                Welcome Message / Note
+                {isSpanish
+                  ? "Mensaje de bienvenida / Nota"
+                  : "Welcome Message / Note"}
               </label>
               <span class="text-[10px] font-bold text-gray-400">
                 {(localConfig.description || "").length}/500
@@ -283,7 +329,9 @@ export default function SplashSettings(
                 })}
               class="w-full px-3 py-2 border-2 border-black rounded-xl focus:border-pink-500 focus:outline-none text-sm font-medium resize-none bg-white"
               rows={3}
-              placeholder="Add instructions, warm greeting, playlist description, or menu teasers..."
+              placeholder={isSpanish
+                ? "Agrega instrucciones, un saludo cálido o detalles de lo que verán..."
+                : "Add instructions, warm greeting, playlist description, or menu teasers..."}
             />
           </div>
 
@@ -291,7 +339,9 @@ export default function SplashSettings(
           <div>
             <div class="flex justify-between items-center mb-1">
               <label class="block text-xs font-black uppercase tracking-wide text-gray-700">
-                Header Cover Image URL (Optional)
+                {isSpanish
+                  ? "URL de imagen de portada (Opcional)"
+                  : "Header Cover Image URL (Optional)"}
               </label>
               {localConfig.imageUrl && (
                 <button
@@ -302,7 +352,7 @@ export default function SplashSettings(
                   }}
                   class="text-[10px] font-bold text-red-500 hover:underline"
                 >
-                  ✕ Clear image
+                  {isSpanish ? "✕ Quitar imagen" : "✕ Clear image"}
                 </button>
               )}
             </div>
@@ -319,7 +369,9 @@ export default function SplashSettings(
 
             {/* Quick image inspiration chips */}
             <div class="flex items-center gap-1.5 flex-wrap mt-2">
-              <span class="text-[10px] font-bold text-gray-400">Presets:</span>
+              <span class="text-[10px] font-bold text-gray-400">
+                {isSpanish ? "Fondos:" : "Presets:"}
+              </span>
               {CURATED_IMAGES.map((img) => (
                 <button
                   key={img.label}
@@ -330,7 +382,7 @@ export default function SplashSettings(
                   }}
                   class="text-[11px] font-bold px-2 py-0.5 rounded-lg border border-gray-300 bg-gray-50 hover:border-black hover:bg-white transition-colors"
                 >
-                  {img.label}
+                  {isSpanish ? img.labelEs : img.label}
                 </button>
               ))}
             </div>
@@ -347,7 +399,7 @@ export default function SplashSettings(
               <div class="rounded-xl border-2 border-black overflow-hidden bg-pink-50 max-h-44 shadow-sm">
                 <img
                   src={localConfig.imageUrl}
-                  alt="Cover image"
+                  alt={isSpanish ? "Imagen de portada" : "Cover image"}
                   class="w-full h-36 object-cover"
                   onError={() => setImageError(true)}
                 />
@@ -356,7 +408,7 @@ export default function SplashSettings(
 
             {/* Title */}
             <h4 class="text-xl font-black text-gray-950 tracking-tight leading-tight pt-1 break-words">
-              {localConfig.title || "Welcome!"}
+              {localConfig.title || (isSpanish ? "¡Hola!" : "Welcome!")}
             </h4>
 
             {/* Description */}
@@ -369,12 +421,15 @@ export default function SplashSettings(
             {/* Button */}
             <div class="pt-2">
               <div class="w-full min-h-[46px] rounded-xl border-3 border-black bg-black text-white font-extrabold text-sm py-2.5 px-4 shadow-[3px_3px_0px_0px_#FF69B4] flex items-center justify-center gap-1.5 cursor-default">
-                <span>{localConfig.buttonText || "Continue"}</span>
+                <span>
+                  {localConfig.buttonText ||
+                    (isSpanish ? "Continuar" : "Continue")}
+                </span>
                 <span>→</span>
               </div>
               {cleanDestDomain && (
                 <p class="text-[10px] text-gray-400 font-semibold mt-1.5 truncate">
-                  Opens: {cleanDestDomain}
+                  {isSpanish ? "Abre:" : "Opens:"} {cleanDestDomain}
                 </p>
               )}
             </div>
@@ -384,15 +439,26 @@ export default function SplashSettings(
               <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-black bg-pink-100 text-[10px] font-black text-gray-900 shadow-[1.5px_1.5px_0px_0px_#000]">
                 <span>⚡</span>
                 <span>
-                  Built with <strong>QRBuddy</strong> · Free forever
+                  {isSpanish
+                    ? (
+                      <>
+                        Hecho con <strong>QRBuddy</strong> · Gratis siempre
+                      </>
+                    )
+                    : (
+                      <>
+                        Built with <strong>QRBuddy</strong> · Free forever
+                      </>
+                    )}
                 </span>
               </div>
             </div>
           </div>
 
           <p class="text-center text-[11px] text-gray-500 font-medium mt-3">
-            ✨ When scanned, your visitors see this card before reaching your
-            destination.
+            {isSpanish
+              ? "✨ Al escanear, tus visitantes verán esta portada antes de abrir tu destino."
+              : "✨ When scanned, your visitors see this card before reaching your destination."}
           </p>
         </div>
       )}

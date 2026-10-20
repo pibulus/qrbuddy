@@ -2,12 +2,15 @@ import { Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface LogoUploaderProps {
   logoUrl: Signal<string>;
+  lang?: Locale;
 }
 
-export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
+export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -33,12 +36,20 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
 
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        throw new Error("Please upload an image file (PNG, JPG, SVG, etc.)");
+        throw new Error(
+          isSpanish
+            ? "Por favor sube una imagen (PNG, JPG, SVG, etc.)"
+            : "Please upload an image file (PNG, JPG, SVG, etc.)",
+        );
       }
 
       // Validate file size (2MB limit for logos)
       if (file.size > 2 * 1024 * 1024) {
-        throw new Error("Logo must be under 2MB");
+        throw new Error(
+          isSpanish
+            ? "El logo debe pesar menos de 2 MB"
+            : "Logo must be under 2MB",
+        );
       }
 
       // Convert to data URL and normalize to a centered square
@@ -71,7 +82,12 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
           ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
           logoUrl.value = canvas.toDataURL("image/png");
           haptics.success();
-          addToast("Logo fitted & added 🖼️", 2000);
+          addToast(
+            isSpanish
+              ? "Logo ajustado y agregado 🖼️"
+              : "Logo fitted & added 🖼️",
+            2000,
+          );
           setIsUploading(false);
         };
         img.onerror = () => {
@@ -112,7 +128,7 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
     uploadGenRef.current++;
     logoUrl.value = "";
     haptics.light();
-    addToast("Logo removed", 2000);
+    addToast(isSpanish ? "Logo quitado" : "Logo removed", 2000);
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -133,7 +149,7 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
           ? (
             <img
               src={logoUrl.value}
-              alt="Logo preview"
+              alt={isSpanish ? "Vista previa del logo" : "Logo preview"}
               class="w-10 h-10 object-contain rounded-xl border-2 border-black bg-white shrink-0"
             />
           )
@@ -144,12 +160,16 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
           )}
         <span class="min-w-0 flex-1">
           <span class="block font-black text-black leading-tight">
-            Center logo
+            {isSpanish ? "Logo central" : "Center logo"}
           </span>
           <span class="block text-xs text-neutral-700 leading-snug mt-0.5">
             {logoUrl.value
-              ? "Sits in the middle of the QR."
-              : "PNG, JPG or SVG · square works best · max 2MB"}
+              ? (isSpanish
+                ? "Va justo al centro del QR."
+                : "Sits in the middle of the QR.")
+              : (isSpanish
+                ? "PNG, JPG o SVG · cuadrado queda mejor · máx. 2 MB"
+                : "PNG, JPG or SVG · square works best · max 2MB")}
           </span>
         </span>
         {logoUrl.value
@@ -159,7 +179,7 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
               onClick={handleRemoveLogo}
               class="shrink-0 min-h-[40px] px-3 rounded-full border-2 border-black bg-white text-xs font-black text-black hover:scale-105 active:scale-95 transition-transform"
             >
-              Remove
+              {isSpanish ? "Quitar" : "Remove"}
             </button>
           )
           : (
@@ -169,7 +189,7 @@ export default function LogoUploader({ logoUrl }: LogoUploaderProps) {
               disabled={isUploading}
               class="shrink-0 min-h-[40px] px-4 rounded-full border-2 border-black bg-black text-xs font-black text-white hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
             >
-              {isUploading ? "…" : "Upload"}
+              {isUploading ? "…" : (isSpanish ? "Subir" : "Upload")}
             </button>
           )}
       </div>

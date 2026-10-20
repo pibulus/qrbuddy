@@ -1,5 +1,6 @@
 import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { addToast } from "../ToastManager.tsx";
 
 export type ShareKind = "slideshow" | "playlist" | "file" | "pack";
@@ -14,13 +15,33 @@ export interface LastShare {
 interface ShareReadyProps {
   share: LastShare;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
+  lang?: Locale;
 }
 
-const KIND_COPY: Record<ShareKind, { label: string; glyph: string }> = {
-  slideshow: { label: "Slideshow is live", glyph: "🖼️" },
-  playlist: { label: "Mixtape is live", glyph: "🎵" },
-  pack: { label: "Pack is live", glyph: "📦" },
-  file: { label: "File is live", glyph: "📄" },
+const KIND_COPY: Record<
+  ShareKind,
+  { label: string; labelEs: string; glyph: string }
+> = {
+  slideshow: {
+    label: "Slideshow is live",
+    labelEs: "Tu galería está lista",
+    glyph: "🖼️",
+  },
+  playlist: {
+    label: "Mixtape is live",
+    labelEs: "Tu mixtape está listo",
+    glyph: "🎵",
+  },
+  pack: {
+    label: "Pack is live",
+    labelEs: "Tu paquete está listo",
+    glyph: "📦",
+  },
+  file: {
+    label: "File is live",
+    labelEs: "Tu archivo está listo",
+    glyph: "📄",
+  },
 };
 
 const PILL =
@@ -29,17 +50,23 @@ const PILL =
 /** The "it's alive" strip under the input once a share has uploaded: open
  * it, copy it, or stamp a SCAN ME sticker — the three things people do next. */
 export default function ShareReady(
-  { share, frameConfig: _frameConfig }: ShareReadyProps,
+  { share, frameConfig: _frameConfig, lang }: ShareReadyProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   const copy = KIND_COPY[share.kind];
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(share.url);
-      addToast("Link copied 📋");
+      addToast(isSpanish ? "Link copiado 📋" : "Link copied 📋");
       haptics.copy();
     } catch {
-      addToast("Couldn't reach the clipboard", 3000);
+      addToast(
+        isSpanish
+          ? "No se pudo copiar al portapapeles"
+          : "Couldn't reach the clipboard",
+        3000,
+      );
     }
   };
 
@@ -51,7 +78,10 @@ export default function ShareReady(
       new CustomEvent("qr-export", {
         detail: {
           format: "png",
-          frameOverride: { enabled: true, caption: "SCAN ME" },
+          frameOverride: {
+            enabled: true,
+            caption: isSpanish ? "ESCANÉAME" : "SCAN ME",
+          },
           isSticker: true,
         },
       }),
@@ -66,7 +96,9 @@ export default function ShareReady(
           {copy.glyph}
         </span>
         <div class="min-w-0 flex-1">
-          <p class="font-black text-black leading-tight">{copy.label}</p>
+          <p class="font-black text-black leading-tight">
+            {isSpanish ? copy.labelEs : copy.label}
+          </p>
           <p class="text-xs text-neutral-600 truncate">
             {share.title}
           </p>
@@ -79,28 +111,31 @@ export default function ShareReady(
           rel="noopener noreferrer"
           class={`${PILL} bg-black text-white`}
         >
-          Open ↗
+          {isSpanish ? "Abrir ↗" : "Open ↗"}
         </a>
         <button type="button" onClick={handleCopy} class={`${PILL} bg-white`}>
-          Copy
+          {isSpanish ? "Copiar" : "Copy"}
         </button>
         <button
           type="button"
           onClick={handleSticker}
           class={`${PILL} bg-qr-pop text-white hover:bg-qr-popDeep`}
         >
-          Sticker
+          {isSpanish ? "Sticker" : "Sticker"}
         </button>
       </div>
       <div class="rounded-xl border border-black/10 bg-amber-50/70 p-2.5 text-xs font-medium text-neutral-700 flex items-start gap-2">
         <span class="text-sm shrink-0">👑</span>
         <div class="leading-snug">
           <p class="font-bold text-black">
-            Managed in this browser · 30-day share
+            {isSpanish
+              ? "Se administra en este navegador · dura 30 días"
+              : "Managed in this browser · 30-day share"}
           </p>
           <p class="text-[11px] text-neutral-600 mt-0.5">
-            Your owner key stays in this browser. Sync or export in History (☁️)
-            to keep control across devices.
+            {isSpanish
+              ? "Tu llave de propietario vive en este navegador. Sincroniza o exporta en Historial (☁️) para conservar el control en otros dispositivos."
+              : "Your owner key stays in this browser. Sync or export in History (☁️) to keep control across devices."}
           </p>
         </div>
       </div>

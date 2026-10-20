@@ -1,5 +1,5 @@
 import { useSignal } from "@preact/signals";
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import QRCanvas from "./QRCanvas.tsx";
 import SmartInput from "./SmartInput.tsx";
 import StyleSelector from "./StyleSelector.tsx";
@@ -13,6 +13,11 @@ import { PricingLink, PricingModal } from "./PricingModal.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
+import {
+  getClientLocale,
+  getLanguageSwitchHref,
+  type Locale,
+} from "../utils/i18n.ts";
 
 export interface ValueCard {
   icon: string;
@@ -66,13 +71,23 @@ export default function VerticalStudio({
   comparisonItems,
   faqItems,
   ctaLabel,
-  lang = "en",
+  lang,
   homeUrl = "/",
   homeLabel = "← Back to QRBuddy Home",
   featuresTitle = "Why Professionals Choose QRBuddy",
   faqTitle = "Frequently Asked Questions",
 }: VerticalStudioProps) {
-  const isSpanish = lang === "es";
+  const locale = getClientLocale(lang);
+  const isSpanish = locale === "es";
+  const targetLang: Locale = isSpanish ? "en" : "es";
+  const [switchHref, setSwitchHref] = useState(() =>
+    getLanguageSwitchHref(
+      typeof globalThis.location !== "undefined"
+        ? globalThis.location.pathname
+        : (isSpanish ? "/es" : "/"),
+      targetLang,
+    )
+  );
   const url = useSignal(defaultUrl);
   const style = useSignal<keyof typeof QR_STYLES | "custom">(defaultStyle);
   const customStyle = useSignal<QRStyle | null>(null);
@@ -96,6 +111,14 @@ export default function VerticalStudio({
     }
   }, [defaultUrl]);
 
+  useEffect(() => {
+    if (typeof globalThis.location !== "undefined") {
+      setSwitchHref(
+        getLanguageSwitchHref(globalThis.location.pathname, targetLang),
+      );
+    }
+  }, [targetLang]);
+
   return (
     <div class="min-h-screen flex flex-col items-center justify-start px-4 pb-12 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative selection:bg-pink-300 selection:text-black">
       {/* Skip to main content link for accessibility */}
@@ -103,7 +126,7 @@ export default function VerticalStudio({
         href="#main-content"
         class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded"
       >
-        Skip to main content
+        {isSpanish ? "Saltar al contenido principal" : "Skip to main content"}
       </a>
 
       <ToastManager />
@@ -133,11 +156,15 @@ export default function VerticalStudio({
             <span class="inline-flex items-center gap-1 px-2.5 sm:px-3 min-h-[36px] bg-black text-white rounded-full text-[11px] sm:text-xs font-black tracking-wide uppercase truncate">
               {badge}
             </span>
-            <div class="shrink-0" aria-label="Style selector">
+            <div
+              class="shrink-0"
+              aria-label={isSpanish ? "Selector de estilo" : "Style selector"}
+            >
               <StyleSelector
                 style={style}
                 customStyle={customStyle}
                 isHidden={isModalOpen}
+                lang={locale}
               />
             </div>
           </div>
@@ -316,15 +343,15 @@ export default function VerticalStudio({
             <PricingLink
               label={isSpanish ? "Pase Supporter ✨" : "Supporter Pass ✨"}
             />
-            <AboutLink label={isSpanish ? "Acerca de" : "About"} />
+            <AboutLink label={isSpanish ? "Qué es" : "About"} />
             <KofiButton
               size="sm"
-              label={isSpanish ? "Propina ☕" : "Tip Jar ☕"}
+              label={isSpanish ? "Invitar un café ☕" : "Tip Jar ☕"}
             />
           </div>
           <p class="text-xs text-gray-600 font-medium">
             {isSpanish
-              ? "Hecho por Pablo • Melbourne • QR útiles con personalidad."
+              ? "Hecho por Pablo • Melbourne • QRs útiles con buena onda."
               : "Made by Pablo • Melbourne • Useful QRs with personality."}
           </p>
           <nav
@@ -343,15 +370,21 @@ export default function VerticalStudio({
               href={isSpanish ? "/terms?lang=es" : "/terms"}
               class="underline underline-offset-2 hover:text-qr-pop"
             >
-              {isSpanish ? "Condiciones" : "Terms"}
+              {isSpanish ? "Términos" : "Terms"}
+            </a>
+            <a
+              href={switchHref}
+              class="underline underline-offset-2 hover:text-qr-pop"
+            >
+              {isSpanish ? "EN" : "🇲🇽 ES"}
             </a>
           </nav>
         </footer>
       </main>
 
       {/* Modals */}
-      <PricingModal lang={lang} />
-      <AboutModal />
+      <PricingModal lang={locale} />
+      <AboutModal lang={locale} />
       <KofiModal kofiUsername="madebypablo" />
     </div>
   );

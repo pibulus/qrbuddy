@@ -2,6 +2,19 @@ import { useEffect, useState } from "preact/hooks";
 import { getHistory } from "../../utils/history.ts";
 import { haptics } from "../../utils/haptics.ts";
 import { QR_TEMPLATES, type QRTemplateType } from "../../types/qr-templates.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+
+const TEMPLATE_LABELS_ES: Record<QRTemplateType, string> = {
+  url: "Enlace",
+  text: "Texto",
+  wifi: "Wi-Fi",
+  vcard: "Contacto",
+  sms: "SMS",
+  email: "Correo",
+  phone: "Llamada",
+  social: "Redes",
+  media: "Archivo",
+};
 
 interface SmartInputToolbarProps {
   selectedTemplate: QRTemplateType;
@@ -10,6 +23,7 @@ interface SmartInputToolbarProps {
   createHasUpdates: boolean;
   onShowHistory: () => void;
   onShowReader: () => void;
+  lang?: Locale;
 }
 export default function SmartInputToolbar({
   selectedTemplate,
@@ -18,8 +32,13 @@ export default function SmartInputToolbar({
   createHasUpdates,
   onShowHistory,
   onShowReader,
+  lang,
 }: SmartInputToolbarProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   const templateMeta = QR_TEMPLATES[selectedTemplate];
+  const templateLabel = isSpanish
+    ? (TEMPLATE_LABELS_ES[selectedTemplate] ?? templateMeta.label)
+    : templateMeta.label;
   const [hasHistory, setHasHistory] = useState(false);
 
   useEffect(() => {
@@ -52,20 +71,28 @@ export default function SmartInputToolbar({
           haptics.light();
         }}
         class="group w-full min-w-0 min-h-[52px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 py-3 rounded-xl border-3 border-black bg-blue-50 shadow-chunky hover:shadow-chunky-hover hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-blue-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-chunky transition-all duration-150 font-bold overflow-hidden"
-        title="Choose QR type, files, options, and logo"
-        aria-label={createHasUpdates
-          ? "Choose QR type, files, options, and logo (new links waiting)"
+        title={isSpanish
+          ? "Elegir tipo de QR, archivos, comportamiento y diseño"
           : "Choose QR type, files, options, and logo"}
+        aria-label={createHasUpdates
+          ? (isSpanish
+            ? "Personalizar tipo de QR, archivos, comportamiento y diseño (hay novedades)"
+            : "Choose QR type, files, options, and logo (new links waiting)")
+          : (isSpanish
+            ? "Personalizar tipo de QR, archivos, comportamiento y diseño"
+            : "Choose QR type, files, options, and logo")}
       >
         <span class="group-hover:text-blue-700 font-black text-xs min-[360px]:text-sm shrink-0 whitespace-nowrap">
-          Customize ✨
+          {isSpanish ? "Personalizar ✨" : "Customize ✨"}
         </span>
         <span
           class={`text-xs text-gray-600 font-black truncate ${
-            hasHistory ? "hidden min-[400px]:inline" : "inline"
+            hasHistory
+              ? "hidden min-[400px]:inline"
+              : "hidden min-[340px]:inline"
           }`}
         >
-          · {templateMeta.icon} {templateMeta.label}
+          · {templateMeta.icon} {templateLabel}
         </span>
         {hasHistory && (
           <span
@@ -87,13 +114,17 @@ export default function SmartInputToolbar({
           haptics.light();
         }}
         class="group px-2 sm:px-3.5 min-h-[52px] flex items-center justify-center gap-1 sm:gap-1.5 rounded-xl border-3 border-black bg-gradient-to-br from-purple-50 to-pink-50 shadow-chunky hover:shadow-chunky-hover hover:translate-x-[-2px] hover:translate-y-[-2px] hover:from-purple-100 hover:to-pink-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-chunky transition-all duration-150 font-bold shrink-0"
-        title="Inspect & scan a QR code safely (image, screenshot, or camera)"
-        aria-label="Inspect or scan a QR code"
+        title={isSpanish
+          ? "Revisar a dónde lleva un QR antes de abrirlo (imagen, captura o cámara)"
+          : "Inspect & scan a QR code safely (image, screenshot, or camera)"}
+        aria-label={isSpanish ? "Revisar QR" : "Inspect or scan a QR code"}
       >
         <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">
           🔍
         </span>
-        <span class="text-xs font-black text-gray-800">Inspect</span>
+        <span class="text-xs font-black text-gray-800">
+          {isSpanish ? "Revisar" : "Inspect"}
+        </span>
       </button>
 
       {hasHistory && (
@@ -104,8 +135,10 @@ export default function SmartInputToolbar({
             haptics.light();
           }}
           class="group w-11 sm:w-14 min-h-[52px] flex items-center justify-center rounded-xl border-3 border-black bg-gradient-to-br from-yellow-50 to-orange-50 shadow-chunky hover:shadow-chunky-hover hover:translate-x-[-2px] hover:translate-y-[-2px] hover:from-yellow-100 hover:to-orange-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-chunky transition-all duration-150 animate-pop-in shrink-0"
-          title="Time Machine (History)"
-          aria-label="Open QR history"
+          title={isSpanish
+            ? "Máquina del Tiempo (Historial)"
+            : "Time Machine (History)"}
+          aria-label={isSpanish ? "Abrir Historial" : "Open QR history"}
         >
           <span class="text-xl group-hover:rotate-[-45deg] transition-transform duration-300">
             🕰️

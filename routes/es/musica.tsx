@@ -20,21 +20,21 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "🎧",
-    title: "Comparte una playlist alojada",
+    title: "Comparte tu mixtape o demo",
     desc:
-      "Sube hasta 10 pistas de audio de hasta 5 MB cada una para una página de QRBuddy con reproducción y controles en el navegador.",
+      "Sube hasta 10 pistas de audio (hasta 5 MB cada una) y comparte un reproductor web listo para sonar en cualquier navegador.",
   },
   {
     icon: "🔗",
-    title: "Cambia un QR editable",
+    title: "Actualiza el link después de imprimir",
     desc:
-      "Actualiza el destino de un QR editable después de imprimirlo. Los QR estáticos conservan su destino. Las playlists vencen a los 30 días.",
+      "Usa un QR editable en tus stickers o flyers y cámbialo con cada nuevo sencillo o gira sin volver a imprimir.",
   },
   {
     icon: "🎨",
-    title: "Diseño para medios físicos",
+    title: "Listo para vinilos, cassettes y merch",
     desc:
-      "Elige colores, añade un logo y descarga un PNG o SVG para calcomanías, fundas y carteles.",
+      "Elige tu paleta, pon el logo de tu banda o sello y descarga en PNG o SVG de alta resolución.",
   },
 ];
 

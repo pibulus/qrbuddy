@@ -2,6 +2,7 @@ import { useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { useKeypad } from "../../hooks/useKeypad.ts";
 import type { CreateBucketOptions } from "../../hooks/useBucketCreator.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface LockerSettingsProps {
   isActive: boolean;
@@ -10,6 +11,7 @@ interface LockerSettingsProps {
   onClose: () => void;
   onDisable: () => void;
   onConfirm: (options: CreateBucketOptions) => Promise<boolean>;
+  lang?: Locale;
 }
 
 export default function LockerSettings({
@@ -19,7 +21,9 @@ export default function LockerSettings({
   onClose,
   onDisable,
   onConfirm,
+  lang,
 }: LockerSettingsProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [lockerMode, setLockerMode] = useState<"open" | "single" | "pingpong">(
     "open",
   );
@@ -39,7 +43,11 @@ export default function LockerSettings({
     setLockerError(null);
 
     if (lockerRequirePin && lockerPinValue.length !== 4) {
-      setLockerError("Enter a 4-digit PIN to lock the locker.");
+      setLockerError(
+        isSpanish
+          ? "Ingresa un PIN de 4 dígitos para proteger el buzón."
+          : "Enter a 4-digit PIN to lock the locker.",
+      );
       haptics.error();
       return;
     }
@@ -54,7 +62,11 @@ export default function LockerSettings({
     });
 
     if (!success) {
-      setLockerError("Couldn't create locker. Try again in a moment.");
+      setLockerError(
+        isSpanish
+          ? "No se pudo crear el buzón. Intenta de nuevo en un momento."
+          : "Couldn't create locker. Try again in a moment.",
+      );
     }
   };
 
@@ -73,14 +85,19 @@ export default function LockerSettings({
           <div class="space-y-4">
             <div>
               <p class="text-sm font-bold text-gray-900">
-                Locker ready to share
+                {isSpanish
+                  ? "Buzón listo para compartir"
+                  : "Locker ready to share"}
               </p>
               <p class="text-xs text-gray-600">
-                Print or send this QR to let people drop files.
+                {isSpanish
+                  ? "Imprime o envía este QR para que te dejen archivos."
+                  : "Print or send this QR to let people drop files."}
               </p>
             </div>
             <div class="bg-qr-cream border-2 border-black/15 rounded-xl p-3 text-xs font-mono break-all text-neutral-700">
-              {bucketUrl || "Generating URL..."}
+              {bucketUrl ||
+                (isSpanish ? "Generando URL..." : "Generating URL...")}
             </div>
             <div class="flex flex-wrap gap-2">
               <button
@@ -88,19 +105,20 @@ export default function LockerSettings({
                 class="min-h-[44px] px-4 py-2 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:border-gray-500 transition"
                 onClick={onClose}
               >
-                Done
+                {isSpanish ? "Listo" : "Done"}
               </button>
               <button
                 type="button"
                 class="min-h-[44px] px-4 py-2 rounded-xl border-2 border-red-500 text-sm font-semibold text-red-600 bg-white hover:bg-red-50 transition"
                 onClick={handleDisable}
               >
-                Forget this locker
+                {isSpanish ? "Olvidar este buzón" : "Forget this locker"}
               </button>
             </div>
             <p class="text-[11px] text-gray-500">
-              Forgetting only clears it from this device — the locker link keeps
-              working for anyone who has it.
+              {isSpanish
+                ? "Olvidarlo sólo lo quita de este dispositivo — el link del buzón sigue funcionando para quien lo tenga."
+                : "Forgetting only clears it from this device — the locker link keeps working for anyone who has it."}
             </p>
           </div>
         )
@@ -108,16 +126,18 @@ export default function LockerSettings({
           <div class="space-y-4">
             <div>
               <p class="text-sm font-bold text-gray-900">
-                Create file locker
+                {isSpanish ? "Crear buzón de archivos" : "Create file locker"}
               </p>
               <p class="text-xs text-gray-600">
-                Choose what happens after someone downloads the file.
+                {isSpanish
+                  ? "Elige qué pasa después de que alguien descargue el archivo."
+                  : "Choose what happens after someone downloads the file."}
               </p>
             </div>
 
             <div class="space-y-2">
               <p class="text-xs font-bold uppercase tracking-wide text-gray-600">
-                Mode
+                {isSpanish ? "Modo" : "Mode"}
               </p>
               <div class="grid grid-cols-3 gap-2">
                 <button
@@ -129,7 +149,7 @@ export default function LockerSettings({
                       : "bg-white text-gray-700 border-gray-300 hover:border-teal-400"
                   }`}
                 >
-                  Keep file
+                  {isSpanish ? "Conservar archivo" : "Keep file"}
                 </button>
                 <button
                   type="button"
@@ -140,7 +160,7 @@ export default function LockerSettings({
                       : "bg-white text-gray-700 border-gray-300 hover:border-purple-400"
                   }`}
                 >
-                  Clear after download
+                  {isSpanish ? "Vaciar al descargar" : "Clear after download"}
                 </button>
                 <button
                   type="button"
@@ -151,16 +171,24 @@ export default function LockerSettings({
                       : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
                   }`}
                 >
-                  Destroy after download
+                  {isSpanish
+                    ? "Destruir al descargar"
+                    : "Destroy after download"}
                 </button>
               </div>
               <p class="text-[11px] text-gray-500 italic">
                 {lockerMode === "open" &&
-                  "The file stays in the locker for anyone to download."}
+                  (isSpanish
+                    ? "El archivo se queda en el buzón para que cualquiera lo descargue."
+                    : "The file stays in the locker for anyone to download.")}
                 {lockerMode === "pingpong" &&
-                  "Download clears the file, then the locker accepts another upload."}
+                  (isSpanish
+                    ? "La descarga vacía el archivo y deja el buzón listo para recibir otro."
+                    : "Download clears the file, then the locker accepts another upload.")}
                 {lockerMode === "single" &&
-                  "The whole locker disappears after one download."}
+                  (isSpanish
+                    ? "Todo el buzón desaparece después de una sola descarga."
+                    : "The whole locker disappears after one download.")}
               </p>
             </div>
 
@@ -168,10 +196,14 @@ export default function LockerSettings({
               <div class="flex items-center justify-between gap-4">
                 <div>
                   <p class="text-xs font-bold uppercase tracking-wide text-gray-600">
-                    Require 4-digit PIN?
+                    {isSpanish
+                      ? "¿Pedir PIN de 4 dígitos?"
+                      : "Require 4-digit PIN?"}
                   </p>
                   <p class="text-[11px] text-gray-500">
-                    Guests need the code to upload or download.
+                    {isSpanish
+                      ? "Tus invitados necesitarán el código para subir o bajar archivos."
+                      : "Guests need the code to upload or download."}
                   </p>
                 </div>
                 <button
@@ -188,7 +220,9 @@ export default function LockerSettings({
                       : "bg-white text-gray-700 border-gray-300"
                   }`}
                 >
-                  {lockerRequirePin ? "On" : "Off"}
+                  {lockerRequirePin
+                    ? (isSpanish ? "Sí" : "On")
+                    : (isSpanish ? "No" : "Off")}
                 </button>
               </div>
 
@@ -231,7 +265,7 @@ export default function LockerSettings({
                           onClick={() => handleKeypadPress(String(key))}
                         >
                           {key === "clear"
-                            ? "Clear"
+                            ? (isSpanish ? "Borrar" : "Clear")
                             : key === "back"
                             ? "⌫"
                             : key}
@@ -252,7 +286,9 @@ export default function LockerSettings({
                 onClick={handleConfirm}
                 disabled={isCreating}
               >
-                {isCreating ? "Creating locker..." : "Create locker"}
+                {isCreating
+                  ? (isSpanish ? "Creando buzón..." : "Creating locker...")
+                  : (isSpanish ? "Crear buzón" : "Create locker")}
               </button>
               <button
                 type="button"
@@ -264,7 +300,7 @@ export default function LockerSettings({
                   resetLockerPin();
                 }}
               >
-                Cancel
+                {isSpanish ? "Cancelar" : "Cancel"}
               </button>
             </div>
           </div>

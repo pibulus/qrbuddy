@@ -6,6 +6,7 @@ import { looksLikeUrl } from "../../utils/url.ts";
 import { isPlusLibraryEnabled } from "../../utils/auth.ts";
 import { fetchLibraryQuota, LibraryQuota } from "../../utils/library.ts";
 import { getOrCreatePassport, QRBuddyPassport } from "../../utils/passport.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface EditableLinkSettingsProps {
   editUrl: Signal<string>;
@@ -15,6 +16,7 @@ interface EditableLinkSettingsProps {
   onCreate: () => void;
   isSequential?: boolean;
   sequentialUrls?: string[];
+  lang?: Locale;
 }
 
 export default function EditableLinkSettings({
@@ -24,7 +26,9 @@ export default function EditableLinkSettings({
   onCreate,
   isSequential,
   sequentialUrls,
+  lang,
 }: EditableLinkSettingsProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [libraryEnabled] = useState(() => isPlusLibraryEnabled());
   const [passport, setPassport] = useState<QRBuddyPassport | null>(null);
   const [quota, setQuota] = useState<LibraryQuota | null>(null);
@@ -80,44 +84,55 @@ export default function EditableLinkSettings({
             <span class="text-2xl">✨</span>
             <div class="min-w-0 flex-1">
               <h4 class="font-bold text-sm text-[#9370DB]">
-                Editable mode is on
+                {isSpanish ? "Modo editable activo" : "Editable mode is on"}
               </h4>
               {isSequential
                 ? (
                   hasSequentialRoutes
                     ? (
                       <p class="text-xs text-gray-700 leading-relaxed truncate">
-                        Wraps{" "}
+                        {isSpanish ? "Envuelve " : "Wraps "}
                         <span class="font-semibold">
-                          {validSeqCount} rotating links
+                          {isSpanish
+                            ? `${validSeqCount} links rotativos`
+                            : `${validSeqCount} rotating links`}
                         </span>
                       </p>
                     )
                     : (
                       <p class="text-xs text-gray-700 leading-relaxed">
-                        Add {validSeqCount === 1 ? "one more" : "at least two"}
-                        {" "}
-                        valid links below to make this sequence rotate.
+                        {isSpanish
+                          ? `Agrega ${
+                            validSeqCount === 1
+                              ? "un link más"
+                              : "al menos dos links"
+                          } abajo para que la secuencia rote.`
+                          : `Add ${
+                            validSeqCount === 1 ? "one more" : "at least two"
+                          } valid links below to make this sequence rotate.`}
                       </p>
                     )
                 )
                 : hasLink
                 ? (
                   <p class="text-xs text-gray-700 leading-relaxed truncate">
-                    Wraps <span class="font-mono">{pendingUrl}</span>
+                    {isSpanish ? "Apunta a " : "Wraps "}
+                    <span class="font-mono">{pendingUrl}</span>
                   </p>
                 )
                 : hasContent
                 ? (
                   <p class="text-xs text-gray-700 leading-relaxed">
-                    Editable wraps a link — this content isn't one, so it stays
-                    a static QR.
+                    {isSpanish
+                      ? "El modo editable necesita un link web — este contenido se queda como QR fijo."
+                      : "Editable wraps a link — this content isn't one, so it stays a static QR."}
                   </p>
                 )
                 : (
                   <p class="text-xs text-gray-700 leading-relaxed">
-                    Add a link first — type or paste it in the main input or
-                    below.
+                    {isSpanish
+                      ? "Agrega un link primero — escríbelo o pégalo en el campo principal."
+                      : "Add a link first — type or paste it in the main input or below."}
                   </p>
                 )}
             </div>
@@ -132,14 +147,21 @@ export default function EditableLinkSettings({
                 </span>
                 <div class="min-w-0">
                   <p class="text-xs font-black text-neutral-900 truncate">
-                    {passport?.name || "QRBuddy Passport"}
+                    {passport?.name ||
+                      (isSpanish ? "Pasaporte QRBuddy" : "QRBuddy Passport")}
                   </p>
                   <p class="text-[11px] text-neutral-600">
                     {quota
                       ? (quota.can_create
-                        ? `${quota.used_count} of ${quota.total_allowed} codes used`
-                        : `Limit reached (${quota.used_count}/${quota.total_allowed}) · Upgrade to Plus for 100`)
-                      : "Sovereign Passport active"}
+                        ? (isSpanish
+                          ? `${quota.used_count} de ${quota.total_allowed} QRs usados`
+                          : `${quota.used_count} of ${quota.total_allowed} codes used`)
+                        : (isSpanish
+                          ? `Límite alcanzado (${quota.used_count}/${quota.total_allowed}) · Sube a Plus para 100`
+                          : `Limit reached (${quota.used_count}/${quota.total_allowed}) · Upgrade to Plus for 100`))
+                      : (isSpanish
+                        ? "Pasaporte Activo"
+                        : "Sovereign Passport active")}
                   </p>
                 </div>
               </div>
@@ -149,7 +171,7 @@ export default function EditableLinkSettings({
                   globalThis.dispatchEvent(new CustomEvent("qrb-open-library"))}
                 class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black bg-white hover:bg-neutral-100 active:scale-95 transition-transform shrink-0"
               >
-                View Library ↗
+                {isSpanish ? "Ver Biblioteca ↗" : "View Library ↗"}
               </button>
             </div>
           )}
@@ -164,10 +186,12 @@ export default function EditableLinkSettings({
             class="w-full min-h-[48px] rounded-xl border-3 border-black bg-[#9370DB] px-4 py-2 font-black text-white shadow-chunky hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
           >
             {isCreating
-              ? "Creating..."
+              ? (isSpanish ? "Creando..." : "Creating...")
               : isOverQuota
-              ? `Free limit reached (${quota?.used_count}/${quota?.total_allowed})`
-              : "Create editable link"}
+              ? (isSpanish
+                ? `Límite gratis alcanzado (${quota?.used_count}/${quota?.total_allowed})`
+                : `Free limit reached (${quota?.used_count}/${quota?.total_allowed})`)
+              : (isSpanish ? "Crear link editable" : "Create editable link")}
           </button>
         </div>
       )}
@@ -176,7 +200,7 @@ export default function EditableLinkSettings({
           <div class="flex items-center gap-2">
             <span class="text-xl">✨</span>
             <p class="text-sm font-black text-[#6B46A8]">
-              Editable QR created!
+              {isSpanish ? "¡QR editable creado!" : "Editable QR created!"}
             </p>
           </div>
           <div class="flex gap-2">
@@ -192,33 +216,51 @@ export default function EditableLinkSettings({
                 try {
                   await navigator.clipboard.writeText(editUrl.value);
                   haptics.success();
-                  addToast("Edit link copied! 📋");
+                  addToast(
+                    isSpanish
+                      ? "¡Link de edición copiado! 📋"
+                      : "Edit link copied! 📋",
+                  );
                 } catch {
                   haptics.error();
-                  addToast("Couldn't reach the clipboard", 3000);
+                  addToast(
+                    isSpanish
+                      ? "No se pudo copiar al portapapeles"
+                      : "Couldn't reach the clipboard",
+                    3000,
+                  );
                 }
               }}
               class="min-h-[44px] px-4 py-2 bg-[#9370DB] text-white rounded-lg font-semibold text-sm hover:bg-[#6B46A8] transition-colors"
             >
-              Copy
+              {isSpanish ? "Copiar" : "Copy"}
             </button>
           </div>
           <a
             href={`mailto:?subject=${
-              encodeURIComponent("Your QRBuddy edit link")
+              encodeURIComponent(
+                isSpanish
+                  ? "Tu link de edición de QRBuddy"
+                  : "Your QRBuddy edit link",
+              )
             }&body=${
               encodeURIComponent(
-                `Keep this safe — it's the only way to edit your QR later.\n\n${editUrl.value}`,
+                isSpanish
+                  ? `Guarda este link — es tu llave para editar tu QR cuando quieras.\n\n${editUrl.value}`
+                  : `Keep this safe — it's the only way to edit your QR later.\n\n${editUrl.value}`,
               )
             }`}
             class="flex items-center justify-center w-full min-h-[44px] rounded-lg border-2 border-[#9370DB] bg-white px-4 py-2 font-bold text-sm text-[#6B46A8] hover:bg-[#F5E6FF] transition-colors"
             onClick={() => haptics.light()}
           >
-            📧 Email me this link
+            {isSpanish
+              ? "📧 Enviarme este link por correo"
+              : "📧 Email me this link"}
           </a>
           <p class="text-xs text-[#6B46A8]">
-            This link is your key — no account, no recovery. Save it somewhere
-            real.
+            {isSpanish
+              ? "Este link es tu llave — sin cuentas ni contraseñas. Guárdalo en un lugar seguro."
+              : "This link is your key — no account, no recovery. Save it somewhere real."}
           </p>
         </div>
       )}

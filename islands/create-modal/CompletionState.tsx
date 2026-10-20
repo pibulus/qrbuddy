@@ -1,4 +1,5 @@
 import type { Signal } from "@preact/signals";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { QR_STYLES } from "../../utils/qr-styles.ts";
 import QRCanvas from "../QRCanvas.tsx";
 
@@ -14,6 +15,7 @@ interface CompletionStateProps {
   onCopy: () => void;
   onShare: () => void;
   onEditDesign: () => void;
+  lang?: Locale;
 }
 
 /** CreateModal's "ready to share" screen — shown once a locker/file-page/
@@ -29,24 +31,32 @@ export default function CompletionState({
   onCopy,
   onShare,
   onEditDesign,
+  lang,
 }: CompletionStateProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   const isFilePage = completionKind === "share-file";
   const isTextCard = completionKind === "text-card";
   const title = isTextCard
-    ? "Text card ready"
+    ? (isSpanish ? "Nota lista" : "Text card ready")
     : isFilePage
-    ? "Download page ready"
-    : "Locker ready to share";
+    ? (isSpanish ? "Página de descarga lista" : "Download page ready")
+    : (isSpanish ? "Buzón listo para compartir" : "Locker ready to share");
   const description = isTextCard
-    ? "Send this link or QR so people can read the note on QRBuddy."
+    ? (isSpanish
+      ? "Envía este link o QR para que la gente lea tu nota en QRBuddy."
+      : "Send this link or QR so people can read the note on QRBuddy.")
     : isFilePage
-    ? "Send this link or QR so someone can download the file."
-    : "Send this link or QR so people can upload into the locker.";
+    ? (isSpanish
+      ? "Envía este link o QR para que alguien descargue tu archivo."
+      : "Send this link or QR so someone can download the file.")
+    : (isSpanish
+      ? "Envía este link o QR para que la gente suba archivos al buzón."
+      : "Send this link or QR so people can upload into the locker.");
   const statusLabel = isTextCard
-    ? "Text card"
+    ? (isSpanish ? "Nota" : "Text card")
     : isFilePage
-    ? "File page"
-    : "File locker";
+    ? (isSpanish ? "Página de archivo" : "File page")
+    : (isSpanish ? "Buzón de archivos" : "File locker");
   const completionQrStyle = qrStyle as Signal<
     keyof typeof QR_STYLES | "custom"
   >;
@@ -84,7 +94,7 @@ export default function CompletionState({
 
         <div class="rounded-xl border-2 border-black bg-white p-3">
           <p class="text-[11px] font-black uppercase tracking-wide text-gray-500 mb-1">
-            Share link
+            {isSpanish ? "Link para compartir" : "Share link"}
           </p>
           <p class="text-sm font-bold text-gray-900 break-all">
             {bucketUrl}
@@ -97,14 +107,16 @@ export default function CompletionState({
             onClick={onCopy}
             class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
           >
-            📋 Copy link
+            {isSpanish ? "📋 Copiar link" : "📋 Copy link"}
           </button>
           <button
             type="button"
             onClick={onShare}
             class="min-h-[52px] rounded-xl border-3 border-black bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 px-4 py-3 font-black text-black shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
           >
-            {canNativeShare ? "📲 Share" : "📋 Copy share link"}
+            {canNativeShare
+              ? (isSpanish ? "📲 Compartir" : "📲 Share")
+              : (isSpanish ? "📋 Copiar link" : "📋 Copy share link")}
           </button>
           <a
             href={bucketUrl}
@@ -112,14 +124,14 @@ export default function CompletionState({
             rel="noopener noreferrer"
             class="min-h-[52px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center"
           >
-            ↗ Open page
+            {isSpanish ? "↗ Abrir página" : "↗ Open page"}
           </a>
           <button
             type="button"
             onClick={onEditDesign}
             class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
           >
-            🎨 Edit design
+            {isSpanish ? "🎨 Editar diseño" : "🎨 Edit design"}
           </button>
         </div>
       </section>

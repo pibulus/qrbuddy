@@ -46,9 +46,9 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
   );
   const pngSize = useSignal<1000 | 2000 | 3000>(1000);
 
-  const title = "QRBuddy — Generador de Códigos QR Hermosos y Éticos";
+  const title = "QRBuddy — Pega un link. Hazlo brillar.";
   const description =
-    "Generador de códigos QR con gradientes, enlaces dinámicos sin suscripciones forzadas, transferencia de archivos autodestructibles y reproductores de música.";
+    "Generador de códigos QR con degradados pastel-punk, links editables sin suscripciones forzadas, transferencia de archivos, galerías y mixtapes de audio.";
 
   return (
     <>
@@ -87,7 +87,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         <meta property="og:image:height" content="630" />
         <meta
           property="og:image:alt"
-          content="QRBuddy - Generador de códigos QR éticos y hermosos"
+          content="QRBuddy - Generador de códigos QR con buena onda"
         />
 
         {/* Twitter Card */}
@@ -102,6 +102,20 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#FF69B4" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="QRBuddy" />
+
+        {/* Umami Analytics */}
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="280ec8ac-9eb5-4d06-89fe-369960e40b5d"
+          data-exclude-search="true"
+          data-exclude-hash="true"
+        >
+        </script>
 
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json">
@@ -126,6 +140,14 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         </script>
       </Head>
 
+      {/* Skip to main content link for accessibility */}
+      <a
+        href="#main-content"
+        class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded"
+      >
+        Saltar al contenido principal
+      </a>
+
       <div class="min-h-[100dvh] flex flex-col items-center justify-start px-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
         <ToastManager />
         <Analytics
@@ -145,16 +167,19 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
           pngSize={pngSize}
         />
 
-        {/* Style Selector */}
+        {/* Shared flex top-rail container */}
         <div
-          class="absolute top-7 right-4 sm:top-12 sm:right-6 z-50 animate-fade-in"
+          class="w-full max-w-md flex justify-end mb-2 z-50 animate-fade-in"
           aria-label="Selector de estilos"
         >
-          <StyleSelector
-            style={style}
-            customStyle={customStyle}
-            isHidden={isModalOpen}
-          />
+          <ErrorBoundary>
+            <StyleSelector
+              style={style}
+              customStyle={customStyle}
+              isHidden={isModalOpen}
+              lang="es"
+            />
+          </ErrorBoundary>
         </div>
 
         <main
@@ -167,7 +192,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
               QRBuddy
             </h1>
             <p class="text-lg font-bold text-gray-800">
-              Deja caer un enlace. Míralo florecer. 🌸
+              Pega un link. Hazlo brillar. 🌸
             </p>
           </header>
 
@@ -186,6 +211,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
                   maxDownloads={maxDownloads}
                   frameConfig={frameConfig}
                   listenForExportEvents
+                  lang="es"
                 />
               </ErrorBoundary>
             </div>
@@ -206,6 +232,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
             pngSize={pngSize}
             frameConfig={frameConfig}
             onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
+            lang="es"
           />
         </main>
 
@@ -213,8 +240,8 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
       </div>
 
       {/* Modals */}
-      <PricingModal />
-      <AboutModal />
+      <PricingModal lang="es" />
+      <AboutModal lang="es" />
       {
         /* Tip Jar parked: re-mount <KofiModal kofiUsername="madebypablo" />
           alongside its FooterDock pill to bring it back. */

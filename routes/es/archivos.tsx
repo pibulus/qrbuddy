@@ -20,21 +20,21 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📤",
-    title: "Comparte un archivo con un QR",
+    title: "Pasa un archivo con un escaneo",
     desc:
-      "Sube un archivo y comparte su enlace o código QR. Los destinatarios lo abren en su navegador.",
+      "Suelta tu archivo y comparte el link o código QR al instante. Quien lo escanee lo abre o descarga directo en su navegador.",
   },
   {
     icon: "⏳",
-    title: "Enlaces temporales",
+    title: "Links temporales sin rastro",
     desc:
-      "Los enlaces para compartir archivos vencen a los 30 días. El contenido de un baúl reutilizable se limpia después de 30 días sin actividad.",
+      "Los links de archivos vencen a los 30 días. Los buzones reutilizables se limpian solos después de 30 días sin actividad.",
   },
   {
     icon: "📦",
-    title: "Subidas individuales más grandes",
+    title: "Archivos pesados de hasta 500 MB",
     desc:
-      "El límite gratuito es de 50 MB por archivo. El Pase Supporter amplía el límite de un archivo individual a 500 MB.",
+      "Gratis subes archivos de hasta 50 MB. Con el Pase Supporter subes archivos individuales de hasta 500 MB (10× más grandes).",
   },
 ];
 

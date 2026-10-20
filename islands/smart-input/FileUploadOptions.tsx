@@ -1,6 +1,7 @@
 import { Signal } from "@preact/signals";
 import { useEffect, useMemo } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { UNLIMITED_SCANS } from "../../utils/constants.ts";
 import { prettyName } from "../../utils/image-prep.ts";
 import { reorderItems } from "../../utils/share-stats.ts";
@@ -17,6 +18,7 @@ interface FileUploadOptionsProps {
   onConfirm: () => void;
   onCancel: () => void;
   onReorderFiles?: (files: File[]) => void;
+  lang?: Locale;
 }
 
 function formatSize(bytes: number): string {
@@ -33,31 +35,51 @@ export function shareKindOf(files: File[]): ShareKind {
 
 const KIND: Record<
   ShareKind,
-  { glyph: string; noun: string; cta: string; placeholder: string }
+  {
+    glyph: string;
+    noun: string;
+    nounEs: string;
+    cta: string;
+    ctaEs: string;
+    placeholder: string;
+    placeholderEs: string;
+  }
 > = {
   slideshow: {
     glyph: "🖼️",
     noun: "Slideshow",
+    nounEs: "Galería de Fotos",
     cta: "Make the slideshow ✨",
+    ctaEs: "Crear galería ✨",
     placeholder: "Name it — Summer '26, Nan's 80th…",
+    placeholderEs: "Ponle nombre — Verano '26, Boda de Ana…",
   },
   playlist: {
     glyph: "🎵",
     noun: "Mixtape",
+    nounEs: "Mixtape de Audio",
     cta: "Make the mixtape 🎵",
+    ctaEs: "Crear mixtape 🎵",
     placeholder: "Name it — Mixtape vol. 3, road trip…",
+    placeholderEs: "Ponle nombre — Mixtape vol. 3, carretera…",
   },
   pack: {
     glyph: "📦",
     noun: "Pack",
+    nounEs: "Paquete",
     cta: "Create QR",
+    ctaEs: "Crear QR",
     placeholder: "Name it (optional)",
+    placeholderEs: "Nombre (opcional)",
   },
   file: {
     glyph: "📄",
     noun: "File",
+    nounEs: "Archivo",
     cta: "Create QR",
+    ctaEs: "Crear QR",
     placeholder: "Name it (optional)",
+    placeholderEs: "Nombre (opcional)",
   },
 };
 
@@ -74,8 +96,10 @@ export default function FileUploadOptions(
     onConfirm,
     onCancel,
     onReorderFiles,
+    lang,
   }: FileUploadOptionsProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   const kind = shareKindOf(files);
   const meta = KIND[kind];
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
@@ -105,10 +129,10 @@ export default function FileUploadOptions(
   const headline = kind === "file"
     ? files[0].name
     : kind === "playlist"
-    ? `${files.length} tracks`
+    ? `${files.length} ${isSpanish ? "rolas" : "tracks"}`
     : kind === "slideshow"
-    ? `${files.length} photos`
-    : `${files.length} files`;
+    ? `${files.length} ${isSpanish ? "fotos" : "photos"}`
+    : `${files.length} ${isSpanish ? "archivos" : "files"}`;
 
   const itemNoun = kind === "playlist"
     ? "track"
@@ -124,10 +148,12 @@ export default function FileUploadOptions(
         </span>
         <div class="min-w-0 flex-1">
           <p class="font-black text-black leading-tight truncate">
-            {meta.noun} · {headline}
+            {isSpanish ? meta.nounEs : meta.noun} · {headline}
           </p>
           <p class="text-xs text-neutral-600">
-            {isPrepping ? "Prepping photos…" : formatSize(totalSize)}
+            {isPrepping
+              ? (isSpanish ? "Preparando fotos…" : "Prepping photos…")
+              : formatSize(totalSize)}
           </p>
         </div>
       </div>
@@ -204,8 +230,8 @@ export default function FileUploadOptions(
           value={title}
           maxLength={80}
           onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
-          placeholder={meta.placeholder}
-          aria-label="Share title"
+          placeholder={isSpanish ? meta.placeholderEs : meta.placeholder}
+          aria-label={isSpanish ? "Título para compartir" : "Share title"}
           class="w-full min-h-[44px] px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-base font-bold focus:border-qr-pop focus:outline-none transition-colors"
         />
       )}
@@ -216,20 +242,32 @@ export default function FileUploadOptions(
         disabled={busy}
         class="w-full min-h-[52px] rounded-full border-3 border-black bg-qr-pop text-white text-lg font-black shadow-chunky hover:scale-[1.02] hover:bg-qr-popDeep hover:shadow-chunky-hover active:scale-[0.97] transition-all disabled:opacity-60 disabled:hover:scale-100"
       >
-        {isUploading ? "Uploading…" : isPrepping ? "Prepping…" : meta.cta}
+        {isUploading
+          ? (isSpanish ? "Subiendo…" : "Uploading…")
+          : isPrepping
+          ? (isSpanish ? "Preparando…" : "Prepping…")
+          : (isSpanish ? meta.ctaEs : meta.cta)}
       </button>
       <p class="-mt-2 text-center text-xs text-neutral-500">
-        Link expires after 30 days. Download limit is separate.
+        {isSpanish
+          ? "El link dura 30 días. El límite de descargas es aparte."
+          : "Link expires after 30 days. Download limit is separate."}
       </p>
 
       {/* Self-destruct lives under a toggle: it's the exception, not the form */}
       <details class="group" open={isLimited}>
         <summary class="list-none cursor-pointer min-h-[44px] flex items-center justify-center gap-1 text-xs font-bold text-neutral-500 hover:text-black transition-colors select-none">
           {isLimited
-            ? `💣 Self-destructs after ${maxDownloads.value} ${
-              maxDownloads.value === 1 ? "download" : "downloads"
-            }`
-            : "Self-destruct after a few downloads?"}
+            ? (isSpanish
+              ? `💣 Se autodestruye después de ${maxDownloads.value} ${
+                maxDownloads.value === 1 ? "descarga" : "descargas"
+              }`
+              : `💣 Self-destructs after ${maxDownloads.value} ${
+                maxDownloads.value === 1 ? "download" : "downloads"
+              }`)
+            : (isSpanish
+              ? "¿Autodestruir después de algunas descargas?"
+              : "Self-destruct after a few downloads?")}
           <span class="transition-transform group-open:rotate-180">▾</span>
         </summary>
         <div class="flex gap-2 flex-wrap justify-center pt-2">
@@ -264,7 +302,7 @@ export default function FileUploadOptions(
         disabled={busy}
         class="w-full min-h-[44px] text-xs font-bold text-neutral-500 hover:text-black transition-colors disabled:opacity-50"
       >
-        Never mind
+        {isSpanish ? "Mejor no" : "Never mind"}
       </button>
     </div>
   );

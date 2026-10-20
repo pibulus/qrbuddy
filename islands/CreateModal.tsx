@@ -5,6 +5,7 @@ import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
 import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { haptics } from "../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import ChoiceRow from "./create-modal/ChoiceRow.tsx";
 import CompletionState, {
   type CompletionKind,
@@ -78,6 +79,7 @@ interface CreateModalProps {
   customStyle?: Signal<QRStyle | null>;
   pngSize?: Signal<1000 | 2000 | 3000>;
   onStageMedia?: (files: File[]) => void;
+  lang?: Locale;
 }
 
 // Frequency-ordered for humans, not enterprises: link and note first, then
@@ -94,47 +96,75 @@ const QR_TYPE_ORDER: QRTemplateType[] = [
 
 const CONTACT_TYPES: QRTemplateType[] = ["phone", "sms", "email"];
 
-const CONTACT_SEGMENTS: { key: QRTemplateType; label: string; icon: string }[] =
-  [
-    { key: "phone", label: "Call", icon: "📞" },
-    { key: "sms", label: "Text", icon: "💬" },
-    { key: "email", label: "Email", icon: "✉️" },
-  ];
+const CONTACT_SEGMENTS: {
+  key: QRTemplateType;
+  label: string;
+  labelEs: string;
+  icon: string;
+}[] = [
+  { key: "phone", label: "Call", labelEs: "Llamar", icon: "📞" },
+  { key: "sms", label: "Text", labelEs: "SMS", icon: "💬" },
+  { key: "email", label: "Email", labelEs: "Correo", icon: "✉️" },
+];
 
 const QR_TYPE_COPY: Partial<
-  Record<QRTemplateType, { label: string; description: string }>
+  Record<
+    QRTemplateType,
+    {
+      label: string;
+      labelEs: string;
+      description: string;
+      descriptionEs: string;
+    }
+  >
 > = {
   url: {
     label: "Link",
+    labelEs: "Enlace o Texto",
     description: "Website or page.",
+    descriptionEs: "Página web o link directo.",
   },
   text: {
     label: "Plain text",
+    labelEs: "Nota de Texto",
     description: "Note, code, or secret.",
+    descriptionEs: "Nota, código o mensaje secreto.",
   },
   wifi: {
     label: "WiFi",
+    labelEs: "Red Wi-Fi",
     description: "Join without typing the password.",
+    descriptionEs: "Conéctate sin escribir la contraseña.",
   },
   vcard: {
     label: "Contact card",
+    labelEs: "Tarjeta de Contacto",
     description: "One scan saves you to their phone.",
+    descriptionEs: "Un escaneo guarda tu contacto en su celular.",
   },
   social: {
     label: "Social profile",
+    labelEs: "Perfil Social",
     description: "Bio links, Instagram, YouTube & more.",
+    descriptionEs: "Links en bio, Instagram, YouTube y más.",
   },
   sms: {
     label: "Text message",
+    labelEs: "Mensaje SMS",
     description: "Open a pre-filled SMS.",
+    descriptionEs: "Abre un SMS listo para enviar.",
   },
   email: {
     label: "Email",
+    labelEs: "Correo",
     description: "Open a pre-filled email.",
+    descriptionEs: "Abre un correo listo para enviar.",
   },
   phone: {
     label: "Phone call",
+    labelEs: "Llamada",
     description: "Dial a number straight from the scan.",
+    descriptionEs: "Marca un número directo al escanear.",
   },
 };
 
@@ -178,7 +208,10 @@ export default function CreateModal({
   customStyle,
   pngSize,
   onStageMedia,
+  lang,
 }: CreateModalProps) {
+  const locale = getClientLocale(lang);
+  const isSpanish = locale === "es";
   const photoInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
@@ -247,7 +280,11 @@ export default function CreateModal({
     setScanLimit(null);
     setExpiryDate("");
     splashConfig.value = null;
-    if (hadExtras) addToast("Editable extras cleared");
+    if (hadExtras) {
+      addToast(
+        isSpanish ? "Extras editables desactivados" : "Editable extras cleared",
+      );
+    }
   };
 
   const handleTemplateSelect = (template: QRTemplateType) => {
@@ -288,7 +325,10 @@ export default function CreateModal({
       setTypeIntent("collect-files");
       setCompletionKind("collect-files");
       setActiveTab("type");
-      void handleCopyResult("Share link copied! 📋", false);
+      void handleCopyResult(
+        isSpanish ? "¡Link copiado! 📋" : "Share link copied! 📋",
+        false,
+      );
     }
     return success;
   };
@@ -305,12 +345,15 @@ export default function CreateModal({
       setTypeIntent("qr");
       setCompletionKind("text-card");
       setActiveTab("type");
-      void handleCopyResult("Text card link copied! 📋", false);
+      void handleCopyResult(
+        isSpanish ? "¡Link de nota copiado! 📋" : "Text card link copied! 📋",
+        false,
+      );
     }
   };
 
   async function handleCopyResult(
-    message = "Link copied! 📋",
+    message = isSpanish ? "¡Link copiado! 📋" : "Link copied! 📋",
     showFailure = true,
   ) {
     const resultUrl = bucketUrl.value;
@@ -323,7 +366,10 @@ export default function CreateModal({
     } catch (error) {
       console.error("Copy result link failed:", error);
       if (showFailure) {
-        addToast("Couldn't copy link", 3000);
+        addToast(
+          isSpanish ? "No se pudo copiar el link" : "Couldn't copy link",
+          3000,
+        );
       }
       haptics.error();
     }
@@ -336,18 +382,24 @@ export default function CreateModal({
     const isFilePage = completionKind === "share-file";
     const isTextCard = completionKind === "text-card";
     const title = isTextCard
-      ? "QRBuddy text card"
+      ? (isSpanish ? "Nota en QRBuddy" : "QRBuddy text card")
       : isFilePage
-      ? "QRBuddy download page"
-      : "QRBuddy file locker";
+      ? (isSpanish ? "Página de descarga en QRBuddy" : "QRBuddy download page")
+      : (isSpanish ? "Buzón de archivos en QRBuddy" : "QRBuddy file locker");
     const text = isTextCard
-      ? "Read this note on QRBuddy."
+      ? (isSpanish ? "Lee esta nota en QRBuddy." : "Read this note on QRBuddy.")
       : isFilePage
-      ? "Download this file from QRBuddy."
-      : "Upload to this QRBuddy file locker.";
+      ? (isSpanish
+        ? "Descarga este archivo desde QRBuddy."
+        : "Download this file from QRBuddy.")
+      : (isSpanish
+        ? "Sube archivos a este buzón de QRBuddy."
+        : "Upload to this QRBuddy file locker.");
 
     if (typeof navigator === "undefined" || !navigator.share) {
-      await handleCopyResult("Share link copied! 📋");
+      await handleCopyResult(
+        isSpanish ? "¡Link copiado! 📋" : "Share link copied! 📋",
+      );
       return;
     }
 
@@ -357,7 +409,9 @@ export default function CreateModal({
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return;
       console.error("Native share failed:", error);
-      await handleCopyResult("Share link copied! 📋");
+      await handleCopyResult(
+        isSpanish ? "¡Link copiado! 📋" : "Share link copied! 📋",
+      );
     }
   };
 
@@ -388,7 +442,9 @@ export default function CreateModal({
                 url.value = (e.target as HTMLTextAreaElement).value;
                 haptics.light();
               }}
-              placeholder="Type a note, a code, a secret..."
+              placeholder={isSpanish
+                ? "Escribe una nota, un código, un secreto..."
+                : "Type a note, a code, a secret..."}
               rows={4}
               maxLength={2900}
               // deno-lint-ignore jsx-boolean-value
@@ -398,7 +454,9 @@ export default function CreateModal({
             {url.value.trim() !== "" && (
               <div class="flex items-center justify-between gap-2 animate-slide-down">
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 border-2 border-green-300 px-3 py-1 text-xs font-bold text-green-800">
-                  ✓ Stored in the QR itself — works offline
+                  {isSpanish
+                    ? "✓ Guardado directo en el QR — funciona sin internet"
+                    : "✓ Stored in the QR itself — works offline"}
                 </span>
                 {nearCapacity && (
                   <span class="text-xs font-bold text-orange-600 whitespace-nowrap">
@@ -412,11 +470,17 @@ export default function CreateModal({
               onClick={handleTextCardConfirm}
               disabled={!url.value.trim() || isCreatingLocker}
               class="w-full min-h-[48px] rounded-full border-2 border-black bg-white px-4 font-black text-black shadow-chunky hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
-              title="A short link and a cleaner read for long text"
+              title={isSpanish
+                ? "Un link corto y una página más limpia para textos largos"
+                : "A short link and a cleaner read for long text"}
             >
               {isCreatingLocker
-                ? "Creating note page…"
-                : "↗ Host as a note page instead"}
+                ? (isSpanish
+                  ? "Creando página de nota…"
+                  : "Creating note page…")
+                : (isSpanish
+                  ? "↗ Alojar como página de nota"
+                  : "↗ Host as a note page instead")}
             </button>
           </div>
         );
@@ -443,6 +507,7 @@ export default function CreateModal({
           setActiveTab("design");
           haptics.light();
         }}
+        lang={locale}
       />
     );
   };
@@ -451,7 +516,7 @@ export default function CreateModal({
     <div class="space-y-5">
       <section class="space-y-2">
         <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-          Core types
+          {isSpanish ? "Tipos principales" : "Core types"}
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {QR_TYPE_ORDER.map((key) => {
@@ -461,8 +526,13 @@ export default function CreateModal({
               <ChoiceRow
                 key={key}
                 icon={template.icon}
-                title={copy?.label ?? template.label}
-                description={copy?.description ?? template.description}
+                title={isSpanish
+                  ? (copy?.labelEs ?? copy?.label ?? template.label)
+                  : (copy?.label ?? template.label)}
+                description={isSpanish
+                  ? (copy?.descriptionEs ?? copy?.description ??
+                    template.description)
+                  : (copy?.description ?? template.description)}
                 active={typeIntent === "qr" && selectedTemplate === key}
                 onClick={() => handleTemplateSelect(key)}
               />
@@ -470,8 +540,10 @@ export default function CreateModal({
           })}
           <ChoiceRow
             icon="📲"
-            title="Contact me"
-            description="Call, text, or email you — you pick."
+            title={isSpanish ? "Contáctame" : "Contact me"}
+            description={isSpanish
+              ? "Llamada, SMS o correo — tú eliges."
+              : "Call, text, or email you — you pick."}
             active={typeIntent === "qr" &&
               CONTACT_TYPES.includes(selectedTemplate)}
             onClick={() => handleTemplateSelect("phone")}
@@ -486,47 +558,63 @@ export default function CreateModal({
       }
       <section class="space-y-2">
         <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-          Files & drops
+          {isSpanish ? "Archivos y álbumes" : "Files & drops"}
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <ChoiceRow
             icon="🖼️"
-            title="Photo slideshow"
-            description="Up to 10 photos, auto-advancing gallery (≤5MB each)."
+            title={isSpanish ? "Galería de Fotos" : "Photo slideshow"}
+            description={isSpanish
+              ? "Hasta 10 fotos en galería automática (≤5 MB c/u)."
+              : "Up to 10 photos, auto-advancing gallery (≤5MB each)."}
             active={false}
             onClick={handlePhotoSelect}
           />
           <ChoiceRow
             icon="🎵"
-            title="Audio playlist"
-            description="Up to 10 tracks, mixtape player (≤5MB each)."
+            title={isSpanish ? "Mixtape de Audio" : "Audio playlist"}
+            description={isSpanish
+              ? "Hasta 10 pistas con reproductor mixtape (≤5 MB c/u)."
+              : "Up to 10 tracks, mixtape player (≤5MB each)."}
             active={false}
             onClick={handleAudioSelect}
           />
           <ChoiceRow
             icon="📂"
-            title="Share a file"
-            description="Download page for one file, optional PIN."
+            title={isSpanish ? "Compartir Archivo" : "Share a file"}
+            description={isSpanish
+              ? "Página de descarga para un archivo, con PIN opcional."
+              : "Download page for one file, optional PIN."}
             active={typeIntent === "share-file"}
             onClick={handleShareFileSelect}
           />
           <ChoiceRow
             icon="🪣"
-            title="Collect files"
-            description="A locker people drop files into."
+            title={isSpanish ? "Buzón de Archivos" : "Collect files"}
+            description={isSpanish
+              ? "Un buzón donde la gente puede subirte archivos."
+              : "A locker people drop files into."}
             active={typeIntent === "collect-files" || lockerActive}
             onClick={handleCollectFilesSelect}
           />
           <ChoiceRow
             icon="📦"
-            title="Bulk create"
-            description="Paste links, download a ZIP of QRs."
+            title={isSpanish ? "Crear en Lote" : "Bulk create"}
+            description={isSpanish
+              ? "Pega varios links y descarga un ZIP con todos los QRs."
+              : "Paste links, download a ZIP of QRs."}
             active={isBatchMode}
             onClick={() => {
               const next = !isBatchMode;
               setIsBatchMode(next);
               if (next) {
-                if (lockerActive) addToast("Locker cleared from this QR");
+                if (lockerActive) {
+                  addToast(
+                    isSpanish
+                      ? "Buzón desconectado de este QR"
+                      : "Locker cleared from this QR",
+                  );
+                }
                 disableDynamicBase();
                 isBucket.value = false;
                 bucketUrl.value = "";
@@ -574,6 +662,7 @@ export default function CreateModal({
             isGeneratingBatch={isGeneratingBatch}
             batchProgress={batchProgress}
             onGenerateBatch={onGenerateBatch}
+            lang={locale}
           />
         )}
       </section>
@@ -587,7 +676,10 @@ export default function CreateModal({
               setCompletionKind("share-file");
               setShowLockerSettings(false);
               setActiveTab("type");
-              void handleCopyResult("Share link copied! 📋", false);
+              void handleCopyResult(
+                isSpanish ? "¡Link copiado! 📋" : "Share link copied! 📋",
+                false,
+              );
             }}
           />
         )}
@@ -599,6 +691,7 @@ export default function CreateModal({
             onClose={() => setShowLockerSettings(false)}
             onDisable={handleLockerDisableWrapper}
             onConfirm={handleLockerConfirmWrapper}
+            lang={locale}
           />
         )}
         {typeIntent === "qr" && (
@@ -620,7 +713,7 @@ export default function CreateModal({
                         : "border-black/15 bg-white text-neutral-700 hover:border-black/60"
                     }`}
                   >
-                    {seg.icon} {seg.label}
+                    {seg.icon} {isSpanish ? seg.labelEs : seg.label}
                   </button>
                 ))}
               </div>
@@ -635,7 +728,9 @@ export default function CreateModal({
                 }}
                 class="w-full min-h-[44px] mt-1 text-sm font-bold text-neutral-500 hover:text-qr-pop transition-colors"
               >
-                Want to repoint this after printing? →
+                {isSpanish
+                  ? "¿Quieres cambiar el destino después de imprimirlo? →"
+                  : "Want to repoint this after printing? →"}
               </button>
             )}
           </div>
@@ -648,17 +743,25 @@ export default function CreateModal({
     <div class="space-y-5">
       <section class="space-y-2">
         <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-          Link behavior
+          {isSpanish ? "Comportamiento del link" : "Link behavior"}
         </h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch">
           <ChoiceRow
             rich
             icon="⚡"
-            title="Static"
-            description="The content lives inside the squares. Works forever, offline, and never touches a server."
+            title={isSpanish ? "Estático" : "Static"}
+            description={isSpanish
+              ? "El contenido vive directo en los cuadritos. Funciona para siempre, sin internet y sin pasar por servidores."
+              : "The content lives inside the squares. Works forever, offline, and never touches a server."}
             active={!isDynamic.value && !isBatchMode && !lockerActive}
             onClick={() => {
-              if (lockerActive) addToast("Locker cleared from this QR");
+              if (lockerActive) {
+                addToast(
+                  isSpanish
+                    ? "Buzón desconectado de este QR"
+                    : "Locker cleared from this QR",
+                );
+              }
               disableDynamicBase();
               setIsBatchMode(false);
               isBucket.value = false;
@@ -670,8 +773,10 @@ export default function CreateModal({
           <ChoiceRow
             rich
             icon="🔗"
-            title="Editable"
-            description="A short link you can repoint after printing. Coarse scan stats, no IPs, no visitor tracking."
+            title={isSpanish ? "Editable después de imprimir" : "Editable"}
+            description={isSpanish
+              ? "Un link corto que puedes redirigir cuando quieras. Estadísticas simples, sin IPs ni rastreo."
+              : "A short link you can repoint after printing. Coarse scan stats, no IPs, no visitor tracking."}
             active={isDynamic.value}
             onClick={() => {
               if (isDynamic.value) {
@@ -691,6 +796,7 @@ export default function CreateModal({
             onCreate={onCreateEditable}
             isSequential={isSequential}
             sequentialUrls={sequentialUrls}
+            lang={locale}
           />
         )}
       </section>
@@ -698,14 +804,18 @@ export default function CreateModal({
       {isDynamic.value && (
         <section class="space-y-2 animate-slide-down">
           <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-            Editable extras
+            {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
           </h3>
 
           {/* Frequency order: limits are the common ask, rotation the exotic one. */}
           <ChoiceRow
             icon="⏳"
-            title="Scan & date limits"
-            description="Stop the QR after a scan count or expiry date."
+            title={isSpanish
+              ? "Autodestrucción (límite de escaneos o fecha)"
+              : "Scan & date limits"}
+            description={isSpanish
+              ? "Desactiva el QR después de cierto número de escaneos o en una fecha."
+              : "Stop the QR after a scan count or expiry date."}
             active={isLimitSettingsOpen}
             onClick={() => {
               const next = !isLimitSettingsOpen;
@@ -723,13 +833,16 @@ export default function CreateModal({
               setScanLimit={setScanLimit}
               expiryDate={expiryDate}
               setExpiryDate={setExpiryDate}
+              lang={locale}
             />
           )}
 
           <ChoiceRow
             icon="🔁"
-            title="Link rotation"
-            description="Each scan moves to the next URL in your list."
+            title={isSpanish ? "Rotación de links" : "Link rotation"}
+            description={isSpanish
+              ? "Cada escaneo avanza al siguiente link de tu lista."
+              : "Each scan moves to the next URL in your list."}
             active={isSequential}
             onClick={() => {
               setIsSequential(!isSequential);
@@ -742,19 +855,22 @@ export default function CreateModal({
               setSequentialUrls={setSequentialUrls}
               loopSequence={loopSequence}
               setLoopSequence={setLoopSequence}
+              lang={locale}
             />
           )}
 
           <ChoiceRow
             icon="✨"
-            title="Intro page"
-            description="Show a short landing page before redirecting."
+            title={isSpanish ? "Portada de bienvenida" : "Intro page"}
+            description={isSpanish
+              ? "Muestra una tarjeta de bienvenida antes de abrir tu link."
+              : "Show a short landing page before redirecting."}
             active={splashActive}
             onClick={() => {
               splashConfig.value = splashActive ? null : {
                 enabled: true,
-                title: "Welcome!",
-                buttonText: "Continue",
+                title: isSpanish ? "¡Hola!" : "Welcome!",
+                buttonText: isSpanish ? "Continuar" : "Continue",
               };
               haptics.light();
             }}
@@ -763,6 +879,7 @@ export default function CreateModal({
             <SplashSettings
               splashConfig={splashConfig}
               destinationUrl={url.value}
+              lang={locale}
             />
           )}
         </section>
@@ -779,15 +896,16 @@ export default function CreateModal({
       customStyle={customStyle}
       pngSize={pngSize}
       onClose={shell.requestClose}
+      lang={locale}
     />
   );
 
   // Labels carry the meaning; the emoji were garnish on navigation, which the
   // footer-charm exception doesn't cover. 🎯 for "Type" was arbitrary anyway.
   const tabs: Array<{ id: ActiveTab; label: string }> = [
-    { id: "type", label: "Content" },
-    { id: "options", label: "Behavior" },
-    { id: "design", label: "Design" },
+    { id: "type", label: isSpanish ? "Contenido" : "Content" },
+    { id: "options", label: isSpanish ? "Comportamiento" : "Behavior" },
+    { id: "design", label: isSpanish ? "Diseño" : "Design" },
   ];
   const hasCompletion = completionKind !== null && bucketUrl.value !== "";
 
@@ -813,19 +931,25 @@ export default function CreateModal({
               id="create-modal-title"
               class="font-black text-2xl tracking-tight text-black leading-tight"
             >
-              {hasCompletion ? "Ready to share." : "Make it do tricks."}
+              {hasCompletion
+                ? (isSpanish ? "Listo para compartir." : "Ready to share.")
+                : (isSpanish ? "Haz que haga trucos ✨" : "Make it do tricks.")}
             </h2>
             <p class="text-sm font-bold text-qr-pop">
               {hasCompletion
-                ? "The QR now points at the new page."
-                : "What it does, how it reacts, how it looks."}
+                ? (isSpanish
+                  ? "Tu QR ya apunta a la nueva página."
+                  : "The QR now points at the new page.")
+                : (isSpanish
+                  ? "Qué lleva, cómo se comporta y cómo se ve."
+                  : "What it does, how it reacts, how it looks.")}
             </p>
           </div>
           <button
             type="button"
             onClick={shell.requestClose}
             class="group shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full flex items-center justify-center"
-            aria-label="Close"
+            aria-label={isSpanish ? "Cerrar" : "Close"}
           >
             <span
               aria-hidden="true"
@@ -849,13 +973,13 @@ export default function CreateModal({
                   }}
                   aria-selected={activeTab === tab.id}
                   role="tab"
-                  class={`min-h-[40px] rounded-full text-sm font-black transition-all flex items-center justify-center ${
+                  class={`min-h-[40px] px-1 rounded-full text-xs min-[380px]:text-sm font-black transition-all flex items-center justify-center min-w-0 ${
                     activeTab === tab.id
                       ? "bg-black text-white"
                       : "text-neutral-600 hover:bg-amber-100"
                   }`}
                 >
-                  <span>{tab.label}</span>
+                  <span class="truncate">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -870,7 +994,9 @@ export default function CreateModal({
                 ? renderOptionsTab()
                 : (
                   <p class="text-sm font-bold text-neutral-600">
-                    File options live in Content. Use Design to style the QR.
+                    {isSpanish
+                      ? "Las opciones de archivos están en Contenido. Usa Diseño para darle estilo al QR."
+                      : "File options live in Content. Use Design to style the QR."}
                   </p>
                 ))}
               {activeTab === "design" && renderDesignTab()}
@@ -886,10 +1012,14 @@ export default function CreateModal({
           >
             <span>
               {hasCompletion
-                ? "Done — Back to Home 🏠"
+                ? (isSpanish
+                  ? "Listo — Volver al inicio 🏠"
+                  : "Done — Back to Home 🏠")
                 : activeTab === "design"
-                ? "Done — Apply Design 🎨"
-                : "Done — View QR ✨"}
+                ? (isSpanish
+                  ? "Listo — Aplicar diseño 🎨"
+                  : "Done — Apply Design 🎨")
+                : (isSpanish ? "Listo — Ver mi QR ✨" : "Done — View QR ✨")}
             </span>
           </button>
         </div>

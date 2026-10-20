@@ -8,6 +8,7 @@ import type { QRStyle } from "../types/qr-types.ts";
 import { addToast } from "./ToastManager.tsx";
 import { checkBlobScannability } from "../utils/qr-decode.ts";
 import { useModalShell } from "./modal/useModalShell.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 const DICE_PROBE_DATA = "https://qrbuddy.app";
 const DICE_MAX_ATTEMPTS = 4;
@@ -96,34 +97,78 @@ interface StyleSelectorProps {
   style: Signal<string>;
   customStyle?: Signal<QRStyle | null>;
   isHidden?: Signal<boolean>;
+  lang?: Locale;
 }
 
 export const STYLE_DISPLAY = {
   // Swatch colors mirror the actual dot gradients in utils/qr-styles.ts —
   // keep them in sync so the gallery doesn't lie about the output. Order is
   // warm → cool → dark; eight presets, one family (pastel-punk, 135° sweep).
-  sunset: { name: "Sunset", colors: ["#F97316", "#FF69B4", "#9370DB"] },
-  candy: { name: "Candy", colors: ["#FF2E93", "#7C3AED", "#0891B2"] },
-  blush: { name: "Blush", colors: ["#F43F5E", "#E11D48", "#9D174D"] },
-  matcha: { name: "Matcha", colors: ["#059669", "#0F766E"] },
-  pool: { name: "Pool", colors: ["#0EA5E9", "#0D9488"] },
-  vapor: { name: "Vapor", colors: ["#8B5CF6", "#DB2777"] },
-  grape: { name: "Grape", colors: ["#4F46E5", "#9333EA"] },
-  noir: { name: "Licorice", colors: ["#1E1B4B", "#0F172A"] },
+  sunset: {
+    name: "Sunset",
+    nameEs: "Atardecer",
+    colors: ["#F97316", "#FF69B4", "#9370DB"],
+  },
+  candy: {
+    name: "Candy",
+    nameEs: "Dulce",
+    colors: ["#FF2E93", "#7C3AED", "#0891B2"],
+  },
+  blush: {
+    name: "Blush",
+    nameEs: "Rubor",
+    colors: ["#F43F5E", "#E11D48", "#9D174D"],
+  },
+  matcha: {
+    name: "Matcha",
+    nameEs: "Matcha",
+    colors: ["#059669", "#0F766E"],
+  },
+  pool: {
+    name: "Pool",
+    nameEs: "Alberca",
+    colors: ["#0EA5E9", "#0D9488"],
+  },
+  vapor: {
+    name: "Vapor",
+    nameEs: "Vapor",
+    colors: ["#8B5CF6", "#DB2777"],
+  },
+  grape: {
+    name: "Grape",
+    nameEs: "Uva",
+    colors: ["#4F46E5", "#9333EA"],
+  },
+  noir: {
+    name: "Licorice",
+    nameEs: "Regaliz",
+    colors: ["#1E1B4B", "#0F172A"],
+  },
 };
 
 // Styles that still render but left the public gallery: brutalist (the 666
 // easter egg), terminal (1337 easter egg + the locker landing pages' default).
 // The trigger pill needs their names too.
-const HIDDEN_STYLE_DISPLAY: Record<string, { name: string; colors: string[] }> =
-  {
-    brutalist: { name: "Brutal", colors: ["#000000", "#FFFF00"] },
-    terminal: { name: "Matrix", colors: ["#00FF41", "#0A0A0A"] },
-  };
+const HIDDEN_STYLE_DISPLAY: Record<
+  string,
+  { name: string; nameEs?: string; colors: string[] }
+> = {
+  brutalist: {
+    name: "Brutal",
+    nameEs: "Brutal",
+    colors: ["#000000", "#FFFF00"],
+  },
+  terminal: {
+    name: "Matrix",
+    nameEs: "Matrix",
+    colors: ["#00FF41", "#0A0A0A"],
+  },
+};
 
 export default function StyleSelector(
-  { style, customStyle, isHidden }: StyleSelectorProps,
+  { style, customStyle, isHidden, lang }: StyleSelectorProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [isRolling, setIsRolling] = useState(false);
   const isCreatorOpen = useSignal(false);
@@ -152,7 +197,8 @@ export default function StyleSelector(
     haptics.light();
     sounds.click();
     shell.requestClose();
-    addToast(`🎨 ${STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY].name}`);
+    const info = STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY];
+    addToast(`🎨 ${isSpanish ? (info.nameEs ?? info.name) : info.name}`);
   };
 
   const handleCustomGradient = (gradient: QRStyle) => {
@@ -165,14 +211,23 @@ export default function StyleSelector(
   // 🎲 Roll a random vivid gradient. Hues are picked a third of the wheel
   // apart so the combo always has contrast-with-harmony; light backgrounds
   // keep the QR scannable.
-  const DICE_QUIPS = [
-    "Ooh, spicy 🌶️",
-    "The dice have spoken 🎲",
-    "Certified fresh combo ✨",
-    "This one's got soul 🎷",
-    "Chaos, but make it pretty 💅",
-    "Nat 20 energy 🐉",
-  ];
+  const DICE_QUIPS = isSpanish
+    ? [
+      "Uff, qué buena mezcla 🌶️",
+      "Los dados hablaron 🎲",
+      "Combinación bien fresca ✨",
+      "Este tiene mucha onda 🎷",
+      "Caos bonito 💅",
+      "Energía de 20 natural 🐉",
+    ]
+    : [
+      "Ooh, spicy 🌶️",
+      "The dice have spoken 🎲",
+      "Certified fresh combo ✨",
+      "This one's got soul 🎷",
+      "Chaos, but make it pretty 💅",
+      "Nat 20 energy 🐉",
+    ];
 
   // Roll, decode-check, reroll on a fail — up to DICE_MAX_ATTEMPTS times —
   // so "the dice must never roll an unscannable QR" is an enforced gate,
@@ -201,10 +256,18 @@ export default function StyleSelector(
   };
 
   const currentStyleInfo = style.value === "custom"
-    ? { name: "Custom", colors: ["#9370DB", "#FF69B4"] }
+    ? {
+      name: "Custom",
+      nameEs: "Propio",
+      colors: ["#9370DB", "#FF69B4"],
+    }
     : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY] ??
       HIDDEN_STYLE_DISPLAY[style.value] ??
       HIDDEN_STYLE_DISPLAY.brutalist;
+
+  const currentStyleName = isSpanish
+    ? (currentStyleInfo.nameEs ?? currentStyleInfo.name)
+    : currentStyleInfo.name;
 
   const getGradientPreview = (colors: string[]) => {
     return `linear-gradient(135deg, ${colors.join(", ")})`;
@@ -221,7 +284,9 @@ export default function StyleSelector(
             haptics.light();
             sounds.click();
           }}
-          aria-label={`Select QR style, current: ${currentStyleInfo.name}`}
+          aria-label={isSpanish
+            ? `Elige tu Vibra, estilo actual: ${currentStyleName}`
+            : `Select QR style, current: ${currentStyleName}`}
           aria-haspopup="dialog"
           aria-expanded={isGalleryOpen}
           class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-white border-2 border-black rounded-full text-xs font-black text-black shadow-chunky hover:scale-105 active:scale-95 transition-all"
@@ -231,7 +296,7 @@ export default function StyleSelector(
             style={{ background: getGradientPreview(currentStyleInfo.colors) }}
           />
           <span class="hidden sm:inline">
-            {currentStyleInfo.name}
+            {currentStyleName}
           </span>
           {
             /* The ▾ stays on mobile — a bare swatch reads as decoration,
@@ -264,16 +329,20 @@ export default function StyleSelector(
                   id="style-gallery-title"
                   class="text-2xl font-black text-black tracking-tight leading-tight"
                 >
-                  Pick your Vibe.
+                  {isSpanish ? "Elige tu Vibra." : "Pick your Vibe."}
                 </h2>
                 <p class="text-sm font-bold text-qr-pop">
-                  Scannable pastel-punk palettes & custom gradients.
+                  {isSpanish
+                    ? "Paletas pastel-punk escaneables y degradados a tu gusto."
+                    : "Scannable pastel-punk palettes & custom gradients."}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={shell.requestClose}
-                aria-label="Close style gallery"
+                aria-label={isSpanish
+                  ? "Cerrar galería de estilos"
+                  : "Close style gallery"}
                 class="group shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full flex items-center justify-center"
               >
                 <span
@@ -289,6 +358,9 @@ export default function StyleSelector(
             <div class="grid grid-cols-2 gap-3">
               {Object.entries(STYLE_DISPLAY).map(([key, info]) => {
                 const active = style.value === key;
+                const displayName = isSpanish
+                  ? (info.nameEs ?? info.name)
+                  : info.name;
                 return (
                   <button
                     type="button"
@@ -307,7 +379,7 @@ export default function StyleSelector(
                       style={{ background: getGradientPreview(info.colors) }}
                     />
                     <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
-                      {info.name}
+                      {displayName}
                     </span>
                   </button>
                 );
@@ -329,7 +401,7 @@ export default function StyleSelector(
                   </span>
                 </div>
                 <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
-                  Surprise me
+                  {isSpanish ? "🎲 Sorpréndeme" : "Surprise me"}
                 </span>
               </button>
 
@@ -349,10 +421,10 @@ export default function StyleSelector(
                 }`}
               >
                 <div class="h-16 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 bg-white flex items-center justify-center text-2xl">
-                  🎨
+                  {isSpanish ? "🌈" : "🎨"}
                 </div>
                 <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
-                  Build your own
+                  {isSpanish ? "🌈 Crear degradado propio" : "Build your own"}
                 </span>
               </button>
             </div>
@@ -363,7 +435,7 @@ export default function StyleSelector(
                 onClick={shell.requestClose}
                 class="w-full min-h-[52px] rounded-full border-3 border-black bg-qr-pop text-white text-lg font-black shadow-chunky hover:scale-[1.02] hover:bg-qr-popDeep hover:shadow-chunky-hover active:scale-[0.97] transition-all flex items-center justify-center gap-2"
               >
-                Done ✨
+                {isSpanish ? "Listo ✨" : "Done ✨"}
               </button>
             </div>
           </div>
