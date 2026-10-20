@@ -3,6 +3,7 @@ import { useEffect, useMemo } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { UNLIMITED_SCANS } from "../../utils/constants.ts";
 import { prettyName } from "../../utils/image-prep.ts";
+import { reorderItems } from "../../utils/share-stats.ts";
 import type { ShareKind } from "./ShareReady.tsx";
 
 interface FileUploadOptionsProps {
@@ -82,27 +83,24 @@ export default function FileUploadOptions(
   const busy = isUploading || isPrepping;
 
   const moveFile = (index: number, direction: -1 | 1) => {
-    const target = index + direction;
-    if (target < 0 || target >= files.length) return;
-    const reordered = [...files];
-    const temp = reordered[index];
-    reordered[index] = reordered[target];
-    reordered[target] = temp;
+    const reordered = reorderItems(files, index, direction);
+    if (reordered.every((item, idx) => item === files[idx])) return;
     onReorderFiles?.(reordered);
     haptics.light();
   };
 
-  // Object URLs for the thumbnail strip — revoked when the files change.
+  // Object URLs for image thumbnails — revoked when the files change.
   const thumbs = useMemo(
     () =>
-      kind === "slideshow"
-        ? files.slice(0, 10).map((f) => URL.createObjectURL(f))
-        : [],
-    [files, kind],
+      files.slice(0, 10).map((f) =>
+        f.type.startsWith("image/") ? URL.createObjectURL(f) : ""
+      ),
+    [files],
   );
-  useEffect(() => () => thumbs.forEach((u) => URL.revokeObjectURL(u)), [
-    thumbs,
-  ]);
+  useEffect(
+    () => () => thumbs.forEach((u) => u && URL.revokeObjectURL(u)),
+    [thumbs],
+  );
 
   const headline = kind === "file"
     ? files[0].name
@@ -111,6 +109,12 @@ export default function FileUploadOptions(
     : kind === "slideshow"
     ? `${files.length} photos`
     : `${files.length} files`;
+
+  const itemNoun = kind === "playlist"
+    ? "track"
+    : kind === "slideshow"
+    ? "photo"
+    : "item";
 
   return (
     <div class="mt-4 bg-white border-2 border-black rounded-2xl p-4 space-y-4 animate-slide-down">
@@ -128,65 +132,53 @@ export default function FileUploadOptions(
         </div>
       </div>
 
-      {/* Show the thing: a strip of photos, or the tracklist */}
+      {/* Polaroid thumbnail preview strip for slideshows */}
       {kind === "slideshow" && (
         <div class="flex gap-2 overflow-x-auto scrollbar-none -mx-1 px-1 py-1">
           {thumbs.map((src, i) => (
-            <div
-              key={src}
-              class="relative shrink-0 flex flex-col items-center gap-1"
-            >
-              <img
-                src={src}
-                alt=""
-                class="w-16 h-16 object-cover rounded-xl border-2 border-black bg-neutral-100"
-                style={{ transform: `rotate(${(i % 3) - 1}deg)` }}
-              />
-              {onReorderFiles && files.length > 1 && (
-                <div class="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => moveFile(i, -1)}
-                    disabled={i === 0 || busy}
-                    aria-label={`Move photo ${i + 1} left`}
-                    class="w-6 h-6 flex items-center justify-center rounded-md border border-black/20 bg-white text-[10px] font-black hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    ←
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveFile(i, 1)}
-                    disabled={i === files.length - 1 || busy}
-                    aria-label={`Move photo ${i + 1} right`}
-                    class="w-6 h-6 flex items-center justify-center rounded-md border border-black/20 bg-white text-[10px] font-black hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    →
-                  </button>
-                </div>
-              )}
-            </div>
+            <img
+              key={`${files[i]?.name ?? i}-${i}`}
+              src={src}
+              alt=""
+              class="w-14 h-14 shrink-0 object-cover rounded-xl border-2 border-black bg-neutral-100"
+              style={{ transform: `rotate(${(i % 3) - 1}deg)` }}
+            />
           ))}
         </div>
       )}
-      {kind === "playlist" && (
-        <ol class="space-y-1.5 max-h-48 overflow-y-auto scrollbar-none">
+
+      {/* Reorderable staging list for 2+ files (mixtape, slideshow, or pack) */}
+      {files.length > 1 && (
+        <ol
+          class="space-y-1.5 max-h-56 overflow-y-auto scrollbar-none"
+          aria-label={`Staged ${meta.noun.toLowerCase()} order`}
+        >
           {files.map((f, i) => (
             <li
-              key={`${f.name}-${i}`}
-              class="flex items-center gap-2 text-sm font-bold text-black min-h-[36px] bg-neutral-50 px-2.5 py-1 rounded-xl border border-black/10"
+              key={`${f.name}-${f.size}-${i}`}
+              class="flex items-center gap-2 text-sm font-bold text-black min-h-[48px] bg-qr-cream px-2.5 py-1 rounded-xl border-2 border-black/15"
             >
-              <span class="w-6 text-xs font-black text-neutral-400 text-right">
+              <span class="w-5 text-xs font-black text-neutral-500 text-right shrink-0">
                 {i + 1}
               </span>
-              <span class="truncate flex-1">{prettyName(f.name)}</span>
-              {onReorderFiles && files.length > 1 && (
+              {thumbs[i] && (
+                <img
+                  src={thumbs[i]}
+                  alt=""
+                  class="w-9 h-9 rounded-lg border border-black object-cover shrink-0 bg-white"
+                />
+              )}
+              <span class="truncate flex-1 min-w-0">
+                {prettyName(f.name)}
+              </span>
+              {onReorderFiles && (
                 <div class="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
                     onClick={() => moveFile(i, -1)}
                     disabled={i === 0 || busy}
-                    aria-label={`Move track ${i + 1} up`}
-                    class="w-7 h-7 flex items-center justify-center rounded-lg border border-black/20 bg-white text-xs font-black hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none"
+                    aria-label={`Move ${itemNoun} ${i + 1} up`}
+                    class="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl border-2 border-black/20 bg-white text-sm font-black text-black hover:bg-amber-200 hover:border-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
                   >
                     ↑
                   </button>
@@ -194,8 +186,8 @@ export default function FileUploadOptions(
                     type="button"
                     onClick={() => moveFile(i, 1)}
                     disabled={i === files.length - 1 || busy}
-                    aria-label={`Move track ${i + 1} down`}
-                    class="w-7 h-7 flex items-center justify-center rounded-lg border border-black/20 bg-white text-xs font-black hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none"
+                    aria-label={`Move ${itemNoun} ${i + 1} down`}
+                    class="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl border-2 border-black/20 bg-white text-sm font-black text-black hover:bg-amber-200 hover:border-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
                   >
                     ↓
                   </button>
@@ -214,7 +206,7 @@ export default function FileUploadOptions(
           onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
           placeholder={meta.placeholder}
           aria-label="Share title"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-base font-bold focus:border-qr-pop focus:outline-none transition-colors"
+          class="w-full min-h-[44px] px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-base font-bold focus:border-qr-pop focus:outline-none transition-colors"
         />
       )}
 

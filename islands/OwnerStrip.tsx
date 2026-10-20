@@ -4,8 +4,9 @@
  * without a token it makes no owner request at all.
  *
  * Stats (today / this week / all time) as a trading card, rename inline,
- * re-vibe with the palette pills, add or remove items, stamp a sticker. The
- * address never changes, so stickers already out there keep working.
+ * re-vibe with the palette pills, add, reorder, or remove items, stamp a
+ * sticker. The address never changes, so stickers already out there keep
+ * working.
  */
 import { useSignal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -16,9 +17,12 @@ import { haptics } from "../utils/haptics.ts";
 import { prepImages, prettyName } from "../utils/image-prep.ts";
 import {
   buildCards,
+  cardKpis,
   cardLines,
   type LedgerRow,
   type LifetimeStats,
+  nextStatsRange,
+  reorderItems,
   type StatsRange,
   type WeatherBaseline,
 } from "../utils/share-stats.ts";
@@ -107,6 +111,7 @@ export default function OwnerStrip(
   const [busy, setBusy] = useState<string | null>(null);
   const [showVibe, setShowVibe] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const mutationLock = useRef(false);
   const cancelRenameOnBlur = useRef(false);
 
@@ -234,6 +239,41 @@ export default function OwnerStrip(
     }
   };
 
+  const moveItem = async (index: number, direction: -1 | 1) => {
+    const nextFiles = reorderItems(files, index, direction);
+    if (
+      nextFiles.every((item, idx) => item.id === files[idx]?.id) ||
+      !beginMutation(`reorder-${files[index]?.id ?? index}`)
+    ) {
+      return;
+    }
+    const previousFiles = files;
+    onFiles(nextFiles);
+    haptics.light();
+    try {
+      const r = await post<{ files: ShareItem[] }>(
+        {
+          action: "reorder",
+          itemIds: nextFiles.map((item) => item.id),
+          itemId: files[index].id,
+          direction: direction === -1 ? "up" : "down",
+        },
+        "Couldn't reorder items",
+      );
+      if (Array.isArray(r.files)) {
+        onFiles(r.files);
+      }
+    } catch (e) {
+      onFiles(previousFiles);
+      addToast(
+        e instanceof Error ? e.message : "Couldn't reorder items",
+        3000,
+      );
+    } finally {
+      endMutation();
+    }
+  };
+
   const removeItem = async (item: ShareItem) => {
     if (mutationLock.current) return;
     if (!confirm(`Remove "${prettyName(item.name)}"?`)) return;
@@ -286,12 +326,24 @@ export default function OwnerStrip(
     addToast("Sticker on the way — print it, stick it 🖨️");
   };
 
+  const handleTabKeyDown = (e: KeyboardEvent) => {
+    const next = nextStatsRange(range, e.key);
+    if (!next) return;
+    e.preventDefault();
+    setRange(next);
+    const nextIdx = RANGES.findIndex((r) => r.id === next);
+    if (nextIdx !== -1) {
+      tabRefs.current[nextIdx]?.focus();
+    }
+  };
+
   const cards = buildCards(
     meta.stats ?? {},
     meta.ledger ?? [],
     meta.weather ?? {},
   );
   const card = cards[range];
+  const kpis = cardKpis(card, kind);
   const itemName = (id: string) => {
     const f = files.find((x) => x.id === id);
     if (!f) return "One of them";
@@ -368,14 +420,22 @@ export default function OwnerStrip(
         <div
           class="grid grid-cols-3 gap-1 rounded-full bg-amber-50 p-1 border-2 border-black"
           role="tablist"
+          aria-label="Stats time range"
         >
-          {RANGES.map((r) => (
+          {RANGES.map((r, idx) => (
             <button
               key={r.id}
+              ref={(el) => {
+                tabRefs.current[idx] = el;
+              }}
+              id={`owner-stats-tab-${r.id}`}
               type="button"
               role="tab"
               aria-selected={range === r.id}
+              aria-controls={`owner-stats-panel-${r.id}`}
+              tabIndex={range === r.id ? 0 : -1}
               onClick={() => setRange(r.id)}
+              onKeyDown={handleTabKeyDown}
               class={`min-h-[44px] rounded-full text-xs font-black transition-all ${
                 range === r.id
                   ? "bg-black text-white"
@@ -386,43 +446,90 @@ export default function OwnerStrip(
             </button>
           ))}
         </div>
-        {statsError || statsLoading
-          ? (
-            <p
-              class="text-sm font-bold text-neutral-500 text-center py-2"
-              role="status"
-            >
-              {statsLoading
-                ? "Loading stats…"
-                : "Stats are unavailable right now."}
-            </p>
-          )
-          : lines.length === 0
-          ? (
-            <p class="text-sm font-bold text-neutral-500 text-center py-2">
-              {range === "today"
-                ? "No page opens yet today."
-                : "No page opens yet — stick it somewhere 🌸"}
-            </p>
-          )
-          : (
-            <ul class="space-y-1.5">
-              {lines.map((line, i) => (
-                <li
-                  key={i}
-                  class={`text-sm leading-snug ${
-                    i === 0
-                      ? "font-black text-base"
-                      : "font-bold text-neutral-800"
-                  }`}
-                >
-                  {line}
-                </li>
-              ))}
-            </ul>
-          )}
-        {!statsError && !statsLoading && range !== "today" &&
-          card.spark.some((v) => v > 0) && <Spark values={card.spark} />}
+
+        <div
+          id={`owner-stats-panel-${range}`}
+          role="tabpanel"
+          aria-labelledby={`owner-stats-tab-${range}`}
+          class="space-y-3"
+        >
+          {statsError || statsLoading
+            ? (
+              <p
+                class="text-sm font-bold text-neutral-500 text-center py-2"
+                role="status"
+              >
+                {statsLoading
+                  ? "Loading stats…"
+                  : "Stats are unavailable right now."}
+              </p>
+            )
+            : (
+              <>
+                {/* 3-Tile Visual KPI Header */}
+                <div class="grid grid-cols-3 gap-1.5">
+                  {kpis.map((tile) => (
+                    <div
+                      key={tile.label}
+                      class="bg-qr-cream border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0"
+                    >
+                      <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                        {tile.label}
+                      </span>
+                      <span class="mt-0.5 text-sm sm:text-base font-black text-black leading-tight truncate">
+                        {tile.value}
+                      </span>
+                      {tile.badge
+                        ? (
+                          <span class="mt-0.5 inline-block mx-auto px-1.5 py-0.2 rounded-full bg-amber-200 border border-black text-[10px] font-black text-black leading-tight truncate max-w-full">
+                            {tile.badge}
+                          </span>
+                        )
+                        : (
+                          <span class="mt-0.5 text-[10px] font-bold text-neutral-500 truncate">
+                            {range === "today"
+                              ? "Today"
+                              : range === "week"
+                              ? "7 days"
+                              : "All time"}
+                          </span>
+                        )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Narrative Story Chips / Bullets */}
+                {lines.length === 0
+                  ? (
+                    <p class="text-sm font-bold text-neutral-500 text-center py-1">
+                      {range === "today"
+                        ? "No page opens yet today."
+                        : "No page opens yet — stick it somewhere 🌸"}
+                    </p>
+                  )
+                  : (
+                    <ul class="flex flex-wrap gap-1.5">
+                      {lines.map((line, i) => (
+                        <li
+                          key={i}
+                          class={`rounded-xl border px-2.5 py-1.5 text-xs leading-snug ${
+                            i === 0
+                              ? "w-full bg-amber-100 border-black font-black text-black"
+                              : "bg-qr-cream border-black/20 font-bold text-neutral-900"
+                          }`}
+                        >
+                          {line}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+              </>
+            )}
+
+          {!statsError && !statsLoading && range !== "today" &&
+            card.spark.some((v) => v > 0) && <Spark values={card.spark} />}
+        </div>
+
         <div class="flex items-center gap-3">
           <p class="flex-1 text-xs text-neutral-500">
             Includes your own opens. Daily visitors are estimates by network;
@@ -510,31 +617,58 @@ export default function OwnerStrip(
         </div>
       )}
 
-      {/* Items with a remove × — only when the payload is editable */}
+      {/* Items with reorder ↑/↓ and remove ✕ — only when the payload is editable */}
       {canEditPayload && files.length > 1 && (
-        <ul class="space-y-1">
-          {files.map((f, i) => (
-            <li
-              key={f.id}
-              class="flex items-center gap-2 min-h-[44px] text-sm font-bold"
-            >
-              <span class="w-5 text-xs font-black text-neutral-400 text-right">
-                {i + 1}
-              </span>
-              <span class="truncate flex-1">
-                {kind === "playlist" ? prettyName(f.name) : `Photo ${i + 1}`}
-              </span>
-              <button
-                type="button"
-                onClick={() => void removeItem(f)}
-                disabled={mutationBusy}
-                aria-label={`Remove ${prettyName(f.name)}`}
-                class="min-w-[44px] min-h-[44px] rounded-full border-2 border-black/15 hover:border-black text-xs font-black transition-colors disabled:opacity-50"
+        <ul class="space-y-1.5" aria-label="Share items">
+          {files.map((f, i) => {
+            const label = kind === "playlist"
+              ? prettyName(f.name)
+              : `Photo ${i + 1} · ${prettyName(f.name)}`;
+            return (
+              <li
+                key={f.id}
+                class="flex items-center gap-1.5 min-h-[44px] text-sm font-bold bg-white border-2 border-black/15 rounded-2xl px-2.5 py-1"
               >
-                ✕
-              </button>
-            </li>
-          ))}
+                <span class="w-5 text-xs font-black text-neutral-400 text-right shrink-0">
+                  {i + 1}
+                </span>
+                <span class="truncate flex-1 min-w-0" title={label}>
+                  {label}
+                </span>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => void moveItem(i, -1)}
+                    disabled={i === 0 || mutationBusy}
+                    aria-label={`Move ${prettyName(f.name)} up`}
+                    class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border-2 border-black/15 hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void moveItem(i, 1)}
+                    disabled={i === files.length - 1 || mutationBusy}
+                    aria-label={`Move ${prettyName(f.name)} down`}
+                    class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border-2 border-black/15 hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void removeItem(f)}
+                    disabled={mutationBusy}
+                    aria-label={`Remove ${prettyName(f.name)}`}
+                    class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border-2 border-black/15 hover:border-black hover:bg-rose-100 text-xs font-black transition-colors disabled:opacity-50"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
 

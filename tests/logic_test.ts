@@ -21,6 +21,17 @@ import {
 
 import { formatFileSize, validateFile } from "../utils/file-validation.ts";
 import { shareKindOf } from "../islands/smart-input/FileUploadOptions.tsx";
+import {
+  buildCards,
+  cardKpis,
+  nextStatsRange,
+  reorderItems,
+} from "../utils/share-stats.ts";
+import { deriveQRStatus } from "../islands/edit-qr/QRStatusCard.tsx";
+import {
+  buildSevenDayActivity,
+  formatRelativeVisit,
+} from "../islands/edit-qr/AnalyticsDashboard.tsx";
 
 import { validateSplashConfig } from "../supabase/functions/_shared/splash-validation.ts";
 
@@ -436,4 +447,188 @@ Deno.test("shareKindOf - classifies files correctly into file, slideshow, playli
     ]),
     "pack",
   );
+});
+
+// ===========================================================================
+// Dynamic QR Status & Analytics Formatting
+// ===========================================================================
+Deno.test("deriveQRStatus - computes Active, Paused, Exhausted, and Expired states accurately", () => {
+  const nowMs = Date.parse("2026-10-20T18:00:00Z");
+
+  // 1. Active unlimited QR
+  const activeUnlimited = deriveQRStatus({
+    is_active: true,
+    max_scans: null,
+    scan_count: 42,
+    expires_at: null,
+  }, nowMs);
+  assertEquals(activeUnlimited.status, "Active ✓");
+  assertEquals(activeUnlimited.scansRemaining, "∞");
+  assertEquals(activeUnlimited.isActive, true);
+
+  // 2. Paused QR
+  const paused = deriveQRStatus({
+    is_active: false,
+    max_scans: 10,
+    scan_count: 3,
+    expires_at: null,
+  }, nowMs);
+  assertEquals(paused.status, "Paused");
+  assertEquals(paused.scansRemaining, 7);
+  assertEquals(paused.isActive, false);
+
+  // 3. Exhausted QR (scan_count >= max_scans)
+  const exhausted = deriveQRStatus({
+    is_active: true,
+    max_scans: 5,
+    scan_count: 8,
+    expires_at: null,
+  }, nowMs);
+  assertEquals(exhausted.status, "Exhausted");
+  assertEquals(exhausted.scansRemaining, 0);
+  assertEquals(exhausted.isActive, false);
+
+  // 4. Expired QR
+  const expired = deriveQRStatus({
+    is_active: true,
+    max_scans: 100,
+    scan_count: 10,
+    expires_at: "2026-10-19T12:00:00Z",
+  }, nowMs);
+  assertEquals(expired.status, "Expired");
+  assertEquals(expired.scansRemaining, 90);
+  assertEquals(expired.isActive, false);
+});
+
+Deno.test("formatRelativeVisit & buildSevenDayActivity - formats visit timestamps and 7-day bars", () => {
+  const nowMs = Date.parse("2026-10-20T18:00:00Z");
+
+  assertEquals(formatRelativeVisit(null, nowMs), {
+    relative: "None recorded",
+    localDateTime: null,
+  });
+
+  const twoHoursAgo = formatRelativeVisit("2026-10-20T16:00:00Z", nowMs);
+  assertEquals(twoHoursAgo.relative, "2 hours ago");
+  assert(twoHoursAgo.localDateTime !== null);
+
+  const justNow = formatRelativeVisit("2026-10-20T17:59:45Z", nowMs);
+  assertEquals(justNow.relative, "Just now");
+
+  const bars = buildSevenDayActivity([0, 2, 5, 1, 0, 10, 4], nowMs);
+  assertEquals(bars.length, 7);
+  assertEquals(bars[5].count, 10);
+  assertEquals(bars[5].heightPx, 56);
+  assertEquals(bars[0].count, 0);
+  assertEquals(bars[0].heightPx, 6);
+  for (const bar of bars) {
+    assert(["S", "M", "T", "W", "T", "F", "S"].includes(bar.dayInitial));
+  }
+});
+
+// ===========================================================================
+// Share Stats KPI Header, Tablist Keyboard Nav, and Item Reordering
+// ===========================================================================
+Deno.test("reorderItems - moves items up/down within bounds without mutating input", () => {
+  const original = ["track-1", "track-2", "track-3"];
+  assertEquals(reorderItems(original, 0, -1), [
+    "track-1",
+    "track-2",
+    "track-3",
+  ]);
+  assertEquals(reorderItems(original, 2, 1), ["track-1", "track-2", "track-3"]);
+  assertEquals(reorderItems(original, 0, 1), ["track-2", "track-1", "track-3"]);
+  assertEquals(reorderItems(original, 2, -1), [
+    "track-1",
+    "track-3",
+    "track-2",
+  ]);
+  assertEquals(original, ["track-1", "track-2", "track-3"]);
+});
+
+Deno.test("nextStatsRange - cycles Today / 7 days / All time on Left/Right/Home/End", () => {
+  assertEquals(nextStatsRange("today", "ArrowRight"), "week");
+  assertEquals(nextStatsRange("week", "ArrowRight"), "all");
+  assertEquals(nextStatsRange("all", "ArrowRight"), "today");
+  assertEquals(nextStatsRange("today", "ArrowLeft"), "all");
+  assertEquals(nextStatsRange("all", "ArrowLeft"), "week");
+  assertEquals(nextStatsRange("week", "Home"), "today");
+  assertEquals(nextStatsRange("today", "End"), "all");
+  assertEquals(nextStatsRange("week", "Enter"), null);
+});
+
+Deno.test("cardKpis - builds 3-tile KPI header for Today, 7 days, and All time", () => {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const prevWeekDay = new Date(Date.now() - 8 * 86_400_000).toISOString().slice(
+    0,
+    10,
+  );
+  const cards = buildCards(
+    {
+      views: 50,
+      devices: { mobile: 40, desktop: 10 },
+      items: { "song-1": 18 },
+      downloads: 7,
+      shares: 3,
+    },
+    [
+      {
+        day: prevWeekDay,
+        views: 10,
+        people: 8,
+        returns: 1,
+        countries: { AU: 10 },
+        cities: { Melbourne: 10 },
+        devices: { mobile: 8, desktop: 2 },
+        hours: new Array(24).fill(0),
+        items: { "song-1": 4 },
+        dwell_s: 120,
+        dwell_n: 5,
+        completions: 3,
+        shares: 1,
+        downloads: 2,
+        referred: 0,
+      },
+      {
+        day: todayStr,
+        views: 15,
+        people: 12,
+        returns: 2,
+        countries: { AU: 15 },
+        cities: { Melbourne: 15 },
+        devices: { mobile: 12, desktop: 3 },
+        hours: new Array(24).fill(0),
+        items: { "song-1": 9 },
+        dwell_s: 200,
+        dwell_n: 10,
+        completions: 6,
+        shares: 2,
+        downloads: 4,
+        referred: 0,
+      },
+    ],
+  );
+
+  const todayKpis = cardKpis(cards.today, "playlist");
+  assertEquals(todayKpis[0].label, "Page Opens");
+  assertEquals(todayKpis[0].value, "15");
+  assertEquals(todayKpis[1].label, "Visitors");
+  assertEquals(todayKpis[1].value, "~12 today");
+  assertEquals(todayKpis[1].badge, "2 repeat");
+  assertEquals(todayKpis[2].label, "Top Track");
+  assertEquals(todayKpis[2].value, "9 plays");
+
+  const weekKpis = cardKpis(cards.week, "playlist");
+  assertEquals(weekKpis[0].label, "Page Opens");
+  assertEquals(weekKpis[0].value, "15");
+  assertEquals(weekKpis[0].badge, "↑ 50%");
+  assertEquals(weekKpis[1].label, "Device Split");
+  assertEquals(weekKpis[1].value, "📱 80% phones");
+  assertEquals(weekKpis[2].value, "9 plays");
+
+  const allFileKpis = cardKpis(cards.all, "file");
+  assertEquals(allFileKpis[0].value, "50");
+  assertEquals(allFileKpis[1].value, "📱 80% phones");
+  assertEquals(allFileKpis[2].label, "Downloads");
+  assertEquals(allFileKpis[2].value, "7");
 });

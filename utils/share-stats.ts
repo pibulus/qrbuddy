@@ -531,6 +531,125 @@ export function buildCards(
   return { today: todayCard, week: weekCard, all: allCard };
 }
 
+export interface KpiTile {
+  label: string;
+  value: string;
+  badge?: string | null;
+}
+
+const ORDERED_RANGES: StatsRange[] = ["today", "week", "all"];
+
+/** Keyboard navigation helper for the Today / 7 days / All time tablist. */
+export function nextStatsRange(
+  current: StatsRange,
+  key: string,
+): StatsRange | null {
+  const idx = ORDERED_RANGES.indexOf(current);
+  if (idx === -1) return null;
+  if (key === "ArrowRight") {
+    return ORDERED_RANGES[(idx + 1) % ORDERED_RANGES.length];
+  }
+  if (key === "ArrowLeft") {
+    return ORDERED_RANGES[
+      (idx - 1 + ORDERED_RANGES.length) % ORDERED_RANGES.length
+    ];
+  }
+  if (key === "Home") return ORDERED_RANGES[0];
+  if (key === "End") return ORDERED_RANGES[ORDERED_RANGES.length - 1];
+  return null;
+}
+
+/** Pure item reordering helper for staging and owner curation. */
+export function reorderItems<T>(
+  items: readonly T[],
+  index: number,
+  direction: -1 | 1,
+): T[] {
+  const target = index + direction;
+  if (
+    index < 0 ||
+    index >= items.length ||
+    target < 0 ||
+    target >= items.length
+  ) {
+    return [...items];
+  }
+  const next = [...items];
+  const temp = next[index];
+  next[index] = next[target];
+  next[target] = temp;
+  return next;
+}
+
+/** Build the compact 3-tile KPI summary row above narrative cardLines. */
+export function cardKpis(
+  card: StatsCard,
+  kind: "slideshow" | "playlist" | "file",
+): [KpiTile, KpiTile, KpiTile] {
+  const trendBadge = card.range === "week" &&
+      card.trend !== null &&
+      Math.abs(card.trend) >= 0.1
+    ? `${card.trend > 0 ? "↑" : "↓"} ${Math.round(Math.abs(card.trend) * 100)}%`
+    : null;
+
+  const opensTile: KpiTile = {
+    label: "Page Opens",
+    value: String(card.views),
+    badge: trendBadge,
+  };
+
+  let visitorsOrDevicesTile: KpiTile;
+  if (card.range === "today") {
+    const peopleCount = card.people !== null && card.people > 0
+      ? `~${card.people} today`
+      : card.views > 0
+      ? "~1 today"
+      : "0 today";
+    visitorsOrDevicesTile = {
+      label: "Visitors",
+      value: peopleCount,
+      badge: card.returns && card.returns > 0 ? `${card.returns} repeat` : null,
+    };
+  } else {
+    const phonePct = card.phoneShare !== null
+      ? `📱 ${Math.round(card.phoneShare * 100)}% phones`
+      : "—";
+    visitorsOrDevicesTile = {
+      label: "Device Split",
+      value: phonePct,
+      badge: null,
+    };
+  }
+
+  let playsOrDownloadsTile: KpiTile;
+  if (kind === "file") {
+    playsOrDownloadsTile = {
+      label: "Downloads",
+      value: String(card.downloads),
+      badge: card.shares > 0 ? `${card.shares} shared` : null,
+    };
+  } else if (card.topItem && card.topItem.plays > 0) {
+    const unit = kind === "playlist"
+      ? card.topItem.plays === 1 ? "play" : "plays"
+      : card.topItem.plays === 1
+      ? "view"
+      : "views";
+    playsOrDownloadsTile = {
+      label: kind === "playlist" ? "Top Track" : "Top Photo",
+      value: `${card.topItem.plays} ${unit}`,
+      badge: card.downloads > 0 ? `${card.downloads} DL` : null,
+    };
+  } else {
+    playsOrDownloadsTile = {
+      label: "Downloads",
+      value: String(card.downloads),
+      badge: null,
+    };
+  }
+
+  return [opensTile, visitorsOrDevicesTile, playsOrDownloadsTile];
+}
+
 /** The lines on the card, in the voice. Empty when there's nothing to say. */
 export function cardLines(
   card: StatsCard,

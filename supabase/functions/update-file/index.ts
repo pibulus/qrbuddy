@@ -72,6 +72,80 @@ function kindOf(items: StoredItem[]): "image" | "audio" | "mixed" | "other" {
   return "other";
 }
 
+function applyItemReorder(
+  items: StoredItem[],
+  itemIds: string[],
+  itemId: string,
+  direction: string,
+):
+  | { ok: true; files: StoredItem[] }
+  | { ok: false; status: number; error: string } {
+  if (items.length < 2) {
+    return {
+      ok: false,
+      status: 400,
+      error: "Need at least two items to reorder",
+    };
+  }
+
+  if (itemIds.length > 0) {
+    if (
+      itemIds.length !== items.length ||
+      new Set(itemIds).size !== items.length
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        error: "Reorder list must include every item once",
+      };
+    }
+    const byId = new Map(items.map((item) => [item.id, item]));
+    const reordered: StoredItem[] = [];
+    for (const id of itemIds) {
+      const found = byId.get(id);
+      if (!found) {
+        return {
+          ok: false,
+          status: 400,
+          error: "Reorder list contains an unknown item",
+        };
+      }
+      reordered.push(found);
+    }
+    return { ok: true, files: reordered };
+  }
+
+  if (itemId) {
+    const idx = items.findIndex((item) => item.id === itemId);
+    if (idx === -1) {
+      return { ok: false, status: 404, error: "Item not found" };
+    }
+    const delta = direction === "up" || direction === "-1"
+      ? -1
+      : direction === "down" || direction === "1"
+      ? 1
+      : 0;
+    if (delta === 0) {
+      return { ok: false, status: 400, error: "Invalid reorder direction" };
+    }
+    const target = idx + delta;
+    if (target < 0 || target >= items.length) {
+      return { ok: true, files: items };
+    }
+    const reordered = [...items];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[target];
+    reordered[target] = temp;
+    return { ok: true, files: reordered };
+  }
+
+  return {
+    ok: false,
+    status: 400,
+    error: "Provide itemIds or itemId and direction to reorder",
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return createCorsResponse(req);
   if (req.method !== "POST") return json(req, 405, { error: "POST only" });
@@ -117,6 +191,8 @@ serve(async (req) => {
     let title = "";
     let theme = "";
     let itemId = "";
+    let direction = "";
+    let itemIds: string[] = [];
     let newFiles: File[] = [];
 
     if (contentType.includes("multipart/form-data")) {
@@ -135,6 +211,10 @@ serve(async (req) => {
       title = String(body.title ?? "");
       theme = String(body.theme ?? "");
       itemId = String(body.itemId ?? "");
+      direction = String(body.direction ?? "");
+      if (Array.isArray(body.itemIds)) {
+        itemIds = body.itemIds.map((id: unknown) => String(id));
+      }
     }
 
     if (!fileId || !ownerToken) {
@@ -195,6 +275,21 @@ serve(async (req) => {
         error:
           "This share self-destructs, so what's inside is frozen. Rename or re-theme it, or make a fresh one.",
       });
+    }
+
+    // ---- reorder ----------------------------------------------------------
+    if (action === "reorder") {
+      const reorderResult = applyItemReorder(items, itemIds, itemId, direction);
+      if (!reorderResult.ok) {
+        return json(req, reorderResult.status, { error: reorderResult.error });
+      }
+      const { error } = await supabase
+        .from("destructible_files")
+        .update({ files: reorderResult.files })
+        .eq("id", fileId)
+        .eq("owner_token", ownerToken);
+      if (error) throw error;
+      return json(req, 200, { success: true, files: reorderResult.files });
     }
 
     // ---- remove -----------------------------------------------------------

@@ -22,6 +22,9 @@ interface RoutingConfigFormProps {
   setTimeInactiveUrl: (url: string) => void;
 }
 
+const INPUT_RECIPE =
+  "w-full min-h-[44px] px-3.5 py-2.5 text-sm border-2 border-black/15 bg-white rounded-2xl text-black focus:border-qr-pop focus:outline-none transition-colors";
+
 export default function RoutingConfigForm({
   routingMode,
   destinationUrl,
@@ -52,7 +55,7 @@ export default function RoutingConfigForm({
         <div class="space-y-2 animate-slide-down">
           <label
             htmlFor="destination-url"
-            class="text-sm font-bold text-gray-700 uppercase tracking-wide"
+            class="block text-xs font-black text-black uppercase tracking-wider"
           >
             Destination URL
           </label>
@@ -62,34 +65,41 @@ export default function RoutingConfigForm({
             value={destinationUrl}
             onInput={(e) =>
               setDestinationUrl((e.target as HTMLInputElement).value)}
-            class="w-full px-4 py-3 border-3 border-gray-300 rounded-xl text-lg focus:border-pink-500 focus:outline-none"
+            class="w-full min-h-[48px] px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-base font-bold text-black focus:border-qr-pop focus:outline-none transition-colors"
             placeholder="https://example.com"
           />
         </div>
       )}
 
       {routingMode === "sequential" && (
-        <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 space-y-3 animate-slide-down">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold text-purple-700 uppercase tracking-wide">
+        <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-1">
+            <span class="text-xs font-black text-black uppercase tracking-wider">
               URL Sequence
             </span>
-            <label class="flex items-center gap-2 text-xs font-bold text-purple-700 cursor-pointer">
+            <label
+              htmlFor="routing-loop-sequence"
+              class="min-h-[44px] inline-flex items-center gap-2 text-xs font-black text-black cursor-pointer"
+            >
               <input
+                id="routing-loop-sequence"
                 type="checkbox"
                 checked={loopSequence}
                 onChange={(e) => setLoopSequence(e.currentTarget.checked)}
-                class="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+                class="w-4 h-4 rounded border-2 border-black text-qr-pop focus:ring-qr-pop"
               />
-              Loop Sequence 🔄
+              <span>Loop Sequence 🔄</span>
             </label>
           </div>
 
           {sequentialUrls.map((seqUrl, index) => (
             <div key={index} class="flex gap-2 items-center">
-              <span class="text-xs font-bold text-purple-400 w-4">
+              <label
+                htmlFor={`seq-url-${index}`}
+                class="text-xs font-black text-neutral-600 w-5 shrink-0 text-right"
+              >
                 {index + 1}.
-              </span>
+              </label>
               <input
                 id={`seq-url-${index}`}
                 type="url"
@@ -101,7 +111,7 @@ export default function RoutingConfigForm({
                 }}
                 placeholder={`URL #${index + 1}`}
                 aria-label={`URL step ${index + 1}`}
-                class="flex-1 min-h-[44px] px-3 py-2 text-sm border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                class={`flex-1 min-w-0 ${INPUT_RECIPE}`}
               />
               {sequentialUrls.length > 2 && (
                 <button
@@ -112,10 +122,10 @@ export default function RoutingConfigForm({
                     );
                     setSequentialUrls(newUrls);
                   }}
-                  class="min-w-[44px] min-h-[44px] rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50 px-1"
+                  class="min-w-[44px] min-h-[44px] rounded-full border-2 border-black/15 hover:border-black hover:bg-rose-100 text-black font-black text-sm transition-colors"
                   aria-label={`Remove step ${index + 1}`}
                 >
-                  ×
+                  ✕
                 </button>
               )}
             </div>
@@ -124,7 +134,7 @@ export default function RoutingConfigForm({
           <button
             type="button"
             onClick={() => setSequentialUrls([...sequentialUrls, ""])}
-            class="w-full min-h-[44px] py-2 text-sm font-bold text-purple-600 border-2 border-dashed border-purple-300 rounded-lg hover:bg-purple-100 hover:border-purple-400 transition-colors"
+            class="w-full min-h-[44px] py-2 text-xs font-black text-black bg-qr-cream border-2 border-black rounded-full shadow-chunky hover:bg-amber-200 transition-colors"
           >
             + Add Step
           </button>
@@ -132,15 +142,15 @@ export default function RoutingConfigForm({
       )}
 
       {routingMode === "device" && (
-        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-3 animate-slide-down">
-          <p class="text-xs text-blue-600 mb-2">
-            Route users based on their device. Leave blank to use fallback.
+        <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
+          <p class="text-xs font-semibold text-neutral-700">
+            Route visitors based on their device. Leave blank to use fallback.
           </p>
 
           <div class="space-y-1">
             <label
               htmlFor="routing-ios-url"
-              class="text-xs font-bold text-blue-700"
+              class="block text-xs font-black text-black"
             >
               iOS (iPhone/iPad)
             </label>
@@ -150,14 +160,14 @@ export default function RoutingConfigForm({
               value={iosUrl}
               onInput={(e) => setIosUrl(e.currentTarget.value)}
               placeholder="https://apps.apple.com/..."
-              class="w-full px-3 py-2 text-sm border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none"
+              class={INPUT_RECIPE}
             />
           </div>
 
           <div class="space-y-1">
             <label
               htmlFor="routing-android-url"
-              class="text-xs font-bold text-blue-700"
+              class="block text-xs font-black text-black"
             >
               Android
             </label>
@@ -167,14 +177,14 @@ export default function RoutingConfigForm({
               value={androidUrl}
               onInput={(e) => setAndroidUrl(e.currentTarget.value)}
               placeholder="https://play.google.com/..."
-              class="w-full px-3 py-2 text-sm border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none"
+              class={INPUT_RECIPE}
             />
           </div>
 
           <div class="space-y-1">
             <label
               htmlFor="routing-fallback-url"
-              class="text-xs font-bold text-blue-700"
+              class="block text-xs font-black text-black"
             >
               Fallback (Desktop/Other)
             </label>
@@ -184,26 +194,26 @@ export default function RoutingConfigForm({
               value={fallbackUrl}
               onInput={(e) => setFallbackUrl(e.currentTarget.value)}
               placeholder="https://example.com"
-              class="w-full px-3 py-2 text-sm border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none"
+              class={INPUT_RECIPE}
             />
           </div>
         </div>
       )}
 
       {routingMode === "time" && (
-        <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 space-y-3 animate-slide-down">
-          <p class="text-xs text-orange-600 mb-2">
+        <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
+          <p class="text-xs font-semibold text-neutral-700">
             Uses the scanner's time zone when available; otherwise uses the time
             zone from the device that last saved this QR. If the end is earlier
             than the start, the active window continues overnight. Choose
             00:00–24:00 for a full-day window.
           </p>
 
-          <div class="flex gap-2 items-center">
-            <div class="flex-1">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="space-y-1">
               <label
                 htmlFor="routing-start-hour"
-                class="text-xs font-bold text-orange-700"
+                class="block text-xs font-black text-black"
               >
                 Start Hour
               </label>
@@ -211,7 +221,7 @@ export default function RoutingConfigForm({
                 id="routing-start-hour"
                 value={startHour}
                 onChange={(e) => setStartHour(e.currentTarget.value)}
-                class="w-full min-h-[44px] px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
+                class={INPUT_RECIPE}
               >
                 {Array.from(
                   { length: 24 },
@@ -223,11 +233,10 @@ export default function RoutingConfigForm({
                 )}
               </select>
             </div>
-            <span class="text-orange-400 font-bold">to</span>
-            <div class="flex-1">
+            <div class="space-y-1">
               <label
                 htmlFor="routing-end-hour"
-                class="text-xs font-bold text-orange-700"
+                class="block text-xs font-black text-black"
               >
                 End Hour
               </label>
@@ -235,7 +244,7 @@ export default function RoutingConfigForm({
                 id="routing-end-hour"
                 value={endHour}
                 onChange={(e) => setEndHour(e.currentTarget.value)}
-                class="w-full min-h-[44px] px-2 py-2 text-sm border-2 border-orange-200 rounded-lg"
+                class={INPUT_RECIPE}
               >
                 {Array.from(
                   { length: 25 },
@@ -254,7 +263,7 @@ export default function RoutingConfigForm({
           <div class="space-y-1">
             <label
               htmlFor="routing-active-url"
-              class="text-xs font-bold text-orange-700"
+              class="block text-xs font-black text-black"
             >
               Active URL (During Hours)
             </label>
@@ -264,14 +273,14 @@ export default function RoutingConfigForm({
               value={timeActiveUrl}
               onInput={(e) => setTimeActiveUrl(e.currentTarget.value)}
               placeholder="https://open-now.com"
-              class="w-full px-3 py-2 text-sm border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none"
+              class={INPUT_RECIPE}
             />
           </div>
 
           <div class="space-y-1">
             <label
               htmlFor="routing-inactive-url"
-              class="text-xs font-bold text-orange-700"
+              class="block text-xs font-black text-black"
             >
               Inactive URL (After Hours)
             </label>
@@ -281,7 +290,7 @@ export default function RoutingConfigForm({
               value={timeInactiveUrl}
               onInput={(e) => setTimeInactiveUrl(e.currentTarget.value)}
               placeholder="https://closed-sorry.com"
-              class="w-full px-3 py-2 text-sm border-2 border-orange-200 rounded-lg focus:border-orange-500 focus:outline-none"
+              class={INPUT_RECIPE}
             />
           </div>
         </div>

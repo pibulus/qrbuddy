@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { useQRData } from "../hooks/useQRData.ts";
+import { updateHistoryItem } from "../utils/history.ts";
 import { normalizeUrl } from "../utils/url.ts";
 import { addToast } from "./ToastManager.tsx";
 
@@ -55,6 +56,30 @@ function hourField(
     ? String(hour).padStart(2, "0")
     : fallback;
 }
+
+export function syncDynamicQRHistory(
+  shortCode: string,
+  destinationUrl: string,
+): boolean {
+  const cleanDest = destinationUrl.trim();
+  if (!shortCode || !cleanDest) return false;
+  return updateHistoryItem(
+    (item) =>
+      item.metadata?.shortCode === shortCode ||
+      item.content.includes(`code=${shortCode}`),
+    (item) => ({
+      ...item,
+      metadata: {
+        ...item.metadata,
+        title: cleanDest,
+        destinationUrl: cleanDest,
+      },
+    }),
+  );
+}
+
+const INPUT_RECIPE =
+  "w-full min-h-[44px] px-3.5 py-2.5 border-2 border-black/15 bg-white rounded-2xl text-sm text-black focus:border-qr-pop focus:outline-none transition-colors";
 
 export default function EditQRForm() {
   const { loading, error, qrData, isSaving, saveQRData } = useQRData();
@@ -205,8 +230,9 @@ export default function EditQRForm() {
       };
     }
 
-    await saveQRData({
-      destination_url: resolvedDest || destinationUrl,
+    const nextDestination = resolvedDest || destinationUrl;
+    const saved = await saveQRData({
+      destination_url: nextDestination,
       max_scans: maxScans,
       expires_at: expiryDate ? new Date(expiryDate).toISOString() : null,
       is_active: isActive,
@@ -226,14 +252,21 @@ export default function EditQRForm() {
         }
         : null,
     });
+
+    if (saved && qrData?.short_code && nextDestination) {
+      syncDynamicQRHistory(qrData.short_code, nextDestination);
+    }
   };
 
   if (loading) {
     return (
-      <div class="bg-white border-4 border-black rounded-2xl p-8 text-center">
+      <div
+        class="bg-qr-cream border-4 border-black rounded-3xl p-8 text-center shadow-chunky"
+        role="status"
+      >
         <div class="animate-pulse">
-          <div class="text-4xl mb-4">⏳</div>
-          <p class="text-gray-600">Loading QR data...</p>
+          <div class="text-4xl mb-3">⏳</div>
+          <p class="font-black text-black">Loading QR data...</p>
         </div>
       </div>
     );
@@ -241,12 +274,15 @@ export default function EditQRForm() {
 
   if (error || !qrData) {
     return (
-      <div class="bg-red-50 border-4 border-red-400 rounded-2xl p-8 text-center">
-        <div class="text-4xl mb-4">❌</div>
-        <p class="text-red-800 font-semibold mb-2">
+      <div
+        class="bg-qr-cream border-4 border-black rounded-3xl p-8 text-center shadow-chunky space-y-2"
+        role="alert"
+      >
+        <div class="text-4xl mb-2">❌</div>
+        <p class="text-black font-black text-lg">
           {error || "QR code not found"}
         </p>
-        <p class="text-red-600 text-sm">
+        <p class="text-neutral-700 text-sm font-semibold">
           Invalid or expired owner token
         </p>
       </div>
@@ -255,15 +291,20 @@ export default function EditQRForm() {
 
   return (
     <div class="space-y-6">
-      {/* Analytics Dashboard (Lite) */}
-      <AnalyticsDashboard analytics={qrData.analytics} />
-
-      {/* QR Status Card */}
+      {/* QR Status Card + Sticker Re-download */}
       <QRStatusCard qrData={qrData} />
 
+      {/* Analytics Dashboard */}
+      <AnalyticsDashboard
+        analytics={qrData.analytics}
+        totalVisits={qrData.scan_count}
+      />
+
       {/* Edit Form */}
-      <div class="bg-white border-4 border-black rounded-2xl p-6 space-y-4">
-        <h2 class="text-2xl font-black text-black">Edit QR Settings</h2>
+      <div class="bg-qr-cream border-4 border-black rounded-3xl p-4 sm:p-6 space-y-5 shadow-chunky">
+        <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
+          Edit QR Settings
+        </h2>
 
         {/* Routing Mode Selector */}
         <RoutingModeSelector
@@ -297,29 +338,35 @@ export default function EditQRForm() {
         />
 
         {/* Scan Limit */}
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
+        <div class="space-y-2" role="group" aria-labelledby="scan-limit-label">
+          <span
+            id="scan-limit-label"
+            class="block text-xs font-black text-black uppercase tracking-wider"
+          >
             Scan Limit
-          </label>
+          </span>
           <div class="flex gap-2 flex-wrap">
-            {[1, 5, 10, 100, null].map((limit) => (
-              <button
-                type="button"
-                key={limit?.toString() || "unlimited"}
-                onClick={() => {
-                  setMaxScans(limit);
-                  haptics.light();
-                }}
-                class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all
-                  ${
-                  maxScans === limit
-                    ? "bg-pink-500 text-white border-pink-600 scale-105"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-pink-400"
-                }`}
-              >
-                {limit === null ? "∞" : limit}
-              </button>
-            ))}
+            {[1, 5, 10, 100, null].map((limit) => {
+              const active = maxScans === limit;
+              return (
+                <button
+                  type="button"
+                  key={limit?.toString() || "unlimited"}
+                  aria-pressed={active}
+                  onClick={() => {
+                    setMaxScans(limit);
+                    haptics.light();
+                  }}
+                  class={`min-w-[44px] min-h-[44px] px-4 py-2 rounded-full border-2 font-black text-sm transition-all ${
+                    active
+                      ? "bg-amber-200 text-black border-black shadow-chunky"
+                      : "bg-white text-neutral-700 border-black/15 hover:border-black/60"
+                  }`}
+                >
+                  {limit === null ? "∞" : limit}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -327,7 +374,7 @@ export default function EditQRForm() {
         <div class="space-y-2">
           <label
             htmlFor="qr-expiry-date"
-            class="text-sm font-bold text-gray-700 uppercase tracking-wide"
+            class="block text-xs font-black text-black uppercase tracking-wider"
           >
             Expiry Date (Optional)
           </label>
@@ -337,46 +384,50 @@ export default function EditQRForm() {
             value={expiryDate}
             onChange={(e) =>
               setExpiryDate((e.target as HTMLInputElement).value)}
-            class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
+            class={INPUT_RECIPE}
           />
         </div>
 
         {/* Intro (splash) page */}
         <div class="space-y-2">
-          <label class="flex items-center gap-3 cursor-pointer group">
+          <label
+            htmlFor="qr-splash-enabled"
+            class="min-h-[44px] inline-flex items-center gap-3 cursor-pointer group"
+          >
             <input
+              id="qr-splash-enabled"
               type="checkbox"
               checked={splashEnabled}
               onChange={(e) => {
                 setSplashEnabled((e.target as HTMLInputElement).checked);
                 haptics.light();
               }}
-              class="w-5 h-5 rounded border-2 border-black cursor-pointer"
+              class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-pink-500"
             />
-            <span class="text-sm font-bold text-gray-700 uppercase tracking-wide group-hover:text-pink-600">
+            <span class="text-xs font-black text-black uppercase tracking-wider group-hover:text-qr-pop">
               ✨ Intro page
             </span>
           </label>
-          <p class="text-xs text-gray-500 ml-8">
+          <p class="text-xs font-semibold text-neutral-600">
             Show a short landing page before redirecting
           </p>
           {splashEnabled && (
-            <div class="ml-8 space-y-3 bg-white border-2 border-black rounded-2xl p-4 shadow-sm animate-slide-down">
-              <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-                <span class="text-xs font-black uppercase text-pink-600">
+            <div class="space-y-3 bg-white border-2 border-black rounded-2xl p-4 animate-slide-down">
+              <div class="flex items-center justify-between border-b border-black/10 pb-2 gap-2">
+                <span class="text-xs font-black uppercase text-qr-pop">
                   Cover Card
                 </span>
-                <div class="flex bg-gray-100 p-0.5 rounded-lg border border-black">
+                <div class="flex bg-amber-50 p-0.5 rounded-full border-2 border-black">
                   <button
                     type="button"
                     onClick={() => {
                       setSplashPreviewTab("edit");
                       haptics.light();
                     }}
-                    class={`px-2.5 py-0.5 rounded text-xs font-bold transition-all ${
+                    class={`min-h-[36px] px-3 py-1 rounded-full text-xs font-black transition-all ${
                       splashPreviewTab === "edit"
-                        ? "bg-white text-black shadow-xs"
-                        : "text-gray-500 hover:text-black"
+                        ? "bg-black text-white"
+                        : "text-neutral-700 hover:bg-amber-100"
                     }`}
                   >
                     ✏️ Edit
@@ -387,10 +438,10 @@ export default function EditQRForm() {
                       setSplashPreviewTab("preview");
                       haptics.light();
                     }}
-                    class={`px-2.5 py-0.5 rounded text-xs font-bold transition-all ${
+                    class={`min-h-[36px] px-3 py-1 rounded-full text-xs font-black transition-all ${
                       splashPreviewTab === "preview"
-                        ? "bg-black text-white shadow-xs"
-                        : "text-gray-500 hover:text-black"
+                        ? "bg-black text-white"
+                        : "text-neutral-700 hover:bg-amber-100"
                     }`}
                   >
                     👁️ Preview
@@ -400,53 +451,91 @@ export default function EditQRForm() {
 
               {splashPreviewTab === "edit"
                 ? (
-                  <div class="space-y-2">
-                    <input
-                      type="text"
-                      maxLength={100}
-                      value={splashTitle}
-                      onInput={(e) =>
-                        setSplashTitle((e.target as HTMLInputElement).value)}
-                      placeholder="Page title (e.g. Welcome!)"
-                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-bold focus:border-pink-500 focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      maxLength={50}
-                      value={splashButtonText}
-                      onInput={(e) =>
-                        setSplashButtonText(
-                          (e.target as HTMLInputElement).value,
-                        )}
-                      placeholder="Button text (e.g. Continue)"
-                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-bold focus:border-pink-500 focus:outline-none"
-                    />
-                    <textarea
-                      maxLength={500}
-                      value={splashDescription}
-                      onInput={(e) =>
-                        setSplashDescription(
-                          (e.target as HTMLTextAreaElement).value,
-                        )}
-                      placeholder="Description (optional greeting or details)"
-                      rows={2}
-                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-pink-500 focus:outline-none resize-none"
-                    />
-                    <input
-                      type="url"
-                      value={splashImageUrl}
-                      onInput={(e) =>
-                        setSplashImageUrl((e.target as HTMLInputElement).value)}
-                      placeholder="Header image URL (optional)"
-                      class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-xs font-mono focus:border-pink-500 focus:outline-none"
-                    />
+                  <div class="space-y-3">
+                    <div class="space-y-1">
+                      <label
+                        htmlFor="qr-splash-title"
+                        class="block text-xs font-black text-black"
+                      >
+                        Page Title
+                      </label>
+                      <input
+                        id="qr-splash-title"
+                        type="text"
+                        maxLength={100}
+                        value={splashTitle}
+                        onInput={(e) =>
+                          setSplashTitle((e.target as HTMLInputElement).value)}
+                        placeholder="Page title (e.g. Welcome!)"
+                        class={`${INPUT_RECIPE} font-bold`}
+                      />
+                    </div>
+                    <div class="space-y-1">
+                      <label
+                        htmlFor="qr-splash-button-text"
+                        class="block text-xs font-black text-black"
+                      >
+                        Button Text
+                      </label>
+                      <input
+                        id="qr-splash-button-text"
+                        type="text"
+                        maxLength={50}
+                        value={splashButtonText}
+                        onInput={(e) =>
+                          setSplashButtonText(
+                            (e.target as HTMLInputElement).value,
+                          )}
+                        placeholder="Button text (e.g. Continue)"
+                        class={`${INPUT_RECIPE} font-bold`}
+                      />
+                    </div>
+                    <div class="space-y-1">
+                      <label
+                        htmlFor="qr-splash-description"
+                        class="block text-xs font-black text-black"
+                      >
+                        Description (Optional)
+                      </label>
+                      <textarea
+                        id="qr-splash-description"
+                        maxLength={500}
+                        value={splashDescription}
+                        onInput={(e) =>
+                          setSplashDescription(
+                            (e.target as HTMLTextAreaElement).value,
+                          )}
+                        placeholder="Description (optional greeting or details)"
+                        rows={2}
+                        class={`${INPUT_RECIPE} resize-none`}
+                      />
+                    </div>
+                    <div class="space-y-1">
+                      <label
+                        htmlFor="qr-splash-image-url"
+                        class="block text-xs font-black text-black"
+                      >
+                        Header Image URL (Optional)
+                      </label>
+                      <input
+                        id="qr-splash-image-url"
+                        type="url"
+                        value={splashImageUrl}
+                        onInput={(e) =>
+                          setSplashImageUrl(
+                            (e.target as HTMLInputElement).value,
+                          )}
+                        placeholder="https://example.com/banner.jpg"
+                        class={`${INPUT_RECIPE} font-mono text-xs`}
+                      />
+                    </div>
                   </div>
                 )
                 : (
                   <div class="py-2 animate-pop-in">
-                    <div class="rounded-xl border-2 border-black bg-[#FAF8F5] p-4 shadow-[3px_3px_0px_0px_#000] text-center max-w-xs mx-auto space-y-2.5">
+                    <div class="rounded-2xl border-2 border-black bg-qr-cream p-4 shadow-chunky text-center max-w-xs mx-auto space-y-2.5">
                       {splashImageUrl && (
-                        <div class="rounded-lg border-2 border-black overflow-hidden bg-pink-50 max-h-36">
+                        <div class="rounded-xl border-2 border-black overflow-hidden bg-pink-50 max-h-36">
                           <img
                             src={splashImageUrl}
                             alt="Cover image"
@@ -457,22 +546,22 @@ export default function EditQRForm() {
                           />
                         </div>
                       )}
-                      <h5 class="text-base font-black text-gray-900 leading-tight">
+                      <h5 class="text-base font-black text-black leading-tight">
                         {splashTitle || "Welcome!"}
                       </h5>
                       {splashDescription && (
-                        <p class="text-xs text-gray-600 whitespace-pre-wrap leading-relaxed line-clamp-3">
+                        <p class="text-xs text-neutral-700 whitespace-pre-wrap leading-relaxed line-clamp-3">
                           {splashDescription}
                         </p>
                       )}
                       <div class="pt-1">
-                        <div class="w-full min-h-[38px] rounded-lg border-2 border-black bg-black text-white font-black text-xs py-2 px-3 shadow-[2px_2px_0px_0px_#FF69B4] flex items-center justify-center gap-1 cursor-default">
+                        <div class="w-full min-h-[38px] rounded-full border-2 border-black bg-black text-white font-black text-xs py-2 px-3 shadow-chunky flex items-center justify-center gap-1 cursor-default">
                           <span>{splashButtonText || "Continue"}</span>
                           <span>→</span>
                         </div>
                       </div>
-                      <div class="pt-2 border-t border-gray-200 flex items-center justify-center">
-                        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-black bg-pink-100 text-[9px] font-black text-gray-900">
+                      <div class="pt-2 border-t border-black/10 flex items-center justify-center">
+                        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-black bg-pink-100 text-[9px] font-black text-black">
                           <span>⚡</span>
                           <span>
                             Built with <strong>QRBuddy</strong>
@@ -487,23 +576,27 @@ export default function EditQRForm() {
         </div>
 
         {/* Active Toggle */}
-        <div class="space-y-2">
-          <label class="flex items-center gap-3 cursor-pointer group">
+        <div class="space-y-1">
+          <label
+            htmlFor="qr-is-active"
+            class="min-h-[44px] inline-flex items-center gap-3 cursor-pointer group"
+          >
             <input
+              id="qr-is-active"
               type="checkbox"
               checked={isActive}
               onChange={(e) => {
                 setIsActive((e.target as HTMLInputElement).checked);
                 haptics.light();
               }}
-              class="w-5 h-5 rounded border-2 border-black cursor-pointer"
+              class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-pink-500"
             />
-            <span class="text-sm font-semibold text-gray-700 group-hover:text-pink-600">
+            <span class="text-sm font-black text-black group-hover:text-qr-pop">
               QR is active
             </span>
           </label>
-          <p class="text-xs text-gray-500 ml-8">
-            Uncheck to deactivate this QR (scans will show KABOOM page)
+          <p class="text-xs font-semibold text-neutral-600">
+            Uncheck to pause this QR (scans will show KABOOM page)
           </p>
         </div>
 
@@ -512,15 +605,15 @@ export default function EditQRForm() {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          class="w-full px-6 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-black text-lg rounded-xl border-2 border-black shadow-chunky hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          class="w-full min-h-[52px] px-6 py-3.5 bg-qr-pop hover:bg-qr-popDeep text-white font-black text-lg rounded-full border-3 border-black shadow-chunky hover:shadow-chunky-hover hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           {isSaving ? "Saving..." : "💾 Save Changes"}
         </button>
       </div>
 
       {/* Privacy Note */}
-      <div class="bg-green-50 border-2 border-green-300 rounded-xl p-4 text-center">
-        <p class="text-sm text-green-800">
+      <div class="bg-white border-2 border-black rounded-2xl p-4 text-center shadow-chunky">
+        <p class="text-xs sm:text-sm font-semibold text-neutral-800">
           🔒 <strong>Privacy First:</strong>{" "}
           Scans log coarse stats only (device type, country) for the dashboard
           above — no IPs, no user agents, deleted after 90 days.
