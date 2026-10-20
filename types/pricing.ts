@@ -32,9 +32,9 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     billingPeriod: "year",
     durationDays: 365,
     features: [
-      "Single-file uploads up to 500 MB; shares expire after 30 days",
-      "No QRBuddy branding on supported note and locker pages",
-      "Higher creation and upload limits; service abuse controls still apply",
+      "100 Editable Dynamic Links — repoint printed QR codes anytime (vs. 5 on Free)",
+      "500 MB Heavy-Duty File Drops — 10× larger 30-day file transfers (vs. 50 MB on Free)",
+      "Clean White-Label Pages — remove QRBuddy branding on supported note and locker pages",
     ],
   },
 };

@@ -631,19 +631,39 @@ export default function QRCanvas(
           on the first character. The save pill is ALWAYS present and is a REAL
           button (regular users don't click posters) — always a SOLID cream
           surface (a translucent pill over the QR read as mush), popping in
-          with a bounce when real content lands. */
+          with a bounce when real content lands. When a frame caption strip is
+          active, dock the Save pill cleanly below the frame so it never covers
+          the caption text. */
       }
-      <button
-        type="button"
-        key={url.value ? "chip-live" : "chip-idle"}
-        onClick={handleDownloadClick}
-        class={`absolute -bottom-4 -right-3 min-h-[44px] px-4 rounded-full bg-qr-cream border-3 border-black shadow-chunky flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
-          url.value ? "animate-bounce-in" : ""
-        }`}
-        aria-label="Download QR code as PNG"
-      >
-        ↓ Save PNG
-      </button>
+      {frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== ""
+        ? (
+          <div class="mt-3 flex justify-end">
+            <button
+              type="button"
+              key={url.value ? "chip-live-framed" : "chip-idle-framed"}
+              onClick={handleDownloadClick}
+              class={`min-h-[44px] px-4 rounded-full bg-qr-cream border-3 border-black shadow-chunky inline-flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+                url.value ? "animate-bounce-in" : ""
+              }`}
+              aria-label="Download QR code as PNG"
+            >
+              ↓ Save PNG
+            </button>
+          </div>
+        )
+        : (
+          <button
+            type="button"
+            key={url.value ? "chip-live" : "chip-idle"}
+            onClick={handleDownloadClick}
+            class={`absolute -bottom-4 -right-3 min-h-[44px] px-4 rounded-full bg-qr-cream border-3 border-black shadow-chunky flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+              url.value ? "animate-bounce-in" : ""
+            }`}
+            aria-label="Download QR code as PNG"
+          >
+            ↓ Save PNG
+          </button>
+        )}
 
       {/* Destructible badge */}
       {isDestructible?.value && (

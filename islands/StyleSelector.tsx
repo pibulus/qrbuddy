@@ -245,28 +245,33 @@ export default function StyleSelector(
             aria-modal="true"
             aria-labelledby="style-gallery-title"
             tabindex={-1}
-            class="relative z-10 w-full max-w-lg bg-white sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-6 animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto scrollbar-none"
+            class="relative z-10 w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover p-4 sm:p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-5 animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto scrollbar-none"
           >
             {/* Header */}
             <div class="flex items-start justify-between gap-3">
               <div>
-                <p class="text-xs uppercase tracking-wide text-pink-600 font-bold">
-                  Style Gallery
-                </p>
-                <p
+                <h2
                   id="style-gallery-title"
-                  class="text-2xl font-black text-gray-900 leading-tight"
+                  class="text-2xl font-black text-black tracking-tight leading-tight"
                 >
-                  Pick your Vibe
+                  Pick your Vibe.
+                </h2>
+                <p class="text-sm font-bold text-qr-pop">
+                  Scannable pastel-punk palettes & custom gradients.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={shell.requestClose}
                 aria-label="Close style gallery"
-                class="text-3xl font-black text-gray-400 hover:text-gray-900 hover:rotate-90 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+                class="group shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full flex items-center justify-center"
               >
-                ×
+                <span
+                  aria-hidden="true"
+                  class="w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
+                >
+                  ✕
+                </span>
               </button>
             </div>
 
@@ -342,13 +347,13 @@ export default function StyleSelector(
               </button>
             </div>
 
-            <div class="flex justify-center">
+            <div class="pt-1">
               <button
                 type="button"
                 onClick={shell.requestClose}
-                class="px-8 py-3 rounded-xl bg-black text-white font-bold hover:scale-105 transition-transform"
+                class="w-full min-h-[52px] rounded-full border-3 border-black bg-qr-pop text-white text-lg font-black shadow-chunky hover:scale-[1.02] hover:bg-qr-popDeep hover:shadow-chunky-hover active:scale-[0.97] transition-all flex items-center justify-center gap-2"
               >
-                Done
+                Done ✨
               </button>
             </div>
           </div>

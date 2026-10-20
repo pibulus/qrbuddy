@@ -300,9 +300,9 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const expiry = hasPass ? supporterPassExpiry() : null;
   const perks = isSpanish
     ? [
-      "Archivos individuales de hasta 500 MB; los enlaces vencen en 30 días",
-      "Sin marca QRBuddy en páginas compatibles de notas y baúles",
-      "Límites más amplios para crear y subir; siguen aplicando controles de uso",
+      "100 Enlaces Dinámicos Editables — cambia a dónde apunta tu QR impreso cuando quieras (vs. 5 gratis)",
+      "Archivos pesados de 500 MB — transferencias de 30 días 10× más grandes (vs. 50 MB gratis)",
+      "Páginas sin marca — elimina el sello de QRBuddy en páginas compatibles de notas y baúles",
     ]
     : PRICING_TIERS.pro.features;
   const price = formatTierPrice(PRICING_TIERS.pro);
@@ -337,8 +337,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                 ? "Gracias por apoyar QRBuddy."
                 : "Thank you for supporting QRBuddy.")
               : (isSpanish
-                ? "Un pago amplía algunos límites durante un año."
-                : "One payment raises selected limits for a year.")}
+                ? "Poder Pro, cero suscripciones trampa. Un solo pago por 365 días."
+                : "Pro power, zero subscription traps. One flat payment for 365 days.")}
           </p>
         </div>
 
@@ -443,9 +443,6 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
               >
                 {isStartingCheckout
                   ? (isSpanish ? "Abriendo el pago…" : "Opening checkout…")
-                  : checkoutAvailability === "checking" ||
-                      checkoutAvailability === "idle"
-                  ? (isSpanish ? "Comprobando el pago…" : "Checking checkout…")
                   : checkoutAvailability === "unavailable"
                   ? (isSpanish
                     ? "El pago estará disponible pronto"
@@ -455,8 +452,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                     ? "No se pudo comprobar el pago"
                     : "Checkout status unavailable")
                   : (isSpanish
-                    ? `Obtener Pase Supporter — ${price} / 365 días`
-                    : `Get Supporter Pass — ${price} / 365 days`)}
+                    ? `Obtener Pase Supporter — ${price} / 365 días ✨`
+                    : `Get Supporter Pass — ${price} / 365 days ✨`)}
               </CardPrimaryButton>
               <CardSecondaryButton
                 onClick={() => {
@@ -534,8 +531,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
               </summary>
               <p class="mt-1 text-gray-700 ml-4">
                 {isSpanish
-                  ? "No. Pagas A$49 una vez y el pase dura 365 días. No se renueva automáticamente."
-                  : "No. You pay A$49 once and the pass lasts 365 days. It does not renew automatically."}
+                  ? "No. Pagas A$49 una vez y el pase dura 365 días. No se renueva automáticamente. Los archivos compartidos vencen en 30 días y siguen aplicando controles de uso del servicio."
+                  : "No. You pay A$49 once and the pass lasts 365 days. It does not renew automatically. Hosted file drops expire after 30 days and standard service abuse controls still apply."}
               </p>
             </details>
             <details>

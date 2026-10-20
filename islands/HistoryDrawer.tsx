@@ -159,16 +159,13 @@ export default function HistoryDrawer(
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
       {/* Backdrop */}
       <div
-        aria-hidden={!isOpen}
-        class={`fixed inset-0 bg-qr-scrim/60 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
-          isOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
+        class="fixed inset-0 bg-qr-scrim/60 backdrop-blur-sm z-[60] animate-fade-in"
         onClick={onClose}
       />
 
@@ -176,15 +173,11 @@ export default function HistoryDrawer(
       <div
         ref={drawerRef}
         data-history-drawer
-        inert={!isOpen}
-        aria-hidden={!isOpen}
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-drawer-title"
         tabIndex={-1}
-        class={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-qr-cream shadow-2xl z-[70] transform transition-transform duration-300 ease-out flex flex-col border-r-4 border-black ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        class="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-qr-cream shadow-2xl z-[70] flex flex-col border-r-4 border-black animate-slide-in-right"
       >
         {/* Header */}
         <div class="p-5 sm:p-6 border-b-4 border-black bg-yellow-300 flex justify-between items-center">

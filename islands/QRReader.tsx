@@ -310,40 +310,75 @@ export default function QRReader(
         aria-modal="true"
         aria-labelledby="qr-reader-title"
         tabindex={-1}
-        class="relative w-full max-w-lg bg-white sm:border-4 sm:border-black rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
+        class="relative w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
       >
-        <div class="flex items-start justify-between gap-3 p-4 sm:p-6 border-b-2 border-gray-100">
+        <div class="flex items-start justify-between gap-3 p-4 sm:p-6 pb-2 sm:pb-3">
           <div>
-            <p class="text-xs uppercase tracking-wide text-pink-600 font-black">
-              Safe QR Inspector
-            </p>
             <h2
               id="qr-reader-title"
-              class="text-xl sm:text-2xl font-black text-gray-900 leading-tight"
+              class="text-2xl font-black text-black tracking-tight leading-tight"
             >
-              Street Safe Inspection
+              Street Safe Inspection.
             </h2>
+            <p class="text-sm font-bold text-qr-pop">
+              Check where a QR code goes before opening it.
+            </p>
           </div>
           <button
             type="button"
             onClick={shell.requestClose}
-            class="min-w-[44px] min-h-[44px] rounded-full hover:bg-gray-100 transition-colors text-2xl font-black text-gray-500"
+            class="group shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full flex items-center justify-center"
             aria-label="Close QR reader"
           >
-            ×
+            <span
+              aria-hidden="true"
+              class="w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
+            >
+              ✕
+            </span>
           </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4">
+        <div class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4">
           {!result && (
             <>
+              {/* Camera — primary action when out in the wild */}
+              {cameraActive
+                ? (
+                  <div class="space-y-2">
+                    <video
+                      ref={videoRef}
+                      class="w-full rounded-2xl border-3 border-black bg-black aspect-video object-cover"
+                      playsInline
+                      muted
+                    />
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      class="w-full min-h-[44px] rounded-full border-2 border-black text-sm font-black text-black bg-white shadow-chunky hover:bg-amber-100 transition"
+                    >
+                      Stop camera
+                    </button>
+                  </div>
+                )
+                : (
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    class="w-full min-h-[54px] rounded-full border-3 border-black bg-qr-pop px-4 py-3 font-black text-lg text-white shadow-chunky hover:scale-[1.02] hover:bg-qr-popDeep active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>📷</span>
+                    <span>Scan with Camera</span>
+                  </button>
+                )}
+
               {/* Drop / pick zone */}
               <div
                 data-dropzone="true"
-                class={`border-3 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                class={`border-2 rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${
                   isDragging
-                    ? "border-purple-500 bg-purple-50 scale-[1.02]"
-                    : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
+                    ? "border-black bg-amber-200 shadow-chunky scale-[1.01]"
+                    : "border-black/15 hover:border-black/60"
                 }`}
                 onClick={() => fileInputRef.current?.click()}
                 onDragEnter={(e) => {
@@ -374,43 +409,19 @@ export default function QRReader(
                     input.value = "";
                   }}
                 />
-                <div class="text-5xl mb-3">🔍</div>
-                <p class="font-black text-gray-800">
-                  {isDecoding ? "Reading..." : "Drop a QR image here"}
+                <div class="text-3xl mb-2">🖼️</div>
+                <p class="font-black text-black text-sm sm:text-base">
+                  {isDecoding
+                    ? "Reading QR image..."
+                    : "Or pick a screenshot / QR image"}
                 </p>
-                <p class="text-xs text-gray-500 mt-1">
-                  tap to pick a file · or paste a screenshot (⌘V)
+                <p class="text-xs text-neutral-500 font-medium mt-1">
+                  <span>Tap to choose a photo</span>
+                  <span class="hidden sm:inline">
+                    {" "}· or drop / paste (⌘V)
+                  </span>
                 </p>
               </div>
-
-              {/* Camera */}
-              {cameraActive
-                ? (
-                  <div class="space-y-2">
-                    <video
-                      ref={videoRef}
-                      class="w-full rounded-2xl border-3 border-black bg-black aspect-video object-cover"
-                      playsInline
-                      muted
-                    />
-                    <button
-                      type="button"
-                      onClick={stopCamera}
-                      class="w-full min-h-[44px] rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:border-gray-500 transition"
-                    >
-                      Stop camera
-                    </button>
-                  </div>
-                )
-                : (
-                  <button
-                    type="button"
-                    onClick={startCamera}
-                    class="w-full min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:-translate-y-0.5 active:translate-y-0 transition-all"
-                  >
-                    📷 Scan with camera
-                  </button>
-                )}
 
               {(decodeError || cameraError) && (
                 <p

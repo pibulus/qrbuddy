@@ -1,4 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
+import { useModalShell } from "./modal/useModalShell.ts";
 import {
   buildPassportSyncUrl,
   generatePassportIdentity,
@@ -166,23 +167,25 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
     }
   };
 
-  if (!isOpen) return null;
+  const shell = useModalShell({ open: isOpen, onClose });
+  if (!shell.mounted) return null;
 
   const syncUrl = passport ? buildPassportSyncUrl(passport) : "";
   const syncQrSvg = syncUrl ? renderPassportQrSvg(syncUrl, 4) : "";
 
   return (
     <div
+      ref={shell.backdropRef}
       class="fixed inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onClick={shell.onBackdropClick}
     >
       <div
-        class="bg-[#FAF7F2] w-full max-w-lg rounded-t-3xl sm:rounded-3xl border-t-4 sm:border-4 border-black p-4 sm:p-6 shadow-chunky max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6"
+        ref={shell.dialogRef}
+        class="bg-[#FAF7F2] w-full max-w-lg rounded-t-3xl sm:rounded-3xl border-t-4 sm:border-4 border-black p-4 sm:p-6 shadow-chunky max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 outline-none"
         role="dialog"
         aria-modal="true"
         aria-labelledby="library-title"
+        tabindex={-1}
       >
         {/* Header */}
         <div class="flex items-center justify-between pb-3 border-b-2 border-black/10">
@@ -197,11 +200,16 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={shell.requestClose}
             aria-label="Close library"
-            class="w-10 h-10 rounded-full border-2 border-black bg-white flex items-center justify-center font-black text-lg hover:bg-neutral-100 active:scale-95 transition-transform"
+            class="group shrink-0 w-11 h-11 -mr-1 rounded-full flex items-center justify-center"
           >
-            ✕
+            <span
+              aria-hidden="true"
+              class="w-9 h-9 rounded-full border-2 border-black bg-white flex items-center justify-center font-black text-base leading-none shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
+            >
+              ✕
+            </span>
           </button>
         </div>
 
@@ -209,8 +217,8 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
         <div class="flex-1 overflow-y-auto scrollbar-none py-4 space-y-4">
           {/* Sovereign Passport Card */}
           {passport && (
-            <div class="rounded-2xl border-2 border-black bg-gradient-to-br from-[#FFFDF9] via-[#FFF9F2] to-[#FFF0E5] p-4 shadow-sm space-y-3">
-              <div class="flex items-center justify-between">
+            <div class="rounded-2xl border-2 border-black bg-gradient-to-br from-[#FFFDF9] via-[#FFF9F2] to-[#FFF0E5] p-3.5 shadow-sm space-y-3">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
                 <div class="flex items-center gap-3">
                   <span class="w-11 h-11 rounded-full border-2 border-black bg-white flex items-center justify-center text-2xl shadow-xs">
                     {passport.avatarEmoji}
@@ -246,52 +254,70 @@ export default function LibraryDrawer({ isOpen, onClose }: LibraryDrawerProps) {
                     </div>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleCopySyncUrl}
+                  class="px-3 min-h-[36px] text-xs font-black rounded-full border-2 border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform shadow-chunky"
+                >
+                  📋 Copy Sync Link
+                </button>
               </div>
 
-              {/* Scan-to-Sync QR Section */}
-              <div class="bg-white rounded-xl border-2 border-black/15 p-3 flex flex-col sm:flex-row items-center gap-3">
-                <div
-                  class="w-24 h-24 flex-shrink-0 bg-white rounded-lg p-1 border border-black/10 flex items-center justify-center overflow-hidden"
-                  // deno-lint-ignore react-no-danger
-                  dangerouslySetInnerHTML={{ __html: syncQrSvg }}
-                />
-                <div class="min-w-0 flex-1 text-center sm:text-left space-y-2">
-                  <p class="font-bold text-xs text-neutral-800">
-                    📱 Scan with phone to sync library
-                  </p>
-                  <p class="text-[11px] text-neutral-500 leading-tight">
-                    Instant cross-device pairing. Zero accounts, zero passwords.
-                  </p>
-                  <div class="flex flex-wrap gap-1.5 justify-center sm:justify-start">
-                    <button
-                      type="button"
-                      onClick={handleCopySyncUrl}
-                      class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform"
-                    >
-                      📋 Copy Link
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowPhrase(!showPhrase)}
-                      class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black/20 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-transform"
-                    >
-                      🔑 {showPhrase ? "Hide Phrase" : "Backup Phrase"}
-                    </button>
+              {/* Compact collapsible Cross-Device Pairing & Backup Phrase */}
+              <details class="group bg-white rounded-xl border-2 border-black/15">
+                <summary class="cursor-pointer list-none px-3 py-2 flex items-center justify-between text-xs font-black text-neutral-800 select-none">
+                  <span>📲 Pair another device or view recovery phrase</span>
+                  <span class="transition-transform group-open:rotate-180 text-[10px]">
+                    ▾
+                  </span>
+                </summary>
+                <div class="p-3 pt-1 border-t border-black/10 space-y-3">
+                  <div class="flex flex-col sm:flex-row items-center gap-3">
+                    <div
+                      class="w-24 h-24 flex-shrink-0 bg-white rounded-lg p-1 border border-black/10 flex items-center justify-center overflow-hidden"
+                      // deno-lint-ignore react-no-danger
+                      dangerouslySetInnerHTML={{ __html: syncQrSvg }}
+                    />
+                    <div class="min-w-0 flex-1 text-center sm:text-left space-y-2">
+                      <p class="font-bold text-xs text-neutral-800">
+                        📱 Scan with another device to sync library
+                      </p>
+                      <p class="text-[11px] text-neutral-500 leading-tight">
+                        Instant cross-device pairing. Zero accounts, zero
+                        passwords.
+                      </p>
+                      <div class="flex flex-wrap gap-1.5 justify-center sm:justify-start">
+                        <button
+                          type="button"
+                          onClick={handleCopySyncUrl}
+                          class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform"
+                        >
+                          📋 Copy Link
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowPhrase(!showPhrase)}
+                          class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black/20 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-transform"
+                        >
+                          🔑 {showPhrase ? "Hide Phrase" : "Backup Phrase"}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* 4-Word Sovereign Backup Phrase */}
-              {showPhrase && (
-                <div class="bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl p-2.5 text-xs text-neutral-700 space-y-1">
-                  <p class="font-bold text-[10px] uppercase tracking-wider text-amber-800">
-                    Sovereign Recovery Phrase
-                  </p>
-                  <code class="block font-mono font-bold text-xs bg-white px-2 py-1 rounded border border-amber-200 select-all break-all">
-                    {passport.phrase}
-                  </code>
+                  {/* 4-Word Sovereign Backup Phrase */}
+                  {showPhrase && (
+                    <div class="bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl p-2.5 text-xs text-neutral-700 space-y-1">
+                      <p class="font-bold text-[10px] uppercase tracking-wider text-amber-800">
+                        Sovereign Recovery Phrase
+                      </p>
+                      <code class="block font-mono font-bold text-xs bg-white px-2 py-1 rounded border border-amber-200 select-all break-all">
+                        {passport.phrase}
+                      </code>
+                    </div>
+                  )}
                 </div>
-              )}
+              </details>
             </div>
           )}
 

@@ -548,8 +548,11 @@ export default function SmartInput(
     : "Uploading...";
 
   const getInputClass = () => {
+    const hasValidBadge = touched && validationState === "valid" &&
+      !isUploading;
+    const rightPadding = hasValidBadge ? "pr-20" : "pr-14";
     const baseClass = `
-      w-full px-5 py-4 text-lg
+      w-full pl-5 ${rightPadding} py-4 text-lg
       bg-white border-3 border-black
       rounded-xl shadow-chunky
       focus:outline-none focus:border-pink-500
@@ -660,16 +663,6 @@ export default function SmartInput(
         onClose={() => setShowLibrary(false)}
       />
 
-      {/* Toolbar */}
-      <SmartInputToolbar
-        selectedTemplate={selectedTemplate}
-        setIsCreateModalOpen={setIsCreateModalOpen}
-        setCreateHasUpdates={setCreateHasUpdates}
-        createHasUpdates={createHasUpdates}
-        onShowHistory={() => setShowHistory(true)} // Pass handler to toolbar
-        onShowReader={() => setShowReader(true)}
-      />
-
       {/* QR Reader - decode images, screenshots, or camera */}
       <QRReader
         isOpen={showReader}
@@ -738,7 +731,7 @@ export default function SmartInput(
       />
 
       <div class="relative group">
-        {/* URL/File Input - Always visible */}
+        {/* URL/File Input - Always visible first */}
         <div
           class="relative"
           data-dropzone="true"
@@ -878,7 +871,7 @@ export default function SmartInput(
           url.value.trim() !== "" && !looksLikeUrl(url.value) && (
           <p class="text-purple-700 text-xs mt-2 text-center animate-slide-down">
             Editable QRs need a link. This text makes a static QR — for a hosted
-            note, use Create → Plain text.
+            note, use Customize → Plain text.
           </p>
         )}
 
@@ -898,6 +891,16 @@ export default function SmartInput(
           </p>
         )}
       </div>
+
+      {/* Toolbar - Below input so users enter data first, then customize */}
+      <SmartInputToolbar
+        selectedTemplate={selectedTemplate}
+        setIsCreateModalOpen={setIsCreateModalOpen}
+        setCreateHasUpdates={setCreateHasUpdates}
+        createHasUpdates={createHasUpdates}
+        onShowHistory={() => setShowHistory(true)}
+        onShowReader={() => setShowReader(true)}
+      />
     </div>
   );
 }

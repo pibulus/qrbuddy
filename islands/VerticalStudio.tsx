@@ -117,30 +117,30 @@ export default function VerticalStudio({
 
       <EasterEggs url={url} style={style} />
 
-      {/* Style Selector - floating top right */}
-      <div
-        class="absolute top-6 right-4 sm:top-10 sm:right-8 z-50 animate-fade-in"
-        aria-label="Style selector"
-      >
-        <StyleSelector
-          style={style}
-          customStyle={customStyle}
-          isHidden={isModalOpen}
-        />
-      </div>
-
       <main id="main-content" class="w-full max-w-2xl space-y-8 sm:space-y-10">
-        {/* Navigation Breadcrumb */}
-        <div class="flex items-center justify-between">
+        {/* Navigation Breadcrumb + Style Selector */}
+        <div class="flex items-center justify-between gap-1.5 sm:gap-2">
           <a
             href={homeUrl}
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-black rounded-xl text-xs font-black shadow-chunky hover:-translate-y-0.5 transition-transform"
+            class="inline-flex items-center gap-1 px-2.5 sm:px-3 min-h-[36px] bg-white border-2 border-black rounded-full text-xs font-black shadow-chunky hover:-translate-y-0.5 transition-transform shrink-0"
           >
-            {homeLabel}
+            <span class="sm:hidden">
+              {isSpanish ? "← Inicio" : "← Home"}
+            </span>
+            <span class="hidden sm:inline">{homeLabel}</span>
           </a>
-          <span class="inline-flex items-center gap-1 px-3 py-1 bg-black text-white rounded-full text-xs font-black tracking-wide uppercase">
-            {badge}
-          </span>
+          <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span class="inline-flex items-center gap-1 px-2.5 sm:px-3 min-h-[36px] bg-black text-white rounded-full text-[11px] sm:text-xs font-black tracking-wide uppercase truncate">
+              {badge}
+            </span>
+            <div class="shrink-0" aria-label="Style selector">
+              <StyleSelector
+                style={style}
+                customStyle={customStyle}
+                isHidden={isModalOpen}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Hero Header */}
@@ -157,7 +157,7 @@ export default function VerticalStudio({
         </header>
 
         {/* Interactive QR Generator Canvas */}
-        <div class="bg-white/80 backdrop-blur border-4 border-black rounded-3xl p-6 sm:p-8 shadow-chunky space-y-6">
+        <div class="bg-white border-4 border-black rounded-3xl p-4 sm:p-8 shadow-chunky space-y-6">
           <div class="flex justify-center animate-slide-up">
             <div class="shadow-xl rounded-2xl w-full max-w-[280px] sm:max-w-[340px] transition-all duration-300">
               <ErrorBoundary>

@@ -805,7 +805,7 @@ export default function CreateModal({
         aria-modal="true"
         aria-labelledby="create-modal-title"
         tabindex={-1}
-        class="relative w-full max-w-lg bg-qr-cream sm:border-4 sm:border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
+        class="relative w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
       >
         <div class="flex items-start justify-between gap-3 p-4 sm:p-6 pb-2 sm:pb-3">
           <div>
@@ -824,15 +824,20 @@ export default function CreateModal({
           <button
             type="button"
             onClick={shell.requestClose}
-            class="shrink-0 w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform hover:scale-110 hover:rotate-90 active:scale-90"
+            class="group shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full flex items-center justify-center"
             aria-label="Close"
           >
-            ✕
+            <span
+              aria-hidden="true"
+              class="w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
+            >
+              ✕
+            </span>
           </button>
         </div>
 
         {!hasCompletion && (
-          <div class="px-4 sm:px-6 pt-2">
+          <div class="px-4 sm:px-6 pt-2 pb-2 bg-qr-cream border-b-2 border-black/10 z-10">
             <div class="grid grid-cols-3 gap-1 rounded-full bg-amber-50 p-1 border-2 border-black">
               {tabs.map((tab) => (
                 <button
@@ -857,7 +862,7 @@ export default function CreateModal({
           </div>
         )}
 
-        <div class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-6 sm:h-[min(480px,56dvh)] sm:flex-none">
+        <div class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-6 pb-6 sm:h-[min(480px,56dvh)] sm:flex-none">
           {hasCompletion ? renderCompletionState() : (
             <>
               {activeTab === "type" && renderTypeTab()}
@@ -873,7 +878,7 @@ export default function CreateModal({
           )}
         </div>
 
-        <div class="p-4 sm:p-6 pt-2 sm:pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6">
+        <div class="p-4 sm:p-6 pt-3 sm:pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 bg-qr-cream border-t-2 border-black/10 z-10">
           <button
             type="button"
             onClick={shell.requestClose}

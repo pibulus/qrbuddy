@@ -205,10 +205,12 @@ export default function SplashSettings(
               key={preset.label}
               type="button"
               onClick={() => applyPreset(preset)}
-              class="flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] rounded-xl border-2 border-black bg-pink-50/70 hover:bg-pink-100 hover:-translate-y-0.5 active:translate-y-0 font-black text-xs text-gray-800 transition-all text-left shadow-sm truncate"
+              class="flex items-center gap-1 px-1.5 sm:px-2 py-2 min-h-[44px] rounded-xl border-2 border-black bg-pink-50/70 hover:bg-pink-100 hover:-translate-y-0.5 active:translate-y-0 font-black text-[10px] min-[375px]:text-[11px] sm:text-xs tracking-tight sm:tracking-normal text-gray-800 transition-all text-left shadow-sm"
               title={preset.title}
             >
-              <span class="text-base shrink-0">{preset.icon}</span>
+              <span class="text-xs min-[375px]:text-sm shrink-0">
+                {preset.icon}
+              </span>
               <span class="truncate">{preset.label}</span>
             </button>
           ))}
