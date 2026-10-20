@@ -1,7 +1,9 @@
 import { Handlers } from "$fresh/server.ts";
 
-function isPrivateHost(hostname: string): boolean {
-  const lower = hostname.toLowerCase();
+const MAX_REDIRECTS = 5;
+
+export function isPrivateHost(hostname: string): boolean {
+  const lower = hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (
     lower === "localhost" ||
     lower.endsWith(".local") ||
@@ -23,28 +25,51 @@ function isPrivateHost(hostname: string): boolean {
     if (a === 169 && b === 254) return true;
     if (a === 172 && b >= 16 && b <= 31) return true;
     if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // Carrier-grade NAT
   }
 
-  // Check IPv6 loopback
-  if (lower === "::1" || lower === "[::1]") return true;
+  // Check IPv6 loopback / unique local / link-local
+  if (
+    lower === "::1" ||
+    lower === "::" ||
+    lower.startsWith("fc") ||
+    lower.startsWith("fd") ||
+    lower.startsWith("fe80:")
+  ) {
+    return true;
+  }
   return false;
 }
 
-function extractMeta(html: string, finalUrl: string) {
+export function buildScreenshotUrl(finalUrl: string): string {
+  return `https://s.wordpress.com/mshots/v1/${
+    encodeURIComponent(finalUrl)
+  }?w=640&h=400`;
+}
+
+export function extractMeta(html: string, finalUrl: string) {
   // Title
   const ogTitleMatch = html.match(
-    /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)["']/i,
   ) || html.match(
-    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:title["']/i,
+  ) || html.match(
+    /<meta[^>]+(?:property|name)=["']twitter:title["'][^>]+content=["']([^"']+)["']/i,
+  ) || html.match(
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']twitter:title["']/i,
   );
   const titleTagMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   const rawTitle = ogTitleMatch?.[1] || titleTagMatch?.[1] || "";
 
   // Description
   const ogDescMatch = html.match(
-    /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i,
   ) || html.match(
-    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:description["']/i,
+  ) || html.match(
+    /<meta[^>]+(?:property|name)=["']twitter:description["'][^>]+content=["']([^"']+)["']/i,
+  ) || html.match(
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']twitter:description["']/i,
   );
   const metaDescMatch = html.match(
     /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i,
@@ -53,17 +78,36 @@ function extractMeta(html: string, finalUrl: string) {
   );
   const rawDesc = ogDescMatch?.[1] || metaDescMatch?.[1] || "";
 
-  // OG Image
+  // Image: og:image -> twitter:image -> apple-touch-icon
   const ogImageMatch = html.match(
-    /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+(?:property|name)=["']og:image(?::url)?["'][^>]+content=["']([^"']+)["']/i,
   ) || html.match(
-    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:image(?::url)?["']/i,
+  );
+  const twitterImageMatch = html.match(
+    /<meta[^>]+(?:property|name)=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i,
+  ) || html.match(
+    /<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']twitter:image(?::src)?["']/i,
+  );
+  const touchIconMatch = html.match(
+    /<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]+href=["']([^"']+)["']/i,
+  ) || html.match(
+    /<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*apple-touch-icon[^"']*["']/i,
   );
 
+  const rawImage = ogImageMatch?.[1] || twitterImageMatch?.[1] ||
+    touchIconMatch?.[1] || "";
+
   let image: string | null = null;
-  if (ogImageMatch?.[1]) {
+  if (rawImage) {
     try {
-      image = new URL(ogImageMatch[1], finalUrl).href;
+      const resolved = new URL(rawImage, finalUrl);
+      if (
+        (resolved.protocol === "http:" || resolved.protocol === "https:") &&
+        !isPrivateHost(resolved.hostname)
+      ) {
+        image = resolved.href;
+      }
     } catch {
       // invalid image URL
     }
@@ -83,6 +127,16 @@ function extractMeta(html: string, finalUrl: string) {
     description: decodeHtml(rawDesc).slice(0, 300),
     image,
   };
+}
+
+function isRedirectStatus(status: number): boolean {
+  return (
+    status === 301 ||
+    status === 302 ||
+    status === 303 ||
+    status === 307 ||
+    status === 308
+  );
 }
 
 export const handler: Handlers = {
@@ -137,41 +191,126 @@ export const handler: Handlers = {
       );
     }
 
+    const redirectChain: string[] = [parsedTarget.href];
+    let currentUrl = parsedTarget;
+
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 3500);
 
-      const response = await fetch(parsedTarget.href, {
-        signal: controller.signal,
-        redirect: "follow",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (compatible; QRBuddyHazmat/1.0; +https://qrbuddy.app)",
-          "Accept":
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        },
-      });
+      let response: Response | null = null;
+      try {
+        for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+          response = await fetch(currentUrl.href, {
+            signal: controller.signal,
+            redirect: "manual",
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (compatible; QRBuddyHazmat/1.0; +https://qrbuddy.app)",
+              "Accept":
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            },
+          });
 
-      clearTimeout(timeout);
+          if (isRedirectStatus(response.status) && hop < MAX_REDIRECTS) {
+            const location = response.headers.get("location");
+            try {
+              await response.body?.cancel();
+            } catch {
+              // ignore
+            }
+            if (!location) break;
 
-      const finalUrl = response.url || parsedTarget.href;
-      const isRedirected = new URL(finalUrl).origin !== parsedTarget.origin ||
-        new URL(finalUrl).pathname !== parsedTarget.pathname;
+            let nextUrl: URL;
+            try {
+              nextUrl = new URL(location, currentUrl.href);
+            } catch {
+              return new Response(
+                JSON.stringify({
+                  ok: false,
+                  error: "Invalid redirect location",
+                }),
+                {
+                  status: 400,
+                  headers: { "Content-Type": "application/json" },
+                },
+              );
+            }
+
+            if (
+              nextUrl.protocol !== "http:" && nextUrl.protocol !== "https:"
+            ) {
+              return new Response(
+                JSON.stringify({
+                  ok: false,
+                  error: "Redirect to non-HTTP/HTTPS protocol not allowed",
+                }),
+                {
+                  status: 400,
+                  headers: { "Content-Type": "application/json" },
+                },
+              );
+            }
+
+            if (isPrivateHost(nextUrl.hostname)) {
+              return new Response(
+                JSON.stringify({
+                  ok: false,
+                  error: "Redirect to internal or private address not allowed",
+                }),
+                {
+                  status: 403,
+                  headers: { "Content-Type": "application/json" },
+                },
+              );
+            }
+
+            redirectChain.push(nextUrl.href);
+            currentUrl = nextUrl;
+            continue;
+          }
+
+          break;
+        }
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      if (!response) {
+        throw new Error("No response received");
+      }
+
+      const finalUrl = currentUrl.href;
+      const finalUrlObj = new URL(finalUrl);
+      const isRedirected = redirectChain.length > 1 ||
+        finalUrlObj.origin !== parsedTarget.origin ||
+        finalUrlObj.pathname !== parsedTarget.pathname;
+      const isHttps = finalUrlObj.protocol === "https:";
+      const statusCode = response.status;
 
       const contentType = response.headers.get("content-type") || "";
       if (!contentType.includes("text/html")) {
+        try {
+          await response.body?.cancel();
+        } catch {
+          // ignore
+        }
         return new Response(
           JSON.stringify({
             ok: true,
             url: parsedTarget.href,
             finalUrl,
-            domain: new URL(finalUrl).hostname,
+            domain: finalUrlObj.hostname,
             isRedirected,
-            title: new URL(finalUrl).hostname,
+            redirectChain,
+            isHttps,
+            statusCode,
+            title: finalUrlObj.hostname,
             description: contentType
               ? `Resource type: ${contentType.split(";")[0]}`
               : "",
             image: null,
+            screenshotUrl: null,
           }),
           {
             headers: {
@@ -210,11 +349,15 @@ export const handler: Handlers = {
           ok: true,
           url: parsedTarget.href,
           finalUrl,
-          domain: new URL(finalUrl).hostname,
+          domain: finalUrlObj.hostname,
           isRedirected,
-          title: meta.title || new URL(finalUrl).hostname,
+          redirectChain,
+          isHttps,
+          statusCode,
+          title: meta.title || finalUrlObj.hostname,
           description: meta.description,
           image: meta.image,
+          screenshotUrl: buildScreenshotUrl(finalUrl),
         }),
         {
           headers: {
@@ -225,16 +368,21 @@ export const handler: Handlers = {
       );
     } catch (_err) {
       // Fallback gracefully on timeout or network error
+      const finalUrlObj = currentUrl;
       return new Response(
         JSON.stringify({
           ok: true,
           url: parsedTarget.href,
-          finalUrl: parsedTarget.href,
-          domain: parsedTarget.hostname,
-          isRedirected: false,
-          title: parsedTarget.hostname,
+          finalUrl: finalUrlObj.href,
+          domain: finalUrlObj.hostname,
+          isRedirected: redirectChain.length > 1,
+          redirectChain,
+          isHttps: finalUrlObj.protocol === "https:",
+          statusCode: 0,
+          title: finalUrlObj.hostname,
           description: "Preview unavailable (network timeout or offline)",
           image: null,
+          screenshotUrl: buildScreenshotUrl(finalUrlObj.href),
         }),
         {
           headers: {

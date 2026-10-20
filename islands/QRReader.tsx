@@ -37,9 +37,25 @@ interface PeekResult {
   finalUrl: string;
   domain: string;
   isRedirected: boolean;
+  redirectChain?: string[];
+  isHttps?: boolean;
+  statusCode?: number;
   title: string;
   description: string;
   image: string | null;
+  screenshotUrl?: string | null;
+}
+
+function formatHopLabel(rawUrl: string): string {
+  try {
+    const u = new URL(rawUrl);
+    const shortPath = u.pathname && u.pathname !== "/"
+      ? (u.pathname.length > 18 ? `${u.pathname.slice(0, 16)}…` : u.pathname)
+      : "";
+    return `${u.hostname}${shortPath}`;
+  } catch {
+    return rawUrl;
+  }
 }
 
 const TYPE_META: Record<DecodedType, { icon: string; label: string }> = {
@@ -110,6 +126,11 @@ export default function QRReader(
   const [result, setResult] = useState<DecodedResult | null>(null);
   const [peekData, setPeekData] = useState<PeekResult | null>(null);
   const [isPeeking, setIsPeeking] = useState(false);
+  const [previewStage, setPreviewStage] = useState<
+    "og" | "screenshot" | "fallback"
+  >("fallback");
+  const [previewLoaded, setPreviewLoaded] = useState(false);
+  const [screenshotRetry, setScreenshotRetry] = useState(0);
   const [isDecoding, setIsDecoding] = useState(false);
   const [decodeError, setDecodeError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -144,6 +165,9 @@ export default function QRReader(
     if (!result || result.type !== "url") {
       setPeekData(null);
       setIsPeeking(false);
+      setPreviewStage("fallback");
+      setPreviewLoaded(false);
+      setScreenshotRetry(0);
       return;
     }
 
@@ -153,12 +177,21 @@ export default function QRReader(
     let isMounted = true;
     setIsPeeking(true);
     setPeekData(null);
+    setPreviewLoaded(false);
+    setScreenshotRetry(0);
 
     fetch(`/api/peek?url=${encodeURIComponent(openable)}`)
       .then((res) => res.json())
       .then((data: PeekResult) => {
         if (isMounted && data.ok) {
           setPeekData(data);
+          if (data.image) {
+            setPreviewStage("og");
+          } else if (data.screenshotUrl) {
+            setPreviewStage("screenshot");
+          } else {
+            setPreviewStage("fallback");
+          }
         }
       })
       .catch((err) => {
@@ -172,6 +205,19 @@ export default function QRReader(
       isMounted = false;
     };
   }, [result]);
+
+  // Automatic timeout fallback if the external screenshot service takes too long
+  useEffect(() => {
+    if (previewStage !== "screenshot" || previewLoaded) return;
+    const timer = setTimeout(() => {
+      if (screenshotRetry < 1) {
+        setScreenshotRetry((r) => r + 1);
+      } else {
+        setPreviewStage("fallback");
+      }
+    }, 3200);
+    return () => clearTimeout(timer);
+  }, [previewStage, previewLoaded, screenshotRetry]);
 
   // Camera cleanup + paste-to-decode. Escape/scroll-lock/focus live in the
   // shared modal shell (useModalShell); only reader-specific behaviour stays.
@@ -489,60 +535,237 @@ export default function QRReader(
                   )}
                 </div>
 
-                {/* Quick Cat Club style Inspection Preview Card */}
+                {/* Mini-Browser Webpage Inspection Preview Card */}
                 {openableUrl && (
-                  <div class="space-y-2">
+                  <div class="space-y-2.5">
                     {isPeeking
                       ? (
-                        <div class="w-full py-7 px-4 rounded-xl border-2 border-black bg-white/80 text-center animate-pulse flex flex-col items-center justify-center gap-1.5 shadow-inner">
-                          <span class="text-2xl animate-spin">🔍</span>
-                          <span class="text-xs font-black text-gray-900">
-                            Inspecting destination safely...
-                          </span>
-                          <span class="text-[10px] text-gray-500 font-medium">
-                            Checking metadata & redirects without firing tracker
-                            cookies
-                          </span>
-                        </div>
-                      )
-                      : peekData
-                      ? (
-                        <div class="rounded-xl border-2 border-black bg-white overflow-hidden shadow-sm">
-                          {peekData.image && (
-                            <div class="relative w-full aspect-video border-b-2 border-black bg-gray-100 overflow-hidden">
-                              <img
-                                src={peekData.image}
-                                alt={peekData.title}
-                                class="w-full h-full object-cover object-center"
-                                loading="lazy"
-                                onError={(e) => {
-                                  const el =
-                                    (e.target as HTMLElement).parentElement;
-                                  if (el) el.style.display = "none";
-                                }}
-                              />
+                        <div class="rounded-2xl border-2 border-black bg-white overflow-hidden shadow-chunky">
+                          <div class="flex items-center justify-between gap-2 px-3 py-2 bg-amber-50 border-b-2 border-black">
+                            <div class="flex items-center gap-1.5 shrink-0">
+                              <span class="w-2.5 h-2.5 rounded-full bg-red-400 border border-black" />
+                              <span class="w-2.5 h-2.5 rounded-full bg-amber-300 border border-black" />
+                              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-black" />
                             </div>
-                          )}
-                          <div class="p-3 space-y-1">
-                            <h4 class="text-sm font-black text-gray-900 leading-snug">
-                              {peekData.title || peekData.domain}
-                            </h4>
-                            {peekData.description && (
-                              <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed font-medium">
-                                {peekData.description}
-                              </p>
-                            )}
-                            {peekData.isRedirected && (
-                              <div class="pt-1.5 flex items-center gap-1.5 text-[11px] font-bold text-gray-600">
-                                <span class="text-amber-700">Destination:</span>
-                                <span class="font-mono text-black text-[10px] bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 truncate max-w-[240px]">
-                                  {peekData.finalUrl}
-                                </span>
-                              </div>
-                            )}
+                            <span class="text-[11px] font-mono font-bold text-neutral-600 truncate">
+                              {new URL(openableUrl).hostname}
+                            </span>
+                            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-200 border border-black text-black">
+                              Peeking…
+                            </span>
+                          </div>
+                          <div class="w-full aspect-video px-4 bg-gradient-to-br from-amber-50 via-white to-pink-50 text-center animate-pulse flex flex-col items-center justify-center gap-1.5">
+                            <span class="text-2xl animate-spin">🔍</span>
+                            <span class="text-xs font-black text-gray-900">
+                              Inspecting destination safely...
+                            </span>
+                            <span class="text-[10px] text-gray-500 font-medium">
+                              Unrolling redirects & fetching visual preview
+                              without cookies
+                            </span>
                           </div>
                         </div>
                       )
+                      : peekData
+                      ? (() => {
+                        const finalUrlStr = peekData.finalUrl || openableUrl;
+                        const isHttps = peekData.isHttps ??
+                          finalUrlStr.startsWith("https://");
+                        const hopChain = peekData.redirectChain &&
+                            peekData.redirectChain.length > 1
+                          ? peekData.redirectChain
+                          : peekData.isRedirected
+                          ? [openableUrl, finalUrlStr]
+                          : [finalUrlStr];
+                        const activePreviewSrc = previewStage === "og"
+                          ? peekData.image
+                          : previewStage === "screenshot" &&
+                              peekData.screenshotUrl
+                          ? `${peekData.screenshotUrl}${
+                            screenshotRetry > 0 ? `&r=${screenshotRetry}` : ""
+                          }`
+                          : null;
+                        const previewLabel = previewStage === "og"
+                          ? "Site Card Preview"
+                          : "Live Page Preview";
+
+                        return (
+                          <div class="rounded-2xl border-2 border-black bg-white overflow-hidden shadow-chunky">
+                            {/* Mini Browser Top Bar */}
+                            <div class="flex items-center justify-between gap-2 px-3 py-2 bg-amber-50 border-b-2 border-black">
+                              <div
+                                class="flex items-center gap-1.5 shrink-0"
+                                aria-hidden="true"
+                              >
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-400 border border-black" />
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-300 border border-black" />
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-black" />
+                              </div>
+
+                              <div class="flex-1 min-w-0 px-2 py-0.5 rounded-full bg-white border border-black/30 flex items-center justify-center gap-1.5">
+                                <span class="font-mono text-[11px] font-bold text-black truncate">
+                                  {peekData.domain ||
+                                    new URL(finalUrlStr).hostname}
+                                </span>
+                              </div>
+
+                              {isHttps
+                                ? (
+                                  <span class="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-emerald-900 bg-emerald-100 border border-emerald-400 px-2 py-0.5 rounded-full">
+                                    <span>🔒</span>
+                                    <span>HTTPS</span>
+                                  </span>
+                                )
+                                : (
+                                  <span class="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-red-900 bg-red-100 border border-red-400 px-2 py-0.5 rounded-full">
+                                    <span>⚠️</span>
+                                    <span>Not Secure (HTTP)</span>
+                                  </span>
+                                )}
+                            </div>
+
+                            {/* Visual Viewport Area (aspect-video) */}
+                            <div class="relative w-full aspect-video border-b-2 border-black bg-gradient-to-br from-[#FFF8F0] via-[#FFF0F7] to-[#F0F9FF] overflow-hidden">
+                              {activePreviewSrc
+                                ? (
+                                  <>
+                                    {!previewLoaded && (
+                                      <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-amber-50 via-pink-50 to-amber-50 animate-pulse p-4 text-center">
+                                        <span class="text-2xl">🖼️</span>
+                                        <span class="text-xs font-black text-black/75">
+                                          Loading {previewLabel.toLowerCase()}…
+                                        </span>
+                                      </div>
+                                    )}
+                                    <img
+                                      key={activePreviewSrc}
+                                      src={activePreviewSrc}
+                                      alt={peekData.title || peekData.domain}
+                                      class={`w-full h-full object-cover object-top transition-opacity duration-300 ${
+                                        previewLoaded
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      }`}
+                                      loading="lazy"
+                                      onLoad={() => setPreviewLoaded(true)}
+                                      onError={() => {
+                                        setPreviewLoaded(false);
+                                        if (
+                                          previewStage === "og" &&
+                                          peekData.screenshotUrl
+                                        ) {
+                                          setPreviewStage("screenshot");
+                                        } else if (
+                                          previewStage === "screenshot" &&
+                                          screenshotRetry < 1
+                                        ) {
+                                          setScreenshotRetry((r) => r + 1);
+                                        } else {
+                                          setPreviewStage("fallback");
+                                        }
+                                      }}
+                                    />
+                                    <span class="absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/95 border-2 border-black text-[10px] font-black text-black shadow-chunky">
+                                      <span>
+                                        {previewStage === "og" ? "🪪" : "🖥️"}
+                                      </span>
+                                      <span>{previewLabel}</span>
+                                    </span>
+                                  </>
+                                )
+                                : (
+                                  /* Clean Visual Domain Card Fallback */
+                                  <div class="w-full h-full p-4 flex flex-col items-center justify-center text-center gap-2">
+                                    <div class="w-12 h-12 rounded-2xl border-2 border-black bg-white shadow-chunky flex items-center justify-center p-2">
+                                      <img
+                                        src={`https://www.google.com/s2/favicons?domain=${peekData.domain}&sz=64`}
+                                        alt=""
+                                        class="w-7 h-7 object-contain"
+                                        onError={(e) => {
+                                          (e.target as HTMLElement).style
+                                            .display = "none";
+                                        }}
+                                      />
+                                    </div>
+                                    <div class="space-y-0.5 max-w-[90%]">
+                                      <p class="font-mono text-sm font-black text-black truncate">
+                                        {peekData.domain}
+                                      </p>
+                                      <p class="text-[11px] font-bold text-neutral-600 line-clamp-1">
+                                        {peekData.title &&
+                                            peekData.title !== peekData.domain
+                                          ? peekData.title
+                                          : "Verified web destination"}
+                                      </p>
+                                    </div>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border-2 border-black text-[10px] font-black text-black">
+                                      <span>🪪</span>
+                                      <span>Site Card Preview</span>
+                                    </span>
+                                  </div>
+                                )}
+                            </div>
+
+                            {/* Metadata & Unrolled Redirect Chain */}
+                            <div class="p-3 space-y-2">
+                              <div>
+                                <h4 class="text-sm font-black text-gray-900 leading-snug">
+                                  {peekData.title || peekData.domain}
+                                </h4>
+                                {peekData.description && (
+                                  <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed font-medium mt-0.5">
+                                    {peekData.description}
+                                  </p>
+                                )}
+                              </div>
+
+                              {(hopChain.length > 1 ||
+                                peekData.isRedirected) && (
+                                <div class="rounded-xl border-2 border-amber-400 bg-amber-50 p-2.5 space-y-1">
+                                  <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-amber-900">
+                                      🔄 Redirect Path ({hopChain.length} hops)
+                                    </span>
+                                    <span class="font-mono text-[10px] font-bold text-amber-800 truncate max-w-[160px]">
+                                      → {peekData.domain}
+                                    </span>
+                                  </div>
+                                  <div
+                                    class="flex flex-wrap items-center gap-1 text-[11px] font-mono font-bold text-black"
+                                    aria-label="Redirect hop chain"
+                                  >
+                                    {hopChain.map((hop, idx) => (
+                                      <span
+                                        key={`${hop}-${idx}`}
+                                        class="inline-flex items-center gap-1 max-w-full"
+                                      >
+                                        {idx > 0 && (
+                                          <span
+                                            class="text-amber-700 font-black"
+                                            aria-hidden="true"
+                                          >
+                                            →
+                                          </span>
+                                        )}
+                                        <span
+                                          title={hop}
+                                          class={`px-1.5 py-0.5 rounded border truncate max-w-[200px] ${
+                                            idx === hopChain.length - 1
+                                              ? "bg-white border-black text-black font-black"
+                                              : "bg-amber-100/80 border-amber-300 text-neutral-700"
+                                          }`}
+                                        >
+                                          {formatHopLabel(hop)}
+                                        </span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()
                       : null}
                   </div>
                 )}

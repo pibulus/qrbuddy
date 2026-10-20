@@ -12,21 +12,31 @@ import { useModalShell } from "./modal/useModalShell.ts";
 const DICE_PROBE_DATA = "https://qrbuddy.app";
 const DICE_MAX_ATTEMPTS = 4;
 
-// Two stops only, with luma-aware lightness: yellows/greens/cyans read far
-// lighter than blues/purples at the same HSL lightness, and a washed finder
-// pattern in any corner kills scannability — this is a starting bias, not a
-// guarantee, which is why every roll gets decode-checked before it commits.
-function rollGradient(): QRStyle {
-  const baseHue = Math.floor(Math.random() * 360);
-  const spread = 80 + Math.floor(Math.random() * 100); // 80–180° apart
-  const hues = [baseHue, (baseHue + spread) % 360];
+// Two stops only, with luma-aware lightness and muddy-zone avoidance:
+// hues 45°–95° (and adjacent olive/khaki angles) turn into brown/swamp sludge
+// at QR-safe darkness. Picking both stops along the continuous clean jewel arc
+// (135° emerald → teal → cobalt → violet → magenta → crimson → 35° coral)
+// with a 40°–110° harmony step guarantees vibrant stops and a clean midpoint.
+const CLEAN_ARC_MIN = 135;
+const CLEAN_ARC_MAX = 395; // 395 % 360 === 35°
+
+export function rollGradient(): QRStyle {
+  const arcSpan = CLEAN_ARC_MAX - CLEAN_ARC_MIN;
+  const u1 = CLEAN_ARC_MIN + Math.floor(Math.random() * (arcSpan + 1));
+  const spread = 40 + Math.floor(Math.random() * 71); // 40°–110° harmony
+  const canGoUp = u1 + spread <= CLEAN_ARC_MAX;
+  const canGoDown = u1 - spread >= CLEAN_ARC_MIN;
+  const goUp = canGoUp && canGoDown ? Math.random() < 0.5 : canGoUp;
+  const u2 = goUp ? u1 + spread : u1 - spread;
+
+  const hues = [u1 % 360, u2 % 360];
   const lightnessFor = (h: number) =>
-    h >= 40 && h <= 200
-      ? 26 + Math.floor(Math.random() * 8)
-      : 34 + Math.floor(Math.random() * 12);
+    h >= 135 && h <= 200
+      ? 26 + Math.floor(Math.random() * 7) // 26%–32% for emerald/teal/cyan
+      : 32 + Math.floor(Math.random() * 9); // 32%–40% for coral/magenta/violet/cobalt
   const stops = hues.map((h, i) => ({
     offset: i / (hues.length - 1),
-    color: `hsl(${h}, ${65 + Math.floor(Math.random() * 20)}%, ${
+    color: `hsl(${h}, ${75 + Math.floor(Math.random() * 16)}%, ${
       lightnessFor(h)
     }%)`,
   }));
@@ -37,7 +47,7 @@ function rollGradient(): QRStyle {
   };
   return {
     dots: { type: "gradient", gradient },
-    background: { color: `hsl(${baseHue}, 60%, 96%)` },
+    background: { color: `hsl(${hues[0]}, 65%, 96%)` },
     cornersSquare: { gradient },
     cornersDot: { gradient },
   };
@@ -92,10 +102,10 @@ export const STYLE_DISPLAY = {
   // Swatch colors mirror the actual dot gradients in utils/qr-styles.ts —
   // keep them in sync so the gallery doesn't lie about the output. Order is
   // warm → cool → dark; eight presets, one family (pastel-punk, 135° sweep).
-  sunset: { name: "Sunset", colors: ["#FF8C42", "#FF69B4", "#9370DB"] },
-  candy: { name: "Candy", colors: ["#FF69B4", "#FF8C00", "#2EB5AC"] },
-  blush: { name: "Blush", colors: ["#D48166", "#BA5566", "#8E44AD"] },
-  matcha: { name: "Matcha", colors: ["#65A30D", "#047857"] },
+  sunset: { name: "Sunset", colors: ["#F97316", "#FF69B4", "#9370DB"] },
+  candy: { name: "Candy", colors: ["#FF2E93", "#7C3AED", "#0891B2"] },
+  blush: { name: "Blush", colors: ["#F43F5E", "#E11D48", "#9D174D"] },
+  matcha: { name: "Matcha", colors: ["#059669", "#0F766E"] },
   pool: { name: "Pool", colors: ["#0EA5E9", "#0D9488"] },
   vapor: { name: "Vapor", colors: ["#8B5CF6", "#DB2777"] },
   grape: { name: "Grape", colors: ["#4F46E5", "#9333EA"] },

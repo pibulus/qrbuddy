@@ -30,6 +30,54 @@ interface FileSlideshowProps {
   theme?: string;
 }
 
+// Theme styles keyed to the real QR styles (utils/qr-styles.ts) — the
+// uploader sends the live picker style as `theme`.
+export function getThemeStylesFor(theme = "sunset"): string {
+  switch (theme) {
+    case "noir":
+      return "bg-gradient-to-br from-[#0F172A] via-[#1E1B4B] to-[#020617] text-white";
+    case "terminal":
+      return "bg-[#0A0A0A] text-[#00FF41]";
+    case "brutalist":
+      return "bg-[#FFFF00] text-black";
+    case "candy":
+      return "bg-gradient-to-br from-[#FFF0F7] via-[#F3E8FF] to-[#E0F2FE] text-black";
+    case "blush":
+      return "bg-gradient-to-br from-[#FFF5F7] via-[#FFE4E9] to-[#FECDD3] text-black";
+    case "matcha":
+      return "bg-gradient-to-br from-[#F2FBF7] via-[#DCFCE7] to-[#CCFBF1] text-black";
+    case "pool":
+      return "bg-gradient-to-br from-[#ECFEFF] via-[#CFFAFE] to-[#BAE6FD] text-black";
+    case "vapor":
+      return "bg-gradient-to-br from-[#F5F3FF] via-[#FCE7F3] to-[#EDE9FE] text-black";
+    case "grape":
+      return "bg-gradient-to-br from-[#EEF2FF] via-[#EDE9FE] to-[#E0E7FF] text-black";
+    case "sunset":
+    default:
+      return "bg-gradient-to-br from-[#FFF8F0] via-[#FFE5B4] to-[#FFD6E7] text-black";
+  }
+}
+
+export function getCardStylesFor(theme = "sunset"): string {
+  switch (theme) {
+    case "noir":
+      return "bg-[#1E293B] border-4 border-white/80 shadow-chunky text-white";
+    case "terminal":
+      return "bg-[#0D1512] border-4 border-[#00FF41] shadow-[4px_4px_0px_rgba(0,255,65,0.35)] text-[#00FF41]";
+    case "brutalist":
+      return "bg-white border-4 border-black shadow-chunky text-black";
+    case "sunset":
+    case "candy":
+    case "blush":
+    case "matcha":
+    case "pool":
+    case "vapor":
+    case "grape":
+    default:
+      return "bg-qr-cream border-4 border-black shadow-chunky text-black";
+  }
+}
+
 function formatExpiry(value?: string | null): string | null {
   if (!value) return null;
   const date = new Date(value);
@@ -167,43 +215,10 @@ export default function FileSlideshow({
 
   // Theme styles keyed to the real QR styles (utils/qr-styles.ts) — the
   // uploader sends the live picker style as `theme`.
-  const getThemeStyles = () => {
-    switch (theme) {
-      case "noir":
-        return "bg-black text-white";
-      case "brutalist":
-        return "bg-[#f4f1ea] text-[#2c2c2c]";
-      case "terminal":
-        return "bg-[#0a0a2a] text-[#00ff9d]";
-      case "pool":
-        return "bg-gradient-to-br from-[#0b2740] via-[#0e3a5c] to-black text-white";
-      case "candy":
-        return "bg-gradient-to-br from-[#2b0f24] via-[#3a1430] to-black text-white";
-      case "vapor":
-        return "bg-gradient-to-br from-[#1d1038] via-[#2a1748] to-black text-white";
-      case "sunset":
-      default:
-        return "bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white";
-    }
-  };
-
-  const getCardStyles = () => {
-    switch (theme) {
-      case "noir":
-        return "bg-white/10 border-white/20";
-      case "brutalist":
-        return "bg-[#e8e4da] border-[#2c2c2c] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
-      case "terminal":
-        return "bg-[#0f0f3a] border-[#00ff9d] shadow-[0_0_15px_rgba(0,255,157,0.3)]";
-      case "pool":
-      case "candy":
-      case "vapor":
-        return "bg-black/40 border-white/15 shadow-2xl backdrop-blur-md";
-      case "sunset":
-      default:
-        return "bg-black/50 border-white/10 shadow-2xl backdrop-blur-md";
-    }
-  };
+  const isDarkTheme = theme === "noir" || theme === "terminal";
+  const isTerminal = theme === "terminal";
+  const getThemeStyles = () => getThemeStylesFor(theme);
+  const getCardStyles = () => getCardStylesFor(theme);
 
   // Navigation Handlers
   const nextSlide = () => {
@@ -445,7 +460,13 @@ export default function FileSlideshow({
       <div class="w-full max-w-4xl flex flex-col items-center gap-6 animate-fade-in">
         <header class="w-full max-w-md text-center space-y-2">
           <div
-            class={`inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide px-3 py-2 rounded-full border ${getCardStyles()}`}
+            class={`inline-flex items-center gap-2 text-xs font-black uppercase tracking-wide px-3.5 py-2 rounded-full ${
+              isTerminal
+                ? "bg-black border-2 border-[#00FF41] text-[#00FF41] shadow-[2px_2px_0px_rgba(0,255,65,0.4)]"
+                : isDarkTheme
+                ? "bg-slate-900 border-2 border-white/80 text-white shadow-chunky"
+                : "bg-white border-2 border-black text-black shadow-chunky"
+            }`}
           >
             <span>
               {isAllAudio
@@ -460,7 +481,7 @@ export default function FileSlideshow({
             </span>
             {hasMultipleFiles && (
               <>
-                <span class="opacity-40">•</span>
+                <span class="opacity-50">•</span>
                 <span>{currentIndex + 1} / {files!.length}</span>
               </>
             )}
@@ -468,7 +489,7 @@ export default function FileSlideshow({
           <h1 class="text-2xl sm:text-3xl font-black leading-tight break-words">
             {shareTitle}
           </h1>
-          <p class="text-sm opacity-60">
+          <p class="text-sm font-bold opacity-80">
             {hasMultipleFiles
               ? prettyName(displayFileName)
               : `${fileKindLabel} • ${fileSizeLabel}`}
@@ -479,7 +500,7 @@ export default function FileSlideshow({
         <div
           class={`relative w-full ${
             isAudio && showPreview ? "" : "aspect-[4/3] md:aspect-video"
-          } rounded-3xl overflow-hidden border group ${getCardStyles()}`}
+          } rounded-3xl overflow-hidden group ${getCardStyles()}`}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -490,7 +511,11 @@ export default function FileSlideshow({
               <button
                 type="button"
                 onClick={goPrev}
-                class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-qr-scrim/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
+                class={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full font-black text-base sm:opacity-0 group-hover:opacity-100 transition-all shadow-chunky ${
+                  isTerminal
+                    ? "bg-black text-[#00FF41] border-2 border-[#00FF41] hover:bg-[#00FF41] hover:text-black"
+                    : "bg-white text-black border-2 border-black hover:bg-amber-200"
+                }`}
                 aria-label="Previous track or image"
               >
                 ←
@@ -498,7 +523,11 @@ export default function FileSlideshow({
               <button
                 type="button"
                 onClick={goNext}
-                class="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full bg-qr-scrim/60 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white hover:text-black backdrop-blur-sm"
+                class={`absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 min-h-[44px] min-w-[44px] rounded-full font-black text-base sm:opacity-0 group-hover:opacity-100 transition-all shadow-chunky ${
+                  isTerminal
+                    ? "bg-black text-[#00FF41] border-2 border-[#00FF41] hover:bg-[#00FF41] hover:text-black"
+                    : "bg-white text-black border-2 border-black hover:bg-amber-200"
+                }`}
                 aria-label="Next track or image"
               >
                 →
@@ -514,9 +543,15 @@ export default function FileSlideshow({
                   {isImage && (
                     mediaErrorKey === currentDownloadUrl
                       ? (
-                        <div class="flex flex-col items-center justify-center p-6 text-center space-y-3 bg-black/40 rounded-2xl border border-white/20">
+                        <div
+                          class={`flex flex-col items-center justify-center p-6 text-center space-y-3 rounded-2xl border-2 ${
+                            isDarkTheme
+                              ? "bg-slate-900 border-white/40 text-white"
+                              : "bg-white border-black text-black shadow-chunky"
+                          }`}
+                        >
                           <span class="text-4xl">⚠️</span>
-                          <p class="font-bold text-sm text-white">
+                          <p class="font-bold text-sm">
                             Couldn't load photo
                           </p>
                           <button
@@ -525,7 +560,7 @@ export default function FileSlideshow({
                               setMediaErrorKey(null);
                               haptics.light();
                             }}
-                            class="min-h-[44px] px-4 py-2 rounded-full border-2 border-white bg-white text-black font-black text-xs hover:bg-amber-200 transition-all shadow-sm"
+                            class="min-h-[44px] px-4 py-2 rounded-full border-2 border-black bg-amber-200 text-black font-black text-xs hover:bg-amber-300 transition-all shadow-chunky"
                           >
                             🔄 Retry photo
                           </button>
@@ -543,7 +578,13 @@ export default function FileSlideshow({
                   )}
                   {isAudio && (
                     <div
-                      class={`w-full max-w-md p-6 sm:p-8 rounded-2xl border text-center space-y-4 ${getCardStyles()}`}
+                      class={`w-full max-w-md p-6 sm:p-8 rounded-2xl border-2 text-center space-y-4 ${
+                        isTerminal
+                          ? "bg-black border-[#00FF41] text-[#00FF41]"
+                          : isDarkTheme
+                          ? "bg-slate-900 border-white/40 text-white"
+                          : "bg-white border-black text-black"
+                      }`}
                     >
                       <div class="text-5xl sm:text-6xl animate-float">🎵</div>
                       <div>
@@ -551,7 +592,7 @@ export default function FileSlideshow({
                           {displayFileName}
                         </p>
                         {hasMultipleFiles && (
-                          <p class="text-xs font-bold opacity-60">
+                          <p class="text-xs font-bold opacity-75">
                             Track {currentIndex + 1} of {files!.length}
                           </p>
                         )}
@@ -579,7 +620,7 @@ export default function FileSlideshow({
                         Your browser does not support the audio element.
                       </audio>
                       {mediaErrorKey === currentDownloadUrl && (
-                        <div class="p-2.5 rounded-xl border border-red-300 bg-red-950/60 text-xs font-bold text-red-200 flex items-center justify-between gap-2 animate-slide-down">
+                        <div class="p-2.5 rounded-xl border-2 border-red-600 bg-red-100 text-xs font-bold text-red-950 flex items-center justify-between gap-2 animate-slide-down">
                           <span>Audio failed to load.</span>
                           <button
                             type="button"
@@ -588,7 +629,7 @@ export default function FileSlideshow({
                               audioRef.current?.load();
                               haptics.light();
                             }}
-                            class="min-h-[36px] px-3 py-1 rounded-lg border border-white bg-white text-black font-black text-xs hover:bg-amber-100"
+                            class="min-h-[36px] px-3 py-1 rounded-lg border-2 border-black bg-white text-black font-black text-xs hover:bg-amber-100"
                           >
                             Retry
                           </button>
@@ -597,7 +638,7 @@ export default function FileSlideshow({
 
                       {/* Tracklist — names, not numbers */}
                       {hasMultipleFiles && (
-                        <ol class="text-left space-y-0.5 pt-2 max-h-44 overflow-y-auto scrollbar-none">
+                        <ol class="text-left space-y-1 pt-2 max-h-44 overflow-y-auto scrollbar-none">
                           {files!.map((file, idx) => {
                             const active = currentIndex === idx;
                             return (
@@ -606,13 +647,21 @@ export default function FileSlideshow({
                                   type="button"
                                   onClick={() => goTo(idx)}
                                   aria-current={active ? "true" : undefined}
-                                  class={`w-full min-h-[44px] px-3 rounded-xl flex items-center gap-3 text-sm font-bold transition-all ${
-                                    active
-                                      ? "bg-white text-black"
-                                      : "text-white/80 hover:bg-white/10"
+                                  class={`w-full min-h-[44px] px-3 rounded-xl flex items-center gap-3 text-sm font-bold transition-all border-2 ${
+                                    isTerminal
+                                      ? active
+                                        ? "bg-[#00FF41] text-black border-[#00FF41]"
+                                        : "border-transparent text-[#00FF41] hover:bg-[#00FF41]/15"
+                                      : isDarkTheme
+                                      ? active
+                                        ? "bg-white text-black border-white"
+                                        : "border-transparent text-white/90 hover:bg-white/10"
+                                      : active
+                                      ? "bg-amber-200 text-black border-black shadow-chunky"
+                                      : "border-transparent text-black/85 hover:bg-amber-50 hover:border-black/20"
                                   }`}
                                 >
-                                  <span class="w-5 text-xs font-black opacity-60 text-right">
+                                  <span class="w-5 text-xs font-black opacity-75 text-right">
                                     {active ? "▶" : idx + 1}
                                   </span>
                                   <span class="truncate">
@@ -646,7 +695,7 @@ export default function FileSlideshow({
                   <h2 class="text-2xl font-black mb-2">
                     {isUnlimited ? `${fileKindLabel} ready` : "Preview locked"}
                   </h2>
-                  <p class="opacity-70 leading-relaxed">
+                  <p class="opacity-80 font-medium leading-relaxed">
                     {isUnlimited
                       ? "Download or preview this shared file."
                       : "This share is limited, so preview stays closed until download starts."}
@@ -663,7 +712,13 @@ export default function FileSlideshow({
               type="button"
               onClick={() => setIsPlaying((p) => !p)}
               aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
-              class="min-h-[44px] min-w-[44px] rounded-full bg-white/15 hover:bg-white/30 text-white text-base font-black flex items-center justify-center transition-colors"
+              class={`min-h-[44px] min-w-[44px] rounded-full text-base font-black flex items-center justify-center transition-all shadow-chunky ${
+                isTerminal
+                  ? "bg-black border-2 border-[#00FF41] text-[#00FF41] hover:bg-[#00FF41] hover:text-black"
+                  : isDarkTheme
+                  ? "bg-slate-900 border-2 border-white text-white hover:bg-slate-800"
+                  : "bg-white border-2 border-black text-black hover:bg-amber-200"
+              }`}
             >
               {isPlaying ? "❚❚" : "▶"}
             </button>
@@ -678,10 +733,18 @@ export default function FileSlideshow({
                   class="min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   <span
-                    class={`block h-2 rounded-full transition-all ${
-                      currentIndex === idx
-                        ? "w-6 bg-white"
-                        : "w-2 bg-white/40 hover:bg-white/70"
+                    class={`block h-2.5 rounded-full transition-all ${
+                      isTerminal
+                        ? currentIndex === idx
+                          ? "w-6 bg-[#00FF41]"
+                          : "w-2.5 bg-[#00FF41]/40 hover:bg-[#00FF41]/75"
+                        : isDarkTheme
+                        ? currentIndex === idx
+                          ? "w-6 bg-white"
+                          : "w-2.5 bg-white/40 hover:bg-white/75"
+                        : currentIndex === idx
+                        ? "w-6 bg-black"
+                        : "w-2.5 bg-black/35 hover:bg-black/65"
                     }`}
                   />
                 </button>
@@ -693,21 +756,21 @@ export default function FileSlideshow({
         {/* File Details & Actions */}
         <div class="w-full max-w-md space-y-4">
           <div
-            class={`rounded-2xl p-5 sm:p-6 space-y-4 border ${getCardStyles()}`}
+            class={`rounded-3xl p-5 sm:p-6 space-y-4 ${getCardStyles()}`}
           >
             <div class="flex items-start justify-between gap-3">
               <h2
-                class="text-lg sm:text-xl font-bold break-words flex-1"
+                class="text-lg sm:text-xl font-black break-words flex-1"
                 title={hasMultipleFiles ? shareTitle : displayFileName}
               >
                 {hasMultipleFiles ? shareTitle : displayFileName}
               </h2>
-              <span class="text-xs sm:text-sm opacity-60 whitespace-nowrap pt-1">
+              <span class="text-xs sm:text-sm font-bold opacity-75 whitespace-nowrap pt-1">
                 {fileSizeLabel}
               </span>
             </div>
             {formattedExpiry && (
-              <p class="-mt-2 text-xs opacity-60">
+              <p class="-mt-2 text-xs font-bold opacity-75">
                 Link expires {formattedExpiry}
               </p>
             )}
@@ -717,7 +780,7 @@ export default function FileSlideshow({
               ? (
                 <p
                   role="status"
-                  class="min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl bg-red-100 text-red-950 font-bold text-center"
+                  class="min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl bg-red-100 border-2 border-black text-red-950 font-black text-center"
                 >
                   One-time link used. Your download may take a moment.
                 </p>
@@ -727,12 +790,14 @@ export default function FileSlideshow({
                   href={primaryDownloadUrl}
                   download={primaryDownloadName}
                   onClick={handleDownloadClick}
-                  class={`min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl font-black text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
+                  class={`min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-2xl font-black text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-chunky ${
                     isUnlimited
-                      ? (theme === "terminal"
-                        ? "bg-[#00ff9d] text-black"
-                        : "bg-white text-black hover:bg-gray-200")
-                      : "bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
+                      ? isTerminal
+                        ? "bg-[#00FF41] text-black border-3 border-[#00FF41]"
+                        : isDarkTheme
+                        ? "bg-white text-black border-3 border-white hover:bg-slate-200"
+                        : "bg-qr-pop text-white border-3 border-black hover:bg-qr-popDeep"
+                      : "bg-gradient-to-r from-red-500 to-orange-500 text-white border-3 border-black shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
                   }`}
                 >
                   {hasMultipleFiles && !isUnlimited
@@ -749,10 +814,12 @@ export default function FileSlideshow({
                 type="button"
                 onClick={handleDownloadAll}
                 disabled={isZipping}
-                class={`min-h-[48px] block w-full py-3 rounded-xl font-bold text-center text-base transition-all border-2 disabled:opacity-60 ${
-                  theme === "terminal"
-                    ? "border-[#00ff9d] text-[#00ff9d] hover:bg-[#00ff9d]/10"
-                    : "border-white/20 hover:bg-white/10"
+                class={`min-h-[48px] block w-full py-3 rounded-xl font-black text-center text-base transition-all border-2 disabled:opacity-60 ${
+                  isTerminal
+                    ? "border-[#00FF41] text-[#00FF41] hover:bg-[#00FF41]/10"
+                    : isDarkTheme
+                    ? "border-white/50 text-white hover:bg-white/10"
+                    : "bg-white border-black text-black shadow-chunky hover:bg-amber-100"
                 }`}
               >
                 {isZipping ? "Zipping..." : "Download All (.zip)"}
@@ -762,14 +829,20 @@ export default function FileSlideshow({
             {zipError && (
               <p
                 role="alert"
-                class="text-xs text-center text-red-300 font-bold bg-red-950/70 p-2.5 rounded-xl border border-red-400/40 animate-slide-down"
+                class="text-xs text-center text-red-950 font-bold bg-red-100 p-2.5 rounded-xl border-2 border-black animate-slide-down"
               >
                 {zipError}
               </p>
             )}
 
             {hasMultipleFiles && !isUnlimited && (
-              <p class="text-xs text-center text-orange-200 leading-relaxed">
+              <p
+                class={`text-xs text-center font-bold leading-relaxed rounded-xl p-2.5 border-2 ${
+                  isDarkTheme
+                    ? "text-amber-200 bg-amber-950/60 border-amber-400/50"
+                    : "text-amber-950 bg-amber-100 border-black"
+                }`}
+              >
                 This limited share downloads as one zip so every file survives
                 the trip. Starting the download consumes one use.
               </p>
@@ -782,14 +855,24 @@ export default function FileSlideshow({
             />
 
             {!isUnlimited && !hasMultipleFiles && (
-              <p class="text-xs text-center text-orange-200 leading-relaxed">
+              <p
+                class={`text-xs text-center font-bold leading-relaxed rounded-xl p-2.5 border-2 ${
+                  isDarkTheme
+                    ? "text-amber-200 bg-amber-950/60 border-amber-400/50"
+                    : "text-amber-950 bg-amber-100 border-black"
+                }`}
+              >
                 Starting this download consumes one use, even if the browser
                 later cancels the handoff.
               </p>
             )}
 
             {/* Limits Info */}
-            <div class="flex justify-between text-xs opacity-50 pt-2 border-t border-white/10">
+            <div
+              class={`flex justify-between text-xs font-bold opacity-75 pt-3 border-t-2 ${
+                isDarkTheme ? "border-white/20" : "border-black/15"
+              }`}
+            >
               <span>
                 {isUnlimited
                   ? "∞ Unlimited Downloads"
@@ -822,7 +905,7 @@ export default function FileSlideshow({
           <div class="text-center">
             <a
               href="/?utm_source=file_download&utm_medium=slideshow"
-              class="inline-block text-sm opacity-60 hover:opacity-100 transition-opacity"
+              class="min-h-[44px] inline-flex items-center justify-center px-4 py-2 text-sm font-black opacity-80 hover:opacity-100 transition-opacity"
             >
               {isAllAudio
                 ? "Create your own playlist or QR code →"

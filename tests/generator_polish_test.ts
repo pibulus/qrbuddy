@@ -1,4 +1,4 @@
-import { assertEquals, assertNotEquals } from "$std/assert/mod.ts";
+import { assert, assertEquals, assertNotEquals } from "$std/assert/mod.ts";
 import {
   createFramedSvg,
   escapeXml,
@@ -15,6 +15,18 @@ import {
   STORAGE_KEY,
   validateDesignPreferences,
 } from "../utils/design-preferences.ts";
+import {
+  contrastRatio,
+  QR_STYLES,
+  relativeLuminance,
+} from "../utils/qr-styles.ts";
+import { rollGradient, STYLE_DISPLAY } from "../islands/StyleSelector.tsx";
+import { QUICK_PICK_COLORS } from "../islands/GradientCreator.tsx";
+import { TEXT_CARD_THEMES } from "../utils/bucket-qr-themes.ts";
+import {
+  getCardStylesFor,
+  getThemeStylesFor,
+} from "../islands/FileSlideshow.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
 
 Deno.test("escapeXml - escapes XML special characters safely", () => {
@@ -420,4 +432,134 @@ Deno.test("Storage resilience - simulated localStorage quota and corruption hand
       configurable: true,
     });
   }
+});
+
+Deno.test("QR_STYLES & STYLE_DISPLAY - public presets satisfy scannability floor (luminance <= 0.40, contrast >= 2:1) and stay synced", () => {
+  for (const [key, display] of Object.entries(STYLE_DISPLAY)) {
+    const preset = QR_STYLES[key as keyof typeof QR_STYLES];
+    assert(preset, `Preset ${key} must exist in QR_STYLES`);
+    assert(
+      "gradient" in preset.dots,
+      `Public preset ${key} must have a dot gradient`,
+    );
+
+    const dotStops = preset.dots.gradient.colorStops.map((s) => s.color);
+    assertEquals(
+      display.colors,
+      dotStops,
+      `STYLE_DISPLAY.${key}.colors must match QR_STYLES.${key} dot colorStops`,
+    );
+
+    const bgColors = "gradient" in preset.background
+      ? preset.background.gradient.colorStops.map((s) => s.color)
+      : [preset.background.color];
+
+    for (const stopColor of dotStops) {
+      const lum = relativeLuminance(stopColor);
+      assert(
+        lum <= 0.40,
+        `Preset ${key} dot stop ${stopColor} has luminance ${
+          lum.toFixed(3)
+        } > 0.40`,
+      );
+      for (const bgColor of bgColors) {
+        const cr = contrastRatio(stopColor, bgColor);
+        assert(
+          cr >= 2.0,
+          `Preset ${key} dot stop ${stopColor} vs bg ${bgColor} has contrast ${
+            cr.toFixed(2)
+          } < 2.0`,
+        );
+      }
+    }
+  }
+});
+
+Deno.test("rollGradient - avoids muddy olive/brown hues (45°-95°) and satisfies scannability floor", () => {
+  for (let i = 0; i < 200; i++) {
+    const rolled = rollGradient();
+    assert("gradient" in rolled.dots && rolled.dots.gradient);
+    assert("color" in rolled.background && rolled.background.color);
+
+    const stops = rolled.dots.gradient.colorStops;
+    assertEquals(stops.length, 2);
+
+    const bgColor = rolled.background.color;
+    for (const stop of stops) {
+      const match = /^hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)$/.exec(stop.color);
+      assert(match, `Expected HSL stop color, got ${stop.color}`);
+      const hue = Number(match[1]);
+      const sat = Number(match[2]);
+      assert(
+        hue < 45 || hue > 95,
+        `Rolled hue ${hue}° fell into muddy dark-yellow/olive zone (45°–95°)`,
+      );
+      assert(
+        sat >= 75 && sat <= 90,
+        `Rolled saturation ${sat}% outside 75%–90%`,
+      );
+
+      const lum = relativeLuminance(stop.color);
+      assert(
+        lum <= 0.40,
+        `Rolled stop ${stop.color} luminance ${lum.toFixed(3)} > 0.40`,
+      );
+      const cr = contrastRatio(stop.color, bgColor);
+      assert(
+        cr >= 2.0,
+        `Rolled stop ${stop.color} vs ${bgColor} contrast ${
+          cr.toFixed(2)
+        } < 2.0`,
+      );
+    }
+  }
+});
+
+Deno.test("QUICK_PICK_COLORS - all 6 curated chips satisfy luminance <= 0.40", () => {
+  assertEquals(QUICK_PICK_COLORS.length, 6);
+  for (const chip of QUICK_PICK_COLORS) {
+    const lum = relativeLuminance(chip.color);
+    assert(
+      lum <= 0.40,
+      `Quick-pick chip ${chip.name} (${chip.color}) luminance ${
+        lum.toFixed(3)
+      } > 0.40`,
+    );
+  }
+});
+
+Deno.test("FileSlideshow & TEXT_CARD_THEMES - cover all 10 styles with daylight pastel-punk and intentional dark modes", () => {
+  const daylightPresets = [
+    "sunset",
+    "candy",
+    "blush",
+    "matcha",
+    "pool",
+    "vapor",
+    "grape",
+  ];
+  for (const theme of daylightPresets) {
+    assert(TEXT_CARD_THEMES[theme], `TEXT_CARD_THEMES missing ${theme}`);
+    const pageClass = getThemeStylesFor(theme);
+    const cardClass = getCardStylesFor(theme);
+    assert(
+      !pageClass.includes("to-black"),
+      `Daylight theme ${theme} should not force gloomy to-black backdrop`,
+    );
+    assert(
+      cardClass.includes("border-4 border-black") &&
+        cardClass.includes("shadow-chunky"),
+      `Daylight theme ${theme} card should use Neo-Toybrut border-4 border-black shadow-chunky`,
+    );
+  }
+
+  for (const darkTheme of ["noir", "terminal"]) {
+    assert(
+      TEXT_CARD_THEMES[darkTheme],
+      `TEXT_CARD_THEMES missing ${darkTheme}`,
+    );
+    const cardClass = getCardStylesFor(darkTheme);
+    assert(cardClass.includes("border-4"));
+  }
+  assert(TEXT_CARD_THEMES.brutalist);
 });
