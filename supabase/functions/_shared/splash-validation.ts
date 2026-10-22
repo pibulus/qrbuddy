@@ -12,6 +12,19 @@ export interface SplashConfig {
   buttonText: string;
   imageUrl?: string;
   description?: string;
+  unbranded?: boolean;
+}
+
+export function isQrUnbranded(
+  qr:
+    | {
+      unbranded?: boolean | null;
+      splash_config?: { unbranded?: boolean | null } | null;
+    }
+    | null
+    | undefined,
+): boolean {
+  return Boolean(qr?.unbranded || qr?.splash_config?.unbranded);
 }
 
 const MAX_TITLE = 100;
@@ -107,6 +120,13 @@ export function validateSplashConfig(
 
   return {
     ok: true,
-    value: { enabled: true, title, buttonText, description, imageUrl },
+    value: {
+      enabled: true,
+      title,
+      buttonText,
+      description,
+      imageUrl,
+      ...(cfg.unbranded === true ? { unbranded: true } : {}),
+    },
   };
 }

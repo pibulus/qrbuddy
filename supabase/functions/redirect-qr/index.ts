@@ -15,6 +15,7 @@ import {
   isLinkPreviewBot,
 } from "../_shared/dynamic-qr-preview.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { isQrUnbranded } from "../_shared/splash-validation.ts";
 
 function escapeHtml(str: string): string {
   return str
@@ -387,11 +388,18 @@ serve(async (req) => {
       const safeTitle = escapeHtml(title);
       const safeButtonText = escapeHtml(buttonText);
       const safeDescription = description ? escapeHtml(description) : null;
+      const isUnbranded = isQrUnbranded(qr);
       const imgHtml = safeImageUrl
         ? `<div class="image-container"><img src="${
           escapeHtml(safeImageUrl)
         }" alt="Splash Image"></div>`
         : "";
+      const footerHtml = isUnbranded ? "" : `<div class="footer-tag">
+              <a href="https://qrbuddy.app" target="_blank" rel="noopener" class="footer-pill">
+                <span>⚡</span>
+                <span>Built with <strong>QRBuddy</strong> · Free forever</span>
+              </a>
+            </div>`;
 
       const html = `
         <!DOCTYPE html>
@@ -544,12 +552,7 @@ serve(async (req) => {
             <a href="${
         escapeHtml(destinationUrl)
       }" class="btn">${safeButtonText} →</a>
-            <div class="footer-tag">
-              <a href="https://qrbuddy.app" target="_blank" rel="noopener" class="footer-pill">
-                <span>⚡</span>
-                <span>Built with <strong>QRBuddy</strong> · Free forever</span>
-              </a>
-            </div>
+            ${footerHtml}
           </div>
         </body>
         </html>

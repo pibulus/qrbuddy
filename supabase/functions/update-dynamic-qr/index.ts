@@ -11,6 +11,7 @@ import {
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { validateSplashConfig } from "../_shared/splash-validation.ts";
 import { validateRoutingConfig } from "../_shared/routing-config.ts";
+import { requestHasValidPass } from "../_shared/license.ts";
 
 serve(async (req) => {
   // Handle CORS
@@ -19,6 +20,7 @@ serve(async (req) => {
   }
 
   try {
+    const hasPass = await requestHasValidPass(req);
     // Rate limiting: 30 updates per hour per IP
     // Owner token required, but rate limit prevents token brute-force
     const clientIP = getClientIP(req);
@@ -205,6 +207,10 @@ serve(async (req) => {
       }
     }
 
+    const isUnbranded = Boolean(
+      hasPass || existing.unbranded || existing.splash_config?.unbranded,
+    );
+
     // Validate splash_config if provided (it gets rendered into HTML on scan).
     let validatedSplash: object | null = null;
     if (splash_config !== undefined) {
@@ -221,11 +227,20 @@ serve(async (req) => {
           },
         );
       }
-      validatedSplash = splashCheck.value;
+      if (splashCheck.value) {
+        const { unbranded: _clientUnbranded, ...cleanSplash } =
+          splashCheck.value;
+        validatedSplash = isUnbranded
+          ? { ...cleanSplash, unbranded: true }
+          : cleanSplash;
+      } else {
+        validatedSplash = null;
+      }
     }
 
     // Build update object (only update provided fields)
-    const updates: Record<string, string | number | null | object> = {};
+    const updates: Record<string, string | number | boolean | null | object> =
+      {};
     if (finalDestinationUrl !== undefined) {
       updates.destination_url = finalDestinationUrl;
     }
@@ -236,15 +251,40 @@ serve(async (req) => {
       updates.routing_mode = routingCheck.mode;
       updates.routing_config = routingCheck.value;
     }
-    if (splash_config !== undefined) updates.splash_config = validatedSplash;
+    if (splash_config !== undefined) {
+      updates.splash_config = validatedSplash;
+    } else if (
+      hasPass &&
+      existing.splash_config &&
+      typeof existing.splash_config === "object"
+    ) {
+      updates.splash_config = { ...existing.splash_config, unbranded: true };
+    }
+    if (hasPass) {
+      updates.unbranded = true;
+    }
 
     // Update the record
-    const { data, error: updateError } = await supabase
+    let { data, error: updateError } = await supabase
       .from("dynamic_qr_codes")
       .update(updates)
       .eq("owner_token", owner_token)
       .select()
       .single();
+
+    if (
+      updateError &&
+      typeof updateError.message === "string" &&
+      updateError.message.includes("unbranded")
+    ) {
+      const { unbranded: _omit, ...fallbackUpdates } = updates;
+      ({ data, error: updateError } = await supabase
+        .from("dynamic_qr_codes")
+        .update(fallbackUpdates)
+        .eq("owner_token", owner_token)
+        .select()
+        .single());
+    }
 
     if (updateError) throw updateError;
 
@@ -262,6 +302,7 @@ serve(async (req) => {
           routing_mode: data.routing_mode,
           routing_config: data.routing_config,
           splash_config: data.splash_config ?? null,
+          unbranded: isUnbranded || Boolean(data.unbranded),
         },
       }),
       {

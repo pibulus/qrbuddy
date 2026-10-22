@@ -82,6 +82,7 @@ function respondWithFinalization(
       fileName: result.file_name ?? "download",
       size: result.size ?? 0,
       maxDownloads,
+      unbranded: true,
       message,
     });
   }
@@ -95,7 +96,8 @@ serve(async (req) => {
   }
 
   try {
-    if (!(await requestHasValidPass(req))) {
+    const hasPass = await requestHasValidPass(req);
+    if (!hasPass) {
       return jsonResponse(
         req,
         { error: "Supporter pass required for big files" },
@@ -210,7 +212,25 @@ serve(async (req) => {
       throw new Error("Pending upload finalization returned no result");
     }
 
-    return respondWithFinalization(req, finalized as FinalizationResult);
+    const finalResult = finalized as FinalizationResult;
+    if (finalResult.kind === "destructible" && finalResult.file_id) {
+      const { error: unbrandError } = await supabase
+        .from("destructible_files")
+        .update({ unbranded: hasPass, stats: { unbranded: hasPass } })
+        .eq("id", finalResult.file_id);
+      if (
+        unbrandError &&
+        typeof unbrandError.message === "string" &&
+        unbrandError.message.includes("unbranded")
+      ) {
+        await supabase
+          .from("destructible_files")
+          .update({ stats: { unbranded: hasPass } })
+          .eq("id", finalResult.file_id);
+      }
+    }
+
+    return respondWithFinalization(req, finalResult);
   } catch (error) {
     console.error("Finalize upload failed:", error);
     return jsonResponse(

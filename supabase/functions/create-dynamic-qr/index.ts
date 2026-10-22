@@ -147,6 +147,13 @@ serve(async (req) => {
         },
       );
     }
+    let finalSplashConfig = splashCheck.value;
+    if (finalSplashConfig) {
+      const { unbranded: _clientUnbranded, ...cleanSplash } = finalSplashConfig;
+      finalSplashConfig = hasPass
+        ? { ...cleanSplash, unbranded: true }
+        : cleanSplash;
+    }
 
     // Helper function to normalize and validate URLs
     const normalizeUrl = (url: string): string => {
@@ -266,7 +273,7 @@ serve(async (req) => {
           p_expires_at: expires_at || null,
           p_routing_mode: routingCheck.mode,
           p_routing_config: routingCheck.value,
-          p_splash_config: splashCheck.value,
+          p_splash_config: finalSplashConfig,
         },
       );
 
@@ -296,24 +303,47 @@ serve(async (req) => {
           createResult?.message || "Failed to create dynamic QR in library",
         );
       }
+
+      if (hasPass && createResult?.id) {
+        await supabase
+          .from("dynamic_qr_codes")
+          .update({ unbranded: true })
+          .eq("id", createResult.id);
+      }
     } else {
       // Create dynamic QR record (flag off / legacy flow)
-      const { error: insertError } = await supabase
+      const baseInsert = {
+        short_code: shortCode,
+        destination_url: finalDestinationUrl,
+        max_scans: max_scans || null,
+        expires_at: expires_at || null,
+        password_hash: password_hash || null,
+        routing_mode: routingCheck.mode,
+        routing_config: routingCheck.value,
+        splash_config: finalSplashConfig,
+        owner_token: ownerToken,
+        is_active: true,
+      };
+      let { error: insertError } = await supabase
         .from("dynamic_qr_codes")
         .insert({
-          short_code: shortCode,
-          destination_url: finalDestinationUrl,
-          max_scans: max_scans || null,
-          expires_at: expires_at || null,
-          password_hash: password_hash || null,
-          routing_mode: routingCheck.mode,
-          routing_config: routingCheck.value,
-          splash_config: splashCheck.value,
-          owner_token: ownerToken,
-          is_active: true,
+          ...baseInsert,
+          unbranded: hasPass,
         })
         .select()
         .single();
+
+      if (
+        insertError &&
+        typeof insertError.message === "string" &&
+        insertError.message.includes("unbranded")
+      ) {
+        ({ error: insertError } = await supabase
+          .from("dynamic_qr_codes")
+          .insert(baseInsert)
+          .select()
+          .single());
+      }
 
       if (insertError) throw insertError;
     }
@@ -334,6 +364,7 @@ serve(async (req) => {
         scan_count: 0,
         max_scans: max_scans || null,
         expires_at: expires_at || null,
+        unbranded: hasPass,
       }),
       {
         headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },

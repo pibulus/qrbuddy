@@ -309,35 +309,51 @@ serve(async (req) => {
       createdAt.getTime() + SHARE_RETENTION_DAYS * 24 * 60 * 60 * 1000,
     ).toISOString();
 
-    const { error: dbError } = await supabase
+    const baseInsert = {
+      id: mainId,
+      file_name: firstFile.path, // Legacy column
+      // Legacy column — doubles as the share headline. A user title wins;
+      // a multi-share without one is named by what it is, not by IMG_2041.
+      original_name: shareTitle ||
+        (uploadedFiles.length > 1
+          ? uploadedFiles.every((f) => f.type.startsWith("audio/"))
+            ? `${uploadedFiles.length} tracks`
+            : uploadedFiles.every((f) => f.type.startsWith("image/"))
+            ? `${uploadedFiles.length} photos`
+            : `${uploadedFiles.length} files`
+          : firstFile.name),
+      size: firstFile.size, // Legacy column
+      mime_type: firstFile.type, // Legacy column
+      files: uploadedFiles, // NEW JSON column
+      theme: theme,
+      owner_token: ownerToken,
+      origin_lat: origin.lat,
+      origin_lon: origin.lon,
+      created_at: createdAt.toISOString(),
+      expires_at: expiresAt,
+      accessed: false,
+      max_downloads: maxDownloads,
+      download_count: 0,
+      creator_ip: clientIP,
+      ...(hasPass ? { stats: { unbranded: true } } : {}),
+    };
+
+    let { error: dbError } = await supabase
       .from("destructible_files")
       .insert({
-        id: mainId,
-        file_name: firstFile.path, // Legacy column
-        // Legacy column — doubles as the share headline. A user title wins;
-        // a multi-share without one is named by what it is, not by IMG_2041.
-        original_name: shareTitle ||
-          (uploadedFiles.length > 1
-            ? uploadedFiles.every((f) => f.type.startsWith("audio/"))
-              ? `${uploadedFiles.length} tracks`
-              : uploadedFiles.every((f) => f.type.startsWith("image/"))
-              ? `${uploadedFiles.length} photos`
-              : `${uploadedFiles.length} files`
-            : firstFile.name),
-        size: firstFile.size, // Legacy column
-        mime_type: firstFile.type, // Legacy column
-        files: uploadedFiles, // NEW JSON column
-        theme: theme,
-        owner_token: ownerToken,
-        origin_lat: origin.lat,
-        origin_lon: origin.lon,
-        created_at: createdAt.toISOString(),
-        expires_at: expiresAt,
-        accessed: false,
-        max_downloads: maxDownloads,
-        download_count: 0,
-        creator_ip: clientIP,
+        ...baseInsert,
+        unbranded: hasPass,
       });
+
+    if (
+      dbError &&
+      typeof dbError.message === "string" &&
+      dbError.message.includes("unbranded")
+    ) {
+      ({ error: dbError } = await supabase
+        .from("destructible_files")
+        .insert(baseInsert));
+    }
 
     if (dbError) throw dbError;
 
@@ -368,6 +384,7 @@ serve(async (req) => {
         maxDownloads,
         ownerToken,
         expiresAt,
+        unbranded: hasPass,
         message,
       }),
       {

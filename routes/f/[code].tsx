@@ -5,6 +5,7 @@ import {
   getAuthHeaders,
   getSupabaseUrl,
 } from "../../utils/api.ts";
+import type { Locale } from "../../utils/i18n.ts";
 
 function metadataUnavailable(retryAfter = "5") {
   return new Response(
@@ -31,6 +32,8 @@ interface FileData {
   expiresAt?: string | null;
   mimeType?: string;
   theme?: string;
+  unbranded?: boolean;
+  lang?: Locale;
   files?: Array<{
     id: string;
     path: string;
@@ -41,7 +44,7 @@ interface FileData {
 }
 
 export const handler: Handlers = {
-  async GET(_req, ctx) {
+  async GET(req, ctx) {
     const { code } = ctx.params;
 
     if (!code) {
@@ -93,6 +96,10 @@ export const handler: Handlers = {
       }
 
       const fileData: FileData = await response.json();
+      fileData.unbranded = Boolean(fileData.unbranded);
+      if (new URL(req.url).searchParams.get("lang") === "es") {
+        fileData.lang = "es";
+      }
 
       // If already expired/exploded, redirect to boom
       if (fileData.isExpired || fileData.remainingDownloads <= 0) {

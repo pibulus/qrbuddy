@@ -18,6 +18,7 @@ import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { v4 as uuidv4 } from "https://esm.sh/uuid@9";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import { requestHasValidPass } from "../_shared/license.ts";
 import {
   checkRateLimit,
   createRateLimitResponse,
@@ -231,7 +232,7 @@ serve(async (req) => {
 
     const { data: share, error: fetchError } = await supabase
       .from("destructible_files")
-      .select("id, owner_token, original_name, files, max_downloads, theme")
+      .select("*")
       .eq("id", fileId)
       .single();
 
@@ -239,6 +240,46 @@ serve(async (req) => {
     // confirm which.
     if (fetchError || !share || share.owner_token !== ownerToken) {
       return json(req, 404, { error: "Share not found" });
+    }
+
+    const hasPass = await requestHasValidPass(req);
+    const applyUnbranded = async () => {
+      const nextStats = {
+        ...(share.stats && typeof share.stats === "object" ? share.stats : {}),
+        unbranded: true,
+      };
+      const { error: unbrandErr } = await supabase
+        .from("destructible_files")
+        .update({ unbranded: true, stats: nextStats })
+        .eq("id", fileId);
+      if (
+        unbrandErr &&
+        typeof unbrandErr.message === "string" &&
+        unbrandErr.message.includes("unbranded")
+      ) {
+        const { error: fallbackErr } = await supabase
+          .from("destructible_files")
+          .update({ stats: nextStats })
+          .eq("id", fileId);
+        if (fallbackErr) throw fallbackErr;
+      } else if (unbrandErr) {
+        throw unbrandErr;
+      }
+      share.unbranded = true;
+      share.stats = nextStats;
+    };
+
+    if (hasPass && !share.unbranded && !share.stats?.unbranded) {
+      await applyUnbranded();
+    }
+
+    // ---- set-unbranded ----------------------------------------------------
+    if (action === "set-unbranded") {
+      if (!hasPass) {
+        return json(req, 403, { error: "Supporter Pass required" });
+      }
+      await applyUnbranded();
+      return json(req, 200, { success: true, unbranded: true });
     }
 
     const items: StoredItem[] = Array.isArray(share.files) ? share.files : [];

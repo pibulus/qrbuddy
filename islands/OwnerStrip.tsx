@@ -12,6 +12,7 @@ import { useSignal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { getApiUrl } from "../utils/api.ts";
 import { apiRequest, apiRequestFormData } from "../utils/api-request.ts";
+import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 import { haptics } from "../utils/haptics.ts";
 import { prepImages, prettyName } from "../utils/image-prep.ts";
@@ -48,6 +49,8 @@ interface OwnerStripProps {
   theme: string;
   isLimited: boolean;
   kind: "slideshow" | "playlist" | "file";
+  unbranded?: boolean;
+  onUnbranded?: () => void;
   onTitle: (title: string) => void;
   onFiles: (files: ShareItem[]) => void;
   onTheme: (theme: string) => void;
@@ -55,7 +58,8 @@ interface OwnerStripProps {
 
 interface OwnerMeta {
   isOwner?: boolean;
-  stats?: LifetimeStats;
+  unbranded?: boolean;
+  stats?: LifetimeStats & { unbranded?: boolean };
   ledger?: LedgerRow[];
   weather?: WeatherBaseline;
   createdAt?: string;
@@ -95,6 +99,8 @@ export default function OwnerStrip(
     theme,
     isLimited,
     kind,
+    unbranded = false,
+    onUnbranded,
     onTitle,
     onFiles,
     onTheme,
@@ -102,6 +108,7 @@ export default function OwnerStrip(
 ) {
   const [token, setToken] = useState<string | null>(null);
   const [meta, setMeta] = useState<OwnerMeta | null>(null);
+  const [hasSupporterPass, setHasSupporterPass] = useState(false);
   const [statsError, setStatsError] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsRevision, setStatsRevision] = useState(0);
@@ -134,9 +141,15 @@ export default function OwnerStrip(
     let cancelled = false;
     getOwnerToken("file", fileId).then(async (t) => {
       if (cancelled || !t) return;
+      const passPresent = getSupporterPass() !== null;
       setToken(t);
+      setHasSupporterPass(passPresent);
+      if (passPresent) {
+        onUnbranded?.();
+      }
       setStatsLoading(true);
       setStatsError(false);
+      let serverUnbranded = unbranded;
       try {
         const data = await apiRequest<OwnerMeta>(
           `${getApiUrl()}/get-file-metadata?id=${fileId}&owner=${t}`,
@@ -144,15 +157,46 @@ export default function OwnerStrip(
           "Couldn't load your stats",
         );
         if (!data.isOwner) throw new Error("Owner stats unavailable");
-        if (!cancelled) setMeta(data);
+        serverUnbranded = Boolean(
+          unbranded || data.unbranded || data.stats?.unbranded,
+        );
+        if (serverUnbranded) {
+          onUnbranded?.();
+        }
+        if (!cancelled) setMeta({ ...data, unbranded: serverUnbranded });
       } catch {
         // Stats are a nicety; the controls still work without them.
         if (!cancelled) {
           setStatsError(true);
-          setMeta({ isOwner: true });
+          setMeta({ isOwner: true, unbranded: serverUnbranded || passPresent });
         }
       } finally {
         if (!cancelled) setStatsLoading(false);
+      }
+
+      // Auto-upgrade older shares when the owner holds a valid Supporter Pass
+      if (passPresent && !serverUnbranded && !cancelled) {
+        try {
+          await apiRequest(
+            `${getApiUrl()}/update-file`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                fileId,
+                ownerToken: t,
+                action: "set-unbranded",
+              }),
+            },
+            "Couldn't activate white-label",
+          );
+          if (!cancelled) {
+            onUnbranded?.();
+            setMeta((prev) => (prev ? { ...prev, unbranded: true } : prev));
+          }
+        } catch {
+          // Best-effort background upgrade; owner can also tap the badge.
+        }
       }
     });
     return () => {
@@ -320,6 +364,21 @@ export default function OwnerStrip(
     }
   };
 
+  const activateWhiteLabel = async () => {
+    onUnbranded?.();
+    setMeta((prev) => (prev ? { ...prev, unbranded: true } : prev));
+    if (!beginMutation("unbranded")) return;
+    try {
+      await post({ action: "set-unbranded" }, "Couldn't activate white-label");
+      haptics.light();
+      addToast("Clean white-label active — zero QRBuddy branding ✨", 3000);
+    } catch {
+      // Local white-label state still stays active for this owner
+    } finally {
+      endMutation();
+    }
+  };
+
   const sticker = () => {
     triggerDownload.value = true;
     haptics.medium();
@@ -365,9 +424,22 @@ export default function OwnerStrip(
           👑
         </span>
         <div class="min-w-0 flex-1">
-          <p class="text-xs font-black uppercase tracking-wide text-qr-pop">
-            It's yours
-          </p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="text-xs font-black uppercase tracking-wide text-qr-pop">
+              It's yours
+            </p>
+            {(unbranded || meta.unbranded || hasSupporterPass) && (
+              <button
+                type="button"
+                disabled={mutationBusy}
+                onClick={() => void activateWhiteLabel()}
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-black bg-amber-200 text-black text-[10px] font-black shadow-sm hover:bg-amber-300 transition-colors disabled:opacity-50"
+                title="Supporter Pass perk: QRBuddy footer badge is hidden on this share"
+              >
+                ✨ Clean White-Label Active
+              </button>
+            )}
+          </div>
           {editing
             ? (
               <input

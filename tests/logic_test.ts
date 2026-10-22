@@ -33,7 +33,14 @@ import {
   formatRelativeVisit,
 } from "../islands/edit-qr/AnalyticsDashboard.tsx";
 
-import { validateSplashConfig } from "../supabase/functions/_shared/splash-validation.ts";
+import {
+  isQrUnbranded,
+  validateSplashConfig,
+} from "../supabase/functions/_shared/splash-validation.ts";
+import {
+  getShareFooterPillCopy,
+  SHARE_FOOTER_PILL_CLASS,
+} from "../islands/FileSlideshow.tsx";
 
 // ---------------------------------------------------------------------------
 // Helper: build a fake File without touching disk
@@ -664,5 +671,55 @@ Deno.test("getLanguageSwitchHref - maps home and vertical routes symmetrically b
   assertEquals(
     getLanguageSwitchHref("/es/guia/impresion", "en"),
     "/guide/printing",
+  );
+});
+
+// ===========================================================================
+// White-Label Unbranded Perks & Neo-Toybrut Share Footer Badge
+// ===========================================================================
+Deno.test("validateSplashConfig & isQrUnbranded - preserves unbranded flag and resolves column or JSONB fallback", () => {
+  const branded = validateSplashConfig({
+    enabled: true,
+    title: "Welcome",
+  });
+  assertEquals(branded.ok, true);
+  if (branded.ok && branded.value) {
+    assertEquals(branded.value.unbranded, undefined);
+  }
+
+  const unbrandedSplash = validateSplashConfig({
+    enabled: true,
+    title: "VIP Event",
+    unbranded: true,
+  });
+  assertEquals(unbrandedSplash.ok, true);
+  if (unbrandedSplash.ok && unbrandedSplash.value) {
+    assertEquals(unbrandedSplash.value.unbranded, true);
+  }
+
+  assertEquals(isQrUnbranded(null), false);
+  assertEquals(isQrUnbranded({ unbranded: false, splash_config: null }), false);
+  assertEquals(isQrUnbranded({ unbranded: true, splash_config: null }), true);
+  assertEquals(
+    isQrUnbranded({
+      unbranded: false,
+      splash_config: { unbranded: true },
+    }),
+    true,
+  );
+});
+
+Deno.test("getShareFooterPillCopy & SHARE_FOOTER_PILL_CLASS - localized Neo-Toybrut badge pill for free shares", () => {
+  assertEquals(
+    getShareFooterPillCopy("en"),
+    "⚡ Made with QRBuddy · Make yours free →",
+  );
+  assertEquals(
+    getShareFooterPillCopy("es"),
+    "⚡ Hecho con QRBuddy · Haz el tuyo gratis →",
+  );
+  assertEquals(
+    SHARE_FOOTER_PILL_CLASS,
+    "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border-2 border-black bg-qr-cream text-black text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all",
   );
 });

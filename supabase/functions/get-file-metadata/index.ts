@@ -126,6 +126,10 @@ serve(async (req) => {
       }
     }
 
+    const unbranded = Boolean(
+      file.unbranded || (file.stats && file.stats.unbranded),
+    );
+
     return new Response(
       JSON.stringify({
         fileId: file.id,
@@ -139,6 +143,7 @@ serve(async (req) => {
         remainingDownloads,
         isExpired,
         expiresAt,
+        unbranded,
         ...(isOwner
           ? {
             isOwner: true,

@@ -9,8 +9,20 @@ import OwnerStrip, { type ShareItem } from "./OwnerStrip.tsx";
 import ShareActions from "./ShareActions.tsx";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
+import { getSupporterPass } from "../utils/supporter-pass.ts";
+import { getOwnerToken } from "../utils/token-vault.ts";
 
 const SLIDE_MS = 4500;
+
+export const SHARE_FOOTER_PILL_CLASS =
+  "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border-2 border-black bg-qr-cream text-black text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all";
+
+export function getShareFooterPillCopy(lang?: Locale): string {
+  return getClientLocale(lang) === "es"
+    ? "⚡ Hecho con QRBuddy · Haz el tuyo gratis →"
+    : "⚡ Made with QRBuddy · Make yours free →";
+}
 
 interface FileSlideshowProps {
   files?: Array<{
@@ -28,6 +40,8 @@ interface FileSlideshowProps {
   remainingDownloads: number;
   expiresAt?: string | null;
   theme?: string;
+  unbranded?: boolean;
+  lang?: Locale;
 }
 
 // Theme styles keyed to the real QR styles (utils/qr-styles.ts) — the
@@ -95,15 +109,39 @@ export default function FileSlideshow({
   remainingDownloads,
   expiresAt,
   theme: initialTheme = "sunset",
+  unbranded: initialUnbranded = false,
+  lang,
 }: FileSlideshowProps) {
   const isUnlimited = maxDownloads >= 999999;
   const formattedExpiry = formatExpiry(expiresAt);
+  const isSpanish = getClientLocale(lang) === "es";
 
   // The owner can rename, re-theme and add/remove from the strip below —
   // the page updates in place, no reload.
   const [files, setFiles] = useState<ShareItem[] | undefined>(initialFiles);
   const [fileName, setFileName] = useState(initialFileName);
   const [theme, setTheme] = useState(initialTheme);
+  const [unbranded, setUnbranded] = useState(Boolean(initialUnbranded));
+
+  useEffect(() => {
+    if (initialUnbranded) {
+      setUnbranded(true);
+    }
+  }, [initialUnbranded]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (getSupporterPass()) {
+      getOwnerToken("file", fileId).then((token) => {
+        if (!cancelled && token) {
+          setUnbranded(true);
+        }
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [fileId]);
 
   // Slideshow State
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -878,7 +916,7 @@ export default function FileSlideshow({
                   ? "∞ Unlimited Downloads"
                   : `${remainingDownloads}/${maxDownloads} uses left`}
               </span>
-              <span>Powered by QRBuddy</span>
+              {!unbranded && <span>Powered by QRBuddy</span>}
             </div>
           </div>
 
@@ -892,6 +930,8 @@ export default function FileSlideshow({
               theme={theme}
               isLimited={!isUnlimited}
               kind={ownerKind}
+              unbranded={unbranded}
+              onUnbranded={() => setUnbranded(true)}
               onTitle={setFileName}
               onFiles={(next) => {
                 setFiles(next);
@@ -902,18 +942,18 @@ export default function FileSlideshow({
           )}
 
           {/* Create Your Own */}
-          <div class="text-center">
-            <a
-              href="/?utm_source=file_download&utm_medium=slideshow"
-              class="min-h-[44px] inline-flex items-center justify-center px-4 py-2 text-sm font-black opacity-80 hover:opacity-100 transition-opacity"
-            >
-              {isAllAudio
-                ? "Create your own playlist or QR code →"
-                : isAllImages
-                ? "Create your own slideshow or QR code →"
-                : "Create your own QR code →"}
-            </a>
-          </div>
+          {!unbranded && (
+            <div class="text-center">
+              <a
+                href={isSpanish
+                  ? "/es?utm_source=file_download&utm_medium=slideshow"
+                  : "/?utm_source=file_download&utm_medium=slideshow"}
+                class={SHARE_FOOTER_PILL_CLASS}
+              >
+                {getShareFooterPillCopy(lang)}
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>
