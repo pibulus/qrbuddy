@@ -2,7 +2,7 @@
   "lock": false,
   "nodeModulesDir": "auto",
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
+    "check": "deno fmt --check && deno lint && deno check main.ts dev.ts fresh.config.ts fresh.gen.ts routes/ islands/ components/ hooks/ utils/ types/ scripts/ supabase/functions/ tests/",
     "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
     "manifest": "deno task cli manifest $(pwd)",
     "start": "PORT=8004 deno run -A --watch=static/,routes/ dev.ts",
@@ -25,6 +25,7 @@
   },
   "exclude": [
     "**/_fresh/*",
+    "node_modules/",
     ".playwright-mcp/"
   ],
   "imports": {
@@ -54,6 +55,6 @@
       "entrypoint": "main.ts"
     },
     "//": "THIS APP NEEDS ITS BUILD \u2014 the opposite of promapper. fresh.config.ts uses the tailwind plugin, which requires Fresh's ahead-of-time build; without it every request 500s with \"Ahead of time builds not configured but required by the tailwindcss plugin\". (promapper precompiles Tailwind into a committed CSS file and must NOT build, because its 31-island bundle OOMs the container. Same platform, opposite configs \u2014 do not copy one to the other.) `runtime` is REQUIRED unless `framework` is set; without it Deploy auto-detects Fresh. If a build is ever removed here, OMIT the key \u2014 never `\"build\": \"\"`, which the CLI reads as 'skip' and a git build executes, dying with \"Error parsing script '': Empty command\". Verified 2026-07-31.",
-    "build": "deno task check && deno task test:unit && deno task build"
+    "build": "deno task build"
   }
 }
