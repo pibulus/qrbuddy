@@ -56,9 +56,9 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
       "Single-file uploads up to 500 MB; shares still expire after 30 days",
   },
   {
-    feature: "Supporter Pass",
+    feature: "QRBuddy Passport",
     free: "No purchase required",
-    supporter: "A$49 once for 365 days; no automatic renewal",
+    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
   },
 ];
 
@@ -68,8 +68,8 @@ const FAQ_ITEMS: FAQItem[] = [
     a: "Yes. Create an editable QR and keep its private edit link. You can change its destination while the code remains active. A static QR cannot be edited because its destination is encoded directly.",
   },
   {
-    q: "What happens when the Supporter Pass expires?",
-    a: "The pass ends after 365 days and does not renew automatically. Free features remain available. Editable QRs follow their own scan and expiry settings and depend on the QRBuddy redirect service.",
+    q: "What happens when the QRBuddy Passport expires?",
+    a: "The Passport ends after 365 days and does not renew automatically. Free features remain available. Editable QRs follow their own scan and expiry settings and depend on the QRBuddy redirect service.",
   },
   {
     q: "Does this work with online PDF menus and Square/Toast ordering?",
@@ -85,7 +85,7 @@ export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/menus";
   const title = "Restaurant & Cafe Menu QR Codes | QRBuddy";
   const description =
-    "Create styled static or editable QR codes for restaurant menus, ordering pages, and websites. Free features are available; the Supporter Pass raises selected limits.";
+    "Create styled static or editable QR codes for restaurant menus, ordering pages, and websites. Free features are available; the QRBuddy Passport raises selected limits.";
 
   return (
     <>
@@ -104,7 +104,7 @@ export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
         applicationCategory="BusinessApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="QRBuddy Supporter Pass, A$49 for 365 days, one payment with no automatic renewal"
+        offerDescription="QRBuddy Passport, A$49 for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
@@ -117,11 +117,11 @@ export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
         defaultUrl="https://your-cafe.com/menu.pdf"
         defaultCaption="MENU"
         valueCards={VALUE_CARDS}
-        comparisonTitle="Free QRBuddy and the Supporter Pass"
+        comparisonTitle="Free QRBuddy and the QRBuddy Passport"
         comparisonSubtitle="A clear look at included features and higher limits"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Get Supporter Pass ✨"
+        ctaLabel="Get QRBuddy Passport 🛂✨"
       />
     </>
   );

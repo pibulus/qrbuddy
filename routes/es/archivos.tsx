@@ -34,7 +34,7 @@ const VALUE_CARDS: ValueCard[] = [
     icon: "📦",
     title: "Archivos pesados de hasta 500 MB",
     desc:
-      "Gratis subes archivos de hasta 50 MB. Con el Pase Supporter subes archivos individuales de hasta 500 MB (10× más grandes).",
+      "Gratis subes archivos de hasta 50 MB. Con el Pasaporte QRBuddy subes archivos individuales de hasta 500 MB (10× más grandes).",
   },
 ];
 
@@ -55,16 +55,17 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
     supporter: "30 días",
   },
   {
-    feature: "Pase Supporter",
+    feature: "Pasaporte QRBuddy",
     free: "No hace falta comprarlo",
-    supporter: "A$49 por 365 días; un pago, sin renovación automática",
+    supporter:
+      "~$32 USD (A$49) por 365 días; un pago, sin renovación automática",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
     q: "¿Qué tamaño de archivo puedo subir?",
-    a: "Las subidas gratuitas permiten archivos de hasta 50 MB. El Pase Supporter amplía el límite a 500 MB para un solo archivo; no añade subidas de archivos comprimidos con varios elementos.",
+    a: "Las subidas gratuitas permiten archivos de hasta 50 MB. El Pasaporte QRBuddy amplía el límite a 500 MB para un solo archivo; no añade subidas de archivos comprimidos con varios elementos.",
   },
   {
     q: "¿Cuánto tiempo se guardan los archivos?",
@@ -75,8 +76,8 @@ const FAQ_ITEMS: FAQItem[] = [
     a: "Pueden abrir un enlace en el navegador. Quien tenga el enlace podría acceder al contenido compartido, así que compártelo solo con las personas indicadas.",
   },
   {
-    q: "¿Qué incluye el Pase Supporter?",
-    a: "Cuesta A$49 por un pago y dura 365 días, sin renovación automática. Amplía algunos límites de creación y subida; siguen aplicando controles de uso.",
+    q: "¿Qué incluye el Pasaporte QRBuddy?",
+    a: "Cuesta ~$32 USD (A$49) por un pago y dura 365 días, sin renovación automática. Amplía algunos límites de creación y subida; siguen aplicando controles de uso.",
   },
 ];
 
@@ -84,7 +85,7 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/es/archivos";
   const title = "Comparte Archivos Temporales con un Código QR | QRBuddy";
   const description =
-    "Comparte archivos con un enlace o código QR de QRBuddy. El límite gratuito es de 50 MB; el Pase Supporter amplía el límite individual a 500 MB. Los enlaces vencen a los 30 días.";
+    "Comparte archivos con un enlace o código QR de QRBuddy. El límite gratuito es de 50 MB; el Pasaporte QRBuddy amplía el límite individual a 500 MB. Los enlaces vencen a los 30 días.";
 
   return (
     <>
@@ -102,7 +103,7 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
         applicationCategory="UtilitiesApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Pase Supporter: A$49 por 365 días, un pago sin renovación automática"
+        offerDescription="Pasaporte QRBuddy: A$49 por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
@@ -119,11 +120,11 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
         featuresTitle="Comparte archivos por QR"
         faqTitle="Preguntas frecuentes"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy gratis y el Pase Supporter"
+        comparisonTitle="QRBuddy gratis y el Pasaporte QRBuddy"
         comparisonSubtitle="Límites de tamaño y tiempo de conservación"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Obtener Pase Supporter 🛡️"
+        ctaLabel="Obtener Pasaporte QRBuddy 🛂✨"
       />
     </>
   );

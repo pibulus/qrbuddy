@@ -387,8 +387,8 @@ export default function QrPrintGuideIsland(
                 <ul class="text-xs text-gray-700 space-y-1.5 list-disc list-inside">
                   <li>
                     {isSpanish
-                      ? "Los QR estáticos se generan en tu navegador y codifican el destino; generarlos no requiere un Pase Supporter."
-                      : "Static QRs are generated in your browser and encode the destination; making them does not require a Supporter Pass."}
+                      ? "Los QR estáticos se generan en tu navegador y codifican el destino; generarlos no requiere un Pasaporte QRBuddy."
+                      : "Static QRs are generated in your browser and encode the destination; making them does not require a QRBuddy Passport."}
                   </li>
                   <li>
                     {isSpanish
@@ -402,8 +402,8 @@ export default function QrPrintGuideIsland(
                   </li>
                   <li>
                     {isSpanish
-                      ? "El Pase Supporter de A$49 dura 365 días y amplía algunos límites; no se renueva automáticamente."
-                      : "The A$49 Supporter Pass lasts 365 days and raises selected limits; it does not renew automatically."}
+                      ? "El Pasaporte QRBuddy de ~$32 USD (A$49) dura 365 días y amplía algunos límites; no se renueva automáticamente."
+                      : "The ~$32 USD (A$49) QRBuddy Passport lasts 365 days and raises selected limits; it does not renew automatically."}
                   </li>
                 </ul>
               </div>
@@ -524,8 +524,8 @@ export default function QrPrintGuideIsland(
           </h3>
           <p class="text-sm sm:text-base text-gray-800 max-w-xl mx-auto">
             {isSpanish
-              ? "Genera un QR estático que contiene directamente el destino o un QR editable, disponible gratis dentro de sus límites. El Pase Supporter cuesta A$49 por 365 días y amplía algunos límites, sin renovación automática."
-              : "Make a static QR that contains its destination directly, or an editable QR available free within its limits. The A$49 Supporter Pass lasts 365 days and raises selected limits, with no automatic renewal."}
+              ? "Genera un QR estático que contiene directamente el destino o un QR editable, disponible gratis dentro de sus límites. El Pasaporte QRBuddy cuesta ~$32 USD (A$49) por 365 días y amplía algunos límites, sin renovación automática."
+              : "Make a static QR that contains its destination directly, or an editable QR available free within its limits. The ~$32 USD (A$49) QRBuddy Passport lasts 365 days and raises selected limits, with no automatic renewal."}
           </p>
           <div class="pt-2">
             <a
@@ -545,7 +545,7 @@ export default function QrPrintGuideIsland(
         <div class="max-w-4xl mx-auto px-4 text-center space-y-4">
           <div class="flex items-center justify-center gap-4 flex-wrap">
             <PricingLink
-              label={isSpanish ? "Precios y Pase ✨" : "Supporter ✨"}
+              label={isSpanish ? "Pasaporte QRBuddy 🛂" : "Passport 🛂"}
             />
             <AboutLink label={isSpanish ? "Acerca de 📖" : "About"} />
             <KofiButton

@@ -60,9 +60,9 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
     supporter: "30 days",
   },
   {
-    feature: "Supporter Pass",
+    feature: "QRBuddy Passport",
     free: "No purchase required",
-    supporter: "A$49 once for 365 days; no automatic renewal",
+    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
   },
 ];
 
@@ -108,7 +108,7 @@ export default function WeddingsPage({ data }: PageProps<PageData>) {
         applicationCategory="LifestyleApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Supporter Pass: A$49 for 365 days, one payment with no automatic renewal"
+        offerDescription="QRBuddy Passport: A$49 for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
@@ -121,11 +121,11 @@ export default function WeddingsPage({ data }: PageProps<PageData>) {
         defaultUrl="https://ourwedding.love"
         defaultCaption="OUR DAY"
         valueCards={VALUE_CARDS}
-        comparisonTitle="Free QRBuddy and the Supporter Pass"
+        comparisonTitle="Free QRBuddy and the QRBuddy Passport"
         comparisonSubtitle="A clear look at file limits and share duration"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Get Supporter Pass 💜"
+        ctaLabel="Get QRBuddy Passport 🛂✨"
       />
     </>
   );

@@ -26,7 +26,7 @@ const COPY = {
     privacy: "Privacy",
     terms: "Terms",
     tip: "Tip Jar ☕",
-    supporter: "Supporter ✨",
+    supporter: "Passport 🛂",
     switchLabel: "🇲🇽 ES",
     switchAria: "Cambiar idioma a español (México / LatAm)",
     links: [
@@ -45,7 +45,7 @@ const COPY = {
     privacy: "Privacidad",
     terms: "Términos",
     tip: "Propina ☕",
-    supporter: "Pase Supporter ✨",
+    supporter: "Pasaporte 🛂",
     switchLabel: "EN",
     switchAria: "Switch language to English",
     links: [

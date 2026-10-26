@@ -29,8 +29,8 @@ export default function TermsPage({ data }: PageProps<PageData>) {
         <meta
           name="description"
           content={es
-            ? "Condiciones del generador de QR, enlaces editables, archivos compartidos y Pase Supporter de QRBuddy."
-            : "Terms for QRBuddy's QR generator, editable links, file shares, and Supporter Pass."}
+            ? "Condiciones del generador de QR, enlaces editables, archivos compartidos y Pasaporte QRBuddy (antes Pase Supporter)."
+            : "Terms for QRBuddy's QR generator, editable links, file shares, and QRBuddy Passport (formerly Supporter Pass)."}
         />
         <link rel="canonical" href="https://qrbuddy.app/terms" />
       </Head>
@@ -75,8 +75,8 @@ export default function TermsPage({ data }: PageProps<PageData>) {
           </h2>
           <p>
             {es
-              ? "Las subidas gratuitas permiten un archivo de hasta 50 MB. Un Pase Supporter vigente permite subir un archivo individual de hasta 500 MB. Las presentaciones de fotos y playlists pueden tener hasta 10 elementos; cada audio admite hasta 5 MB y las fotos grandes pueden reducirse antes de compartirlas."
-              : "Free uploads allow a single file up to 50 MB. An active Supporter Pass allows a single file up to 500 MB. Photo slideshows and playlists can contain up to 10 items; each audio file can be up to 5 MB, and large photos may be resized before sharing."}
+              ? "Las subidas gratuitas permiten un archivo de hasta 50 MB. Un Pasaporte QRBuddy (antes Pase Supporter) vigente permite subir un archivo individual de hasta 500 MB. Las presentaciones de fotos y playlists pueden tener hasta 10 elementos; cada audio admite hasta 5 MB y las fotos grandes pueden reducirse antes de compartirlas."
+              : "Free uploads allow a single file up to 50 MB. An active QRBuddy Passport (formerly Supporter Pass) allows a single file up to 500 MB. Photo slideshows and playlists can contain up to 10 items; each audio file can be up to 5 MB, and large photos may be resized before sharing."}
           </p>
           <p>
             {es
@@ -92,12 +92,14 @@ export default function TermsPage({ data }: PageProps<PageData>) {
 
         <section class="space-y-3">
           <h2 class="text-xl font-black">
-            {es ? "Pase Supporter" : "Supporter Pass"}
+            {es
+              ? "Pasaporte QRBuddy (antes Pase Supporter)"
+              : "QRBuddy Passport (formerly Supporter Pass)"}
           </h2>
           <p>
             {es
-              ? "El Pase Supporter cuesta A$49 en un solo pago, dura 365 días desde su emisión y no se renueva automáticamente. Amplía algunos límites de creación y subida; siguen aplicando los controles de uso del servicio."
-              : "The Supporter Pass costs A$49 as a one-time payment, lasts 365 days from issue, and does not renew automatically. It raises selected creation and upload limits; service use controls still apply."}
+              ? "El Pasaporte QRBuddy (antes Pase Supporter) cuesta ~$32 USD (A$49) en un solo pago, dura 365 días desde su emisión y no se renueva automáticamente. Amplía algunos límites de creación y subida; siguen aplicando los controles de uso del servicio."
+              : "The QRBuddy Passport (formerly Supporter Pass) costs ~$32 USD (A$49) as a one-time payment, lasts 365 days from issue, and does not renew automatically. It raises selected creation and upload limits; service use controls still apply."}
           </p>
           <p>
             {es

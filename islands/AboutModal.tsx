@@ -240,7 +240,7 @@ export function AboutModal({ lang }: { lang?: Locale } = {}) {
           {!isIntro && (
             <div class="flex">
               <CardSecondaryButton onClick={() => handOff(openPricingModal)}>
-                {isSpanish ? "Pase Supporter ✨" : "Supporter Pass ✨"}
+                {isSpanish ? "Pasaporte QRBuddy 🛂" : "QRBuddy Passport 🛂"}
               </CardSecondaryButton>
             </div>
           )}

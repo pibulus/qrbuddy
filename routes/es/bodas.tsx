@@ -60,9 +60,10 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
     supporter: "30 días",
   },
   {
-    feature: "Pase Supporter",
+    feature: "Pasaporte QRBuddy",
     free: "No hace falta comprarlo",
-    supporter: "A$49 por 365 días; un pago, sin renovación automática",
+    supporter:
+      "~$32 USD (A$49) por 365 días; un pago, sin renovación automática",
   },
 ];
 
@@ -107,7 +108,7 @@ export default function BodasEspanolPage({ data }: PageProps<PageData>) {
         applicationCategory="LifestyleApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Pase Supporter: A$49 por 365 días, un pago sin renovación automática"
+        offerDescription="Pasaporte QRBuddy: A$49 por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
@@ -125,11 +126,11 @@ export default function BodasEspanolPage({ data }: PageProps<PageData>) {
         featuresTitle="Códigos QR para compartir los detalles"
         faqTitle="Preguntas frecuentes"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy gratis y el Pase Supporter"
+        comparisonTitle="QRBuddy gratis y el Pasaporte QRBuddy"
         comparisonSubtitle="Límites de archivo y duración del enlace"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Obtener Pase Supporter 💜"
+        ctaLabel="Obtener Pasaporte QRBuddy 🛂✨"
       />
     </>
   );

@@ -50,8 +50,8 @@ export default function PrivacyPage({ data }: PageProps<PageData>) {
           </p>
           <p>
             {es
-              ? "Este aviso explica la información que procesa QRBuddy al crear códigos, editar enlaces, compartir archivos y comprar un Pase Supporter."
-              : "This notice explains the information QRBuddy processes when you make codes, edit links, share files, and buy a Supporter Pass."}
+              ? "Este aviso explica la información que procesa QRBuddy al crear códigos, editar enlaces, compartir archivos y comprar un Pasaporte QRBuddy (antes Pase Supporter)."
+              : "This notice explains the information QRBuddy processes when you make codes, edit links, share files, and buy a QRBuddy Passport (formerly Supporter Pass)."}
           </p>
         </header>
 
@@ -109,13 +109,13 @@ export default function PrivacyPage({ data }: PageProps<PageData>) {
           </h2>
           <p>
             {es
-              ? "El historial, el Pase Supporter y los enlaces de administración se guardan en el almacenamiento local del navegador. Los enlaces de administración se cifran con Web Crypto cuando está disponible; si no, QRBuddy puede guardarlos sin cifrar en ese dispositivo. No hay una cuenta que permita recuperar automáticamente un pase o enlace perdido."
-              : "History, the Supporter Pass, and management links are stored in your browser's local storage. Management links are encrypted with Web Crypto when available; otherwise QRBuddy may store them unencrypted on that device. There is no account for automatic recovery of a lost pass or management link."}
+              ? "El historial, el Pasaporte QRBuddy (antes Pase Supporter) y los enlaces de administración se guardan en el almacenamiento local del navegador. Los enlaces de administración se cifran con Web Crypto cuando está disponible; si no, QRBuddy puede guardarlos sin cifrar en ese dispositivo. No hay una cuenta que permita recuperar automáticamente un pasaporte o enlace perdido."
+              : "History, the QRBuddy Passport (formerly Supporter Pass), and management links are stored in your browser's local storage. Management links are encrypted with Web Crypto when available; otherwise QRBuddy may store them unencrypted on that device. There is no account for automatic recovery of a lost passport or management link."}
           </p>
           <p>
             {es
-              ? "Puedes crear una copia cifrada desde Historial → Sincronizar dispositivos. Guarda el pase Supporter en un lugar privado y conserva la frase de sincronización: sin una copia no podemos garantizar su recuperación."
-              : "You can make an encrypted backup from History → Sync Devices. Keep the Supporter Pass and sync phrase somewhere private; without a backup we cannot guarantee recovery."}
+              ? "Puedes crear una copia cifrada desde Historial → Sincronizar dispositivos. Guarda tu clave de Pasaporte QRBuddy en un lugar privado y conserva la frase de sincronización: sin una copia no podemos garantizar su recuperación."
+              : "You can make an encrypted backup from History → Sync Devices. Keep your QRBuddy Passport key and sync phrase somewhere private; without a backup we cannot guarantee recovery."}
           </p>
         </section>
 

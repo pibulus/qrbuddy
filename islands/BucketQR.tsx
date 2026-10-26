@@ -286,13 +286,21 @@ export default function BucketQR({
       let response: Response | undefined;
 
       if (file) {
-        // Supporter pass lifts the size ceiling (R2-backed big files).
+        // QRBuddy Passport lifts the size ceiling (R2-backed big files).
         const pass = getSupporterPass();
         const validation = validateFile(
           file,
           pass ? SUPPORTER_MAX_FILE_SIZE : MAX_FILE_SIZE,
         );
         if (!validation.valid) {
+          if (
+            !pass && file.size > MAX_FILE_SIZE &&
+            file.size <= SUPPORTER_MAX_FILE_SIZE
+          ) {
+            throw new Error(
+              "File over 50 MB — QRBuddy Passport unlocks 500 MB file drops.",
+            );
+          }
           throw new Error(validation.error);
         }
 

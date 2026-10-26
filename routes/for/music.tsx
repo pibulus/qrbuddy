@@ -60,9 +60,9 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
     supporter: "Same limit; 500 MB applies to a single file",
   },
   {
-    feature: "Supporter Pass",
+    feature: "QRBuddy Passport",
     free: "No purchase required",
-    supporter: "A$49 once for 365 days; no automatic renewal",
+    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
   },
 ];
 
@@ -80,8 +80,8 @@ const FAQ_ITEMS: FAQItem[] = [
     a: "Download the QR as a PNG or SVG for your design. Scan a test print at its intended size before producing a larger run. You can also link directly to a release page on another service.",
   },
   {
-    q: "What does the Supporter Pass include?",
-    a: "It costs A$49 once and lasts 365 days, with no automatic renewal. It raises selected limits and allows a single file up to 500 MB. Multi-track playlists remain limited to 10 audio files of up to 5 MB each.",
+    q: "What does the QRBuddy Passport include?",
+    a: "It costs ~$32 USD (A$49) once and lasts 365 days, with no automatic renewal. It raises selected limits and allows a single file up to 500 MB. Multi-track playlists remain limited to 10 audio files of up to 5 MB each.",
   },
 ];
 
@@ -108,7 +108,7 @@ export default function MusicPage({ data }: PageProps<PageData>) {
         applicationCategory="MultimediaApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Supporter Pass: A$49 for 365 days, one payment with no automatic renewal"
+        offerDescription="QRBuddy Passport: A$49 for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
@@ -121,11 +121,11 @@ export default function MusicPage({ data }: PageProps<PageData>) {
         defaultUrl="https://bandcamp.com/album"
         defaultCaption="LISTEN NOW"
         valueCards={VALUE_CARDS}
-        comparisonTitle="Free QRBuddy and the Supporter Pass"
+        comparisonTitle="Free QRBuddy and the QRBuddy Passport"
         comparisonSubtitle="A clear look at included features and higher limits"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Get Supporter Pass 🎵"
+        ctaLabel="Get QRBuddy Passport 🛂✨"
       />
     </>
   );

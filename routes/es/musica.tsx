@@ -60,9 +60,10 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
     supporter: "Mismo límite; 500 MB aplica a un solo archivo",
   },
   {
-    feature: "Pase Supporter",
+    feature: "Pasaporte QRBuddy",
     free: "No hace falta comprarlo",
-    supporter: "A$49 por 365 días; un pago, sin renovación automática",
+    supporter:
+      "~$32 USD (A$49) por 365 días; un pago, sin renovación automática",
   },
 ];
 
@@ -80,8 +81,8 @@ const FAQ_ITEMS: FAQItem[] = [
     a: "Descárgalo como PNG o SVG para tu diseño. Prueba el código impreso en su tamaño final. También puedes enlazar directamente a una página de lanzamiento en otro servicio.",
   },
   {
-    q: "¿Qué incluye el Pase Supporter?",
-    a: "Cuesta A$49 por un pago y dura 365 días, sin renovación automática. Amplía algunos límites y permite subir un archivo individual de hasta 500 MB. Las playlists siguen limitadas a 10 audios de hasta 5 MB cada uno.",
+    q: "¿Qué incluye el Pasaporte QRBuddy?",
+    a: "Cuesta ~$32 USD (A$49) por un pago y dura 365 días, sin renovación automática. Amplía algunos límites y permite subir un archivo individual de hasta 500 MB. Las playlists siguen limitadas a 10 audios de hasta 5 MB cada uno.",
   },
 ];
 
@@ -107,7 +108,7 @@ export default function MusicaEspanolPage({ data }: PageProps<PageData>) {
         applicationCategory="MultimediaApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Pase Supporter: A$49 por 365 días, un pago sin renovación automática"
+        offerDescription="Pasaporte QRBuddy: A$49 por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
@@ -125,11 +126,11 @@ export default function MusicaEspanolPage({ data }: PageProps<PageData>) {
         featuresTitle="QR para compartir música"
         faqTitle="Preguntas frecuentes"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy gratis y el Pase Supporter"
+        comparisonTitle="QRBuddy gratis y el Pasaporte QRBuddy"
         comparisonSubtitle="Funciones incluidas y límites de archivo"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Obtener Pase Supporter 🎵"
+        ctaLabel="Obtener Pasaporte QRBuddy 🛂✨"
       />
     </>
   );

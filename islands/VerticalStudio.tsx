@@ -264,7 +264,7 @@ export default function VerticalStudio({
                     {isSpanish ? "Gratis" : "Free"}
                   </th>
                   <th class="py-2.5 px-3 text-purple-700">
-                    {isSpanish ? "Pase Supporter" : "Supporter Pass"}
+                    {isSpanish ? "Pasaporte QRBuddy 🛂" : "QRBuddy Passport 🛂"}
                   </th>
                 </tr>
               </thead>
@@ -324,14 +324,14 @@ export default function VerticalStudio({
           </h2>
           <p class="text-sm font-bold text-white/95 max-w-md mx-auto">
             {isSpanish
-              ? "Los códigos estáticos y las funciones gratuitas siguen disponibles. El Pase Supporter cuesta A$49 por 365 días, en un solo pago y sin renovación automática."
-              : "Free features stay available. The Supporter Pass is A$49 for 365 days, paid once with no automatic renewal."}
+              ? "Los códigos estáticos y las funciones gratuitas siguen disponibles. El Pasaporte QRBuddy cuesta ~$32 USD (A$49) por 365 días, en un solo pago y sin renovación automática."
+              : "Free features stay available. The QRBuddy Passport is ~$32 USD (A$49) for 365 days, paid once with no automatic renewal."}
           </p>
           <div class="pt-2 flex justify-center gap-3">
             <PricingLink
               label={ctaLabel ?? (isSpanish
-                ? "Obtener Pase Supporter ✨"
-                : "Get Supporter Pass ✨")}
+                ? "Obtener Pasaporte QRBuddy 🛂✨"
+                : "Get QRBuddy Passport 🛂✨")}
               className="text-base px-6 py-3"
             />
           </div>
@@ -341,7 +341,7 @@ export default function VerticalStudio({
         <footer class="pt-8 pb-4 border-t-4 border-black text-center space-y-4">
           <div class="flex items-center justify-center gap-4 flex-wrap">
             <PricingLink
-              label={isSpanish ? "Pase Supporter ✨" : "Supporter Pass ✨"}
+              label={isSpanish ? "Pasaporte QRBuddy 🛂" : "QRBuddy Passport 🛂"}
             />
             <AboutLink label={isSpanish ? "Qué es" : "About"} />
             <KofiButton

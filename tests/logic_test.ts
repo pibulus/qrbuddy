@@ -41,6 +41,11 @@ import {
   getShareFooterPillCopy,
   SHARE_FOOTER_PILL_CLASS,
 } from "../islands/FileSlideshow.tsx";
+import {
+  formatInternationalPrice,
+  formatTierPrice,
+  PRICING_TIERS,
+} from "../types/pricing.ts";
 
 // ---------------------------------------------------------------------------
 // Helper: build a fake File without touching disk
@@ -722,4 +727,27 @@ Deno.test("getShareFooterPillCopy & SHARE_FOOTER_PILL_CLASS - localized Neo-Toyb
     SHARE_FOOTER_PILL_CLASS,
     "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border-2 border-black bg-qr-cream text-black text-xs font-black shadow-chunky hover:scale-105 active:scale-95 transition-all",
   );
+});
+
+Deno.test("PRICING_TIERS.pro & formatInternationalPrice - unified QRBuddy Passport pricing and 4 EN/ES bullets", () => {
+  const pro = PRICING_TIERS.pro;
+  assertEquals(pro.name, "QRBuddy Passport");
+  assertEquals(formatTierPrice(pro), "A$49");
+  assertEquals(formatInternationalPrice(pro), "~$32 USD (A$49)");
+  assertEquals(
+    formatInternationalPrice(PRICING_TIERS.free),
+    "A$0",
+  );
+  assertEquals(pro.features, [
+    "100 Editable Dynamic Links — repoint printed QR codes anytime (vs. 5 on Free)",
+    "500 MB Heavy-Duty File Drops — 10× larger 30-day file transfers (vs. 50 MB on Free)",
+    "Passport Field Report — 90-day scan history, top cities, peak rush hour, track/photo leaderboard & CSV export",
+    "Clean White-Label Pages & 4-Word Sync — zero QRBuddy footer branding + instant cross-device sync",
+  ]);
+  assertEquals(pro.featuresEs, [
+    "100 Links Dinámicos Editables — Cambia a dónde apuntan tus QRs impresos cuando quieras (vs. 5 gratis).",
+    "Archivos Pesados de hasta 500 MB — Transferencias por 30 días 10× más grandes (vs. 50 MB gratis).",
+    "Reporte de Campo Pasaporte — Historial de 90 días, ciudades top, hora pico, ranking por canción/foto y exportar CSV.",
+    "Páginas Limpias Sin Marca y Sincronización de 4 Palabras — Sin sello de QRBuddy + sincronización entre dispositivos.",
+  ]);
 });

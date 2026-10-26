@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { formatTierPrice, PRICING_TIERS } from "../types/pricing.ts";
+import { formatInternationalPrice, PRICING_TIERS } from "../types/pricing.ts";
 import { addToast } from "./ToastManager.tsx";
 import {
   CardModal,
@@ -10,6 +10,10 @@ import {
 import { getApiUrl } from "../utils/api.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
 import { getClientLocale } from "../utils/i18n.ts";
+import {
+  getOrCreatePassport,
+  type QRBuddyPassport,
+} from "../utils/passport.ts";
 import {
   clearPendingCheckout,
   getPendingCheckout,
@@ -66,6 +70,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const isSpanish = getClientLocale(lang) === "es";
   const isOpen = pricingModalOpen.value;
   const [hasPass, setHasPass] = useState(false);
+  const [passport, setPassport] = useState<QRBuddyPassport | null>(null);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
   const [pastedPass, setPastedPass] = useState("");
   const [checkoutError, setCheckoutError] = useState("");
@@ -78,6 +83,17 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const [checkoutRetry, setCheckoutRetry] = useState(0);
   const checkoutAllowedRef = useRef(false);
   const claimCheckoutRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setPassport(getOrCreatePassport());
+    const onPassportChanged = () => setPassport(getOrCreatePassport());
+    globalThis.addEventListener("qrb-passport-changed", onPassportChanged);
+    globalThis.addEventListener("qrb-passport-synced", onPassportChanged);
+    return () => {
+      globalThis.removeEventListener("qrb-passport-changed", onPassportChanged);
+      globalThis.removeEventListener("qrb-passport-synced", onPassportChanged);
+    };
+  }, [isOpen]);
 
   // Check the public availability endpoint when the offer opens. This only
   // reads configuration; a payment link is created only after an explicit click.
@@ -186,7 +202,12 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
           claimCheckoutRef.current = null;
           setClaimStatus("idle");
           pricingModalOpen.value = true;
-          addToast("Supporter pass active 💜 Thank you!", 5000);
+          addToast(
+            isSpanish
+              ? "Pasaporte QRBuddy activo 🛂✨ ¡Gracias!"
+              : "QRBuddy Passport active 🛂✨ Thank you!",
+            5000,
+          );
           trackUmami("upgrade_completed", {
             plan: "supporter_pass",
             billing: "year",
@@ -264,12 +285,15 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       setHasPass(true);
       setPastedPass("");
       setPassCopied(false);
-      addToast(isSpanish ? "Pase restaurado 💜" : "Pass restored 💜", 4000);
+      addToast(
+        isSpanish ? "Pasaporte restaurado 🛂✨" : "Passport restored 🛂✨",
+        4000,
+      );
     } else {
       addToast(
         isSpanish
-          ? "Ese pase no parece válido"
-          : "That doesn't look like a supporter pass",
+          ? "Esa clave de Pasaporte no parece válida"
+          : "That doesn't look like a valid Passport key",
         3500,
       );
     }
@@ -283,8 +307,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       setPassCopied(true);
       addToast(
         isSpanish
-          ? "Pase copiado. Guárdalo en un lugar privado. 📋"
-          : "Pass copied. Save it somewhere private. 📋",
+          ? "Clave de Pasaporte copiada. Guárdala en un lugar privado. 📋"
+          : "Passport key copied. Save it somewhere private. 📋",
       );
     } catch {
       addToast(
@@ -296,11 +320,22 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
     }
   };
 
+  const openLibrary = () => {
+    closePricingModal();
+    setTimeout(
+      () =>
+        globalThis.dispatchEvent(
+          new CustomEvent("qrb-open-library"),
+        ),
+      60,
+    );
+  };
+
   const expiry = hasPass ? supporterPassExpiry() : null;
   const perks = isSpanish
     ? (PRICING_TIERS.pro.featuresEs ?? PRICING_TIERS.pro.features)
     : PRICING_TIERS.pro.features;
-  const price = formatTierPrice(PRICING_TIERS.pro);
+  const intlPrice = formatInternationalPrice(PRICING_TIERS.pro);
   const privacyHref = isSpanish ? "/privacy?lang=es" : "/privacy";
   const termsHref = isSpanish ? "/terms?lang=es" : "/terms";
 
@@ -309,8 +344,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       open={isOpen}
       onClose={closePricingModal}
       labelledby="pricing-modal-title"
-      badge={hasPass ? "💜" : "✨"}
-      badgeClass="from-pink-300 via-qr-pop to-purple-500"
+      badge={hasPass ? "🛂" : "🛂"}
+      badgeClass="from-amber-200 via-pink-300 to-qr-pop"
     >
       <div class="text-center space-y-5">
         <div class="space-y-1.5">
@@ -320,22 +355,61 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
           >
             {hasPass
               ? (isSpanish
-                ? "Ya tienes el Pase Supporter."
-                : "You're a Supporter.")
-              : (isSpanish
-                ? "Pase Supporter de QRBuddy."
-                : "QRBuddy Supporter Pass.")}
+                ? "Tu Pasaporte QRBuddy está activo."
+                : "Your QRBuddy Passport is active.")
+              : (isSpanish ? "El Pasaporte QRBuddy." : "The QRBuddy Passport.")}
           </h2>
           <p class="text-base font-bold text-qr-pop">
             {hasPass
               ? (isSpanish
-                ? "Gracias por apoyar QRBuddy."
-                : "Thank you for supporting QRBuddy.")
+                ? "Todo el equipo pro desbloqueado en este dispositivo."
+                : "Full pro gear unlocked on this device.")
               : (isSpanish
                 ? "Poder Pro, cero suscripciones trampa. Un solo pago por 365 días."
                 : "Pro power, zero subscription traps. One flat payment for 365 days.")}
           </p>
         </div>
+
+        {/* Sovereign Identity Strip */}
+        {passport && (
+          <div class="rounded-2xl border-2 border-black bg-white p-3 text-left shadow-chunky space-y-2.5">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span
+                  class="w-10 h-10 shrink-0 rounded-full border-2 border-black bg-amber-100 flex items-center justify-center text-xl"
+                  aria-hidden="true"
+                >
+                  {passport.avatarEmoji}
+                </span>
+                <div class="min-w-0">
+                  <div class="font-black text-sm text-black truncate">
+                    {passport.name}
+                  </div>
+                  <span
+                    class={`inline-flex items-center px-2 py-0.5 rounded-full border border-black text-[10px] font-black tracking-wide uppercase ${
+                      hasPass
+                        ? "bg-amber-200 text-black"
+                        : "bg-qr-cream text-gray-800"
+                    }`}
+                  >
+                    {hasPass
+                      ? (isSpanish ? "PASAPORTE PRO ✨" : "PASSPORT PRO ✨")
+                      : (isSpanish ? "PASAPORTE GRATIS" : "FREE PASSPORT")}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={openLibrary}
+                class="w-full sm:w-auto min-h-[44px] px-3 rounded-full border-2 border-black bg-amber-100 hover:bg-amber-200 text-xs font-black text-black transition-all active:scale-95"
+              >
+                {isSpanish
+                  ? "📚 Biblioteca y Sincronización"
+                  : "📚 Open Library & 4-Word Sync"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {claimStatus !== "idle" && (
           <div
@@ -357,8 +431,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                   ? "No encontramos esa referencia de pago. Escribe a soporte con tu recibo de Square."
                   : "We couldn't find that checkout reference. Email support with your Square receipt.")
                 : (isSpanish
-                  ? "No se pudo comprobar el pase. La referencia queda guardada en este dispositivo; inténtalo de nuevo o escribe a soporte."
-                  : "We couldn't check the pass. The checkout reference is saved on this device; try again or contact support.")}
+                  ? "No se pudo comprobar el Pasaporte. La referencia queda guardada en este dispositivo; inténtalo de nuevo o escribe a soporte."
+                  : "We couldn't check the Passport. The checkout reference is saved on this device; try again or contact support.")}
             </p>
             {(claimStatus === "waiting" || claimStatus === "error") && (
               <button
@@ -388,7 +462,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
           ? (
             <div class="space-y-2">
               <div class="w-full min-h-[52px] flex items-center justify-center rounded-full border-3 border-black bg-green-100 text-green-900 font-black text-base">
-                ✓ {isSpanish ? "Pase activo" : "Pass active"}
+                ✓ {isSpanish ? "Pasaporte activo" : "Passport active"}
                 {expiry
                   ? ` until ${
                     expiry.toLocaleDateString(isSpanish ? "es" : "en-AU", {
@@ -403,20 +477,9 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                 <CardSecondaryButton onClick={handleCopyPass}>
                   {passCopied
                     ? (isSpanish ? "Copiado ✓" : "Copied ✓")
-                    : (isSpanish ? "Copiar mi pase" : "Copy my pass")}
+                    : (isSpanish ? "Copiar mi clave" : "Copy Passport key")}
                 </CardSecondaryButton>
-                <CardSecondaryButton
-                  onClick={() => {
-                    closePricingModal();
-                    setTimeout(
-                      () =>
-                        globalThis.dispatchEvent(
-                          new CustomEvent("qrb-open-library"),
-                        ),
-                      60,
-                    );
-                  }}
-                >
+                <CardSecondaryButton onClick={openLibrary}>
                   {isSpanish
                     ? "Pasaporte y Biblioteca 📚"
                     : "Passport & Library 📚"}
@@ -424,8 +487,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
               </div>
               <p class="text-xs text-gray-600 font-medium">
                 {isSpanish
-                  ? "El pase se guarda en este navegador. Cópialo a un lugar privado o crea una copia cifrada desde Historial → Sincronizar dispositivos antes de borrar los datos del navegador."
-                  : "Your pass is stored in this browser. Copy it somewhere private or make an encrypted backup from History → Sync Devices before clearing browser data."}
+                  ? "Tu clave de Pasaporte se guarda en este navegador. Cópiala a un lugar privado o sincroniza tus dispositivos antes de borrar los datos del navegador."
+                  : "Your Passport key is stored in this browser. Copy it somewhere private or sync your devices before clearing browser data."}
               </p>
             </div>
           )
@@ -447,25 +510,9 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                     ? "No se pudo comprobar el pago"
                     : "Checkout status unavailable")
                   : (isSpanish
-                    ? `Obtener Pase Supporter — ${price} / 365 días ✨`
-                    : `Get Supporter Pass — ${price} / 365 days ✨`)}
+                    ? `Obtener Pasaporte QRBuddy — ${intlPrice} / año ✨`
+                    : `Get QRBuddy Passport — ${intlPrice} / year ✨`)}
               </CardPrimaryButton>
-              <CardSecondaryButton
-                onClick={() => {
-                  closePricingModal();
-                  setTimeout(
-                    () =>
-                      globalThis.dispatchEvent(
-                        new CustomEvent("qrb-open-library"),
-                      ),
-                    60,
-                  );
-                }}
-              >
-                {isSpanish
-                  ? "Abrir Pasaporte y Biblioteca 📚"
-                  : "Open Passport & Library 📚"}
-              </CardSecondaryButton>
               {checkoutAvailability === "unavailable" && (
                 <p class="text-sm text-gray-700 font-medium" role="status">
                   {isSpanish
@@ -494,8 +541,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
               )}
               <p class="text-xs text-gray-500 font-medium">
                 {isSpanish
-                  ? "Un pago de A$49. Dura 365 días. Sin renovación automática."
-                  : "One A$49 payment. Valid for 365 days. No automatic renewal."}
+                  ? "Un solo pago de ~$32 USD (A$49) · Dura 365 días · Sin renovación automática"
+                  : "One ~$32 USD (A$49) payment · Valid for 365 days · No automatic renewal"}
               </p>
               {checkoutError && (
                 <p class="text-sm text-red-800 font-bold" role="alert">
@@ -515,8 +562,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
         <details class="group text-left pt-2 border-t-2 border-black/10">
           <summary class="cursor-pointer list-none min-h-[44px] flex items-center justify-center gap-1 text-sm font-bold text-gray-600 hover:text-black transition-colors">
             {isSpanish
-              ? "Preguntas o ¿ya tienes un pase?"
-              : "Questions, or have a pass already?"}
+              ? "Preguntas o ¿ya tienes un Pasaporte?"
+              : "Questions, or have a Passport already?"}
             <span class="transition-transform group-open:rotate-180">▾</span>
           </summary>
           <div class="space-y-3 text-sm pt-1">
@@ -526,8 +573,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
               </summary>
               <p class="mt-1 text-gray-700 ml-4">
                 {isSpanish
-                  ? "No. Pagas A$49 una vez y el pase dura 365 días. No se renueva automáticamente. Los archivos compartidos vencen en 30 días y siguen aplicando controles de uso del servicio."
-                  : "No. You pay A$49 once and the pass lasts 365 days. It does not renew automatically. Hosted file drops expire after 30 days and standard service abuse controls still apply."}
+                  ? "No. Pagas ~$32 USD (A$49) una vez y el Pasaporte QRBuddy dura 365 días. No se renueva automáticamente. Los archivos compartidos vencen en 30 días y siguen aplicando controles de uso del servicio."
+                  : "No. You pay ~$32 USD (A$49) once and the QRBuddy Passport lasts 365 days. It does not renew automatically. Hosted file drops expire after 30 days and standard service abuse controls still apply."}
               </p>
             </details>
             <details>
@@ -553,29 +600,37 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
             <details>
               <summary class="font-bold cursor-pointer hover:text-qr-pop">
                 {isSpanish
-                  ? "¿Cómo guardo o recupero mi pase?"
-                  : "How do I keep or recover my pass?"}
+                  ? "¿Cómo guardo o recupero mi Pasaporte?"
+                  : "How do I keep or recover my Passport?"}
               </summary>
               <p class="mt-1 text-gray-700 ml-4">
                 {isSpanish
-                  ? "El pase se guarda en el navegador de este dispositivo. Cópialo o exporta una copia cifrada desde Historial → Sincronizar dispositivos. Sin una copia, no hay recuperación automática por correo o recibo; escribe a soporte con el recibo de Square."
-                  : "The pass is stored in this device's browser. Copy it or export an encrypted backup from History → Sync Devices. Without a backup there is no automatic recovery by email or receipt; contact support with your Square receipt."}
+                  ? "El Pasaporte se guarda en el navegador de este dispositivo. Cópialo o exporta una copia cifrada desde Historial → Sincronizar dispositivos. Sin una copia, no hay recuperación automática por correo o recibo; escribe a soporte con el recibo de Square."
+                  : "The Passport is stored in this device's browser. Copy it or export an encrypted backup from History → Sync Devices. Without a backup there is no automatic recovery by email or receipt; contact support with your Square receipt."}
               </p>
             </details>
             {!hasPass && (
               <details>
                 <summary class="font-bold cursor-pointer hover:text-qr-pop">
-                  {isSpanish ? "¿Ya tienes un pase?" : "Already have a pass?"}
+                  {isSpanish
+                    ? "¿Ya tienes un Pasaporte?"
+                    : "Already have a Passport?"}
                 </summary>
                 <div class="mt-2 ml-4 flex gap-2">
+                  <label class="sr-only" for="restore-passport-input">
+                    {isSpanish
+                      ? "Pega tu clave de Pasaporte"
+                      : "Paste your Passport key"}
+                  </label>
                   <input
+                    id="restore-passport-input"
                     type="text"
                     value={pastedPass}
                     onInput={(e) =>
                       setPastedPass((e.target as HTMLInputElement).value)}
                     placeholder={isSpanish
-                      ? "Pega tu pase Supporter"
-                      : "Paste your supporter pass"}
+                      ? "Pega tu clave de Pasaporte"
+                      : "Paste your Passport key"}
                     class="flex-1 min-w-0 px-3 py-2 border-2 border-black rounded-full text-sm font-mono bg-white focus:border-qr-pop focus:outline-none"
                   />
                   <button
@@ -618,7 +673,7 @@ interface PricingLinkProps {
 }
 
 export function PricingLink({
-  label = "Supporter ✨",
+  label = "Passport 🛂",
   className = "",
 }: PricingLinkProps) {
   return (

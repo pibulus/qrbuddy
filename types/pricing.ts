@@ -33,7 +33,7 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
   },
   pro: {
     id: "pro",
-    name: "Supporter Pass",
+    name: "QRBuddy Passport",
     price: 49,
     currency: "AUD",
     billingPeriod: "year",
@@ -41,16 +41,25 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
     features: [
       "100 Editable Dynamic Links — repoint printed QR codes anytime (vs. 5 on Free)",
       "500 MB Heavy-Duty File Drops — 10× larger 30-day file transfers (vs. 50 MB on Free)",
-      "Clean White-Label Pages — remove QRBuddy branding on supported note and locker pages",
+      "Passport Field Report — 90-day scan history, top cities, peak rush hour, track/photo leaderboard & CSV export",
+      "Clean White-Label Pages & 4-Word Sync — zero QRBuddy footer branding + instant cross-device sync",
     ],
     featuresEs: [
-      "100 Links Dinámicos Editables — Cambia a dónde apuntan tus QRs impresos cuando quieras.",
+      "100 Links Dinámicos Editables — Cambia a dónde apuntan tus QRs impresos cuando quieras (vs. 5 gratis).",
       "Archivos Pesados de hasta 500 MB — Transferencias por 30 días 10× más grandes (vs. 50 MB gratis).",
-      "Páginas Limpias Sin Marca — Tus galerías, mixtapes y descargas sin el sello de QRBuddy.",
+      "Reporte de Campo Pasaporte — Historial de 90 días, ciudades top, hora pico, ranking por canción/foto y exportar CSV.",
+      "Páginas Limpias Sin Marca y Sincronización de 4 Palabras — Sin sello de QRBuddy + sincronización entre dispositivos.",
     ],
   },
 };
 
 export function formatTierPrice(tier: PricingTier): string {
   return tier.currency === "AUD" ? `A$${tier.price}` : `${tier.price}`;
+}
+
+export function formatInternationalPrice(tier: PricingTier): string {
+  if (tier.currency === "AUD" && tier.price === 49) {
+    return "~$32 USD (A$49)";
+  }
+  return formatTierPrice(tier);
 }

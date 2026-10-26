@@ -5,6 +5,8 @@ import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { UNLIMITED_SCANS } from "../../utils/constants.ts";
 import { prettyName } from "../../utils/image-prep.ts";
 import { reorderItems } from "../../utils/share-stats.ts";
+import { getSupporterPass } from "../../utils/supporter-pass.ts";
+import { openPricingModal } from "../PricingModal.tsx";
 import type { ShareKind } from "./ShareReady.tsx";
 
 interface FileUploadOptionsProps {
@@ -253,6 +255,20 @@ export default function FileUploadOptions(
           ? "El link dura 30 días. El límite de descargas es aparte."
           : "Link expires after 30 days. Download limit is separate."}
       </p>
+
+      {kind === "file" && !getSupporterPass() && (
+        <div class="text-center">
+          <button
+            type="button"
+            onClick={openPricingModal}
+            class="min-h-[44px] inline-flex items-center justify-center px-3 py-1 rounded-full border border-black/20 bg-qr-cream text-xs font-bold text-neutral-700 hover:border-black hover:text-black transition-colors"
+          >
+            {isSpanish
+              ? "50 MB gratis · ¿Hasta 500 MB? Pasaporte QRBuddy 🛂"
+              : "50 MB free · Need 500 MB? QRBuddy Passport 🛂"}
+          </button>
+        </div>
+      )}
 
       {/* Self-destruct lives under a toggle: it's the exception, not the form */}
       <details class="group" open={isLimited}>

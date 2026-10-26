@@ -70,7 +70,7 @@ export const TRANSLATIONS = {
     subtagline: "Zero Subscriptions • No Hostage Links • Honest Utility",
     switchLanguage: "🇲🇽 ES",
     backHome: "← Back to QRBuddy Home",
-    supportPass: "Supporter Pass ✨",
+    supportPass: "QRBuddy Passport 🛂",
     tipJar: "Tip Jar ☕",
     madeBy: "Made by Pablo • Melbourne • Anti-scale software with personality.",
     menuBadge: "Hospitality & Dining",
@@ -83,7 +83,7 @@ export const TRANSLATIONS = {
     subtagline: "Sin Suscripciones • Tus Links son Tuyos • Utilidad con Onda",
     switchLanguage: "EN",
     backHome: "← Volver al inicio de QRBuddy",
-    supportPass: "Pase Supporter ✨",
+    supportPass: "Pasaporte QRBuddy 🛂",
     tipJar: "Invitar un café ☕",
     madeBy:
       "Hecho por Pablo • Mexicano-Australiano • Software libre de corporativos.",

@@ -34,7 +34,7 @@ const VALUE_CARDS: ValueCard[] = [
     icon: "📦",
     title: "Larger single-file uploads",
     desc:
-      "Free uploads support files up to 50 MB. The Supporter Pass raises the limit for a single file to 500 MB.",
+      "Free uploads support files up to 50 MB. The QRBuddy Passport raises the limit for a single file to 500 MB.",
   },
 ];
 
@@ -55,16 +55,16 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
     supporter: "30 days",
   },
   {
-    feature: "Supporter Pass",
+    feature: "QRBuddy Passport",
     free: "No purchase required",
-    supporter: "A$49 once for 365 days; no automatic renewal",
+    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
     q: "What file sizes are supported?",
-    a: "Free uploads support files up to 50 MB. The Supporter Pass raises the limit to 500 MB for a single file. It does not add multi-file archive uploads.",
+    a: "Free uploads support files up to 50 MB. The QRBuddy Passport raises the limit to 500 MB for a single file. It does not add multi-file archive uploads.",
   },
   {
     q: "How long are files kept?",
@@ -75,8 +75,8 @@ const FAQ_ITEMS: FAQItem[] = [
     a: "Recipients can open a share link in a browser. Anyone who has the link may be able to access the shared content, so share it only with the people you intend.",
   },
   {
-    q: "What does the Supporter Pass include?",
-    a: "It costs A$49 once and lasts 365 days, with no automatic renewal. It raises selected creation and upload limits. Abuse controls still apply.",
+    q: "What does the QRBuddy Passport include?",
+    a: "It costs ~$32 USD (A$49) once and lasts 365 days, with no automatic renewal. It raises selected creation and upload limits. Abuse controls still apply.",
   },
 ];
 
@@ -84,7 +84,7 @@ export default function LockersPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/lockers";
   const title = "Temporary File Sharing by QR Code | QRBuddy";
   const description =
-    "Share a file through a QRBuddy link or QR code. Free uploads support up to 50 MB; the Supporter Pass raises the single-file limit to 500 MB. Shares expire after 30 days.";
+    "Share a file through a QRBuddy link or QR code. Free uploads support up to 50 MB; the QRBuddy Passport raises the single-file limit to 500 MB. Shares expire after 30 days.";
 
   return (
     <>
@@ -103,7 +103,7 @@ export default function LockersPage({ data }: PageProps<PageData>) {
         applicationCategory="UtilitiesApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Supporter Pass: A$49 for 365 days, one payment with no automatic renewal"
+        offerDescription="QRBuddy Passport: A$49 for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
@@ -115,11 +115,11 @@ export default function LockersPage({ data }: PageProps<PageData>) {
         defaultStyle="terminal"
         defaultCaption="OPEN FILE"
         valueCards={VALUE_CARDS}
-        comparisonTitle="Free QRBuddy and the Supporter Pass"
+        comparisonTitle="Free QRBuddy and the QRBuddy Passport"
         comparisonSubtitle="A clear look at file-size limits and retention"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
-        ctaLabel="Get Supporter Pass 🛡️"
+        ctaLabel="Get QRBuddy Passport 🛂✨"
       />
     </>
   );

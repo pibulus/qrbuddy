@@ -454,15 +454,28 @@ export default function SmartInput(
       haptics.error();
       return;
     }
-    // Supporter pass lifts the single-file ceiling (R2-backed) — multi-file
+    // QRBuddy Passport lifts the single-file ceiling (R2-backed) — multi-file
     // slideshows stay on the Supabase path and its cap.
-    const maxSize = getSupporterPass() && files.length === 1
+    const hasPass = Boolean(getSupporterPass());
+    const maxSize = hasPass && files.length === 1
       ? SUPPORTER_MAX_FILE_SIZE
       : MAX_FILE_SIZE;
     for (const file of files) {
       const validation = validateFile(file, maxSize);
       if (!validation.valid) {
-        addToast(`❌ ${validation.error}`, 4000);
+        if (
+          !hasPass && files.length === 1 && file.size > MAX_FILE_SIZE &&
+          file.size <= SUPPORTER_MAX_FILE_SIZE
+        ) {
+          addToast(
+            isSpanish
+              ? "📦 Archivo mayor a 50 MB — el Pasaporte QRBuddy desbloquea envíos de hasta 500 MB 🛂"
+              : "📦 File over 50 MB — QRBuddy Passport unlocks 500 MB file drops 🛂",
+            4500,
+          );
+        } else {
+          addToast(`❌ ${validation.error}`, 4000);
+        }
         haptics.error();
         return;
       }

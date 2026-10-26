@@ -174,7 +174,7 @@ export default function OwnerStrip(
         if (!cancelled) setStatsLoading(false);
       }
 
-      // Auto-upgrade older shares when the owner holds a valid Supporter Pass
+      // Auto-upgrade older shares when the owner holds a valid QRBuddy Passport
       if (passPresent && !serverUnbranded && !cancelled) {
         try {
           await apiRequest(
@@ -434,9 +434,9 @@ export default function OwnerStrip(
                 disabled={mutationBusy}
                 onClick={() => void activateWhiteLabel()}
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-black bg-amber-200 text-black text-[10px] font-black shadow-sm hover:bg-amber-300 transition-colors disabled:opacity-50"
-                title="Supporter Pass perk: QRBuddy footer badge is hidden on this share"
+                title="QRBuddy Passport perk: QRBuddy footer badge is hidden on this share"
               >
-                ✨ Clean White-Label Active
+                🛂 Clean White-Label Active
               </button>
             )}
           </div>
