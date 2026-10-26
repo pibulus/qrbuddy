@@ -46,16 +46,20 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
   );
   const pngSize = useSignal<1000 | 2000 | 3000>(1000);
 
-  const title = "QRBuddy — Pega un link. Hazlo brillar.";
+  const title =
+    "QRBuddy — Estudio Profesional de Códigos QR Gratis y Dinámicos (SVG Vectorial, Logos y Analíticas)";
   const description =
-    "Generador de códigos QR con degradados pastel-punk, links editables sin suscripciones forzadas, transferencia de archivos, galerías y mixtapes de audio.";
+    "Crea códigos QR estáticos y dinámicos editables, Wi-Fi, vCard, portadas de marca, lotes ZIP con manifiesto CSV, entregas de hasta 500 MB y analíticas de 90 días sin suscripciones trampa.";
 
   return (
     <>
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+        />
         <link rel="canonical" href="https://qrbuddy.app/es" />
         <link
           rel="alternate"

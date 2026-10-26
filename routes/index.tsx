@@ -52,10 +52,13 @@ export default function Home({ data }: PageProps<HomeProps>) {
   return (
     <>
       <Head>
-        <title>QRBuddy - Drop a link. Watch it bloom.</title>
+        <title>
+          QRBuddy — Free &amp; Dynamic QR Code Studio (Vector SVG, Logos,
+          Routing &amp; Analytics)
+        </title>
         <meta
           name="description"
-          content="Beautiful QR code generator with 8 gradient styles, QR types for links/WiFi/contact cards/messages, custom logos, file sharing, and editable QR codes. Free, privacy-first, minimal analytics."
+          content="Full-stack QR code studio for print, menus, packaging, and events. Create static & editable dynamic QR codes, Wi-Fi, vCards, branded cover pages, bulk ZIPs, 500 MB media drops, and 90-day analytics without hostage subscriptions."
         />
         <link rel="canonical" href="https://qrbuddy.app" />
         <link rel="alternate" hrefLang="en" href="https://qrbuddy.app" />
@@ -129,30 +132,38 @@ export default function Home({ data }: PageProps<HomeProps>) {
             "name": "QRBuddy",
             "url": "https://qrbuddy.app",
             "description":
-              "Beautiful gradient QR code generator with personality. Create stunning QR codes with useful QR types, file sharing, custom logos, and editable redirects.",
-            "applicationCategory": "UtilityApplication",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "AUD",
-            },
+              "Full-stack QR code studio replacing Bitly, QR Code Monkey, and QR Tiger. Create print-verified gradient QR codes with vector SVG export, custom logos, editable dynamic redirects, time-of-day & device routing, bulk ZIP generation, 500 MB media drops, and 90-day privacy-safe analytics.",
+            "applicationCategory": "BusinessApplication",
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Free Studio",
+                "price": "0",
+                "priceCurrency": "AUD",
+              },
+              {
+                "@type": "Offer",
+                "name": "The QRBuddy Passport (1 Year)",
+                "price": "49",
+                "priceCurrency": "AUD",
+              },
+            ],
             "creator": {
               "@type": "Person",
               "name": "Pablo",
             },
             "featureList": [
-              "8 gradient presets (Sunset, Candy, Blush, Matcha, Pool, Vapor, Grape, Licorice)",
-              "Custom gradient creator",
-              "QR types for links, WiFi, contact cards, messages, and plain text",
-              "File sharing and file lockers",
-              "Custom logo in QR center",
-              "Destructible QR codes (one-time use)",
-              "Dynamic QR codes (editable redirects)",
-              "Drag & drop file upload",
-              "Copy to clipboard",
-              "Download PNG",
-              "Mobile-first responsive design",
-              "Coarse share statistics described in the privacy notice",
+              "8 print-verified gradient palettes (Sunset, Candy, Blush, Matcha, Pool, Vapor, Grape, Licorice) + custom gradient builder",
+              "High-resolution PNG (up to 3000px) and true vector SVG export with live WCAG contrast verification",
+              "All core QR types: URL, Wi-Fi, Contact Card (vCard), Social Bio Hub, Media Hub, Phone, SMS, Email, Plain Text",
+              "Editable Dynamic QR codes with custom short codes, scan caps, and expiration dates",
+              "Smart Conditional Routing: Time-of-day schedules (Breakfast/Lunch/Dinner menus), iOS/Android split, and A/B split",
+              "Branded Cover Pages with 3 themes, 1-click starters, and Passport White-Label mode",
+              "Bulk / Batch QR Generator exporting PNG + Vector SVG + print-shop manifest.csv in one ZIP",
+              "Daylight Media Drops: Photo Slideshows, Audio Mixtapes, Inbound File Lockers, and up to 500 MB file drops",
+              "Passport Field Report: 7d/30d/90d scan trends, Top Cities & Countries, 24h Peak Rush Hour, Track/Photo Leaderboard, and RFC-4180 CSV export",
+              "Street-Safe QR Inspector: unroll up to 5 redirect hops, verify HTTPS, and inspect live visual webpage previews",
+              "Bilingual English (/) and Spanish (/es) with zero mandatory email/password account walls",
             ],
             "operatingSystem": "Any (Web-based)",
             "browserRequirements":

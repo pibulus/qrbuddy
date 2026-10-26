@@ -902,3 +902,51 @@ Deno.test("buildCards & buildShareStatsCsv - computes itemLeaderboard, topPlaces
   );
   assert(rows.includes("Brunswick Mixtape,all,app,Instagram,11"));
 });
+
+Deno.test("Batch Generator — parseBatchRows and buildBatchManifestCsv support labeled rows and PNG+SVG manifests", async () => {
+  const { parseBatchRows, buildBatchManifestCsv } = await import(
+    "../hooks/useBatchGenerator.ts"
+  );
+
+  const raw = [
+    "Table 1 | https://cafe.example/t1",
+    "Patio, Table 2, https://cafe.example/t2",
+    "https://cafe.example/vip-menu",
+  ].join("\n");
+
+  const parsed = parseBatchRows(raw);
+  assertEquals(parsed.length, 3);
+  assertEquals(parsed[0], {
+    index: 1,
+    label: "Table 1",
+    url: "https://cafe.example/t1",
+    safeSlug: "table_1",
+  });
+  assertEquals(parsed[1], {
+    index: 2,
+    label: "Patio, Table 2",
+    url: "https://cafe.example/t2",
+    safeSlug: "patio_table_2",
+  });
+  assertEquals(parsed[2], {
+    index: 3,
+    label: "QR 3",
+    url: "https://cafe.example/vip-menu",
+    safeSlug: "cafe_example_vip_menu",
+  });
+
+  const csvBoth = buildBatchManifestCsv(parsed, "both");
+  const lines = csvBoth.trim().split("\r\n");
+  assertEquals(
+    lines[0],
+    "index,label,target_url,png_filename,svg_filename",
+  );
+  assertEquals(
+    lines[1],
+    "1,Table 1,https://cafe.example/t1,qr_01_table_1.png,qr_01_table_1.svg",
+  );
+  assertEquals(
+    lines[2],
+    '2,"Patio, Table 2",https://cafe.example/t2,qr_02_patio_table_2.png,qr_02_patio_table_2.svg',
+  );
+});

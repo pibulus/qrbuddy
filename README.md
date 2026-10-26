@@ -1,35 +1,46 @@
 # 🌈 QRBuddy
 
-> The Porkbun of QR generators - beautiful gradient QR codes that make you smile
+> Everything the big QR platforms do — designed for print, never held hostage.
 
-Drop a link. Watch it bloom. QRBuddy transforms boring QR codes into stunning
-gradient art pieces with that soft brutal aesthetic.
+Drop a link. Watch it bloom. QRBuddy is a full-stack QR studio for businesses,
+restaurants, agencies, designers, and makers that replaces Bitly, QR Code
+Monkey, and QR Tiger without dated black-and-white barcodes, mandatory account
+walls, or $35/month hostage subscriptions.
 
 ## ✨ Features
 
-- **Smart Input** - Paste URLs, type text, or drop files - it just works
-- **Destructible QRs** 💣 - One-time QR codes (URLs or files) that self-destruct
-  after 1 scan → KABOOM!
-- **Dynamic QR Codes** 🔗 - Privacy-first editable redirects with scan limits
-  (no IPs or raw user agents logged — just coarse scan stats for your own
-  dashboard)
-- **File Locker** 🔐 - Reusable or one-shot QR lockers for passing files, text,
-  and links
-- **Scan Limits** - Set 1, 5, 10, 100, or unlimited scans before self-destruct
-- **Expiry Dates** - Optional time-based QR expiration
-- **Edit Anytime** - Change destination URL without reprinting QR (works for
-  both URLs and files)
-- **Multi-File Shares** - Image sets preview as a slideshow; finite shares
-  download as one zip so one file cannot consume the whole set
-- **7 Gradient Styles** - Sunset, Pool, Terminal, Candy, Vapor, Classic, and
-  Brutalist themes
-- **Custom Gradient Creator** - Build your own gradient QR codes
-- **Instant Generation** - <100ms QR generation with no loading states
-- **Download & Copy** - Save PNG/SVG files or copy text with a separate action
-- **Mobile First** - Responsive design that works beautifully on all devices
-- **Soft Brutal Design** - Chunky borders, hard shadows, pastel colors
-- **Error Handling** - Graceful degradation with helpful error messages
-- **KABOOM Page** - Spectacular explosion page for already-scanned files
+- **Full-Stack QR Studio** - Create URLs, Wi-Fi cards, Contact Cards (vCard),
+  Social Bio Hubs, Media Hubs, Phone/SMS/Email triggers, and Plain Text from one
+  smart auto-detecting input bar
+- **Print-Verified Design Engine** - 8 luminance-tested gradient palettes (≤
+  0.40 contrast), custom 2-stop linear/radial gradients, dot & corner geometry,
+  center logo stamp, SCAN ME frames, live WCAG contrast badge, and 3000px PNG +
+  vector SVG export
+- **Smart Dynamic QR Codes** - Edit destinations after printing, route by
+  time-of-day (Breakfast/Lunch/Dinner menus), split by iOS/Android or A/B
+  weights, rotate sequential links, or set scan caps and expiration dates
+- **Branded Cover Pages & White-Label** - Add Warm Paper, Sunset Pop, or
+  Midnight Ink cover pages with 1-click starters (Café Menu, Wi-Fi Card, Tip
+  Jar, Event Check-in) and 1-click Passport White-Labeling
+- **Passport Field Report 🛂** - 7d/30d/90d scan trends, Top Cities & Countries,
+  24-hour Peak Rush Hour window, Browser & Device split, Track/Photo
+  Leaderboard, and 1-click RFC-4180 CSV export (zero IP or raw User-Agent
+  logging)
+- **Agency Bulk / Batch ZIP Generator** - Paste multiple URLs (or `Label | URL`
+  rows) and export a single ZIP containing 1000px PNGs, vector SVGs, and a
+  print-shop `manifest.csv`
+- **Daylight Media Drops & File Lockers** - Drop up to 10 photos for an
+  auto-advancing gallery, up to 10 audio tracks for a browser mixtape player,
+  inbound File Collection Lockers, or up to 500 MB file drops with optional PIN
+  & self-destruct limits
+- **Street-Safe QR Inspector** - Scan any QR code to unroll up to 5 redirect
+  hops, verify HTTPS, and inspect a live visual webpage preview before visiting
+- **The QRBuddy Passport 🛂✨** - Cryptographic 4-word key & scannable QR card
+  that syncs your library and paid status (`~$32 USD / A$49` for 365 days, zero
+  auto-renewal) across laptop and phone with zero email/password sign-up
+- **Bilingual Out of the Box** - Native English (`/`) and LatAm/Mexican Spanish
+  (`/es`) across the studio and vertical landing pages (`/for/menus`,
+  `/for/weddings`, `/for/music`, `/for/lockers`, `/guide/printing`)
 
 ## 🚀 Quick Start (Local Development)
 

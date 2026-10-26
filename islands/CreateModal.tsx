@@ -59,7 +59,7 @@ interface CreateModalProps {
   setBatchUrls: (urls: string) => void;
   isGeneratingBatch: boolean;
   batchProgress: number;
-  onGenerateBatch: () => void;
+  onGenerateBatch: (format?: "png" | "svg" | "both") => void;
   onLockerConfirm: (options: CreateBucketOptions) => Promise<boolean>;
   onLockerDisable: () => void;
   onTextCardConfirm: (text: string) => Promise<boolean>;

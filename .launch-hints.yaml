@@ -5,68 +5,74 @@ slug: qrbuddy
 app_type: web-app
 
 audience: >-
-  small business owners, designers, event organisers and makers who put QR codes on real
-  physical things — menus, stickers, posters, business cards — and refuse to ship an ugly
-  black square or pay $30/mo for a tracking dashboard
+  businesses, restaurants, agencies, designers, musicians, and event teams who print QR
+  codes on menus, packaging, signage, and merch — and want every pro feature of Bitly,
+  QR Code Monkey, and QR Tiger without ugly barcodes, mandatory accounts, or $35/mo
+  hostage subscriptions
 
 problem: >-
-  every QR generator is either a bare-bones ugly tool or an enterprise dashboard that
-  charges monthly to edit a URL you already own
+  mainstream QR platforms either hand out dated black-and-white barcodes or bait businesses
+  with "free" dynamic codes that deactivate after 14 days unless you pay $120–$420/year
 
-promise: Drop a link. Watch it bloom.
+promise: Everything the big QR platforms do — designed for print, never held hostage.
 
-one_liner: Drop a link. Watch it bloom.
+one_liner: The full-stack QR studio that beats Bitly and QR Code Monkey on design, routing, analytics, and price.
 
-cta: Make one at https://qrbuddy.app
+cta: Create your QR at https://qrbuddy.app
 
 voice: juicy
 palette: pastel-punk
 
 differentiators:
-  - Eight jewel-arc pastel-punk gradient styles (luminance-tested ≤ 0.40 so every code scans first try) plus a custom gradient creator & logo stamp
-  - Street-Safe Mini-Browser QR Inspector — scan any street QR to unroll up to 5 redirect hops, check HTTPS, and see a live webpage preview without cookies before clicking
-  - Daylight Pastel-Punk Media Drops — drop photos for an instant gallery slideshow, MP3/WAV tracks for a playable mixtape, or up to 500 MB of files
-  - Self-destructing Time-Bomb codes & PIN-locked Secret Drops that work N times and then blow up with a full KABOOM page
-  - The QRBuddy Passport (~$32 USD / A$49 for 365 days, zero subscription traps) — unlocks 100 editable dynamic links, 500 MB file drops, clean white-label pages, 4-word device sync, and the 90-day Passport Field Report (top cities, peak rush hour, track/photo leaderboard & CSV export)
-  - Bilingual out of the box — English (/) and "buena onda" Mexican/LatAm Spanish (/es)
+  - Full-stack QR studio that replaces Bitly, QR Code Monkey, and QR Tiger — static & dynamic URLs, Wi-Fi, vCard, Social Bio Hubs, Photo Galleries, Audio Mixtapes, inbound File Lockers, and Bulk ZIP generation in one workspace
+  - Print-verified design engine — 8 luminance-tested gradient palettes (≤ 0.40 contrast), custom 2-stop gradients, dot/corner geometry, center logo stamp, SCAN ME frames, live WCAG scannability badge, and 2400px PNG + vector SVG export
+  - Smart Dynamic QRs without hostage pricing — edit destinations after printing, route by time-of-day (Breakfast/Lunch/Dinner menus), split by iOS/Android or A/B weights, add branded Cover Pages, or set scan/date limits
+  - The QRBuddy Passport (~$32 USD / A$49 once for 365 days, zero auto-renew) — unlocks 100 editable dynamic links, 500 MB file drops, clean 1-click white-label pages, 4-word cross-device QR sync, and the 90-day Passport Field Report (top cities, 24h peak rush hour, track/photo leaderboard & RFC-4180 CSV export)
+  - Street-Safe QR Inspector — scan any QR code to unroll up to 5 redirect hops, verify HTTPS, and inspect a live visual webpage preview before visiting
+  - Fully bilingual out of the box — native English (/) and LatAm/Mexican Spanish (/es) with zero account wall
 
 proof_points:
-  - Paste a URL, type text, or drop photos/audio/files — it figures out which one you gave it in one input bar
-  - Repoint printed QR codes anytime or route by time-of-day (Breakfast / Lunch / Dinner menus) without reprinting
-  - Inspect sketchy street QR codes safely with a live visual webpage preview and unrolled redirect chain
-  - Zero email or password accounts — your 4-word Sovereign Passport & scannable QR card sync your library and pro entitlement across phone and laptop instantly
+  - One smart input bar auto-detects URLs, text, Wi-Fi, vCards, or dragged-and-dropped PDFs, photo albums, and audio tracks
+  - Dynamic QR codes support live destination edits, time-of-day menu schedules, iOS/Android device routing, and branded cover pages without reprinting a single poster or table tent
+  - Passport Field Report delivers 7d/30d/90d scan trends, Top Cities & Countries, Peak Rush Hour windows, Browser/Device breakdown, and 1-click CSV export with zero creepy ad-tech or IP logging
+  - No email/password sign-up wall — your cryptographic QRBuddy Passport pairs phone and desktop via a scannable QR or 4-word recovery key
 
 objections:
   - >-
-      "why not a free generator?" — most hand you a flat black-and-white square. The
-      aesthetic gap shows up the second you put it on a poster.
+      "Can this actually replace Bitly, QR Tiger, or Uniqode for my business?" — Yes. You get
+      dynamic redirects, conditional routing (time-of-day & iOS/Android), bulk ZIP generation,
+      vector SVG export, white-label cover pages, and 90-day city/hour analytics with CSV export —
+      for ~$32 USD (A$49) a year instead of $35/month.
   - >-
-      "will the dynamic links stay up?" — the redirects are as durable as the hosting,
-      and the whole thing is open source if you would rather self-host it.
+      "What happens to my printed codes if I don't renew?" — Unlike trial-trap generators that
+      brick your printed menus after 14 days, static codes work offline forever and dynamic codes
+      are never held hostage behind surprise auto-renewals.
   - >-
-      "free with no catch?" — there are no scan analytics to sell, so there is nothing
-      to monetise and nothing to upsell you to.
+      "Will gradient QR codes scan reliably in dim bars or on glossy packaging?" — Every preset is
+      luminance-capped (≤ 0.40) with Error Correction Level Q/H (25–30% recovery) and verified in
+      real time by a built-in WCAG & Michelson contrast meter before export.
 
 keywords:
   seed:
     - QR code generator
-    - gradient QR code
-    - self-destructing QR code
-    - dynamic QR code free
-    - QR code with logo
-    - privacy QR generator
-  audience: small business owners, designers and makers who print QR codes on physical materials
+    - dynamic QR code generator
+    - Bitly QR code alternative
+    - QR Code Monkey alternative
+    - custom QR code with logo SVG
+    - restaurant menu QR code generator
+    - bulk QR code generator
+  audience: businesses, restaurants, agencies, designers, and makers printing QR codes on menus, packaging, signage, and merch
   intent:
-    - make a QR code that looks good
-    - free dynamic QR code no tracking
-    - self-destructing QR code generator
-    - WiFi QR code generator
+    - dynamic QR code generator without subscription
+    - QR code generator with logo and vector SVG
+    - editable QR code for restaurant menu
+    - bulk QR code generator ZIP
 
 links:
   website: https://qrbuddy.app
   github: https://github.com/pibulus/qrbuddy
 
 notes:
-  - Lead visuals with the gradient codes — the aesthetic gap is the whole pitch
-  - The KABOOM page is the memorable brand moment, worth featuring
-  - Destructible file sharing (not just URLs) widens this past normal QR tools
+  - Position QRBuddy head-on against Bitly, QR Code Monkey, QR Tiger, and Uniqode — not as a niche indie toy, but as a faster, better-designed, non-predatory powerhouse
+  - Highlight the complete pro feature set: Dynamic routing (time-of-day/device), Bulk ZIP creation, Vector SVG, White-Label Cover Pages, 500 MB media drops, and the 90-day Passport Field Report with CSV export
+  - Emphasize the anti-hostage pricing contrast: ~$32 USD (A$49) once for 365 days vs. $120–$420/yr recurring SaaS traps

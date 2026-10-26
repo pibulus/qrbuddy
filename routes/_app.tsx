@@ -25,7 +25,10 @@ export default function App({ Component, url }: PageProps) {
           data-site="qrbuddy.app"
         >
         </script>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+        />
         <title>qrbuddy</title>
         <link rel="stylesheet" href={asset("/styles.css")} />
         <script
