@@ -42,6 +42,13 @@ export interface QRData {
     sparkline: number[];
     last_scan: string | null;
     devices: { ios: number; android: number; desktop: number; other: number };
+    sparkline_30d?: number[];
+    total_30d?: number;
+    total_90d?: number;
+    hours?: number[];
+    top_cities?: Array<{ name: string; count: number }>;
+    top_countries?: Array<{ code: string; count: number }>;
+    browsers?: Record<string, number>;
   };
 }
 

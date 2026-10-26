@@ -23,13 +23,16 @@ import { formatFileSize, validateFile } from "../utils/file-validation.ts";
 import { shareKindOf } from "../islands/smart-input/FileUploadOptions.tsx";
 import {
   buildCards,
+  buildShareStatsCsv,
   cardKpis,
   nextStatsRange,
   reorderItems,
 } from "../utils/share-stats.ts";
 import { deriveQRStatus } from "../islands/edit-qr/QRStatusCard.tsx";
 import {
+  buildAnalyticsCsv,
   buildSevenDayActivity,
+  findPeakHourWindow,
   formatRelativeVisit,
 } from "../islands/edit-qr/AnalyticsDashboard.tsx";
 
@@ -750,4 +753,152 @@ Deno.test("PRICING_TIERS.pro & formatInternationalPrice - unified QRBuddy Passpo
     "Reporte de Campo Pasaporte — Historial de 90 días, ciudades top, hora pico, ranking por canción/foto y exportar CSV.",
     "Páginas Limpias Sin Marca y Sincronización de 4 Palabras — Sin sello de QRBuddy + sincronización entre dispositivos.",
   ]);
+});
+
+// ===========================================================================
+// Passport Field Report: Dynamic QR Analytics & Media Share Stats
+// ===========================================================================
+Deno.test("findPeakHourWindow & buildAnalyticsCsv - computes peak 2-hour window and RFC-4180 CSV", () => {
+  assertEquals(findPeakHourWindow(undefined), null);
+  assertEquals(findPeakHourWindow(new Array(24).fill(0)), null);
+
+  const eveningHours = new Array(24).fill(0);
+  eveningHours[20] = 14;
+  eveningHours[21] = 19;
+  eveningHours[9] = 4;
+  assertEquals(findPeakHourWindow(eveningHours), "8pm–10pm");
+
+  const midnightWrapHours = new Array(24).fill(0);
+  midnightWrapHours[23] = 8;
+  midnightWrapHours[0] = 9;
+  assertEquals(findPeakHourWindow(midnightWrapHours), "11pm–1am");
+
+  const nowMs = Date.parse("2026-10-26T12:00:00Z");
+  const spark30 = Array.from({ length: 30 }, (_, i) => i + 1);
+  const csv = buildAnalyticsCsv(
+    "menu99",
+    {
+      available: true,
+      sparkline: [1, 2, 3, 4, 5, 6, 7],
+      sparkline_30d: spark30,
+      total_30d: 465,
+      total_90d: 920,
+      last_scan: "2026-10-26T11:30:00Z",
+      devices: { ios: 25, android: 12, desktop: 5, other: 1 },
+      hours: eveningHours,
+      top_cities: [
+        { name: "Melbourne, VIC", count: 18 },
+        { name: "CDMX", count: 11 },
+      ],
+      top_countries: [
+        { code: "AU", count: 22 },
+        { code: "MX", count: 11 },
+      ],
+      browsers: { safari: 22, chrome: 15, firefox: 4, edge: 1, other: 1 },
+    },
+    nowMs,
+  );
+
+  const lines = csv.split("\r\n");
+  assertEquals(lines[0], "short_code,category,label,value");
+  assert(lines.includes("menu99,daily,2026-10-26,30"));
+  assert(lines.includes("menu99,summary,total_30d,465"));
+  assert(lines.includes("menu99,summary,total_90d,920"));
+  assert(lines.includes("menu99,summary,peak_rush_hour,8pm–10pm"));
+  assert(lines.includes("menu99,device,ios,25"));
+  assert(lines.includes('menu99,city,"Melbourne, VIC",18'));
+  assert(lines.includes("menu99,country,AU,22"));
+  assert(lines.includes("menu99,browser,safari,22"));
+});
+
+Deno.test("buildCards & buildShareStatsCsv - computes itemLeaderboard, topPlaces, appBreakdown, and CSV export", () => {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const cards = buildCards(
+    {
+      views: 42,
+      referred: 18,
+      countries: { AU: 25, MX: 10, JP: 7 },
+      cities: { Melbourne: 20, "Mexico City, MX": 10, Tokyo: 7 },
+      devices: { mobile: 35, desktop: 7 },
+      apps: { Instagram: 11, WhatsApp: 5, Telegram: 2 },
+      items: { "track-a": 8, "track-b": 20, "track-c": 10 },
+      dwell_s: 2040,
+      dwell_n: 20,
+      completions: 14,
+      shares: 4,
+      downloads: 9,
+      farthest_km: 13100,
+      farthest_place: "Mexico City",
+    },
+    [
+      {
+        day: todayStr,
+        views: 12,
+        people: 9,
+        returns: 3,
+        countries: { AU: 8, MX: 4 },
+        cities: {},
+        devices: { mobile: 10, desktop: 2 },
+        hours: new Array(24).fill(0),
+        items: { "track-a": 3, "track-b": 6 },
+        apps: { Instagram: 5, WhatsApp: 2 },
+        dwell_s: 600,
+        dwell_n: 6,
+        completions: 4,
+        shares: 1,
+        downloads: 3,
+        referred: 7,
+      },
+    ],
+  );
+
+  // All-time leaderboard sorted descending with normalized share (0..1)
+  assertEquals(cards.all.itemLeaderboard, [
+    { id: "track-b", plays: 20, share: 1 },
+    { id: "track-c", plays: 10, share: 0.5 },
+    { id: "track-a", plays: 8, share: 0.4 },
+  ]);
+
+  // All-time topPlaces uses cities when available
+  assertEquals(cards.all.topPlaces, [
+    { name: "Melbourne", views: 20 },
+    { name: "Mexico City, MX", views: 10 },
+    { name: "Tokyo", views: 7 },
+  ]);
+
+  // Today topPlaces falls back to countries when cities is empty
+  assertEquals(cards.today.topPlaces, [
+    { name: "AU", views: 8 },
+    { name: "MX", views: 4 },
+  ]);
+
+  // App breakdown sorted descending
+  assertEquals(cards.all.appBreakdown, [
+    { name: "Instagram", views: 11 },
+    { name: "WhatsApp", views: 5 },
+    { name: "Telegram", views: 2 },
+  ]);
+
+  const names: Record<string, string> = {
+    "track-a": "Intro (Warm Dawn)",
+    "track-b": 'Track 2, "The Hit"',
+    "track-c": "Outro",
+  };
+  const csv = buildShareStatsCsv(
+    "Brunswick Mixtape",
+    cards.all,
+    (id) => names[id] ?? id,
+  );
+  const rows = csv.split("\r\n");
+  assertEquals(rows[0], "title,range,category,label,value");
+  assert(rows.includes("Brunswick Mixtape,all,summary,views,42"));
+  assert(
+    rows.includes(
+      'Brunswick Mixtape,all,leaderboard,"Track 2, ""The Hit""",20',
+    ),
+  );
+  assert(
+    rows.includes('Brunswick Mixtape,all,place,"Mexico City, MX",10'),
+  );
+  assert(rows.includes("Brunswick Mixtape,all,app,Instagram,11"));
 });

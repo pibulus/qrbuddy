@@ -298,6 +298,7 @@ export default function EditQRForm() {
       <AnalyticsDashboard
         analytics={qrData.analytics}
         totalVisits={qrData.scan_count}
+        shortCode={qrData.short_code}
       />
 
       {/* Edit Form */}

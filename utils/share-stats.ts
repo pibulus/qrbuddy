@@ -102,6 +102,12 @@ export interface StatsCard {
   iosShare: number | null;
   /** Conditions that over-index against a fair baseline (lift ≥ 1.5). */
   patterns: Pattern[];
+  /** Sorted descending by plays across all items in items tally, share = plays / maxPlays (0..1). */
+  itemLeaderboard: Array<{ id: string; plays: number; share: number }>;
+  /** Up to 5 top cities (or countries when city is absent) for the selected range. */
+  topPlaces: Array<{ name: string; views: number }>;
+  /** Up to 4 top referrer apps for the selected range. */
+  appBreakdown: Array<{ name: string; views: number }>;
 }
 
 // ── Patterns ──────────────────────────────────────────────────────────────
@@ -355,6 +361,44 @@ function appOf(
   return { name: t[0], share: t[1] / referred };
 }
 
+function buildItemLeaderboard(
+  items: Record<string, number> | undefined,
+): Array<{ id: string; plays: number; share: number }> {
+  if (!items) return [];
+  const entries = Object.entries(items)
+    .map(([id, plays]) => ({ id, plays: Math.max(0, Number(plays) || 0) }))
+    .filter((entry) => entry.plays > 0)
+    .sort((a, b) => b.plays - a.plays || a.id.localeCompare(b.id));
+  if (entries.length === 0) return [];
+  const maxPlays = Math.max(1, entries[0].plays);
+  return entries.map((entry) => ({
+    id: entry.id,
+    plays: entry.plays,
+    share: entry.plays / maxPlays,
+  }));
+}
+
+function topEntries(
+  map: Record<string, number> | undefined,
+  limit: number,
+): Array<{ name: string; views: number }> {
+  if (!map) return [];
+  return Object.entries(map)
+    .map(([name, views]) => ({ name, views: Math.max(0, Number(views) || 0) }))
+    .filter((entry) => entry.name.trim() !== "" && entry.views > 0)
+    .sort((a, b) => b.views - a.views || a.name.localeCompare(b.name))
+    .slice(0, limit);
+}
+
+function buildTopPlaces(
+  cities: Record<string, number> | undefined,
+  countries: Record<string, number> | undefined,
+): Array<{ name: string; views: number }> {
+  const topCities = topEntries(cities, 5);
+  if (topCities.length > 0) return topCities;
+  return topEntries(countries, 5);
+}
+
 function cardFromRows(range: StatsRange, rows: LedgerRow[]): StatsCard {
   const views = rows.reduce((a, r) => a + (r.views ?? 0), 0);
   const people = rows.reduce((a, r) => a + (r.people ?? 0), 0);
@@ -417,6 +461,9 @@ function cardFromRows(range: StatsRange, rows: LedgerRow[]): StatsCard {
     weekendShare: range === "week" ? weekendShareOf(dowTally) : null,
     iosShare: null,
     patterns: [],
+    itemLeaderboard: buildItemLeaderboard(items),
+    topPlaces: buildTopPlaces(cities, countries),
+    appBreakdown: topEntries(apps, 4),
   };
 }
 
@@ -505,6 +552,9 @@ export function buildCards(
     nightShare: nightShareOf(hours),
     weekendShare: weekendShareOf(dowTally),
     patterns: [],
+    itemLeaderboard: buildItemLeaderboard(lifetime.items),
+    topPlaces: buildTopPlaces(lifetime.cities, lifetime.countries),
+    appBreakdown: topEntries(lifetime.apps, 4),
     iosShare: (() => {
       const os = lifetime.os ?? {};
       const known = (os.ios ?? 0) + (os.android ?? 0);
@@ -767,4 +817,133 @@ export function cardLines(
     );
   }
   return lines;
+}
+
+function escapeCsvCell(value: string | number): string {
+  const str = String(value ?? "");
+  if (/[",\r\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function formatCsvRow(cells: Array<string | number>): string {
+  return cells.map(escapeCsvCell).join(",");
+}
+
+/** Export share stats and item leaderboard as RFC-4180 CSV. */
+export function buildShareStatsCsv(
+  title: string,
+  card: StatsCard,
+  resolveItemName: (id: string) => string,
+): string {
+  const cleanTitle = title.trim() || "QRBuddy Share";
+  const rows: string[] = [
+    formatCsvRow(["title", "range", "category", "label", "value"]),
+    formatCsvRow([cleanTitle, card.range, "summary", "views", card.views]),
+    formatCsvRow([cleanTitle, card.range, "summary", "scans", card.scans]),
+    formatCsvRow([cleanTitle, card.range, "summary", "shared", card.shared]),
+    formatCsvRow([
+      cleanTitle,
+      card.range,
+      "summary",
+      "downloads",
+      card.downloads,
+    ]),
+    formatCsvRow([cleanTitle, card.range, "summary", "shares", card.shares]),
+    formatCsvRow([
+      cleanTitle,
+      card.range,
+      "summary",
+      "countries",
+      card.countries,
+    ]),
+  ];
+
+  if (card.people !== null) {
+    rows.push(
+      formatCsvRow([cleanTitle, card.range, "summary", "people", card.people]),
+    );
+  }
+  if (card.returns !== null) {
+    rows.push(
+      formatCsvRow([
+        cleanTitle,
+        card.range,
+        "summary",
+        "returns",
+        card.returns,
+      ]),
+    );
+  }
+  if (card.avgDwellSeconds !== null) {
+    rows.push(
+      formatCsvRow([
+        cleanTitle,
+        card.range,
+        "summary",
+        "avg_dwell_seconds",
+        card.avgDwellSeconds,
+      ]),
+    );
+  }
+  if (card.completionRate !== null) {
+    rows.push(
+      formatCsvRow([
+        cleanTitle,
+        card.range,
+        "summary",
+        "completion_rate",
+        `${Math.round(card.completionRate * 100)}%`,
+      ]),
+    );
+  }
+  if (card.busiest) {
+    rows.push(
+      formatCsvRow([
+        cleanTitle,
+        card.range,
+        "summary",
+        "busiest",
+        card.busiest,
+      ]),
+    );
+  }
+  if (card.farthest) {
+    rows.push(
+      formatCsvRow([
+        cleanTitle,
+        card.range,
+        "summary",
+        "farthest",
+        `${card.farthest.place} (${card.farthest.km} km)`,
+      ]),
+    );
+  }
+
+  for (const entry of card.itemLeaderboard) {
+    rows.push(
+      formatCsvRow([
+        cleanTitle,
+        card.range,
+        "leaderboard",
+        resolveItemName(entry.id),
+        entry.plays,
+      ]),
+    );
+  }
+
+  for (const place of card.topPlaces) {
+    rows.push(
+      formatCsvRow([cleanTitle, card.range, "place", place.name, place.views]),
+    );
+  }
+
+  for (const app of card.appBreakdown) {
+    rows.push(
+      formatCsvRow([cleanTitle, card.range, "app", app.name, app.views]),
+    );
+  }
+
+  return rows.join("\r\n");
 }

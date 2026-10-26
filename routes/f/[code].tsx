@@ -121,6 +121,8 @@ export const handler: Handlers = {
 
 import FileSlideshow from "../../islands/FileSlideshow.tsx";
 import ErrorBoundary from "../../islands/ErrorBoundary.tsx";
+import { PricingModal } from "../../islands/PricingModal.tsx";
+import ToastManager from "../../islands/ToastManager.tsx";
 
 export default function FilePage({ data }: PageProps<FileData>) {
   const isAllAudio = Boolean(
@@ -182,6 +184,8 @@ export default function FilePage({ data }: PageProps<FileData>) {
       <ErrorBoundary>
         <FileSlideshow {...data} />
       </ErrorBoundary>
+      <PricingModal lang={data.lang} />
+      <ToastManager />
 
       <style>
         {`

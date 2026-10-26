@@ -1,5 +1,6 @@
 import { Head } from "$fresh/runtime.ts";
 import EditQRForm from "../islands/EditQRForm.tsx";
+import { PricingModal } from "../islands/PricingModal.tsx";
 import ToastManager from "../islands/ToastManager.tsx";
 
 export default function EditPage() {
@@ -49,6 +50,7 @@ export default function EditPage() {
           Made by Pablo • Melbourne
         </footer>
 
+        <PricingModal />
         <ToastManager />
       </div>
     </>

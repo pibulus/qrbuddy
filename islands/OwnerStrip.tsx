@@ -12,12 +12,15 @@ import { useSignal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { getApiUrl } from "../utils/api.ts";
 import { apiRequest, apiRequestFormData } from "../utils/api-request.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
+import { getOrCreatePassport } from "../utils/passport.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 import { haptics } from "../utils/haptics.ts";
 import { prepImages, prettyName } from "../utils/image-prep.ts";
 import {
   buildCards,
+  buildShareStatsCsv,
   cardKpis,
   cardLines,
   type LedgerRow,
@@ -29,6 +32,7 @@ import {
 } from "../utils/share-stats.ts";
 import type { QR_STYLES } from "../utils/qr-styles.ts";
 import { updateHistoryItem } from "../utils/history.ts";
+import { openPricingModal, pricingModalOpen } from "./PricingModal.tsx";
 import { addToast } from "./ToastManager.tsx";
 import PalettePills from "./create-modal/PalettePills.tsx";
 import QRCanvas from "./QRCanvas.tsx";
@@ -49,6 +53,7 @@ interface OwnerStripProps {
   theme: string;
   isLimited: boolean;
   kind: "slideshow" | "playlist" | "file";
+  lang?: Locale;
   unbranded?: boolean;
   onUnbranded?: () => void;
   onTitle: (title: string) => void;
@@ -90,6 +95,18 @@ function Spark({ values }: { values: number[] }) {
   );
 }
 
+function checkHasPassport(): boolean {
+  if (typeof localStorage === "undefined") return false;
+  return getSupporterPass() !== null || getOrCreatePassport().tier !== "free";
+}
+
+function formatDwellSeconds(seconds: number | null): string {
+  if (seconds === null || seconds <= 0) return "—";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+}
+
 export default function OwnerStrip(
   {
     fileId,
@@ -99,6 +116,7 @@ export default function OwnerStrip(
     theme,
     isLimited,
     kind,
+    lang,
     unbranded = false,
     onUnbranded,
     onTitle,
@@ -106,9 +124,22 @@ export default function OwnerStrip(
     onTheme,
   }: OwnerStripProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
+  const isModalOpen = pricingModalOpen.value;
   const [token, setToken] = useState<string | null>(null);
   const [meta, setMeta] = useState<OwnerMeta | null>(null);
   const [hasSupporterPass, setHasSupporterPass] = useState(false);
+
+  useEffect(() => {
+    const syncPass = () => setHasSupporterPass(checkHasPassport());
+    syncPass();
+    globalThis.addEventListener("qrb-passport-changed", syncPass);
+    globalThis.addEventListener("qrb-passport-synced", syncPass);
+    return () => {
+      globalThis.removeEventListener("qrb-passport-changed", syncPass);
+      globalThis.removeEventListener("qrb-passport-synced", syncPass);
+    };
+  }, [isModalOpen]);
   const [statsError, setStatsError] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsRevision, setStatsRevision] = useState(0);
@@ -141,7 +172,7 @@ export default function OwnerStrip(
     let cancelled = false;
     getOwnerToken("file", fileId).then(async (t) => {
       if (cancelled || !t) return;
-      const passPresent = getSupporterPass() !== null;
+      const passPresent = checkHasPassport();
       setToken(t);
       setHasSupporterPass(passPresent);
       if (passPresent) {
@@ -412,6 +443,26 @@ export default function OwnerStrip(
   const lines = cardLines(card, itemName, kind, meta.createdAt);
   const canEditPayload = !isLimited && kind !== "file";
   const mutationBusy = busy !== null;
+  const hasPass = hasSupporterPass;
+
+  const resolveLeaderboardItemName = (id: string) => {
+    const f = files.find((x) => x.id === id);
+    return f ? prettyName(f.name) : itemName(id);
+  };
+
+  const handleExportCsv = () => {
+    const csv = buildShareStatsCsv(title, card, resolveLeaderboardItemName);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `qrbuddy-${fileId}-stats.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    haptics.success();
+  };
 
   return (
     <section
@@ -600,6 +651,156 @@ export default function OwnerStrip(
 
           {!statsError && !statsLoading && range !== "today" &&
             card.spark.some((v) => v > 0) && <Spark values={card.spark} />}
+
+          {/* Passport Field Report 🛂 */}
+          {!statsError && !statsLoading && (
+            hasPass
+              ? (
+                <div class="bg-qr-cream border-2 border-black rounded-2xl p-3 space-y-3">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-black bg-amber-200 text-[10px] font-black uppercase tracking-wide text-black shadow-sm">
+                      🛂 PASSPORT FIELD REPORT
+                    </span>
+                  </div>
+
+                  {/* 1. 🏆 Full Track / Photo Leaderboard */}
+                  {files.length > 1 && card.itemLeaderboard.length > 0 && (
+                    <div class="space-y-1.5">
+                      <p class="text-[11px] font-black uppercase tracking-wider text-black">
+                        🏆 {kind === "playlist"
+                          ? "Track Leaderboard"
+                          : "Photo Leaderboard"}
+                      </p>
+                      <ol class="space-y-1.5">
+                        {card.itemLeaderboard.map((entry, idx) => {
+                          const label = resolveLeaderboardItemName(entry.id);
+                          const unit = kind === "playlist"
+                            ? entry.plays === 1 ? "play" : "plays"
+                            : entry.plays === 1
+                            ? "view"
+                            : "views";
+                          const widthPct = Math.max(
+                            8,
+                            Math.round(entry.share * 100),
+                          );
+                          return (
+                            <li
+                              key={entry.id}
+                              class="bg-white border-2 border-black rounded-xl p-2 space-y-1"
+                            >
+                              <div class="flex items-center justify-between gap-2 text-xs font-black text-black min-w-0">
+                                <span class="truncate min-w-0">
+                                  <span class="text-qr-pop mr-1.5">
+                                    #{idx + 1}
+                                  </span>
+                                  {label}
+                                </span>
+                                <span class="shrink-0 font-mono text-[11px] text-neutral-700">
+                                  {entry.plays} {unit}
+                                </span>
+                              </div>
+                              <div class="w-full h-2 rounded-full bg-black/10 overflow-hidden border border-black/30">
+                                <div
+                                  class="h-full rounded-full bg-qr-pop transition-all"
+                                  style={{ width: `${widthPct}%` }}
+                                />
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
+                  )}
+
+                  {/* 2. ⏱️ Hang Time & Completion + 🧭 Farthest Stamp */}
+                  <div class="grid grid-cols-3 gap-1.5">
+                    <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                        Avg. Hang Time
+                      </span>
+                      <span class="mt-0.5 text-xs sm:text-sm font-black text-black leading-tight truncate">
+                        {formatDwellSeconds(card.avgDwellSeconds)}
+                      </span>
+                    </div>
+                    <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                        Completion Rate
+                      </span>
+                      <span class="mt-0.5 text-xs sm:text-sm font-black text-black leading-tight truncate">
+                        {card.completionRate !== null
+                          ? `${Math.round(card.completionRate * 100)}%`
+                          : "—"}
+                      </span>
+                    </div>
+                    <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                        Farthest Scan
+                      </span>
+                      <span
+                        class="mt-0.5 text-[11px] font-black text-black leading-tight truncate"
+                        title={card.farthest
+                          ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
+                          : undefined}
+                      >
+                        {card.farthest
+                          ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
+                          : card.topPlaces[0]
+                          ? `📍 ${card.topPlaces[0].name}`
+                          : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {card.topPlaces.length > 0 && (
+                    <div class="flex flex-wrap gap-1.5">
+                      {card.topPlaces.map((place) => (
+                        <span
+                          key={place.name}
+                          class="bg-white border-2 border-black px-2.5 py-1 rounded-full text-[11px] font-black text-black"
+                        >
+                          📍 {place.name} · {place.views}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 3. 📲 Source Apps & 📥 Export CSV */}
+                  <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <div class="flex flex-wrap gap-1.5 min-w-0">
+                      {card.appBreakdown.map((app) => (
+                        <span
+                          key={app.name}
+                          class="bg-amber-100 border-2 border-black px-2.5 py-1 rounded-full text-[11px] font-black text-black"
+                        >
+                          📲 {app.name} · {app.views}
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleExportCsv}
+                      class="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full border-2 border-black bg-white hover:bg-amber-200 text-xs font-black text-black shadow-chunky transition-all hover:scale-105 active:scale-95 ml-auto"
+                    >
+                      📥 Export CSV
+                    </button>
+                  </div>
+                </div>
+              )
+              : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.light();
+                    openPricingModal();
+                  }}
+                  class="w-full min-h-[44px] px-3.5 py-2.5 rounded-2xl border-2 border-black bg-amber-100 hover:bg-amber-200 text-black text-xs font-black text-left sm:text-center leading-snug shadow-chunky transition-all hover:scale-[1.01] active:scale-[0.99]"
+                >
+                  {isSpanish
+                    ? "🛂 Desbloquea ranking por canción/foto, ciudades y CSV con el Pasaporte QRBuddy →"
+                    : "🛂 Unlock track leaderboard, top cities & CSV export with QRBuddy Passport →"}
+                </button>
+              )
+          )}
         </div>
 
         <div class="flex items-center gap-3">

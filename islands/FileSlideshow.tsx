@@ -930,6 +930,7 @@ export default function FileSlideshow({
               theme={theme}
               isLimited={!isUnlimited}
               kind={ownerKind}
+              lang={lang}
               unbranded={unbranded}
               onUnbranded={() => setUnbranded(true)}
               onTitle={setFileName}
