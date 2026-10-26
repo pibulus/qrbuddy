@@ -1,6 +1,7 @@
 import {
   assert,
   assertEquals,
+  assertNotEquals,
 } from "https://deno.land/std@0.216.0/assert/mod.ts";
 import {
   buildPassportSyncUrl,
@@ -10,8 +11,15 @@ import {
   getPassportAuthHeaders,
   getStoredPassport,
   parsePassportFromUrl,
+  rerollPassportIdentity,
   savePassport,
 } from "../utils/passport.ts";
+import {
+  clearSupporterPass,
+  getSupporterPass,
+  setSupporterPass,
+} from "../utils/supporter-pass.ts";
+import { issueSupporterToken } from "../supabase/functions/_shared/license.ts";
 
 Deno.test("passport - identity generation has required sovereign fields", () => {
   const p = generatePassportIdentity();
@@ -108,5 +116,75 @@ Deno.test("passport - parsePassportFromUrl extracts from fragment and saves", ()
     globalThis.location = originalLocation;
     globalThis.history = originalHistory;
     clearPassport();
+  }
+});
+
+Deno.test("passport - buildPassportSyncUrl includes pass= in # fragment and parsePassportFromUrl restores token & plus tier", async () => {
+  clearPassport();
+  clearSupporterPass();
+  const originalLocation = globalThis.location;
+  const originalHistory = globalThis.history;
+
+  try {
+    const token = await issueSupporterToken("test-secret-at-least-16-chars");
+    assertEquals(setSupporterPass(token), true);
+
+    const sourcePassport = generatePassportIdentity();
+    const syncUrl = buildPassportSyncUrl(sourcePassport, "https://qrbuddy.app");
+    const parsedUrl = new URL(syncUrl);
+
+    assertEquals(parsedUrl.search, "");
+    const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
+    assertEquals(hashParams.get("pass"), token);
+    assertEquals(hashParams.get("tier"), "plus");
+
+    // Simulate scanning / opening the sync URL on a second device with clean storage
+    clearPassport();
+    clearSupporterPass();
+    assertEquals(getSupporterPass(), null);
+
+    // deno-lint-ignore no-explicit-any
+    (globalThis as any).location = {
+      hash: parsedUrl.hash,
+      pathname: "/",
+      search: "",
+    };
+    // deno-lint-ignore no-explicit-any
+    (globalThis as any).history = {
+      replaceState: () => {},
+    };
+
+    const synced = parsePassportFromUrl();
+    assert(synced);
+    assertEquals(synced.id, sourcePassport.id);
+    assertEquals(synced.tier, "plus");
+    assertEquals(getSupporterPass(), token);
+    assertEquals(getStoredPassport()?.tier, "plus");
+  } finally {
+    globalThis.location = originalLocation;
+    globalThis.history = originalHistory;
+    clearPassport();
+    clearSupporterPass();
+  }
+});
+
+Deno.test("passport - rerollPassportIdentity updates name and avatarEmoji while preserving id, secret, and phrase", () => {
+  clearPassport();
+  clearSupporterPass();
+
+  try {
+    const original = getOrCreatePassport();
+    const rerolled = rerollPassportIdentity(original);
+
+    assertEquals(rerolled.id, original.id);
+    assertEquals(rerolled.secret, original.secret);
+    assertEquals(rerolled.phrase, original.phrase);
+    assertEquals(rerolled.createdAt, original.createdAt);
+    assertNotEquals(rerolled.name, original.name);
+    assertNotEquals(rerolled.avatarEmoji, original.avatarEmoji);
+    assertEquals(getStoredPassport()?.name, rerolled.name);
+  } finally {
+    clearPassport();
+    clearSupporterPass();
   }
 });

@@ -4,6 +4,7 @@
 // Zero passwords, zero email walls. A holographic tactile passport card that
 // syncs across phones and laptops by scanning its own QR code.
 
+import { getSupporterPass, setSupporterPass } from "./supporter-pass.ts";
 import { generateSyncPhrase } from "./sync-phrase.ts";
 import qrcode from "qrcode-generator";
 
@@ -139,7 +140,12 @@ export function getStoredPassport(): QRBuddyPassport | null {
       parsed && typeof parsed.id === "string" &&
       typeof parsed.secret === "string"
     ) {
-      return parsed as QRBuddyPassport;
+      const passport = parsed as QRBuddyPassport;
+      if (passport.tier !== "plus" && getSupporterPass() !== null) {
+        passport.tier = "plus";
+        savePassport(passport);
+      }
+      return passport;
     }
     return null;
   } catch {
@@ -163,10 +169,42 @@ export function savePassport(passport: QRBuddyPassport): void {
 
 export function getOrCreatePassport(): QRBuddyPassport {
   const existing = getStoredPassport();
-  if (existing) return existing;
+  if (existing) {
+    if (existing.tier !== "plus" && getSupporterPass() !== null) {
+      existing.tier = "plus";
+      savePassport(existing);
+    }
+    return existing;
+  }
   const created = generatePassportIdentity();
+  if (getSupporterPass() !== null) {
+    created.tier = "plus";
+  }
   savePassport(created);
   return created;
+}
+
+export function rerollPassportIdentity(
+  current?: QRBuddyPassport | null,
+): QRBuddyPassport {
+  const base = current ?? getOrCreatePassport();
+  let fresh = generatePassportIdentity();
+  for (
+    let i = 0;
+    i < 10 &&
+    (fresh.name === base.name || fresh.avatarEmoji === base.avatarEmoji);
+    i++
+  ) {
+    fresh = generatePassportIdentity();
+  }
+  const updated: QRBuddyPassport = {
+    ...base,
+    name: fresh.name,
+    avatarEmoji: fresh.avatarEmoji,
+    tier: getSupporterPass() !== null ? "plus" : base.tier,
+  };
+  savePassport(updated);
+  return updated;
 }
 
 export function clearPassport(): void {
@@ -201,8 +239,12 @@ export function buildPassportSyncUrl(
   params.set("name", passport.name);
   params.set("emoji", passport.avatarEmoji);
   params.set("phrase", passport.phrase);
-  if (passport.tier === "plus") {
+  const activePass = getSupporterPass();
+  if (activePass || passport.tier === "plus") {
     params.set("tier", "plus");
+  }
+  if (activePass) {
+    params.set("pass", activePass);
   }
 
   return `${base}/#${params.toString()}`;
@@ -231,7 +273,12 @@ export function parsePassportFromUrl(): QRBuddyPassport | null {
     const name = params.get("name")?.trim() || "Synced Passport";
     const avatarEmoji = params.get("emoji")?.trim() || "🦎";
     const phrase = params.get("phrase")?.trim() || generateSyncPhrase();
-    const tier = params.get("tier") === "plus" ? "plus" : "free";
+    const incomingPass = params.get("pass")?.trim();
+    const passRestored = incomingPass ? setSupporterPass(incomingPass) : false;
+    const tier = passRestored || params.get("tier") === "plus" ||
+        getSupporterPass() !== null
+      ? "plus"
+      : "free";
 
     const passport: QRBuddyPassport = {
       id,

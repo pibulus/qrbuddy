@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
+import { useModalShell } from "./modal/useModalShell.ts";
 import {
   clearHistory,
   getHistory,
@@ -34,8 +35,6 @@ export default function HistoryDrawer(
   const [importInput, setImportInput] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const drawerRef = useRef<HTMLDivElement>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     // Load initial
@@ -46,52 +45,6 @@ export default function HistoryDrawer(
     globalThis.addEventListener("history-updated", handler);
     return () => globalThis.removeEventListener("history-updated", handler);
   }, []);
-
-  // Keep keyboard focus inside the modal drawer, then return it to the opener.
-  useEffect(() => {
-    if (!isOpen) return;
-    const active = document.activeElement;
-    returnFocusRef.current = active instanceof HTMLElement ? active : null;
-    const drawer = drawerRef.current;
-    const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-      if (e.key !== "Tab" || !drawer) return;
-
-      const focusable = drawer.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
-      if (!focusable.length) {
-        e.preventDefault();
-        drawer.focus();
-        return;
-      }
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const focusIsInside = drawer.contains(document.activeElement);
-      if (e.shiftKey && (!focusIsInside || document.activeElement === first)) {
-        e.preventDefault();
-        last.focus();
-      } else if (
-        !e.shiftKey && (!focusIsInside || document.activeElement === last)
-      ) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", handleKeydown);
-    const closeBtn = drawer?.querySelector<HTMLElement>("[data-history-close]");
-    closeBtn?.focus();
-    return () => {
-      document.removeEventListener("keydown", handleKeydown);
-      const opener = returnFocusRef.current;
-      returnFocusRef.current = null;
-      if (opener?.isConnected) opener.focus();
-    };
-  }, [isOpen]);
 
   const formatDate = (ts: number) => {
     return new Intl.DateTimeFormat(isSpanish ? "es-MX" : "en-US", {
@@ -182,33 +135,34 @@ export default function HistoryDrawer(
     }
   };
 
-  if (!isOpen) return null;
+  const shell = useModalShell({ open: isOpen, onClose });
+  if (!shell.mounted) return null;
 
   return (
-    <>
-      {/* Backdrop */}
+    <div
+      ref={shell.backdropRef}
+      class="fixed inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+      onClick={shell.onBackdropClick}
+    >
       <div
-        class="fixed inset-0 bg-qr-scrim/60 backdrop-blur-sm z-[60] animate-fade-in"
-        onClick={onClose}
-      />
-
-      {/* Drawer (Left Side) */}
-      <div
-        ref={drawerRef}
+        ref={shell.dialogRef}
         data-history-drawer
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-drawer-title"
         tabIndex={-1}
-        class="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-qr-cream shadow-2xl z-[70] flex flex-col border-r-4 border-black animate-slide-in-right"
+        class="bg-qr-cream w-full max-w-lg border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl p-4 sm:p-6 shadow-chunky max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 outline-none"
       >
         {/* Header */}
-        <div class="p-5 sm:p-6 border-b-4 border-black bg-yellow-300 flex justify-between items-center">
+        <div class="pb-3 border-b-2 border-black/10 flex justify-between items-center gap-2">
           <div>
-            <h2 id="history-drawer-title" class="text-2xl font-black italic">
+            <h2
+              id="history-drawer-title"
+              class="text-xl sm:text-2xl font-black tracking-tight text-neutral-900"
+            >
               {isSpanish ? "Máquina del Tiempo" : "Time Machine"}
             </h2>
-            <p class="text-xs font-bold opacity-70">
+            <p class="text-xs font-bold text-neutral-600">
               {isSpanish ? "Tu Historial de QRs" : "Your QR History"}
             </p>
           </div>
@@ -243,9 +197,7 @@ export default function HistoryDrawer(
                 ? "Sincronización entre dispositivos"
                 : "Four-part device sync"}
               class={`w-11 h-11 flex items-center justify-center border-2 border-black rounded-full font-black text-sm transition-all ${
-                showSync
-                  ? "bg-black text-white"
-                  : "bg-white hover:bg-yellow-100"
+                showSync ? "bg-black text-white" : "bg-white hover:bg-amber-100"
               }`}
             >
               ☁️
@@ -253,18 +205,23 @@ export default function HistoryDrawer(
             <button
               type="button"
               data-history-close
-              onClick={onClose}
+              onClick={shell.requestClose}
               aria-label={isSpanish ? "Cerrar historial" : "Close history"}
-              class="w-11 h-11 flex items-center justify-center bg-white border-2 border-black rounded-full hover:bg-red-100 transition-colors font-bold"
+              class="group shrink-0 w-11 h-11 -mr-1 rounded-full flex items-center justify-center"
             >
-              ✕
+              <span
+                aria-hidden="true"
+                class="w-9 h-9 rounded-full border-2 border-black bg-white flex items-center justify-center font-black text-base leading-none shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
+              >
+                ✕
+              </span>
             </button>
           </div>
         </div>
 
         {/* Sync View Card */}
         {showSync && (
-          <div class="p-4 bg-purple-50 border-b-3 border-black space-y-3 animate-slide-down">
+          <div class="mt-3 p-4 rounded-2xl bg-purple-50 border-2 border-black space-y-3 animate-slide-down">
             <div class="flex items-center justify-between">
               <span class="text-xs font-black uppercase tracking-wide text-purple-900">
                 {isSpanish
@@ -280,7 +237,7 @@ export default function HistoryDrawer(
               </button>
             </div>
             <div class="p-2.5 bg-white border-2 border-black rounded-xl text-center">
-              <p class="text-xs font-mono font-black text-gray-900 break-words select-all">
+              <p class="text-xs font-mono font-black text-gray-900 break-all select-all">
                 {currentPhrase}
               </p>
             </div>
@@ -300,7 +257,13 @@ export default function HistoryDrawer(
               onSubmit={handleImportSync}
               class="space-y-2 pt-1 border-t border-purple-200"
             >
+              <label class="sr-only" for="history-sync-import-input">
+                {isSpanish
+                  ? "Pega el respaldo de otro dispositivo"
+                  : "Paste backup JSON from other phone"}
+              </label>
               <input
+                id="history-sync-import-input"
                 type="text"
                 value={importInput}
                 onInput={(e) =>
@@ -326,7 +289,7 @@ export default function HistoryDrawer(
         )}
 
         {/* List */}
-        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        <div class="flex-1 overflow-y-auto scrollbar-none py-4 space-y-3">
           {history.length === 0
             ? (
               <div class="text-center py-10 opacity-50">
@@ -434,7 +397,7 @@ export default function HistoryDrawer(
 
         {/* Footer */}
         {history.length > 0 && (
-          <div class="p-4 border-t-4 border-black bg-gray-50 flex items-center justify-between gap-2">
+          <div class="pt-3 border-t-2 border-black/10 flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => {
@@ -468,6 +431,6 @@ export default function HistoryDrawer(
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

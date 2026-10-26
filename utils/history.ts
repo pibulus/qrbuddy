@@ -21,6 +21,7 @@ export interface HistoryItem {
     bucketCode?: string;
     ownerToken?: string;
     shortCode?: string;
+    editUrl?: string;
     [key: string]: unknown;
   };
 }

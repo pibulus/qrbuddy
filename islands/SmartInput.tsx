@@ -671,8 +671,12 @@ export default function SmartInput(
       setSelectedTemplate(item.type);
       url.value = item.content;
       setTouched(true);
+    } else {
+      url.value = item.content;
+      setTouched(true);
     }
     setShowHistory(false);
+    setShowLibrary(false);
   };
 
   // Effect to save to history when a QR is successfully generated/updated
@@ -708,6 +712,7 @@ export default function SmartInput(
       <LibraryDrawer
         isOpen={showLibrary}
         onClose={() => setShowLibrary(false)}
+        onSelect={handleHistorySelect}
         lang={locale}
       />
 

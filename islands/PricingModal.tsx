@@ -9,10 +9,15 @@ import {
 } from "./modal/CardModal.tsx";
 import { getApiUrl } from "../utils/api.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
+import { haptics } from "../utils/haptics.ts";
 import { getClientLocale } from "../utils/i18n.ts";
 import {
+  buildPassportSyncUrl,
   getOrCreatePassport,
+  parsePassportFromUrl,
   type QRBuddyPassport,
+  renderPassportQrSvg,
+  rerollPassportIdentity,
 } from "../utils/passport.ts";
 import {
   clearPendingCheckout,
@@ -85,8 +90,24 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const claimCheckoutRef = useRef<string | null>(null);
 
   useEffect(() => {
-    setPassport(getOrCreatePassport());
-    const onPassportChanged = () => setPassport(getOrCreatePassport());
+    const synced = parsePassportFromUrl();
+    if (synced) {
+      setPassport(synced);
+      setHasPass(getSupporterPass() !== null);
+      addToast(
+        isSpanish
+          ? "✨ ¡Sincronizado con tu Pasaporte QRBuddy!"
+          : "✨ Synced with your QRBuddy Passport!",
+        3500,
+      );
+    } else {
+      setPassport(getOrCreatePassport());
+      setHasPass(getSupporterPass() !== null);
+    }
+    const onPassportChanged = () => {
+      setPassport(getOrCreatePassport());
+      setHasPass(getSupporterPass() !== null);
+    };
     globalThis.addEventListener("qrb-passport-changed", onPassportChanged);
     globalThis.addEventListener("qrb-passport-synced", onPassportChanged);
     return () => {
@@ -283,6 +304,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const handlePastePass = () => {
     if (setSupporterPass(pastedPass)) {
       setHasPass(true);
+      setPassport(getOrCreatePassport());
       setPastedPass("");
       setPassCopied(false);
       addToast(
@@ -295,6 +317,40 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
           ? "Esa clave de Pasaporte no parece válida"
           : "That doesn't look like a valid Passport key",
         3500,
+      );
+    }
+  };
+
+  const handleRerollMoniker = () => {
+    haptics.light();
+    const updated = rerollPassportIdentity(passport);
+    setPassport(updated);
+    addToast(
+      isSpanish
+        ? `🎲 ¡Nuevo apodo: ${updated.avatarEmoji} ${updated.name}!`
+        : `🎲 Re-rolled to ${updated.avatarEmoji} ${updated.name}!`,
+      3000,
+    );
+  };
+
+  const handleCopySyncUrl = async () => {
+    if (!passport) return;
+    haptics.light();
+    const syncUrl = buildPassportSyncUrl(passport);
+    try {
+      await navigator.clipboard.writeText(syncUrl);
+      addToast(
+        isSpanish
+          ? "📋 ¡Link de sincronización copiado! Ábrelo en otro dispositivo para vincularlo"
+          : "📋 Sync link copied! Open on any device to pair",
+        3000,
+      );
+    } catch {
+      addToast(
+        isSpanish
+          ? "No se pudo copiar el link automáticamente"
+          : "Could not copy link automatically",
+        3000,
       );
     }
   };
@@ -370,29 +426,44 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
           </p>
         </div>
 
-        {/* Sovereign Identity Strip */}
+        {/* Interactive Tactile Passport Card */}
         {passport && (
           <div class="rounded-2xl border-2 border-black bg-white p-3 text-left shadow-chunky space-y-2.5">
             <div class="flex items-center justify-between gap-2 flex-wrap">
-              <div class="flex items-center gap-2.5 min-w-0">
+              <div class="flex items-center gap-2.5 min-w-0 flex-1">
                 <span
                   class="w-10 h-10 shrink-0 rounded-full border-2 border-black bg-amber-100 flex items-center justify-center text-xl"
                   aria-hidden="true"
                 >
                   {passport.avatarEmoji}
                 </span>
-                <div class="min-w-0">
-                  <div class="font-black text-sm text-black truncate">
-                    {passport.name}
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="font-black text-sm text-black truncate">
+                      {passport.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRerollMoniker}
+                      title={isSpanish
+                        ? "Tirar otro apodo"
+                        : "Roll a new moniker"}
+                      aria-label={isSpanish
+                        ? "Tirar otro apodo"
+                        : "Roll a new moniker"}
+                      class="shrink-0 min-w-[36px] min-h-[36px] w-9 h-9 rounded-full border border-black/30 bg-amber-50 hover:bg-amber-200 flex items-center justify-center text-xs transition-transform active:scale-95"
+                    >
+                      🎲
+                    </button>
                   </div>
                   <span
                     class={`inline-flex items-center px-2 py-0.5 rounded-full border border-black text-[10px] font-black tracking-wide uppercase ${
-                      hasPass
+                      hasPass || passport.tier === "plus"
                         ? "bg-amber-200 text-black"
                         : "bg-qr-cream text-gray-800"
                     }`}
                   >
-                    {hasPass
+                    {hasPass || passport.tier === "plus"
                       ? (isSpanish ? "PASAPORTE PRO ✨" : "PASSPORT PRO ✨")
                       : (isSpanish ? "PASAPORTE GRATIS" : "FREE PASSPORT")}
                   </span>
@@ -403,11 +474,57 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                 onClick={openLibrary}
                 class="w-full sm:w-auto min-h-[44px] px-3 rounded-full border-2 border-black bg-amber-100 hover:bg-amber-200 text-xs font-black text-black transition-all active:scale-95"
               >
-                {isSpanish
-                  ? "📚 Biblioteca y Sincronización"
-                  : "📚 Open Library & 4-Word Sync"}
+                {isSpanish ? "📚 Abrir Biblioteca" : "📚 Open Library"}
               </button>
             </div>
+
+            <details class="group rounded-xl border-2 border-black/15 bg-qr-cream/60">
+              <summary class="cursor-pointer list-none min-h-[44px] px-3 py-2 flex items-center justify-between gap-2 text-xs font-black text-neutral-900 select-none">
+                <span class="min-w-0">
+                  {isSpanish
+                    ? "📲 Vincular otro dispositivo (QR y clave de 4 palabras)"
+                    : "📲 Pair another device (QR & 4-word key)"}
+                </span>
+                <span class="shrink-0 transition-transform group-open:rotate-180 text-[10px]">
+                  ▾
+                </span>
+              </summary>
+              <div class="p-3 pt-2 border-t border-black/10 space-y-2.5">
+                <div class="flex flex-col sm:flex-row items-center gap-3">
+                  <div
+                    class="w-24 h-24 shrink-0 bg-white rounded-xl p-1.5 border-2 border-black flex items-center justify-center overflow-hidden"
+                    // deno-lint-ignore react-no-danger
+                    dangerouslySetInnerHTML={{
+                      __html: renderPassportQrSvg(
+                        buildPassportSyncUrl(passport),
+                        4,
+                      ),
+                    }}
+                  />
+                  <div class="min-w-0 flex-1 w-full text-center sm:text-left space-y-2">
+                    <button
+                      type="button"
+                      onClick={handleCopySyncUrl}
+                      class="w-full sm:w-auto min-h-[44px] px-3 py-1.5 text-xs font-black rounded-full border-2 border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform shadow-chunky"
+                    >
+                      {isSpanish
+                        ? "📋 Copiar link de sincronización"
+                        : "📋 Copy Sync Link"}
+                    </button>
+                    <div class="space-y-1">
+                      <div class="text-[10px] font-black uppercase tracking-wider text-neutral-600">
+                        {isSpanish
+                          ? "Clave de 4 palabras"
+                          : "4-word sovereign key"}
+                      </div>
+                      <code class="block w-full font-mono select-all break-all text-[11px] font-bold bg-white px-2.5 py-1.5 rounded-xl border border-black/20 text-neutral-900">
+                        {passport.phrase}
+                      </code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </details>
           </div>
         )}
 

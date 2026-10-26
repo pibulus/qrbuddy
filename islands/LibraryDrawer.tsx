@@ -2,12 +2,11 @@ import { useEffect, useState } from "preact/hooks";
 import { useModalShell } from "./modal/useModalShell.ts";
 import {
   buildPassportSyncUrl,
-  generatePassportIdentity,
   getOrCreatePassport,
   parsePassportFromUrl,
   QRBuddyPassport,
   renderPassportQrSvg,
-  savePassport,
+  rerollPassportIdentity,
 } from "../utils/passport.ts";
 import {
   claimLegacyCode,
@@ -16,6 +15,13 @@ import {
   LibraryCodeItem,
   LibraryQuota,
 } from "../utils/library.ts";
+import {
+  getHistory,
+  type HistoryItem,
+  removeFromHistory,
+} from "../utils/history.ts";
+import { exportSyncBundle, importSyncBundle } from "../utils/sync-phrase.ts";
+import { getOwnerToken } from "../utils/token-vault.ts";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
@@ -23,25 +29,64 @@ import { getClientLocale, type Locale } from "../utils/i18n.ts";
 interface LibraryDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelect?: (item: HistoryItem) => void;
   lang?: Locale;
 }
 
 export default function LibraryDrawer(
-  { isOpen, onClose, lang }: LibraryDrawerProps,
+  { isOpen, onClose, onSelect, lang }: LibraryDrawerProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const [passport, setPassport] = useState<QRBuddyPassport | null>(null);
   const [loading, setLoading] = useState(false);
   const [codes, setCodes] = useState<LibraryCodeItem[]>([]);
+  const [localHistory, setLocalHistory] = useState<HistoryItem[]>([]);
+  const [ownerTokensByCode, setOwnerTokensByCode] = useState<
+    Record<string, string>
+  >({});
   const [quota, setQuota] = useState<LibraryQuota | null>(null);
   const [search, setSearch] = useState("");
   const [showPhrase, setShowPhrase] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importToken, setImportToken] = useState("");
   const [importing, setImporting] = useState(false);
+  const [isExportingBackup, setIsExportingBackup] = useState(false);
+  const [isImportingBackup, setIsImportingBackup] = useState(false);
+  const [backupInput, setBackupInput] = useState("");
+  const [backupPhraseInput, setBackupPhraseInput] = useState("");
 
-  // Initialize passport & check URL hash on open
+  const refreshLocalHistory = async (
+    serverCodes: LibraryCodeItem[] = codes,
+  ) => {
+    const hist = getHistory();
+    setLocalHistory(hist);
+
+    const shortCodes = new Set<string>();
+    for (const item of hist) {
+      if (item.metadata?.shortCode) {
+        shortCodes.add(String(item.metadata.shortCode));
+      }
+    }
+    for (const c of serverCodes) {
+      if (c.short_code) {
+        shortCodes.add(c.short_code);
+      }
+    }
+
+    if (shortCodes.size > 0) {
+      const nextTokens: Record<string, string> = {};
+      for (const sc of shortCodes) {
+        const tok = await getOwnerToken("dynamic", sc);
+        if (tok) nextTokens[sc] = tok;
+      }
+      setOwnerTokensByCode((prev) => ({ ...prev, ...nextTokens }));
+    }
+  };
+
+  // Initialize passport, local history & check URL hash on open
   useEffect(() => {
+    void refreshLocalHistory();
+
     // Check if URL contains passport sync credentials
     const synced = parsePassportFromUrl();
     if (synced) {
@@ -62,13 +107,18 @@ export default function LibraryDrawer(
       setPassport(p);
       loadLibraryData();
     };
+    const onHistoryUpdated = () => {
+      void refreshLocalHistory();
+    };
 
     globalThis.addEventListener("qrb-passport-changed", onPassportChanged);
     globalThis.addEventListener("qrb-passport-synced", onPassportChanged);
+    globalThis.addEventListener("history-updated", onHistoryUpdated);
 
     return () => {
       globalThis.removeEventListener("qrb-passport-changed", onPassportChanged);
       globalThis.removeEventListener("qrb-passport-synced", onPassportChanged);
+      globalThis.removeEventListener("history-updated", onHistoryUpdated);
     };
   }, []);
 
@@ -76,6 +126,7 @@ export default function LibraryDrawer(
     if (!isOpen) return;
     const p = getOrCreatePassport();
     setPassport(p);
+    void refreshLocalHistory();
     loadLibraryData();
   }, [isOpen]);
 
@@ -86,6 +137,7 @@ export default function LibraryDrawer(
       if (res.success) {
         setCodes(res.codes);
         setQuota(res.quota);
+        void refreshLocalHistory(res.codes);
       }
     } catch (err) {
       console.warn("Failed to load library:", err);
@@ -119,14 +171,7 @@ export default function LibraryDrawer(
   const handleRerollMoniker = () => {
     if (!passport) return;
     haptics.light();
-    const fresh = generatePassportIdentity();
-    // Keep same ID, secret, tier, and phrase; re-roll moniker & spirit emoji
-    const updated: QRBuddyPassport = {
-      ...passport,
-      name: fresh.name,
-      avatarEmoji: fresh.avatarEmoji,
-    };
-    savePassport(updated);
+    const updated = rerollPassportIdentity(passport);
     setPassport(updated);
     addToast(
       isSpanish
@@ -134,6 +179,72 @@ export default function LibraryDrawer(
         : `🎲 Re-rolled to ${updated.avatarEmoji} ${updated.name}!`,
       3000,
     );
+  };
+
+  const handleCopyEncryptedBackup = async () => {
+    if (!passport) return;
+    setIsExportingBackup(true);
+    try {
+      const bundle = await exportSyncBundle(passport.phrase);
+      await navigator.clipboard.writeText(bundle);
+      haptics.success();
+      addToast(
+        isSpanish
+          ? "¡Respaldo cifrado copiado! 📋"
+          : "Encrypted sync backup copied! 📋",
+      );
+    } catch {
+      haptics.error();
+      addToast(
+        isSpanish
+          ? "No se pudo generar el respaldo"
+          : "Couldn't generate sync backup",
+      );
+    } finally {
+      setIsExportingBackup(false);
+    }
+  };
+
+  const handleImportEncryptedBackup = async (e: Event) => {
+    e.preventDefault();
+    if (!backupInput.trim() || !passport) return;
+
+    setIsImportingBackup(true);
+    try {
+      const phraseToUse = backupPhraseInput.trim() || passport.phrase;
+      const result = await importSyncBundle(backupInput.trim(), phraseToUse);
+      await refreshLocalHistory();
+      setPassport(getOrCreatePassport());
+      haptics.success();
+      const manageLinks = result.ownerTokensRestored
+        ? (isSpanish
+          ? " · se restauraron " + result.ownerTokensRestored + " llaves"
+          : " · restored " + result.ownerTokensRestored + " manage links")
+        : "";
+      addToast(
+        result.historySaved
+          ? (isSpanish
+            ? "¡Se sincronizaron " + result.mergedHistoryCount +
+              " elementos" + manageLinks + "! ☁️✨"
+            : "Synced " + result.mergedHistoryCount + " items" + manageLinks +
+              " from other device! ☁️✨")
+          : (isSpanish
+            ? "No se pudo guardar el historial en este dispositivo" +
+              manageLinks
+            : "Couldn't save synced history on this device" + manageLinks),
+      );
+      setBackupInput("");
+      setBackupPhraseInput("");
+    } catch {
+      haptics.error();
+      addToast(
+        isSpanish
+          ? "Respaldo inválido o frase incorrecta"
+          : "Invalid sync backup or wrong phrase",
+      );
+    } finally {
+      setIsImportingBackup(false);
+    }
   };
 
   const handleClaimLegacy = async (e: Event) => {
@@ -230,6 +341,77 @@ export default function LibraryDrawer(
   const syncUrl = passport ? buildPassportSyncUrl(passport) : "";
   const syncQrSvg = syncUrl ? renderPassportQrSvg(syncUrl, 4) : "";
 
+  const serverShortCodes = new Set(
+    codes.map((c) => c.short_code).filter(Boolean),
+  );
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredLocalHistory = localHistory.filter((item) => {
+    const sc = item.metadata?.shortCode
+      ? String(item.metadata.shortCode)
+      : undefined;
+    if (sc && serverShortCodes.has(sc)) return false;
+    if (!normalizedSearch) return true;
+    const title = String(item.metadata?.title ?? "").toLowerCase();
+    const content = item.content.toLowerCase();
+    const codeStr = (sc ?? "").toLowerCase();
+    return (
+      title.includes(normalizedSearch) ||
+      content.includes(normalizedSearch) ||
+      codeStr.includes(normalizedSearch)
+    );
+  });
+
+  const resolveItemEditUrl = (item: HistoryItem): string | null => {
+    if (typeof item.metadata?.editUrl === "string" && item.metadata.editUrl) {
+      return item.metadata.editUrl;
+    }
+    const directToken = typeof item.metadata?.ownerToken === "string"
+      ? item.metadata.ownerToken
+      : undefined;
+    const shortCode = typeof item.metadata?.shortCode === "string"
+      ? item.metadata.shortCode
+      : undefined;
+    const vaultToken = shortCode ? ownerTokensByCode[shortCode] : undefined;
+    const token = directToken || vaultToken;
+    if (token) {
+      return `/edit?token=${encodeURIComponent(token)}`;
+    }
+    return null;
+  };
+
+  const resolveServerCodeEditUrl = (c: LibraryCodeItem): string => {
+    const matchingLocal = localHistory.find(
+      (item) => item.metadata?.shortCode === c.short_code,
+    );
+    if (matchingLocal) {
+      const fromLocal = resolveItemEditUrl(matchingLocal);
+      if (fromLocal) return fromLocal;
+    }
+    const tok = ownerTokensByCode[c.short_code];
+    if (tok) {
+      return `/edit?token=${encodeURIComponent(tok)}`;
+    }
+    return `/edit?code=${encodeURIComponent(c.short_code)}`;
+  };
+
+  const getHistoryIcon = (type: HistoryItem["type"]) => {
+    switch (type) {
+      case "dynamic":
+        return "⚡";
+      case "file":
+        return "📂";
+      case "wifi":
+        return "📶";
+      case "text":
+        return "📝";
+      case "url":
+      default:
+        return "🔗";
+    }
+  };
+
+  const hasAnyItems = codes.length > 0 || filteredLocalHistory.length > 0;
+
   return (
     <div
       ref={shell.backdropRef}
@@ -282,13 +464,13 @@ export default function LibraryDrawer(
           {passport && (
             <div class="rounded-2xl border-2 border-black bg-gradient-to-br from-[#FFFDF9] via-[#FFF9F2] to-[#FFF0E5] p-3.5 shadow-sm space-y-3">
               <div class="flex items-center justify-between gap-2 flex-wrap">
-                <div class="flex items-center gap-3">
-                  <span class="w-11 h-11 rounded-full border-2 border-black bg-white flex items-center justify-center text-2xl shadow-xs">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <span class="w-11 h-11 shrink-0 rounded-full border-2 border-black bg-white flex items-center justify-center text-2xl shadow-xs">
                     {passport.avatarEmoji}
                   </span>
-                  <div>
-                    <div class="flex items-center gap-2">
-                      <h3 class="font-black text-base text-neutral-900 leading-tight">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <h3 class="font-black text-base text-neutral-900 leading-tight truncate">
                         {passport.name}
                       </h3>
                       <button
@@ -297,13 +479,16 @@ export default function LibraryDrawer(
                         title={isSpanish
                           ? "Tirar otro apodo"
                           : "Roll a new moniker"}
-                        class="text-xs p-1 rounded-md border border-black/20 hover:bg-black/5 active:scale-95"
+                        aria-label={isSpanish
+                          ? "Tirar otro apodo"
+                          : "Roll a new moniker"}
+                        class="shrink-0 min-w-[36px] min-h-[36px] w-9 h-9 text-xs rounded-full border border-black/20 bg-white hover:bg-amber-100 flex items-center justify-center active:scale-95"
                       >
                         🎲
                       </button>
                     </div>
                     <div class="mt-0.5">
-                      {quota?.is_active_plus
+                      {quota?.is_active_plus || passport.tier === "plus"
                         ? (
                           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-300 to-pink-300 border border-black">
                             {isSpanish
@@ -332,7 +517,7 @@ export default function LibraryDrawer(
                 <button
                   type="button"
                   onClick={handleCopySyncUrl}
-                  class="px-3 min-h-[36px] text-xs font-black rounded-full border-2 border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform shadow-chunky"
+                  class="px-3 min-h-[44px] text-xs font-black rounded-full border-2 border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform shadow-chunky"
                 >
                   {isSpanish
                     ? "📋 Copiar link de sincronización"
@@ -340,15 +525,15 @@ export default function LibraryDrawer(
                 </button>
               </div>
 
-              {/* Compact collapsible Cross-Device Pairing & Backup Phrase */}
+              {/* Compact collapsible Cross-Device Pairing & Encrypted Backup */}
               <details class="group bg-white rounded-xl border-2 border-black/15">
-                <summary class="cursor-pointer list-none px-3 py-2 flex items-center justify-between text-xs font-black text-neutral-800 select-none">
-                  <span>
+                <summary class="cursor-pointer list-none min-h-[44px] px-3 py-2 flex items-center justify-between gap-2 text-xs font-black text-neutral-800 select-none">
+                  <span class="min-w-0">
                     {isSpanish
-                      ? "📲 Vincular otro dispositivo o ver frase de respaldo"
-                      : "📲 Pair another device or view recovery phrase"}
+                      ? "📲 Vincular otro dispositivo o respaldo cifrado"
+                      : "📲 Pair another device or backup"}
                   </span>
-                  <span class="transition-transform group-open:rotate-180 text-[10px]">
+                  <span class="shrink-0 transition-transform group-open:rotate-180 text-[10px]">
                     ▾
                   </span>
                 </summary>
@@ -374,16 +559,14 @@ export default function LibraryDrawer(
                         <button
                           type="button"
                           onClick={handleCopySyncUrl}
-                          class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform"
+                          class="min-h-[36px] px-2.5 py-1 text-xs font-bold rounded-lg border border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform"
                         >
-                          {isSpanish
-                            ? "📋 Copiar link de sincronización"
-                            : "📋 Copy Link"}
+                          {isSpanish ? "📋 Copiar link" : "📋 Copy Link"}
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowPhrase(!showPhrase)}
-                          class="px-2.5 py-1 text-xs font-bold rounded-lg border border-black/20 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-transform"
+                          class="min-h-[36px] px-2.5 py-1 text-xs font-bold rounded-lg border border-black/20 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-transform"
                         >
                           🔑 {showPhrase
                             ? (isSpanish ? "Ocultar frase" : "Hide Phrase")
@@ -408,6 +591,83 @@ export default function LibraryDrawer(
                       </code>
                     </div>
                   )}
+
+                  {/* Encrypted History & Keys Backup */}
+                  <div class="pt-2 border-t border-black/10 space-y-2">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                      <span class="text-[11px] font-black uppercase tracking-wide text-neutral-700">
+                        {isSpanish
+                          ? "🔐 Respaldo cifrado de historial y llaves"
+                          : "🔐 Encrypted History & Keys Backup"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleCopyEncryptedBackup}
+                        disabled={isExportingBackup}
+                        class="min-h-[36px] px-2.5 py-1 rounded-lg border-2 border-black bg-purple-100 hover:bg-purple-200 text-xs font-black text-neutral-900 active:scale-95 transition-transform disabled:opacity-50"
+                      >
+                        {isExportingBackup
+                          ? (isSpanish ? "Cifrando..." : "Encrypting...")
+                          : (isSpanish
+                            ? "📋 Copiar respaldo cifrado"
+                            : "📋 Copy Encrypted Backup")}
+                      </button>
+                    </div>
+                    <form
+                      onSubmit={handleImportEncryptedBackup}
+                      class="space-y-1.5"
+                    >
+                      <label class="sr-only" for="library-backup-json">
+                        {isSpanish
+                          ? "Pega el respaldo cifrado de otro dispositivo"
+                          : "Paste encrypted backup from another device"}
+                      </label>
+                      <input
+                        id="library-backup-json"
+                        type="text"
+                        value={backupInput}
+                        onInput={(e) =>
+                          setBackupInput((e.target as HTMLInputElement).value)}
+                        placeholder={isSpanish
+                          ? "Pega el respaldo cifrado de otro dispositivo..."
+                          : "Paste encrypted backup JSON from other device..."}
+                        class="w-full min-h-[40px] px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-black/15 bg-white focus:border-black focus:outline-none"
+                      />
+                      {backupInput.trim() !== "" && (
+                        <div class="flex flex-col sm:flex-row gap-1.5">
+                          <label class="sr-only" for="library-backup-phrase">
+                            {isSpanish
+                              ? "Frase de 4 palabras (opcional si ya vinculaste)"
+                              : "4-word phrase (optional if already paired)"}
+                          </label>
+                          <input
+                            id="library-backup-phrase"
+                            type="text"
+                            value={backupPhraseInput}
+                            onInput={(e) =>
+                              setBackupPhraseInput(
+                                (e.target as HTMLInputElement).value,
+                              )}
+                            placeholder={isSpanish
+                              ? "Frase de 4 palabras (opcional si es la misma)..."
+                              : "4-word phrase (optional if same passport)..."}
+                            class="flex-1 min-w-0 min-h-[40px] px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-black/15 bg-white focus:border-black focus:outline-none"
+                          />
+                          <button
+                            type="submit"
+                            disabled={isImportingBackup}
+                            class="min-h-[40px] px-3 py-1.5 rounded-lg border-2 border-black bg-amber-200 hover:bg-amber-300 font-black text-xs text-black active:scale-95 transition-all disabled:opacity-50"
+                          >
+                            {isImportingBackup
+                              ? (isSpanish ? "Uniendo..." : "Merging...")
+                              : (isSpanish
+                                ? "📥 Restaurar y unir"
+                                : "📥 Merge Backup")}
+                          </button>
+                        </div>
+                      )}
+                    </form>
+                  </div>
                 </div>
               </details>
             </div>
@@ -459,7 +719,13 @@ export default function LibraryDrawer(
 
           {/* Search Bar */}
           <div class="relative">
+            <label class="sr-only" for="library-search-input">
+              {isSpanish
+                ? "Buscar en tus QRs guardados"
+                : "Search your library"}
+            </label>
             <input
+              id="library-search-input"
               type="text"
               value={search}
               onInput={(e) => {
@@ -477,8 +743,8 @@ export default function LibraryDrawer(
             </span>
           </div>
 
-          {/* Code List */}
-          {loading && codes.length === 0
+          {/* Unified Server + Local History Code List */}
+          {loading && !hasAnyItems
             ? (
               <div class="text-center py-8 text-neutral-400 text-sm font-medium">
                 {isSpanish
@@ -486,67 +752,210 @@ export default function LibraryDrawer(
                   : "Loading your QR codes..."}
               </div>
             )
-            : codes.length === 0
+            : !hasAnyItems
             ? (
               <div class="text-center py-8 bg-white border-2 border-dashed border-black/20 rounded-2xl p-6 space-y-2">
                 <p class="text-2xl">🌱</p>
                 <p class="font-bold text-sm text-neutral-800">
                   {isSpanish
                     ? "Tus QRs guardados aparecerán aquí"
-                    : "No editable codes yet"}
+                    : "No saved QR codes yet"}
                 </p>
                 <p class="text-xs text-neutral-500 max-w-xs mx-auto">
                   {isSpanish
-                    ? "Crea un QR editable en el generador para cambiar a dónde apunta cuando quieras, incluso después de imprimirlo."
-                    : "Create an editable QR code in the generator to update its destination anytime after printing."}
+                    ? "Crea un QR en el generador para guardarlo aquí y editar su destino o recargarlo cuando quieras."
+                    : "Create a QR code in the generator to keep it here, reload it onto the canvas, or update editable links anytime."}
                 </p>
               </div>
             )
             : (
               <div class="space-y-3">
-                {codes.map((c) => (
-                  <div
-                    key={c.id}
-                    class="bg-white border-2 border-black rounded-2xl p-4 shadow-sm hover:border-black/70 transition-colors flex flex-col gap-2"
-                  >
-                    <div class="flex items-start justify-between gap-2">
-                      <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                          <span class="font-black text-sm text-neutral-900 truncate">
-                            {c.title || c.short_code}
-                          </span>
-                          {c.is_legacy && (
-                            <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 rounded">
-                              {isSpanish ? "Clásico" : "Legacy"}
+                {codes.map((c) => {
+                  const editHref = resolveServerCodeEditUrl(c);
+                  return (
+                    <div
+                      key={c.id}
+                      class="bg-white border-2 border-black rounded-2xl p-4 shadow-sm hover:border-black/70 transition-colors flex flex-col gap-2"
+                    >
+                      <div class="flex items-start justify-between gap-2 flex-wrap">
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="font-black text-sm text-neutral-900 truncate">
+                              {c.title || c.short_code}
                             </span>
+                            <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-purple-100 text-purple-900 border border-purple-300 rounded">
+                              {isSpanish ? "⚡ Dinámico" : "⚡ Dynamic"}
+                            </span>
+                            {c.is_legacy && (
+                              <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 rounded">
+                                {isSpanish ? "Clásico" : "Legacy"}
+                              </span>
+                            )}
+                          </div>
+                          <p class="text-xs text-neutral-500 font-mono truncate mt-0.5">
+                            {c.destination_url}
+                          </p>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+                          {onSelect && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSelect({
+                                  id: c.id,
+                                  type: "url",
+                                  content: c.redirect_url || c.destination_url,
+                                  timestamp: new Date(c.created_at).getTime(),
+                                  metadata: {
+                                    title: c.title || c.short_code,
+                                  },
+                                });
+                                onClose();
+                              }}
+                              class="min-h-[36px] px-2.5 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-neutral-100 text-xs font-bold active:scale-95 transition-transform"
+                            >
+                              {isSpanish ? "Cargar QR" : "Load QR"}
+                            </button>
+                          )}
+                          <a
+                            href={editHref}
+                            class="min-h-[36px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-black bg-amber-200 text-xs font-bold hover:bg-amber-300 active:scale-95 transition-transform"
+                          >
+                            {isSpanish ? "Editar y Stats ↗" : "Edit & Stats ↗"}
+                          </a>
+                        </div>
+                      </div>
+                      <div class="flex items-center justify-between pt-2 border-t border-black/5 text-[11px] text-neutral-400">
+                        <span>
+                          {c.scan_count} {isSpanish
+                            ? (c.scan_count === 1 ? "escaneo" : "escaneos")
+                            : (c.scan_count === 1 ? "scan" : "scans")}
+                        </span>
+                        <span>
+                          {isSpanish ? "Creado " : "Created "}
+                          {new Date(c.created_at).toLocaleDateString(
+                            isSpanish ? "es-MX" : undefined,
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredLocalHistory.map((item) => {
+                  const isDynamicItem = item.type === "dynamic" ||
+                    Boolean(item.metadata?.shortCode) ||
+                    Boolean(item.metadata?.editUrl) ||
+                    Boolean(item.metadata?.ownerToken);
+                  const editHref = isDynamicItem
+                    ? resolveItemEditUrl(item)
+                    : null;
+                  const isFileItem = item.type === "file";
+
+                  return (
+                    <div
+                      key={item.id}
+                      class="bg-white border-2 border-black rounded-2xl p-3.5 shadow-sm hover:border-black/70 transition-colors flex flex-col gap-2"
+                    >
+                      <div class="flex items-start justify-between gap-2">
+                        <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                          <span
+                            class="w-9 h-9 rounded-xl border border-black bg-amber-50 flex items-center justify-center text-lg shrink-0"
+                            aria-hidden="true"
+                          >
+                            {getHistoryIcon(item.type)}
+                          </span>
+                          <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                              <span class="font-black text-sm text-neutral-900 truncate">
+                                {item.metadata?.title || item.content}
+                              </span>
+                              {isDynamicItem && (
+                                <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-purple-100 text-purple-900 border border-purple-300 rounded">
+                                  {isSpanish ? "⚡ Dinámico" : "⚡ Dynamic"}
+                                </span>
+                              )}
+                              {isFileItem && (
+                                <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-teal-100 text-teal-900 border border-teal-300 rounded">
+                                  {isSpanish ? "📂 Archivo" : "📂 File Drop"}
+                                </span>
+                              )}
+                            </div>
+                            <p class="text-xs text-neutral-500 font-mono truncate mt-0.5">
+                              {item.content}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFromHistory(item.id)}
+                          aria-label={isSpanish
+                            ? "Quitar de la biblioteca"
+                            : "Remove from library"}
+                          title={isSpanish
+                            ? "Quitar de la biblioteca"
+                            : "Remove from library"}
+                          class="shrink-0 w-8 h-8 rounded-full border border-black/20 bg-neutral-100 hover:bg-rose-100 text-neutral-700 flex items-center justify-center text-xs font-bold transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div class="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-black/5">
+                        <span class="text-[11px] text-neutral-400">
+                          {new Date(item.timestamp).toLocaleDateString(
+                            isSpanish ? "es-MX" : undefined,
+                            {
+                              month: "short",
+                              day: "numeric",
+                            },
+                          )}
+                        </span>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          {onSelect && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSelect({
+                                  ...item,
+                                  type: item.type === "text" ||
+                                      item.type === "wifi"
+                                    ? item.type
+                                    : "url",
+                                  metadata: {
+                                    title: item.metadata?.title,
+                                  },
+                                });
+                                onClose();
+                              }}
+                              class="min-h-[36px] px-2.5 py-1 rounded-xl border-2 border-black bg-white hover:bg-neutral-100 text-xs font-bold text-black active:scale-95 transition-transform"
+                            >
+                              {isSpanish ? "Cargar QR" : "Load QR"}
+                            </button>
+                          )}
+                          {editHref && (
+                            <a
+                              href={editHref}
+                              class="min-h-[36px] inline-flex items-center px-3 py-1 rounded-xl border-2 border-black bg-amber-200 hover:bg-amber-300 text-xs font-bold text-black active:scale-95 transition-transform"
+                            >
+                              {isSpanish
+                                ? "Editar y Stats ↗"
+                                : "Edit & Stats ↗"}
+                            </a>
+                          )}
+                          {isFileItem && (
+                            <a
+                              href={item.content}
+                              class="min-h-[36px] inline-flex items-center px-3 py-1 rounded-xl border-2 border-black bg-teal-200 hover:bg-teal-300 text-xs font-bold text-black active:scale-95 transition-transform"
+                            >
+                              {isSpanish ? "Abrir ↗" : "Open Share ↗"}
+                            </a>
                           )}
                         </div>
-                        <p class="text-xs text-neutral-500 font-mono truncate mt-0.5">
-                          {c.destination_url}
-                        </p>
                       </div>
-                      <a
-                        href={`/edit/${c.short_code}`}
-                        class="px-3 py-1.5 rounded-xl border-2 border-black bg-amber-200 text-xs font-bold hover:bg-amber-300 active:scale-95 transition-transform shrink-0"
-                      >
-                        {isSpanish ? "Editar ↗" : "Edit ↗"}
-                      </a>
                     </div>
-                    <div class="flex items-center justify-between pt-2 border-t border-black/5 text-[11px] text-neutral-400">
-                      <span>
-                        {c.scan_count} {isSpanish
-                          ? (c.scan_count === 1 ? "escaneo" : "escaneos")
-                          : (c.scan_count === 1 ? "scan" : "scans")}
-                      </span>
-                      <span>
-                        {isSpanish ? "Creado " : "Created "}
-                        {new Date(c.created_at).toLocaleDateString(
-                          isSpanish ? "es-MX" : undefined,
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -602,7 +1011,13 @@ export default function LibraryDrawer(
                       ? "Pega el token de propietario de un QR que hayas creado antes. Reclamarlo no gasta tus 5 lugares gratis."
                       : "Paste the owner token from a code you created before this release. Claiming it does not consume your 5-code allowance."}
                   </p>
+                  <label class="sr-only" for="library-claim-token-input">
+                    {isSpanish
+                      ? "Token de propietario del QR"
+                      : "QR owner token"}
+                  </label>
                   <input
+                    id="library-claim-token-input"
                     type="text"
                     value={importToken}
                     onInput={(e) =>

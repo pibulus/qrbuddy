@@ -7,7 +7,7 @@ const ENCRYPTED_PREFIX = "enc.";
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-export type TokenScope = "qr" | "bucket" | "file";
+export type TokenScope = "qr" | "dynamic" | "bucket" | "file";
 
 export interface OwnerTokenRecord {
   scope: TokenScope;
@@ -157,7 +157,11 @@ export async function getOwnerToken(
   if (!storage) return null;
 
   try {
-    const value = storage.getItem(storageKey(scope, identifier));
+    let value = storage.getItem(storageKey(scope, identifier));
+    if (!value && (scope === "dynamic" || scope === "qr")) {
+      const altScope = scope === "dynamic" ? "qr" : "dynamic";
+      value = storage.getItem(storageKey(altScope, identifier));
+    }
     if (!value) return null;
 
     if (value.startsWith(ENCRYPTED_PREFIX)) {
@@ -202,7 +206,8 @@ export async function exportOwnerTokens(): Promise<OwnerTokenRecord[]> {
       const scope = key.slice(prefix.length, separator);
       const identifier = key.slice(separator + 1);
       if (
-        (scope !== "qr" && scope !== "bucket" && scope !== "file") ||
+        (scope !== "qr" && scope !== "dynamic" && scope !== "bucket" &&
+          scope !== "file") ||
         !identifier
       ) continue;
 
@@ -226,7 +231,8 @@ export async function importOwnerTokens(records: unknown): Promise<number> {
     const record = value as Partial<OwnerTokenRecord>;
     const { scope, identifier, token } = record;
     if (
-      (scope !== "qr" && scope !== "bucket" && scope !== "file") ||
+      (scope !== "qr" && scope !== "dynamic" && scope !== "bucket" &&
+        scope !== "file") ||
       typeof identifier !== "string" || !identifier ||
       typeof token !== "string" || !token
     ) continue;

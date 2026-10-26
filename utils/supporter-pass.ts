@@ -5,6 +5,7 @@
 // active-state UI) and lets the server be the judge on every real request.
 
 const STORAGE_KEY = "qrb_supporter_pass";
+const ALT_STORAGE_KEY = "qrbuddy_supporter_pass_v1";
 const PENDING_CHECKOUT_KEY = "qrb_pending_checkout";
 
 function parseExpiry(pass: string): number | null {
@@ -14,7 +15,8 @@ function parseExpiry(pass: string): number | null {
     const body = JSON.parse(
       atob(encodedBody.replace(/-/g, "+").replace(/_/g, "/")),
     );
-    return body?.tier === "supporter" && Number.isFinite(body?.exp)
+    return (body?.tier === "supporter" || body?.tier === "plus") &&
+        Number.isFinite(body?.exp)
       ? body.exp
       : null;
   } catch {
@@ -25,11 +27,13 @@ function parseExpiry(pass: string): number | null {
 /** The stored pass, or null when absent/expired (expired passes self-clean). */
 export function getSupporterPass(): string | null {
   if (typeof localStorage === "undefined") return null;
-  const pass = localStorage.getItem(STORAGE_KEY);
+  const pass = localStorage.getItem(STORAGE_KEY) ??
+    localStorage.getItem(ALT_STORAGE_KEY);
   if (!pass) return null;
   const exp = parseExpiry(pass);
   if (exp === null || exp < Math.floor(Date.now() / 1000)) {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(ALT_STORAGE_KEY);
     return null;
   }
   return pass;
@@ -40,7 +44,14 @@ export function setSupporterPass(pass: string): boolean {
   const trimmed = pass.trim();
   if (parseExpiry(trimmed) === null) return false;
   localStorage.setItem(STORAGE_KEY, trimmed);
+  localStorage.setItem(ALT_STORAGE_KEY, trimmed);
   return true;
+}
+
+export function clearSupporterPass(): void {
+  if (typeof localStorage === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(ALT_STORAGE_KEY);
 }
 
 export function supporterPassExpiry(): Date | null {
