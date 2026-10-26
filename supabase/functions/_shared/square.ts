@@ -84,16 +84,16 @@ export async function createSquareCheckout(
       },
       body: JSON.stringify({
         idempotency_key: checkoutId,
-        description: `QRBuddy Supporter Pass ${checkoutId}`,
+        description: `QRBuddy Passport ${checkoutId}`,
         quick_pay: {
-          name: "QRBuddy Supporter Pass (1 year)",
+          name: "QRBuddy Passport (1 year)",
           price_money: priceMoney,
           location_id: config.locationId,
         },
         checkout_options: {
           redirect_url: redirectUrl,
         },
-        payment_note: `QRBuddy supporter checkout ${checkoutId}`,
+        payment_note: `QRBuddy Passport checkout ${checkoutId}`,
       }),
       signal: AbortSignal.timeout(15000),
     },

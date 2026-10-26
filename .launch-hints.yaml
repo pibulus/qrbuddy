@@ -23,17 +23,18 @@ voice: juicy
 palette: pastel-punk
 
 differentiators:
-  - Six gradient styles plus a custom creator, so the code looks like a design piece instead of a barcode
-  - Self-destructing codes that work once and then blow up — the already-scanned page is a full KABOOM
-  - Editable dynamic redirects with scan limits, without the surveillance tax that usually comes with them
-  - Sovereign Passport sync — carry your dynamic locker across phone and desktop with a holographic card, 4-word human passkey, or camera QR scan (zero email/password accounts)
-  - No enterprise tier, no per-scan pricing, no upsell to teams
+  - Eight jewel-arc pastel-punk gradient styles (luminance-tested ≤ 0.40 so every code scans first try) plus a custom gradient creator & logo stamp
+  - Street-Safe Mini-Browser QR Inspector — scan any street QR to unroll up to 5 redirect hops, check HTTPS, and see a live webpage preview without cookies before clicking
+  - Daylight Pastel-Punk Media Drops — drop photos for an instant gallery slideshow, MP3/WAV tracks for a playable mixtape, or up to 500 MB of files
+  - Self-destructing Time-Bomb codes & PIN-locked Secret Drops that work N times and then blow up with a full KABOOM page
+  - The QRBuddy Passport (~$32 USD / A$49 for 365 days, zero subscription traps) — unlocks 100 editable dynamic links, 500 MB file drops, clean white-label pages, 4-word device sync, and the 90-day Passport Field Report (top cities, peak rush hour, track/photo leaderboard & CSV export)
+  - Bilingual out of the box — English (/) and "buena onda" Mexican/LatAm Spanish (/es)
 
 proof_points:
-  - Paste a URL, type text or drop a file — it works out which one you gave it
-  - Change where a printed code points without reprinting the code
-  - Set a code to die after 1, 5, 10 or 100 scans
-  - WiFi, vCard, SMS and email templates so you never look up an encoding format
+  - Paste a URL, type text, or drop photos/audio/files — it figures out which one you gave it in one input bar
+  - Repoint printed QR codes anytime or route by time-of-day (Breakfast / Lunch / Dinner menus) without reprinting
+  - Inspect sketchy street QR codes safely with a live visual webpage preview and unrolled redirect chain
+  - Zero email or password accounts — your 4-word Sovereign Passport & scannable QR card sync your library and pro entitlement across phone and laptop instantly
 
 objections:
   - >-
