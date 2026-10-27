@@ -6,12 +6,14 @@ import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
+import { QR_STYLES } from "../utils/qr-styles.ts";
 import { sounds } from "../utils/sounds.ts";
 import ChoiceRow from "./create-modal/ChoiceRow.tsx";
 import CompletionState, {
   type CompletionKind,
 } from "./create-modal/CompletionState.tsx";
 import DesignTab from "./create-modal/DesignTab.tsx";
+import { STYLE_DISPLAY } from "./StyleSelector.tsx";
 import BatchSettings from "./extras/BatchSettings.tsx";
 import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
 import LockerSettings from "./extras/LockerSettings.tsx";
@@ -718,19 +720,19 @@ export default function CreateModal({
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <ChoiceRow
                     icon="🖼️"
-                    title={isSpanish ? "Galería de Fotos" : "Photo slideshow"}
+                    title={isSpanish ? "Galería de fotos" : "Photo gallery"}
                     description={isSpanish
-                      ? "Hasta 10 fotos en galería automática (≤5 MB c/u)."
-                      : "Up to 10 photos, auto-advancing gallery (≤5MB each)."}
+                      ? "Hasta 10 fotos en galería automática."
+                      : "Up to 10 photos in a swipeable gallery."}
                     active={false}
                     onClick={handlePhotoSelect}
                   />
                   <ChoiceRow
                     icon="🎵"
-                    title={isSpanish ? "Mixtape de Audio" : "Audio playlist"}
+                    title={isSpanish ? "Mixtape de audio" : "Audio playlist"}
                     description={isSpanish
-                      ? "Hasta 10 pistas con reproductor mixtape (≤5 MB c/u)."
-                      : "Up to 10 tracks, mixtape player (≤5MB each)."}
+                      ? "Hasta 10 pistas con reproductor mixtape."
+                      : "Up to 10 tracks in a mixtape player."}
                     active={false}
                     onClick={handleAudioSelect}
                   />
@@ -925,170 +927,181 @@ export default function CreateModal({
     );
   };
 
-  const renderOptionsTab = () => (
-    <div class="space-y-5">
-      <section class="space-y-2">
-        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-          {isSpanish ? "Comportamiento del link" : "Link behavior"}
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-stretch">
-          <ChoiceRow
-            rich
-            icon="⚡"
-            title={isSpanish ? "Estático" : "Static"}
-            description={isSpanish
-              ? "El contenido vive directo en los cuadritos. Funciona para siempre, sin internet y sin pasar por servidores."
-              : "The content lives inside the squares. Works forever, offline, and never touches a server."}
-            active={!isDynamic.value && !isBatchMode && !lockerActive}
-            onClick={() => {
-              if (lockerActive) {
-                addToast(
-                  isSpanish
-                    ? "Buzón desconectado de este QR"
-                    : "Locker cleared from this QR",
-                );
-              }
-              disableDynamicBase();
-              setIsBatchMode(false);
-              isBucket.value = false;
-              bucketUrl.value = "";
-              haptics.light();
-            }}
-          />
-
-          <ChoiceRow
-            rich
-            icon="🔗"
-            title={isSpanish ? "Editable después de imprimir" : "Editable"}
-            description={isSpanish
-              ? "Un link corto que puedes redirigir cuando quieras. Estadísticas simples, sin IPs ni rastreo."
-              : "A short link you can repoint after printing. Coarse scan stats, no IPs, no visitor tracking."}
-            active={isDynamic.value}
-            onClick={() => {
-              if (isDynamic.value) {
-                disableDynamicBase();
-              } else {
-                activateDynamicBase();
-              }
-              haptics.light();
-            }}
-          />
-        </div>
-        {isDynamic.value && (
-          <EditableLinkSettings
-            editUrl={editUrl}
-            pendingUrl={url.value}
-            isCreating={isCreatingEditable}
-            onCreate={onCreateEditable}
-            isSequential={isSequential}
-            sequentialUrls={sequentialUrls}
-            lang={locale}
-          />
-        )}
-      </section>
-
-      {isDynamic.value && (
-        <section class="space-y-2 animate-slide-down">
+  const renderOptionsTab = () => {
+    const isStaticActive = !isDynamic.value && !isBatchMode && !lockerActive;
+    return (
+      <div class="space-y-4">
+        <section class="space-y-2">
           <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-            {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
+            {isSpanish ? "Comportamiento del link" : "Link behavior"}
           </h3>
 
-          {/* Frequency order: limits are the common ask, rotation the exotic one. */}
-          <ChoiceRow
-            icon="⏳"
-            title={isSpanish
-              ? "Autodestrucción (límite de escaneos o fecha)"
-              : "Scan & date limits"}
-            description={isSpanish
-              ? "Desactiva el QR después de cierto número de escaneos o en una fecha."
-              : "Stop the QR after a scan count or expiry date."}
-            active={isLimitSettingsOpen}
-            onClick={() => {
-              const next = !isLimitSettingsOpen;
-              if (!next) {
-                setScanLimit(null);
-                setExpiryDate("");
-              }
-              setIsLimitSettingsOpen(next);
-              haptics.light();
-            }}
-          />
-          {isLimitSettingsOpen && (
-            <TimeBombSettings
-              scanLimit={scanLimit}
-              setScanLimit={setScanLimit}
-              expiryDate={expiryDate}
-              setExpiryDate={setExpiryDate}
-              lang={locale}
-            />
-          )}
+          {/* Compact 2-pill segmented toggle (replaces two 5-line cards that clipped on scroll) */}
+          <div
+            role="group"
+            aria-label={isSpanish ? "Modo de enlace QR" : "QR link mode"}
+            class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] shadow-[2px_2px_0_#1e1714]"
+          >
+            <button
+              type="button"
+              aria-pressed={isStaticActive}
+              onClick={() => {
+                if (lockerActive) {
+                  addToast(
+                    isSpanish
+                      ? "Buzón desconectado de este QR"
+                      : "Locker cleared from this QR",
+                  );
+                }
+                disableDynamicBase();
+                setIsBatchMode(false);
+                isBucket.value = false;
+                bucketUrl.value = "";
+                haptics.light();
+                sounds.toggleOff?.();
+              }}
+              class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 ${
+                isStaticActive
+                  ? "bg-[#1e1714] text-[#fffef7] shadow-sm"
+                  : "text-neutral-700 hover:bg-amber-100"
+              }`}
+            >
+              <span>⚡ {isSpanish ? "Estático" : "Static"}</span>
+            </button>
 
-          <ChoiceRow
-            icon="🔁"
-            title={isSpanish ? "Rotación de links" : "Link rotation"}
-            description={isSpanish
-              ? "Cada escaneo avanza al siguiente link de tu lista."
-              : "Each scan moves to the next URL in your list."}
-            active={isSequential}
-            onClick={() => {
-              setIsSequential(!isSequential);
-              haptics.light();
-            }}
-          />
-          {isSequential && (
-            <MultiLinkSettings
+            <button
+              type="button"
+              aria-pressed={isDynamic.value}
+              onClick={() => {
+                if (isDynamic.value) {
+                  disableDynamicBase();
+                  sounds.toggleOff?.();
+                } else {
+                  activateDynamicBase();
+                  sounds.toggleOn?.();
+                }
+                haptics.light();
+              }}
+              class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 ${
+                isDynamic.value
+                  ? "bg-amber-200 text-[#1e1714] border-2 border-[#1e1714] shadow-sm"
+                  : "text-neutral-700 hover:bg-amber-100"
+              }`}
+            >
+              <span>
+                🔗 {isSpanish ? "Editable + Stats" : "Editable + Stats"}
+              </span>
+            </button>
+          </div>
+
+          <p class="text-xs font-semibold text-[#6f6158] px-1">
+            {isDynamic.value
+              ? (isSpanish
+                ? "Un link corto que puedes redirigir después de imprimir, con estadísticas sin rastreo."
+                : "A short link you can repoint after printing, with coarse privacy-safe scan stats.")
+              : (isSpanish
+                ? "El contenido vive directo en los cuadritos. Funciona para siempre y sin internet."
+                : "Content lives directly inside the QR squares. Works forever, offline, zero servers.")}
+          </p>
+
+          {isDynamic.value && (
+            <EditableLinkSettings
+              editUrl={editUrl}
+              pendingUrl={url.value}
+              isCreating={isCreatingEditable}
+              onCreate={onCreateEditable}
+              isSequential={isSequential}
               sequentialUrls={sequentialUrls}
-              setSequentialUrls={setSequentialUrls}
-              loopSequence={loopSequence}
-              setLoopSequence={setLoopSequence}
-              lang={locale}
-            />
-          )}
-
-          <ChoiceRow
-            icon="✨"
-            title={isSpanish ? "Portada de bienvenida" : "Intro page"}
-            description={isSpanish
-              ? "Muestra una tarjeta de bienvenida antes de abrir tu link."
-              : "Show a short landing page before redirecting."}
-            active={splashActive}
-            onClick={() => {
-              splashConfig.value = splashActive ? null : {
-                enabled: true,
-                title: isSpanish ? "¡Hola!" : "Welcome!",
-                buttonText: isSpanish ? "Continuar" : "Continue",
-              };
-              haptics.light();
-            }}
-          />
-          {splashActive && (
-            <SplashSettings
-              splashConfig={splashConfig}
-              destinationUrl={url.value}
               lang={locale}
             />
           )}
         </section>
-      )}
 
-      <div class="pt-2 border-t-2 border-black/10">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab("design");
-            scrollBodyToTop();
-            haptics.light();
-            sounds.click();
-          }}
-          class="w-full min-h-[44px] rounded-full border-2 border-black bg-amber-200 px-4 py-2 text-xs sm:text-sm font-black text-black shadow-chunky hover:bg-amber-300 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
-        >
-          {isSpanish
-            ? "🎨 Siguiente: Estilo y Logo →"
-            : "🎨 Next: Style & Logo →"}
-        </button>
+        {isDynamic.value && (
+          <section class="space-y-2 animate-slide-down">
+            <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+              {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
+            </h3>
+
+            <ChoiceRow
+              icon="⏳"
+              title={isSpanish
+                ? "Límite de escaneos o fecha"
+                : "Scan & date limits"}
+              description={isSpanish
+                ? "Desactiva el QR después de ciertos escaneos o en una fecha."
+                : "Stop the QR after a scan count or expiry date."}
+              active={isLimitSettingsOpen}
+              onClick={() => {
+                const next = !isLimitSettingsOpen;
+                if (!next) {
+                  setScanLimit(null);
+                  setExpiryDate("");
+                }
+                setIsLimitSettingsOpen(next);
+                haptics.light();
+              }}
+            />
+            {isLimitSettingsOpen && (
+              <TimeBombSettings
+                scanLimit={scanLimit}
+                setScanLimit={setScanLimit}
+                expiryDate={expiryDate}
+                setExpiryDate={setExpiryDate}
+                lang={locale}
+              />
+            )}
+
+            <ChoiceRow
+              icon="🔁"
+              title={isSpanish ? "Rotación de links" : "Link rotation"}
+              description={isSpanish
+                ? "Cada escaneo avanza al siguiente link de tu lista."
+                : "Each scan moves to the next URL in your list."}
+              active={isSequential}
+              onClick={() => {
+                setIsSequential(!isSequential);
+                haptics.light();
+              }}
+            />
+            {isSequential && (
+              <MultiLinkSettings
+                sequentialUrls={sequentialUrls}
+                setSequentialUrls={setSequentialUrls}
+                loopSequence={loopSequence}
+                setLoopSequence={setLoopSequence}
+                lang={locale}
+              />
+            )}
+
+            <ChoiceRow
+              icon="✨"
+              title={isSpanish ? "Portada de bienvenida" : "Intro page"}
+              description={isSpanish
+                ? "Muestra una tarjeta de bienvenida antes de abrir tu link."
+                : "Show a short landing page before redirecting."}
+              active={splashActive}
+              onClick={() => {
+                splashConfig.value = splashActive ? null : {
+                  enabled: true,
+                  title: isSpanish ? "¡Hola!" : "Welcome!",
+                  buttonText: isSpanish ? "Continuar" : "Continue",
+                };
+                haptics.light();
+              }}
+            />
+            {splashActive && (
+              <SplashSettings
+                splashConfig={splashConfig}
+                destinationUrl={url.value}
+                lang={locale}
+              />
+            )}
+          </section>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderDesignTab = () => (
     <DesignTab
@@ -1104,13 +1117,79 @@ export default function CreateModal({
   );
 
   // Labels carry the meaning; the emoji were garnish on navigation, which the
-  // footer-charm exception doesn't cover. 🎯 for "Type" was arbitrary anyway.
+  // footer-charm exception doesn't cover.
   const tabs: Array<{ id: ActiveTab; label: string }> = [
     { id: "type", label: isSpanish ? "Contenido" : "Content" },
     { id: "options", label: isSpanish ? "Comportamiento" : "Behavior" },
     { id: "design", label: isSpanish ? "Diseño" : "Design" },
   ];
   const hasCompletion = completionKind !== null && bucketUrl.value !== "";
+
+  // Live Corner Mini-QR Preview Badge state
+  const isCustomStyle = qrStyle.value === "custom";
+  const presetInfo =
+    STYLE_DISPLAY[qrStyle.value as keyof typeof STYLE_DISPLAY] ??
+      STYLE_DISPLAY.sunset;
+  const presetStyle = QR_STYLES[qrStyle.value as keyof typeof QR_STYLES];
+  const customStopColors = isCustomStyle && customStyle?.value &&
+      "gradient" in customStyle.value.dots &&
+      customStyle.value.dots.gradient
+    ? customStyle.value.dots.gradient.colorStops.map((s) => s.color)
+    : null;
+  const miniColors = customStopColors && customStopColors.length > 0
+    ? customStopColors
+    : isCustomStyle
+    ? ["#9370DB", "#FF69B4"]
+    : presetInfo.colors;
+  const miniGradient = `linear-gradient(135deg, ${miniColors.join(", ")})`;
+  const miniBg = !isCustomStyle && presetStyle &&
+      "gradient" in presetStyle.background &&
+      presetStyle.background.gradient
+    ? `linear-gradient(135deg, ${
+      presetStyle.background.gradient.colorStops.map((s) => s.color).join(", ")
+    })`
+    : !isCustomStyle && presetStyle && "color" in presetStyle.background
+    ? presetStyle.background.color
+    : "#FFFDF9";
+  const miniDotShape = !isCustomStyle && presetStyle &&
+      "shape" in presetStyle.dots
+    ? presetStyle.dots.shape
+    : "rounded";
+  const miniDotRadius = miniDotShape === "dots"
+    ? "rounded-full"
+    : miniDotShape === "square"
+    ? "rounded-none"
+    : "rounded-[2px]";
+  const miniFrameActive = frameConfig?.value?.enabled ?? false;
+  const miniFrameCaption = frameConfig?.value?.caption ||
+    (isSpanish ? "ESCANÉAME" : "SCAN ME");
+  const MINI_MATRIX = [
+    1,
+    1,
+    1,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    1,
+  ];
 
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
@@ -1130,50 +1209,110 @@ export default function CreateModal({
         aria-modal="true"
         aria-labelledby="create-modal-title"
         tabindex={-1}
-        class={`relative w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col overflow-hidden ${
+        class={`relative w-full max-w-lg bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col overflow-hidden ${
           shell.closing
             ? "charm-modal--closing animate-modal-exit"
             : "animate-slide-up sm:animate-pop-in"
         }`}
       >
-        <div class="flex items-start justify-between gap-3 p-4 sm:p-6 pb-2 sm:pb-3">
-          <div>
-            <h2
-              id="create-modal-title"
-              class="font-black text-2xl tracking-tight text-black leading-tight"
+        <div class="flex items-center justify-between gap-3 p-4 sm:px-6 sm:pt-5 pb-2">
+          <div class="flex items-center gap-3 min-w-0">
+            {/* Live Corner Mini-QR Badge — mirrors the main QR style, logo, and frame across all tabs */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("design");
+                scrollBodyToTop();
+                haptics.light();
+                sounds.bloop?.();
+              }}
+              title={isSpanish
+                ? "Vista previa en vivo — toca para diseñar"
+                : "Live QR preview — tap to style"}
+              aria-label={isSpanish
+                ? "Vista previa en vivo del QR"
+                : "Live QR preview"}
+              class="group relative shrink-0 flex flex-col items-center focus:outline-none"
             >
-              {hasCompletion
-                ? (isSpanish ? "Listo para compartir." : "Ready to share.")
-                : (isSpanish ? "Haz que haga trucos ✨" : "Make it do tricks.")}
-            </h2>
-            <p class="text-sm font-bold text-qr-pop">
-              {hasCompletion
-                ? (isSpanish
-                  ? "Tu QR ya apunta a la nueva página."
-                  : "The QR now points at the new page.")
-                : (isSpanish
-                  ? "Qué lleva, cómo se comporta y cómo se ve."
-                  : "What it does, how it reacts, how it looks.")}
-            </p>
+              <div
+                key={`${qrStyle.value}-${
+                  Boolean(logoUrl.value)
+                }-${miniFrameActive}-${url.value.slice(0, 16)}`}
+                class="w-12 h-12 rounded-2xl border-2 border-[#1e1714] p-1.5 flex items-center justify-center relative overflow-hidden shadow-[2px_2px_0_#1e1714] group-hover:scale-105 group-active:scale-95 transition-transform animate-pop"
+                style={{ background: miniBg }}
+              >
+                <div class="grid grid-cols-5 gap-[2px] w-full h-full">
+                  {MINI_MATRIX.map((cell, idx) => (
+                    <span
+                      key={idx}
+                      class={`${miniDotRadius} ${
+                        cell ? "opacity-100" : "opacity-15"
+                      }`}
+                      style={{
+                        background: cell ? miniGradient : "transparent",
+                      }}
+                    />
+                  ))}
+                </div>
+                {logoUrl.value && (
+                  <img
+                    src={logoUrl.value}
+                    alt=""
+                    class="absolute inset-0 m-auto w-5 h-5 rounded-md border border-[#1e1714] bg-[#fffef7] object-contain"
+                  />
+                )}
+              </div>
+              {miniFrameActive && (
+                <span class="-mt-1.5 z-10 px-1.5 py-0.2 rounded border border-[#1e1714] bg-[#1e1714] text-[#fffef7] text-[8px] font-black uppercase tracking-wider leading-tight max-w-[56px] truncate">
+                  {miniFrameCaption}
+                </span>
+              )}
+            </button>
+
+            <div class="min-w-0">
+              <h2
+                id="create-modal-title"
+                class="font-black text-xl sm:text-2xl tracking-tight text-[#1e1714] leading-tight truncate"
+              >
+                {hasCompletion
+                  ? (isSpanish ? "Listo para compartir." : "Ready to share.")
+                  : (isSpanish ? "Haz que haga trucos." : "Make it do tricks.")}
+              </h2>
+              <p class="text-xs sm:text-sm font-bold text-[#ec4899] truncate">
+                {hasCompletion
+                  ? (isSpanish
+                    ? "Tu QR ya apunta a la nueva página."
+                    : "The QR now points at the new page.")
+                  : (isSpanish
+                    ? "Qué lleva, cómo reacciona y cómo se ve."
+                    : "What it does, how it reacts, how it looks.")}
+              </p>
+            </div>
           </div>
+
           <button
             type="button"
             onClick={shell.requestClose}
-            class="group shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full flex items-center justify-center"
+            class="qr-modal-close-btn shrink-0"
             aria-label={isSpanish ? "Cerrar" : "Close"}
           >
-            <span
+            <svg
+              class="w-4 h-4 pointer-events-none"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3.25"
+              stroke-linecap="round"
               aria-hidden="true"
-              class="w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
             >
-              ✕
-            </span>
+              <path d="M6.5 6.5l11 11m0-11l-11 11" />
+            </svg>
           </button>
         </div>
 
         {!hasCompletion && (
-          <div class="px-4 sm:px-6 pt-2 pb-2 bg-qr-cream border-b-2 border-black/10 z-10">
-            <div class="grid grid-cols-3 gap-1 rounded-full bg-amber-50 p-1 border-2 border-black">
+          <div class="px-4 sm:px-6 pt-1.5 pb-2 bg-[#fbf1e4] border-b-2 border-[#1e1714]/10 z-10">
+            <div class="grid grid-cols-3 gap-1 rounded-full bg-[#fffef7] p-1 border-2 border-[#1e1714] shadow-[2px_2px_0_#1e1714]">
               {tabs.map((tab) => (
                 <button
                   type="button"
@@ -1185,12 +1324,13 @@ export default function CreateModal({
                     setActiveTab(tab.id);
                     scrollBodyToTop();
                     haptics.light();
+                    sounds.click();
                   }}
                   aria-selected={activeTab === tab.id}
                   role="tab"
-                  class={`min-h-[40px] px-1 rounded-full text-xs min-[380px]:text-sm font-black transition-all flex items-center justify-center min-w-0 ${
+                  class={`min-h-[38px] px-1 rounded-full text-xs min-[380px]:text-sm font-black transition-all flex items-center justify-center min-w-0 ${
                     activeTab === tab.id
-                      ? "bg-black text-white"
+                      ? "bg-[#1e1714] text-[#fffef7]"
                       : "text-neutral-600 hover:bg-amber-100"
                   }`}
                 >
@@ -1203,7 +1343,7 @@ export default function CreateModal({
 
         <div
           ref={bodyScrollRef}
-          class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-6 pb-6 sm:h-[min(480px,56dvh)] sm:flex-none"
+          class="flex-1 overflow-y-auto scrollbar-none p-4 sm:px-6 sm:py-4 pb-5 sm:max-h-[min(520px,64dvh)]"
         >
           {hasCompletion ? renderCompletionState() : (
             <>
@@ -1222,21 +1362,24 @@ export default function CreateModal({
           )}
         </div>
 
-        <div class="p-4 sm:p-6 pt-3 sm:pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 bg-qr-cream border-t-2 border-black/10 z-10">
+        <div class="p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
           <button
             type="button"
-            onClick={shell.requestClose}
-            class="w-full min-h-[52px] rounded-full border-3 border-black bg-qr-pop text-white text-lg font-black shadow-chunky hover:scale-[1.02] hover:bg-qr-popDeep hover:shadow-chunky-hover active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+            onClick={() => {
+              globalThis.dispatchEvent(new CustomEvent("qrb-modal-bloom"));
+              shell.requestClose();
+            }}
+            class="qr-pitch-cta"
           >
             <span>
               {hasCompletion
                 ? (isSpanish
-                  ? "Listo — Volver al inicio 🏠"
-                  : "Done — Back to Home 🏠")
+                  ? "Listo — Volver al inicio ✨"
+                  : "Done — Back to Home ✨")
                 : activeTab === "design"
                 ? (isSpanish
-                  ? "Listo — Aplicar diseño 🎨"
-                  : "Done — Apply Design 🎨")
+                  ? "Listo — Aplicar diseño ✨"
+                  : "Done — Apply Design ✨")
                 : (isSpanish ? "Listo — Ver mi QR ✨" : "Done — View QR ✨")}
             </span>
           </button>

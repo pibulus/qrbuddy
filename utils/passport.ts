@@ -141,8 +141,19 @@ export function getStoredPassport(): QRBuddyPassport | null {
       typeof parsed.secret === "string"
     ) {
       const passport = parsed as QRBuddyPassport;
+      let dirty = false;
+      if (typeof passport.phrase === "string") {
+        const words = passport.phrase.split(/[-_\s]+/).filter(Boolean);
+        if (words.length > 4 || passport.phrase.includes("_")) {
+          passport.phrase = words.slice(0, 4).join("-").toLowerCase();
+          dirty = true;
+        }
+      }
       if (passport.tier !== "plus" && getSupporterPass() !== null) {
         passport.tier = "plus";
+        dirty = true;
+      }
+      if (dirty) {
         savePassport(passport);
       }
       return passport;

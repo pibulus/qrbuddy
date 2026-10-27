@@ -1,13 +1,10 @@
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
-import {
-  CardModal,
-  CardPrimaryButton,
-  CardSecondaryButton,
-} from "./modal/CardModal.tsx";
+import { CardModal, CardPrimaryButton } from "./modal/CardModal.tsx";
 import { openPricingModal } from "./PricingModal.tsx";
 import { MAKER_URL } from "../utils/constants.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
+import { sounds } from "../utils/sounds.ts";
 
 // Global signal for modal state
 export const aboutModalOpen = signal(false);
@@ -26,67 +23,20 @@ export function closeAboutModal() {
 
 const INTRO_SEEN_KEY = "qrbuddy_intro_seen";
 
-const PUNCHES = {
+const PITCH_ITEMS = {
   en: [
-    {
-      icon: "🎨",
-      tint: "bg-rose-100",
-      title: "Gorgeous by default",
-      body: '8 gradients, a style dice, printable "SCAN ME" frames.',
-    },
-    {
-      icon: "💣",
-      tint: "bg-amber-100",
-      title: "Codes with superpowers",
-      body: "Self-destructing files, mixtapes, editable links, PIN'd lockers.",
-    },
-    {
-      icon: "🔍",
-      tint: "bg-purple-100",
-      title: "Reads them too",
-      body: "Scan any code — then remake the ugly ones beautiful.",
-    },
+    "8 print-ready palettes, custom logos & frames",
+    "Editable links, photo slideshows & lockers",
+    "Zero accounts, zero hostage links — free forever",
   ],
   es: [
-    {
-      icon: "🎨",
-      tint: "bg-rose-100",
-      title: "Chulos por defecto",
-      body: "8 degradados, dado de estilos y marcos listos para imprimir.",
-    },
-    {
-      icon: "💣",
-      tint: "bg-amber-100",
-      title: "QRs con superpoderes",
-      body:
-        "Archivos con autodestrucción, mixtapes, links editables y buzones con PIN.",
-    },
-    {
-      icon: "🔍",
-      tint: "bg-purple-100",
-      title: "También los revisa",
-      body: "Checa a dónde lleva cualquier QR antes de abrirlo.",
-    },
+    "8 paletas listas para imprimir, logos y marcos",
+    "Links editables, galerías de fotos y buzones",
+    "Cero cuentas, cero links secuestrados — gratis",
   ],
 };
 
-// The deal, as stickers — a bold run-on line kept orphaning "links." on
-// phones.
-const DEAL = {
-  en: [
-    { label: "Free", class: "bg-rose-100 -rotate-2" },
-    { label: "Zero accounts", class: "bg-amber-100 rotate-1" },
-    { label: "No hostage links", class: "bg-purple-100 -rotate-1" },
-  ],
-  es: [
-    { label: "Gratis", class: "bg-rose-100 -rotate-2" },
-    { label: "Cero cuentas", class: "bg-amber-100 rotate-1" },
-    { label: "Sin links secuestrados", class: "bg-purple-100 -rotate-1" },
-  ],
-};
-
-const SIGNATURE_LINK =
-  "inline-flex items-center min-h-[44px] font-bold text-gray-700 underline decoration-2 decoration-qr-pop/40 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop";
+const PABLO_EMOJIS = ["☕", "🌴", "🍸", "🌮"];
 
 // One modal at a time (the shell's scroll-lock is single-slot), so hand off
 // to the next card after this one has let go.
@@ -100,6 +50,7 @@ export function AboutModal({ lang }: { lang?: Locale } = {}) {
   const isSpanish = locale === "es";
   const isOpen = aboutModalOpen.value;
   const isIntro = aboutModalMode.value === "intro";
+  const [emojiIdx, setEmojiIdx] = useState(0);
 
   // First visit: open once as the intro poster, after the page has had its
   // bloom-in moment, but don't interrupt someone who's already using the page.
@@ -144,134 +95,139 @@ export function AboutModal({ lang }: { lang?: Locale } = {}) {
     }
   }, []);
 
+  const privacyHref = isSpanish ? "/privacy?lang=es" : "/privacy";
+  const termsHref = isSpanish ? "/terms?lang=es" : "/terms";
+
   return (
     <CardModal
       open={isOpen}
       onClose={closeAboutModal}
       labelledby="about-title"
       badge="🌸"
+      badgeClass="from-amber-200 via-pink-300 to-purple-400"
     >
-      <div class="text-center space-y-5">
-        <h2
-          id="about-title"
-          class="font-black text-2xl sm:text-3xl tracking-tight leading-tight text-black text-balance"
-        >
-          {isIntro
-            ? (isSpanish ? "Pega un link." : "Drop a link.")
-            : (isSpanish ? "Los QRs comunes aburren." : "QR codes are boring.")}
-          <span class="block text-qr-pop">
+      <div class="text-center space-y-4">
+        <div class="space-y-1">
+          <h2
+            id="about-title"
+            class="font-black text-2xl sm:text-[26px] tracking-tight leading-tight text-[#1e1714]"
+          >
             {isIntro
-              ? (isSpanish ? "Hazlo brillar." : "Watch it bloom.")
-              : (isSpanish
-                ? "QRBuddy les dio buena onda."
-                : "QRBuddy fixed that.")}
-          </span>
-        </h2>
-
-        {isIntro
-          ? (
-            <ul class="space-y-3.5 text-left">
-              {PUNCHES[locale].map((punch) => (
-                <li key={punch.title} class="flex items-center gap-3">
-                  <span
-                    class={`w-10 h-10 shrink-0 rounded-xl border-2 border-black ${punch.tint} flex items-center justify-center text-lg`}
-                    aria-hidden="true"
-                  >
-                    {punch.icon}
-                  </span>
-                  <span class="min-w-0 text-sm text-gray-700 leading-snug">
-                    <span class="block font-black text-black">
-                      {punch.title}
-                    </span>
-                    {punch.body}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )
-          : (
-            <div class="space-y-4">
-              <div class="space-y-2 text-[15px] leading-relaxed text-gray-700 font-medium text-balance">
-                <p>
-                  {isSpanish
-                    ? "La mayoría de los QRs parecen errores de impresora y te atrapan en suscripciones mensuales."
-                    : "Most QR codes look like printer errors and trap you in monthly subscriptions."}
-                </p>
-                <p>
-                  {isSpanish
-                    ? (
-                      <>
-                        QRBuddy los hace bonitos, interactivos y{" "}
-                        <span class="font-black text-black">
-                          tuyos para siempre.
-                        </span>
-                      </>
-                    )
-                    : (
-                      <>
-                        QRBuddy makes them gorgeous, interactive, and{" "}
-                        <span class="font-black text-black">
-                          forever yours.
-                        </span>
-                      </>
-                    )}
-                </p>
-              </div>
-              <ul
-                class="flex flex-wrap justify-center gap-2"
-                aria-label={isSpanish ? "El trato" : "The deal"}
-              >
-                {DEAL[locale].map((deal) => (
-                  <li
-                    key={deal.label}
-                    class={`px-3 py-1 rounded-full border-2 border-black text-xs font-black text-black ${deal.class}`}
-                  >
-                    {deal.label}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-        <div class="space-y-2.5">
-          <CardPrimaryButton onClick={closeAboutModal}>
-            {isSpanish ? "Crear algo chido 🌸" : "Make something 🌸"}
-          </CardPrimaryButton>
-          {!isIntro && (
-            <div class="flex">
-              <CardSecondaryButton onClick={() => handOff(openPricingModal)}>
-                {isSpanish ? "Pasaporte QRBuddy 🛂" : "QRBuddy Passport 🛂"}
-              </CardSecondaryButton>
-            </div>
-          )}
+              ? (
+                isSpanish
+                  ? (
+                    <>
+                      Pega un link.<br />
+                      <span class="qr-marker">Hazlo brillar.</span>
+                    </>
+                  )
+                  : (
+                    <>
+                      Drop a link.<br />
+                      <span class="qr-marker">Watch it bloom.</span>
+                    </>
+                  )
+              )
+              : (
+                isSpanish
+                  ? (
+                    <>
+                      QRBuddy es lo <span class="qr-marker">máximo.</span>
+                      <br />
+                      Olvida el resto.
+                    </>
+                  )
+                  : (
+                    <>
+                      QRBuddy’s the <span class="qr-marker">best.</span>
+                      <br />
+                      Kick out the rest.
+                    </>
+                  )
+              )}
+          </h2>
+          <p class="text-base font-bold text-[#ec4899]">
+            {isSpanish
+              ? "Es rápido, divertido y ridículamente bueno."
+              : "It’s fast, it’s fun, it’s freaky good."}
+          </p>
         </div>
 
-        {/* Signature row — the maker credit lives on both faces of the card */}
-        <p class="text-xs font-medium text-gray-500">
+        <p class="qr-pitch-copy">
+          {isSpanish
+            ? "Otros generadores parecen errores de impresora y secuestran tus links con cobros mensuales. QRBuddy crea códigos hermosos, listos para imprimir y gratis para siempre."
+            : "Other QR tools look like printer errors and hold links hostage behind monthly subscriptions. QRBuddy makes gorgeous, print-ready codes that stay free forever."}
+        </p>
+
+        <ul class="qr-pitch-list">
+          {PITCH_ITEMS[locale].map((item) => <li key={item}>{item}</li>)}
+        </ul>
+
+        <div class="pt-1">
+          {isIntro
+            ? (
+              <CardPrimaryButton onClick={closeAboutModal}>
+                {isSpanish ? "Crear un código QR ✨" : "Make a QR code ✨"}
+              </CardPrimaryButton>
+            )
+            : (
+              <CardPrimaryButton onClick={() => handOff(openPricingModal)}>
+                {isSpanish ? "Pasaporte QRBuddy" : "QRBuddy Passport"}
+              </CardPrimaryButton>
+            )}
+        </div>
+
+        {/* Signature row — matches TalkType Pitch Kit */}
+        <p class="text-xs font-medium text-[#6f6158] flex items-center justify-center gap-1 flex-wrap pt-0.5">
+          <span>{isSpanish ? "Hecho por" : "Made by"}</span>
           <a
             href={MAKER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            class={SIGNATURE_LINK}
+            class="font-bold text-[#1e1714] underline decoration-2 decoration-[#ec4899]/50 underline-offset-2 hover:text-[#ec4899] transition-colors"
           >
-            {isSpanish ? "Hecho por Pablo" : "Made by Pablo"}
+            Pablo
           </a>
+          <button
+            type="button"
+            onClick={() => {
+              setEmojiIdx((i) => (i + 1) % PABLO_EMOJIS.length);
+              sounds.bloop?.();
+            }}
+            class="inline-block text-sm leading-none hover:scale-125 active:scale-95 transition-transform cursor-pointer select-none"
+            aria-label="Change vibe"
+          >
+            {PABLO_EMOJIS[emojiIdx]}
+          </button>
+          <span>{isSpanish ? "en Melbourne" : "in Melbourne"}</span>
+          <span aria-hidden="true">·</span>
           {isIntro
             ? (
-              <>
-                <span class="mx-2" aria-hidden="true">·</span>
-                <button
-                  type="button"
-                  onClick={() => (aboutModalMode.value = "about")}
-                  class="inline-flex items-center min-h-[44px] font-bold text-gray-500 transition-colors hover:text-qr-pop"
-                >
-                  {isSpanish ? "Toda la historia →" : "The whole story →"}
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => (aboutModalMode.value = "about")}
+                class="font-bold text-[#1e1714] hover:text-[#ec4899] underline underline-offset-2 transition-colors"
+              >
+                {isSpanish ? "Toda la historia →" : "The whole story →"}
+              </button>
             )
-            : (isSpanish
-              ? " en Melbourne · Cero VC, cero rollos"
-              : " in Melbourne · No VC, no BS")}
+            : (
+              <>
+                <a
+                  href={privacyHref}
+                  class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
+                >
+                  {isSpanish ? "Privacidad" : "Privacy"}
+                </a>
+                <span aria-hidden="true">·</span>
+                <a
+                  href={termsHref}
+                  class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
+                >
+                  {isSpanish ? "Términos" : "Terms"}
+                </a>
+              </>
+            )}
         </p>
       </div>
     </CardModal>

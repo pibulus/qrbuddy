@@ -73,6 +73,15 @@ export default function QRCanvas(
   }, [url.value]);
 
   useEffect(() => {
+    const onBloom = () => {
+      setStylePop(true);
+      setTimeout(() => setStylePop(false), 380);
+    };
+    globalThis.addEventListener("qrb-modal-bloom", onBloom);
+    return () => globalThis.removeEventListener("qrb-modal-bloom", onBloom);
+  }, []);
+
+  useEffect(() => {
     const styleChanged = prevStyleRef.current !== style.value;
     const customChanged = prevCustomRef.current !== customStyle?.value;
     if (!styleChanged && !customChanged) return;
@@ -387,6 +396,34 @@ export default function QRCanvas(
     setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   };
 
+  const handleSvgDownloadClick = async (e: MouseEvent) => {
+    e.stopPropagation();
+    if (!qrCodeRef.current) return;
+
+    setIsClicking(true);
+    setTimeout(() => setIsClicking(false), 150);
+
+    try {
+      await downloadSvg();
+      haptics.success();
+      addToast(
+        isSpanish
+          ? "¡Descarga SVG vectorial iniciada! 📐"
+          : "Vector SVG download started! 📐",
+      );
+      setShowSuccessFlash(true);
+      setTimeout(() => setShowSuccessFlash(false), 600);
+    } catch (err) {
+      console.error("Failed to start SVG download:", err);
+      haptics.error();
+      addToast(
+        isSpanish
+          ? "No se pudo descargar el SVG ❌"
+          : "Couldn't start SVG download ❌",
+      );
+    }
+  };
+
   const handleDownloadClick = async () => {
     if (!qrCodeRef.current) return;
 
@@ -664,19 +701,37 @@ export default function QRCanvas(
           with a bounce when real content lands, overlapping the bottom-right
           corner of the card or frame without adding an extra chin below. */
       }
-      <button
-        type="button"
+      <div
         key={url.value ? "chip-live" : "chip-idle"}
-        onClick={handleDownloadClick}
-        class={`absolute -bottom-4 -right-3 min-h-[44px] px-4 rounded-full bg-qr-cream border-3 border-black shadow-chunky flex items-center justify-center gap-1 text-sm font-black text-black z-10 transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+        class={`absolute -bottom-4 -right-3 min-h-[44px] p-0.5 rounded-full bg-qr-cream border-3 border-black shadow-chunky inline-flex items-center z-10 ${
           url.value ? "animate-bounce-in" : ""
         }`}
-        aria-label={isSpanish
-          ? "Descargar código QR como PNG"
-          : "Download QR code as PNG"}
       >
-        {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
-      </button>
+        <button
+          type="button"
+          onClick={handleDownloadClick}
+          class="min-h-[38px] pl-3.5 pr-2.5 rounded-l-full flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-all hover:bg-amber-100/80 active:scale-95"
+          aria-label={isSpanish
+            ? "Descargar código QR como PNG"
+            : "Download QR code as PNG"}
+        >
+          {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
+        </button>
+        <span class="w-[2px] h-5 bg-[#1e1714]/20" aria-hidden="true" />
+        <button
+          type="button"
+          onClick={handleSvgDownloadClick}
+          class="min-h-[38px] pl-2.5 pr-3.5 rounded-r-full flex items-center justify-center text-xs font-black text-[#1e1714] transition-all hover:bg-amber-100/80 active:scale-95"
+          aria-label={isSpanish
+            ? "Descargar código QR como SVG vectorial"
+            : "Download QR code as vector SVG"}
+          title={isSpanish
+            ? "Descargar SVG vectorial para imprenta"
+            : "Download print-ready vector SVG"}
+        >
+          SVG
+        </button>
+      </div>
 
       {/* Destructible badge */}
       {isDestructible?.value && (

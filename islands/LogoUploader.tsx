@@ -71,15 +71,39 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
             return;
           }
 
-          // Calculate aspect ratio containment
+          // Draw a Neo-Toybrut rounded-square enamel badge so any uploaded
+          // photo or logo looks crisp and framed inside the QR center.
+          const pad = 16;
+          const badgeSize = size - pad * 2;
+          const radius = 72;
+          ctx.save();
+          ctx.beginPath();
+          ctx.roundRect(pad, pad, badgeSize, badgeSize, radius);
+          ctx.fillStyle = "#fffef7";
+          ctx.fill();
+          ctx.lineWidth = 16;
+          ctx.strokeStyle = "#1e1714";
+          ctx.stroke();
+          ctx.restore();
+
+          // Clip inner area and cover/contain image cleanly
+          const innerPad = 36;
+          const innerSize = size - innerPad * 2;
+          const innerRadius = 52;
+          ctx.save();
+          ctx.beginPath();
+          ctx.roundRect(innerPad, innerPad, innerSize, innerSize, innerRadius);
+          ctx.clip();
+
           const maxDim = Math.max(img.width, img.height);
-          const scale = size / maxDim;
+          const scale = innerSize / maxDim;
           const drawW = img.width * scale;
           const drawH = img.height * scale;
           const offsetX = (size - drawW) / 2;
           const offsetY = (size - drawH) / 2;
 
           ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+          ctx.restore();
           logoUrl.value = canvas.toDataURL("image/png");
           haptics.success();
           addToast(

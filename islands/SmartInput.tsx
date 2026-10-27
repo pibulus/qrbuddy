@@ -52,6 +52,7 @@ interface SmartInputProps {
   pngSize?: Signal<1000 | 2000 | 3000>;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
   onModalStateChange?: (isOpen: boolean) => void;
+  hidePrimaryInput?: boolean;
   lang?: Locale;
 }
 
@@ -70,6 +71,7 @@ export default function SmartInput(
     pngSize,
     frameConfig,
     onModalStateChange,
+    hidePrimaryInput = false,
     lang,
   }: SmartInputProps,
 ) {
@@ -843,81 +845,85 @@ export default function SmartInput(
       />
 
       <div class="relative group">
-        {/* URL/File Input - Always visible first */}
-        <div
-          class="relative"
-          data-dropzone="true"
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <input
-            ref={textInputRef}
-            type="text"
-            value={url.value}
-            onInput={handleInput}
-            onFocus={handleFocus}
-            onBlur={() => setTouched(true)}
-            placeholder={isDragging
-              ? (isSpanish ? "Suelta tu archivo aquí..." : "Drop file here...")
-              : (isSpanish
-                ? "Pega un link, escribe algo o suelta un archivo..."
-                : "Enter URL, text, or drop a file...")}
-            aria-label={isSpanish
-              ? "Link, texto o archivo para codificar en QR"
-              : "URL, text, or file to encode in QR code"}
-            aria-invalid={validationState === "invalid"}
-            aria-describedby={validationState === "invalid"
-              ? "input-error"
-              : undefined}
-            class={getInputClass()}
-            disabled={isUploading}
-          />
+        {/* Hidden file input (always mounted so toolbar/dropzone can trigger it) */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          class="hidden"
+          onChange={handleFileInputChange}
+          accept="*/*"
+          multiple
+        />
 
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            class="hidden"
-            onChange={handleFileInputChange}
-            accept="*/*"
-            multiple
-          />
+        {/* URL/File Input - Hidden while staging files or when a vertical quick-builder owns the primary input */}
+        {!stagedFiles && !hidePrimaryInput && (
+          <div
+            class="relative"
+            data-dropzone="true"
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <input
+              ref={textInputRef}
+              type="text"
+              value={url.value}
+              onInput={handleInput}
+              onFocus={handleFocus}
+              onBlur={() => setTouched(true)}
+              placeholder={isDragging
+                ? (isSpanish
+                  ? "Suelta tu archivo aquí..."
+                  : "Drop file here...")
+                : (isSpanish
+                  ? "Pega un link, escribe algo o suelta un archivo..."
+                  : "Enter URL, text, or drop a file...")}
+              aria-label={isSpanish
+                ? "Link, texto o archivo para codificar en QR"
+                : "URL, text, or file to encode in QR code"}
+              aria-invalid={validationState === "invalid"}
+              aria-describedby={validationState === "invalid"
+                ? "input-error"
+                : undefined}
+              class={getInputClass()}
+              disabled={isUploading}
+            />
 
-          {/* File upload button */}
-          {!isUploading && !isDestructible.value && (
-            <button
-              type="button"
-              onClick={handleFileInputClick}
-              class="absolute right-3 top-1/2 transform -translate-y-1/2
-                   w-11 h-11 flex items-center justify-center rounded-lg
-                   text-2xl hover:bg-gray-100 hover:scale-110 transition-all"
-              aria-label={isSpanish ? "Subir archivo" : "Upload file"}
-              title={isSpanish ? "Subir archivo" : "Upload file"}
-            >
-              📎
-            </button>
-          )}
+            {/* File upload button */}
+            {!isUploading && !isDestructible.value && (
+              <button
+                type="button"
+                onClick={handleFileInputClick}
+                class="absolute right-3 top-1/2 transform -translate-y-1/2
+                     w-11 h-11 flex items-center justify-center rounded-lg
+                     text-2xl hover:bg-gray-100 hover:scale-110 transition-all"
+                aria-label={isSpanish ? "Subir archivo" : "Upload file"}
+                title={isSpanish ? "Subir archivo" : "Upload file"}
+              >
+                📎
+              </button>
+            )}
 
-          {/* Validation indicator */}
-          {touched && validationState === "valid" && !isUploading && (
-            <div class="absolute right-14 top-1/2 transform -translate-y-1/2
-                      text-xl animate-pop">
-              {isDestructible.value ? "💣" : "✓"}
-            </div>
-          )}
+            {/* Validation indicator */}
+            {touched && validationState === "valid" && !isUploading && (
+              <div class="absolute right-14 top-1/2 transform -translate-y-1/2
+                        text-xl animate-pop">
+                {isDestructible.value ? "💣" : "✓"}
+              </div>
+            )}
 
-          {/* Upload progress */}
-          {isUploading && (
-            <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
-              <div
-                class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          )}
-        </div>
+            {/* Upload progress */}
+            {isUploading && (
+              <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
+                <div
+                  class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Helper text */}
         {touched && validationState === "invalid" && url.value.trim() !== "" &&
@@ -1023,8 +1029,8 @@ export default function SmartInput(
               >
                 <span>
                   {isSpanish
-                    ? "Directo · Nunca caduca"
-                    : "Direct · Never expires"}
+                    ? "🔒 Estático · Gratis siempre"
+                    : "🔒 Static · Free forever"}
                 </span>
               </button>
 
@@ -1050,14 +1056,22 @@ export default function SmartInput(
                       : "Creating editable link…")
                     : editUrl.value
                     ? (isSpanish
-                      ? "Editable + Analíticas ✓"
-                      : "Editable + Scan Stats ✓")
+                      ? "⚡ Editable + Analíticas ✓"
+                      : "⚡ Editable + Scan Stats ✓")
                     : (isSpanish
-                      ? "Hacer editable + Stats"
-                      : "Make Editable + Stats")}
+                      ? "⚡ Editable tras imprimir + Stats"
+                      : "⚡ Editable after print + Stats")}
                 </span>
               </button>
             </div>
+
+            {!editUrl.value && !isCreatingDynamic && (
+              <p class="text-[11px] font-bold text-[#57524b] text-center px-2">
+                {isSpanish
+                  ? "Estático fija el link en la tinta · Editable cambia el destino tras imprimir (5 gratis)"
+                  : "Static locks the URL into the ink · Editable repoints after printing (5 free)"}
+              </p>
+            )}
 
             {editUrl.value && (
               <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border-2 border-black bg-[#fffef7] text-xs font-bold text-[#1e1714] shadow-sm">

@@ -539,286 +539,323 @@ export default function OwnerStrip(
         </div>
       </div>
 
-      {/* Stats card */}
-      <div class="bg-white border-2 border-black rounded-2xl p-3 space-y-3">
-        <div
-          class="grid grid-cols-3 gap-1 rounded-full bg-amber-50 p-1 border-2 border-black"
-          role="tablist"
-          aria-label="Stats time range"
-        >
-          {RANGES.map((r, idx) => (
-            <button
-              key={r.id}
-              ref={(el) => {
-                tabRefs.current[idx] = el;
-              }}
-              id={`owner-stats-tab-${r.id}`}
-              type="button"
-              role="tab"
-              aria-selected={range === r.id}
-              aria-controls={`owner-stats-panel-${r.id}`}
-              tabIndex={range === r.id ? 0 : -1}
-              onClick={() => setRange(r.id)}
-              onKeyDown={handleTabKeyDown}
-              class={`min-h-[44px] rounded-full text-xs font-black transition-all ${
-                range === r.id
-                  ? "bg-black text-white"
-                  : "text-neutral-600 hover:bg-amber-100"
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-
-        <div
-          id={`owner-stats-panel-${range}`}
-          role="tabpanel"
-          aria-labelledby={`owner-stats-tab-${range}`}
-          class="space-y-3"
-        >
-          {statsError || statsLoading
-            ? (
-              <p
-                class="text-sm font-bold text-neutral-500 text-center py-2"
-                role="status"
-              >
-                {statsLoading
-                  ? "Loading stats…"
-                  : "Stats are unavailable right now."}
+      {/* Stats card: compact 1-row banner when 0 opens, full KPI card once opens > 0 */}
+      {cards.all.views === 0 && !statsError && !statsLoading
+        ? (
+          <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3 space-y-2.5 shadow-[2px_2px_0_#1e1714]">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs sm:text-sm font-black text-[#1e1714]">
+                🌸 {isSpanish
+                  ? "Aún sin visitas — ¡pega el QR en algún lugar!"
+                  : "No opens yet — stick the QR somewhere!"}
               </p>
-            )
-            : (
-              <>
-                {/* 3-Tile Visual KPI Header */}
-                <div class="grid grid-cols-3 gap-1.5">
-                  {kpis.map((tile) => (
-                    <div
-                      key={tile.label}
-                      class="bg-qr-cream border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0"
-                    >
-                      <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
-                        {tile.label}
-                      </span>
-                      <span class="mt-0.5 text-sm sm:text-base font-black text-black leading-tight truncate">
-                        {tile.value}
-                      </span>
-                      {tile.badge
-                        ? (
-                          <span class="mt-0.5 inline-block mx-auto px-1.5 py-0.2 rounded-full bg-amber-200 border border-black text-[10px] font-black text-black leading-tight truncate max-w-full">
-                            {tile.badge}
-                          </span>
-                        )
-                        : (
-                          <span class="mt-0.5 text-[10px] font-bold text-neutral-500 truncate">
-                            {range === "today"
-                              ? "Today"
-                              : range === "week"
-                              ? "7 days"
-                              : "All time"}
-                          </span>
-                        )}
-                    </div>
-                  ))}
-                </div>
+              <button
+                type="button"
+                class="min-h-[34px] px-3 rounded-full border-2 border-[#1e1714] bg-amber-100 hover:bg-amber-200 text-xs font-black text-[#1e1714] shrink-0 transition-transform active:scale-95"
+                disabled={statsLoading}
+                onClick={() => setStatsRevision((n) => n + 1)}
+              >
+                {isSpanish ? "Actualizar" : "Refresh"}
+              </button>
+            </div>
+            {!hasPass && (
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.light();
+                  openPricingModal();
+                }}
+                class="w-full min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-amber-100 hover:bg-amber-200 text-[#1e1714] text-xs font-black text-center leading-snug transition-all hover:-translate-y-0.5"
+              >
+                {isSpanish
+                  ? "🛂 Desbloquea ranking, ciudades y CSV con el Pasaporte QRBuddy →"
+                  : "🛂 Unlock leaderboard, top cities & CSV with QRBuddy Passport →"}
+              </button>
+            )}
+          </div>
+        )
+        : (
+          <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3 space-y-3 shadow-[2px_2px_0_#1e1714]">
+            <div
+              class="grid grid-cols-3 gap-1 rounded-full bg-amber-50 p-1 border-2 border-black"
+              role="tablist"
+              aria-label="Stats time range"
+            >
+              {RANGES.map((r, idx) => (
+                <button
+                  key={r.id}
+                  ref={(el) => {
+                    tabRefs.current[idx] = el;
+                  }}
+                  id={`owner-stats-tab-${r.id}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={range === r.id}
+                  aria-controls={`owner-stats-panel-${r.id}`}
+                  tabIndex={range === r.id ? 0 : -1}
+                  onClick={() => setRange(r.id)}
+                  onKeyDown={handleTabKeyDown}
+                  class={`min-h-[38px] rounded-full text-xs font-black transition-all ${
+                    range === r.id
+                      ? "bg-black text-white"
+                      : "text-neutral-600 hover:bg-amber-100"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
 
-                {/* Narrative Story Chips / Bullets */}
-                {lines.length === 0
+            <div
+              id={`owner-stats-panel-${range}`}
+              role="tabpanel"
+              aria-labelledby={`owner-stats-tab-${range}`}
+              class="space-y-3"
+            >
+              {statsError || statsLoading
+                ? (
+                  <p
+                    class="text-sm font-bold text-neutral-500 text-center py-2"
+                    role="status"
+                  >
+                    {statsLoading
+                      ? "Loading stats…"
+                      : "Stats are unavailable right now."}
+                  </p>
+                )
+                : (
+                  <>
+                    {/* 3-Tile Visual KPI Header */}
+                    <div class="grid grid-cols-3 gap-1.5">
+                      {kpis.map((tile) => (
+                        <div
+                          key={tile.label}
+                          class="bg-qr-cream border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0"
+                        >
+                          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                            {tile.label}
+                          </span>
+                          <span class="mt-0.5 text-sm sm:text-base font-black text-black leading-tight truncate">
+                            {tile.value}
+                          </span>
+                          {tile.badge
+                            ? (
+                              <span class="mt-0.5 inline-block mx-auto px-1.5 py-0.2 rounded-full bg-amber-200 border border-black text-[10px] font-black text-black leading-tight truncate max-w-full">
+                                {tile.badge}
+                              </span>
+                            )
+                            : (
+                              <span class="mt-0.5 text-[10px] font-bold text-neutral-500 truncate">
+                                {range === "today"
+                                  ? "Today"
+                                  : range === "week"
+                                  ? "7 days"
+                                  : "All time"}
+                              </span>
+                            )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Narrative Story Chips / Bullets */}
+                    {lines.length === 0
+                      ? (
+                        <p class="text-sm font-bold text-neutral-500 text-center py-1">
+                          {range === "today"
+                            ? "No page opens yet today."
+                            : "No page opens yet — stick it somewhere 🌸"}
+                        </p>
+                      )
+                      : (
+                        <ul class="flex flex-wrap gap-1.5">
+                          {lines.map((line, i) => (
+                            <li
+                              key={i}
+                              class={`rounded-xl border px-2.5 py-1.5 text-xs leading-snug ${
+                                i === 0
+                                  ? "w-full bg-amber-100 border-black font-black text-black"
+                                  : "bg-qr-cream border-black/20 font-bold text-neutral-900"
+                              }`}
+                            >
+                              {line}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                  </>
+                )}
+
+              {!statsError && !statsLoading && range !== "today" &&
+                card.spark.some((v) => v > 0) && <Spark values={card.spark} />}
+
+              {/* Passport Field Report 🛂 */}
+              {!statsError && !statsLoading && (
+                hasPass
                   ? (
-                    <p class="text-sm font-bold text-neutral-500 text-center py-1">
-                      {range === "today"
-                        ? "No page opens yet today."
-                        : "No page opens yet — stick it somewhere 🌸"}
-                    </p>
+                    <div class="bg-qr-cream border-2 border-black rounded-2xl p-3 space-y-3">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-black bg-amber-200 text-[10px] font-black uppercase tracking-wide text-black shadow-sm">
+                          🛂 PASSPORT FIELD REPORT
+                        </span>
+                      </div>
+
+                      {/* 1. 🏆 Full Track / Photo Leaderboard */}
+                      {files.length > 1 && card.itemLeaderboard.length > 0 && (
+                        <div class="space-y-1.5">
+                          <p class="text-[11px] font-black uppercase tracking-wider text-black">
+                            🏆 {kind === "playlist"
+                              ? "Track Leaderboard"
+                              : "Photo Leaderboard"}
+                          </p>
+                          <ol class="space-y-1.5">
+                            {card.itemLeaderboard.map((entry, idx) => {
+                              const label = resolveLeaderboardItemName(
+                                entry.id,
+                              );
+                              const unit = kind === "playlist"
+                                ? entry.plays === 1 ? "play" : "plays"
+                                : entry.plays === 1
+                                ? "view"
+                                : "views";
+                              const widthPct = Math.max(
+                                8,
+                                Math.round(entry.share * 100),
+                              );
+                              return (
+                                <li
+                                  key={entry.id}
+                                  class="bg-white border-2 border-black rounded-xl p-2 space-y-1"
+                                >
+                                  <div class="flex items-center justify-between gap-2 text-xs font-black text-black min-w-0">
+                                    <span class="truncate min-w-0">
+                                      <span class="text-qr-pop mr-1.5">
+                                        #{idx + 1}
+                                      </span>
+                                      {label}
+                                    </span>
+                                    <span class="shrink-0 font-mono text-[11px] text-neutral-700">
+                                      {entry.plays} {unit}
+                                    </span>
+                                  </div>
+                                  <div class="w-full h-2 rounded-full bg-black/10 overflow-hidden border border-black/30">
+                                    <div
+                                      class="h-full rounded-full bg-qr-pop transition-all"
+                                      style={{ width: `${widthPct}%` }}
+                                    />
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ol>
+                        </div>
+                      )}
+
+                      {/* 2. ⏱️ Hang Time & Completion + 🧭 Farthest Stamp */}
+                      <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                        <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                            Avg. Hang Time
+                          </span>
+                          <span class="mt-0.5 text-xs sm:text-sm font-black text-black leading-tight truncate">
+                            {formatDwellSeconds(card.avgDwellSeconds)}
+                          </span>
+                        </div>
+                        <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                            Completion Rate
+                          </span>
+                          <span class="mt-0.5 text-xs sm:text-sm font-black text-black leading-tight truncate">
+                            {card.completionRate !== null
+                              ? `${Math.round(card.completionRate * 100)}%`
+                              : "—"}
+                          </span>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1 bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                            Farthest Scan
+                          </span>
+                          <span
+                            class="mt-0.5 text-[11px] font-black text-black leading-tight truncate"
+                            title={card.farthest
+                              ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
+                              : undefined}
+                          >
+                            {card.farthest
+                              ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
+                              : card.topPlaces[0]
+                              ? `📍 ${card.topPlaces[0].name}`
+                              : "—"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {card.topPlaces.length > 0 && (
+                        <div class="flex flex-wrap gap-1.5">
+                          {card.topPlaces.map((place) => (
+                            <span
+                              key={place.name}
+                              class="bg-white border-2 border-black px-2.5 py-1 rounded-full text-[11px] font-black text-black"
+                            >
+                              📍 {place.name} · {place.views}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* 3. 📲 Source Apps & 📥 Export CSV */}
+                      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <div class="flex flex-wrap gap-1.5 min-w-0">
+                          {card.appBreakdown.map((app) => (
+                            <span
+                              key={app.name}
+                              class="bg-amber-100 border-2 border-black px-2.5 py-1 rounded-full text-[11px] font-black text-black"
+                            >
+                              📲 {app.name} · {app.views}
+                            </span>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleExportCsv}
+                          class="min-h-[40px] inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full border-2 border-black bg-white hover:bg-amber-200 text-xs font-black text-black shadow-chunky transition-all hover:scale-105 active:scale-95 ml-auto"
+                        >
+                          📥 Export CSV
+                        </button>
+                      </div>
+                    </div>
                   )
                   : (
-                    <ul class="flex flex-wrap gap-1.5">
-                      {lines.map((line, i) => (
-                        <li
-                          key={i}
-                          class={`rounded-xl border px-2.5 py-1.5 text-xs leading-snug ${
-                            i === 0
-                              ? "w-full bg-amber-100 border-black font-black text-black"
-                              : "bg-qr-cream border-black/20 font-bold text-neutral-900"
-                          }`}
-                        >
-                          {line}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-              </>
-            )}
-
-          {!statsError && !statsLoading && range !== "today" &&
-            card.spark.some((v) => v > 0) && <Spark values={card.spark} />}
-
-          {/* Passport Field Report 🛂 */}
-          {!statsError && !statsLoading && (
-            hasPass
-              ? (
-                <div class="bg-qr-cream border-2 border-black rounded-2xl p-3 space-y-3">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-black bg-amber-200 text-[10px] font-black uppercase tracking-wide text-black shadow-sm">
-                      🛂 PASSPORT FIELD REPORT
-                    </span>
-                  </div>
-
-                  {/* 1. 🏆 Full Track / Photo Leaderboard */}
-                  {files.length > 1 && card.itemLeaderboard.length > 0 && (
-                    <div class="space-y-1.5">
-                      <p class="text-[11px] font-black uppercase tracking-wider text-black">
-                        🏆 {kind === "playlist"
-                          ? "Track Leaderboard"
-                          : "Photo Leaderboard"}
-                      </p>
-                      <ol class="space-y-1.5">
-                        {card.itemLeaderboard.map((entry, idx) => {
-                          const label = resolveLeaderboardItemName(entry.id);
-                          const unit = kind === "playlist"
-                            ? entry.plays === 1 ? "play" : "plays"
-                            : entry.plays === 1
-                            ? "view"
-                            : "views";
-                          const widthPct = Math.max(
-                            8,
-                            Math.round(entry.share * 100),
-                          );
-                          return (
-                            <li
-                              key={entry.id}
-                              class="bg-white border-2 border-black rounded-xl p-2 space-y-1"
-                            >
-                              <div class="flex items-center justify-between gap-2 text-xs font-black text-black min-w-0">
-                                <span class="truncate min-w-0">
-                                  <span class="text-qr-pop mr-1.5">
-                                    #{idx + 1}
-                                  </span>
-                                  {label}
-                                </span>
-                                <span class="shrink-0 font-mono text-[11px] text-neutral-700">
-                                  {entry.plays} {unit}
-                                </span>
-                              </div>
-                              <div class="w-full h-2 rounded-full bg-black/10 overflow-hidden border border-black/30">
-                                <div
-                                  class="h-full rounded-full bg-qr-pop transition-all"
-                                  style={{ width: `${widthPct}%` }}
-                                />
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ol>
-                    </div>
-                  )}
-
-                  {/* 2. ⏱️ Hang Time & Completion + 🧭 Farthest Stamp */}
-                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                    <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                      <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
-                        Avg. Hang Time
-                      </span>
-                      <span class="mt-0.5 text-xs sm:text-sm font-black text-black leading-tight truncate">
-                        {formatDwellSeconds(card.avgDwellSeconds)}
-                      </span>
-                    </div>
-                    <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                      <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
-                        Completion Rate
-                      </span>
-                      <span class="mt-0.5 text-xs sm:text-sm font-black text-black leading-tight truncate">
-                        {card.completionRate !== null
-                          ? `${Math.round(card.completionRate * 100)}%`
-                          : "—"}
-                      </span>
-                    </div>
-                    <div class="col-span-2 sm:col-span-1 bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                      <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
-                        Farthest Scan
-                      </span>
-                      <span
-                        class="mt-0.5 text-[11px] font-black text-black leading-tight truncate"
-                        title={card.farthest
-                          ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
-                          : undefined}
-                      >
-                        {card.farthest
-                          ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
-                          : card.topPlaces[0]
-                          ? `📍 ${card.topPlaces[0].name}`
-                          : "—"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {card.topPlaces.length > 0 && (
-                    <div class="flex flex-wrap gap-1.5">
-                      {card.topPlaces.map((place) => (
-                        <span
-                          key={place.name}
-                          class="bg-white border-2 border-black px-2.5 py-1 rounded-full text-[11px] font-black text-black"
-                        >
-                          📍 {place.name} · {place.views}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* 3. 📲 Source Apps & 📥 Export CSV */}
-                  <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-                    <div class="flex flex-wrap gap-1.5 min-w-0">
-                      {card.appBreakdown.map((app) => (
-                        <span
-                          key={app.name}
-                          class="bg-amber-100 border-2 border-black px-2.5 py-1 rounded-full text-[11px] font-black text-black"
-                        >
-                          📲 {app.name} · {app.views}
-                        </span>
-                      ))}
-                    </div>
                     <button
                       type="button"
-                      onClick={handleExportCsv}
-                      class="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full border-2 border-black bg-white hover:bg-amber-200 text-xs font-black text-black shadow-chunky transition-all hover:scale-105 active:scale-95 ml-auto"
+                      onClick={() => {
+                        haptics.light();
+                        openPricingModal();
+                      }}
+                      class="w-full min-h-[40px] px-3 py-2 rounded-2xl border-2 border-black bg-amber-100 hover:bg-amber-200 text-black text-xs font-black text-center leading-snug shadow-chunky transition-all hover:scale-[1.01] active:scale-[0.99]"
                     >
-                      📥 Export CSV
+                      {isSpanish
+                        ? "🛂 Desbloquea ranking, ciudades y CSV con el Pasaporte QRBuddy →"
+                        : "🛂 Unlock leaderboard, top cities & CSV with QRBuddy Passport →"}
                     </button>
-                  </div>
-                </div>
-              )
-              : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    haptics.light();
-                    openPricingModal();
-                  }}
-                  class="w-full min-h-[44px] px-3.5 py-2.5 rounded-2xl border-2 border-black bg-amber-100 hover:bg-amber-200 text-black text-xs font-black text-left sm:text-center leading-snug shadow-chunky transition-all hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  {isSpanish
-                    ? "🛂 Desbloquea ranking por canción/foto, ciudades y CSV con el Pasaporte QRBuddy →"
-                    : "🛂 Unlock track leaderboard, top cities & CSV export with QRBuddy Passport →"}
-                </button>
-              )
-          )}
-        </div>
+                  )
+              )}
+            </div>
 
-        <div class="flex items-center gap-3">
-          <p class="flex-1 text-xs text-neutral-500">
-            Includes your own opens. Daily visitors are estimates by network;
-            days use UTC. Playback and downloads are best-effort events.
-          </p>
-          <button
-            type="button"
-            class={PILL}
-            disabled={statsLoading}
-            onClick={() => setStatsRevision((n) => n + 1)}
-          >
-            {statsError ? "Retry stats" : "Refresh stats"}
-          </button>
-        </div>
-      </div>
+            <div class="flex items-center justify-between gap-2 pt-1 border-t border-black/10">
+              <p class="text-[11px] text-neutral-500 truncate">
+                Coarse UTC estimates · includes your opens
+              </p>
+              <button
+                type="button"
+                class="min-h-[34px] px-3 rounded-full border-2 border-black bg-white text-xs font-black hover:bg-amber-100 shrink-0"
+                disabled={statsLoading}
+                onClick={() => setStatsRevision((n) => n + 1)}
+              >
+                {statsError ? "Retry" : "Refresh"}
+              </button>
+            </div>
+          </div>
+        )}
 
       {/* Verbs */}
       <div class="grid grid-cols-3 gap-2">
@@ -891,63 +928,74 @@ export default function OwnerStrip(
         </div>
       )}
 
-      {/* Items with reorder ↑/↓ and remove ✕ — only when the payload is editable */}
+      {/* Items with reorder ↑/↓ and remove ✕ — tucked in a compact drawer so OwnerStrip stays short */}
       {canEditPayload && files.length > 1 && (
-        <ul class="space-y-1.5" aria-label="Share items">
-          {files.map((f, i) => {
-            const label = kind === "playlist"
-              ? prettyName(f.name)
-              : `Photo ${i + 1} · ${prettyName(f.name)}`;
-            return (
-              <li
-                key={f.id}
-                class="flex items-center gap-1.5 min-h-[44px] text-sm font-bold bg-white border-2 border-black/15 rounded-2xl px-2.5 py-1"
-              >
-                <span class="w-5 text-xs font-black text-neutral-600 text-right shrink-0">
-                  {i + 1}
-                </span>
-                <span class="truncate flex-1 min-w-0" title={label}>
-                  {label}
-                </span>
-                <div class="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => void moveItem(i, -1)}
-                    disabled={i === 0 || mutationBusy}
-                    aria-label={`Move ${prettyName(f.name)} up`}
-                    class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border-2 border-black/15 hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void moveItem(i, 1)}
-                    disabled={i === files.length - 1 || mutationBusy}
-                    aria-label={`Move ${prettyName(f.name)} down`}
-                    class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border-2 border-black/15 hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void removeItem(f)}
-                    disabled={mutationBusy}
-                    aria-label={`Remove ${prettyName(f.name)}`}
-                    class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border-2 border-black/15 hover:border-black hover:bg-rose-100 text-xs font-black transition-colors disabled:opacity-50"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <details class="group bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl px-3 py-2">
+          <summary class="list-none cursor-pointer min-h-[34px] flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] select-none">
+            <span>
+              Manage {files.length} {kind === "playlist" ? "tracks" : "photos"}
+              {" "}
+              (reorder / remove)
+            </span>
+            <span class="transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <ul class="space-y-1.5 pt-2" aria-label="Share items">
+            {files.map((f, i) => {
+              const label = kind === "playlist"
+                ? prettyName(f.name)
+                : `Photo ${i + 1} · ${prettyName(f.name)}`;
+              return (
+                <li
+                  key={f.id}
+                  class="flex items-center gap-1.5 min-h-[40px] text-xs sm:text-sm font-bold bg-qr-cream border-2 border-black/15 rounded-xl px-2.5 py-1"
+                >
+                  <span class="w-4 text-xs font-black text-neutral-600 text-right shrink-0">
+                    {i + 1}
+                  </span>
+                  <span class="truncate flex-1 min-w-0" title={label}>
+                    {label}
+                  </span>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => void moveItem(i, -1)}
+                      disabled={i === 0 || mutationBusy}
+                      aria-label={`Move ${prettyName(f.name)} up`}
+                      class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void moveItem(i, 1)}
+                      disabled={i === files.length - 1 || mutationBusy}
+                      aria-label={`Move ${prettyName(f.name)} down`}
+                      class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void removeItem(f)}
+                      disabled={mutationBusy}
+                      aria-label={`Remove ${prettyName(f.name)}`}
+                      class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-rose-100 text-xs font-black transition-colors disabled:opacity-50"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </details>
       )}
 
-      {/* The sticker canvas: small, real, framed */}
-      <div class="mx-auto w-full max-w-[200px]">
+      {/* Off-screen sticker exporter: powers the "Sticker" button above without hanging a 200px QR off the bottom */}
+      <div
+        class="sr-only pointer-events-none h-0 overflow-hidden"
+        aria-hidden="true"
+      >
         <QRCanvas
           url={qrUrl}
           style={qrStyle}

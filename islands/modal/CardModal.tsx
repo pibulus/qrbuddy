@@ -40,8 +40,8 @@ export function CardModal({
   labelledby,
   badge,
   badgeClass = "from-qr-sunset1 via-pink-400 to-purple-500",
-  maxWidthClass = "max-w-[460px]",
-  padClass = "p-6 sm:p-8",
+  maxWidthClass = "max-w-[440px]",
+  padClass = "p-6 sm:p-7",
   children,
 }: CardModalProps) {
   const shell = useModalShell({ open, onClose });
@@ -60,9 +60,7 @@ export function CardModal({
     >
       <div
         ref={shell.dialogRef}
-        class={`relative w-full ${maxWidthClass} ${
-          badge ? "mt-8" : ""
-        } outline-none charm-modal-card animate-pop-in${
+        class={`relative w-full ${maxWidthClass} outline-none charm-modal-card animate-pop-in${
           shell.closing ? " charm-modal--closing" : ""
         }`}
         role="dialog"
@@ -70,45 +68,37 @@ export function CardModal({
         aria-labelledby={labelledby}
         tabindex={-1}
       >
-        {/* 44px hit area, 36px visual — pinned to the frame, not the scroll */}
         <button
           type="button"
           onClick={shell.requestClose}
-          class="group absolute z-10 top-2.5 right-2.5 w-11 h-11 rounded-full flex items-center justify-center"
+          class="qr-modal-close-btn absolute z-10 top-3.5 right-3.5"
           aria-label="Close"
         >
-          <span
-            class="w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
+          <svg
+            class="w-4 h-4 pointer-events-none"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3.25"
+            stroke-linecap="round"
             aria-hidden="true"
           >
-            ✕
-          </span>
+            <path d="M6.5 6.5l11 11m0-11l-11 11" />
+          </svg>
         </button>
 
-        {badge && (
-          // Half on, half off the top edge. Tilt and float live on separate
-          // elements so the float keyframes don't wipe the tilt. The strip is
-          // click-through so it never shadows the ×; the tile itself isn't,
-          // so tapping the mascot can't fall through to the backdrop.
-          <div
-            class="absolute z-10 inset-x-0 top-0 -translate-y-1/2 flex justify-center select-none pointer-events-none"
-            aria-hidden="true"
-          >
-            <div class="-rotate-6 pointer-events-auto">
+        <div
+          class={`max-h-[calc(92dvh-2rem)] overflow-y-auto scrollbar-none bg-[#fbf1e4] border-3 border-[#1e1714] rounded-3xl shadow-chunky-hover ${padClass}`}
+        >
+          {badge && (
+            <div class="flex justify-center mb-3" aria-hidden="true">
               <div
-                class={`w-16 h-16 rounded-2xl border-3 border-black bg-gradient-to-br ${badgeClass} shadow-chunky animate-float flex items-center justify-center text-3xl`}
+                class={`w-14 h-14 rounded-2xl border-2 border-[#1e1714] bg-gradient-to-br ${badgeClass} shadow-[2px_2px_0_#1e1714] flex items-center justify-center text-2xl select-none`}
               >
                 {badge}
               </div>
             </div>
-          </div>
-        )}
-
-        <div
-          class={`max-h-[calc(92dvh-2rem)] overflow-y-auto scrollbar-none bg-qr-cream border-4 border-black rounded-3xl shadow-chunky-hover ${padClass} ${
-            badge ? "pt-12 sm:pt-14" : ""
-          }`}
-        >
+          )}
           {children}
         </div>
       </div>
@@ -116,7 +106,7 @@ export function CardModal({
   );
 }
 
-/** The one primary pill every card shares. */
+/** The one primary pill every card shares (TalkType Pitch Kit warm yellow CTA). */
 export function CardPrimaryButton(
   props: {
     onClick: () => void;
@@ -130,16 +120,14 @@ export function CardPrimaryButton(
       type="button"
       onClick={props.onClick}
       disabled={props.disabled}
-      class={`w-full min-h-[52px] rounded-full border-3 border-black px-6 py-3 text-lg font-black shadow-chunky transition-all hover:scale-[1.02] hover:shadow-chunky-hover active:scale-[0.97] disabled:opacity-60 disabled:hover:scale-100 ${
-        props.class ?? "bg-qr-pop text-white hover:bg-qr-popDeep"
-      }`}
+      class={`qr-pitch-cta ${props.class ?? ""}`}
     >
       {props.children}
     </button>
   );
 }
 
-/** Secondary pill — white, bordered, for the row under the primary. */
+/** Secondary pill — cream/white, bordered, for auxiliary actions. */
 export function CardSecondaryButton(
   props: {
     onClick?: () => void;
@@ -148,7 +136,7 @@ export function CardSecondaryButton(
   },
 ) {
   const cls =
-    "flex-1 min-h-[44px] inline-flex items-center justify-center rounded-full border-2 border-black bg-white px-4 text-sm font-bold text-black shadow-chunky transition-all hover:scale-105 active:scale-95";
+    "flex-1 min-h-[44px] inline-flex items-center justify-center rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] px-4 text-sm font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] transition-all hover:-translate-y-0.5 active:translate-y-0";
   if (props.href) {
     return (
       <a

@@ -124,21 +124,11 @@ export default function ShareReady(
           {isSpanish ? "Sticker" : "Sticker"}
         </button>
       </div>
-      <div class="rounded-xl border border-black/10 bg-amber-50/70 p-2.5 text-xs font-medium text-neutral-700 flex items-start gap-2">
-        <span class="text-sm shrink-0">👑</span>
-        <div class="leading-snug">
-          <p class="font-bold text-black">
-            {isSpanish
-              ? "Se administra en este navegador · dura 30 días"
-              : "Managed in this browser · 30-day share"}
-          </p>
-          <p class="text-[11px] text-neutral-600 mt-0.5">
-            {isSpanish
-              ? "Tu llave de propietario vive en este navegador. Sincroniza o exporta en Historial (☁️) para conservar el control en otros dispositivos."
-              : "Your owner key stays in this browser. Sync or export in History (☁️) to keep control across devices."}
-          </p>
-        </div>
-      </div>
+      <p class="text-[11px] font-bold text-[#6f6158] text-center pt-0.5">
+        👑 {isSpanish
+          ? "Guardado en este navegador (30 días) · Sincroniza en Historial"
+          : "Saved in this browser (30 days) · Sync in History"}
+      </p>
     </div>
   );
 }

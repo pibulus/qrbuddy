@@ -55,17 +55,17 @@ export function getThemeStylesFor(theme = "sunset"): string {
     case "brutalist":
       return "bg-[#FFFF00] text-black";
     case "candy":
-      return "bg-gradient-to-br from-[#FFF0F7] via-[#F3E8FF] to-[#E0F2FE] text-black";
+      return "bg-gradient-to-br from-[#FFFDF9] via-[#FFF0F7] to-[#F3E8FF] text-black";
     case "blush":
-      return "bg-gradient-to-br from-[#FFF5F7] via-[#FFE4E9] to-[#FECDD3] text-black";
+      return "bg-gradient-to-br from-[#FFFDF9] via-[#FFF5F7] to-[#FFE4E9] text-black";
     case "matcha":
-      return "bg-gradient-to-br from-[#F2FBF7] via-[#DCFCE7] to-[#CCFBF1] text-black";
+      return "bg-gradient-to-br from-[#FFFDF9] via-[#F2FBF7] to-[#DCFCE7] text-black";
     case "pool":
-      return "bg-gradient-to-br from-[#ECFEFF] via-[#CFFAFE] to-[#BAE6FD] text-black";
+      return "bg-gradient-to-br from-[#FFFDF9] via-[#F0FDFA] to-[#E0F2FE] text-black";
     case "vapor":
-      return "bg-gradient-to-br from-[#F5F3FF] via-[#FCE7F3] to-[#EDE9FE] text-black";
+      return "bg-gradient-to-br from-[#FFFDFB] via-[#FAF5FF] to-[#FCE7F3] text-black";
     case "grape":
-      return "bg-gradient-to-br from-[#EEF2FF] via-[#EDE9FE] to-[#E0E7FF] text-black";
+      return "bg-gradient-to-br from-[#FFFDFB] via-[#FBF1E4] to-[#EDE9FE] text-black";
     case "sunset":
     default:
       return "bg-gradient-to-br from-[#FFF8F0] via-[#FFE5B4] to-[#FFD6E7] text-black";
@@ -791,98 +791,103 @@ export default function FileSlideshow({
           </div>
         )}
 
-        {/* File Details & Actions */}
+        {/* File Details & Actions (Compressed Neo-Toybrut action dock) */}
         <div class="w-full max-w-md space-y-4">
           <div
-            class={`rounded-3xl p-5 sm:p-6 space-y-4 ${getCardStyles()}`}
+            class={`rounded-3xl p-4 sm:p-5 space-y-3 ${getCardStyles()}`}
           >
-            <div class="flex items-start justify-between gap-3">
-              <h2
-                class="text-lg sm:text-xl font-black break-words flex-1"
-                title={hasMultipleFiles ? shareTitle : displayFileName}
-              >
-                {hasMultipleFiles ? shareTitle : displayFileName}
-              </h2>
-              <span class="text-xs sm:text-sm font-bold opacity-75 whitespace-nowrap pt-1">
+            <div class="flex items-center justify-between gap-2 text-xs font-black opacity-80">
+              <span class="truncate">
+                {hasMultipleFiles
+                  ? `${prettyName(displayFileName)} (${currentIndex + 1}/${
+                    files!.length
+                  })`
+                  : displayFileName}
+              </span>
+              <span class="shrink-0">
                 {fileSizeLabel}
+                {formattedExpiry
+                  ? ` · Exp ${formattedExpiry.slice(0, 10)}`
+                  : ""}
               </span>
             </div>
-            {formattedExpiry && (
-              <p class="-mt-2 text-xs font-bold opacity-75">
-                Link expires {formattedExpiry}
-              </p>
-            )}
 
-            {/* Download Button */}
+            {/* Primary Download + Secondary Zip Row */}
             {lastDownloadStarted
               ? (
                 <p
                   role="status"
-                  class="min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-xl bg-red-100 border-2 border-black text-red-950 font-black text-center"
+                  class="min-h-[48px] flex items-center justify-center w-full px-4 py-3 rounded-2xl bg-red-100 border-2 border-black text-red-950 font-black text-center text-sm"
                 >
                   One-time link used. Your download may take a moment.
                 </p>
               )
               : (
-                <a
-                  href={primaryDownloadUrl}
-                  download={primaryDownloadName}
-                  onClick={handleDownloadClick}
-                  class={`min-h-[56px] flex items-center justify-center w-full px-4 py-4 rounded-2xl font-black text-center text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-chunky ${
-                    isUnlimited
-                      ? isTerminal
-                        ? "bg-[#00FF41] text-black border-3 border-[#00FF41]"
-                        : isDarkTheme
-                        ? "bg-white text-black border-3 border-white hover:bg-slate-200"
-                        : "bg-qr-pop text-white border-3 border-black hover:bg-qr-popDeep"
-                      : "bg-gradient-to-r from-red-500 to-orange-500 text-white border-3 border-black shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
-                  }`}
+                <div
+                  class={hasMultipleFiles && isUnlimited
+                    ? "grid grid-cols-1 sm:grid-cols-2 gap-2"
+                    : ""}
                 >
-                  {hasMultipleFiles && !isUnlimited
-                    ? "Download All & Destroy (.zip) 💥"
-                    : isUnlimited
-                    ? `Download ${fileKindLabel} ↓`
-                    : "Download & Destroy 💥"}
-                </a>
-              )}
+                  <a
+                    href={primaryDownloadUrl}
+                    download={primaryDownloadName}
+                    onClick={handleDownloadClick}
+                    class={`min-h-[48px] flex items-center justify-center w-full px-4 py-2.5 rounded-2xl font-black text-center text-base transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-chunky ${
+                      isUnlimited
+                        ? isTerminal
+                          ? "bg-[#00FF41] text-black border-2 border-[#00FF41]"
+                          : isDarkTheme
+                          ? "bg-white text-black border-2 border-white hover:bg-slate-200"
+                          : "bg-[#fbbf24] text-[#1e1714] border-2 border-[#1e1714] hover:bg-[#f59e0b]"
+                        : "bg-gradient-to-r from-red-500 to-orange-500 text-white border-2 border-black shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
+                    }`}
+                  >
+                    {hasMultipleFiles && !isUnlimited
+                      ? "Download All & Destroy (.zip) 💥"
+                      : isUnlimited
+                      ? `Download ${fileKindLabel} ↓`
+                      : "Download & Destroy 💥"}
+                  </a>
 
-            {/* Download All Button */}
-            {hasMultipleFiles && isUnlimited && (
-              <button
-                type="button"
-                onClick={handleDownloadAll}
-                disabled={isZipping}
-                class={`min-h-[48px] block w-full py-3 rounded-xl font-black text-center text-base transition-all border-2 disabled:opacity-60 ${
-                  isTerminal
-                    ? "border-[#00FF41] text-[#00FF41] hover:bg-[#00FF41]/10"
-                    : isDarkTheme
-                    ? "border-white/50 text-white hover:bg-white/10"
-                    : "bg-white border-black text-black shadow-chunky hover:bg-amber-100"
-                }`}
-              >
-                {isZipping ? "Zipping..." : "Download All (.zip)"}
-              </button>
-            )}
+                  {hasMultipleFiles && isUnlimited && (
+                    <button
+                      type="button"
+                      onClick={handleDownloadAll}
+                      disabled={isZipping}
+                      class={`min-h-[48px] px-4 py-2.5 rounded-2xl font-black text-center text-sm transition-all border-2 disabled:opacity-60 ${
+                        isTerminal
+                          ? "border-[#00FF41] text-[#00FF41] hover:bg-[#00FF41]/10"
+                          : isDarkTheme
+                          ? "border-white/50 text-white hover:bg-white/10"
+                          : "bg-white border-black text-black shadow-chunky hover:bg-amber-100"
+                      }`}
+                    >
+                      {isZipping ? "Zipping..." : "Download All (.zip)"}
+                    </button>
+                  )}
+                </div>
+              )}
 
             {zipError && (
               <p
                 role="alert"
-                class="text-xs text-center text-red-950 font-bold bg-red-100 p-2.5 rounded-xl border-2 border-black animate-slide-down"
+                class="text-xs text-center text-red-950 font-bold bg-red-100 p-2 rounded-xl border-2 border-black animate-slide-down"
               >
                 {zipError}
               </p>
             )}
 
-            {hasMultipleFiles && !isUnlimited && (
+            {!isUnlimited && (
               <p
-                class={`text-xs text-center font-bold leading-relaxed rounded-xl p-2.5 border-2 ${
+                class={`text-xs text-center font-bold leading-snug rounded-xl p-2 border-2 ${
                   isDarkTheme
                     ? "text-amber-200 bg-amber-950/60 border-amber-400/50"
                     : "text-amber-950 bg-amber-100 border-black"
                 }`}
               >
-                This limited share downloads as one zip so every file survives
-                the trip. Starting the download consumes one use.
+                {hasMultipleFiles
+                  ? "Limited share: downloads as one zip and consumes 1 use."
+                  : "Starting this download consumes 1 use."}
               </p>
             )}
 
@@ -892,22 +897,9 @@ export default function FileSlideshow({
               onShared={() => beacon({ kind: "engagement", shares: 1 })}
             />
 
-            {!isUnlimited && !hasMultipleFiles && (
-              <p
-                class={`text-xs text-center font-bold leading-relaxed rounded-xl p-2.5 border-2 ${
-                  isDarkTheme
-                    ? "text-amber-200 bg-amber-950/60 border-amber-400/50"
-                    : "text-amber-950 bg-amber-100 border-black"
-                }`}
-              >
-                Starting this download consumes one use, even if the browser
-                later cancels the handoff.
-              </p>
-            )}
-
             {/* Limits Info */}
             <div
-              class={`flex justify-between text-xs font-bold opacity-75 pt-3 border-t-2 ${
+              class={`flex justify-between text-xs font-bold opacity-75 pt-2 border-t-2 ${
                 isDarkTheme ? "border-white/20" : "border-black/15"
               }`}
             >
