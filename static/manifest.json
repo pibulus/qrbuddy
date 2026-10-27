@@ -47,6 +47,18 @@
           "sizes": "192x192"
         }
       ]
+    },
+    {
+      "name": "Inspect QR Safely",
+      "short_name": "Inspect",
+      "description": "Unmask where a mystery QR goes before opening it",
+      "url": "/?inspect=1",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
   "lang": "en-US",

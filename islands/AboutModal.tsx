@@ -27,11 +27,13 @@ const PITCH_ITEMS = {
   en: [
     "8 print-ready palettes, custom logos & frames",
     "Editable links, photo slideshows & lockers",
+    "Street-safe QR Inspector — unmask mystery codes",
     "Zero accounts, zero hostage links — free forever",
   ],
   es: [
     "8 paletas listas para imprimir, logos y marcos",
     "Links editables, galerías de fotos y buzones",
+    "Inspector seguro — revela QRs sospechosos",
     "Cero cuentas, cero links secuestrados — gratis",
   ],
 };
@@ -43,6 +45,21 @@ const PABLO_EMOJIS = ["☕", "🌴", "🍸", "🌮"];
 function handOff(open: () => void) {
   closeAboutModal();
   setTimeout(open, 60);
+}
+
+function openInspectorFromAbout(isSpanish: boolean) {
+  closeAboutModal();
+  const g = globalThis as typeof globalThis & {
+    __qrbInspectorListener?: boolean;
+  };
+  if (g.__qrbInspectorListener) {
+    setTimeout(
+      () => globalThis.dispatchEvent(new CustomEvent("qrb-open-inspector")),
+      60,
+    );
+  } else if (typeof globalThis.location !== "undefined") {
+    globalThis.location.href = isSpanish ? "/es?inspect=1" : "/?inspect=1";
+  }
 }
 
 export function AboutModal({ lang }: { lang?: Locale } = {}) {
@@ -213,6 +230,14 @@ export function AboutModal({ lang }: { lang?: Locale } = {}) {
             )
             : (
               <>
+                <button
+                  type="button"
+                  onClick={() => openInspectorFromAbout(isSpanish)}
+                  class="font-bold text-[#1e1714] hover:text-[#ec4899] underline underline-offset-2 transition-colors"
+                >
+                  {isSpanish ? "🔍 Revisar QR" : "🔍 Inspect QR"}
+                </button>
+                <span aria-hidden="true">·</span>
                 <a
                   href={privacyHref}
                   class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"

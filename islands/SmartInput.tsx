@@ -117,12 +117,14 @@ export default function SmartInput(
   // short link, so switching back to Static restores the direct URL cleanly.
   const [staticSourceUrl, setStaticSourceUrl] = useState("");
 
-  // Listen for open library requests & ?library=1 query param
+  // Listen for open library / inspector requests & ?library=1 / ?inspect=1 query params
   useEffect(() => {
     const g = globalThis as typeof globalThis & {
       __qrbLibraryListener?: boolean;
+      __qrbInspectorListener?: boolean;
     };
     g.__qrbLibraryListener = true;
+    g.__qrbInspectorListener = true;
 
     const handleOpenLibrary = () => {
       setIsCreateModalOpen(false);
@@ -130,22 +132,44 @@ export default function SmartInput(
       setShowReader(false);
       setShowLibrary(true);
     };
+    const handleOpenInspector = () => {
+      setIsCreateModalOpen(false);
+      setShowHistory(false);
+      setShowLibrary(false);
+      setShowReader(true);
+    };
     globalThis.addEventListener("qrb-open-library", handleOpenLibrary);
+    globalThis.addEventListener("qrb-open-inspector", handleOpenInspector);
 
     const params = new URLSearchParams(globalThis.location?.search ?? "");
+    let mutatedParams = false;
     if (params.has("library")) {
       handleOpenLibrary();
       params.delete("library");
+      mutatedParams = true;
+    } else if (
+      params.has("inspect") || globalThis.location?.hash === "#inspect"
+    ) {
+      handleOpenInspector();
+      params.delete("inspect");
+      mutatedParams = true;
+    }
+    if (mutatedParams) {
       const qs = params.toString();
+      const cleanHash = globalThis.location.hash === "#inspect"
+        ? ""
+        : globalThis.location.hash;
       const nextUrl = `${globalThis.location.pathname}${
         qs ? `?${qs}` : ""
-      }${globalThis.location.hash}`;
+      }${cleanHash}`;
       globalThis.history?.replaceState?.(null, "", nextUrl);
     }
 
     return () => {
       g.__qrbLibraryListener = false;
+      g.__qrbInspectorListener = false;
       globalThis.removeEventListener("qrb-open-library", handleOpenLibrary);
+      globalThis.removeEventListener("qrb-open-inspector", handleOpenInspector);
     };
   }, []);
 

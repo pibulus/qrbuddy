@@ -558,44 +558,78 @@ export default function QRReader(
         aria-modal="true"
         aria-labelledby="qr-reader-title"
         tabindex={-1}
-        class={`relative w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col charm-modal-sheet animate-slide-up sm:animate-pop-in overflow-hidden${
+        class={`relative w-full max-w-lg bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col charm-modal-sheet animate-slide-up sm:animate-pop-in overflow-hidden${
           shell.closing ? " charm-modal--closing" : ""
         }`}
       >
-        <div class="flex items-start justify-between gap-3 p-4 sm:p-6 pb-2 sm:pb-3">
-          <div>
-            <h2
-              id="qr-reader-title"
-              class="text-2xl font-black text-black tracking-tight leading-tight"
+        <div class="flex items-center justify-between gap-3 p-4 sm:px-6 sm:pt-5 pb-2">
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="w-12 h-12 rounded-2xl border-2 border-[#1e1714] bg-gradient-to-br from-emerald-200 via-amber-200 to-pink-300 shadow-[2px_2px_0_#1e1714] flex items-center justify-center text-2xl shrink-0 select-none"
+              aria-hidden="true"
             >
-              {isSpanish
-                ? "Revisión Callejera Segura."
-                : "Street Safe Inspection."}
-            </h2>
-            <p class="text-sm font-bold text-qr-pop">
-              {isSpanish
-                ? "Checa a dónde lleva un QR antes de abrirlo."
-                : "Check where a QR code goes before opening it."}
-            </p>
+              🛡️
+            </div>
+            <div class="min-w-0">
+              <h2
+                id="qr-reader-title"
+                class="text-xl sm:text-2xl font-black text-[#1e1714] tracking-tight leading-tight truncate"
+              >
+                {isSpanish
+                  ? (
+                    <>
+                      Escudo <span class="qr-marker">Callejero.</span>
+                    </>
+                  )
+                  : (
+                    <>
+                      Street-Safe <span class="qr-marker">Airlock.</span>
+                    </>
+                  )}
+              </h2>
+              <p class="text-xs sm:text-sm font-bold text-[#ec4899] truncate">
+                {isSpanish
+                  ? "Un filtro seguro entre un QR desconocido y el navegador."
+                  : "A safe buffer between a mystery QR and the browser."}
+              </p>
+            </div>
           </div>
           <button
             type="button"
             onClick={shell.requestClose}
-            class="group shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full flex items-center justify-center"
+            class="qr-modal-close-btn shrink-0"
             aria-label={isSpanish ? "Cerrar lector QR" : "Close QR reader"}
           >
-            <span
+            <svg
+              class="w-4 h-4 pointer-events-none"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3.25"
+              stroke-linecap="round"
               aria-hidden="true"
-              class="w-9 h-9 rounded-full bg-white border-2 border-black text-black font-black text-base leading-none flex items-center justify-center shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
             >
-              ✕
-            </span>
+              <path d="M6.5 6.5l11 11m0-11l-11 11" />
+            </svg>
           </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-4">
+        <div class="flex-1 overflow-y-auto scrollbar-none p-4 sm:px-6 sm:py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-3.5">
           {!result && (
             <>
+              {/* 3-pill Safe Buffer promise strip */}
+              <div class="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-black text-[#1e1714]">
+                <span class="px-2.5 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] shadow-[1px_1px_0_#1e1714]">
+                  🛡️ {isSpanish ? "No abre nada solo" : "Zero auto-open"}
+                </span>
+                <span class="px-2.5 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] shadow-[1px_1px_0_#1e1714]">
+                  🔄 {isSpanish ? "Revela acortadores" : "Unmasks shortlinks"}
+                </span>
+                <span class="px-2.5 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] shadow-[1px_1px_0_#1e1714]">
+                  🍪 {isSpanish ? "Sin cookies" : "No cookies sent"}
+                </span>
+              </div>
+
               {/* Camera — primary action when out in the wild */}
               {cameraActive
                 ? (
@@ -670,7 +704,7 @@ export default function QRReader(
                   <button
                     type="button"
                     onClick={startCamera}
-                    class="w-full min-h-[54px] rounded-full border-3 border-black bg-qr-pop px-4 py-3 font-black text-lg text-white shadow-chunky hover:scale-[1.02] hover:bg-qr-popDeep active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+                    class="qr-pitch-cta"
                   >
                     <span>📷</span>
                     <span>

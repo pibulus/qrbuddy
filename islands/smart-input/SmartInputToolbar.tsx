@@ -140,9 +140,11 @@ export default function SmartInputToolbar({
         }}
         class="group px-2 sm:px-3.5 min-h-[52px] flex items-center justify-center gap-1 sm:gap-1.5 rounded-xl border-3 border-black bg-gradient-to-br from-purple-50 to-pink-50 shadow-chunky hover:shadow-chunky-hover hover:translate-x-[-2px] hover:translate-y-[-2px] hover:from-purple-100 hover:to-pink-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-chunky transition-all duration-150 font-bold shrink-0"
         title={isSpanish
-          ? "Revisar a dónde lleva un QR antes de abrirlo (imagen, captura o cámara)"
-          : "Inspect & scan a QR code safely (image, screenshot, or camera)"}
-        aria-label={isSpanish ? "Revisar QR" : "Inspect or scan a QR code"}
+          ? "Escudo callejero: descubre a dónde lleva un QR desconocido antes de abrirlo"
+          : "Street-safe QR airlock: unmask where a mystery QR goes before opening"}
+        aria-label={isSpanish
+          ? "Revisar QR de forma segura"
+          : "Inspect or scan a mystery QR code safely"}
       >
         <span class="text-base sm:text-lg group-hover:scale-110 transition-transform">
           🔍
