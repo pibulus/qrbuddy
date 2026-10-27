@@ -93,14 +93,29 @@ See GLOSSARY.md for complete list organized by category. Key islands:
   download entry point
 - `ToastManager`: Notification stacking system
 - `CreateModal`: Combined QR type, options, file locker, and design sheet
+- `VerticalStudio`: Interactive vertical & comparison studio (`routes/for/*`,
+  `routes/compare.tsx`, `routes/vs/[slug].tsx`, and `/es/*` equivalents) with
+  built-in Wi-Fi, vCard, and GS1 Sunrise 2027 Digital Link quick-builders
 - `AboutModal`/`KofiModal`/`PricingModal`: Feature discovery
 - `ErrorBoundary`: Error handling
 - `Analytics`: Umami event tracking
 
-**Utils**
+**Utils & Ecosystem Plugins**
 
 - **`utils/qr-styles.ts`**: Style definitions with gradient configurations -
   each style defines dots, background, cornersSquare, and cornersDot properties
+- **`utils/qr-vector-svg.ts`**: Pure-TypeScript, zero-DOM Vector SVG 1.1 builder
+  with luminance-locked palettes and Canva/Figma compliance validator
+- **`utils/gs1-digital-link.ts`**: GS1 Sunrise 2027 Digital Link URI builder
+  (`/01/GTIN/10/LOT/21/SERIAL/17/EXP`) and GS1 Mod-10 check-digit calculator
+- **`utils/comparisons.ts`**: Bilingual (`en`/`es`), Sovereign-Voice comparison
+  registry powering `/compare`, `/es/comparar`, `/vs/[slug]`, and
+  `/es/vs/[slug]` (`qrio`, `qrfy`, `bitly`, `qr-code-generator`)
+- **`plugins/canva-app/` & `plugins/figma-plugin/`**: Ready-to-ship Canva Apps
+  SDK v2 (`addElementAtPoint` SVG vector drop) and Figma Community
+  (`createNodeFromSvg`) plugin packages
+- **`static/sitemap.xml` & `static/llms.txt`**: Bilingual search + LLM crawler
+  indexes covering all 28 canonical EN/ES routes
 - **`utils/api-request.ts`**: Shared API request helpers with automatic auth
   header injection and consistent error handling (eliminates duplicate code
   across hooks)

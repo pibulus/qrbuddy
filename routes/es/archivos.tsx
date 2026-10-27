@@ -20,72 +20,78 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📤",
-    title: "Pasa un archivo con un escaneo",
+    title: "Suelta un Archivo, Obtén un QR",
     desc:
-      "Suelta tu archivo y comparte el link o código QR al instante. Quien lo escanee lo abre o descarga directo en su navegador.",
+      "Arrastra cualquier PDF, ZIP, imagen o pista de audio al cuadro principal para generar una página de descarga y su código QR en segundos.",
   },
   {
-    icon: "⏳",
-    title: "Links temporales sin rastro",
+    icon: "💣",
+    title: "Límites de Descarga con Autodestrucción",
     desc:
-      "Los links de archivos vencen a los 30 días. Los buzones reutilizables se limpian solos después de 30 días sin actividad.",
+      "Mantén el enlace activo por 30 días o fija un tope estricto (1, 5, 10 o 100 descargas) que se autodestruye al agotarse.",
   },
   {
     icon: "📦",
-    title: "Archivos pesados de hasta 500 MB",
+    title: "Envíos Pesados de hasta 500 MB",
     desc:
-      "Gratis subes archivos de hasta 50 MB. Con el Pasaporte QRBuddy subes archivos individuales de hasta 500 MB (10× más grandes).",
+      "El nivel gratuito admite archivos de hasta 50 MB. El Pasaporte QRBuddy desbloquea envíos individuales de hasta 500 MB y buzones con PIN.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
     feature: "Códigos QR estáticos",
-    free: "Ilimitados; el destino queda codificado en el QR",
+    free: "Ilimitados; el destino queda grabado directo en el QR ($0)",
     supporter: "Incluidos",
   },
   {
-    feature: "Subida de un archivo",
-    free: "Hasta 50 MB",
-    supporter: "Un archivo de hasta 500 MB",
+    feature: "Envío de archivo individual por QR",
+    free: "Hasta 50 MB por archivo",
+    supporter: "Hasta 500 MB por archivo individual (10× más grande)",
   },
   {
-    feature: "Vencimiento del enlace del archivo",
-    free: "30 días",
-    supporter: "30 días",
+    feature: "Límite de descargas y autodestrucción",
+    free: "Ilimitado o tope de 1 / 5 / 10 / 100 descargas",
+    supporter: "Incluido + páginas limpias sin marca",
+  },
+  {
+    feature: "Vigencia del enlace",
+    free: "Vence a los 30 días",
+    supporter: "Vence a los 30 días + analíticas de 90 días",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "No hace falta comprarlo",
+    free: "Sin compra necesaria",
     supporter:
-      "~$32 USD (A$49) por 365 días; un pago, sin renovación automática",
+      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "¿Qué tamaño de archivo puedo subir?",
-    a: "Las subidas gratuitas permiten archivos de hasta 50 MB. El Pasaporte QRBuddy amplía el límite a 500 MB para un solo archivo; no añade subidas de archivos comprimidos con varios elementos.",
+    q: "¿Qué tamaños y formatos de archivo se pueden compartir por QR?",
+    a: "Las subidas gratuitas admiten archivos de hasta 50 MB (PDF, imágenes, audio, paquetes ZIP y documentos; los ejecutables se bloquean por seguridad). El Pasaporte QRBuddy amplía el límite individual a 500 MB.",
   },
   {
-    q: "¿Cuánto tiempo se guardan los archivos?",
-    a: "Los enlaces para compartir archivos vencen a los 30 días. El contenido de un baúl reutilizable se limpia después de 30 días sin actividad. La limpieza se ejecuta a diario y puede tardar más; consulta el aviso de privacidad.",
+    q: "¿Cómo funciona la autodestrucción por número de descargas?",
+    a: "Al preparar un archivo para subir, se puede elegir un límite de 1, 5, 10 o 100 descargas. El conteo se valida de forma atómica en el servidor y, al completarse la última descarga, el archivo se elimina y muestra la pantalla KABOOM.",
   },
   {
-    q: "¿Los destinatarios necesitan una cuenta?",
-    a: "Pueden abrir un enlace en el navegador. Quien tenga el enlace podría acceder al contenido compartido, así que compártelo solo con las personas indicadas.",
+    q: "¿Cuánto tiempo permanecen guardados los archivos?",
+    a: "Los enlaces estándar vencen a los 30 días de haberse subido, y los buzones reutilizables se limpian tras 30 días sin actividad mediante el proceso diario de limpieza.",
   },
   {
-    q: "¿Qué incluye el Pasaporte QRBuddy?",
-    a: "Cuesta ~$32 USD (A$49) por un pago y dura 365 días, sin renovación automática. Amplía algunos límites de creación y subida; siguen aplicando controles de uso.",
+    q: "¿Hace falta tener cuenta o instalar una app para recibir el archivo?",
+    a: "No. Al escanear el código QR, la página de descarga se abre directamente en el navegador del celular o computadora sin pedir registro.",
   },
 ];
 
 export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/es/archivos";
-  const title = "Comparte Archivos Temporales con un Código QR | QRBuddy";
+  const title =
+    "Compartir Archivos por Código QR y Envíos Autodestructibles (500 MB) | QRBuddy";
   const description =
-    "Comparte archivos con un enlace o código QR de QRBuddy. El límite gratuito es de 50 MB; el Pasaporte QRBuddy amplía el límite individual a 500 MB. Los enlaces vencen a los 30 días.";
+    "Suelta un archivo para generar un código QR de descarga al instante. Subidas gratis de hasta 50 MB, autodestrucción por descargas y envíos de 500 MB con el Pasaporte QRBuddy.";
 
   return (
     <>
@@ -96,33 +102,34 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="en"
         altHref="https://qrbuddy.app/for/lockers"
+        ogTitle="Envío de Archivos por QR y Enlaces Autodestructibles — QRBuddy"
         ogImageAlt="Compartir archivos temporales con un código QR de QRBuddy"
         themeColor="#00A84F"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="Compartir archivos con QRBuddy"
+        jsonLdName="QRBuddy Estudio de Archivos y Buzones"
         applicationCategory="UtilitiesApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Pasaporte QRBuddy: A$49 por 365 días, un pago sin renovación automática"
+        offerDescription="Pasaporte QRBuddy: A$49 (~$32 USD) por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         lang="es"
-        badge="Compartir archivos"
-        title="Un código QR para compartir archivos temporalmente."
-        tagline="Sube un archivo y comparte su enlace o código QR con las personas que lo necesitan."
-        subtagline="Los enlaces vencen a los 30 días. La limpieza es diaria y puede tardar más; consulta el aviso de privacidad."
+        badge="Envío de Archivos y Buzones"
+        title="Suelta un Archivo. Comparte el QR. Listo."
+        tagline="Convierte PDFs, paquetes ZIP, fotos o audios en un código QR descargable con vigencia de 30 días o autodestrucción por usos."
+        subtagline="Arrastra un archivo al cuadro de abajo o toca el clip para preparar el envío."
         defaultStyle="pool"
         defaultUrl="https://qrbuddy.app/f/demo"
         defaultCaption="ABRIR ARCHIVO"
         homeUrl="/es"
-        homeLabel="← Volver al inicio"
-        featuresTitle="Comparte archivos por QR"
-        faqTitle="Preguntas frecuentes"
+        homeLabel="← Volver al estudio"
+        featuresTitle="Hecho para Entregas Rápidas, Pruebas de Imprenta y Archivos"
+        faqTitle="Preguntas sobre Envío de Archivos por QR"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy gratis y el Pasaporte QRBuddy"
-        comparisonSubtitle="Límites de tamaño y tiempo de conservación"
+        comparisonTitle="Envíos Gratis y Pasaporte QRBuddy"
+        comparisonSubtitle="Los envíos de 50 MB y límites de descarga son gratis; el Pasaporte amplía archivos individuales a 500 MB"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
         ctaLabel="Obtener Pasaporte QRBuddy 🛂✨"

@@ -130,46 +130,50 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         </script>
 
         {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebApplication",
-            "name": "QRBuddy en Español",
-            "url": "https://qrbuddy.app/es",
-            "inLanguage": "es",
-            "description": description,
-            "applicationCategory": "BusinessApplication",
-            "operatingSystem": "Any (Web-based)",
-            "offers": [
-              {
-                "@type": "Offer",
-                "name": "Estudio Gratuito",
-                "price": "0",
-                "priceCurrency": "AUD",
+        <script
+          type="application/ld+json"
+          // deno-lint-ignore react-no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "QRBuddy en Español",
+              "url": "https://qrbuddy.app/es",
+              "inLanguage": "es",
+              "description": description,
+              "applicationCategory": "BusinessApplication",
+              "operatingSystem": "Any (Web-based)",
+              "offers": [
+                {
+                  "@type": "Offer",
+                  "name": "Estudio Gratuito",
+                  "price": "0",
+                  "priceCurrency": "AUD",
+                },
+                {
+                  "@type": "Offer",
+                  "name": "Pasaporte QRBuddy (1 Año)",
+                  "price": "49",
+                  "priceCurrency": "AUD",
+                },
+              ],
+              "creator": {
+                "@type": "Person",
+                "name": "Pablo",
               },
-              {
-                "@type": "Offer",
-                "name": "Pasaporte QRBuddy (1 Año)",
-                "price": "49",
-                "priceCurrency": "AUD",
-              },
-            ],
-            "creator": {
-              "@type": "Person",
-              "name": "Pablo",
-            },
-            "featureList": [
-              "8 paletas degradadas verificadas para impresión + creador de degradados personalizados",
-              "Exportación PNG de alta resolución (hasta 3000px) y SVG vectorial con contraste WCAG en vivo",
-              "Todos los tipos de QR: URL, Wi-Fi, vCard, Bio Social, Centro Multimedia, Teléfono, SMS, Correo y Texto",
-              "Códigos QR dinámicos editables con rutas por horario (desayuno/comida/cena), iOS/Android y pruebas A/B",
-              "Generador de QR por lotes con exportación ZIP (PNG + SVG vectorial + manifest.csv para imprenta)",
-              "Entregas multimedia de hasta 500 MB, galerías de fotos, mixtapes de audio y buzones de archivos",
-              "Reporte de Campo del Pasaporte: analíticas de 7/30/90 días, ciudades principales, hora pico y exportación CSV",
-              "Inspector seguro de QR con vista previa visual del sitio y desenrollado de redirecciones",
-            ],
-          })}
-        </script>
+              "featureList": [
+                "8 paletas degradadas verificadas para impresión + creador de degradados personalizados",
+                "Exportación PNG de alta resolución (hasta 3000px) y SVG vectorial con contraste WCAG en vivo",
+                "Todos los tipos de QR: URL, Wi-Fi, vCard, Bio Social, Centro Multimedia, Teléfono, SMS, Correo y Texto",
+                "Códigos QR dinámicos editables con rutas por horario (desayuno/comida/cena), iOS/Android y pruebas A/B",
+                "Generador de QR por lotes con exportación ZIP (PNG + SVG vectorial + manifest.csv para imprenta)",
+                "Entregas multimedia de hasta 500 MB, galerías de fotos, mixtapes de audio y buzones de archivos",
+                "Reporte de Campo del Pasaporte: analíticas de 7/30/90 días, ciudades principales, hora pico y exportación CSV",
+                "Inspector seguro de QR con vista previa visual del sitio y desenrollado de redirecciones",
+              ],
+            }),
+          }}
+        />
       </Head>
 
       {/* Skip to main content link for accessibility */}

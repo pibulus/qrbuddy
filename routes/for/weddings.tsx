@@ -19,43 +19,48 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "📍",
-    title: "Make a photo slideshow QR",
+    icon: "💌",
+    title: "RSVP, Maps & Schedule Links",
     desc:
-      "Share a QRBuddy slideshow with up to 10 photos. Owners can manage items on editable shares; guests can view or download them.",
+      "Encode wedding websites, venue directions, or registry links into a permanent static QR or an editable link that updates as plans evolve.",
   },
   {
-    icon: "🔗",
-    title: "Add a hosted playlist",
+    icon: "📸",
+    title: "Curated 10-Photo Slideshow Drops",
     desc:
-      "Make a browser playlist from up to 10 audio tracks. The page can advance between tracks; file shares expire after 30 days.",
+      "Drop up to 10 photos onto the studio to mint a hosted 30-day slideshow page that guests can view and download on any phone browser.",
   },
   {
-    icon: "🌸",
-    title: "Share the event details",
+    icon: "🎶",
+    title: "Reception Mixtape & Stationery SVG",
     desc:
-      "Make a QR for directions, the schedule, RSVP details, or your wedding website. Download a PNG or SVG for your stationery.",
+      "Share a 10-track audio playlist (up to 5 MB per track) or export print-verified Vector SVGs for letterpress invitations and table cards.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Static QR codes",
-    free: "Unlimited; destination is encoded in the QR",
+    feature: "Static Invitation & RSVP QR Codes",
+    free: "Unlimited; destination is encoded directly in the QR ($0)",
     supporter: "Included",
   },
   {
-    feature: "Editable QRs",
-    free: "Available within free-tier limits",
-    supporter: "Higher creation limits",
+    feature: "Editable Event & Schedule Links",
+    free: "5 permanent editable links included free",
+    supporter: "100 editable links + custom Cover Pages",
   },
   {
-    feature: "Photo slideshow or playlist",
+    feature: "Photo Slideshow or Audio Playlist",
     free: "Up to 10 photos or tracks; audio files up to 5 MB each",
-    supporter: "Same limit; 500 MB applies to a single file",
+    supporter: "Same multi-item cap; single-file drops expand to 500 MB",
   },
   {
-    feature: "File-share expiry",
+    feature: "White-Label Share Pages",
+    free: "Includes subtle 'Made with QRBuddy' footer pill",
+    supporter: "One-click white-label mode removes footer branding",
+  },
+  {
+    feature: "File-Share Retention",
     free: "30 days",
     supporter: "30 days",
   },
@@ -68,28 +73,29 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "Can guests upload photos to a shared wedding album?",
-    a: "QRBuddy doesn't provide a multi-guest upload album. You can create and manage a slideshow share of up to 10 photos, then give guests its link or QR to view or download the photos.",
+    q: "Do guests upload photos into a shared wedding album, or view a curated slideshow?",
+    a: "QRBuddy slideshow shares are host-curated: drop up to 10 photos to create a swipeable gallery that guests open and download from a single scan. For receiving individual files into a pin-protected dropbox, use the File Locker tool in Customize.",
   },
   {
-    q: "Can I make a photo slideshow or music playlist?",
-    a: "Yes. A share can contain up to 10 photos or up to 10 audio tracks. Audio files are limited to 5 MB each; large photos may be resized before sharing. Shares expire after 30 days.",
+    q: "Can a wedding schedule or RSVP link change after invitations are printed?",
+    a: "Yes. Toggle 'Editable after print + Stats' below the URL input before downloading the SVG or PNG. The printed QR points to an editable short link whose destination can be updated anytime before or after the wedding day.",
   },
   {
-    q: "Can I change an event link after printing?",
-    a: "Yes, if you create an editable QR and keep its private edit link. A static QR cannot be changed because its destination is encoded in the image.",
+    q: "How long do hosted photo slideshows and audio playlists stay online?",
+    a: "Hosted file shares, photo slideshows, and audio mixtapes stay active for 30 days before expiring on the daily cleanup schedule. Static and editable URL QR codes pointing to an external wedding website do not have a 30-day file limit.",
   },
   {
-    q: "How long are shared photos and audio available?",
-    a: "File shares expire after 30 days. Deletion runs on a daily cleanup schedule and may take longer; see the privacy notice for details.",
+    q: "Can stationers and calligraphers export true Vector SVGs for foil and letterpress?",
+    a: "Yes. Click 'SVG' right next to 'Save PNG' on the QR card to download clean vector paths that import directly into Adobe Illustrator, InDesign, Affinity, or Canva.",
   },
 ];
 
 export default function WeddingsPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/weddings";
-  const title = "Wedding QR Codes for Event Details and Media | QRBuddy";
+  const title =
+    "Wedding QR Code Generator for Invitations, RSVPs & Photo Drops | QRBuddy";
   const description =
-    "Create QR codes for wedding websites and event details, plus temporary QRBuddy photo slideshow and music playlist shares. Download PNG or SVG designs for stationery.";
+    "Create pastel-punk and classic QR codes for wedding invitations, RSVP links, venue maps, 10-photo slideshows, and reception playlists. Free Vector SVG export with zero monthly fees.";
 
   return (
     <>
@@ -100,29 +106,31 @@ export default function WeddingsPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="es"
         altHref="https://qrbuddy.app/es/bodas"
-        ogTitle="Wedding QR Codes for Event Details — QRBuddy"
-        ogImageAlt="Styled QR codes for wedding event details"
+        ogTitle="Wedding QR Codes for Invitations, RSVPs & Photo Slideshows — QRBuddy"
+        ogImageAlt="Styled QR codes for wedding invitations and event details"
         themeColor="#BA5566"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy Wedding QR Codes"
+        jsonLdName="QRBuddy Wedding QR Code Studio"
         applicationCategory="LifestyleApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="QRBuddy Passport: A$49 for 365 days, one payment with no automatic renewal"
+        offerDescription="QRBuddy Passport: A$49 (~$32 USD) for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         badge="Weddings & Celebrations"
-        title="Wedding QR Codes for the Moments You Want to Share."
-        tagline="Share your event details, a small photo slideshow, or a music playlist from one easy scan."
-        subtagline="Photo and audio shares hold up to 10 items and expire after 30 days. Audio tracks are limited to 5 MB each; large photos may be resized. Guests view or download the share; they don't upload into it."
+        title="Wedding QR Codes That Match the Stationery."
+        tagline="Link invitations to RSVP pages, venue maps, curated 10-photo slideshows, or reception playlists in one scan."
+        subtagline="Paste the wedding website URL or drop up to 10 photos/tracks below — export 3000px PNG or print-shop Vector SVG."
         defaultStyle="blush"
-        defaultUrl="https://ourwedding.love"
+        defaultUrl="https://ourwedding.love/rsvp"
         defaultCaption="OUR DAY"
+        featuresTitle="Designed for Invitations, Save-the-Dates & Table Cards"
+        faqTitle="Wedding & Stationery QR Questions"
         valueCards={VALUE_CARDS}
-        comparisonTitle="Free QRBuddy and the QRBuddy Passport"
-        comparisonSubtitle="A clear look at file limits and share duration"
+        comparisonTitle="Free Wedding Studio and the QRBuddy Passport"
+        comparisonSubtitle="Static RSVP codes and 5 editable links are free; the Passport adds white-label share pages and 500 MB drops"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
         ctaLabel="Get QRBuddy Passport 🛂✨"

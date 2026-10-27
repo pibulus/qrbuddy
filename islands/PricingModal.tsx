@@ -933,19 +933,24 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
 interface PricingLinkProps {
   label?: string;
   className?: string;
+  class?: string;
+  children?: preact.ComponentChildren;
 }
 
 export function PricingLink({
   label = "Passport 🛂",
   className = "",
+  class: cls,
+  children,
 }: PricingLinkProps) {
   return (
     <button
       type="button"
       onClick={openPricingModal}
-      class={`inline-flex items-center justify-center px-4 min-h-[44px] rounded-full border-2 border-black bg-qr-pop text-white text-sm font-bold shadow-chunky transition-all hover:scale-105 hover:bg-qr-popDeep active:scale-95 ${className}`}
+      class={cls ??
+        `inline-flex items-center justify-center px-4 min-h-[44px] rounded-full border-2 border-black bg-qr-pop text-white text-sm font-bold shadow-chunky transition-all hover:scale-105 hover:bg-qr-popDeep active:scale-95 ${className}`}
     >
-      {label}
+      {children ?? label}
     </button>
   );
 }

@@ -5,6 +5,7 @@ import VerticalStudio, {
   type ValueCard,
 } from "../../islands/VerticalStudio.tsx";
 import VerticalLandingHead from "../../components/VerticalLandingHead.tsx";
+import { getComparisonNavPills } from "../../utils/comparisons.ts";
 import { getSupabaseUrl } from "../../utils/api.ts";
 
 interface PageData {
@@ -19,57 +20,75 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "🔒",
-    title: "Los QRs estáticos nunca caducan",
-    desc:
-      "Al crear un QR estático, el enlace queda grabado directamente en la matriz gráfica. No pasa por servidores intermediarios y funciona para siempre.",
-  },
-  {
     icon: "⚡",
-    title: "Links editables sin rentas mensuales",
+    title: "Edita el Link Tras Imprimir",
+    tag: "5 Gratis · 100 Pro",
     desc:
-      "Incluye hasta 5 códigos QR dinámicos editables gratis, o desbloquea 100 códigos editables y analíticas de 90 días con el Pasaporte anual (~$32 USD / A$49).",
+      "Corrige un enlace, cambia el menú de temporada o alterna Desayuno y Cena sin reimprimir un solo folleto.",
   },
   {
-    icon: "🎨",
-    title: "SVG vectorial y contraste verificado",
+    icon: "📐",
+    title: "SVG Vectorial y ZIP por Lotes",
+    tag: "Gratis Siempre",
     desc:
-      "Descarga SVG vectorial real y PNG de hasta 3000px con verificación de contraste WCAG en vivo, logo central y paquetes ZIP listos para imprenta.",
+      "Descarga SVG vectorial real, PNG de 3000px o paquetes ZIP de 50 códigos con manifiesto CSV en un clic.",
+  },
+  {
+    icon: "📼",
+    title: "Mixtapes de 500 MB, Fotos y Notas",
+    tag: "Sello QRBuddy",
+    desc:
+      "Convierte cualquier sticker en un mixtape reproducible, galería de fotos o nota secreta de 1 escaneo.",
+  },
+  {
+    icon: "🔍",
+    title: "Escaneo en Bares + Inspector QR",
+    tag: "Sin Registro",
+    desc:
+      "Paletas con contraste bloqueado para cámaras reales. Además: inspecciona QRs callejeros antes de abrirlos.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Códigos QR estáticos",
-    free: "Suelen cambiarse por redirecciones ocultas de prueba de 7 a 14 días",
-    supporter:
-      "Ilimitados, codificados directo en la imagen, duran siempre ($0)",
+    feature: "Precio Anual",
+    free: "$348 – $420 / año ($29–$35/mes)",
+    supporter: "$0 Gratis · ~$32/año Pasaporte",
   },
   {
-    feature: "Códigos editables (dinámicos) gratis",
-    free: "Se desactivan a los 7–14 días si no pagas suscripción mensual",
-    supporter: "5 códigos editables permanentes incluidos gratis ($0)",
+    feature: "Apagón al Día 8",
+    free: "Desactiva QRs impresos tras la prueba",
+    supporter: "Jamás — los códigos siguen vivos",
   },
   {
-    feature: "Costo anual por funciones Pro",
-    free: "$180 a $420 USD al año ($15–$35 USD/mes recurrentes)",
-    supporter:
-      "~$32 USD (A$49) un solo pago por 365 días — sin cobro automático",
+    feature: "Trampa de Renovación",
+    free: "Cargo mensual recurrente",
+    supporter: "Cero cobro automático (pase 1 año)",
   },
   {
-    feature: "Registro y tarjeta obligatoria",
-    free: "Piden crear cuenta antes de descargar vectores",
-    supporter: "Cero muros de registro — descarga PNG y SVG al instante",
+    feature: "Editar Link Impreso",
+    free: "0–2 gratis antes del muro de pago",
+    supporter: "5 Gratis siempre · 100 con Pase",
   },
   {
-    feature: "Ruteo inteligente y portadas",
-    free: "Bloqueado en planes empresariales de $35+/mes",
-    supporter: "Horarios de menú, desvío iOS/Android y portadas incluidas",
+    feature: "SVG Vectorial + ZIP de 50",
+    free: "Bloqueado tras plan de $35/mes",
+    supporter: "Gratis (SVG + PNG 3000px + CSV)",
   },
   {
-    feature: "Envío de archivos y música",
-    free: "Alojar PDF o MP3 exige plan mensual de pago",
-    supporter: "Galerías de fotos, mixtapes de audio y envíos de hasta 500 MB",
+    feature: "Horarios de Menú",
+    free: "Solo plan empresarial ($199+/mes)",
+    supporter: "Desayuno/Cena e iOS/Android",
+  },
+  {
+    feature: "Mixtapes, Fotos y Notas",
+    free: "Solo página PDF básica",
+    supporter: "Envíos de 500 MB + notas 1-vista",
+  },
+  {
+    feature: "Cuenta y Privacidad",
+    free: "Correo obligatorio y spam",
+    supporter: "Sin registro (clave de 4 palabras)",
   },
 ];
 
@@ -122,24 +141,26 @@ export default function CompararEspanolPage({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         lang="es"
-        badge="Comparativa Honesta"
-        title="Sin trampas de 14 días. Sin rentas de $35 al mes."
-        tagline="Reemplaza los códigos QR que caducan tras imprimir con códigos estáticos permanentes o enlaces editables justos."
-        subtagline="Prueba el estudio en vivo aquí abajo: descarga PNG para imprenta y SVG vectorial real al instante y sin crear cuenta."
+        badge="Cero Rentas Trampa"
+        title="Rompe la factura de $35/mes. QRs libres para siempre."
+        tagline="Códigos directos gratis para siempre. Links editables, SVG vectorial, ZIP por lotes y mixtapes de 500 MB — hechos para imprenta."
+        subtagline="Genera un QR permanente aquí abajo: descarga PNG 3000px o SVG vectorial al instante y sin crear cuenta."
         defaultStyle="sunset"
         defaultUrl="https://qrbuddy.app/es"
         defaultCaption="ESCANÉAME"
+        navPills={getComparisonNavPills("es", "all")}
         homeUrl="/es"
         homeLabel="← Volver al inicio"
-        featuresTitle="Cómo QRBuddy resuelve la trampa de los QRs"
+        featuresTitle="El 80/20 que importa + El sello único de QRBuddy"
         faqTitle="Preguntas frecuentes al cambiar de plataforma"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy frente a las 'pruebas gratis' trampa"
-        comparisonSubtitle="Comparativa directa frente a QR.io, QRFY, Bitly y QR-Code-Generator"
+        comparisonTitle="QRBuddy vs. Los Gigantes del QR Secuestrado"
+        comparisonSubtitle="Sin pagar $420 al año solo por redirigir un enlace"
+        qrbuddyFirst
         comparisonColumns={{
-          feature: "Lo que importa",
-          col1: "Sitios QR de 'prueba gratis'",
-          col2: "QRBuddy y Pasaporte 🛂",
+          feature: "Capacidad",
+          col1: "Bitly / QR.io / QRFY",
+          col2: "QRBuddy (Gratis + Pasaporte)",
         }}
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}

@@ -33,12 +33,20 @@ export function getClientLocale(explicitLang?: Locale): Locale {
 
 const ROUTE_COUNTERPARTS_EN_TO_ES: Record<string, string> = {
   "/": "/es",
+  "/for/inspect": "/es/escanear",
   "/for/menus": "/es/menus",
+  "/for/wifi": "/es/wifi",
+  "/for/vcard": "/es/vcard",
+  "/for/gs1": "/es/gs1",
   "/for/weddings": "/es/bodas",
   "/for/music": "/es/musica",
   "/for/lockers": "/es/archivos",
   "/why": "/es/por-que",
   "/compare": "/es/comparar",
+  "/vs/qrio": "/es/vs/qrio",
+  "/vs/qrfy": "/es/vs/qrfy",
+  "/vs/bitly": "/es/vs/bitly",
+  "/vs/qr-code-generator": "/es/vs/qr-code-generator",
   "/guide/printing": "/es/guia/impresion",
 };
 

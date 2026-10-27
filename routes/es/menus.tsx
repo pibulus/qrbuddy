@@ -20,72 +20,78 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📜",
-    title: "Tu menú en cada mesa",
+    title: "Menús Estáticos o Editables",
     desc:
-      "Crea un QR fijo para tu PDF o sitio web, o usa un link editable si quieres cambiar el menú del día sin volver a imprimir.",
+      "Graba el enlace del menú directamente en un QR estático ($0 para siempre) o activa un enlace editable para actualizar precios y platillos sin reimprimir.",
   },
   {
-    icon: "🔗",
-    title: "Cambia el destino cuando quieras",
+    icon: "🕰️",
+    title: "Ruteo de Desayuno, Comida y Cena",
     desc:
-      "Los QRs fijos guardan el link directo en la imagen. Los editables pasan por QRBuddy para que puedas actualizarlos o ponerles fecha límite.",
+      "Los enlaces editables admiten horarios automáticos: el mismo QR impreso en la mesa muestra desayunos por la mañana y carta de noche al atardecer.",
   },
   {
     icon: "🎨",
-    title: "Con la vibra de tu local",
+    title: "Contraste Verificado y SVG Vectorial",
     desc:
-      "Elige una paleta pastel-punk, pon tu logo al centro y descarga en PNG o SVG listo para imprenta, mesas y vitrinas.",
+      "Elige una paleta pastel-punk, coloca el logo al centro y descarga PNG de 3000px o SVG vectorial listo para acrílicos de mesa y vitrinas.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Códigos QR estáticos",
-    free: "Ilimitados; el destino queda codificado en el QR",
+    feature: "Códigos QR estáticos para menú",
+    free: "Ilimitados; el destino queda grabado directo en el gráfico ($0)",
     supporter: "Incluidos",
   },
   {
-    feature: "Códigos QR editables",
-    free: "Disponibles dentro de los límites gratuitos",
-    supporter: "Límites de creación más amplios",
+    feature: "Enlaces dinámicos editables",
+    free: "5 enlaces editables permanentes incluidos gratis",
+    supporter: "100 enlaces editables + ruteo por horario y sistema",
   },
   {
-    feature: "Subida de archivos",
-    free: "Hasta 50 MB por archivo; los enlaces vencen a los 30 días",
-    supporter: "Hasta 500 MB por archivo; los enlaces vencen a los 30 días",
+    feature: "Subida de archivos PDF",
+    free: "Hasta 50 MB por archivo; vigencia de 30 días",
+    supporter: "Archivos individuales de hasta 500 MB; vigencia de 30 días",
+  },
+  {
+    feature: "Analíticas y hora pico de escaneos",
+    free: "Contador de escaneos en el panel de edición",
+    supporter: "Reporte de Campo de 90 días, horas pico y exportación CSV",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "No hace falta comprarlo",
+    free: "Sin compra necesaria",
     supporter:
-      "~$32 USD (A$49) por 365 días; un pago, sin renovación automática",
+      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "¿Puedo cambiar el enlace del menú sin reimprimir el QR?",
-    a: "Sí, si creas un QR editable y conservas su enlace privado de edición. Un QR estático no se puede cambiar porque el destino está codificado en la imagen.",
+    q: "¿Se puede cambiar el enlace del menú sin volver a imprimir los códigos de las mesas?",
+    a: "Sí. Activa el botón 'Editable tras imprimir + Stats' debajo del enlace antes de descargar. QRBuddy genera un enlace corto editable cuya llave se guarda en el dispositivo y en el Pasaporte de 4 palabras para actualizar el destino cuando cambie la carta. Un QR estático graba el enlace directo en la imagen y no puede modificarse tras imprimirse.",
   },
   {
-    q: "¿Qué pasa cuando vence el Pasaporte QRBuddy?",
-    a: "El Pasaporte termina después de 365 días y no se renueva automáticamente. Las funciones gratuitas siguen disponibles. Los QR editables tienen sus propios límites de escaneos y vencimiento, y dependen del servicio de redirección de QRBuddy.",
+    q: "¿Qué sucede cuando terminan los 365 días del Pasaporte QRBuddy?",
+    a: "El Pasaporte dura 365 días y jamás se cobra en automático. Las funciones gratuitas siguen abiertas, los códigos estáticos funcionan por siempre y los enlaces editables gratuitos mantienen su operación dentro de los límites de uso justo.",
   },
   {
-    q: "¿Puedo enlazar un PDF, sitio web o página de pedidos?",
-    a: "Sí. Puedes enlazar directamente a un archivo PDF, tu sitio web o la página de pedidos que uses.",
+    q: "¿Funciona con menús en PDF, Google Drive, sitios web o plataformas de pedidos?",
+    a: "Sí. Acepta cualquier dirección HTTPS — carta web, PDF en Google Drive o Dropbox, o sistema de pedidos en línea — además de permitir generar lotes ZIP de hasta 50 mesas de un jalón.",
   },
   {
-    q: "¿Puedo limitar los escaneos o fijar una fecha de vencimiento?",
-    a: "Los QR editables permiten configurar un límite de escaneos o una fecha de vencimiento. El servicio de redirección también aplica controles de uso; QRBuddy no promete escaneos ilimitados.",
+    q: "¿Puede un mismo código QR cambiar entre menú matutino y nocturno automáticamente?",
+    a: "Sí. Desde el panel de edición (/edit) de cualquier código editable se puede activar el ruteo por horario para mostrar la carta de cafetería en la mañana y el menú de cenas por la noche.",
   },
 ];
 
 export default function MenusEspanolPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/es/menus";
-  const title = "Códigos QR para Menús de Restaurantes | QRBuddy";
+  const title =
+    "Códigos QR para Menús de Restaurantes y Cafeterías (Sin Renta Mensual) | QRBuddy";
   const description =
-    "Crea códigos QR con estilo para menús, pedidos y sitios web. Elige un QR estático o un enlace editable. Hay funciones gratuitas; el Pasaporte QRBuddy amplía algunos límites.";
+    "Crea códigos QR estáticos o editables para menús de restaurantes, bares y cafeterías. Exportación SVG vectorial gratis, horarios automáticos y cero suscripciones trampa.";
 
   return (
     <>
@@ -96,34 +102,34 @@ export default function MenusEspanolPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="en"
         altHref="https://qrbuddy.app/for/menus"
-        ogTitle="Códigos QR para Menús — QRBuddy"
-        ogImageAlt="Códigos QR con estilo para menús de restaurantes"
+        ogTitle="Códigos QR para Menús de Restaurantes — Sin Rentas Mensuales"
+        ogImageAlt="Códigos QR con estilo para menús de restaurantes y cafeterías"
         themeColor="#2E7D32"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy para Menús de Restaurantes"
+        jsonLdName="QRBuddy Estudio de Menús para Restaurantes"
         applicationCategory="BusinessApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Pasaporte QRBuddy: A$49 por 365 días, un pago sin renovación automática"
+        offerDescription="Pasaporte QRBuddy: A$49 (~$32 USD) por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         lang="es"
-        badge="Restaurantes y cafeterías"
-        title="Códigos QR para menús fáciles de actualizar."
-        tagline="Crea códigos con estilo o enlaces editables para menús y pedidos en línea."
-        subtagline="Guarda el enlace privado de edición del QR editable para cambiar el destino sin reimprimir."
+        badge="Restaurantes y Cafeterías"
+        title="Códigos QR para Menús que Nunca Secuestran las Mesas."
+        tagline="Genera códigos estáticos eternos o enlaces editables que cambian del desayuno a la cena sin reimprimir acrílicos."
+        subtagline="Pega el enlace del menú abajo: descarga PNG de 3000px o SVG vectorial para imprenta sin crear cuenta."
         defaultStyle="matcha"
-        defaultUrl="https://tu-restaurante.com/menu.pdf"
-        defaultCaption="MENÚ"
+        defaultUrl="https://bistro-roma.mx/menu"
+        defaultCaption="VER MENÚ"
         homeUrl="/es"
-        homeLabel="← Volver al inicio"
-        featuresTitle="Códigos QR para tu restaurante"
-        faqTitle="Preguntas frecuentes sobre menús QR"
+        homeLabel="← Volver al estudio"
+        featuresTitle="Hecho para Cafeterías, Restaurantes, Bares e Imprentas"
+        faqTitle="Preguntas Frecuentes sobre Menús QR"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy gratis y el Pasaporte QRBuddy"
-        comparisonSubtitle="Funciones incluidas y límites más amplios"
+        comparisonTitle="Estudio Gratis y Pasaporte QRBuddy"
+        comparisonSubtitle="Los códigos estáticos y 5 links editables son gratis; el Pasaporte suma 100 links y analíticas de 90 días"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
         ctaLabel="Obtener Pasaporte QRBuddy 🛂✨"

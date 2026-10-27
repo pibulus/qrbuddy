@@ -4,7 +4,7 @@
   <!-- English Homepage -->
   <url>
     <loc>https://qrbuddy.app/</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://qrbuddy.app/" />
@@ -16,7 +16,7 @@
   <!-- Spanish Homepage -->
   <url>
     <loc>https://qrbuddy.app/es</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="es" href="https://qrbuddy.app/es" />
@@ -28,7 +28,7 @@
   <!-- Menus (EN) -->
   <url>
     <loc>https://qrbuddy.app/for/menus</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
@@ -42,7 +42,7 @@
   <!-- Menus (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/menus</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
@@ -53,10 +53,94 @@
       href="https://qrbuddy.app/for/menus" />
   </url>
 
+  <!-- Wi-Fi QR Cards (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/for/wifi</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/wifi" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/wifi" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/wifi" />
+  </url>
+
+  <!-- Wi-Fi QR Cards (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/wifi</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/wifi" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/wifi" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/wifi" />
+  </url>
+
+  <!-- vCard Digital Business Cards (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/for/vcard</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/vcard" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vcard" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/vcard" />
+  </url>
+
+  <!-- vCard Digital Business Cards (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/vcard</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vcard" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/vcard" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/vcard" />
+  </url>
+
+  <!-- GS1 Sunrise 2027 Digital Link Builder (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/for/gs1</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/gs1" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/gs1" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/gs1" />
+  </url>
+
+  <!-- GS1 Sunrise 2027 Digital Link Builder (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/gs1</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/gs1" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/gs1" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/gs1" />
+  </url>
+
   <!-- Weddings (EN) -->
   <url>
     <loc>https://qrbuddy.app/for/weddings</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
@@ -70,7 +154,7 @@
   <!-- Weddings (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/bodas</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
@@ -84,7 +168,7 @@
   <!-- Music (EN) -->
   <url>
     <loc>https://qrbuddy.app/for/music</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
@@ -98,7 +182,7 @@
   <!-- Music (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/musica</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
@@ -112,7 +196,7 @@
   <!-- Lockers (EN) -->
   <url>
     <loc>https://qrbuddy.app/for/lockers</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
@@ -126,7 +210,7 @@
   <!-- Lockers (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/archivos</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
@@ -137,10 +221,38 @@
       href="https://qrbuddy.app/for/lockers" />
   </url>
 
+  <!-- Street-Safe QR Inspector (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/for/inspect</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/inspect" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/escanear" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/inspect" />
+  </url>
+
+  <!-- Escáner e Inspector Seguro de QR (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/escanear</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/escanear" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/inspect" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/inspect" />
+  </url>
+
   <!-- QR Print & Anti-Hostage Guide (EN) -->
   <url>
     <loc>https://qrbuddy.app/guide/printing</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
@@ -154,7 +266,7 @@
   <!-- Guía de Impresión QR & Anti-Extorsión (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/guia/impresion</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
@@ -168,7 +280,7 @@
   <!-- Honest Competitor Comparison (EN) -->
   <url>
     <loc>https://qrbuddy.app/compare</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
@@ -182,7 +294,7 @@
   <!-- Comparativa Honesta vs Suscripciones (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/comparar</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
@@ -193,10 +305,122 @@
       href="https://qrbuddy.app/compare" />
   </url>
 
+  <!-- vs. QR.io (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/vs/qrio</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/vs/qrio" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vs/qrio" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/vs/qrio" />
+  </url>
+
+  <!-- vs. QR.io (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/vs/qrio</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vs/qrio" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/vs/qrio" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/vs/qrio" />
+  </url>
+
+  <!-- vs. QRFY (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/vs/qrfy</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/vs/qrfy" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vs/qrfy" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/vs/qrfy" />
+  </url>
+
+  <!-- vs. QRFY (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/vs/qrfy</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vs/qrfy" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/vs/qrfy" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/vs/qrfy" />
+  </url>
+
+  <!-- vs. Bitly (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/vs/bitly</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/vs/bitly" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vs/bitly" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/vs/bitly" />
+  </url>
+
+  <!-- vs. Bitly (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/vs/bitly</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vs/bitly" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/vs/bitly" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/vs/bitly" />
+  </url>
+
+  <!-- vs. QR Code Generator Pro (EN) -->
+  <url>
+    <loc>https://qrbuddy.app/vs/qr-code-generator</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/vs/qr-code-generator" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vs/qr-code-generator" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/vs/qr-code-generator" />
+  </url>
+
+  <!-- vs. QR Code Generator Pro (ES) -->
+  <url>
+    <loc>https://qrbuddy.app/es/vs/qr-code-generator</loc>
+    <lastmod>2026-10-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/vs/qr-code-generator" />
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/vs/qr-code-generator" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/vs/qr-code-generator" />
+  </url>
+
   <!-- Privacy Notice -->
   <url>
     <loc>https://qrbuddy.app/privacy</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
@@ -204,7 +428,7 @@
   <!-- Terms of Use -->
   <url>
     <loc>https://qrbuddy.app/terms</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>

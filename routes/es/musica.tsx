@@ -20,77 +20,78 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "🎧",
-    title: "Comparte tu mixtape o demo",
+    title: "Reproductor de Mixtapes de 10 Pistas",
     desc:
-      "Sube hasta 10 pistas de audio (hasta 5 MB cada una) y comparte un reproductor web listo para sonar en cualquier navegador.",
+      "Suelta hasta 10 pistas de audio (máx. 5 MB cada una) para crear un reproductor web con avance automático y ranking de reproducciones.",
   },
   {
     icon: "🔗",
-    title: "Actualiza el link después de imprimir",
+    title: "Actualiza Stickers y Merch en Gira",
     desc:
-      "Usa un QR editable en tus stickers o flyers y cámbialo con cada nuevo sencillo o gira sin volver a imprimir.",
+      "Usa un QR dinámico editable en vinilos, cassettes o carteles y cambia el destino en cada nuevo sencillo o fecha de concierto sin reimprimir.",
   },
   {
     icon: "🎨",
-    title: "Listo para vinilos, cassettes y merch",
+    title: "SVG Vectorial para Fundas y Carteles",
     desc:
-      "Elige tu paleta, pon el logo de tu banda o sello y descarga en PNG o SVG de alta resolución.",
+      "Elige un degradado de alto contraste, coloca el logo de la banda al centro y exporta PNG de 3000px o SVG vectorial para imprenta.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Códigos QR estáticos",
-    free: "Ilimitados; el destino queda codificado en el QR",
+    feature: "Códigos QR estáticos para lanzamientos",
+    free: "Ilimitados; el destino queda grabado directo en el QR ($0)",
     supporter: "Incluidos",
   },
   {
-    feature: "Códigos QR editables",
-    free: "Disponibles dentro de los límites gratuitos",
-    supporter: "Límites de creación más amplios",
+    feature: "Enlaces editables para giras y merch",
+    free: "5 enlaces editables permanentes incluidos gratis",
+    supporter: "100 enlaces editables + ruteo iOS/Android y por horario",
   },
   {
-    feature: "Subida de un archivo",
-    free: "Hasta 50 MB; vence a los 30 días",
-    supporter: "Hasta 500 MB; vence a los 30 días",
+    feature: "Mixtape reproducible de varias pistas",
+    free: "Hasta 10 pistas de hasta 5 MB cada una (30 días en línea)",
+    supporter: "Mismo tope de 10 pistas + ranking por canción y modo sin marca",
   },
   {
-    feature: "Playlist de varias pistas",
-    free: "Hasta 10 pistas de hasta 5 MB cada una",
-    supporter: "Mismo límite; 500 MB aplica a un solo archivo",
+    feature: "Envío de archivo individual (WAV / Stems)",
+    free: "Hasta 50 MB por archivo (vigencia de 30 días)",
+    supporter: "Hasta 500 MB por archivo individual (vigencia de 30 días)",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "No hace falta comprarlo",
+    free: "Sin compra necesaria",
     supporter:
-      "~$32 USD (A$49) por 365 días; un pago, sin renovación automática",
+      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "¿Cómo funciona una playlist de QRBuddy?",
-    a: "Sube hasta 10 archivos de audio de hasta 5 MB cada uno. QRBuddy aloja una página donde se pueden escuchar y seleccionar las pistas en el navegador. El enlace vence a los 30 días.",
+    q: "¿Cómo funciona una playlist o mixtape alojado en QRBuddy?",
+    a: "Al soltar de 2 a 10 archivos de audio (MP3, M4A, WAV u OGG de hasta 5 MB cada uno) en el cuadro principal, QRBuddy genera una página en /f/{código} con reproductor web y avance automático. Los envíos alojados permanecen activos durante 30 días.",
   },
   {
-    q: "¿Puedo cambiar el destino después de imprimir el QR?",
-    a: "Sí, con un QR editable y su enlace privado de edición. Un QR estático no se puede cambiar porque el destino está codificado en la imagen.",
+    q: "¿Se puede cambiar a dónde apunta el QR de un vinilo o sticker después de imprimir?",
+    a: "Sí. Activando 'Editable tras imprimir + Stats' debajo del enlace antes de exportar, el QR impreso redirige a través de un enlace corto editable que hoy puede abrir una preventa y el mes próximo la boletera de la gira.",
   },
   {
-    q: "¿Puedo usar el QR en calcomanías y fundas?",
-    a: "Descárgalo como PNG o SVG para tu diseño. Prueba el código impreso en su tamaño final. También puedes enlazar directamente a una página de lanzamiento en otro servicio.",
+    q: "¿Permite enviar un master WAV pesado o paquete ZIP por código QR?",
+    a: "Los envíos de un solo archivo admiten hasta 50 MB gratis y hasta 500 MB con el Pasaporte QRBuddy, con opción de autodestrucción tras 1, 5, 10 o 100 descargas.",
   },
   {
-    q: "¿Qué incluye el Pasaporte QRBuddy?",
-    a: "Cuesta ~$32 USD (A$49) por un pago y dura 365 días, sin renovación automática. Amplía algunos límites y permite subir un archivo individual de hasta 500 MB. Las playlists siguen limitadas a 10 audios de hasta 5 MB cada uno.",
+    q: "¿El Pasaporte muestra qué canción del mixtape se escuchó más?",
+    a: "Sí. En cualquier mixtape o galería propia (/f/{código}), el Reporte de Campo del Pasaporte muestra aperturas de 7, 30 y 90 días, ciudades principales, hora pico y el ranking de reproducciones por pista con exportación CSV.",
   },
 ];
 
 export default function MusicaEspanolPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/es/musica";
-  const title = "Códigos QR para Música y Playlists Alojadas | QRBuddy";
+  const title =
+    "Códigos QR para Música, Bandas y Mixtapes Reproducibles | QRBuddy";
   const description =
-    "Crea una playlist de QRBuddy con hasta 10 pistas de audio o enlaza un QR a tu página de lanzamiento. Descarga diseños PNG o SVG para tus lanzamientos físicos.";
+    "Crea códigos QR con degradados para vinilos, cassettes, carteles y merch. Sube hasta 10 pistas para armar un mixtape web o descarga SVG vectorial gratis.";
 
   return (
     <>
@@ -101,33 +102,34 @@ export default function MusicaEspanolPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="en"
         altHref="https://qrbuddy.app/for/music"
-        ogImageAlt="Código QR para una playlist alojada de QRBuddy"
+        ogTitle="Códigos QR para Música, Vinilos y Mixtapes — QRBuddy"
+        ogImageAlt="Código QR para lanzamientos musicales y mixtapes"
         themeColor="#E600E6"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy para Música"
+        jsonLdName="QRBuddy Estudio para Música y Bandas"
         applicationCategory="MultimediaApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Pasaporte QRBuddy: A$49 por 365 días, un pago sin renovación automática"
+        offerDescription="Pasaporte QRBuddy: A$49 (~$32 USD) por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         lang="es"
-        badge="Músicos y sellos"
-        title="Lleva tu playlist a cada escaneo."
-        tagline="Sube hasta 10 pistas para una playlist alojada por QRBuddy o enlaza a tu página de lanzamiento."
-        subtagline="Las pistas se reproducen en el navegador y pueden avanzar automáticamente. Los enlaces para compartir archivos vencen a los 30 días."
+        badge="Músicos y Sellos Independientes"
+        title="El Mixtape a un Solo Escaneo."
+        tagline="Suelta hasta 10 pistas para armar un reproductor web al instante, o genera QRs editables para vinilos, cassettes y carteles."
+        subtagline="Pega el link del lanzamiento o suelta audios abajo: descarga PNG de 3000px y SVG vectorial gratis."
         defaultStyle="vapor"
         defaultUrl="https://bandcamp.com/album"
         defaultCaption="ESCUCHAR"
         homeUrl="/es"
-        homeLabel="← Volver al inicio"
-        featuresTitle="QR para compartir música"
-        faqTitle="Preguntas frecuentes"
+        homeLabel="← Volver al estudio"
+        featuresTitle="Hecho para Vinilos, Cassettes, Fanzines, Carteles y Merch"
+        faqTitle="Preguntas sobre QRs para Música y Mixtapes"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy gratis y el Pasaporte QRBuddy"
-        comparisonSubtitle="Funciones incluidas y límites de archivo"
+        comparisonTitle="Estudio Musical Gratis y Pasaporte QRBuddy"
+        comparisonSubtitle="Los QRs estáticos, 5 links editables y mixtapes de 10 pistas son gratis; el Pasaporte suma 500 MB y estadísticas"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
         ctaLabel="Obtener Pasaporte QRBuddy 🛂✨"

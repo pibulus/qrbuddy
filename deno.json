@@ -26,7 +26,8 @@
   "exclude": [
     "**/_fresh/*",
     "node_modules/",
-    ".playwright-mcp/"
+    ".playwright-mcp/",
+    "plugins/"
   ],
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",

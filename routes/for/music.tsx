@@ -20,44 +20,44 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "🎧",
-    title: "Share a hosted mixtape",
+    title: "Hosted 10-Track Mixtape Player",
     desc:
-      "Upload up to 10 audio tracks, up to 5 MB each, for a QRBuddy playlist page with browser playback and track controls.",
+      "Drop up to 10 audio tracks (up to 5 MB each) onto the studio to mint a browser-playable mixtape page with auto-advance and track leaderboards.",
   },
   {
     icon: "🔗",
-    title: "Update an editable QR",
+    title: "Repoint Merch & Poster QRs on Tour",
     desc:
-      "Change an editable QR's destination after printing. Static QRs keep their original destination. Playlist shares expire after 30 days.",
+      "Use an editable dynamic QR on vinyl sleeves, cassette J-cards, or tour posters and update the destination for every new release or ticket drop.",
   },
   {
     icon: "🎨",
-    title: "Design for physical media",
+    title: "Sticker, Sleeve & Poster Vector SVG",
     desc:
-      "Choose a color style, add a logo, and download a PNG or SVG for stickers, sleeves, and posters.",
+      "Pick a luminance-locked gradient, add band or label artwork in the center, and export a 3000px PNG or Vector SVG ready for pressing plants.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Static QR codes",
-    free: "Unlimited; destination is encoded in the QR",
+    feature: "Static Release & Bandcamp QR Codes",
+    free: "Unlimited; destination is encoded directly in the QR ($0)",
     supporter: "Included",
   },
   {
-    feature: "Editable QRs",
-    free: "Available within free-tier limits",
-    supporter: "Higher creation limits",
+    feature: "Editable Tour & Merch Links",
+    free: "5 permanent editable links included free",
+    supporter: "100 editable links + iOS/Android & schedule routing",
   },
   {
-    feature: "Single-file uploads",
-    free: "Up to 50 MB; share expires after 30 days",
-    supporter: "Up to 500 MB; share expires after 30 days",
+    feature: "Multi-Track Mixtape Share",
+    free: "Up to 10 audio tracks, up to 5 MB each (30-day hosting)",
+    supporter: "Same 10-track cap + track play leaderboard & white-label mode",
   },
   {
-    feature: "Multi-track playlist share",
-    free: "Up to 10 audio tracks, up to 5 MB each",
-    supporter: "Same limit; 500 MB applies to a single file",
+    feature: "Single WAV / Stem Pack File Drop",
+    free: "Up to 50 MB single file (30-day hosting)",
+    supporter: "Up to 500 MB single file (30-day hosting)",
   },
   {
     feature: "QRBuddy Passport",
@@ -68,28 +68,29 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "How does a QRBuddy playlist work?",
-    a: "Upload up to 10 audio files, up to 5 MB each. QRBuddy hosts a page where listeners can play tracks in the browser and move between them. The share expires after 30 days.",
+    q: "How does a hosted QRBuddy mixtape playlist work?",
+    a: "Drop 2 to 10 audio files (MP3, M4A, WAV, or OGG up to 5 MB each) onto the studio input. QRBuddy builds a hosted player page at /f/{code} where listeners stream tracks in the browser with auto-advance. Hosted file shares remain online for 30 days.",
   },
   {
-    q: "Can I change the destination after printing?",
-    a: "Yes, with an editable QR and its private edit link. A static QR cannot be changed because the destination is encoded in the image.",
+    q: "Can a band update where a merch table or vinyl sticker QR points after printing?",
+    a: "Yes. Toggle 'Editable after print + Stats' below the URL input before exporting the QR. The printed graphic routes through an editable short link that can point to a Bandcamp pre-order today and tour tickets next month.",
   },
   {
-    q: "Can I use the QR on stickers and sleeves?",
-    a: "Download the QR as a PNG or SVG for your design. Scan a test print at its intended size before producing a larger run. You can also link directly to a release page on another service.",
+    q: "Can a producer drop a large WAV master or stem ZIP via QR?",
+    a: "Single-file drops support up to 50 MB on the free tier and up to 500 MB with the QRBuddy Passport, with optional scan-count self-destruction (1, 5, 10, or 100 downloads).",
   },
   {
-    q: "What does the QRBuddy Passport include?",
-    a: "It costs ~$32 USD (A$49) once and lasts 365 days, with no automatic renewal. It raises selected limits and allows a single file up to 500 MB. Multi-track playlists remain limited to 10 audio files of up to 5 MB each.",
+    q: "Does the Passport include track-by-track play analytics?",
+    a: "Yes. On any owned mixtape or slideshow page (/f/{code}), the Passport Field Report displays 7d/30d/90d opens, top listener cities, peak hours, and a per-track play leaderboard with CSV export.",
   },
 ];
 
 export default function MusicPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/music";
-  const title = "Music QR Codes and Hosted Mixtape Playlists | QRBuddy";
+  const title =
+    "Music QR Code Generator & Hosted Mixtape Player for Bands & Labels | QRBuddy";
   const description =
-    "Create a QRBuddy mixtape playlist with up to 10 audio files, or link a QR code to a release page. Download PNG or SVG designs for physical releases.";
+    "Create gradient QR codes for vinyl sleeves, cassette J-cards, gig posters, and merch tables. Drop up to 10 audio tracks for an instant mixtape player or export free Vector SVGs.";
 
   return (
     <>
@@ -100,29 +101,31 @@ export default function MusicPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="es"
         altHref="https://qrbuddy.app/es/musica"
-        ogTitle="Music QR Codes for Releases and Merch — QRBuddy"
-        ogImageAlt="QR code for a music release"
+        ogTitle="Music QR Codes & Mixtape Drops for Bands, Vinyl & Merch — QRBuddy"
+        ogImageAlt="Styled QR code for music releases and mixtapes"
         themeColor="#E600E6"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy Music QR Codes"
+        jsonLdName="QRBuddy Music & Mixtape QR Studio"
         applicationCategory="MultimediaApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="QRBuddy Passport: A$49 for 365 days, one payment with no automatic renewal"
+        offerDescription="QRBuddy Passport: A$49 (~$32 USD) for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
-        badge="Musicians & Labels"
-        title="Put Your Mixtape One Scan Away."
-        tagline="Upload up to 10 audio tracks for a hosted QRBuddy playlist, or link to your release page."
-        subtagline="Tracks play in the browser and can advance automatically. File shares expire after 30 days."
+        badge="Musicians & Independent Labels"
+        title="Put the Mixtape One Scan Away."
+        tagline="Drop up to 10 audio tracks for a browser-playable mixtape page, or mint editable QR codes for vinyl sleeves, zines, and tour posters."
+        subtagline="Paste a release link or drop audio files below — export 3000px PNGs and pressing-plant Vector SVGs free."
         defaultStyle="vapor"
         defaultUrl="https://bandcamp.com/album"
         defaultCaption="LISTEN NOW"
+        featuresTitle="Built for Vinyl Sleeves, Cassette J-Cards, Posters & Merch"
+        faqTitle="Music & Mixtape QR Questions"
         valueCards={VALUE_CARDS}
-        comparisonTitle="Free QRBuddy and the QRBuddy Passport"
-        comparisonSubtitle="A clear look at included features and higher limits"
+        comparisonTitle="Free Music Studio and the QRBuddy Passport"
+        comparisonSubtitle="Static release QRs, 5 editable links, and 10-track mixtapes are free; the Passport adds 500 MB drops and track stats"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
         ctaLabel="Get QRBuddy Passport 🛂✨"

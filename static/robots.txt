@@ -9,5 +9,6 @@ Disallow: /r
 Disallow: /q
 Disallow: /boom
 
-# Sitemap
+# Sitemap & AI Search Index
 Sitemap: https://qrbuddy.app/sitemap.xml
+# LLMs: https://qrbuddy.app/llms.txt

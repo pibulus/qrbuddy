@@ -30,7 +30,11 @@ const COPY = {
     switchLabel: "🇲🇽 ES",
     switchAria: "Cambiar idioma a español (México / LatAm)",
     links: [
+      { href: "/for/inspect", label: "Safe QR Inspector 🛡️" },
       { href: "/for/menus", label: "Restaurant Menus 📜" },
+      { href: "/for/wifi", label: "Wi-Fi Cards 📶" },
+      { href: "/for/vcard", label: "Contact Cards (vCard) 👤" },
+      { href: "/for/gs1", label: "GS1 2027 Packaging 📦" },
       { href: "/for/weddings", label: "Weddings & Photo Drops 📸" },
       { href: "/for/music", label: "Music Mixtapes 📼" },
       { href: "/for/lockers", label: "Secret Drops 🔐" },
@@ -49,7 +53,11 @@ const COPY = {
     switchLabel: "EN",
     switchAria: "Switch language to English",
     links: [
+      { href: "/es/escanear", label: "Inspector Seguro de QR 🛡️" },
       { href: "/es/menus", label: "Menús para Restaurantes 📜" },
+      { href: "/es/wifi", label: "Tarjetas Wi-Fi 📶" },
+      { href: "/es/vcard", label: "Tarjetas de Contacto 👤" },
+      { href: "/es/gs1", label: "Empaques GS1 2027 📦" },
       { href: "/es/bodas", label: "Bodas y Álbum de Fotos 📸" },
       { href: "/es/musica", label: "Mixtapes y Música 📼" },
       { href: "/es/archivos", label: "Buzón de Archivos 🔐" },
@@ -136,12 +144,12 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
                 knock the panel off-axis mid-animation. */
             }
             <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50">
-              <div class="w-64 bg-qr-cream border-3 border-black rounded-2xl shadow-chunky-hover p-2 flex flex-col origin-bottom animate-pop-in">
+              <div class="w-64 max-h-[70dvh] overflow-y-auto scrollbar-none bg-qr-cream border-3 border-black rounded-2xl shadow-chunky-hover p-2 flex flex-col origin-bottom animate-pop-in">
                 {t.links.map((link) => (
                   <a
                     key={link.href}
                     href={link.href}
-                    class="px-3 min-h-[44px] flex items-center rounded-xl text-sm font-bold text-gray-800 hover:bg-white hover:text-black transition-colors"
+                    class="px-3 min-h-[40px] flex items-center rounded-xl text-xs sm:text-sm font-bold text-gray-800 hover:bg-white hover:text-black transition-colors"
                   >
                     {link.label}
                   </a>

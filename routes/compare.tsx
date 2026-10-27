@@ -5,6 +5,7 @@ import VerticalStudio, {
   type ValueCard,
 } from "../islands/VerticalStudio.tsx";
 import VerticalLandingHead from "../components/VerticalLandingHead.tsx";
+import { getComparisonNavPills } from "../utils/comparisons.ts";
 import { getSupabaseUrl } from "../utils/api.ts";
 
 interface PageData {
@@ -19,55 +20,75 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "🔒",
-    title: "True Static Codes Never Expire",
-    desc:
-      "When creating a static QR code, the destination URL is encoded directly into the graphic matrix. It never touches a redirect server and works forever offline.",
-  },
-  {
     icon: "⚡",
-    title: "Editable Links Without Monthly Traps",
+    title: "Edit Links After Printing",
+    tag: "5 Free · 100 Pass",
     desc:
-      "Create up to 5 permanent editable dynamic QR codes for free, or unlock 100 editable codes + 90-day scan analytics with the once-a-year Passport (~$32 USD / A$49).",
+      "Fix a typo, swap a seasonal menu, or auto-switch Breakfast & Dinner links without reprinting a single flyer.",
   },
   {
-    icon: "🎨",
-    title: "Print-Verified Vector SVG & Contrast",
+    icon: "📐",
+    title: "Print-Shop Vector SVG & Batch ZIP",
+    tag: "Free Forever",
     desc:
-      "Export true vector SVGs and 3000px PNGs with live WCAG luminance verification, custom center logos, and bulk ZIP manifests ready for commercial print shops.",
+      "Export razor-sharp Vector SVGs, 3000px PNGs, or 50-code batch ZIPs with a print manifest in one click.",
+  },
+  {
+    icon: "📼",
+    title: "500 MB Mixtapes, Photos & Secrets",
+    tag: "Only on QRBuddy",
+    desc:
+      "Turn any sticker into a playable audio mixtape, event photo drop, or self-destructing 1-scan note.",
+  },
+  {
+    icon: "🔍",
+    title: "Scans in Dim Bars + Street Inspector",
+    tag: "Zero Sign-Up",
+    desc:
+      "Every palette is contrast-locked for phone cameras. Plus: unmask sketchy street QRs before opening.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Static QR Codes",
-    free: "Often swapped for a hidden 7–14 day redirect trial",
-    supporter: "Unlimited, direct-encoded, works forever ($0)",
+    feature: "Annual Price",
+    free: "$348 – $420 / year ($29–$35/mo)",
+    supporter: "$0 Free · ~$32/yr Passport",
   },
   {
-    feature: "Free Editable (Dynamic) Codes",
-    free: "Deactivated after 7–14 days unless billed monthly",
-    supporter: "5 permanent editable codes included free ($0)",
+    feature: "Day-8 Trial Shutoff",
+    free: "Deactivates printed QRs after trial",
+    supporter: "Never — codes stay alive",
   },
   {
-    feature: "Annual Cost for Pro / Editable",
-    free: "$180 to $420 / year ($15–$35/mo recurring)",
-    supporter: "~$32 USD (A$49) once for 365 days — zero auto-renew",
+    feature: "Auto-Renewal Trap",
+    free: "Recurring monthly card charge",
+    supporter: "Zero auto-billing (1-year pass)",
   },
   {
-    feature: "Account & Credit Card Wall",
-    free: "Mandatory signup before downloading vector files",
-    supporter: "Zero login walls — instant PNG & Vector SVG export",
+    feature: "Edit Link After Print",
+    free: "0–2 Free before paywall",
+    supporter: "5 Free forever · 100 with Pass",
   },
   {
-    feature: "Smart Routing & Cover Pages",
-    free: "Locked behind $35+/mo enterprise tiers",
-    supporter: "Time-of-day menus, iOS/Android split & Cover Pages included",
+    feature: "Vector SVG + 50-Code ZIP",
+    free: "Paywalled behind $35/mo plan",
+    supporter: "Free (SVG + 3000px PNG + CSV)",
   },
   {
-    feature: "Media & File Drops",
-    free: "PDF/MP3 hosting requires paid monthly plan",
-    supporter: "Photo slideshows, audio mixtapes & 500 MB Passport drops",
+    feature: "Smart Menu Schedules",
+    free: "Enterprise tier ($199+/mo)",
+    supporter: "Breakfast/Dinner & iOS/Android",
+  },
+  {
+    feature: "Mixtapes, Photos & Secrets",
+    free: "Basic PDF page only",
+    supporter: "500 MB drops + 1-scan notes",
+  },
+  {
+    feature: "Account Requirement",
+    free: "Mandatory email & spam drip",
+    supporter: "Zero sign-up (4-word passkey)",
   },
 ];
 
@@ -119,22 +140,24 @@ export default function ComparePage({ data }: PageProps<PageData>) {
       />
 
       <VerticalStudio
-        badge="Honest Comparison"
-        title="No 14-Day Trial Traps. No $35/Month Hostage Links."
-        tagline="Replace expiring subscription QR codes with permanent static matrices or fair, transparent editable links."
-        subtagline="Test the studio live below — export print-ready PNGs and true Vector SVGs immediately without creating an account."
+        badge="Zero Hostage Fees"
+        title="Kill the $35/mo. QR hostage bill."
+        tagline="Direct codes stay free forever. Editable links, Vector SVGs, batch ZIPs, and 500 MB mixtape drops — built for print."
+        subtagline="Mint a permanent QR below — download 3000px PNG or Vector SVG immediately with zero sign-up."
         defaultStyle="sunset"
         defaultUrl="https://qrbuddy.app"
         defaultCaption="SCAN ME"
-        featuresTitle="How QRBuddy Fixes the QR Industry Trap"
+        navPills={getComparisonNavPills("en", "all")}
+        featuresTitle="The 80/20 That Matters + Pure QRBuddy Soul"
         faqTitle="Questions From Switchers & Print Shops"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy vs. 'Free Trial' QR Traps"
-        comparisonSubtitle="Side-by-side against QR.io, QRFY, Bitly & QR-Code-Generator"
+        comparisonTitle="QRBuddy vs. The Hostage QR Giants"
+        comparisonSubtitle="Why pay $420/year just to redirect a URL?"
+        qrbuddyFirst
         comparisonColumns={{
-          feature: "What Matters",
-          col1: "Typical 'Free Trial' QR Sites",
-          col2: "QRBuddy Studio & Passport 🛂",
+          feature: "Capability",
+          col1: "Bitly / QR.io / QRFY",
+          col2: "QRBuddy (Free + Passport)",
         }}
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}

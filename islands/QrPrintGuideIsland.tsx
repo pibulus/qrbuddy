@@ -321,10 +321,10 @@ export default function QrPrintGuideIsland(
                 ? "⚠️ Códigos estáticos y redirecciones alojadas"
                 : "⚠️ Static Codes and Hosted Redirects"}
             </div>
-            <h2 class="text-2xl sm:text-3xl font-black text-black tracking-tight">
+            <h2 class="text-2xl sm:text-3xl font-black text-[#1e1714] tracking-tight">
               {isSpanish
-                ? "¿Qué Puede Hacer que un QR Impreso Deje de Funcionar?"
-                : "What Can Make a Printed QR Stop Working?"}
+                ? "Por Qué un Código QR Impreso Puede Dejar de Funcionar"
+                : "Why a Printed QR Code Can Stop Scanning"}
             </h2>
           </div>
 
@@ -336,8 +336,8 @@ export default function QrPrintGuideIsland(
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div class="bg-amber-50 border-2 border-black rounded-2xl p-4 space-y-2">
-                <div class="font-black text-black flex items-center gap-1.5 text-sm">
+              <div class="bg-amber-50 border-2 border-[#1e1714] rounded-2xl p-4 space-y-2">
+                <div class="font-black text-[#1e1714] flex items-center gap-1.5 text-sm">
                   <span>🔍</span>
                   <span>
                     {isSpanish
@@ -349,7 +349,7 @@ export default function QrPrintGuideIsland(
                   <li>
                     {isSpanish
                       ? "El QR contiene una URL del proveedor que redirige al destino."
-                      : "The QR contains a provider URL that redirects to your destination."}
+                      : "The QR contains a provider URL that redirects to the target destination."}
                   </li>
                   <li>
                     {isSpanish
@@ -369,7 +369,7 @@ export default function QrPrintGuideIsland(
                 </ul>
               </div>
 
-              <div class="bg-emerald-50 border-2 border-black rounded-2xl p-4 space-y-2">
+              <div class="bg-emerald-50 border-2 border-[#1e1714] rounded-2xl p-4 space-y-2">
                 <div class="font-black text-emerald-950 flex items-center gap-1.5 text-sm">
                   <span>✅</span>
                   <span>
@@ -379,8 +379,8 @@ export default function QrPrintGuideIsland(
                 <ul class="text-xs text-gray-700 space-y-1.5 list-disc list-inside">
                   <li>
                     {isSpanish
-                      ? "Los QR estáticos se generan en tu navegador y codifican el destino; generarlos no requiere un Pasaporte QRBuddy."
-                      : "Static QRs are generated in your browser and encode the destination; making them does not require a QRBuddy Passport."}
+                      ? "Los QR estáticos se generan en el navegador y codifican el destino; generarlos no requiere un Pasaporte QRBuddy."
+                      : "Static QRs generate directly in the browser and encode the destination; making them does not require a QRBuddy Passport."}
                   </li>
                   <li>
                     {isSpanish
@@ -404,8 +404,8 @@ export default function QrPrintGuideIsland(
         </section>
 
         {/* SECTION 3: 5 GOLDEN RULES OF QR PRINTING */}
-        <section class="bg-white border-4 border-black rounded-3xl p-6 sm:p-8 shadow-chunky space-y-6">
-          <h2 class="text-2xl sm:text-3xl font-black text-black tracking-tight flex items-center gap-2">
+        <section class="bg-[#fffef7] border-4 border-[#1e1714] rounded-3xl p-6 sm:p-8 shadow-chunky space-y-6">
+          <h2 class="text-2xl sm:text-3xl font-black text-[#1e1714] tracking-tight flex items-center gap-2">
             <span>✨</span>
             <span>
               {isSpanish
@@ -415,9 +415,9 @@ export default function QrPrintGuideIsland(
           </h2>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="border-2 border-black rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
-              <div class="font-black text-sm text-black flex items-center gap-2">
-                <span class="bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
+            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
+              <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
+                <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                   1
                 </span>
                 <span>
@@ -433,9 +433,9 @@ export default function QrPrintGuideIsland(
               </p>
             </div>
 
-            <div class="border-2 border-black rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
-              <div class="font-black text-sm text-black flex items-center gap-2">
-                <span class="bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
+            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
+              <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
+                <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                   2
                 </span>
                 <span>
@@ -451,9 +451,9 @@ export default function QrPrintGuideIsland(
               </p>
             </div>
 
-            <div class="border-2 border-black rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
-              <div class="font-black text-sm text-black flex items-center gap-2">
-                <span class="bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
+            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
+              <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
+                <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                   3
                 </span>
                 <span>
@@ -464,14 +464,14 @@ export default function QrPrintGuideIsland(
               </div>
               <p class="text-xs text-gray-700 leading-relaxed">
                 {isSpanish
-                  ? "El PNG es una imagen rasterizada y puede verse borroso si se amplía mucho. El SVG se escala sin perder nitidez; QRBuddy permite descargar ambos formatos."
-                  : "PNG is a raster image and can look blurry when enlarged a lot. SVG scales cleanly; QRBuddy lets you download both formats."}
+                  ? "El PNG es una imagen rasterizada y puede verse borroso si se amplía mucho. El SVG se escala sin perder nitidez; QRBuddy exporta ambos formatos."
+                  : "PNG is a raster image and can look blurry when enlarged a lot. SVG scales cleanly; QRBuddy exports both formats."}
               </p>
             </div>
 
-            <div class="border-2 border-black rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
-              <div class="font-black text-sm text-black flex items-center gap-2">
-                <span class="bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
+            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
+              <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
+                <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                   4
                 </span>
                 <span>
@@ -488,9 +488,9 @@ export default function QrPrintGuideIsland(
             </div>
           </div>
 
-          <div class="border-2 border-black rounded-2xl p-4 bg-[#E5F9FF] space-y-1.5">
-            <div class="font-black text-sm text-black flex items-center gap-2">
-              <span class="bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
+          <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-[#E5F9FF] space-y-1.5">
+            <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
+              <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                 5
               </span>
               <span>
@@ -501,32 +501,30 @@ export default function QrPrintGuideIsland(
             </div>
             <p class="text-xs text-gray-700 leading-relaxed">
               {isSpanish
-                ? "Antes de mandar a imprimir 10,000 folletos, imprime una sola copia en tu impresora casera y escanéala con un iPhone y un Android bajo poca luz a la distancia real del cliente."
-                : "Before ordering 10,000 offset copies, print a single proof sheet on your home printer. Test it with both an iPhone and an Android under dim evening lighting from the actual expected distance."}
+                ? "Antes de encargar 10,000 folletos, imprime una hoja de prueba en papel normal y escanéala con un iPhone y un Android bajo poca luz a la distancia real prevista."
+                : "Before ordering 10,000 offset copies, print a single proof sheet on standard office paper. Test it with both an iPhone and an Android under dim evening lighting from the actual expected distance."}
             </p>
           </div>
         </section>
 
         {/* BOTTOM CTA */}
-        <section class="bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 border-4 border-black rounded-3xl p-6 sm:p-8 shadow-chunky text-center space-y-4">
-          <h3 class="text-2xl sm:text-3xl font-black text-white drop-shadow">
+        <section class="bg-[#fbf1e4] border-4 border-[#1e1714] rounded-3xl p-6 sm:p-8 shadow-chunky text-center space-y-4">
+          <h3 class="text-2xl sm:text-3xl font-black text-[#1e1714]">
             {isSpanish
-              ? "¿Listo para Preparar un Código QR para Imprimir?"
-              : "Ready to Make a QR Code for Print?"}
+              ? "Genera Códigos QR Listos para Imprenta"
+              : "Generate Print-Ready Vector & Static QR Codes"}
           </h3>
-          <p class="text-sm font-bold text-white/95 max-w-xl mx-auto">
+          <p class="text-sm font-bold text-[#1e1714]/80 max-w-xl mx-auto">
             {isSpanish
-              ? "Genera un QR estático que contiene directamente el destino o un QR editable, disponible gratis dentro de sus límites. El Pasaporte QRBuddy cuesta ~$32 USD (A$49) por 365 días y amplía algunos límites, sin renovación automática."
-              : "Make a static QR that contains its destination directly, or an editable QR available free within its limits. The ~$32 USD (A$49) QRBuddy Passport lasts 365 days and raises selected limits, with no automatic renewal."}
+              ? "Genera un QR estático que contiene directamente el destino o un QR editable disponible gratis dentro de sus límites. El Pasaporte QRBuddy cuesta ~$32 USD (A$49) por 365 días y amplía algunos límites, sin renovación automática."
+              : "Generate a static QR that contains its destination directly, or an editable QR available free within its limits. The ~$32 USD (A$49) QRBuddy Passport lasts 365 days and raises selected limits, with no automatic renewal."}
           </p>
           <div class="pt-2">
             <a
               href={isSpanish ? "/es" : "/"}
-              class="inline-block bg-black text-white font-black text-base px-8 py-3.5 rounded-full border-3 border-black shadow-chunky hover:bg-gray-800 hover:shadow-chunky-hover hover:-translate-y-0.5 transition-all"
+              class="inline-block bg-[#1e1714] text-[#fffef7] font-black text-base px-8 py-3.5 rounded-full border-2 border-[#1e1714] shadow-chunky hover:bg-[#ff9a8b] hover:text-[#1e1714] hover:shadow-chunky-hover hover:-translate-y-0.5 transition-all"
             >
-              {isSpanish
-                ? "Crear Mi Código QR Ahora →"
-                : "Create My Free QR Code Now →"}
+              {isSpanish ? "Abrir el Estudio QR →" : "Open the QR Studio →"}
             </a>
           </div>
         </section>

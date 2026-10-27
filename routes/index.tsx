@@ -134,51 +134,55 @@ export default function Home({ data }: PageProps<HomeProps>) {
         </script>
 
         {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebApplication",
-            "name": "QRBuddy",
-            "url": "https://qrbuddy.app",
-            "description":
-              "Full-stack QR code studio replacing Bitly, QR Code Monkey, and QR Tiger. Create print-verified gradient QR codes with vector SVG export, custom logos, editable dynamic redirects, time-of-day & device routing, bulk ZIP generation, 500 MB media drops, and 90-day privacy-safe analytics.",
-            "applicationCategory": "BusinessApplication",
-            "offers": [
-              {
-                "@type": "Offer",
-                "name": "Free Studio",
-                "price": "0",
-                "priceCurrency": "AUD",
+        <script
+          type="application/ld+json"
+          // deno-lint-ignore react-no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "QRBuddy",
+              "url": "https://qrbuddy.app",
+              "description":
+                "Full-stack QR code studio replacing Bitly, QR Code Monkey, and QR Tiger. Create print-verified gradient QR codes with vector SVG export, custom logos, editable dynamic redirects, time-of-day & device routing, bulk ZIP generation, 500 MB media drops, and 90-day privacy-safe analytics.",
+              "applicationCategory": "BusinessApplication",
+              "offers": [
+                {
+                  "@type": "Offer",
+                  "name": "Free Studio",
+                  "price": "0",
+                  "priceCurrency": "AUD",
+                },
+                {
+                  "@type": "Offer",
+                  "name": "The QRBuddy Passport (1 Year)",
+                  "price": "49",
+                  "priceCurrency": "AUD",
+                },
+              ],
+              "creator": {
+                "@type": "Person",
+                "name": "Pablo",
               },
-              {
-                "@type": "Offer",
-                "name": "The QRBuddy Passport (1 Year)",
-                "price": "49",
-                "priceCurrency": "AUD",
-              },
-            ],
-            "creator": {
-              "@type": "Person",
-              "name": "Pablo",
-            },
-            "featureList": [
-              "8 print-verified gradient palettes (Sunset, Candy, Blush, Matcha, Pool, Vapor, Grape, Licorice) + custom gradient builder",
-              "High-resolution PNG (up to 3000px) and true vector SVG export with live WCAG contrast verification",
-              "All core QR types: URL, Wi-Fi, Contact Card (vCard), Social Bio Hub, Media Hub, Phone, SMS, Email, Plain Text",
-              "Editable Dynamic QR codes with custom short codes, scan caps, and expiration dates",
-              "Smart Conditional Routing: Time-of-day schedules (Breakfast/Lunch/Dinner menus), iOS/Android split, and A/B split",
-              "Branded Cover Pages with 3 themes, 1-click starters, and Passport White-Label mode",
-              "Bulk / Batch QR Generator exporting PNG + Vector SVG + print-shop manifest.csv in one ZIP",
-              "Daylight Media Drops: Photo Slideshows, Audio Mixtapes, Inbound File Lockers, and up to 500 MB file drops",
-              "Passport Field Report: 7d/30d/90d scan trends, Top Cities & Countries, 24h Peak Rush Hour, Track/Photo Leaderboard, and RFC-4180 CSV export",
-              "Street-Safe QR Inspector: unroll up to 5 redirect hops, verify HTTPS, and inspect live visual webpage previews",
-              "Bilingual English (/) and Spanish (/es) with zero mandatory email/password account walls",
-            ],
-            "operatingSystem": "Any (Web-based)",
-            "browserRequirements":
-              "Requires JavaScript, Modern browser with Clipboard API support",
-          })}
-        </script>
+              "featureList": [
+                "8 print-verified gradient palettes (Sunset, Candy, Blush, Matcha, Pool, Vapor, Grape, Licorice) + custom gradient builder",
+                "High-resolution PNG (up to 3000px) and true vector SVG export with live WCAG contrast verification",
+                "All core QR types: URL, Wi-Fi, Contact Card (vCard), Social Bio Hub, Media Hub, Phone, SMS, Email, Plain Text",
+                "Editable Dynamic QR codes with custom short codes, scan caps, and expiration dates",
+                "Smart Conditional Routing: Time-of-day schedules (Breakfast/Lunch/Dinner menus), iOS/Android split, and A/B split",
+                "Branded Cover Pages with 3 themes, 1-click starters, and Passport White-Label mode",
+                "Bulk / Batch QR Generator exporting PNG + Vector SVG + print-shop manifest.csv in one ZIP",
+                "Daylight Media Drops: Photo Slideshows, Audio Mixtapes, Inbound File Lockers, and up to 500 MB file drops",
+                "Passport Field Report: 7d/30d/90d scan trends, Top Cities & Countries, 24h Peak Rush Hour, Track/Photo Leaderboard, and RFC-4180 CSV export",
+                "Street-Safe QR Inspector: unroll up to 5 redirect hops, verify HTTPS, and inspect live visual webpage previews",
+                "Bilingual English (/) and Spanish (/es) with zero mandatory email/password account walls",
+              ],
+              "operatingSystem": "Any (Web-based)",
+              "browserRequirements":
+                "Requires JavaScript, Modern browser with Clipboard API support",
+            }),
+          }}
+        />
       </Head>
 
       {/* Skip to main content link for accessibility */}

@@ -20,40 +20,44 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📜",
-    title: "A QR for your menu link",
+    title: "Static or Editable Menu Links",
     desc:
-      "Make a static QR for a menu PDF or website, or use an editable QR when you want to change its destination later.",
+      "Encode a menu PDF or ordering URL directly into a static QR ($0 forever), or switch to an editable link to update seasonal menus without reprinting table tents.",
   },
   {
-    icon: "🔗",
-    title: "Choose the kind of link",
+    icon: "🕰️",
+    title: "Breakfast, Lunch & Dinner Routing",
     desc:
-      "Static QRs encode the destination directly. Editable QRs use QRBuddy's redirect service and can have scan or date limits.",
+      "Editable links support time-of-day schedules — one printed table QR can open the breakfast menu at 8 AM and the dinner menu at 6 PM.",
   },
   {
     icon: "🎨",
-    title: "Make it fit your venue",
+    title: "Print-Verified Contrast & Vector SVG",
     desc:
-      "Choose a gradient, add a logo, and export a PNG or SVG for table cards and window signs.",
+      "Choose a pastel-punk palette, drop a venue logo in the center, and export a 3000px PNG or true Vector SVG for acrylic stands and window decals.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Static QR codes",
-    free: "Unlimited; destination is encoded in the QR",
+    feature: "Static Menu QR Codes",
+    free: "Unlimited; destination is encoded directly in the graphic ($0)",
     supporter: "Included",
   },
   {
-    feature: "Editable QRs",
-    free: "Available within fair-use limits",
-    supporter: "Higher creation limits",
+    feature: "Editable Dynamic Menu Links",
+    free: "5 permanent editable links included free",
+    supporter: "100 editable links + time-of-day & OS routing",
   },
   {
-    feature: "File sharing",
-    free: "Free-tier size and use limits; shares expire after 30 days",
-    supporter:
-      "Single-file uploads up to 500 MB; shares still expire after 30 days",
+    feature: "Hosted Menu PDF Uploads",
+    free: "Up to 50 MB per file; shares expire after 30 days",
+    supporter: "Single-file uploads up to 500 MB; shares expire after 30 days",
+  },
+  {
+    feature: "Scan Analytics & Rush-Hour Report",
+    free: "Live scan counter on edit dashboard",
+    supporter: "90-day Field Report, peak dining hours & CSV export",
   },
   {
     feature: "QRBuddy Passport",
@@ -64,28 +68,29 @@ const COMPARISON_ITEMS: ComparisonItem[] = [
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "Can I update my menu link without reprinting the QR?",
-    a: "Yes. Create an editable QR and keep its private edit link. You can change its destination while the code remains active. A static QR cannot be edited because its destination is encoded directly.",
+    q: "Can a restaurant menu link change without reprinting table cards?",
+    a: "Yes. Toggle 'Editable after print + Stats' below the URL input before downloading. QRBuddy mints an editable redirect link and saves its edit key locally (and in the 4-word Sovereign Passport) so the destination URL can change anytime while the code remains active. Static QRs encode the URL directly into the image and cannot be edited after printing.",
   },
   {
-    q: "What happens when the QRBuddy Passport expires?",
-    a: "The Passport ends after 365 days and does not renew automatically. Free features remain available. Editable QRs follow their own scan and expiry settings and depend on the QRBuddy redirect service.",
+    q: "What happens when the 1-year QRBuddy Passport ends?",
+    a: "The Passport runs for 365 days and never renews automatically. Free features stay available, static QR codes work forever on their own, and existing free-tier editable links continue operating within fair-use limits.",
   },
   {
-    q: "Does this work with online PDF menus and Square/Toast ordering?",
-    a: "Absolutely. Point your QR directly to your PDF file on Google Drive, Dropbox, your website, or your Square/Toast online ordering page.",
+    q: "Does this work with PDF menus, Square, Toast, and Google Drive links?",
+    a: "Yes. Paste any HTTPS link — a website menu, Square or Toast online ordering page, Google Drive PDF, or Notion page — or generate a batch ZIP of up to 50 table-specific ordering URLs.",
   },
   {
-    q: "Can I set scan or date limits?",
-    a: "Editable QRs can have a scan limit or expiry date. The redirect service also applies abuse controls; QRBuddy does not promise unlimited scans.",
+    q: "Can one printed QR code switch between breakfast and dinner menus automatically?",
+    a: "Yes. On an editable QR's management page (/edit), enable Time-of-Day Smart Routing to point morning scans to a breakfast or coffee menu and evening scans to a dinner or drinks list.",
   },
 ];
 
 export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/for/menus";
-  const title = "Restaurant & Cafe Menu QR Codes | QRBuddy";
+  const title =
+    "Restaurant & Café Menu QR Code Generator (No Monthly Fee) | QRBuddy";
   const description =
-    "Create styled static or editable QR codes for restaurant menus, ordering pages, and websites. Free features are available; the QRBuddy Passport raises selected limits.";
+    "Create print-ready static or editable QR codes for restaurant menus, coffee shops, and table ordering. Free vector SVG export, time-of-day menu routing, and zero subscription traps.";
 
   return (
     <>
@@ -96,29 +101,31 @@ export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="es"
         altHref="https://qrbuddy.app/es/menus"
-        ogTitle="Restaurant Menu QR Codes — QRBuddy"
-        ogImageAlt="Styled QR codes for restaurant menus"
+        ogTitle="Restaurant & Café Menu QR Codes — No Monthly Hostage Fees"
+        ogImageAlt="Styled QR codes for restaurant and cafe menus"
         themeColor="#2E7D32"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy Restaurant Menus"
+        jsonLdName="QRBuddy Restaurant Menu QR Studio"
         applicationCategory="BusinessApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="QRBuddy Passport, A$49 for 365 days, one payment with no automatic renewal"
+        offerDescription="QRBuddy Passport: A$49 (~$32 USD) for 365 days, one payment with no automatic renewal"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         badge="Hospitality & Dining"
-        title="Menu QR Codes That Are Easy to Update."
-        tagline="Create styled static codes or editable links for restaurant menus and ordering pages."
-        subtagline="Keep the private edit link for an editable QR so you can change its destination without reprinting."
+        title="Menu QR Codes Built for the Dining Room."
+        tagline="Mint permanent static menu QRs or editable links that swap from breakfast to dinner without reprinting table tents."
+        subtagline="Paste a menu URL below — export 3000px PNGs or print-shop Vector SVGs with zero account wall."
         defaultStyle="matcha"
-        defaultUrl="https://your-cafe.com/menu.pdf"
-        defaultCaption="MENU"
+        defaultUrl="https://brunswick-bistro.com/menu"
+        defaultCaption="VIEW MENU"
+        featuresTitle="Built for Cafés, Bars, Food Trucks & Print Shops"
+        faqTitle="Restaurant Menu QR Questions"
         valueCards={VALUE_CARDS}
-        comparisonTitle="Free QRBuddy and the QRBuddy Passport"
-        comparisonSubtitle="A clear look at included features and higher limits"
+        comparisonTitle="Free Menu Studio and the QRBuddy Passport"
+        comparisonSubtitle="Static codes and 5 editable links are free; the Passport unlocks 100 links and 90-day dining room analytics"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
         ctaLabel="Get QRBuddy Passport 🛂✨"

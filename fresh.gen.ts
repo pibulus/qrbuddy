@@ -15,18 +15,31 @@ import * as $edit from "./routes/edit.tsx";
 import * as $es_archivos from "./routes/es/archivos.tsx";
 import * as $es_bodas from "./routes/es/bodas.tsx";
 import * as $es_comparar from "./routes/es/comparar.tsx";
+import * as $es_escanear from "./routes/es/escanear.tsx";
+import * as $es_gs1 from "./routes/es/gs1.tsx";
 import * as $es_guia_impresion from "./routes/es/guia/impresion.tsx";
 import * as $es_index from "./routes/es/index.tsx";
 import * as $es_menus from "./routes/es/menus.tsx";
 import * as $es_musica from "./routes/es/musica.tsx";
 import * as $es_por_que from "./routes/es/por-que.tsx";
+import * as $es_restaurantes from "./routes/es/restaurantes.tsx";
+import * as $es_vcard from "./routes/es/vcard.tsx";
+import * as $es_vs_slug_ from "./routes/es/vs/[slug].tsx";
+import * as $es_wifi from "./routes/es/wifi.tsx";
 import * as $f_code_ from "./routes/f/[code].tsx";
+import * as $for_gs1 from "./routes/for/gs1.tsx";
+import * as $for_inspect from "./routes/for/inspect.tsx";
 import * as $for_lockers from "./routes/for/lockers.tsx";
 import * as $for_menus from "./routes/for/menus.tsx";
 import * as $for_music from "./routes/for/music.tsx";
+import * as $for_restaurants from "./routes/for/restaurants.tsx";
+import * as $for_vcard from "./routes/for/vcard.tsx";
 import * as $for_weddings from "./routes/for/weddings.tsx";
+import * as $for_wifi from "./routes/for/wifi.tsx";
+import * as $gs1 from "./routes/gs1.tsx";
 import * as $guide_printing from "./routes/guide/printing.tsx";
 import * as $index from "./routes/index.tsx";
+import * as $inspect from "./routes/inspect.tsx";
 import * as $lockers from "./routes/lockers.tsx";
 import * as $menus from "./routes/menus.tsx";
 import * as $music from "./routes/music.tsx";
@@ -35,8 +48,11 @@ import * as $privacy from "./routes/privacy.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
 import * as $terms from "./routes/terms.tsx";
+import * as $vcard from "./routes/vcard.tsx";
+import * as $vs_slug_ from "./routes/vs/[slug].tsx";
 import * as $weddings from "./routes/weddings.tsx";
 import * as $why from "./routes/why.tsx";
+import * as $wifi from "./routes/wifi.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $Analytics from "./islands/Analytics.tsx";
@@ -112,18 +128,31 @@ const manifest = {
     "./routes/es/archivos.tsx": $es_archivos,
     "./routes/es/bodas.tsx": $es_bodas,
     "./routes/es/comparar.tsx": $es_comparar,
+    "./routes/es/escanear.tsx": $es_escanear,
+    "./routes/es/gs1.tsx": $es_gs1,
     "./routes/es/guia/impresion.tsx": $es_guia_impresion,
     "./routes/es/index.tsx": $es_index,
     "./routes/es/menus.tsx": $es_menus,
     "./routes/es/musica.tsx": $es_musica,
     "./routes/es/por-que.tsx": $es_por_que,
+    "./routes/es/restaurantes.tsx": $es_restaurantes,
+    "./routes/es/vcard.tsx": $es_vcard,
+    "./routes/es/vs/[slug].tsx": $es_vs_slug_,
+    "./routes/es/wifi.tsx": $es_wifi,
     "./routes/f/[code].tsx": $f_code_,
+    "./routes/for/gs1.tsx": $for_gs1,
+    "./routes/for/inspect.tsx": $for_inspect,
     "./routes/for/lockers.tsx": $for_lockers,
     "./routes/for/menus.tsx": $for_menus,
     "./routes/for/music.tsx": $for_music,
+    "./routes/for/restaurants.tsx": $for_restaurants,
+    "./routes/for/vcard.tsx": $for_vcard,
     "./routes/for/weddings.tsx": $for_weddings,
+    "./routes/for/wifi.tsx": $for_wifi,
+    "./routes/gs1.tsx": $gs1,
     "./routes/guide/printing.tsx": $guide_printing,
     "./routes/index.tsx": $index,
+    "./routes/inspect.tsx": $inspect,
     "./routes/lockers.tsx": $lockers,
     "./routes/menus.tsx": $menus,
     "./routes/music.tsx": $music,
@@ -132,8 +161,11 @@ const manifest = {
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
     "./routes/terms.tsx": $terms,
+    "./routes/vcard.tsx": $vcard,
+    "./routes/vs/[slug].tsx": $vs_slug_,
     "./routes/weddings.tsx": $weddings,
     "./routes/why.tsx": $why,
+    "./routes/wifi.tsx": $wifi,
   },
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,

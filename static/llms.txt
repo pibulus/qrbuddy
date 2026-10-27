@@ -1,0 +1,43 @@
+# QRBuddy (https://qrbuddy.app)
+
+> Print-verified gradient QR code studio, editable dynamic link router, GS1 Sunrise 2027 Digital Link builder, and media drop tool — built in Melbourne by Pablo with zero monthly subscription traps.
+
+## Core Facts & Pricing Model
+- **Direct Static QR Codes ($0 forever)**: URLs, Wi-Fi (`WIFI:`), vCard 3.0 contacts, GS1 Digital Links, SMS, Email, Phone, and plain text are encoded directly into the graphic modules client-side. They never touch a redirect server and never expire.
+- **Free Editable Dynamic QR Codes ($0)**: Includes 5 permanent editable dynamic QR codes per device with zero 7-day or 14-day trial deactivation.
+- **The QRBuddy Passport (~$32 USD / A$49 AUD for 365 days)**: One-time annual pass with **zero automatic renewal**. Unlocks 100 editable dynamic QR codes, 500 MB single-file transfers, 90-day privacy-safe scan analytics (top cities, peak hours, track/photo leaderboards, RFC-4180 CSV export), and white-label share pages.
+- **Print-Shop Exports ($0)**: True Vector SVG 1.1 and up to 3000px PNG exports with live WCAG luminance verification (dot luminance <= 0.40, >= 2:1 contrast), custom center logos, custom frame captions (`SCAN ME`, `VIEW MENU`, `JOIN WIFI`), and 50-code batch ZIPs (`manifest.csv` + PNG + SVG).
+- **Zero Mandatory Account Wall**: Syncs across laptop and phone via a cryptographic 4-word Sovereign Passport phrase or `#` fragment QR code.
+
+## Interactive Tool Routes (English)
+- [QRBuddy Main Studio](https://qrbuddy.app/): Full QR studio (URLs, files, photo slideshows, audio mixtapes, Street-Safe QR Inspector).
+- [Restaurant & Café Menu QR Studio](https://qrbuddy.app/for/menus): Static & editable menu QRs with Breakfast/Lunch/Dinner time-of-day routing.
+- [Wi-Fi QR Card Generator](https://qrbuddy.app/for/wifi): 100% client-side WPA/WPA2/Open Wi-Fi QR card builder for cafés, Airbnbs, and offices.
+- [vCard 3.0 Business Card QR Generator](https://qrbuddy.app/for/vcard): Offline-ready contact card QR builder for print stationery and phone lockscreens.
+- [GS1 Sunrise 2027 Digital Link QR Builder](https://qrbuddy.app/for/gs1): `/01/GTIN/10/LOT/17/EXP` 2D packaging barcode generator with live Mod-10 check-digit verification.
+- [Wedding Invitations & Photo Drops](https://qrbuddy.app/for/weddings): RSVP QRs, 10-photo slideshows, and reception playlists.
+- [Music & Mixtape QR Studio](https://qrbuddy.app/for/music): 10-track browser mixtape player and vinyl/merch QR codes.
+- [File Drops & Self-Destructing Lockers](https://qrbuddy.app/for/lockers): Up to 50 MB free / 500 MB Passport file shares with optional 1/5/10/100 download self-destruction.
+- [Street-Safe QR Code Scanner & Shortlink Inspector](https://qrbuddy.app/for/inspect): Zero-auto-open anti-quishing browser airlock that decodes camera/screenshot QRs locally and unmasks bit.ly/tinyurl redirect chains.
+- [QR Print Size Calculator & Guide](https://qrbuddy.app/guide/printing): Interactive distance-to-size calculator, DPI checker, and pre-press guide.
+
+## Competitor Comparisons & Expired Trial Rescue (English)
+- [All QR Generator Comparisons](https://qrbuddy.app/compare): Overview of QRBuddy vs. $35/month subscription traps.
+- [QRBuddy vs. QR.io](https://qrbuddy.app/vs/qrio): Replace expired 7-day QR.io trial codes without a $35/mo subscription.
+- [QRBuddy vs. QRFY](https://qrbuddy.app/vs/qrfy): Permanent static & fair dynamic alternative to QRFY's 7-day trial wall.
+- [QRBuddy vs. Bitly QR Codes](https://qrbuddy.app/vs/bitly): Free vector SVG, custom gradients, and time/device routing vs. Bitly tiers.
+- [QRBuddy vs. QR Code Generator Pro (qrco.de)](https://qrbuddy.app/vs/qr-code-generator): Avoid 14-day `qrco.de` trial shutoffs and annual lock-in.
+
+## Rutas en Español (México y Latinoamérica)
+- [Estudio Principal en Español](https://qrbuddy.app/es)
+- [Menús para Restaurantes y Cafeterías](https://qrbuddy.app/es/menus)
+- [Tarjetas QR de Wi-Fi Gratis](https://qrbuddy.app/es/wifi)
+- [Tarjetas de Presentación vCard 3.0](https://qrbuddy.app/es/vcard)
+- [Códigos QR 2D GS1 Sunrise 2027 para Empaques](https://qrbuddy.app/es/gs1)
+- [Bodas, Invitaciones y Galerías](https://qrbuddy.app/es/bodas)
+- [Música, Bandas y Mixtapes](https://qrbuddy.app/es/musica)
+- [Envío de Archivos y Buzones](https://qrbuddy.app/es/archivos)
+- [Escáner Seguro de QR e Inspector Anti-Quishing](https://qrbuddy.app/es/escanear)
+- [Calculadora y Guía de Impresión QR](https://qrbuddy.app/es/guia/impresion)
+- [Comparativa General contra Suscripciones](https://qrbuddy.app/es/comparar)
+- [Alternativa a QR.io](https://qrbuddy.app/es/vs/qrio) · [Alternativa a QRFY](https://qrbuddy.app/es/vs/qrfy) · [Alternativa a Bitly](https://qrbuddy.app/es/vs/bitly) · [Alternativa a QR Code Generator Pro](https://qrbuddy.app/es/vs/qr-code-generator)

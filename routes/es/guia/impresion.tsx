@@ -44,65 +44,69 @@ export default function GuiaImpresionPage() {
         <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
 
         {/* JSON-LD Structured Data */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "TechArticle",
-                headline: "Calculadora de Tamaño QR y Guía de Impresión",
-                url: canonicalUrl,
-                image: "https://qrbuddy.app/og-card.png",
-                description: description,
-                inLanguage: "es",
-                author: {
-                  "@type": "Person",
-                  name: "Pablo",
-                  url: "https://madebypablo.app",
+        <script
+          type="application/ld+json"
+          // deno-lint-ignore react-no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "TechArticle",
+                  headline: "Calculadora de Tamaño QR y Guía de Impresión",
+                  url: canonicalUrl,
+                  image: "https://qrbuddy.app/og-card.png",
+                  description: description,
+                  inLanguage: "es",
+                  author: {
+                    "@type": "Person",
+                    name: "Pablo",
+                    url: "https://madebypablo.app",
+                  },
+                  publisher: {
+                    "@type": "Organization",
+                    name: "QRBuddy",
+                    url: "https://qrbuddy.app",
+                  },
                 },
-                publisher: {
-                  "@type": "Organization",
-                  name: "QRBuddy",
-                  url: "https://qrbuddy.app",
+                {
+                  "@type": "FAQPage",
+                  mainEntity: [
+                    {
+                      "@type": "Question",
+                      name:
+                        "¿Cuál es la fórmula para calcular el tamaño de impresión de un código QR?",
+                      acceptedAnswer: {
+                        "@type": "Answer",
+                        text:
+                          "Dividir la distancia entre 10 da una estimación inicial, no un mínimo garantizado. A 0.5 metros sugiere 5 cm. Usa un código mayor para contenido denso o poca luz y prueba una muestra impresa con los teléfonos previstos.",
+                      },
+                    },
+                    {
+                      "@type": "Question",
+                      name:
+                        "¿Por qué los códigos QR 'gratuitos' dejan de funcionar después de imprimirlos?",
+                      acceptedAnswer: {
+                        "@type": "Answer",
+                        text:
+                          "La imagen de un QR estático no vence por sí sola, pero su destino puede desaparecer. Los QR editables dependen del servicio de redirección y de sus límites o vencimiento. Revisa las condiciones antes de imprimir.",
+                      },
+                    },
+                    {
+                      "@type": "Question",
+                      name: "¿Debo imprimir en archivo vectorial SVG o en PNG?",
+                      acceptedAnswer: {
+                        "@type": "Answer",
+                        text:
+                          "SVG permite cambiar el tamaño sin pixelación y es útil para diseños impresos. PNG también sirve si tiene suficientes píxeles para el tamaño final. Prueba la impresión antes de una tirada grande.",
+                      },
+                    },
+                  ],
                 },
-              },
-              {
-                "@type": "FAQPage",
-                mainEntity: [
-                  {
-                    "@type": "Question",
-                    name:
-                      "¿Cuál es la fórmula para calcular el tamaño de impresión de un código QR?",
-                    acceptedAnswer: {
-                      "@type": "Answer",
-                      text:
-                        "Dividir la distancia entre 10 da una estimación inicial, no un mínimo garantizado. A 0.5 metros sugiere 5 cm. Usa un código mayor para contenido denso o poca luz y prueba una muestra impresa con los teléfonos previstos.",
-                    },
-                  },
-                  {
-                    "@type": "Question",
-                    name:
-                      "¿Por qué los códigos QR 'gratuitos' dejan de funcionar después de imprimirlos?",
-                    acceptedAnswer: {
-                      "@type": "Answer",
-                      text:
-                        "La imagen de un QR estático no vence por sí sola, pero su destino puede desaparecer. Los QR editables dependen del servicio de redirección y de sus límites o vencimiento. Revisa las condiciones antes de imprimir.",
-                    },
-                  },
-                  {
-                    "@type": "Question",
-                    name: "¿Debo imprimir en archivo vectorial SVG o en PNG?",
-                    acceptedAnswer: {
-                      "@type": "Answer",
-                      text:
-                        "SVG permite cambiar el tamaño sin pixelación y es útil para diseños impresos. PNG también sirve si tiene suficientes píxeles para el tamaño final. Prueba la impresión antes de una tirada grande.",
-                    },
-                  },
-                ],
-              },
-            ],
-          })}
-        </script>
+              ],
+            }),
+          }}
+        />
       </Head>
 
       <QrPrintGuideIsland isSpanish />

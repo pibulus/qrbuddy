@@ -19,78 +19,84 @@ export const handler: Handlers<PageData> = {
 
 const VALUE_CARDS: ValueCard[] = [
   {
-    icon: "📍",
-    title: "Galería de fotos del gran día",
+    icon: "💌",
+    title: "Confirmaciones, Mapas y Mesas de Regalos",
     desc:
-      "Arma una galería en QRBuddy con hasta 10 fotos. Tus invitados la ven o descargan al instante desde su celular sin instalar nada.",
+      "Conecta invitaciones al sitio de la boda, ubicación del salón o lista de regalos con un QR estático eterno o un enlace editable.",
   },
   {
-    icon: "🔗",
-    title: "Mixtape de audio para la fiesta",
+    icon: "📸",
+    title: "Galerías de hasta 10 Fotos",
     desc:
-      "Sube hasta 10 canciones para compartir las rolas de la boda en un reproductor web bonito. Los links duran 30 días.",
+      "Suelta hasta 10 fotos en el estudio para crear una galería web de 30 días lista para ver y descargar desde cualquier celular.",
   },
   {
-    icon: "🌸",
-    title: "Ubicación, horarios y mesa de regalos",
+    icon: "🎶",
+    title: "Mixtape de la Fiesta y SVG para Imprenta",
     desc:
-      "Crea un QR para el mapa del salón, el itinerario o las confirmaciones. Descárgalo en PNG o SVG listo para tus invitaciones.",
+      "Comparte una playlist de hasta 10 pistas (5 MB por pista) o descarga vectores SVG limpios para invitaciones impresas y tarjetas de mesa.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Códigos QR estáticos",
-    free: "Ilimitados; el destino queda codificado en el QR",
+    feature: "Códigos QR estáticos para invitaciones",
+    free: "Ilimitados; el destino queda grabado directo en el QR ($0)",
     supporter: "Incluidos",
   },
   {
-    feature: "Códigos QR editables",
-    free: "Disponibles dentro de los límites gratuitos",
-    supporter: "Límites de creación más amplios",
+    feature: "Enlaces dinámicos editables del evento",
+    free: "5 enlaces editables permanentes incluidos gratis",
+    supporter: "100 enlaces editables + portadas personalizadas",
   },
   {
-    feature: "Presentación de fotos o playlist",
-    free: "Hasta 10 fotos o pistas; audio de hasta 5 MB por archivo",
-    supporter: "Mismo límite; 500 MB aplica a un archivo individual",
+    feature: "Galería de fotos o playlist de audio",
+    free: "Hasta 10 fotos o pistas; audios de hasta 5 MB cada uno",
+    supporter: "Mismo tope múltiple; archivos individuales de hasta 500 MB",
   },
   {
-    feature: "Vencimiento del enlace del archivo",
+    feature: "Páginas limpias sin marca (White-Label)",
+    free: "Incluye sello discreto de QRBuddy al pie",
+    supporter: "Modo sin marca activable en un clic",
+  },
+  {
+    feature: "Vigencia de archivos alojados",
     free: "30 días",
     supporter: "30 días",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "No hace falta comprarlo",
+    free: "Sin compra necesaria",
     supporter:
-      "~$32 USD (A$49) por 365 días; un pago, sin renovación automática",
+      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
   },
 ];
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    q: "¿Los invitados pueden subir fotos a un álbum compartido?",
-    a: "QRBuddy no ofrece un álbum para que varios invitados suban fotos. Puedes crear y gestionar una presentación de hasta 10 fotos y compartir su enlace o QR para que los invitados la vean o descarguen.",
+    q: "¿Cómo funcionan las galerías de fotos para bodas en QRBuddy?",
+    a: "Las galerías permiten al organizador seleccionar y subir hasta 10 fotos para compartirlas en una presentación deslizable que los invitados ven o descargan al escanear el QR. Para recibir un archivo individual en un buzón protegido por PIN, está disponible la herramienta Buzón en Personalizar.",
   },
   {
-    q: "¿Puedo crear una presentación de fotos o playlist?",
-    a: "Sí. Un enlace puede incluir hasta 10 fotos o 10 pistas de audio. Cada audio debe medir hasta 5 MB; las fotos grandes pueden reducirse antes de compartirlas. Los enlaces vencen a los 30 días.",
+    q: "¿Se puede actualizar el enlace de confirmación o mapa después de imprimir las invitaciones?",
+    a: "Sí. Activando el botón 'Editable tras imprimir + Stats' antes de descargar el archivo SVG o PNG, el código impreso apunta a un enlace corto editable cuyo destino puede modificarse antes o después de la boda.",
   },
   {
-    q: "¿Puedo cambiar el enlace del evento después de imprimirlo?",
-    a: "Sí, si creas un QR editable y conservas su enlace privado de edición. Un QR estático no se puede cambiar porque el destino está codificado en la imagen.",
+    q: "¿Cuánto tiempo permanecen en línea las galerías de fotos y playlists?",
+    a: "Los archivos alojados, galerías de fotos y mixtapes permanecen activos durante 30 días. Los códigos QR estáticos o editables que apuntan a un sitio web externo de boda no tienen límite de 30 días.",
   },
   {
-    q: "¿Cuánto tiempo están disponibles las fotos y el audio?",
-    a: "Los enlaces para compartir archivos vencen a los 30 días. La limpieza se ejecuta a diario y puede tardar más; consulta el aviso de privacidad.",
+    q: "¿Sirven los archivos SVG para imprenta, serigrafía o grabado en papel?",
+    a: "Sí. El botón 'SVG' junto a 'Guardar PNG' descarga trazos vectoriales reales listos para abrir en Illustrator, InDesign, Affinity o Canva.",
   },
 ];
 
 export default function BodasEspanolPage({ data }: PageProps<PageData>) {
   const canonicalUrl = "https://qrbuddy.app/es/bodas";
-  const title = "Códigos QR para Bodas, Detalles y Contenido | QRBuddy";
+  const title =
+    "Códigos QR para Bodas, Invitaciones, Confirmaciones y Fotos | QRBuddy";
   const description =
-    "Crea códigos QR para sitios de boda y detalles del evento, además de presentaciones temporales de fotos y playlists alojadas por QRBuddy.";
+    "Crea códigos QR con estilo para invitaciones de boda, mapas, confirmaciones, galerías de 10 fotos y playlists. Exportación SVG vectorial gratis sin suscripciones.";
 
   return (
     <>
@@ -101,33 +107,34 @@ export default function BodasEspanolPage({ data }: PageProps<PageData>) {
         description={description}
         altLang="en"
         altHref="https://qrbuddy.app/for/weddings"
-        ogImageAlt="Códigos QR con estilo para los detalles de una boda"
+        ogTitle="Códigos QR para Bodas, Invitaciones y Galerías — QRBuddy"
+        ogImageAlt="Códigos QR con estilo para invitaciones y detalles de boda"
         themeColor="#BA5566"
         supabaseUrl={data?.supabaseUrl}
-        jsonLdName="QRBuddy para Bodas"
+        jsonLdName="QRBuddy Estudio de Bodas"
         applicationCategory="LifestyleApplication"
         price="49"
         priceCurrency="AUD"
-        offerDescription="Pasaporte QRBuddy: A$49 por 365 días, un pago sin renovación automática"
+        offerDescription="Pasaporte QRBuddy: A$49 (~$32 USD) por 365 días, un pago sin renovación automática"
         faqItems={FAQ_ITEMS}
       />
 
       <VerticalStudio
         lang="es"
-        badge="Bodas y celebraciones"
-        title="Un QR para los momentos que quieres compartir."
-        tagline="Comparte los detalles del evento, una pequeña presentación de fotos o una playlist con un solo escaneo."
-        subtagline="Las presentaciones y playlists admiten hasta 10 elementos y vencen a los 30 días. Cada audio puede medir hasta 5 MB; las fotos grandes pueden reducirse. Los invitados ven o descargan; no suben contenido."
+        badge="Bodas y Celebraciones"
+        title="Códigos QR para Bodas a la Altura de la Papelería."
+        tagline="Enlaza invitaciones con confirmaciones, mapas del salón, galerías de 10 fotos o playlists en un solo escaneo."
+        subtagline="Pega el enlace del evento o suelta fotos/audios abajo: exporta PNG de 3000px o SVG vectorial para imprenta."
         defaultStyle="blush"
-        defaultUrl="https://nuestraboda.love"
+        defaultUrl="https://nuestraboda.love/rsvp"
         defaultCaption="NUESTRO DÍA"
         homeUrl="/es"
-        homeLabel="← Volver al inicio"
-        featuresTitle="Códigos QR para compartir los detalles"
-        faqTitle="Preguntas frecuentes"
+        homeLabel="← Volver al estudio"
+        featuresTitle="Diseñado para Invitaciones, Mesas y Recuerdos"
+        faqTitle="Preguntas sobre Códigos QR para Bodas"
         valueCards={VALUE_CARDS}
-        comparisonTitle="QRBuddy gratis y el Pasaporte QRBuddy"
-        comparisonSubtitle="Límites de archivo y duración del enlace"
+        comparisonTitle="Estudio de Bodas Gratis y Pasaporte QRBuddy"
+        comparisonSubtitle="Los QRs estáticos y 5 links editables son gratis; el Pasaporte añade páginas sin marca y envíos de 500 MB"
         comparisonItems={COMPARISON_ITEMS}
         faqItems={FAQ_ITEMS}
         ctaLabel="Obtener Pasaporte QRBuddy 🛂✨"

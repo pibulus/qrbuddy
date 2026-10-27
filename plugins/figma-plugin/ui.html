@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QRBuddy Vector QR Studio</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <style>
+    :root {
+      --paper: #fffef7;
+      --cream: #fbf1e4;
+      --ink: #1e1714;
+      --coral: #ff9a8b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 12px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--cream);
+      border: 2px solid var(--ink);
+      border-radius: 12px;
+      padding: 8px 10px;
+      box-shadow: 2px 2px 0 var(--ink);
+      margin-bottom: 10px;
+    }
+    .header-title {
+      font-weight: 900;
+      font-size: 13px;
+    }
+    .header-sub {
+      font-size: 10px;
+      opacity: 0.7;
+      font-weight: 700;
+    }
+    .badge {
+      background: var(--paper);
+      border: 1.5px solid var(--ink);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .mode-btn {
+      padding: 7px 6px;
+      border-radius: 10px;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .label {
+      display: block;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+    .input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .preview-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--cream);
+      border: 2px solid var(--ink);
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .swatch {
+      height: 26px;
+      border-radius: 8px;
+      border: 2px solid var(--ink);
+      cursor: pointer;
+    }
+    .swatch.active {
+      box-shadow: 2px 2px 0 var(--ink);
+      transform: translate(-1px, -1px);
+    }
+    .cta-btn {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid var(--ink);
+      background: var(--coral);
+      color: var(--ink);
+      font-weight: 900;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+    .cta-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="header-title">QRBuddy Vector QR</div>
+      <div class="header-sub">True SVG 1.1 · Zero expiry</div>
+    </div>
+    <span class="badge">Print Ready</span>
+  </div>
+
+  <div class="mode-grid">
+    <button id="modeStatic" class="mode-btn active" type="button">🔒 Static · Free</button>
+    <button id="modeDynamic" class="mode-btn" type="button">⚡ Editable + Stats</button>
+  </div>
+
+  <label class="label" for="payloadInput">Destination URL or Text</label>
+  <input id="payloadInput" class="input" type="text" value="https://qrbuddy.app" />
+
+  <div class="preview-box" id="svgPreview"></div>
+
+  <span class="label">Luminance-Locked Palette</span>
+  <div class="swatches" id="swatchGrid"></div>
+
+  <label class="label" for="captionInput">Optional Frame Caption</label>
+  <input id="captionInput" class="input" type="text" maxlength="28" placeholder="e.g. SCAN MENU" />
+
+  <button id="insertBtn" class="cta-btn" type="button">✨ Drop Vector SVG on Canvas</button>
+
+  <script>
+    const PALETTES = [
+      { id: "ink", fg: "#1e1714", bg: "#fffef7", accent: "#ff6b6b" },
+      { id: "espresso", fg: "#2a1b15", bg: "#fbf1e4", accent: "#d97742" },
+      { id: "forest", fg: "#14281d", bg: "#f4f9f4", accent: "#2d6a4f" },
+      { id: "cobalt", fg: "#141b38", bg: "#f4f6fc", accent: "#3b5bdb" },
+      { id: "plum", fg: "#2b142c", bg: "#fcf4f9", accent: "#9c36b5" },
+      { id: "slate", fg: "#1a2426", bg: "#f2f7f7", accent: "#0c8599" }
+    ];
+
+    let state = {
+      mode: "static",
+      payload: "https://qrbuddy.app",
+      palette: PALETTES[0],
+      caption: ""
+    };
+
+    function escapeXml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function buildSvg(data, palette, caption) {
+      const qr = qrcode(0, "M");
+      qr.addData(data || "https://qrbuddy.app");
+      qr.make();
+      const count = qr.getModuleCount();
+      const quiet = 4;
+      const total = count + quiet * 2;
+      const size = 240;
+      const cell = size / total;
+      const hasCaption = Boolean(caption && caption.trim());
+      const bannerH = hasCaption ? 34 : 0;
+      const totalH = size + bannerH;
+
+      let paths = "";
+      for (let r = 0; r < count; r++) {
+        for (let c = 0; c < count; c++) {
+          const isFinder = (r < 7 && c < 7) || (r < 7 && c >= count - 7) || (r >= count - 7 && c < 7);
+          if (isFinder || !qr.isDark(r, c)) continue;
+          const x = ((c + quiet) * cell).toFixed(2);
+          const y = ((r + quiet) * cell).toFixed(2);
+          const w = cell.toFixed(2);
+          const rx = (cell * 0.35).toFixed(2);
+          paths += `<rect x="${x}" y="${y}" width="${w}" height="${w}" rx="${rx}" fill="${palette.fg}"/>`;
+        }
+      }
+
+      function finder(r0, c0) {
+        const x = ((c0 + quiet) * cell).toFixed(2);
+        const y = ((r0 + quiet) * cell).toFixed(2);
+        const outer = (7 * cell).toFixed(2);
+        const innerXY = ((c0 + quiet + 1) * cell).toFixed(2);
+        const innerY = ((r0 + quiet + 1) * cell).toFixed(2);
+        const inner = (5 * cell).toFixed(2);
+        const coreX = ((c0 + quiet + 2) * cell).toFixed(2);
+        const coreY = ((r0 + quiet + 2) * cell).toFixed(2);
+        const core = (3 * cell).toFixed(2);
+        return (
+          `<rect x="${x}" y="${y}" width="${outer}" height="${outer}" rx="${(cell*1.6).toFixed(2)}" fill="${palette.fg}"/>` +
+          `<rect x="${innerXY}" y="${innerY}" width="${inner}" height="${inner}" rx="${(cell*1.1).toFixed(2)}" fill="${palette.bg}"/>` +
+          `<rect x="${coreX}" y="${coreY}" width="${core}" height="${core}" rx="${(cell*0.8).toFixed(2)}" fill="${palette.accent}"/>`
+        );
+      }
+
+      const finders = finder(0, 0) + finder(0, count - 7) + finder(count - 7, 0);
+      const capMarkup = hasCaption
+        ? `<rect x="14" y="${size - 4}" width="${size - 28}" height="24" rx="12" fill="${palette.fg}"/>` +
+          `<text x="${size / 2}" y="${size + 12}" text-anchor="middle" fill="${palette.bg}" font-family="system-ui, sans-serif" font-size="11" font-weight="800">${escapeXml(caption.trim().toUpperCase())}</text>`
+        : "";
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${totalH}" width="${size}" height="${totalH}">` +
+        `<rect x="1.5" y="1.5" width="${size - 3}" height="${totalH - 3}" rx="16" fill="${palette.bg}" stroke="${palette.fg}" stroke-width="3"/>` +
+        finders + paths + capMarkup + `</svg>`;
+    }
+
+    function render() {
+      const preview = document.getElementById("svgPreview");
+      const svg = buildSvg(state.payload, state.palette, state.caption);
+      preview.innerHTML = svg;
+      const svgEl = preview.querySelector("svg");
+      if (svgEl) {
+        svgEl.style.width = "156px";
+        svgEl.style.height = "auto";
+      }
+    }
+
+    const swatchGrid = document.getElementById("swatchGrid");
+    PALETTES.forEach((p) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "swatch" + (p.id === state.palette.id ? " active" : "");
+      btn.style.background = `linear-gradient(135deg, ${p.bg} 48%, ${p.fg} 52%)`;
+      btn.onclick = () => {
+        state.palette = p;
+        document.querySelectorAll(".swatch").forEach((el) => el.classList.remove("active"));
+        btn.classList.add("active");
+        render();
+      };
+      swatchGrid.appendChild(btn);
+    });
+
+    document.getElementById("modeStatic").onclick = () => {
+      state.mode = "static";
+      document.getElementById("modeStatic").classList.add("active");
+      document.getElementById("modeDynamic").classList.remove("active");
+    };
+    document.getElementById("modeDynamic").onclick = () => {
+      state.mode = "dynamic";
+      document.getElementById("modeDynamic").classList.add("active");
+      document.getElementById("modeStatic").classList.remove("active");
+    };
+    document.getElementById("payloadInput").oninput = (e) => {
+      state.payload = e.target.value;
+      render();
+    };
+    document.getElementById("captionInput").oninput = (e) => {
+      state.caption = e.target.value;
+      render();
+    };
+    document.getElementById("insertBtn").onclick = async () => {
+      let targetUrl = state.payload.trim() || "https://qrbuddy.app";
+      if (state.mode === "dynamic") {
+        try {
+          const res = await fetch("https://qrbuddy.app/api/redirect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: targetUrl })
+          });
+          const data = await res.json();
+          if (res.ok && data.shortUrl) targetUrl = data.shortUrl;
+        } catch (_e) {
+          // Fallback to static URL if offline
+        }
+      }
+      const svg = buildSvg(targetUrl, state.palette, state.caption);
+      parent.postMessage({
+        pluginMessage: {
+          type: "insert-svg",
+          svg,
+          name: `QRBuddy (${targetUrl.slice(0, 28)})`
+        }
+      }, "*");
+    };
+
+    render();
+  </script>
+</body>
+</html>

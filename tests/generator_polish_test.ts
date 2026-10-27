@@ -28,6 +28,24 @@ import {
   getThemeStylesFor,
 } from "../islands/FileSlideshow.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
+import {
+  buildGs1DigitalLink,
+  computeGs1CheckDigit,
+  validateAndNormalizeGtin,
+} from "../utils/gs1-digital-link.ts";
+import {
+  buildQrSvgString,
+  toSvgDataUrl,
+  validateCanvaSvgCompliance,
+  VECTOR_PALETTES,
+} from "../utils/qr-vector-svg.ts";
+import {
+  COMPETITOR_SLUGS,
+  COMPETITORS,
+  getComparisonNavPills,
+  isValidCompetitorSlug,
+} from "../utils/comparisons.ts";
+import { getLanguageSwitchHref } from "../utils/i18n.ts";
 
 Deno.test("escapeXml - escapes XML special characters safely", () => {
   assertEquals(escapeXml("hello world"), "hello world");
@@ -562,4 +580,135 @@ Deno.test("FileSlideshow & TEXT_CARD_THEMES - cover all 10 styles with daylight 
     assert(cardClass.includes("border-4"));
   }
   assert(TEXT_CARD_THEMES.brutalist);
+});
+
+Deno.test("GS1 Digital Link - computes Mod-10 check digits and validates GTIN-8/12/13/14", () => {
+  // Valid GTIN-14: 09312345678907 (check digit 7)
+  assertEquals(computeGs1CheckDigit("0931234567890"), 7);
+  const valid14 = validateAndNormalizeGtin("09312345678907");
+  assertEquals(valid14.valid, true);
+  assertEquals(valid14.normalizedGtin14, "09312345678907");
+  assertEquals(valid14.expectedCheckDigit, 7);
+
+  // Valid EAN-13: 9312345678907 -> normalized to 14 digits with leading 0
+  const valid13 = validateAndNormalizeGtin("9312345678907");
+  assertEquals(valid13.valid, true);
+  assertEquals(valid13.normalizedGtin14, "09312345678907");
+
+  // Invalid check digit (ends in 4 instead of 7)
+  const badCheck = validateAndNormalizeGtin("09312345678904");
+  assertEquals(badCheck.valid, false);
+  assertEquals(badCheck.expectedCheckDigit, 7);
+  assertEquals(badCheck.providedCheckDigit, 4);
+
+  // Invalid length (10 digits)
+  const badLen = validateAndNormalizeGtin("1234567890");
+  assertEquals(badLen.valid, false);
+
+  // Full GS1 Digital Link URI assembly
+  const link = buildGs1DigitalLink({
+    domain: "solbotanicals.co",
+    gtin: "9312345678907",
+    lot: "BATCH-04",
+    expiry: "271231",
+    serial: "SN99",
+  });
+  assertEquals(
+    link,
+    "https://solbotanicals.co/01/09312345678907/10/BATCH-04/21/SN99/17/271231",
+  );
+});
+
+Deno.test("Pure-TS Vector SVG Builder - generates Canva & Figma compliant SVG 1.1 across all palettes", () => {
+  for (const [key, palette] of Object.entries(VECTOR_PALETTES)) {
+    // Luminance floor check on vector palettes
+    assert(
+      relativeLuminance(palette.c1) <= 0.40,
+      `VECTOR_PALETTES.${key}.c1 luminance > 0.40`,
+    );
+    assert(
+      relativeLuminance(palette.c2) <= 0.40,
+      `VECTOR_PALETTES.${key}.c2 luminance > 0.40`,
+    );
+
+    const svgFramed = buildQrSvgString({
+      data: "https://qrbuddy.app/for/menus",
+      palette: key,
+      caption: "SCAN ME",
+    });
+    const complianceFramed = validateCanvaSvgCompliance(svgFramed);
+    assertEquals(
+      complianceFramed.valid,
+      true,
+      `Framed SVG for ${key} failed compliance: ${
+        complianceFramed.errors.join(", ")
+      }`,
+    );
+    assert(svgFramed.includes("SCAN ME"));
+
+    const svgUnframed = buildQrSvgString({
+      data: "https://qrbuddy.app",
+      palette: key,
+      caption: "",
+    });
+    const complianceUnframed = validateCanvaSvgCompliance(svgUnframed);
+    assertEquals(complianceUnframed.valid, true);
+    assertEquals(svgUnframed.includes("<text"), false);
+
+    const dataUrl = toSvgDataUrl(svgUnframed);
+    assert(dataUrl.startsWith("data:image/svg+xml;base64,"));
+  }
+});
+
+Deno.test("Competitor Comparisons & i18n - complete EN/ES coverage and Sovereign Voice compliance", () => {
+  assertEquals(COMPETITOR_SLUGS.length, 4);
+  for (const slug of COMPETITOR_SLUGS) {
+    assert(isValidCompetitorSlug(slug));
+    const entry = COMPETITORS[slug];
+    assert(entry);
+    for (const locale of ["en", "es"] as const) {
+      const copy = entry[locale];
+      assert(copy.valueCards.length >= 3);
+      assert(copy.comparisonItems.length >= 5);
+      assert(copy.faqItems.length >= 3);
+
+      // Verify Sovereign Voice on English copy: zero "you" or "your"
+      if (locale === "en") {
+        const allText = [
+          copy.title,
+          copy.tagline,
+          copy.subtagline,
+          ...copy.valueCards.map((c) => `${c.title} ${c.desc}`),
+          ...copy.comparisonItems.map((i) =>
+            `${i.feature} ${i.free} ${i.supporter}`
+          ),
+          ...copy.faqItems.map((f) => `${f.q} ${f.a}`),
+        ].join(" ");
+        assertEquals(
+          /\b(you|your|yours)\b/i.test(allText),
+          false,
+          `Competitor ${slug} EN copy contains second-person pronoun`,
+        );
+      }
+    }
+  }
+
+  assertEquals(getComparisonNavPills("en", "qrio").length, 5);
+  assertEquals(getComparisonNavPills("es", "bitly").length, 5);
+
+  // Verify bidirectional EN <-> ES route switching for all new tool & vs routes
+  const pairs: [string, string][] = [
+    ["/for/wifi", "/es/wifi"],
+    ["/for/vcard", "/es/vcard"],
+    ["/for/gs1", "/es/gs1"],
+    ["/for/inspect", "/es/escanear"],
+    ["/vs/qrio", "/es/vs/qrio"],
+    ["/vs/qrfy", "/es/vs/qrfy"],
+    ["/vs/bitly", "/es/vs/bitly"],
+    ["/vs/qr-code-generator", "/es/vs/qr-code-generator"],
+  ];
+  for (const [enPath, esPath] of pairs) {
+    assertEquals(getLanguageSwitchHref(enPath, "es"), esPath);
+    assertEquals(getLanguageSwitchHref(esPath, "en"), enPath);
+  }
 });
