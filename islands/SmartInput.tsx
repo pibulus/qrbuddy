@@ -111,12 +111,36 @@ export default function SmartInput(
   const [createHasUpdates, setCreateHasUpdates] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
 
-  // Listen for open library requests
+  // Listen for open library requests & ?library=1 query param
   useEffect(() => {
-    const handleOpenLibrary = () => setShowLibrary(true);
+    const g = globalThis as typeof globalThis & {
+      __qrbLibraryListener?: boolean;
+    };
+    g.__qrbLibraryListener = true;
+
+    const handleOpenLibrary = () => {
+      setIsCreateModalOpen(false);
+      setShowHistory(false);
+      setShowReader(false);
+      setShowLibrary(true);
+    };
     globalThis.addEventListener("qrb-open-library", handleOpenLibrary);
-    return () =>
+
+    const params = new URLSearchParams(globalThis.location?.search ?? "");
+    if (params.has("library")) {
+      handleOpenLibrary();
+      params.delete("library");
+      const qs = params.toString();
+      const nextUrl = `${globalThis.location.pathname}${
+        qs ? `?${qs}` : ""
+      }${globalThis.location.hash}`;
+      globalThis.history?.replaceState?.(null, "", nextUrl);
+    }
+
+    return () => {
+      g.__qrbLibraryListener = false;
       globalThis.removeEventListener("qrb-open-library", handleOpenLibrary);
+    };
   }, []);
 
   // Report modal state changes
@@ -188,6 +212,7 @@ export default function SmartInput(
       batchUrls,
       logoUrl,
       qrStyle,
+      customStyle,
     });
 
   const { isCreatingBucket, createTextBucket, createBucket, uploadToBucket } =

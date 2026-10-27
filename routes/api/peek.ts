@@ -3,7 +3,10 @@ import { Handlers } from "$fresh/server.ts";
 const MAX_REDIRECTS = 5;
 
 export function isPrivateHost(hostname: string): boolean {
-  const lower = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  const lower = hostname
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.+$/, "");
   if (
     lower === "localhost" ||
     lower.endsWith(".local") ||
@@ -28,10 +31,12 @@ export function isPrivateHost(hostname: string): boolean {
     if (a === 100 && b >= 64 && b <= 127) return true; // Carrier-grade NAT
   }
 
-  // Check IPv6 loopback / unique local / link-local
+  // Check IPv6 loopback / unique local / link-local / IPv4-mapped IPv6
   if (
     lower === "::1" ||
     lower === "::" ||
+    lower.startsWith("::ffff:") ||
+    lower.startsWith("0:0:0:0:0:ffff:") ||
     lower.startsWith("fc") ||
     lower.startsWith("fd") ||
     lower.startsWith("fe80:")
@@ -42,8 +47,16 @@ export function isPrivateHost(hostname: string): boolean {
 }
 
 export function buildScreenshotUrl(finalUrl: string): string {
+  let cleanUrl = finalUrl;
+  try {
+    const parsed = new URL(finalUrl);
+    parsed.hash = "";
+    cleanUrl = parsed.href;
+  } catch {
+    // Keep original if unparseable
+  }
   return `https://s.wordpress.com/mshots/v1/${
-    encodeURIComponent(finalUrl)
+    encodeURIComponent(cleanUrl)
   }?w=640&h=400`;
 }
 
@@ -157,6 +170,8 @@ export const handler: Handlers = {
     let parsedTarget: URL;
     try {
       parsedTarget = new URL(target.trim());
+      // Never forward client #hash fragments (e.g. #passport=...) to upstream servers or mshots
+      parsedTarget.hash = "";
       if (
         parsedTarget.protocol !== "http:" && parsedTarget.protocol !== "https:"
       ) {
@@ -224,6 +239,7 @@ export const handler: Handlers = {
             let nextUrl: URL;
             try {
               nextUrl = new URL(location, currentUrl.href);
+              nextUrl.hash = "";
             } catch {
               return new Response(
                 JSON.stringify({
@@ -272,29 +288,75 @@ export const handler: Handlers = {
 
           break;
         }
-      } finally {
-        clearTimeout(timeout);
-      }
 
-      if (!response) {
-        throw new Error("No response received");
-      }
-
-      const finalUrl = currentUrl.href;
-      const finalUrlObj = new URL(finalUrl);
-      const isRedirected = redirectChain.length > 1 ||
-        finalUrlObj.origin !== parsedTarget.origin ||
-        finalUrlObj.pathname !== parsedTarget.pathname;
-      const isHttps = finalUrlObj.protocol === "https:";
-      const statusCode = response.status;
-
-      const contentType = response.headers.get("content-type") || "";
-      if (!contentType.includes("text/html")) {
-        try {
-          await response.body?.cancel();
-        } catch {
-          // ignore
+        if (!response) {
+          throw new Error("No response received");
         }
+
+        const finalUrl = currentUrl.href;
+        const finalUrlObj = new URL(finalUrl);
+        const isRedirected = redirectChain.length > 1 ||
+          finalUrlObj.origin !== parsedTarget.origin ||
+          finalUrlObj.pathname !== parsedTarget.pathname;
+        const isHttps = finalUrlObj.protocol === "https:";
+        const statusCode = response.status;
+
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("text/html")) {
+          try {
+            await response.body?.cancel();
+          } catch {
+            // ignore
+          }
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              url: parsedTarget.href,
+              finalUrl,
+              domain: finalUrlObj.hostname,
+              isRedirected,
+              redirectChain,
+              isHttps,
+              statusCode,
+              title: finalUrlObj.hostname,
+              description: contentType
+                ? `Resource type: ${contentType.split(";")[0]}`
+                : "",
+              image: null,
+              screenshotUrl: null,
+            }),
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "public, max-age=300",
+              },
+            },
+          );
+        }
+
+        // Stream up to 64KB (still governed by controller.signal timeout)
+        const reader = response.body?.getReader();
+        let html = "";
+        if (reader) {
+          const decoder = new TextDecoder();
+          let bytesRead = 0;
+          const maxBytes = 64 * 1024;
+          while (bytesRead < maxBytes) {
+            const { done, value } = await reader.read();
+            if (done || !value) break;
+            bytesRead += value.length;
+            html += decoder.decode(value, { stream: true });
+            if (html.includes("</head>")) break;
+          }
+          try {
+            await reader.cancel();
+          } catch {
+            // ignore
+          }
+        }
+
+        const meta = extractMeta(html, finalUrl);
+
         return new Response(
           JSON.stringify({
             ok: true,
@@ -305,12 +367,10 @@ export const handler: Handlers = {
             redirectChain,
             isHttps,
             statusCode,
-            title: finalUrlObj.hostname,
-            description: contentType
-              ? `Resource type: ${contentType.split(";")[0]}`
-              : "",
-            image: null,
-            screenshotUrl: null,
+            title: meta.title || finalUrlObj.hostname,
+            description: meta.description,
+            image: meta.image,
+            screenshotUrl: buildScreenshotUrl(finalUrl),
           }),
           {
             headers: {
@@ -319,53 +379,9 @@ export const handler: Handlers = {
             },
           },
         );
+      } finally {
+        clearTimeout(timeout);
       }
-
-      // Stream up to 64KB
-      const reader = response.body?.getReader();
-      let html = "";
-      if (reader) {
-        const decoder = new TextDecoder();
-        let bytesRead = 0;
-        const maxBytes = 64 * 1024;
-        while (bytesRead < maxBytes) {
-          const { done, value } = await reader.read();
-          if (done || !value) break;
-          bytesRead += value.length;
-          html += decoder.decode(value, { stream: true });
-          if (html.includes("</head>")) break;
-        }
-        try {
-          await reader.cancel();
-        } catch {
-          // ignore
-        }
-      }
-
-      const meta = extractMeta(html, finalUrl);
-
-      return new Response(
-        JSON.stringify({
-          ok: true,
-          url: parsedTarget.href,
-          finalUrl,
-          domain: finalUrlObj.hostname,
-          isRedirected,
-          redirectChain,
-          isHttps,
-          statusCode,
-          title: meta.title || finalUrlObj.hostname,
-          description: meta.description,
-          image: meta.image,
-          screenshotUrl: buildScreenshotUrl(finalUrl),
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "public, max-age=300",
-          },
-        },
-      );
     } catch (_err) {
       // Fallback gracefully on timeout or network error
       const finalUrlObj = currentUrl;

@@ -8,6 +8,12 @@ import { addToast } from "../islands/ToastManager.tsx";
 import { reportFailure } from "../utils/report-failure.ts";
 
 import { QR_STYLES } from "../utils/qr-styles.ts";
+import type {
+  CornerDotShape,
+  CornerSquareShape,
+  DotShape,
+  QRStyle,
+} from "../types/qr-types.ts";
 
 export type BatchExportFormat = "png" | "svg" | "both";
 
@@ -110,10 +116,11 @@ interface UseBatchGeneratorProps {
   batchUrls: string;
   logoUrl: Signal<string>;
   qrStyle?: Signal<string>;
+  customStyle?: Signal<QRStyle | null>;
 }
 
 export function useBatchGenerator(
-  { batchUrls, logoUrl, qrStyle }: UseBatchGeneratorProps,
+  { batchUrls, logoUrl, qrStyle, customStyle }: UseBatchGeneratorProps,
 ) {
   const [isGeneratingBatch, setIsGeneratingBatch] = useState(false);
   const [batchProgress, setBatchProgress] = useState(0);
@@ -131,8 +138,10 @@ export function useBatchGenerator(
       setBatchProgress(0);
       haptics.medium();
 
-      const styleKey = (qrStyle?.value as keyof typeof QR_STYLES) || "sunset";
-      const styleConfig = QR_STYLES[styleKey] || QR_STYLES.sunset;
+      const styleKey = qrStyle?.value || "sunset";
+      const styleConfig: QRStyle = styleKey === "custom" && customStyle?.value
+        ? customStyle.value
+        : (QR_STYLES[styleKey as keyof typeof QR_STYLES] || QR_STYLES.sunset);
 
       const includePng = format === "png" || format === "both";
       const includeSvg = format === "svg" || format === "both";
@@ -143,34 +152,40 @@ export function useBatchGenerator(
         height: 1000,
         image: logoUrl.value || undefined,
         qrOptions: {
-          errorCorrectionLevel: "Q" as const,
+          errorCorrectionLevel: (logoUrl.value ? "H" : "Q") as "H" | "Q",
         },
         dotsOptions: {
-          type: styleConfig.dots.shape || "rounded",
-          ...("gradient" in styleConfig.dots
+          type: (styleConfig.dots.shape || "rounded") as DotShape,
+          ...("gradient" in styleConfig.dots && styleConfig.dots.gradient
             ? { gradient: styleConfig.dots.gradient }
             : { color: styleConfig.dots.color }),
         },
         backgroundOptions: {
-          ...("gradient" in styleConfig.background
+          ...("gradient" in styleConfig.background &&
+              styleConfig.background.gradient
             ? { gradient: styleConfig.background.gradient }
             : { color: styleConfig.background.color }),
         },
         cornersSquareOptions: {
-          type: styleConfig.cornersSquare.shape || "extra-rounded",
-          ...("gradient" in styleConfig.cornersSquare
+          type: (styleConfig.cornersSquare?.shape ||
+            "extra-rounded") as CornerSquareShape,
+          ...(styleConfig.cornersSquare &&
+              "gradient" in styleConfig.cornersSquare &&
+              styleConfig.cornersSquare.gradient
             ? { gradient: styleConfig.cornersSquare.gradient }
-            : { color: styleConfig.cornersSquare.color }),
+            : { color: styleConfig.cornersSquare?.color }),
         },
         cornersDotOptions: {
-          type: styleConfig.cornersDot.shape || "dot",
-          ...("gradient" in styleConfig.cornersDot
+          type: (styleConfig.cornersDot?.shape || "dot") as CornerDotShape,
+          ...(styleConfig.cornersDot && "gradient" in styleConfig.cornersDot &&
+              styleConfig.cornersDot.gradient
             ? { gradient: styleConfig.cornersDot.gradient }
-            : { color: styleConfig.cornersDot.color }),
+            : { color: styleConfig.cornersDot?.color }),
         },
         imageOptions: {
           crossOrigin: "anonymous",
           margin: 10,
+          hideBackgroundDots: true,
         },
       };
 

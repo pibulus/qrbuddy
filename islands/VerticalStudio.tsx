@@ -214,8 +214,10 @@ export default function VerticalStudio({
             bucketUrl={bucketUrl}
             logoUrl={logoUrl}
             qrStyle={style}
+            customStyle={customStyle}
             frameConfig={frameConfig}
             onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
+            lang={locale}
           />
         </div>
 

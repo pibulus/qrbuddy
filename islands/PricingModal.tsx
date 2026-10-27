@@ -215,6 +215,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
         );
         if (data.license && setSupporterPass(data.license)) {
           setHasPass(true);
+          setPassport(getOrCreatePassport());
           try {
             clearPendingCheckout();
           } catch {
@@ -378,13 +379,20 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
 
   const openLibrary = () => {
     closePricingModal();
-    setTimeout(
-      () =>
-        globalThis.dispatchEvent(
-          new CustomEvent("qrb-open-library"),
-        ),
-      60,
-    );
+    const g = globalThis as typeof globalThis & {
+      __qrbLibraryListener?: boolean;
+    };
+    if (g.__qrbLibraryListener) {
+      setTimeout(
+        () =>
+          globalThis.dispatchEvent(
+            new CustomEvent("qrb-open-library"),
+          ),
+        60,
+      );
+    } else if (typeof globalThis.location !== "undefined") {
+      globalThis.location.href = isSpanish ? "/es?library=1" : "/?library=1";
+    }
   };
 
   const expiry = hasPass ? supporterPassExpiry() : null;

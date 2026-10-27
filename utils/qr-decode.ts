@@ -119,57 +119,61 @@ export async function decodeQRFromFile(file: File): Promise<string | null> {
     return await decodeWithZXing(file);
   }
 
-  // 1. Fast native OS/browser vision check if available
-  const nativeHit = await detectWithNativeBarcodeDetector(bitmap);
-  if (nativeHit) return nativeHit;
+  try {
+    // 1. Fast native OS/browser vision check if available
+    const nativeHit = await detectWithNativeBarcodeDetector(bitmap);
+    if (nativeHit) return nativeHit;
 
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return await decodeWithZXing(file);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return await decodeWithZXing(file);
 
-  const maxDim = Math.max(bitmap.width, bitmap.height);
-  const targets = [...new Set(SCALE_TARGETS.map((t) => Math.min(t, maxDim)))];
+    const maxDim = Math.max(bitmap.width, bitmap.height);
+    const targets = [...new Set(SCALE_TARGETS.map((t) => Math.min(t, maxDim)))];
 
-  // 2. Multi-scale jsQR + zxing-wasm on Canvas ImageData
-  for (const target of targets) {
-    const scale = target / maxDim;
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    // 2. Multi-scale jsQR + zxing-wasm on Canvas ImageData
+    for (const target of targets) {
+      const scale = target / maxDim;
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: "attemptBoth",
-    });
-    if (code?.data) return code.data;
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "attemptBoth",
+      });
+      if (code?.data) return code.data;
 
-    const zxingHit = await decodeWithZXing(imageData);
-    if (zxingHit) return zxingHit;
+      const zxingHit = await decodeWithZXing(imageData);
+      if (zxingHit) return zxingHit;
+    }
+
+    // 3. Center-crop fallback for photos where the QR sticker is small in the middle
+    const minSide = Math.min(bitmap.width, bitmap.height);
+    if (minSide >= 300) {
+      const cropSize = Math.round(minSide * 0.6);
+      const sx = Math.round((bitmap.width - cropSize) / 2);
+      const sy = Math.round((bitmap.height - cropSize) / 2);
+      const outSize = Math.min(640, cropSize);
+      canvas.width = outSize;
+      canvas.height = outSize;
+      ctx.drawImage(bitmap, sx, sy, cropSize, cropSize, 0, 0, outSize, outSize);
+      const croppedData = ctx.getImageData(0, 0, outSize, outSize);
+
+      const croppedJsQr = jsQR(croppedData.data, outSize, outSize, {
+        inversionAttempts: "attemptBoth",
+      });
+      if (croppedJsQr?.data) return croppedJsQr.data;
+
+      const croppedZxing = await decodeWithZXing(croppedData);
+      if (croppedZxing) return croppedZxing;
+    }
+
+    // 4. Final raw file fallback
+    return await decodeWithZXing(file);
+  } finally {
+    bitmap.close?.();
   }
-
-  // 3. Center-crop fallback for photos where the QR sticker is small in the middle
-  const minSide = Math.min(bitmap.width, bitmap.height);
-  if (minSide >= 300) {
-    const cropSize = Math.round(minSide * 0.6);
-    const sx = Math.round((bitmap.width - cropSize) / 2);
-    const sy = Math.round((bitmap.height - cropSize) / 2);
-    const outSize = Math.min(640, cropSize);
-    canvas.width = outSize;
-    canvas.height = outSize;
-    ctx.drawImage(bitmap, sx, sy, cropSize, cropSize, 0, 0, outSize, outSize);
-    const croppedData = ctx.getImageData(0, 0, outSize, outSize);
-
-    const croppedJsQr = jsQR(croppedData.data, outSize, outSize, {
-      inversionAttempts: "attemptBoth",
-    });
-    if (croppedJsQr?.data) return croppedJsQr.data;
-
-    const croppedZxing = await decodeWithZXing(croppedData);
-    if (croppedZxing) return croppedZxing;
-  }
-
-  // 4. Final raw file fallback
-  return await decodeWithZXing(file);
 }
 
 /**
@@ -234,8 +238,12 @@ export async function checkBlobScannability(
   probe.width = SIZE;
   probe.height = SIZE;
   const ctx = probe.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return null;
+  if (!ctx) {
+    bitmap.close?.();
+    return null;
+  }
   ctx.drawImage(bitmap, 0, 0, SIZE, SIZE);
+  bitmap.close?.();
 
   let imageData: ImageData;
   try {

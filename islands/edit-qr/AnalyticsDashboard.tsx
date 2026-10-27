@@ -189,12 +189,12 @@ export function formatRelativeVisit(
 }
 
 export function buildSevenDayActivity(
-  sparkline: number[],
+  sparkline: number[] | undefined,
   nowMs = Date.now(),
 ): DayActivityBar[] {
   const normalized = Array.from(
     { length: 7 },
-    (_, i) => Math.max(0, Number(sparkline[i] ?? 0)),
+    (_, i) => Math.max(0, Number(sparkline?.[i] ?? 0) || 0),
   );
   const peak = Math.max(1, ...normalized);
 
@@ -223,18 +223,21 @@ export function buildSevenDayActivity(
 
 function buildThirtyDayActivity(
   sparkline30d: number[] | undefined,
-  fallback7d: number[],
+  fallback7d: number[] | undefined,
   nowMs = Date.now(),
 ): DayActivityBar[] {
   const source = Array.isArray(sparkline30d) && sparkline30d.length === 30
     ? sparkline30d
     : [
       ...new Array(23).fill(0),
-      ...Array.from({ length: 7 }, (_, i) => Number(fallback7d[i] ?? 0)),
+      ...Array.from(
+        { length: 7 },
+        (_, i) => Number(fallback7d?.[i] ?? 0) || 0,
+      ),
     ];
   const normalized = Array.from(
     { length: 30 },
-    (_, i) => Math.max(0, Number(source[i] ?? 0)),
+    (_, i) => Math.max(0, Number(source[i] ?? 0) || 0),
   );
   const peak = Math.max(1, ...normalized);
 
@@ -565,17 +568,17 @@ export default function AnalyticsDashboard(
       {/* Device Breakdown Pills */}
       <div class="flex flex-wrap items-center gap-2 text-xs font-black text-black">
         <span class="bg-qr-cream border-2 border-black px-3 py-1.5 rounded-full">
-          📱 iOS: {analytics.devices.ios}
+          📱 iOS: {analytics.devices?.ios ?? 0}
         </span>
         <span class="bg-qr-cream border-2 border-black px-3 py-1.5 rounded-full">
-          🤖 Android: {analytics.devices.android}
+          🤖 Android: {analytics.devices?.android ?? 0}
         </span>
         <span class="bg-qr-cream border-2 border-black px-3 py-1.5 rounded-full">
-          💻 Desktop: {analytics.devices.desktop}
+          💻 Desktop: {analytics.devices?.desktop ?? 0}
         </span>
-        {analytics.devices.other > 0 && (
+        {(analytics.devices?.other ?? 0) > 0 && (
           <span class="bg-qr-cream border-2 border-black px-3 py-1.5 rounded-full">
-            🌐 Other: {analytics.devices.other}
+            🌐 Other: {analytics.devices?.other ?? 0}
           </span>
         )}
       </div>

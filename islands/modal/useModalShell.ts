@@ -22,6 +22,9 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), ' +
   'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+let openModalCount = 0;
+let savedBodyOverflow = "";
+
 export interface UseModalShellOptions {
   /** Parent-owned open state (boolean or signal.value). */
   open: boolean;
@@ -156,7 +159,10 @@ export function useModalShell(
     lastFocused.current = document.activeElement;
     dialogRef.current?.focus();
 
-    const prevOverflow = document.body.style.overflow;
+    if (openModalCount === 0) {
+      savedBodyOverflow = document.body.style.overflow;
+    }
+    openModalCount += 1;
     document.body.style.overflow = "hidden";
 
     const onKeydown = (e: KeyboardEvent) => {
@@ -172,7 +178,10 @@ export function useModalShell(
 
     return () => {
       document.removeEventListener("keydown", onKeydown);
-      document.body.style.overflow = prevOverflow;
+      openModalCount = Math.max(0, openModalCount - 1);
+      if (openModalCount === 0) {
+        document.body.style.overflow = savedBodyOverflow;
+      }
       if (closeTimer.current != null) {
         clearTimeout(closeTimer.current);
         closeTimer.current = null;

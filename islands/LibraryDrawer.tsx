@@ -22,6 +22,7 @@ import {
 } from "../utils/history.ts";
 import { exportSyncBundle, importSyncBundle } from "../utils/sync-phrase.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
+import { isPlusLibraryEnabled } from "../utils/auth.ts";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
@@ -131,6 +132,7 @@ export default function LibraryDrawer(
   }, [isOpen]);
 
   const loadLibraryData = async (query = "") => {
+    if (!isPlusLibraryEnabled()) return;
     setLoading(true);
     try {
       const res = await fetchLibrary(query);
@@ -379,7 +381,7 @@ export default function LibraryDrawer(
     return null;
   };
 
-  const resolveServerCodeEditUrl = (c: LibraryCodeItem): string => {
+  const resolveServerCodeEditUrl = (c: LibraryCodeItem): string | null => {
     const matchingLocal = localHistory.find(
       (item) => item.metadata?.shortCode === c.short_code,
     );
@@ -391,7 +393,7 @@ export default function LibraryDrawer(
     if (tok) {
       return `/edit?token=${encodeURIComponent(tok)}`;
     }
-    return `/edit?code=${encodeURIComponent(c.short_code)}`;
+    return null;
   };
 
   const getHistoryIcon = (type: HistoryItem["type"]) => {
@@ -695,10 +697,12 @@ export default function LibraryDrawer(
                   }`}
                   style={{
                     width: `${
-                      Math.min(
-                        100,
-                        (quota.used_count / quota.total_allowed) * 100,
-                      )
+                      quota.total_allowed > 0
+                        ? Math.min(
+                          100,
+                          (quota.used_count / quota.total_allowed) * 100,
+                        )
+                        : 0
                     }%`,
                   }}
                 />
@@ -817,12 +821,16 @@ export default function LibraryDrawer(
                               {isSpanish ? "Cargar QR" : "Load QR"}
                             </button>
                           )}
-                          <a
-                            href={editHref}
-                            class="min-h-[36px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-black bg-amber-200 text-xs font-bold hover:bg-amber-300 active:scale-95 transition-transform"
-                          >
-                            {isSpanish ? "Editar y Stats ↗" : "Edit & Stats ↗"}
-                          </a>
+                          {editHref && (
+                            <a
+                              href={editHref}
+                              class="min-h-[36px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-black bg-amber-200 text-xs font-bold hover:bg-amber-300 active:scale-95 transition-transform"
+                            >
+                              {isSpanish
+                                ? "Editar y Stats ↗"
+                                : "Edit & Stats ↗"}
+                            </a>
+                          )}
                         </div>
                       </div>
                       <div class="flex items-center justify-between pt-2 border-t border-black/5 text-[11px] text-neutral-400">
@@ -959,85 +967,87 @@ export default function LibraryDrawer(
               </div>
             )}
 
-          {/* Claim Legacy / Time Machine Tools */}
-          <div class="pt-2 border-t border-black/10 space-y-2">
-            {!showImport
-              ? (
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowImport(true)}
-                    class="text-xs font-bold text-neutral-600 hover:text-black underline text-left"
-                  >
-                    {isSpanish
-                      ? "Reclamar un QR anterior con su llave ↗"
-                      : "Claim old QR code with token ↗"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={importing}
-                    onClick={handleImportHistory}
-                    class="text-xs font-bold text-neutral-600 hover:text-black underline disabled:opacity-50 text-left sm:text-right"
-                  >
-                    {importing
-                      ? (isSpanish ? "Importando..." : "Importing...")
-                      : (isSpanish
-                        ? "Sincronizar desde el historial ↺"
-                        : "Sync from browser history ↺")}
-                  </button>
-                </div>
-              )
-              : (
-                <form
-                  onSubmit={handleClaimLegacy}
-                  class="bg-white border-2 border-black rounded-2xl p-4 space-y-3"
-                >
-                  <div class="flex items-center justify-between">
-                    <p class="font-bold text-xs text-neutral-900">
-                      {isSpanish
-                        ? "Reclamar QR anterior"
-                        : "Claim Pre-Launch Code"}
-                    </p>
+          {/* Claim Legacy / Time Machine Tools (only when server library is enabled) */}
+          {isPlusLibraryEnabled() && (
+            <div class="pt-2 border-t border-black/10 space-y-2">
+              {!showImport
+                ? (
+                  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <button
                       type="button"
-                      onClick={() => setShowImport(false)}
-                      class="text-xs font-bold text-neutral-500 hover:text-black"
+                      onClick={() => setShowImport(true)}
+                      class="text-xs font-bold text-neutral-600 hover:text-black underline text-left"
                     >
-                      {isSpanish ? "Cancelar" : "Cancel"}
+                      {isSpanish
+                        ? "Reclamar un QR anterior con su llave ↗"
+                        : "Claim old QR code with token ↗"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={importing}
+                      onClick={handleImportHistory}
+                      class="text-xs font-bold text-neutral-600 hover:text-black underline disabled:opacity-50 text-left sm:text-right"
+                    >
+                      {importing
+                        ? (isSpanish ? "Importando..." : "Importing...")
+                        : (isSpanish
+                          ? "Sincronizar desde el historial ↺"
+                          : "Sync from browser history ↺")}
                     </button>
                   </div>
-                  <p class="text-[11px] text-neutral-500 leading-relaxed">
-                    {isSpanish
-                      ? "Pega el token de propietario de un QR que hayas creado antes. Reclamarlo no gasta tus 5 lugares gratis."
-                      : "Paste the owner token from a code you created before this release. Claiming it does not consume your 5-code allowance."}
-                  </p>
-                  <label class="sr-only" for="library-claim-token-input">
-                    {isSpanish
-                      ? "Token de propietario del QR"
-                      : "QR owner token"}
-                  </label>
-                  <input
-                    id="library-claim-token-input"
-                    type="text"
-                    value={importToken}
-                    onInput={(e) =>
-                      setImportToken((e.target as HTMLInputElement).value)}
-                    placeholder="ot_..."
-                    required
-                    class="w-full px-3 py-2 rounded-xl border-2 border-black/15 bg-white text-xs font-mono focus:outline-none focus:border-black"
-                  />
-                  <button
-                    type="submit"
-                    disabled={importing || !importToken.trim()}
-                    class="w-full py-2 px-3 rounded-xl border-2 border-black bg-amber-300 font-bold text-xs hover:bg-amber-400 active:scale-95 disabled:opacity-50 transition-all"
+                )
+                : (
+                  <form
+                    onSubmit={handleClaimLegacy}
+                    class="bg-white border-2 border-black rounded-2xl p-4 space-y-3"
                   >
-                    {importing
-                      ? (isSpanish ? "Reclamando..." : "Claiming...")
-                      : (isSpanish ? "Reclamar QR →" : "Claim Code →")}
-                  </button>
-                </form>
-              )}
-          </div>
+                    <div class="flex items-center justify-between">
+                      <p class="font-bold text-xs text-neutral-900">
+                        {isSpanish
+                          ? "Reclamar QR anterior"
+                          : "Claim Pre-Launch Code"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowImport(false)}
+                        class="text-xs font-bold text-neutral-500 hover:text-black"
+                      >
+                        {isSpanish ? "Cancelar" : "Cancel"}
+                      </button>
+                    </div>
+                    <p class="text-[11px] text-neutral-500 leading-relaxed">
+                      {isSpanish
+                        ? "Pega el token de propietario de un QR que hayas creado antes. Reclamarlo no gasta tus 5 lugares gratis."
+                        : "Paste the owner token from a code you created before this release. Claiming it does not consume your 5-code allowance."}
+                    </p>
+                    <label class="sr-only" for="library-claim-token-input">
+                      {isSpanish
+                        ? "Token de propietario del QR"
+                        : "QR owner token"}
+                    </label>
+                    <input
+                      id="library-claim-token-input"
+                      type="text"
+                      value={importToken}
+                      onInput={(e) =>
+                        setImportToken((e.target as HTMLInputElement).value)}
+                      placeholder="ot_..."
+                      required
+                      class="w-full px-3 py-2 rounded-xl border-2 border-black/15 bg-white text-xs font-mono focus:outline-none focus:border-black"
+                    />
+                    <button
+                      type="submit"
+                      disabled={importing || !importToken.trim()}
+                      class="w-full py-2 px-3 rounded-xl border-2 border-black bg-amber-300 font-bold text-xs hover:bg-amber-400 active:scale-95 disabled:opacity-50 transition-all"
+                    >
+                      {importing
+                        ? (isSpanish ? "Reclamando..." : "Claiming...")
+                        : (isSpanish ? "Reclamar QR →" : "Claim Code →")}
+                    </button>
+                  </form>
+                )}
+            </div>
+          )}
         </div>
       </div>
     </div>

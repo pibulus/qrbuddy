@@ -144,10 +144,13 @@ serve(async (req) => {
         .range(offset, offset + limit - 1);
 
       if (search) {
-        // Safe parameterised substring match on title or destination_url
-        query = query.or(
-          `title.ilike.%${search}%,destination_url.ilike.%${search}%`,
-        );
+        const safeSearch = search.replace(/[,()%\\]/g, "").trim();
+        if (safeSearch) {
+          // Safe parameterised substring match on title or destination_url
+          query = query.or(
+            `title.ilike.%${safeSearch}%,destination_url.ilike.%${safeSearch}%`,
+          );
+        }
       }
 
       const [

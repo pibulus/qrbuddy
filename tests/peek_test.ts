@@ -40,7 +40,22 @@ Deno.test("api/peek - blocks internal and private addresses", async () => {
   assertEquals(isPrivateHost("10.0.0.1"), true);
   assertEquals(isPrivateHost("172.16.0.5"), true);
   assertEquals(isPrivateHost("[::1]"), true);
+  assertEquals(
+    isPrivateHost(new URL("http://[::ffff:127.0.0.1]/").hostname),
+    true,
+  );
+  assertEquals(
+    isPrivateHost(new URL("http://[::ffff:169.254.169.254]/").hostname),
+    true,
+  );
+  assertEquals(isPrivateHost("localhost."), true);
   assertEquals(isPrivateHost("qrbuddy.app"), false);
+
+  // Never leak URL #hash fragments to mshots screenshot URLs
+  assertEquals(
+    buildScreenshotUrl("https://qrbuddy.app/#passport=123&secret=abc"),
+    "https://s.wordpress.com/mshots/v1/https%3A%2F%2Fqrbuddy.app%2F?w=640&h=400",
+  );
 });
 
 Deno.test("api/peek - blocks SSRF via open redirect hop to private host", async () => {

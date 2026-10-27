@@ -9,6 +9,7 @@ import {
 } from "../utils/qr-decode.ts";
 import { useModalShell } from "./modal/useModalShell.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
+import { parsePassportFromUrl } from "../utils/passport.ts";
 import {
   getInAppBrowserName,
   getUnsupportedCameraMessage,
@@ -162,8 +163,12 @@ export default function QRReader(
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanLoopRef = useRef<number | null>(null);
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
+  const cameraSessionRef = useRef(0);
 
   const stopCamera = () => {
+    cameraSessionRef.current += 1;
     if (scanLoopRef.current !== null) {
       clearInterval(scanLoopRef.current);
       scanLoopRef.current = null;
@@ -194,13 +199,41 @@ export default function QRReader(
     const openable = safeOpenUrl(result.data);
     if (!openable) return;
 
+    // Strip #hash fragments before network inspection so client secrets (e.g. #passport=...)
+    // never leave the browser or touch /api/peek or external screenshot services.
+    let peekTargetUrl = openable;
+    try {
+      const parsed = new URL(openable);
+      if (parsed.hash.startsWith("#passport=")) {
+        // In-app Passport pairing QR scan: apply sync directly in-browser without network calls
+        if (typeof globalThis.location !== "undefined") {
+          globalThis.location.hash = parsed.hash;
+          const synced = parsePassportFromUrl();
+          if (synced) {
+            addToast(
+              isSpanish
+                ? "✨ ¡Pasaporte QRBuddy sincronizado!"
+                : "✨ QRBuddy Passport synced!",
+              3500,
+            );
+          }
+        }
+        setIsPeeking(false);
+        return;
+      }
+      parsed.hash = "";
+      peekTargetUrl = parsed.href;
+    } catch {
+      // Fallback to openable if URL constructor fails
+    }
+
     let isMounted = true;
     setIsPeeking(true);
     setPeekData(null);
     setPreviewLoaded(false);
     setScreenshotRetry(0);
 
-    fetch(`/api/peek?url=${encodeURIComponent(openable)}`)
+    fetch(`/api/peek?url=${encodeURIComponent(peekTargetUrl)}`)
       .then((res) => res.json())
       .then((data: PeekResult) => {
         if (isMounted && data.ok) {
@@ -274,6 +307,7 @@ export default function QRReader(
     setDecodeError(null);
     try {
       const data = await decodeQRFromFile(file);
+      if (!isOpenRef.current) return;
       if (data) {
         stopCamera();
         setResult({ data, type: detectType(data) });
@@ -407,6 +441,7 @@ export default function QRReader(
   }, [cameraActive]);
 
   const startCamera = async () => {
+    const sessionId = ++cameraSessionRef.current;
     setCameraError(null);
     setDecodeError(null);
     try {
@@ -426,6 +461,11 @@ export default function QRReader(
           video: true,
           audio: false,
         });
+      }
+
+      if (!isOpenRef.current || cameraSessionRef.current !== sessionId) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
       }
 
       // Enable continuous autofocus on mobile lenses when supported
@@ -448,6 +488,11 @@ export default function QRReader(
         } catch {
           // Ignore if browser disallows focusMode constraint
         }
+      }
+
+      if (!isOpenRef.current || cameraSessionRef.current !== sessionId) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
       }
 
       streamRef.current = stream;
@@ -738,9 +783,9 @@ export default function QRReader(
                     </div>
                   </div>
 
-                  {openableUrl && (
+                  {openableUrl && !isPeeking && peekData?.ok && (
                     <div class="shrink-0">
-                      {peekData?.isRedirected
+                      {peekData.isRedirected
                         ? (
                           <span class="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full shadow-xs">
                             <span>🔄</span>
@@ -1070,7 +1115,8 @@ export default function QRReader(
               <div class="grid gap-2.5 sm:grid-cols-2">
                 {openableUrl && (
                   <a
-                    href={peekData?.finalUrl || openableUrl}
+                    href={(peekData?.finalUrl &&
+                      safeOpenUrl(peekData.finalUrl)) || openableUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="min-h-[50px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-[3px_3px_0px_0px_#FF69B4] hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2"

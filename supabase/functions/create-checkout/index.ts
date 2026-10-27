@@ -77,6 +77,8 @@ serve(async (req) => {
     );
 
     const { user } = await getAuthenticatedUser(req, supabase);
+    const verifiedAuthUserId =
+      user && user.app_metadata?.provider !== "passport" ? user.id : null;
 
     const { error: insertError } = await supabase
       .from("supporter_checkouts")
@@ -85,7 +87,7 @@ serve(async (req) => {
         provider_order_id: checkout.providerOrderId,
         amount: checkout.amount,
         currency: checkout.currency,
-        user_id: user?.id ?? null,
+        user_id: verifiedAuthUserId,
       });
     if (insertError) throw insertError;
 

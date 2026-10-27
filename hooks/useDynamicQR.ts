@@ -4,6 +4,7 @@ import { haptics } from "../utils/haptics.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
 import { apiRequest } from "../utils/api-request.ts";
+import { isPlusLibraryEnabled } from "../utils/auth.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 import { reportFailure } from "../utils/report-failure.ts";
 import { normalizeUrl } from "../utils/url.ts";
@@ -85,7 +86,7 @@ export function useDynamicQR(
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
-          useUserAuth: true,
+          useUserAuth: isPlusLibraryEnabled(),
         },
         "Failed to create dynamic QR",
       );
