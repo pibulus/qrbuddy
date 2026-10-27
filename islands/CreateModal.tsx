@@ -143,8 +143,8 @@ const QR_TYPE_COPY: Partial<
   vcard: {
     label: "Contact card",
     labelEs: "Tarjeta de Contacto",
-    description: "One scan saves you to their phone.",
-    descriptionEs: "Un escaneo guarda tu contacto en su celular.",
+    description: "One scan saves straight to contacts.",
+    descriptionEs: "Un escaneo guarda el contacto directo.",
   },
   social: {
     label: "Social profile",
@@ -687,8 +687,8 @@ export default function CreateModal({
                     icon="📲"
                     title={isSpanish ? "Contáctame" : "Contact me"}
                     description={isSpanish
-                      ? "Llamada, SMS o correo — tú eliges."
-                      : "Call, text, or email you — you pick."}
+                      ? "Llamada, SMS o correo en un escaneo."
+                      : "Call, text, or email in one scan."}
                     active={typeIntent === "qr" && !isBatchMode &&
                       !lockerActive &&
                       CONTACT_TYPES.includes(selectedTemplate)}
@@ -738,10 +738,10 @@ export default function CreateModal({
                   />
                   <ChoiceRow
                     icon="📂"
-                    title={isSpanish ? "Compartir Archivo" : "Share a file"}
+                    title={isSpanish ? "Compartir archivo" : "Share a file"}
                     description={isSpanish
-                      ? "Página de descarga para un archivo, con PIN opcional."
-                      : "Download page for one file, optional PIN."}
+                      ? "Página de descarga con PIN opcional."
+                      : "One-file download page, optional PIN."}
                     active={typeIntent === "share-file"}
                     onClick={handleShareFileSelect}
                   />
@@ -1131,10 +1131,17 @@ export default function CreateModal({
     STYLE_DISPLAY[qrStyle.value as keyof typeof STYLE_DISPLAY] ??
       STYLE_DISPLAY.sunset;
   const presetStyle = QR_STYLES[qrStyle.value as keyof typeof QR_STYLES];
+  const activeStyleObj = isCustomStyle && customStyle?.value
+    ? customStyle.value
+    : presetStyle;
   const customStopColors = isCustomStyle && customStyle?.value &&
       "gradient" in customStyle.value.dots &&
       customStyle.value.dots.gradient
     ? customStyle.value.dots.gradient.colorStops.map((s) => s.color)
+    : isCustomStyle && customStyle?.value &&
+        "color" in customStyle.value.dots &&
+        customStyle.value.dots.color
+    ? [customStyle.value.dots.color, customStyle.value.dots.color]
     : null;
   const miniColors = customStopColors && customStopColors.length > 0
     ? customStopColors
@@ -1142,18 +1149,21 @@ export default function CreateModal({
     ? ["#9370DB", "#FF69B4"]
     : presetInfo.colors;
   const miniGradient = `linear-gradient(135deg, ${miniColors.join(", ")})`;
-  const miniBg = !isCustomStyle && presetStyle &&
-      "gradient" in presetStyle.background &&
-      presetStyle.background.gradient
+  const miniBg = activeStyleObj &&
+      "gradient" in activeStyleObj.background &&
+      activeStyleObj.background.gradient
     ? `linear-gradient(135deg, ${
-      presetStyle.background.gradient.colorStops.map((s) => s.color).join(", ")
+      activeStyleObj.background.gradient.colorStops.map((s) => s.color).join(
+        ", ",
+      )
     })`
-    : !isCustomStyle && presetStyle && "color" in presetStyle.background
-    ? presetStyle.background.color
+    : activeStyleObj && "color" in activeStyleObj.background &&
+        activeStyleObj.background.color
+    ? activeStyleObj.background.color
     : "#FFFDF9";
-  const miniDotShape = !isCustomStyle && presetStyle &&
-      "shape" in presetStyle.dots
-    ? presetStyle.dots.shape
+  const miniDotShape = activeStyleObj &&
+      "shape" in activeStyleObj.dots
+    ? activeStyleObj.dots.shape
     : "rounded";
   const miniDotRadius = miniDotShape === "dots"
     ? "rounded-full"
@@ -1221,6 +1231,7 @@ export default function CreateModal({
             <button
               type="button"
               onClick={() => {
+                setCompletionKind(null);
                 setActiveTab("design");
                 scrollBodyToTop();
                 haptics.light();

@@ -55,6 +55,7 @@ export default function QRCanvas(
   // springy pop when the style changes — the card acknowledges every update.
   const [bloomTick, setBloomTick] = useState(false);
   const [stylePop, setStylePop] = useState(false);
+  const stylePopTimerRef = useRef<number | null>(null);
   const prevStyleRef = useRef(style.value);
   const prevCustomRef = useRef(customStyle?.value);
   // Decode-check verdict for the current render: silence means scannable.
@@ -74,11 +75,22 @@ export default function QRCanvas(
 
   useEffect(() => {
     const onBloom = () => {
+      if (stylePopTimerRef.current !== null) {
+        clearTimeout(stylePopTimerRef.current);
+      }
       setStylePop(true);
-      setTimeout(() => setStylePop(false), 380);
+      stylePopTimerRef.current = setTimeout(() => {
+        setStylePop(false);
+        stylePopTimerRef.current = null;
+      }, 380) as unknown as number;
     };
     globalThis.addEventListener("qrb-modal-bloom", onBloom);
-    return () => globalThis.removeEventListener("qrb-modal-bloom", onBloom);
+    return () => {
+      globalThis.removeEventListener("qrb-modal-bloom", onBloom);
+      if (stylePopTimerRef.current !== null) {
+        clearTimeout(stylePopTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -87,9 +99,19 @@ export default function QRCanvas(
     if (!styleChanged && !customChanged) return;
     prevStyleRef.current = style.value;
     prevCustomRef.current = customStyle?.value;
+    if (stylePopTimerRef.current !== null) {
+      clearTimeout(stylePopTimerRef.current);
+    }
     setStylePop(true);
-    const popTimer = setTimeout(() => setStylePop(false), 380);
-    return () => clearTimeout(popTimer);
+    stylePopTimerRef.current = setTimeout(() => {
+      setStylePop(false);
+      stylePopTimerRef.current = null;
+    }, 380) as unknown as number;
+    return () => {
+      if (stylePopTimerRef.current !== null) {
+        clearTimeout(stylePopTimerRef.current);
+      }
+    };
   }, [style.value, customStyle?.value]);
 
   const handleDragOver = (event: DragEvent) => {
@@ -685,7 +707,7 @@ export default function QRCanvas(
       {/* Frame caption preview — the downloaded PNG bakes this in */}
       {frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== "" &&
         (
-          <div class="bg-white border-4 border-t-0 border-black rounded-b-chunky -mt-3 pt-4 pb-4 text-center animate-slide-down">
+          <div class="bg-white border-4 border-t-0 border-black rounded-b-chunky -mt-3 pt-3 pb-7 text-center animate-slide-down">
             <span class="font-chunky font-black text-xl sm:text-2xl tracking-wide text-black uppercase">
               {frameConfig.value.caption}
             </span>
@@ -703,7 +725,11 @@ export default function QRCanvas(
       }
       <div
         key={url.value ? "chip-live" : "chip-idle"}
-        class={`absolute -bottom-4 -right-3 min-h-[44px] p-0.5 rounded-full bg-qr-cream border-3 border-black shadow-chunky inline-flex items-center z-10 ${
+        class={`absolute ${
+          frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== ""
+            ? "-bottom-5"
+            : "-bottom-4"
+        } -right-3 min-h-[44px] p-0.5 rounded-full bg-qr-cream border-3 border-black shadow-chunky inline-flex items-center z-10 ${
           url.value ? "animate-bounce-in" : ""
         }`}
       >

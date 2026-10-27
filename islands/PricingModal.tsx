@@ -140,7 +140,11 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
 
   useEffect(() => {
     if (!isOpen) {
-      setView("pitch");
+      const t = setTimeout(() => {
+        setView("pitch");
+        setPastedPass("");
+      }, 200);
+      return () => clearTimeout(t);
     }
   }, [isOpen]);
 
@@ -661,8 +665,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                     ? "Todo el equipo Pro desbloqueado en este dispositivo."
                     : "Full Pro gear unlocked on this device.")
                   : (isSpanish
-                    ? "Tu Pasaporte QRBuddy. Todo lo bueno."
-                    : "Your QRBuddy Passport. All the good stuff.")}
+                    ? "El Pasaporte QRBuddy. Todo lo bueno."
+                    : "The QRBuddy Passport. All the good stuff.")}
               </p>
             </div>
 
@@ -678,16 +682,20 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                   tabIndex={0}
                   onClick={handleRollSkin}
                   onKeyDown={(e) => {
+                    if (e.target !== e.currentTarget) return;
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
                       handleRollSkin();
                     }
                   }}
                   onPointerMove={handleCardPointerMove}
+                  onPointerLeave={() => setPointerPos({ x: 50, y: 50 })}
                   style={{
                     background: activeSkin.bg,
-                    "--pointer-x": `${pointerPos.x}%`,
-                    "--pointer-y": `${pointerPos.y}%`,
+                    "--mx": `${pointerPos.x}%`,
+                    "--my": `${pointerPos.y}%`,
+                    "--rx": `${((50 - pointerPos.y) / 9).toFixed(2)}deg`,
+                    "--ry": `${((pointerPos.x - 50) / 9).toFixed(2)}deg`,
                   } as Record<string, string>}
                   class="qr-holo-card mx-auto w-full max-w-[300px] aspect-[1.68/1] p-4 flex flex-col justify-between text-left text-[#fffef7]"
                   aria-label={isSpanish
@@ -815,7 +823,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                   <CardPrimaryButton
                     onClick={handleUpgrade}
                     disabled={isStartingCheckout ||
-                      checkoutAvailability !== "available"}
+                      checkoutAvailability === "unavailable" ||
+                      checkoutAvailability === "error"}
                   >
                     {isStartingCheckout
                       ? (isSpanish ? "Abriendo el pago…" : "Opening checkout…")

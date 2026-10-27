@@ -218,7 +218,7 @@ export default function FileUploadOptions(
                   <button
                     type="button"
                     onClick={() => moveFile(i, 1)}
-                    disabled={i === files.length - 1 || busy}
+                    disabled={i === thumbs.length - 1 || busy}
                     aria-label={`Move ${itemNoun} ${i + 1} down`}
                     class="w-6 h-6 rounded-md border border-[#1e1714] bg-[#fffef7]/95 hover:bg-amber-200 text-[11px] font-black text-[#1e1714] flex items-center justify-center disabled:opacity-0 disabled:pointer-events-none transition-colors"
                   >

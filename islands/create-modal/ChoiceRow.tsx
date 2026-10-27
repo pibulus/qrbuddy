@@ -34,8 +34,8 @@ export default function ChoiceRow(
   }: ChoiceRowProps,
 ) {
   const shell = active
-    ? "border-black bg-amber-200 shadow-chunky"
-    : "border-black/15 bg-white hover:border-black/60";
+    ? "border-[#1e1714] bg-amber-200 shadow-chunky"
+    : "border-[#1e1714]/15 bg-[#fffef7] hover:border-[#1e1714]/60";
 
   if (rich) {
     return (
@@ -45,10 +45,12 @@ export default function ChoiceRow(
         aria-pressed={active}
         class={`group w-full h-full rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] flex flex-col gap-2 ${shell}`}
       >
-        <span class="w-11 h-11 rounded-xl border-2 border-black bg-white flex items-center justify-center text-xl">
+        <span class="w-11 h-11 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-xl">
           {icon}
         </span>
-        <span class="font-black text-black text-lg leading-tight">{title}</span>
+        <span class="font-black text-[#1e1714] text-lg leading-tight">
+          {title}
+        </span>
         <span class="text-sm text-neutral-700 leading-snug">{description}</span>
       </button>
     );
@@ -68,11 +70,13 @@ export default function ChoiceRow(
       }}
       class={`group w-full min-h-[60px] rounded-2xl border-2 px-3 py-2.5 text-left transition-all active:scale-[0.98] flex items-center gap-3 cursor-pointer select-none ${shell}`}
     >
-      <span class="w-10 h-10 rounded-xl border-2 border-black bg-white flex items-center justify-center text-lg shrink-0">
+      <span class="w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-lg shrink-0">
         {icon}
       </span>
       <span class="min-w-0 flex-1">
-        <span class="block font-black text-black leading-tight">{title}</span>
+        <span class="block font-black text-[#1e1714] leading-tight">
+          {title}
+        </span>
         <span class="block text-xs text-neutral-700 leading-snug mt-0.5">
           {description}
         </span>
@@ -88,8 +92,8 @@ export default function ChoiceRow(
             aria-hidden="true"
             class={`shrink-0 inline-flex items-center gap-1 transition-transform group-hover:translate-x-0.5 ${
               badge || active
-                ? "rounded-full border-2 border-black bg-white px-2 py-0.5 text-[11px] font-black text-black"
-                : "text-sm font-black text-neutral-400 group-hover:text-black"
+                ? "rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-2 py-0.5 text-[11px] font-black text-[#1e1714]"
+                : "text-sm font-black text-neutral-400 group-hover:text-[#1e1714]"
             }`}
           >
             {badge && <span>{badge}</span>}

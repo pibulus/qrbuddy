@@ -90,9 +90,9 @@ export default function ShareReady(
   };
 
   return (
-    <div class="mt-4 bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
+    <div class="mt-4 bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 space-y-3 animate-slide-down shadow-[2px_2px_0_#1e1714]">
       <div class="flex items-center gap-3">
-        <span class="w-10 h-10 rounded-xl border-2 border-black bg-amber-200 flex items-center justify-center text-lg shrink-0">
+        <span class="w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-amber-200 flex items-center justify-center text-lg shrink-0">
           {copy.glyph}
         </span>
         <div class="min-w-0 flex-1">
