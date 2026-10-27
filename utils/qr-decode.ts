@@ -1,16 +1,74 @@
-// Shared QR decoding helpers (jsQR + zxing-wasm, both lazy-loaded).
+// Shared QR decoding helpers (Native BarcodeDetector + zxing-wasm + jsQR).
 //
-// jsQR is picky about resolution: at full res, rounded/dotted modules have
-// visible gaps that break its binarization, while heavy downscaling can blur
-// small codes. Real scanners try multiple scales — so do we. 640px first
-// (the sweet spot where antialiasing merges stylised dots into solid bars),
-// then larger and smaller fallbacks, each with inverted-color attempts.
+// Why three engines?
+// 1. Native `BarcodeDetector` (when supported by Safari/WebKit, Chrome, Android)
+//    uses OS-level vision hardware and locks onto angled/low-light camera frames
+//    in <5ms.
+// 2. `zxing-wasm` (with tryHarder + tryInvert + tryRotate + tryDownscale on
+//    Canvas ImageData) reads stylized pastel-punk gradients, rounded/dotted
+//    modules, center logos, and perspective-warped codes that break jsQR.
+// 3. `jsQR` (with attemptBoth inversion) is a fast synchronous pure-JS pass.
 //
-// zxing-wasm (the decoder family real phone scanners descend from) backs
-// jsQR up on still images and powers the scannability self-check. Its wasm
-// binary is vendored at /zxing_reader.wasm so no CDN fetch happens at runtime.
+// Passing `ImageData` (rendered via createImageBitmap -> Canvas) to zxing-wasm
+// instead of only raw File blobs ensures WebP, HEIC, AVIF, and SVG images decode
+// reliably across all browsers.
 
-const SCALE_TARGETS = [640, 1024, 400];
+const SCALE_TARGETS = [800, 1280, 512, 360];
+
+interface NativeBarcodeResult {
+  rawValue?: string;
+}
+
+interface NativeBarcodeDetector {
+  detect(
+    source: ImageBitmapSource,
+  ): Promise<NativeBarcodeResult[]>;
+}
+
+interface NativeBarcodeDetectorConstructor {
+  new (options?: { formats?: string[] }): NativeBarcodeDetector;
+  getSupportedFormats?: () => Promise<string[]>;
+}
+
+let barcodeDetectorPromise: Promise<NativeBarcodeDetector | null> | null = null;
+
+function getNativeBarcodeDetector(): Promise<NativeBarcodeDetector | null> {
+  if (barcodeDetectorPromise) return barcodeDetectorPromise;
+  barcodeDetectorPromise = (async () => {
+    try {
+      const Ctor = (
+        globalThis as unknown as {
+          BarcodeDetector?: NativeBarcodeDetectorConstructor;
+        }
+      ).BarcodeDetector;
+      if (!Ctor) return null;
+      if (typeof Ctor.getSupportedFormats === "function") {
+        const formats = await Ctor.getSupportedFormats();
+        if (!formats.includes("qr_code")) return null;
+      }
+      return new Ctor({ formats: ["qr_code"] });
+    } catch {
+      return null;
+    }
+  })();
+  return barcodeDetectorPromise;
+}
+
+export async function detectWithNativeBarcodeDetector(
+  source: ImageBitmapSource,
+): Promise<string | null> {
+  try {
+    const detector = await getNativeBarcodeDetector();
+    if (!detector) return null;
+    const hits = await detector.detect(source);
+    const match = hits.find((h) =>
+      typeof h.rawValue === "string" && h.rawValue.trim().length > 0
+    );
+    return match?.rawValue ?? null;
+  } catch {
+    return null;
+  }
+}
 
 async function loadJsQR() {
   const mod = await import("jsqr");
@@ -42,8 +100,10 @@ async function decodeWithZXing(
       formats: ["QRCode"],
       tryHarder: true,
       tryInvert: true,
+      tryRotate: true,
+      tryDownscale: true,
     });
-    return results.find((r) => r.isValid)?.text ?? null;
+    return results.find((r) => r.isValid && r.text)?.text ?? null;
   } catch {
     return null;
   }
@@ -51,33 +111,64 @@ async function decodeWithZXing(
 
 export async function decodeQRFromFile(file: File): Promise<string | null> {
   const jsQR = await loadJsQR();
-  let bitmap: ImageBitmap;
+  let bitmap: ImageBitmap | null = null;
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    return null;
+    // Fallback for formats createImageBitmap couldn't open directly
+    return await decodeWithZXing(file);
   }
+
+  // 1. Fast native OS/browser vision check if available
+  const nativeHit = await detectWithNativeBarcodeDetector(bitmap);
+  if (nativeHit) return nativeHit;
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return null;
+  if (!ctx) return await decodeWithZXing(file);
 
   const maxDim = Math.max(bitmap.width, bitmap.height);
   const targets = [...new Set(SCALE_TARGETS.map((t) => Math.min(t, maxDim)))];
 
+  // 2. Multi-scale jsQR + zxing-wasm on Canvas ImageData
   for (const target of targets) {
     const scale = target / maxDim;
     canvas.width = Math.max(1, Math.round(bitmap.width * scale));
     canvas.height = Math.max(1, Math.round(bitmap.height * scale));
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
     const code = jsQR(imageData.data, imageData.width, imageData.height, {
       inversionAttempts: "attemptBoth",
     });
     if (code?.data) return code.data;
+
+    const zxingHit = await decodeWithZXing(imageData);
+    if (zxingHit) return zxingHit;
   }
 
-  // jsQR struck out — zxing reads low-contrast/stylised codes it can't.
+  // 3. Center-crop fallback for photos where the QR sticker is small in the middle
+  const minSide = Math.min(bitmap.width, bitmap.height);
+  if (minSide >= 300) {
+    const cropSize = Math.round(minSide * 0.6);
+    const sx = Math.round((bitmap.width - cropSize) / 2);
+    const sy = Math.round((bitmap.height - cropSize) / 2);
+    const outSize = Math.min(640, cropSize);
+    canvas.width = outSize;
+    canvas.height = outSize;
+    ctx.drawImage(bitmap, sx, sy, cropSize, cropSize, 0, 0, outSize, outSize);
+    const croppedData = ctx.getImageData(0, 0, outSize, outSize);
+
+    const croppedJsQr = jsQR(croppedData.data, outSize, outSize, {
+      inversionAttempts: "attemptBoth",
+    });
+    if (croppedJsQr?.data) return croppedJsQr.data;
+
+    const croppedZxing = await decodeWithZXing(croppedData);
+    if (croppedZxing) return croppedZxing;
+  }
+
+  // 4. Final raw file fallback
   return await decodeWithZXing(file);
 }
 
@@ -166,13 +257,20 @@ export async function checkBlobScannability(
   }
 }
 
-/** Single-shot decode for camera frames (already sized by the caller). */
+/**
+ * Single-shot decode for live camera frames (already sized by the caller).
+ * Runs both jsQR (with inversion support) and zxing-wasm (tryHarder + tryInvert +
+ * tryRotate) so stylized gradient, rounded-dot, and angled QR codes lock in
+ * reliably during live camera scanning.
+ */
 export async function decodeQRFromImageData(
   imageData: ImageData,
 ): Promise<string | null> {
   const jsQR = await loadJsQR();
   const code = jsQR(imageData.data, imageData.width, imageData.height, {
-    inversionAttempts: "dontInvert",
+    inversionAttempts: "attemptBoth",
   });
-  return code?.data ?? null;
+  if (code?.data) return code.data;
+
+  return await decodeWithZXing(imageData);
 }

@@ -2,7 +2,11 @@ import { type Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
-import { decodeQRFromFile, decodeQRFromImageData } from "../utils/qr-decode.ts";
+import {
+  decodeQRFromFile,
+  decodeQRFromImageData,
+  detectWithNativeBarcodeDetector,
+} from "../utils/qr-decode.ts";
 import { useModalShell } from "./modal/useModalShell.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import {
@@ -154,6 +158,7 @@ export default function QRReader(
 
   const shell = useModalShell({ open: isOpen, onClose });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraCaptureInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanLoopRef = useRef<number | null>(null);
@@ -294,40 +299,159 @@ export default function QRReader(
     }
   };
 
+  // Attach MediaStream & run multi-pass QR scan loop once <video> is mounted.
+  useEffect(() => {
+    if (!cameraActive || !streamRef.current) return;
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!video) return;
+
+    video.setAttribute("playsinline", "true");
+    video.muted = true;
+    video.srcObject = stream;
+    void video.play().catch(() => {
+      // Autoplay/play promise rejection is benign if user taps or stream is starting
+    });
+
+    const fullCanvas = document.createElement("canvas");
+    const fullCtx = fullCanvas.getContext("2d", { willReadFrequently: true });
+    const cropCanvas = document.createElement("canvas");
+    const cropCtx = cropCanvas.getContext("2d", { willReadFrequently: true });
+
+    let cancelled = false;
+    let inFlight = false;
+
+    const commitDecoded = (data: string) => {
+      if (cancelled) return;
+      cancelled = true;
+      stopCamera();
+      setResult({ data, type: detectType(data) });
+      haptics.success();
+    };
+
+    scanLoopRef.current = setInterval(async () => {
+      if (cancelled || inFlight) return;
+      if (!video.videoWidth || !video.videoHeight || video.readyState < 2) {
+        return;
+      }
+      inFlight = true;
+      try {
+        // Pass 0: Hardware/OS BarcodeDetector fast-path directly on <video>
+        const nativeHit = await detectWithNativeBarcodeDetector(video);
+        if (nativeHit) {
+          commitDecoded(nativeHit);
+          return;
+        }
+
+        // Pass 1: Full frame @ up to 720px (jsQR attemptBoth + zxing-wasm tryHarder/tryInvert)
+        if (fullCtx) {
+          const maxDim = Math.max(video.videoWidth, video.videoHeight);
+          const scale = Math.min(1, 720 / maxDim);
+          fullCanvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+          fullCanvas.height = Math.max(
+            1,
+            Math.round(video.videoHeight * scale),
+          );
+          fullCtx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
+          const fullData = await decodeQRFromImageData(
+            fullCtx.getImageData(0, 0, fullCanvas.width, fullCanvas.height),
+          );
+          if (fullData) {
+            commitDecoded(fullData);
+            return;
+          }
+        }
+
+        // Pass 2: 1:1 Center-crop macro pass (reads smaller or held-back codes without downscale blur)
+        if (cropCtx) {
+          const minSide = Math.min(video.videoWidth, video.videoHeight);
+          const cropSize = Math.max(120, Math.round(minSide * 0.58));
+          const sx = Math.round((video.videoWidth - cropSize) / 2);
+          const sy = Math.round((video.videoHeight - cropSize) / 2);
+          const outSize = Math.min(480, cropSize);
+          cropCanvas.width = outSize;
+          cropCanvas.height = outSize;
+          cropCtx.drawImage(
+            video,
+            sx,
+            sy,
+            cropSize,
+            cropSize,
+            0,
+            0,
+            outSize,
+            outSize,
+          );
+          const cropData = await decodeQRFromImageData(
+            cropCtx.getImageData(0, 0, outSize, outSize),
+          );
+          if (cropData) {
+            commitDecoded(cropData);
+            return;
+          }
+        }
+      } catch {
+        // Ignore transient frame decode errors while camera warms up
+      } finally {
+        inFlight = false;
+      }
+    }, 150) as unknown as number;
+
+    return () => {
+      cancelled = true;
+      if (scanLoopRef.current !== null) {
+        clearInterval(scanLoopRef.current);
+        scanLoopRef.current = null;
+      }
+    };
+  }, [cameraActive]);
+
   const startCamera = async () => {
     setCameraError(null);
     setDecodeError(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false,
-      });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch {
+        // Fallback for desktop webcams that reject resolution/facingMode ideals
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
+      // Enable continuous autofocus on mobile lenses when supported
+      const track = stream.getVideoTracks()[0];
+      if (track && typeof track.getCapabilities === "function") {
+        try {
+          const caps = track.getCapabilities() as { focusMode?: string[] };
+          if (
+            Array.isArray(caps.focusMode) &&
+            caps.focusMode.includes("continuous")
+          ) {
+            await track.applyConstraints({
+              advanced: [
+                {
+                  focusMode: "continuous",
+                } as unknown as MediaTrackConstraintSet,
+              ],
+            });
+          }
+        } catch {
+          // Ignore if browser disallows focusMode constraint
+        }
+      }
+
       streamRef.current = stream;
       setCameraActive(true);
-      // Wait a tick for the <video> to mount, then attach + scan.
-      requestAnimationFrame(() => {
-        const video = videoRef.current;
-        if (!video) return;
-        video.srcObject = stream;
-        void video.play();
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d")!;
-        scanLoopRef.current = setInterval(async () => {
-          if (!video.videoWidth) return;
-          const scale = Math.min(1, 640 / video.videoWidth);
-          canvas.width = Math.round(video.videoWidth * scale);
-          canvas.height = Math.round(video.videoHeight * scale);
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const data = await decodeQRFromImageData(
-            ctx.getImageData(0, 0, canvas.width, canvas.height),
-          );
-          if (data) {
-            stopCamera();
-            setResult({ data, type: detectType(data) });
-            haptics.success();
-          }
-        }, 200) as unknown as number;
-      });
     } catch (err) {
       const name = err instanceof DOMException ? err.name : "";
       const inApp = getInAppBrowserName();
@@ -425,19 +549,67 @@ export default function QRReader(
               {cameraActive
                 ? (
                   <div class="space-y-2">
-                    <video
-                      ref={videoRef}
-                      class="w-full rounded-2xl border-3 border-black bg-black aspect-video object-cover"
-                      playsInline
-                      muted
+                    <div class="relative rounded-2xl border-3 border-black bg-black overflow-hidden aspect-square sm:aspect-video">
+                      <video
+                        ref={videoRef}
+                        class="w-full h-full object-cover"
+                        playsInline
+                        muted
+                        autoPlay
+                      />
+                      {/* Viewfinder target reticle */}
+                      <div
+                        aria-hidden="true"
+                        class="pointer-events-none absolute inset-0 flex items-center justify-center p-6"
+                      >
+                        <div class="relative w-48 h-48 sm:w-44 sm:h-44 rounded-2xl border-2 border-white/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.28)]">
+                          <span class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-amber-300 rounded-tl-xl" />
+                          <span class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-amber-300 rounded-tr-xl" />
+                          <span class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-amber-300 rounded-bl-xl" />
+                          <span class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-amber-300 rounded-br-xl" />
+                        </div>
+                      </div>
+                      <div class="pointer-events-none absolute bottom-2.5 inset-x-0 flex justify-center">
+                        <span class="px-3 py-1 rounded-full bg-black/75 text-white text-xs font-black tracking-wide border border-white/30 animate-pulse">
+                          {isSpanish
+                            ? "Apunta al QR para escanear…"
+                            : "Center QR in frame to scan…"}
+                        </span>
+                      </div>
+                    </div>
+                    <input
+                      ref={cameraCaptureInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      class="hidden"
+                      onChange={(e) => {
+                        const input = e.target as HTMLInputElement;
+                        const file = input.files?.[0];
+                        if (file) void decodeFile(file);
+                        input.value = "";
+                      }}
                     />
-                    <button
-                      type="button"
-                      onClick={stopCamera}
-                      class="w-full min-h-[44px] rounded-full border-2 border-black text-sm font-black text-black bg-white shadow-chunky hover:bg-amber-100 transition"
-                    >
-                      {isSpanish ? "Detener cámara" : "Stop camera"}
-                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          cameraCaptureInputRef.current?.click()}
+                        class="min-h-[44px] px-3 rounded-full border-2 border-black text-xs sm:text-sm font-black text-black bg-amber-200 shadow-chunky hover:bg-amber-300 transition flex items-center justify-center gap-1.5"
+                      >
+                        <span>📸</span>
+                        <span>
+                          {isSpanish ? "Foto HD / Macro" : "Snap HD Photo"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        class="min-h-[44px] px-3 rounded-full border-2 border-black text-xs sm:text-sm font-black text-black bg-white shadow-chunky hover:bg-amber-100 transition"
+                      >
+                        {isSpanish ? "Detener cámara" : "Stop camera"}
+                      </button>
+                    </div>
                   </div>
                 )
                 : (
@@ -540,6 +712,7 @@ export default function QRReader(
                             peekData?.domain || new URL(openableUrl).hostname
                           }&sz=64`}
                           alt="Site icon"
+                          referrerpolicy="no-referrer"
                           class="w-10 h-10 rounded-xl border-2 border-black bg-white object-contain p-1 shrink-0 shadow-xs"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = "none";
@@ -707,6 +880,7 @@ export default function QRReader(
                                       key={activePreviewSrc}
                                       src={activePreviewSrc}
                                       alt={peekData.title || peekData.domain}
+                                      referrerpolicy="no-referrer"
                                       class={`w-full h-full object-cover object-top transition-opacity duration-300 ${
                                         previewLoaded
                                           ? "opacity-100"
@@ -746,6 +920,7 @@ export default function QRReader(
                                       <img
                                         src={`https://www.google.com/s2/favicons?domain=${peekData.domain}&sz=64`}
                                         alt=""
+                                        referrerpolicy="no-referrer"
                                         class="w-7 h-7 object-contain"
                                         onError={(e) => {
                                           (e.target as HTMLElement).style
