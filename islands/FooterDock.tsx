@@ -35,7 +35,7 @@ const COPY = {
       { href: "/for/music", label: "Music Mixtapes 📼" },
       { href: "/for/lockers", label: "Secret Drops 🔐" },
       { href: "/guide/printing", label: "Print Calculator & Guide 📐" },
-      { href: "/why", label: "Why QRBuddy? 💡" },
+      { href: "/compare", label: "Compare vs. $35/mo Traps ⚖️" },
     ],
   },
   es: {
@@ -54,7 +54,7 @@ const COPY = {
       { href: "/es/musica", label: "Mixtapes y Música 📼" },
       { href: "/es/archivos", label: "Buzón de Archivos 🔐" },
       { href: "/es/guia/impresion", label: "Calculadora de Impresión 📐" },
-      { href: "/es/por-que", label: "¿Por qué QRBuddy? 💡" },
+      { href: "/es/comparar", label: "Comparar vs. Trampas de $35/mes ⚖️" },
     ],
   },
 } as const;

@@ -10,9 +10,11 @@ import * as $api_download_file from "./routes/api/download-file.ts";
 import * as $api_peek from "./routes/api/peek.ts";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
+import * as $compare from "./routes/compare.tsx";
 import * as $edit from "./routes/edit.tsx";
 import * as $es_archivos from "./routes/es/archivos.tsx";
 import * as $es_bodas from "./routes/es/bodas.tsx";
+import * as $es_comparar from "./routes/es/comparar.tsx";
 import * as $es_guia_impresion from "./routes/es/guia/impresion.tsx";
 import * as $es_index from "./routes/es/index.tsx";
 import * as $es_menus from "./routes/es/menus.tsx";
@@ -105,9 +107,11 @@ const manifest = {
     "./routes/api/peek.ts": $api_peek,
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
+    "./routes/compare.tsx": $compare,
     "./routes/edit.tsx": $edit,
     "./routes/es/archivos.tsx": $es_archivos,
     "./routes/es/bodas.tsx": $es_bodas,
+    "./routes/es/comparar.tsx": $es_comparar,
     "./routes/es/guia/impresion.tsx": $es_guia_impresion,
     "./routes/es/index.tsx": $es_index,
     "./routes/es/menus.tsx": $es_menus,

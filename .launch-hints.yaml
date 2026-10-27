@@ -23,6 +23,59 @@ cta: Create your QR at https://qrbuddy.app
 voice: juicy
 palette: pastel-punk
 
+pricing: "~$32 USD (A$49) once for 365 days — zero auto-renew, free static studio forever"
+pricing_anchor: "~$32 USD (A$49) once for 365 days vs. $120–$420/yr recurring SaaS traps"
+
+competitors:
+  - name: Bitly
+    price: "$120–$420/yr"
+    trap: "Paywall locks SVG/bulk and charges up to $35/mo for dynamic features"
+    annual_cost: "$120–$420/yr recurring"
+    code_survival: "Paywall locks edits"
+    print_design: "SVG gated on paid tiers"
+    smart_routing: "Enterprise tier ($420/yr)"
+    bulk_and_drops: "Paid bulk · No file drops"
+    analytics_privacy: "Ad-tech · Gated history"
+  - name: QR Tiger
+    price: "$192–$600/yr"
+    trap: "14-day trial bait that deactivates printed restaurant menus unless you subscribe"
+    annual_cost: "$192–$600/yr recurring"
+    code_survival: "14-day trial bricks menus"
+    print_design: "No live WCAG meter"
+    smart_routing: "Higher paid tiers only"
+    bulk_and_drops: "Tier-capped · Account wall"
+    analytics_privacy: "Subscription paywall"
+  - name: QR Code Monkey
+    price: "Free static / ~$108/yr Pro"
+    trap: "Dated interface with dynamic codes, bulk ZIPs, and analytics locked behind subscription"
+    annual_cost: "Free static · ~$108/yr Pro"
+    code_survival: "Dynamic expires on trial"
+    print_design: "Manual contrast check"
+    smart_routing: "Single URL redirect only"
+    bulk_and_drops: "No bulk ZIP or media"
+    analytics_privacy: "Paid Pro dashboard only"
+
+high_intent_keywords:
+  - dynamic QR code generator without subscription
+  - Bitly QR code alternative no monthly fee
+  - QR Code Monkey alternative with dynamic routing
+  - editable QR code for restaurant menu without subscription
+  - custom QR code generator with logo vector SVG
+  - bulk QR code generator ZIP with CSV manifest
+  - QR code deactivated after trial replacement
+
+low_intent_keywords:
+  - free qr code
+  - what is a qr code
+  - qr code scanner online
+  - how to make a qr code
+
+force_multiplier_personas:
+  - "Brand, Print & Packaging Designers — buy 1 Passport (~$32 USD) to export WCAG-verified vector SVGs and dynamic links across 10–30 client menus, flyers, and product boxes"
+  - "Hospitality & Multi-Venue Operators — run Breakfast/Lunch/Dinner time-routed menus, Wi-Fi cards, and table tents across 5–15 venues without a $35/mo per-seat SaaS bill"
+  - "Print Shops, Signwriters & Merch Producers — use the 50-row Batch ZIP + manifest.csv engine to deliver print-ready 2400px PNG/SVG packs for entire client runs in one click"
+  - "Boutique Marketing & Event Agencies — launch white-label Cover Pages, iOS/Android app splits, 500 MB press/audio drops, and 90-day CSV Field Reports for clients on a single pass"
+
 differentiators:
   - Full-stack QR studio that replaces Bitly, QR Code Monkey, and QR Tiger — static & dynamic URLs, Wi-Fi, vCard, Social Bio Hubs, Photo Galleries, Audio Mixtapes, inbound File Lockers, and Bulk ZIP generation in one workspace
   - Print-verified design engine — 8 luminance-tested gradient palettes (≤ 0.40 contrast), custom 2-stop gradients, dot/corner geometry, center logo stamp, SCAN ME frames, live WCAG scannability badge, and 2400px PNG + vector SVG export

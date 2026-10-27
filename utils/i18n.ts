@@ -38,6 +38,7 @@ const ROUTE_COUNTERPARTS_EN_TO_ES: Record<string, string> = {
   "/for/music": "/es/musica",
   "/for/lockers": "/es/archivos",
   "/why": "/es/por-que",
+  "/compare": "/es/comparar",
   "/guide/printing": "/es/guia/impresion",
 };
 

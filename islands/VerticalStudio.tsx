@@ -48,6 +48,11 @@ export interface VerticalStudioProps {
   comparisonTitle: string;
   comparisonSubtitle: string;
   comparisonItems: ComparisonItem[];
+  comparisonColumns?: {
+    feature?: string;
+    col1?: string;
+    col2?: string;
+  };
   faqItems: FAQItem[];
   ctaLabel?: string;
   lang?: "en" | "es";
@@ -69,6 +74,7 @@ export default function VerticalStudio({
   comparisonTitle,
   comparisonSubtitle,
   comparisonItems,
+  comparisonColumns,
   faqItems,
   ctaLabel,
   lang,
@@ -260,13 +266,18 @@ export default function VerticalStudio({
               <thead>
                 <tr class="border-b-3 border-black text-gray-500 font-black uppercase text-[11px] tracking-wider">
                   <th class="py-2.5 px-3">
-                    {isSpanish ? "Función" : "Feature"}
+                    {comparisonColumns?.feature ??
+                      (isSpanish ? "Función" : "Feature")}
                   </th>
                   <th class="py-2.5 px-3 text-gray-600">
-                    {isSpanish ? "Gratis" : "Free"}
+                    {comparisonColumns?.col1 ??
+                      (isSpanish ? "Gratis" : "Free")}
                   </th>
                   <th class="py-2.5 px-3 text-purple-700">
-                    {isSpanish ? "Pasaporte QRBuddy 🛂" : "QRBuddy Passport 🛂"}
+                    {comparisonColumns?.col2 ??
+                      (isSpanish
+                        ? "Pasaporte QRBuddy 🛂"
+                        : "QRBuddy Passport 🛂")}
                   </th>
                 </tr>
               </thead>

@@ -110,6 +110,9 @@ export default function SmartInput(
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createHasUpdates, setCreateHasUpdates] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
+  // Snapshot of the original destination URL before wrapping it in an editable
+  // short link, so switching back to Static restores the direct URL cleanly.
+  const [staticSourceUrl, setStaticSourceUrl] = useState("");
 
   // Listen for open library requests & ?library=1 query param
   useEffect(() => {
@@ -387,6 +390,8 @@ export default function SmartInput(
       targetUrl && !isCreatingDynamic && !editUrl.value && !isBucket.value &&
       !isCreatingBucket && looksLikeUrl(targetUrl)
     ) {
+      setStaticSourceUrl(targetUrl);
+      isDynamic.value = true;
       void createDynamicQR(targetUrl);
     } else if (targetUrl && !looksLikeUrl(targetUrl)) {
       addToast(
@@ -416,6 +421,11 @@ export default function SmartInput(
     const input = e.target as HTMLInputElement;
     url.value = input.value;
     isDestructible.value = false; // Regular text/URL, not destructible
+    if (editUrl.value) {
+      editUrl.value = "";
+      isDynamic.value = false;
+      setStaticSourceUrl("");
+    }
 
     if (!touched) {
       setTouched(true);
@@ -961,6 +971,113 @@ export default function SmartInput(
             frameConfig={frameConfig}
             lang={locale}
           />
+        )}
+
+        {/* In-flow Link Mode Bar (OwnQR 80% conversion pattern): Static vs Editable */}
+        {!stagedFiles && !isUploading && !isBucket.value &&
+          !isDestructible.value &&
+          !(lastShare && url.value === lastShare.url) &&
+          (looksLikeUrl(url.value) || Boolean(editUrl.value)) && (
+          <div class="mt-2.5 space-y-2 animate-slide-down">
+            <div
+              role="group"
+              aria-label={isSpanish ? "Modo de enlace QR" : "QR link mode"}
+              class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl border-2 border-black bg-[#fbf1e4] shadow-chunky"
+            >
+              <button
+                type="button"
+                aria-pressed={!editUrl.value && !isCreatingDynamic}
+                onClick={() => {
+                  if (editUrl.value) {
+                    if (staticSourceUrl) {
+                      url.value = staticSourceUrl;
+                    }
+                    editUrl.value = "";
+                    isDynamic.value = false;
+                    haptics.light();
+                  }
+                }}
+                class={`min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                  !editUrl.value && !isCreatingDynamic
+                    ? "bg-[#1e1714] text-[#fffef7] shadow-sm"
+                    : "text-neutral-700 hover:bg-amber-100/80"
+                }`}
+              >
+                <span>
+                  {isSpanish
+                    ? "Directo · Nunca caduca"
+                    : "Direct · Never expires"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isCreatingDynamic}
+                aria-pressed={Boolean(editUrl.value) || isCreatingDynamic}
+                onClick={() => {
+                  if (!editUrl.value && !isCreatingDynamic) {
+                    handleCreateEditable();
+                  }
+                }}
+                class={`min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                  editUrl.value || isCreatingDynamic
+                    ? "bg-[#9370DB] text-[#fffef7] border border-black shadow-sm"
+                    : "text-purple-900 bg-purple-100/70 hover:bg-purple-200/80"
+                }`}
+              >
+                <span>
+                  {isCreatingDynamic
+                    ? (isSpanish
+                      ? "Creando link editable…"
+                      : "Creating editable link…")
+                    : editUrl.value
+                    ? (isSpanish
+                      ? "Editable + Analíticas ✓"
+                      : "Editable + Scan Stats ✓")
+                    : (isSpanish
+                      ? "Hacer editable + Stats"
+                      : "Make Editable + Stats")}
+                </span>
+              </button>
+            </div>
+
+            {editUrl.value && (
+              <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border-2 border-black bg-[#fffef7] text-xs font-bold text-[#1e1714] shadow-sm">
+                <span class="truncate">
+                  {isSpanish
+                    ? "QR editable activo — cambia el destino cuando quieras"
+                    : "Editable QR active — repoint destination anytime"}
+                </span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(editUrl.value);
+                        haptics.success();
+                        addToast(
+                          isSpanish
+                            ? "Link de edición copiado"
+                            : "Edit link copied",
+                        );
+                      } catch {
+                        haptics.error();
+                      }
+                    }}
+                    class="px-2.5 py-1 rounded-lg border border-black bg-[#fbf1e4] hover:bg-amber-100 font-black transition-colors"
+                  >
+                    {isSpanish ? "Copiar llave" : "Copy edit key"}
+                  </button>
+                  <a
+                    href={editUrl.value}
+                    class="px-2.5 py-1 rounded-lg border border-black bg-[#9370DB] text-[#fffef7] hover:bg-[#6B46A8] font-black transition-colors"
+                  >
+                    {isSpanish ? "Panel ↗" : "Manage ↗"}
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Editable mode needs a URL — plain text stays a static QR */}
