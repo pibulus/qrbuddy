@@ -32,7 +32,27 @@ export default function PrivacyPage({ data }: PageProps<PageData>) {
             ? "Qué información procesa QRBuddy, para qué la usamos y cuánto tiempo la conservamos."
             : "What information QRBuddy processes, why we use it, and how long we keep it."}
         />
-        <link rel="canonical" href="https://qrbuddy.app/privacy" />
+        <link
+          rel="canonical"
+          href={es
+            ? "https://qrbuddy.app/privacy?lang=es"
+            : "https://qrbuddy.app/privacy"}
+        />
+        <link
+          rel="alternate"
+          hrefLang="en"
+          href="https://qrbuddy.app/privacy"
+        />
+        <link
+          rel="alternate"
+          hrefLang="es"
+          href="https://qrbuddy.app/privacy?lang=es"
+        />
+        <link
+          rel="alternate"
+          hrefLang="x-default"
+          href="https://qrbuddy.app/privacy"
+        />
       </Head>
 
       <article class="max-w-3xl mx-auto space-y-8">

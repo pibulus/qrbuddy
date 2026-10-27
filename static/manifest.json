@@ -1,11 +1,11 @@
 {
-  "name": "QRBuddy - Beautiful QR Code Generator",
+  "name": "QRBuddy — Free & Dynamic QR Code Studio",
   "short_name": "QRBuddy",
-  "description": "Drop a link. Watch it bloom. Create stunning gradient QR codes with personality.",
+  "description": "Drop a link. Watch it bloom. Create static & editable dynamic QR codes, vector SVGs, bulk ZIPs, and media drops without hostage subscriptions.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFF8F0",
-  "theme_color": "#FF69B4",
+  "background_color": "#fbf1e4",
+  "theme_color": "#fbf1e4",
   "orientation": "portrait",
   "scope": "/",
   "categories": ["productivity", "utilities", "graphics"],
@@ -39,7 +39,7 @@
     {
       "name": "Quick QR",
       "short_name": "Quick",
-      "description": "Generate QR code quickly",
+      "description": "Generate a QR code immediately",
       "url": "/?quick=true",
       "icons": [
         {

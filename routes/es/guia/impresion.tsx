@@ -20,6 +20,11 @@ export default function GuiaImpresionPage() {
           hrefLang="en"
           href="https://qrbuddy.app/guide/printing"
         />
+        <link
+          rel="alternate"
+          hrefLang="x-default"
+          href="https://qrbuddy.app/guide/printing"
+        />
 
         {/* OpenGraph */}
         <meta property="og:type" content="article" />

@@ -71,6 +71,11 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
           hrefLang="en"
           href="https://qrbuddy.app"
         />
+        <link
+          rel="alternate"
+          hrefLang="x-default"
+          href="https://qrbuddy.app"
+        />
 
         {/* Performance hints */}
         {data?.supabaseUrl && (
@@ -83,6 +88,8 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="QRBuddy" />
+        <meta property="og:locale" content="es_MX" />
+        <meta property="og:locale:alternate" content="en_US" />
         <meta property="og:url" content="https://qrbuddy.app/es" />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
@@ -91,7 +98,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         <meta property="og:image:height" content="630" />
         <meta
           property="og:image:alt"
-          content="QRBuddy - Generador de códigos QR con buena onda"
+          content="QRBuddy - Estudio profesional de códigos QR con buena onda"
         />
 
         {/* Twitter Card */}
@@ -103,9 +110,10 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
 
         {/* PWA */}
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#FF69B4" />
+        <meta name="theme-color" content="#fbf1e4" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -128,18 +136,38 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
             "@type": "WebApplication",
             "name": "QRBuddy en Español",
             "url": "https://qrbuddy.app/es",
+            "inLanguage": "es",
             "description": description,
-            "applicationCategory": "UtilityApplication",
-            "operatingSystem": "All",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "AUD",
-            },
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Any (Web-based)",
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Estudio Gratuito",
+                "price": "0",
+                "priceCurrency": "AUD",
+              },
+              {
+                "@type": "Offer",
+                "name": "Pasaporte QRBuddy (1 Año)",
+                "price": "49",
+                "priceCurrency": "AUD",
+              },
+            ],
             "creator": {
               "@type": "Person",
               "name": "Pablo",
             },
+            "featureList": [
+              "8 paletas degradadas verificadas para impresión + creador de degradados personalizados",
+              "Exportación PNG de alta resolución (hasta 3000px) y SVG vectorial con contraste WCAG en vivo",
+              "Todos los tipos de QR: URL, Wi-Fi, vCard, Bio Social, Centro Multimedia, Teléfono, SMS, Correo y Texto",
+              "Códigos QR dinámicos editables con rutas por horario (desayuno/comida/cena), iOS/Android y pruebas A/B",
+              "Generador de QR por lotes con exportación ZIP (PNG + SVG vectorial + manifest.csv para imprenta)",
+              "Entregas multimedia de hasta 500 MB, galerías de fotos, mixtapes de audio y buzones de archivos",
+              "Reporte de Campo del Pasaporte: analíticas de 7/30/90 días, ciudades principales, hora pico y exportación CSV",
+              "Inspector seguro de QR con vista previa visual del sitio y desenrollado de redirecciones",
+            ],
           })}
         </script>
       </Head>

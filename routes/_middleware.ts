@@ -51,7 +51,10 @@ function buildCsp(): string {
   ].join("; ");
 }
 
-export async function handler(_req: Request, ctx: FreshContext) {
+const NOINDEX_PATH_RE =
+  /^\/(?:r|q|edit|boom|api(?:\/|$)|f\/|bucket\/|note\/)(?:\/|$)/;
+
+export async function handler(req: Request, ctx: FreshContext) {
   const resp = await ctx.next();
 
   resp.headers.set(
@@ -62,6 +65,15 @@ export async function handler(_req: Request, ctx: FreshContext) {
   resp.headers.set("X-Frame-Options", "DENY");
   resp.headers.set("X-Content-Type-Options", "nosniff");
   resp.headers.set("Content-Security-Policy", buildCsp());
+
+  try {
+    const { pathname } = new URL(req.url);
+    if (NOINDEX_PATH_RE.test(pathname)) {
+      resp.headers.set("X-Robots-Tag", "noindex, nofollow");
+    }
+  } catch {
+    // Ignore malformed URLs
+  }
 
   return resp;
 }

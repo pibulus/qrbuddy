@@ -32,7 +32,23 @@ export default function TermsPage({ data }: PageProps<PageData>) {
             ? "Condiciones del generador de QR, enlaces editables, archivos compartidos y Pasaporte QRBuddy (antes Pase Supporter)."
             : "Terms for QRBuddy's QR generator, editable links, file shares, and QRBuddy Passport (formerly Supporter Pass)."}
         />
-        <link rel="canonical" href="https://qrbuddy.app/terms" />
+        <link
+          rel="canonical"
+          href={es
+            ? "https://qrbuddy.app/terms?lang=es"
+            : "https://qrbuddy.app/terms"}
+        />
+        <link rel="alternate" hrefLang="en" href="https://qrbuddy.app/terms" />
+        <link
+          rel="alternate"
+          hrefLang="es"
+          href="https://qrbuddy.app/terms?lang=es"
+        />
+        <link
+          rel="alternate"
+          hrefLang="x-default"
+          href="https://qrbuddy.app/terms"
+        />
       </Head>
 
       <article class="max-w-3xl mx-auto space-y-8">

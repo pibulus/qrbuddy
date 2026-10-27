@@ -21,6 +21,7 @@ export default function GuidePrintingPage() {
           hrefLang="es"
           href="https://qrbuddy.app/es/guia/impresion"
         />
+        <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
 
         {/* OpenGraph */}
         <meta property="og:type" content="article" />

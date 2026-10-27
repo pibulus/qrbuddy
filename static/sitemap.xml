@@ -4,140 +4,180 @@
   <!-- English Homepage -->
   <url>
     <loc>https://qrbuddy.app/</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://qrbuddy.app/" />
     <xhtml:link rel="alternate" hreflang="es" href="https://qrbuddy.app/es" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/" />
   </url>
 
   <!-- Spanish Homepage -->
   <url>
     <loc>https://qrbuddy.app/es</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="es" href="https://qrbuddy.app/es" />
     <xhtml:link rel="alternate" hreflang="en" href="https://qrbuddy.app/" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/" />
   </url>
 
   <!-- Menus (EN) -->
   <url>
     <loc>https://qrbuddy.app/for/menus</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
       href="https://qrbuddy.app/for/menus" />
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/menus" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/menus" />
   </url>
 
   <!-- Menus (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/menus</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/menus" />
     <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/menus" />
+    <xhtml:link rel="alternate" hreflang="x-default"
       href="https://qrbuddy.app/for/menus" />
   </url>
 
   <!-- Weddings (EN) -->
   <url>
     <loc>https://qrbuddy.app/for/weddings</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
       href="https://qrbuddy.app/for/weddings" />
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/bodas" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/weddings" />
   </url>
 
   <!-- Weddings (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/bodas</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/bodas" />
     <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/weddings" />
+    <xhtml:link rel="alternate" hreflang="x-default"
       href="https://qrbuddy.app/for/weddings" />
   </url>
 
   <!-- Music (EN) -->
   <url>
     <loc>https://qrbuddy.app/for/music</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
       href="https://qrbuddy.app/for/music" />
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/musica" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/music" />
   </url>
 
   <!-- Music (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/musica</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/musica" />
     <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/music" />
+    <xhtml:link rel="alternate" hreflang="x-default"
       href="https://qrbuddy.app/for/music" />
   </url>
 
   <!-- Lockers (EN) -->
   <url>
     <loc>https://qrbuddy.app/for/lockers</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
       href="https://qrbuddy.app/for/lockers" />
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/archivos" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/for/lockers" />
   </url>
 
   <!-- Lockers (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/archivos</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/archivos" />
     <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/for/lockers" />
+    <xhtml:link rel="alternate" hreflang="x-default"
       href="https://qrbuddy.app/for/lockers" />
   </url>
 
   <!-- QR Print & Anti-Hostage Guide (EN) -->
   <url>
     <loc>https://qrbuddy.app/guide/printing</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en"
       href="https://qrbuddy.app/guide/printing" />
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/guia/impresion" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/guide/printing" />
   </url>
 
   <!-- Guía de Impresión QR & Anti-Extorsión (ES) -->
   <url>
     <loc>https://qrbuddy.app/es/guia/impresion</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="es"
       href="https://qrbuddy.app/es/guia/impresion" />
     <xhtml:link rel="alternate" hreflang="en"
       href="https://qrbuddy.app/guide/printing" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/guide/printing" />
+  </url>
+
+  <!-- Privacy Notice -->
+  <url>
+    <loc>https://qrbuddy.app/privacy</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Terms of Use -->
+  <url>
+    <loc>https://qrbuddy.app/terms</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
   </url>
 </urlset>

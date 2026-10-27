@@ -29,7 +29,12 @@ export default function App({ Component, url }: PageProps) {
           name="viewport"
           content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
         />
-        <title>qrbuddy</title>
+        <title>QRBuddy — Free &amp; Dynamic QR Code Studio</title>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#fbf1e4" />
         <link rel="stylesheet" href={asset("/styles.css")} />
         <script
           // deno-lint-ignore react-no-danger

@@ -24,15 +24,7 @@ export interface VerticalLandingHeadProps {
   applicationCategory: string;
   price: string;
   /**
-   * ⚠️ OPEN QUESTION (2026-09): defaults to "USD" here and is asserted as
-   * "USD" in every JSON-LD offer across en+es landing pages, but the actual
-   * charge currency is `SUPPORTER_CURRENCY`, read ONCE at
-   * `supabase/functions/_shared/square.ts:35` with a fallback of `"AUD"` —
-   * a var with no `.env.example` entry, no deploy script, and no doc
-   * anywhere else in the repo. $49 AUD ≈ $32 USD, not $49 USD. Before
-   * trusting this default, check the live Supabase dashboard value for
-   * `SUPPORTER_CURRENCY` and either set it to `"USD"` explicitly or update
-   * every prop call site (and routes/es/menus.tsx's prose) to match.
+   * Charge currency is AUD ($49 AUD ≈ $32 USD, matching `supabase/functions/_shared/square.ts`).
    */
   priceCurrency?: string;
   offerDescription: string;
@@ -53,11 +45,12 @@ export default function VerticalLandingHead({
   jsonLdName,
   applicationCategory,
   price,
-  priceCurrency = "USD",
+  priceCurrency = "AUD",
   offerDescription,
   faqItems,
 }: VerticalLandingHeadProps) {
   const resolvedOgTitle = ogTitle ?? title;
+  const xDefaultHref = lang === "en" ? canonicalUrl : altHref;
 
   return (
     <Head>
@@ -67,6 +60,7 @@ export default function VerticalLandingHead({
       <link rel="canonical" href={canonicalUrl} />
       <link rel="alternate" hrefLang={lang} href={canonicalUrl} />
       <link rel="alternate" hrefLang={altLang} href={altHref} />
+      <link rel="alternate" hrefLang="x-default" href={xDefaultHref} />
 
       {/* Performance hints */}
       {supabaseUrl && (

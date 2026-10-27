@@ -63,6 +63,11 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <link rel="canonical" href="https://qrbuddy.app" />
         <link rel="alternate" hrefLang="en" href="https://qrbuddy.app" />
         <link rel="alternate" hrefLang="es" href="https://qrbuddy.app/es" />
+        <link
+          rel="alternate"
+          hrefLang="x-default"
+          href="https://qrbuddy.app"
+        />
 
         {/* Performance hints */}
         {data?.supabaseUrl && (
@@ -74,21 +79,24 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="QRBuddy" />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:locale:alternate" content="es_MX" />
         <meta property="og:url" content="https://qrbuddy.app" />
         <meta
           property="og:title"
-          content="QRBuddy - Beautiful QR Codes with Files, Options & Logos"
+          content="QRBuddy — Free & Dynamic QR Code Studio (Vector SVG, Logos, Routing & Analytics)"
         />
         <meta
           property="og:description"
-          content="Free QR code generator with practical QR types, file sharing, custom logos, 8 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
+          content="Full-stack QR code studio for print, menus, packaging, and events. Create static & editable dynamic QR codes, Wi-Fi, vCards, branded cover pages, bulk ZIPs, 500 MB media drops, and 90-day analytics without hostage subscriptions."
         />
         <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta
           property="og:image:alt"
-          content="QRBuddy - Beautiful gradient QR code generator"
+          content="QRBuddy - Full-stack gradient QR code studio"
         />
 
         {/* Twitter Card */}
@@ -96,19 +104,20 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <meta name="twitter:url" content="https://qrbuddy.app" />
         <meta
           name="twitter:title"
-          content="QRBuddy - Beautiful QR Codes with Files, Options & Logos"
+          content="QRBuddy — Free & Dynamic QR Code Studio (Vector SVG, Logos, Routing & Analytics)"
         />
         <meta
           name="twitter:description"
-          content="Free QR code generator with practical QR types, file sharing, custom logos, 8 gradient styles, and editable QR codes. Privacy-first, minimal analytics."
+          content="Full-stack QR code studio for print, menus, packaging, and events. Create static & editable dynamic QR codes, Wi-Fi, vCards, branded cover pages, bulk ZIPs, 500 MB media drops, and 90-day analytics without hostage subscriptions."
         />
         <meta name="twitter:image" content="https://qrbuddy.app/og-card.png" />
 
         {/* PWA */}
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#FF69B4" />
+        <meta name="theme-color" content="#fbf1e4" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

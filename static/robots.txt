@@ -1,6 +1,13 @@
-# robots.txt for QRBuddy
+# robots.txt for QRBuddy (https://qrbuddy.app)
 User-agent: *
 Allow: /
+
+# Ephemeral redirect, edit, and API routes
+Disallow: /api/
+Disallow: /edit
+Disallow: /r
+Disallow: /q
+Disallow: /boom
 
 # Sitemap
 Sitemap: https://qrbuddy.app/sitemap.xml

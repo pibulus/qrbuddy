@@ -1,12 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 8 240 240">
   <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FFD4A4" />
-      <stop offset="100%" stop-color="#FFB7D8" />
+    <linearGradient id="qrbGrad" gradientUnits="userSpaceOnUse" x1="20" y1="20"
+      x2="236" y2="236">
+      <stop offset="0%" stop-color="#FFB36B" />
+      <stop offset="50%" stop-color="#FF65A3" />
+      <stop offset="100%" stop-color="#C084FC" />
     </linearGradient>
   </defs>
+
+  <!-- Top-Left Finder Square -->
+  <rect x="24" y="24" width="82" height="82" rx="21" fill="url(#qrbGrad)"
+    stroke="#1e1714" stroke-width="22" stroke-linejoin="round"
+    paint-order="stroke" />
+  <rect x="49" y="49" width="32" height="32" rx="9" fill="#1e1714" />
+
+  <!-- Top-Right Finder Square -->
+  <rect x="150" y="24" width="82" height="82" rx="21" fill="url(#qrbGrad)"
+    stroke="#1e1714" stroke-width="22" stroke-linejoin="round"
+    paint-order="stroke" />
+  <rect x="175" y="49" width="32" height="32" rx="9" fill="#1e1714" />
+
+  <!-- Bottom-Left Finder Square -->
+  <rect x="24" y="150" width="82" height="82" rx="21" fill="url(#qrbGrad)"
+    stroke="#1e1714" stroke-width="22" stroke-linejoin="round"
+    paint-order="stroke" />
+  <rect x="49" y="175" width="32" height="32" rx="9" fill="#1e1714" />
+
+  <!-- Bottom-Right QR Data Modules (L-shape + floating bit with clean 6px daylight gap) -->
   <path
-    d="M120,56v48a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40h48A16,16,0,0,1,120,56Zm-16,80H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm96-96H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40ZM144,184a8,8,0,0,0,8-8V144a8,8,0,0,0-16,0v32A8,8,0,0,0,144,184Zm64-32H184v-8a8,8,0,0,0-16,0v56H144a8,8,0,0,0,0,16h32a8,8,0,0,0,8-8V168h24a8,8,0,0,0,0-16Zm0,32a8,8,0,0,0-8,8v16a8,8,0,0,0,16,0V192A8,8,0,0,0,208,184Z"
-    fill="url(#g)" stroke="#1e1714" stroke-width="16" stroke-linejoin="round"
+    d="M150 161C150 154.925 154.925 150 161 150H165C171.075 150 176 154.925 176 161V198C176 202.418 179.582 206 184 206H221C227.075 206 232 210.925 232 217V221C232 227.075 227.075 232 221 232H165C156.716 232 150 225.284 150 217V161Z"
+    fill="url(#qrbGrad)"
+    stroke="#1e1714"
+    stroke-width="22"
+    stroke-linejoin="round"
+    paint-order="stroke"
+  />
+  <rect x="204" y="150" width="28" height="28" rx="9" fill="url(#qrbGrad)"
+    stroke="#1e1714" stroke-width="22" stroke-linejoin="round"
     paint-order="stroke" />
 </svg>
