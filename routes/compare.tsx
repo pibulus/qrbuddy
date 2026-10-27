@@ -152,7 +152,7 @@ export default function ComparePage({ data }: PageProps<PageData>) {
         faqTitle="Questions From Switchers & Print Shops"
         valueCards={VALUE_CARDS}
         comparisonTitle="QRBuddy vs. The Hostage QR Giants"
-        comparisonSubtitle="Why pay $420/year just to redirect a URL?"
+        comparisonSubtitle="Print once. Keep every link alive without a $420/year ransom."
         qrbuddyFirst
         comparisonColumns={{
           feature: "Capability",
