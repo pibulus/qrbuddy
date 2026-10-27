@@ -408,7 +408,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       open={isOpen}
       onClose={closePricingModal}
       labelledby="pricing-modal-title"
-      badge={hasPass ? "🛂" : "🛂"}
+      badge="🛂"
       badgeClass="from-amber-200 via-pink-300 to-qr-pop"
     >
       <div class="text-center space-y-5">
@@ -459,7 +459,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                       aria-label={isSpanish
                         ? "Tirar otro apodo"
                         : "Roll a new moniker"}
-                      class="shrink-0 min-w-[36px] min-h-[36px] w-9 h-9 rounded-full border border-black/30 bg-amber-50 hover:bg-amber-200 flex items-center justify-center text-xs transition-transform active:scale-95"
+                      class="shrink-0 min-w-[44px] min-h-[44px] w-11 h-11 rounded-full border border-black/30 bg-amber-50 hover:bg-amber-200 flex items-center justify-center text-sm transition-transform active:scale-95"
                     >
                       🎲
                     </button>
@@ -500,6 +500,10 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
               <div class="p-3 pt-2 border-t border-black/10 space-y-2.5">
                 <div class="flex flex-col sm:flex-row items-center gap-3">
                   <div
+                    role="img"
+                    aria-label={isSpanish
+                      ? "Código QR para vincular tu Pasaporte"
+                      : "Passport pairing QR code"}
                     class="w-24 h-24 shrink-0 bg-white rounded-xl p-1.5 border-2 border-black flex items-center justify-center overflow-hidden"
                     // deno-lint-ignore react-no-danger
                     dangerouslySetInnerHTML={{
@@ -598,7 +602,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                   }`
                   : ""}
               </div>
-              <div class="flex gap-2">
+              <div class="flex flex-col min-[400px]:flex-row gap-2">
                 <CardSecondaryButton onClick={handleCopyPass}>
                   {passCopied
                     ? (isSpanish ? "Copiado ✓" : "Copied ✓")

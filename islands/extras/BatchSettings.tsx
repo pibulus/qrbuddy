@@ -63,9 +63,10 @@ export default function BatchSettings({
           <button
             key={opt.id}
             type="button"
+            aria-pressed={format === opt.id}
             onClick={() => setFormat(opt.id)}
             disabled={isGeneratingBatch}
-            class={`px-2.5 py-1 text-xs font-black rounded-lg border-2 border-black transition-all ${
+            class={`min-h-[44px] px-3 py-2 text-xs font-black rounded-xl border-2 border-black transition-all ${
               format === opt.id
                 ? "bg-amber-200 text-black shadow-chunky-xs"
                 : "bg-qr-cream text-gray-700 hover:bg-amber-50"
@@ -78,18 +79,21 @@ export default function BatchSettings({
 
       <textarea
         value={batchUrls}
+        aria-label={isSpanish
+          ? "Lista de enlaces para generar QRs en lote (uno por línea)"
+          : "Batch QR links (one per line)"}
         onInput={(e) => setBatchUrls((e.target as HTMLTextAreaElement).value)}
         placeholder={isSpanish
           ? `Mesa 1 | https://ejemplo.com/mesa-1\nMesa 2 | https://ejemplo.com/mesa-2\nhttps://ejemplo.com/menu-vip`
           : `Table 1 | https://example.com/table-1\nTable 2 | https://example.com/table-2\nhttps://example.com/vip-menu`}
         rows={5}
-        class="w-full px-3.5 py-2.5 text-sm border-2 border-gray-300 focus:border-black rounded-xl focus:outline-none font-mono bg-white resize-none"
+        class="w-full px-3.5 py-2.5 text-base sm:text-sm border-2 border-gray-300 focus:border-black rounded-xl focus:outline-none font-mono bg-white resize-none"
         disabled={isGeneratingBatch}
       />
 
       {isGeneratingBatch
         ? (
-          <div class="space-y-2 pt-1">
+          <div class="space-y-2 pt-1" role="status" aria-live="polite">
             <div class="h-3.5 bg-gray-200 rounded-full overflow-hidden border-2 border-black">
               <div
                 class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300"

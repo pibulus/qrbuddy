@@ -201,6 +201,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
         {/* Style Selector - aligned with the title line */}
         <div
+          role="region"
           class="absolute top-7 right-4 sm:top-12 sm:right-6 z-50 animate-fade-in"
           aria-label="Style selector"
         >

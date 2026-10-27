@@ -188,18 +188,19 @@ export function formatRelativeVisit(
   };
 }
 
-export function buildSevenDayActivity(
-  sparkline: number[] | undefined,
-  nowMs = Date.now(),
+function buildActivityBars(
+  series: number[] | undefined,
+  days: number,
+  nowMs: number,
 ): DayActivityBar[] {
   const normalized = Array.from(
-    { length: 7 },
-    (_, i) => Math.max(0, Number(sparkline?.[i] ?? 0) || 0),
+    { length: days },
+    (_, i) => Math.max(0, Number(series?.[i] ?? 0) || 0),
   );
   const peak = Math.max(1, ...normalized);
 
   return normalized.map((count, index) => {
-    const daysAgo = 6 - index;
+    const daysAgo = (days - 1) - index;
     const dayDate = new Date(nowMs - daysAgo * 86_400_000);
     const dow = dayDate.getDay();
     const dateShort = dayDate.toLocaleDateString(undefined, {
@@ -221,6 +222,13 @@ export function buildSevenDayActivity(
   });
 }
 
+export function buildSevenDayActivity(
+  sparkline: number[] | undefined,
+  nowMs = Date.now(),
+): DayActivityBar[] {
+  return buildActivityBars(sparkline, 7, nowMs);
+}
+
 function buildThirtyDayActivity(
   sparkline30d: number[] | undefined,
   fallback7d: number[] | undefined,
@@ -235,33 +243,7 @@ function buildThirtyDayActivity(
         (_, i) => Number(fallback7d?.[i] ?? 0) || 0,
       ),
     ];
-  const normalized = Array.from(
-    { length: 30 },
-    (_, i) => Math.max(0, Number(source[i] ?? 0) || 0),
-  );
-  const peak = Math.max(1, ...normalized);
-
-  return normalized.map((count, index) => {
-    const daysAgo = 29 - index;
-    const dayDate = new Date(nowMs - daysAgo * 86_400_000);
-    const dow = dayDate.getDay();
-    const dateShort = dayDate.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-    });
-    const heightPx = count === 0
-      ? 6
-      : Math.max(12, Math.round((count / peak) * 56));
-
-    return {
-      index,
-      count,
-      dayInitial: DAY_INITIALS[dow],
-      dayShort: DAY_SHORTS[dow],
-      dateShort,
-      heightPx,
-    };
-  });
+  return buildActivityBars(source, 30, nowMs);
 }
 
 function checkHasPassport(): boolean {
@@ -395,7 +377,9 @@ export default function AnalyticsDashboard(
   return (
     <section
       class="bg-white border-4 border-black rounded-3xl p-4 sm:p-6 space-y-4 shadow-chunky"
-      aria-label="7-Day Analytics"
+      aria-label={windowDays === 30 && hasPass
+        ? "30-Day Analytics"
+        : "7-Day Analytics"}
     >
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-wrap items-center gap-2">
@@ -446,7 +430,8 @@ export default function AnalyticsDashboard(
 
       {/* Screen-reader full breakdown */}
       <p class="sr-only">
-        Last 7 days total: {weekTotal} recorded visits. Daily breakdown:{" "}
+        Last {windowDays === 30 && hasPass ? "30" : "7"} days total:{" "}
+        {activeTotal} recorded visits. Daily breakdown:{" "}
         {summaryText}. Last recorded visit: {lastVisit.relative}
         {lastVisit.localDateTime ? ` (${lastVisit.localDateTime})` : ""}.
       </p>

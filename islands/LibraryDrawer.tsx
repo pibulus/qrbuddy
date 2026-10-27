@@ -484,7 +484,7 @@ export default function LibraryDrawer(
                         aria-label={isSpanish
                           ? "Tirar otro apodo"
                           : "Roll a new moniker"}
-                        class="shrink-0 min-w-[36px] min-h-[36px] w-9 h-9 text-xs rounded-full border border-black/20 bg-white hover:bg-amber-100 flex items-center justify-center active:scale-95"
+                        class="shrink-0 min-w-[44px] min-h-[44px] w-11 h-11 text-sm rounded-full border border-black/20 bg-white hover:bg-amber-100 flex items-center justify-center active:scale-95"
                       >
                         🎲
                       </button>
@@ -519,7 +519,7 @@ export default function LibraryDrawer(
                 <button
                   type="button"
                   onClick={handleCopySyncUrl}
-                  class="px-3 min-h-[44px] text-xs font-black rounded-full border-2 border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform shadow-chunky"
+                  class="w-full sm:w-auto px-3 min-h-[44px] text-xs font-black rounded-full border-2 border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform shadow-chunky"
                 >
                   {isSpanish
                     ? "📋 Copiar link de sincronización"
@@ -542,6 +542,10 @@ export default function LibraryDrawer(
                 <div class="p-3 pt-1 border-t border-black/10 space-y-3">
                   <div class="flex flex-col sm:flex-row items-center gap-3">
                     <div
+                      role="img"
+                      aria-label={isSpanish
+                        ? "Código QR para vincular tu Pasaporte"
+                        : "Passport pairing QR code"}
                       class="w-24 h-24 flex-shrink-0 bg-white rounded-lg p-1 border border-black/10 flex items-center justify-center overflow-hidden"
                       // deno-lint-ignore react-no-danger
                       dangerouslySetInnerHTML={{ __html: syncQrSvg }}
@@ -561,14 +565,15 @@ export default function LibraryDrawer(
                         <button
                           type="button"
                           onClick={handleCopySyncUrl}
-                          class="min-h-[36px] px-2.5 py-1 text-xs font-bold rounded-lg border border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform"
+                          class="min-h-[44px] px-3 py-1.5 text-xs font-bold rounded-lg border border-black bg-amber-200 hover:bg-amber-300 active:scale-95 transition-transform"
                         >
                           {isSpanish ? "📋 Copiar link" : "📋 Copy Link"}
                         </button>
                         <button
                           type="button"
+                          aria-expanded={showPhrase}
                           onClick={() => setShowPhrase(!showPhrase)}
-                          class="min-h-[36px] px-2.5 py-1 text-xs font-bold rounded-lg border border-black/20 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-transform"
+                          class="min-h-[44px] px-3 py-1.5 text-xs font-bold rounded-lg border border-black/20 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-transform"
                         >
                           🔑 {showPhrase
                             ? (isSpanish ? "Ocultar frase" : "Hide Phrase")
@@ -606,7 +611,7 @@ export default function LibraryDrawer(
                         type="button"
                         onClick={handleCopyEncryptedBackup}
                         disabled={isExportingBackup}
-                        class="min-h-[36px] px-2.5 py-1 rounded-lg border-2 border-black bg-purple-100 hover:bg-purple-200 text-xs font-black text-neutral-900 active:scale-95 transition-transform disabled:opacity-50"
+                        class="min-h-[44px] px-3 py-1.5 rounded-lg border-2 border-black bg-purple-100 hover:bg-purple-200 text-xs font-black text-neutral-900 active:scale-95 transition-transform disabled:opacity-50"
                       >
                         {isExportingBackup
                           ? (isSpanish ? "Cifrando..." : "Encrypting...")
@@ -633,7 +638,7 @@ export default function LibraryDrawer(
                         placeholder={isSpanish
                           ? "Pega el respaldo cifrado de otro dispositivo..."
                           : "Paste encrypted backup JSON from other device..."}
-                        class="w-full min-h-[40px] px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-black/15 bg-white focus:border-black focus:outline-none"
+                        class="w-full min-h-[44px] px-2.5 py-1.5 text-base sm:text-xs font-mono rounded-lg border-2 border-black/15 bg-white focus:border-black focus:outline-none"
                       />
                       {backupInput.trim() !== "" && (
                         <div class="flex flex-col sm:flex-row gap-1.5">
@@ -653,12 +658,12 @@ export default function LibraryDrawer(
                             placeholder={isSpanish
                               ? "Frase de 4 palabras (opcional si es la misma)..."
                               : "4-word phrase (optional if same passport)..."}
-                            class="flex-1 min-w-0 min-h-[40px] px-2.5 py-1.5 text-xs font-mono rounded-lg border-2 border-black/15 bg-white focus:border-black focus:outline-none"
+                            class="flex-1 min-w-0 min-h-[44px] px-2.5 py-1.5 text-base sm:text-xs font-mono rounded-lg border-2 border-black/15 bg-white focus:border-black focus:outline-none"
                           />
                           <button
                             type="submit"
                             disabled={isImportingBackup}
-                            class="min-h-[40px] px-3 py-1.5 rounded-lg border-2 border-black bg-amber-200 hover:bg-amber-300 font-black text-xs text-black active:scale-95 transition-all disabled:opacity-50"
+                            class="min-h-[44px] px-3 py-1.5 rounded-lg border-2 border-black bg-amber-200 hover:bg-amber-300 font-black text-xs text-black active:scale-95 transition-all disabled:opacity-50"
                           >
                             {isImportingBackup
                               ? (isSpanish ? "Uniendo..." : "Merging...")
@@ -688,7 +693,16 @@ export default function LibraryDrawer(
                     : `${quota.used_count} / ${quota.total_allowed} used`}
                 </span>
               </div>
-              <div class="w-full h-3 bg-neutral-100 rounded-full border border-black/20 overflow-hidden">
+              <div
+                role="progressbar"
+                aria-label={isSpanish
+                  ? "Cuota de QRs guardados"
+                  : "Saved QR code allowance"}
+                aria-valuenow={quota.used_count}
+                aria-valuemin={0}
+                aria-valuemax={quota.total_allowed}
+                class="w-full h-3 bg-neutral-100 rounded-full border border-black/20 overflow-hidden"
+              >
                 <div
                   class={`h-full transition-all duration-300 ${
                     quota.used_count >= quota.total_allowed
@@ -750,7 +764,10 @@ export default function LibraryDrawer(
           {/* Unified Server + Local History Code List */}
           {loading && !hasAnyItems
             ? (
-              <div class="text-center py-8 text-neutral-400 text-sm font-medium">
+              <div
+                class="text-center py-8 text-neutral-600 text-sm font-medium"
+                role="status"
+              >
                 {isSpanish
                   ? "Cargando tus QRs guardados..."
                   : "Loading your QR codes..."}
@@ -816,7 +833,7 @@ export default function LibraryDrawer(
                                 });
                                 onClose();
                               }}
-                              class="min-h-[36px] px-2.5 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-neutral-100 text-xs font-bold active:scale-95 transition-transform"
+                              class="min-h-[44px] px-3 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-neutral-100 text-xs font-bold active:scale-95 transition-transform"
                             >
                               {isSpanish ? "Cargar QR" : "Load QR"}
                             </button>
@@ -824,7 +841,7 @@ export default function LibraryDrawer(
                           {editHref && (
                             <a
                               href={editHref}
-                              class="min-h-[36px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-black bg-amber-200 text-xs font-bold hover:bg-amber-300 active:scale-95 transition-transform"
+                              class="min-h-[44px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-black bg-amber-200 text-xs font-bold hover:bg-amber-300 active:scale-95 transition-transform"
                             >
                               {isSpanish
                                 ? "Editar y Stats ↗"
@@ -833,7 +850,7 @@ export default function LibraryDrawer(
                           )}
                         </div>
                       </div>
-                      <div class="flex items-center justify-between pt-2 border-t border-black/5 text-[11px] text-neutral-400">
+                      <div class="flex items-center justify-between pt-2 border-t border-black/5 text-[11px] text-neutral-600">
                         <span>
                           {c.scan_count} {isSpanish
                             ? (c.scan_count === 1 ? "escaneo" : "escaneos")
@@ -903,14 +920,14 @@ export default function LibraryDrawer(
                           title={isSpanish
                             ? "Quitar de la biblioteca"
                             : "Remove from library"}
-                          class="shrink-0 w-8 h-8 rounded-full border border-black/20 bg-neutral-100 hover:bg-rose-100 text-neutral-700 flex items-center justify-center text-xs font-bold transition-colors"
+                          class="shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full border border-black/20 bg-neutral-100 hover:bg-rose-100 text-neutral-700 flex items-center justify-center text-xs font-bold transition-colors"
                         >
                           ✕
                         </button>
                       </div>
 
                       <div class="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-black/5">
-                        <span class="text-[11px] text-neutral-400">
+                        <span class="text-[11px] text-neutral-600">
                           {new Date(item.timestamp).toLocaleDateString(
                             isSpanish ? "es-MX" : undefined,
                             {
@@ -936,7 +953,7 @@ export default function LibraryDrawer(
                                 });
                                 onClose();
                               }}
-                              class="min-h-[36px] px-2.5 py-1 rounded-xl border-2 border-black bg-white hover:bg-neutral-100 text-xs font-bold text-black active:scale-95 transition-transform"
+                              class="min-h-[44px] px-3 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-neutral-100 text-xs font-bold text-black active:scale-95 transition-transform"
                             >
                               {isSpanish ? "Cargar QR" : "Load QR"}
                             </button>
@@ -944,7 +961,7 @@ export default function LibraryDrawer(
                           {editHref && (
                             <a
                               href={editHref}
-                              class="min-h-[36px] inline-flex items-center px-3 py-1 rounded-xl border-2 border-black bg-amber-200 hover:bg-amber-300 text-xs font-bold text-black active:scale-95 transition-transform"
+                              class="min-h-[44px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-black bg-amber-200 hover:bg-amber-300 text-xs font-bold text-black active:scale-95 transition-transform"
                             >
                               {isSpanish
                                 ? "Editar y Stats ↗"
@@ -954,7 +971,7 @@ export default function LibraryDrawer(
                           {isFileItem && (
                             <a
                               href={item.content}
-                              class="min-h-[36px] inline-flex items-center px-3 py-1 rounded-xl border-2 border-black bg-teal-200 hover:bg-teal-300 text-xs font-bold text-black active:scale-95 transition-transform"
+                              class="min-h-[44px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-black bg-teal-200 hover:bg-teal-300 text-xs font-bold text-black active:scale-95 transition-transform"
                             >
                               {isSpanish ? "Abrir ↗" : "Open Share ↗"}
                             </a>

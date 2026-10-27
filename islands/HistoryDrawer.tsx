@@ -186,6 +186,7 @@ export default function HistoryDrawer(
             )}
             <button
               type="button"
+              aria-expanded={showSync}
               onClick={() => {
                 setShowSync(!showSync);
                 haptics.light();
@@ -367,20 +368,20 @@ export default function HistoryDrawer(
                           ? (isSpanish ? "Buzón de archivos" : "File Locker")
                           : item.content}
                       </p>
-                      <p class="text-[10px] text-gray-400 mt-0.5">
+                      <p class="text-[10px] text-gray-600 mt-0.5">
                         {formatDate(item.timestamp)}
                       </p>
                     </div>
                   </div>
 
-                  {/* Delete Button (visible on hover/group-hover) */}
+                  {/* Delete Button (visible on hover/group-hover & keyboard focus) */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeFromHistory(item.id);
                     }}
-                    class="absolute -top-2 -right-2 w-11 h-11 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:scale-110"
+                    class="absolute -top-2 -right-2 w-11 h-11 bg-red-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus:opacity-100 transition-opacity hover:scale-110"
                     aria-label={isSpanish
                       ? "Quitar del historial"
                       : "Remove from history"}
@@ -400,6 +401,7 @@ export default function HistoryDrawer(
           <div class="pt-3 border-t-2 border-black/10 flex items-center justify-between gap-2">
             <button
               type="button"
+              aria-expanded={showSync}
               onClick={() => {
                 setShowSync(!showSync);
                 haptics.light();

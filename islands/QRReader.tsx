@@ -597,6 +597,9 @@ export default function QRReader(
                     <div class="relative rounded-2xl border-3 border-black bg-black overflow-hidden aspect-square sm:aspect-video">
                       <video
                         ref={videoRef}
+                        aria-label={isSpanish
+                          ? "Vista previa de la cámara en vivo"
+                          : "Live camera scanner preview"}
                         class="w-full h-full object-cover"
                         playsInline
                         muted
@@ -675,12 +678,23 @@ export default function QRReader(
               {/* Drop / pick zone */}
               <div
                 data-dropzone="true"
+                role="button"
+                tabIndex={0}
+                aria-label={isSpanish
+                  ? "Elegir una captura o foto del QR"
+                  : "Pick a screenshot or QR image"}
                 class={`border-2 rounded-2xl p-6 text-center cursor-pointer transition-all bg-white ${
                   isDragging
                     ? "border-black bg-amber-200 shadow-chunky scale-[1.01]"
                     : "border-black/15 hover:border-black/60"
                 }`}
                 onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
                 onDragEnter={(e) => {
                   e.preventDefault();
                   setIsDragging(true);
@@ -811,7 +825,11 @@ export default function QRReader(
                   <div class="space-y-2.5">
                     {isPeeking
                       ? (
-                        <div class="rounded-2xl border-2 border-black bg-white overflow-hidden shadow-chunky">
+                        <div
+                          class="rounded-2xl border-2 border-black bg-white overflow-hidden shadow-chunky"
+                          role="status"
+                          aria-live="polite"
+                        >
                           <div class="flex items-center justify-between gap-2 px-3 py-2 bg-amber-50 border-b-2 border-black">
                             <div class="flex items-center gap-1.5 shrink-0">
                               <span class="w-2.5 h-2.5 rounded-full bg-red-400 border border-black" />
@@ -837,6 +855,13 @@ export default function QRReader(
                                 ? "Desarmando redirecciones y obteniendo vista previa sin cookies"
                                 : "Unrolling redirects & fetching visual preview without cookies"}
                             </span>
+                          </div>
+                          <div
+                            class="p-3 space-y-2 border-t-2 border-black bg-white"
+                            aria-hidden="true"
+                          >
+                            <div class="h-4 w-2/3 rounded bg-black/10 animate-pulse" />
+                            <div class="h-3 w-full rounded bg-black/5 animate-pulse" />
                           </div>
                         </div>
                       )
@@ -1085,8 +1110,8 @@ export default function QRReader(
                   )
                   : openableUrl
                   ? (
-                    <details class="group rounded-xl border-2 border-black/20 bg-white/70 p-2.5 text-xs transition-all">
-                      <summary class="cursor-pointer font-bold text-gray-600 hover:text-black list-none flex items-center justify-between text-[11px] select-none">
+                    <details class="group rounded-xl border-2 border-black/20 bg-white/70 text-xs transition-all">
+                      <summary class="cursor-pointer min-h-[44px] px-3 py-2 font-bold text-gray-600 hover:text-black list-none flex items-center justify-between text-[11px] select-none">
                         <span class="flex items-center gap-1.5">
                           <span>🔍</span>
                           <span>
@@ -1099,7 +1124,7 @@ export default function QRReader(
                           ▼
                         </span>
                       </summary>
-                      <div class="pt-2 mt-1.5 border-t border-gray-200 font-mono text-[11px] text-gray-800 break-all select-all max-h-24 overflow-y-auto">
+                      <div class="px-3 pb-2.5 pt-2 border-t border-gray-200 font-mono text-[11px] text-gray-800 break-all select-all max-h-24 overflow-y-auto">
                         {result.data}
                       </div>
                     </details>

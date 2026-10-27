@@ -173,6 +173,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
 
         {/* Shared flex top-rail container */}
         <div
+          role="region"
           class="w-full max-w-md flex justify-end mb-2 z-50 animate-fade-in"
           aria-label="Selector de estilos"
         >

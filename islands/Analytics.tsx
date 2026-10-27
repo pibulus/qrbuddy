@@ -55,40 +55,5 @@ export default function Analytics({
     return () => clearTimeout(timeoutId);
   }, [url.value]);
 
-  // Track conversion events (upgrade success/cancel)
-  useEffect(() => {
-    const urlParams = new URLSearchParams(globalThis.location.search);
-    const upgradeStatus = urlParams.get("upgrade");
-
-    // deno-lint-ignore no-explicit-any
-    const win = globalThis as any;
-
-    if (upgradeStatus && win.umami) {
-      if (upgradeStatus === "success") {
-        win.umami.track("upgrade_completed", {
-          plan: "pro",
-        });
-
-        // Clean URL
-        globalThis.history.replaceState(
-          {},
-          "",
-          globalThis.location.pathname,
-        );
-      } else if (upgradeStatus === "cancelled") {
-        win.umami.track("upgrade_cancelled", {
-          plan: "pro",
-        });
-
-        // Clean URL
-        globalThis.history.replaceState(
-          {},
-          "",
-          globalThis.location.pathname,
-        );
-      }
-    }
-  }, []);
-
   return null;
 }

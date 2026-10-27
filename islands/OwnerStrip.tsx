@@ -532,7 +532,8 @@ export default function OwnerStrip(
                 class="min-h-[44px] text-left font-black text-lg leading-tight hover:text-qr-pop transition-colors truncate max-w-full disabled:opacity-50"
                 title="Rename"
               >
-                {title} <span class="text-xs opacity-50">✎</span>
+                {title}{" "}
+                <span class="text-xs opacity-50" aria-hidden="true">✎</span>
               </button>
             )}
         </div>
@@ -713,7 +714,7 @@ export default function OwnerStrip(
                   )}
 
                   {/* 2. ⏱️ Hang Time & Completion + 🧭 Farthest Stamp */}
-                  <div class="grid grid-cols-3 gap-1.5">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                     <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
                       <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
                         Avg. Hang Time
@@ -732,7 +733,7 @@ export default function OwnerStrip(
                           : "—"}
                       </span>
                     </div>
-                    <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                    <div class="col-span-2 sm:col-span-1 bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
                       <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
                         Farthest Scan
                       </span>
@@ -902,7 +903,7 @@ export default function OwnerStrip(
                 key={f.id}
                 class="flex items-center gap-1.5 min-h-[44px] text-sm font-bold bg-white border-2 border-black/15 rounded-2xl px-2.5 py-1"
               >
-                <span class="w-5 text-xs font-black text-neutral-400 text-right shrink-0">
+                <span class="w-5 text-xs font-black text-neutral-600 text-right shrink-0">
                   {i + 1}
                 </span>
                 <span class="truncate flex-1 min-w-0" title={label}>

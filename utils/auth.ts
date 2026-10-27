@@ -1,8 +1,7 @@
-// Client & Server Auth Utility for QRBuddy Recoverable Library (Supabase Auth REST API)
-// Uses lightweight native fetch to eliminate node polyfills, CSP violations, and heavy bundles.
+// Client & Server Auth Utility for QRBuddy Recoverable Library
+// Lightweight session reader for optional server-library feature flag.
 
 import { IS_BROWSER } from "$fresh/runtime.ts";
-import { getSupabaseAnonKey, getSupabaseUrl } from "./api.ts";
 
 export interface AuthUser {
   id: string;
@@ -41,150 +40,6 @@ export function isPlusLibraryEnabled(): boolean {
   return false;
 }
 
-/** Request a 6-digit email OTP for passwordless sign-in via Supabase Auth REST. */
-export async function sendEmailOtp(
-  email: string,
-): Promise<{ success: boolean; error?: string }> {
-  const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes("@")) {
-    return { success: false, error: "Please enter a valid email address" };
-  }
-
-  const url = getSupabaseUrl();
-  const anonKey = getSupabaseAnonKey();
-
-  if (!url || !anonKey) {
-    // Local dev without Supabase configured: simulate code delivery
-    console.log(`[DEV_AUTH] Mock OTP sent to ${cleanEmail}`);
-    return { success: true };
-  }
-
-  try {
-    const response = await fetch(`${url}/auth/v1/otp`, {
-      method: "POST",
-      headers: {
-        "apikey": anonKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: cleanEmail,
-        create_user: true,
-      }),
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      return {
-        success: false,
-        error: errData.msg || errData.error_description || errData.error ||
-          "Failed to send verification code",
-      };
-    }
-
-    return { success: true };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Network error sending code",
-    };
-  }
-}
-
-/** Verify a 6-digit email OTP code via Supabase Auth REST. */
-export async function verifyEmailOtp(
-  email: string,
-  token: string,
-): Promise<{ success: boolean; session?: AuthSession; error?: string }> {
-  const cleanEmail = email.trim().toLowerCase();
-  const cleanToken = token.trim();
-
-  if (!cleanToken || cleanToken.length < 6) {
-    return {
-      success: false,
-      error: "Please enter the 6-digit verification code",
-    };
-  }
-
-  const url = getSupabaseUrl();
-  const anonKey = getSupabaseAnonKey();
-
-  if (!url || !anonKey) {
-    // Local dev mock session
-    const mockSession: AuthSession = {
-      access_token: `mock_user_jwt_${Date.now()}`,
-      user: {
-        id: "mock_user_id_" + cleanEmail.replace(/[^a-z0-9]/gi, "_"),
-        email: cleanEmail,
-      },
-    };
-    try {
-      if (IS_BROWSER) {
-        globalThis.localStorage?.setItem(
-          SESSION_STORAGE_KEY,
-          JSON.stringify(mockSession),
-        );
-      }
-    } catch {
-      // Ignore
-    }
-    globalThis.dispatchEvent?.(new CustomEvent("qrb-auth-changed"));
-    return { success: true, session: mockSession };
-  }
-
-  try {
-    const response = await fetch(`${url}/auth/v1/verify`, {
-      method: "POST",
-      headers: {
-        "apikey": anonKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        type: "email",
-        email: cleanEmail,
-        token: cleanToken,
-      }),
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      return {
-        success: false,
-        error: errData.msg || errData.error_description || errData.error ||
-          "Invalid or expired verification code",
-      };
-    }
-
-    const data = await response.json();
-    const session: AuthSession = {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-      user: {
-        id: data.user.id,
-        email: data.user.email,
-      },
-    };
-
-    if (IS_BROWSER) {
-      try {
-        globalThis.localStorage?.setItem(
-          SESSION_STORAGE_KEY,
-          JSON.stringify(session),
-        );
-      } catch {
-        // Ignore
-      }
-    }
-
-    globalThis.dispatchEvent?.(new CustomEvent("qrb-auth-changed"));
-    return { success: true, session };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Failed to verify code",
-    };
-  }
-}
-
 /** Get the currently authenticated session from storage. */
 export function getCurrentSession(): Promise<AuthSession | null> {
   if (!IS_BROWSER) return Promise.resolve(null);
@@ -205,37 +60,4 @@ export function getCurrentSession(): Promise<AuthSession | null> {
 export async function getUserAccessToken(): Promise<string | null> {
   const session = await getCurrentSession();
   return session?.access_token ?? null;
-}
-
-/** Get current authenticated user. */
-export async function getCurrentUser(): Promise<AuthUser | null> {
-  const session = await getCurrentSession();
-  return session?.user ?? null;
-}
-
-/** Sign out from current session. */
-export function signOutUser(): Promise<void> {
-  if (IS_BROWSER) {
-    try {
-      globalThis.localStorage?.removeItem(SESSION_STORAGE_KEY);
-    } catch {
-      // Ignore
-    }
-  }
-  globalThis.dispatchEvent?.(new CustomEvent("qrb-auth-changed"));
-  return Promise.resolve();
-}
-
-/** Listen for auth state changes. */
-export function onAuthStateChange(
-  callback: (session: AuthSession | null) => void,
-): () => void {
-  if (!IS_BROWSER) return () => {};
-  const handler = () => {
-    getCurrentSession().then(callback);
-  };
-  globalThis.addEventListener("qrb-auth-changed", handler);
-  return () => {
-    globalThis.removeEventListener("qrb-auth-changed", handler);
-  };
 }
