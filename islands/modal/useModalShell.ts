@@ -5,19 +5,19 @@
  * needs a custom skeleton but still wants the canonical machinery.
  *
  * Owns: Escape, Tab focus trap + focus restore, body scroll-lock, backdrop
- * click-outside, the close-out animation clock, reduced-motion. Close timing
+ * click-outside, the close-out animation clock, reduced-motion, and
+ * Weightless ("Elsewhere") sploosh/sclop audio feedback. Close timing
  * has ONE source of truth: the --charm-modal-close-ms token, read off the
  * card at close time (pass closeMs only to override).
  *
  * Works with plain useState or @preact/signals — pass `open` as a boolean
  * each render (reading signal.value re-renders, so it Just Works).
- *
- * Self-contained: copy the modal/ folder verbatim into an app, no other files.
  */
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { RefObject } from "preact";
+import { sounds } from "../../utils/sounds.ts";
 
-const DEFAULT_CLOSE_MS = 160;
+const DEFAULT_CLOSE_MS = 180;
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), ' +
   'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -93,10 +93,25 @@ export function useModalShell(
     return DEFAULT_CLOSE_MS;
   }
 
+  function applyClosingClasses(isClosing: boolean) {
+    const backdrop = backdropRef.current;
+    const dialog = dialogRef.current;
+    if (backdrop) {
+      backdrop.classList.add("animate-fade-in");
+      backdrop.classList.toggle("charm-modal-backdrop--closing", isClosing);
+      backdrop.classList.toggle("charm-modal--closing", isClosing);
+    }
+    if (dialog) {
+      dialog.classList.toggle("charm-modal--closing", isClosing);
+    }
+  }
+
   function requestClose() {
     if (stateRef.current.closing || !stateRef.current.open) return;
+    sounds.sclop();
     setClosing(true);
     stateRef.current.closing = true;
+    applyClosingClasses(true);
     const finish = () => {
       closeTimer.current = null;
       const prev = lastFocused.current;
@@ -142,6 +157,14 @@ export function useModalShell(
     }
   }
 
+  // Sync closing classes after render commit so consumers that only bind refs
+  // (like CreateModal) still keep `.charm-modal--closing` across re-renders.
+  useEffect(() => {
+    if (open || closing) {
+      applyClosingClasses(closing);
+    }
+  });
+
   // Open lifecycle: focus in, scroll-lock, Escape + trap. Cleanup releases
   // everything (also covers unmount mid-open).
   useEffect(() => {
@@ -156,6 +179,8 @@ export function useModalShell(
     }
 
     setClosing(false);
+    applyClosingClasses(false);
+    sounds.sploosh();
     lastFocused.current = document.activeElement;
     dialogRef.current?.focus();
 

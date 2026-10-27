@@ -144,7 +144,11 @@ export default function GradientCreator(
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
         ref={shell.backdropRef}
-        class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
+        class={`absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm charm-modal-backdrop animate-fade-in${
+          shell.closing
+            ? " charm-modal-backdrop--closing charm-modal--closing"
+            : ""
+        }`}
         onClick={shell.onBackdropClick}
       />
       <div
@@ -153,7 +157,9 @@ export default function GradientCreator(
         aria-modal="true"
         aria-labelledby="gradient-creator-title"
         tabindex={-1}
-        class="relative z-10 w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover p-4 sm:p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-5 animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto scrollbar-none"
+        class={`relative z-10 w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover p-4 sm:p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-5 charm-modal-sheet animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto scrollbar-none${
+          shell.closing ? " charm-modal--closing" : ""
+        }`}
       >
         {/* Header */}
         <div class="flex items-start justify-between gap-3">

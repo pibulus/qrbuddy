@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { getHistory } from "../../utils/history.ts";
 import { haptics } from "../../utils/haptics.ts";
+import { sounds } from "../../utils/sounds.ts";
 import { QR_TEMPLATES, type QRTemplateType } from "../../types/qr-templates.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
@@ -23,6 +24,8 @@ interface SmartInputToolbarProps {
   createHasUpdates: boolean;
   onShowHistory: () => void;
   onShowReader: () => void;
+  isBucket?: boolean;
+  isBatchMode?: boolean;
   lang?: Locale;
 }
 export default function SmartInputToolbar({
@@ -32,13 +35,27 @@ export default function SmartInputToolbar({
   createHasUpdates,
   onShowHistory,
   onShowReader,
+  isBucket = false,
+  isBatchMode = false,
   lang,
 }: SmartInputToolbarProps) {
   const isSpanish = getClientLocale(lang) === "es";
   const templateMeta = QR_TEMPLATES[selectedTemplate];
-  const templateLabel = isSpanish
+  const activeIcon = isBatchMode
+    ? "📦"
+    : isBucket
+    ? "🪣"
+    : selectedTemplate === "vcard"
+    ? "🪪"
+    : templateMeta.icon;
+  const activeLabel = isBatchMode
+    ? (isSpanish ? "Lote" : "Bulk")
+    : isBucket
+    ? (isSpanish ? "Buzón" : "Locker")
+    : isSpanish
     ? (TEMPLATE_LABELS_ES[selectedTemplate] ?? templateMeta.label)
     : templateMeta.label;
+  const isSpecialMode = isBatchMode || isBucket || selectedTemplate !== "url";
   const [hasHistory, setHasHistory] = useState(false);
 
   useEffect(() => {
@@ -69,6 +86,7 @@ export default function SmartInputToolbar({
           setIsCreateModalOpen(true);
           setCreateHasUpdates(false);
           haptics.light();
+          sounds.click();
         }}
         class="group w-full min-w-0 min-h-[52px] flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 py-3 rounded-xl border-3 border-black bg-blue-50 shadow-chunky hover:shadow-chunky-hover hover:translate-x-[-2px] hover:translate-y-[-2px] hover:bg-blue-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-chunky transition-all duration-150 font-bold overflow-hidden"
         title={isSpanish
@@ -86,20 +104,26 @@ export default function SmartInputToolbar({
           {isSpanish ? "Personalizar ✨" : "Customize ✨"}
         </span>
         <span
-          class={`text-xs text-gray-600 font-black truncate ${
+          class={`text-xs font-black truncate ${
+            isSpecialMode
+              ? "rounded-full border border-black bg-amber-200 px-2 py-0.5 text-black"
+              : "text-gray-600"
+          } ${
             hasHistory
               ? "hidden min-[400px]:inline"
               : "hidden min-[340px]:inline"
           }`}
         >
-          · {templateMeta.icon} {templateLabel}
+          {isSpecialMode
+            ? `${activeIcon} ${activeLabel}`
+            : `· ${activeIcon} ${activeLabel}`}
         </span>
         {hasHistory && (
           <span
             class="hidden min-[360px]:inline min-[400px]:hidden text-xs text-gray-600 font-black shrink-0"
             aria-hidden="true"
           >
-            {templateMeta.icon}
+            {activeIcon}
           </span>
         )}
         {createHasUpdates && (
@@ -112,6 +136,7 @@ export default function SmartInputToolbar({
         onClick={() => {
           onShowReader();
           haptics.light();
+          sounds.click();
         }}
         class="group px-2 sm:px-3.5 min-h-[52px] flex items-center justify-center gap-1 sm:gap-1.5 rounded-xl border-3 border-black bg-gradient-to-br from-purple-50 to-pink-50 shadow-chunky hover:shadow-chunky-hover hover:translate-x-[-2px] hover:translate-y-[-2px] hover:from-purple-100 hover:to-pink-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-chunky transition-all duration-150 font-bold shrink-0"
         title={isSpanish
@@ -133,6 +158,7 @@ export default function SmartInputToolbar({
           onClick={() => {
             onShowHistory();
             haptics.light();
+            sounds.click();
           }}
           class="group w-11 sm:w-14 min-h-[52px] flex items-center justify-center rounded-xl border-3 border-black bg-gradient-to-br from-yellow-50 to-orange-50 shadow-chunky hover:shadow-chunky-hover hover:translate-x-[-2px] hover:translate-y-[-2px] hover:from-yellow-100 hover:to-orange-100 active:translate-x-[2px] active:translate-y-[2px] active:shadow-chunky transition-all duration-150 animate-pop-in shrink-0"
           title={isSpanish

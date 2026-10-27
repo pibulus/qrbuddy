@@ -1,5 +1,7 @@
-// Enhanced haptic feedback system for QRBuddy
-// Provides tactile feedback on mobile devices with fallback patterns
+// Enhanced haptic + tactile audio feedback system for QRBuddy
+// Bridges device vibration with Weightless ("Elsewhere") procedural audio cues
+
+import { sounds } from "./sounds.ts";
 
 export interface HapticPattern {
   light: () => void;
@@ -15,7 +17,8 @@ class HapticManager implements HapticPattern {
   private isSupported: boolean;
 
   constructor() {
-    this.isSupported = "vibrate" in navigator;
+    this.isSupported = typeof navigator !== "undefined" &&
+      "vibrate" in navigator;
   }
 
   private vibrate(pattern: number | number[]): void {
@@ -26,34 +29,41 @@ class HapticManager implements HapticPattern {
 
   light(): void {
     this.vibrate(10);
+    sounds.select();
   }
 
   medium(): void {
     this.vibrate(25);
+    sounds.bloop();
   }
 
   heavy(): void {
     this.vibrate(50);
+    sounds.sclop();
   }
 
   success(): void {
-    // Triple tap success pattern
+    // Triple tap success pattern + harmonic bloom chord
     this.vibrate([10, 30, 10, 30, 10]);
+    sounds.success();
   }
 
   error(): void {
-    // Strong double buzz for errors
+    // Double buzz + warm low double-sclop
     this.vibrate([100, 30, 100]);
+    sounds.error();
   }
 
   shuffle(): void {
-    // Playful shuffle pattern
+    // Playful shuffle pattern + pentatonic droplet cascade
     this.vibrate([15, 20, 15, 20, 25]);
+    sounds.shuffle();
   }
 
   copy(): void {
-    // Quick double tap for copy
+    // Quick double tap + crisp double-droplet bloop
     this.vibrate([20, 40, 20]);
+    sounds.copy();
   }
 
   // Check if device supports haptics

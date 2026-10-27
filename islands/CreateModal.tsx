@@ -6,6 +6,7 @@ import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
+import { sounds } from "../utils/sounds.ts";
 import ChoiceRow from "./create-modal/ChoiceRow.tsx";
 import CompletionState, {
   type CompletionKind,
@@ -30,6 +31,7 @@ import { addToast } from "./ToastManager.tsx";
 
 type ActiveTab = "type" | "options" | "design";
 type TypeIntent = "qr" | "share-file" | "collect-files";
+type ContentStep = "pick" | "fill";
 
 interface CreateModalProps {
   isOpen: boolean;
@@ -214,24 +216,35 @@ export default function CreateModal({
   const isSpanish = locale === "es";
   const photoInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
+  const fillStageRef = useRef<HTMLDivElement>(null);
+
+  const scrollBodyToTop = () => {
+    if (bodyScrollRef.current) {
+      bodyScrollRef.current.scrollTop = 0;
+    }
+  };
 
   const handlePhotoSelect = () => {
     photoInputRef.current?.click();
     haptics.light();
+    sounds.click();
   };
 
   const handleAudioSelect = () => {
     audioInputRef.current?.click();
     haptics.light();
+    sounds.click();
   };
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("type");
   const [typeIntent, setTypeIntent] = useState<TypeIntent>("qr");
+  const [contentStep, setContentStep] = useState<ContentStep>("pick");
   const [completionKind, setCompletionKind] = useState<CompletionKind | null>(
     null,
   );
   const completionDownload = useSignal(false);
-  const [showLockerSettings, setShowLockerSettings] = useState(false);
+  const [_showLockerSettings, setShowLockerSettings] = useState(false);
   const [isLimitSettingsOpen, setIsLimitSettingsOpen] = useState(false);
 
   const lockerActive = isBucket.value && bucketUrl.value !== "";
@@ -246,10 +259,29 @@ export default function CreateModal({
   useEffect(() => {
     if (!isOpen) {
       setTypeIntent("qr");
+      setContentStep("pick");
       setCompletionKind(null);
       setShowLockerSettings(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || activeTab !== "type" || contentStep !== "fill") return;
+    const timer = setTimeout(() => {
+      const firstInput = fillStageRef.current?.querySelector<HTMLElement>(
+        'input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]), textarea',
+      );
+      firstInput?.focus();
+    }, 40);
+    return () => clearTimeout(timer);
+  }, [
+    isOpen,
+    activeTab,
+    contentStep,
+    selectedTemplate,
+    typeIntent,
+    isBatchMode,
+  ]);
 
   // Dialog behaviour (Escape, scroll-lock, focus trap, backdrop click) lives
   // in the shared modal shell.
@@ -292,8 +324,12 @@ export default function CreateModal({
       url.value = "";
     }
     setTypeIntent("qr");
+    setIsBatchMode(false);
+    setShowLockerSettings(false);
     onSelectTemplate(template);
-    haptics.light();
+    setContentStep("fill");
+    scrollBodyToTop();
+    haptics.medium();
   };
 
   const handleShareFileSelect = () => {
@@ -302,7 +338,9 @@ export default function CreateModal({
     setCompletionKind(null);
     setIsBatchMode(false);
     setShowLockerSettings(false);
-    haptics.light();
+    setContentStep("fill");
+    scrollBodyToTop();
+    haptics.medium();
   };
 
   const handleCollectFilesSelect = () => {
@@ -311,7 +349,28 @@ export default function CreateModal({
     setCompletionKind(null);
     setShowLockerSettings(true);
     setIsBatchMode(false);
-    haptics.light();
+    setContentStep("fill");
+    scrollBodyToTop();
+    haptics.medium();
+  };
+
+  const handleBulkCreateSelect = () => {
+    if (lockerActive) {
+      addToast(
+        isSpanish
+          ? "Buzón desconectado de este QR"
+          : "Locker cleared from this QR",
+      );
+    }
+    disableDynamicBase();
+    setTypeIntent("qr");
+    setShowLockerSettings(false);
+    setIsBatchMode(true);
+    isBucket.value = false;
+    bucketUrl.value = "";
+    setContentStep("fill");
+    scrollBodyToTop();
+    haptics.medium();
   };
 
   const handleLockerConfirmWrapper = async (options: CreateBucketOptions) => {
@@ -512,117 +571,49 @@ export default function CreateModal({
     );
   };
 
-  const renderTypeTab = () => (
-    <div class="space-y-5">
-      <section class="space-y-2">
-        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-          {isSpanish ? "Tipos principales" : "Core types"}
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {QR_TYPE_ORDER.map((key) => {
-            const template = QR_TEMPLATES[key];
-            const copy = QR_TYPE_COPY[key];
-            return (
-              <ChoiceRow
-                key={key}
-                icon={template.icon}
-                title={isSpanish
-                  ? (copy?.labelEs ?? copy?.label ?? template.label)
-                  : (copy?.label ?? template.label)}
-                description={isSpanish
-                  ? (copy?.descriptionEs ?? copy?.description ??
-                    template.description)
-                  : (copy?.description ?? template.description)}
-                active={typeIntent === "qr" && selectedTemplate === key}
-                onClick={() => handleTemplateSelect(key)}
-              />
-            );
-          })}
-          <ChoiceRow
-            icon="📲"
-            title={isSpanish ? "Contáctame" : "Contact me"}
-            description={isSpanish
-              ? "Llamada, SMS o correo — tú eliges."
-              : "Call, text, or email you — you pick."}
-            active={typeIntent === "qr" &&
-              CONTACT_TYPES.includes(selectedTemplate)}
-            onClick={() => handleTemplateSelect("phone")}
-          />
-        </div>
-      </section>
+  const getSelectedStageBadge = (): { icon: string; label: string } => {
+    if (isBatchMode) {
+      return {
+        icon: "📦",
+        label: isSpanish ? "Crear en Lote" : "Bulk create",
+      };
+    }
+    if (typeIntent === "share-file") {
+      return {
+        icon: "📂",
+        label: isSpanish ? "Compartir Archivo" : "Share a file",
+      };
+    }
+    if (typeIntent === "collect-files") {
+      return {
+        icon: "🪣",
+        label: isSpanish ? "Buzón de Archivos" : "Collect files",
+      };
+    }
+    if (CONTACT_TYPES.includes(selectedTemplate)) {
+      return {
+        icon: "📲",
+        label: isSpanish ? "Contáctame" : "Contact me",
+      };
+    }
+    const template = QR_TEMPLATES[selectedTemplate];
+    const copy = QR_TYPE_COPY[selectedTemplate];
+    return {
+      icon: selectedTemplate === "vcard" ? "🪪" : template.icon,
+      label: isSpanish
+        ? (copy?.labelEs ?? copy?.label ?? template.label)
+        : (copy?.label ?? template.label),
+    };
+  };
 
-      {
-        /* Files and bulk are what-am-I-making intents (a page, a locker, many
-          static QRs at once), not per-QR behaviors — they live here with the
-          other top-level intents. */
-      }
-      <section class="space-y-2">
-        <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-          {isSpanish ? "Archivos y álbumes" : "Files & drops"}
-        </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <ChoiceRow
-            icon="🖼️"
-            title={isSpanish ? "Galería de Fotos" : "Photo slideshow"}
-            description={isSpanish
-              ? "Hasta 10 fotos en galería automática (≤5 MB c/u)."
-              : "Up to 10 photos, auto-advancing gallery (≤5MB each)."}
-            active={false}
-            onClick={handlePhotoSelect}
-          />
-          <ChoiceRow
-            icon="🎵"
-            title={isSpanish ? "Mixtape de Audio" : "Audio playlist"}
-            description={isSpanish
-              ? "Hasta 10 pistas con reproductor mixtape (≤5 MB c/u)."
-              : "Up to 10 tracks, mixtape player (≤5MB each)."}
-            active={false}
-            onClick={handleAudioSelect}
-          />
-          <ChoiceRow
-            icon="📂"
-            title={isSpanish ? "Compartir Archivo" : "Share a file"}
-            description={isSpanish
-              ? "Página de descarga para un archivo, con PIN opcional."
-              : "Download page for one file, optional PIN."}
-            active={typeIntent === "share-file"}
-            onClick={handleShareFileSelect}
-          />
-          <ChoiceRow
-            icon="🪣"
-            title={isSpanish ? "Buzón de Archivos" : "Collect files"}
-            description={isSpanish
-              ? "Un buzón donde la gente puede subirte archivos."
-              : "A locker people drop files into."}
-            active={typeIntent === "collect-files" || lockerActive}
-            onClick={handleCollectFilesSelect}
-          />
-          <ChoiceRow
-            icon="📦"
-            title={isSpanish ? "Crear en Lote" : "Bulk create"}
-            description={isSpanish
-              ? "Pega varios links y descarga un ZIP con todos los QRs."
-              : "Paste links, download a ZIP of QRs."}
-            active={isBatchMode}
-            onClick={() => {
-              const next = !isBatchMode;
-              setIsBatchMode(next);
-              if (next) {
-                if (lockerActive) {
-                  addToast(
-                    isSpanish
-                      ? "Buzón desconectado de este QR"
-                      : "Locker cleared from this QR",
-                  );
-                }
-                disableDynamicBase();
-                isBucket.value = false;
-                bucketUrl.value = "";
-              }
-              haptics.light();
-            }}
-          />
-        </div>
+  const renderTypeTab = () => {
+    const activeStageBadge = getSelectedStageBadge();
+    const batchCount = batchUrls.split("\n").filter((u) => u.trim()).length;
+    const isUrlStep = typeIntent === "qr" && !isBatchMode &&
+      selectedTemplate === "url";
+
+    return (
+      <div class="space-y-5">
         <input
           ref={photoInputRef}
           type="file"
@@ -655,89 +646,284 @@ export default function CreateModal({
             }
           }}
         />
-        {isBatchMode && (
-          <BatchSettings
-            batchUrls={batchUrls}
-            setBatchUrls={setBatchUrls}
-            isGeneratingBatch={isGeneratingBatch}
-            batchProgress={batchProgress}
-            onGenerateBatch={onGenerateBatch}
-            lang={locale}
-          />
-        )}
-      </section>
 
-      <div class="pt-2">
-        {typeIntent === "share-file" && (
-          <MediaHubForm
-            url={url}
-            onCreated={() => {
-              setTypeIntent("share-file");
-              setCompletionKind("share-file");
-              setShowLockerSettings(false);
-              setActiveTab("type");
-              void handleCopyResult(
-                isSpanish ? "¡Link copiado! 📋" : "Share link copied! 📋",
-                false,
-              );
-            }}
-          />
-        )}
-        {typeIntent === "collect-files" && showLockerSettings && (
-          <LockerSettings
-            isActive={lockerActive}
-            bucketUrl={bucketUrl.value}
-            isCreating={isCreatingLocker}
-            onClose={() => setShowLockerSettings(false)}
-            onDisable={handleLockerDisableWrapper}
-            onConfirm={handleLockerConfirmWrapper}
-            lang={locale}
-          />
-        )}
-        {typeIntent === "qr" && (
-          <div class="animate-slide-down">
-            {CONTACT_TYPES.includes(selectedTemplate) && (
-              <div class="grid grid-cols-3 gap-2 mb-3">
-                {CONTACT_SEGMENTS.map((seg) => (
-                  <button
-                    key={seg.key}
-                    type="button"
-                    onClick={() => {
-                      onSelectTemplate(seg.key);
-                      haptics.light();
-                    }}
-                    aria-pressed={selectedTemplate === seg.key}
-                    class={`min-h-[44px] rounded-full border-2 px-2 font-black text-sm transition-all ${
-                      selectedTemplate === seg.key
-                        ? "border-black bg-amber-200 text-black shadow-chunky"
-                        : "border-black/15 bg-white text-neutral-700 hover:border-black/60"
-                    }`}
-                  >
-                    {seg.icon} {isSpanish ? seg.labelEs : seg.label}
-                  </button>
-                ))}
+        {contentStep === "pick"
+          ? (
+            <div class="space-y-5 animate-fade-in">
+              <section class="space-y-2">
+                <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+                  {isSpanish ? "Tipos principales" : "Core types"}
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {QR_TYPE_ORDER.map((key) => {
+                    const template = QR_TEMPLATES[key];
+                    const copy = QR_TYPE_COPY[key];
+                    const isRowActive = typeIntent === "qr" && !isBatchMode &&
+                      !lockerActive && selectedTemplate === key;
+                    const isConfigured = isRowActive &&
+                      url.value.trim() !== "";
+                    return (
+                      <ChoiceRow
+                        key={key}
+                        icon={key === "vcard" ? "🪪" : template.icon}
+                        title={isSpanish
+                          ? (copy?.labelEs ?? copy?.label ?? template.label)
+                          : (copy?.label ?? template.label)}
+                        description={isSpanish
+                          ? (copy?.descriptionEs ?? copy?.description ??
+                            template.description)
+                          : (copy?.description ?? template.description)}
+                        active={isRowActive}
+                        badge={isConfigured
+                          ? (isSpanish ? "Listo" : "Ready")
+                          : undefined}
+                        onClick={() => handleTemplateSelect(key)}
+                      />
+                    );
+                  })}
+                  <ChoiceRow
+                    icon="📲"
+                    title={isSpanish ? "Contáctame" : "Contact me"}
+                    description={isSpanish
+                      ? "Llamada, SMS o correo — tú eliges."
+                      : "Call, text, or email you — you pick."}
+                    active={typeIntent === "qr" && !isBatchMode &&
+                      !lockerActive &&
+                      CONTACT_TYPES.includes(selectedTemplate)}
+                    badge={typeIntent === "qr" && !isBatchMode &&
+                        !lockerActive &&
+                        CONTACT_TYPES.includes(selectedTemplate) &&
+                        url.value.trim() !== ""
+                      ? (isSpanish ? "Listo" : "Ready")
+                      : undefined}
+                    onClick={() =>
+                      handleTemplateSelect(
+                        CONTACT_TYPES.includes(selectedTemplate)
+                          ? selectedTemplate
+                          : "phone",
+                      )}
+                  />
+                </div>
+              </section>
+
+              {
+                /* Files and bulk are what-am-I-making intents (a page, a locker, many
+                  static QRs at once), not per-QR behaviors — they live here with the
+                  other top-level intents. */
+              }
+              <section class="space-y-2">
+                <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+                  {isSpanish ? "Archivos y álbumes" : "Files & drops"}
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <ChoiceRow
+                    icon="🖼️"
+                    title={isSpanish ? "Galería de Fotos" : "Photo slideshow"}
+                    description={isSpanish
+                      ? "Hasta 10 fotos en galería automática (≤5 MB c/u)."
+                      : "Up to 10 photos, auto-advancing gallery (≤5MB each)."}
+                    active={false}
+                    onClick={handlePhotoSelect}
+                  />
+                  <ChoiceRow
+                    icon="🎵"
+                    title={isSpanish ? "Mixtape de Audio" : "Audio playlist"}
+                    description={isSpanish
+                      ? "Hasta 10 pistas con reproductor mixtape (≤5 MB c/u)."
+                      : "Up to 10 tracks, mixtape player (≤5MB each)."}
+                    active={false}
+                    onClick={handleAudioSelect}
+                  />
+                  <ChoiceRow
+                    icon="📂"
+                    title={isSpanish ? "Compartir Archivo" : "Share a file"}
+                    description={isSpanish
+                      ? "Página de descarga para un archivo, con PIN opcional."
+                      : "Download page for one file, optional PIN."}
+                    active={typeIntent === "share-file"}
+                    onClick={handleShareFileSelect}
+                  />
+                  <ChoiceRow
+                    icon="🪣"
+                    title={isSpanish ? "Buzón de Archivos" : "Collect files"}
+                    description={isSpanish
+                      ? "Un buzón donde la gente puede subirte archivos."
+                      : "A locker people drop files into."}
+                    active={typeIntent === "collect-files" || lockerActive}
+                    badge={lockerActive
+                      ? (isSpanish ? "Activo" : "Live")
+                      : undefined}
+                    onClick={handleCollectFilesSelect}
+                  />
+                  <ChoiceRow
+                    icon="📦"
+                    title={isSpanish ? "Crear en Lote" : "Bulk create"}
+                    description={isSpanish
+                      ? "Pega varios links y descarga un ZIP con todos los QRs."
+                      : "Paste links, download a ZIP of QRs."}
+                    active={isBatchMode}
+                    badge={isBatchMode && batchCount > 0
+                      ? `${batchCount} ${batchCount === 1 ? "QR" : "QRs"}`
+                      : undefined}
+                    onClick={handleBulkCreateSelect}
+                  />
+                </div>
+              </section>
+            </div>
+          )
+          : (
+            <div ref={fillStageRef} class="space-y-4 animate-slide-up">
+              {/* Top Stage Bar: Back to intent grid + active type enamel badge */}
+              <div class="flex items-center justify-between gap-2 pb-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContentStep("pick");
+                    scrollBodyToTop();
+                    haptics.light();
+                    sounds.toggleOff?.();
+                  }}
+                  class="min-h-[40px] inline-flex items-center gap-1.5 rounded-full border-2 border-black bg-white px-3.5 py-1.5 text-xs font-black text-black shadow-chunky hover:bg-amber-50 hover:scale-105 active:scale-95 transition-all"
+                >
+                  {isSpanish ? "← Todos los tipos" : "← All QR types"}
+                </button>
+
+                <span class="min-h-[36px] inline-flex items-center gap-1.5 rounded-full border-2 border-black bg-amber-200 px-3 py-1 text-xs font-black text-black shadow-chunky truncate">
+                  <span aria-hidden="true">{activeStageBadge.icon}</span>
+                  <span class="truncate">{activeStageBadge.label}</span>
+                </span>
               </div>
-            )}
-            {renderTemplateForm()}
-            {selectedTemplate === "url" && !isDynamic.value && (
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("options");
-                  haptics.light();
-                }}
-                class="w-full min-h-[44px] mt-1 text-sm font-bold text-neutral-500 hover:text-qr-pop transition-colors"
-              >
-                {isSpanish
-                  ? "¿Quieres cambiar el destino después de imprimirlo? →"
-                  : "Want to repoint this after printing? →"}
-              </button>
-            )}
-          </div>
-        )}
+
+              {/* Focused Form Body */}
+              {isBatchMode
+                ? (
+                  <BatchSettings
+                    batchUrls={batchUrls}
+                    setBatchUrls={setBatchUrls}
+                    isGeneratingBatch={isGeneratingBatch}
+                    batchProgress={batchProgress}
+                    onGenerateBatch={onGenerateBatch}
+                    lang={locale}
+                  />
+                )
+                : typeIntent === "share-file"
+                ? (
+                  <MediaHubForm
+                    url={url}
+                    onCreated={() => {
+                      setTypeIntent("share-file");
+                      setCompletionKind("share-file");
+                      setShowLockerSettings(false);
+                      setActiveTab("type");
+                      void handleCopyResult(
+                        isSpanish
+                          ? "¡Link copiado! 📋"
+                          : "Share link copied! 📋",
+                        false,
+                      );
+                    }}
+                  />
+                )
+                : typeIntent === "collect-files"
+                ? (
+                  <LockerSettings
+                    isActive={lockerActive}
+                    bucketUrl={bucketUrl.value}
+                    isCreating={isCreatingLocker}
+                    onClose={() => {
+                      setShowLockerSettings(false);
+                      setContentStep("pick");
+                      scrollBodyToTop();
+                    }}
+                    onDisable={handleLockerDisableWrapper}
+                    onConfirm={handleLockerConfirmWrapper}
+                    lang={locale}
+                  />
+                )
+                : (
+                  <div class="space-y-3">
+                    {CONTACT_TYPES.includes(selectedTemplate) && (
+                      <div class="grid grid-cols-3 gap-2">
+                        {CONTACT_SEGMENTS.map((seg) => (
+                          <button
+                            key={seg.key}
+                            type="button"
+                            onClick={() => {
+                              onSelectTemplate(seg.key);
+                              haptics.light();
+                              sounds.click();
+                            }}
+                            aria-pressed={selectedTemplate === seg.key}
+                            class={`min-h-[44px] rounded-full border-2 px-2 font-black text-sm transition-all ${
+                              selectedTemplate === seg.key
+                                ? "border-black bg-amber-200 text-black shadow-chunky"
+                                : "border-black/15 bg-white text-neutral-700 hover:border-black/60"
+                            }`}
+                          >
+                            {seg.icon} {isSpanish ? seg.labelEs : seg.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {renderTemplateForm()}
+                  </div>
+                )}
+
+              {/* Next-Phase Bridge Row */}
+              <div class="pt-2 border-t-2 border-black/10">
+                {isUrlStep
+                  ? (
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("options");
+                          scrollBodyToTop();
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        class="min-h-[44px] rounded-full border-2 border-black bg-white px-3.5 py-2 text-xs font-black text-black shadow-chunky hover:bg-amber-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                      >
+                        {isSpanish
+                          ? "🔗 Comportamiento (Editable / Límites) →"
+                          : "🔗 Behavior (Editable / Limits) →"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("design");
+                          scrollBodyToTop();
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        class="min-h-[44px] rounded-full border-2 border-black bg-amber-200 px-3.5 py-2 text-xs font-black text-black shadow-chunky hover:bg-amber-300 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                      >
+                        {isSpanish ? "🎨 Estilo y Logo →" : "🎨 Style & Logo →"}
+                      </button>
+                    </div>
+                  )
+                  : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab("design");
+                        scrollBodyToTop();
+                        haptics.light();
+                        sounds.click();
+                      }}
+                      class="w-full min-h-[44px] rounded-full border-2 border-black bg-amber-200 px-4 py-2 text-xs sm:text-sm font-black text-black shadow-chunky hover:bg-amber-300 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      {isSpanish
+                        ? "🎨 Siguiente: Estilo y Logo →"
+                        : "🎨 Next: Style & Logo →"}
+                    </button>
+                  )}
+              </div>
+            </div>
+          )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderOptionsTab = () => (
     <div class="space-y-5">
@@ -884,6 +1070,23 @@ export default function CreateModal({
           )}
         </section>
       )}
+
+      <div class="pt-2 border-t-2 border-black/10">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab("design");
+            scrollBodyToTop();
+            haptics.light();
+            sounds.click();
+          }}
+          class="w-full min-h-[44px] rounded-full border-2 border-black bg-amber-200 px-4 py-2 text-xs sm:text-sm font-black text-black shadow-chunky hover:bg-amber-300 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+        >
+          {isSpanish
+            ? "🎨 Siguiente: Estilo y Logo →"
+            : "🎨 Next: Style & Logo →"}
+        </button>
+      </div>
     </div>
   );
 
@@ -913,7 +1116,11 @@ export default function CreateModal({
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
         ref={shell.backdropRef}
-        class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm transition-opacity"
+        class={`absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm transition-opacity ${
+          shell.closing
+            ? "charm-modal-backdrop--closing charm-modal--closing opacity-0"
+            : "animate-fade-in"
+        }`}
         onClick={shell.onBackdropClick}
       />
 
@@ -923,7 +1130,11 @@ export default function CreateModal({
         aria-modal="true"
         aria-labelledby="create-modal-title"
         tabindex={-1}
-        class="relative w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
+        class={`relative w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col overflow-hidden ${
+          shell.closing
+            ? "charm-modal--closing animate-modal-exit"
+            : "animate-slide-up sm:animate-pop-in"
+        }`}
       >
         <div class="flex items-start justify-between gap-3 p-4 sm:p-6 pb-2 sm:pb-3">
           <div>
@@ -968,7 +1179,11 @@ export default function CreateModal({
                   type="button"
                   key={tab.id}
                   onClick={() => {
+                    if (tab.id === "type" && activeTab === "type") {
+                      setContentStep("pick");
+                    }
                     setActiveTab(tab.id);
+                    scrollBodyToTop();
                     haptics.light();
                   }}
                   aria-selected={activeTab === tab.id}
@@ -986,7 +1201,10 @@ export default function CreateModal({
           </div>
         )}
 
-        <div class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-6 pb-6 sm:h-[min(480px,56dvh)] sm:flex-none">
+        <div
+          ref={bodyScrollRef}
+          class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-6 pb-6 sm:h-[min(480px,56dvh)] sm:flex-none"
+        >
           {hasCompletion ? renderCompletionState() : (
             <>
               {activeTab === "type" && renderTypeTab()}

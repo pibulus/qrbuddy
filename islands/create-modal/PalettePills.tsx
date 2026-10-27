@@ -1,6 +1,7 @@
 import type { ComponentChildren } from "preact";
 import { haptics } from "../../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+import { sounds } from "../../utils/sounds.ts";
 import { STYLE_DISPLAY } from "../StyleSelector.tsx";
 
 export const PALETTE_PILL =
@@ -28,7 +29,7 @@ export default function PalettePills(
   const isSpanish = getClientLocale(lang) === "es";
   return (
     <div class="flex flex-wrap gap-2">
-      {Object.entries(STYLE_DISPLAY).map(([key, info]) => (
+      {Object.entries(STYLE_DISPLAY).map(([key, info], index) => (
         <button
           key={key}
           type="button"
@@ -36,6 +37,7 @@ export default function PalettePills(
           disabled={disabled}
           onClick={() => {
             onChange(key);
+            sounds.playAt?.("bloop", index, { total: 8 });
             haptics.light();
           }}
           class={`${PALETTE_PILL} ${pillState(value === key)}`}

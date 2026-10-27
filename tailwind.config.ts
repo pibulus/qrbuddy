@@ -24,15 +24,20 @@ export default {
         "gradient-flow": "gradient-flow 3s ease infinite",
         "pop": "pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
         "fade-out": "fade-out 0.5s ease-out forwards",
-        "fade-in": "fade-in 0.4s ease-out",
+        "fade-in": "fade-in 0.18s ease backwards",
         "shake": "shake 0.3s ease-in-out",
-        "slide-down": "slide-down 0.2s ease-out",
-        "slide-up": "slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        "modal-exit": "modal-exit 0.3s ease-in forwards",
+        "slide-down": "slide-down 0.2s ease-out backwards",
+        "slide-up":
+          "slide-up 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) backwards",
+        "modal-exit": "modal-exit 0.18s ease forwards",
         "pulse-glow": "pulse-glow 1.5s ease-in-out infinite",
         "glow-pulse": "glow-pulse 1.5s ease-out forwards",
-        "bounce-in": "bounce-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
-        "pop-in": "pop-in 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+        "bounce-in":
+          "bounce-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards",
+        "pop-in": "pop-in 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) backwards",
+        "drawer-in":
+          "drawer-in 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) backwards",
+        "drawer-out": "drawer-out 0.18s ease forwards",
       },
 
       keyframes: {
@@ -76,7 +81,7 @@ export default {
         "slide-up": {
           "0%": {
             opacity: "0",
-            transform: "translateY(30px) scale(0.95)",
+            transform: "translateY(28px) scale(0.97)",
           },
           "100%": {
             opacity: "1",
@@ -94,7 +99,7 @@ export default {
           },
           "100%": {
             opacity: "0",
-            transform: "translateY(20px) scale(0.95)",
+            transform: "translateY(8px) scale(0.94)",
           },
         },
         "pulse-glow": {
@@ -110,8 +115,16 @@ export default {
           "100%": { opacity: "1", transform: "scale(1)" },
         },
         "pop-in": {
-          "0%": { opacity: "0", transform: "scale(0.85)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
+          "0%": { opacity: "0", transform: "scale(0.94) translateY(10px)" },
+          "100%": { opacity: "1", transform: "scale(1) translateY(0)" },
+        },
+        "drawer-in": {
+          "0%": { opacity: "0", transform: "translateX(32px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateX(0) scale(1)" },
+        },
+        "drawer-out": {
+          "0%": { opacity: "1", transform: "translateX(0) scale(1)" },
+          "100%": { opacity: "0", transform: "translateX(32px) scale(0.98)" },
         },
         "glow-pulse": {
           "0%": {

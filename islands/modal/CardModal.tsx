@@ -50,7 +50,11 @@ export function CardModal({
   return (
     <div
       ref={shell.backdropRef}
-      class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
+      class={`fixed inset-0 z-[60] flex items-center justify-center p-4 bg-qr-scrim/60 backdrop-blur-sm charm-modal-backdrop animate-fade-in${
+        shell.closing
+          ? " charm-modal-backdrop--closing charm-modal--closing"
+          : ""
+      }`}
       role="presentation"
       onClick={shell.onBackdropClick}
     >
@@ -58,7 +62,9 @@ export function CardModal({
         ref={shell.dialogRef}
         class={`relative w-full ${maxWidthClass} ${
           badge ? "mt-8" : ""
-        } outline-none animate-slide-up sm:animate-pop-in`}
+        } outline-none charm-modal-card animate-pop-in${
+          shell.closing ? " charm-modal--closing" : ""
+        }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledby}

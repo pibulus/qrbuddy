@@ -112,7 +112,8 @@ export default function LockersPage({ data }: PageProps<PageData>) {
         title="A QR Code for a Temporary File Share."
         tagline="Upload a file, then share its link or QR code with the people who need it."
         subtagline="Shares expire after 30 days. Deletion runs on a daily cleanup schedule and may take longer; see the privacy notice."
-        defaultStyle="terminal"
+        defaultStyle="pool"
+        defaultUrl="https://qrbuddy.app/f/demo"
         defaultCaption="OPEN FILE"
         valueCards={VALUE_CARDS}
         comparisonTitle="Free QRBuddy and the QRBuddy Passport"

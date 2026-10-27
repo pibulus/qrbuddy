@@ -417,12 +417,20 @@ export default function LibraryDrawer(
   return (
     <div
       ref={shell.backdropRef}
-      class="fixed inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+      class={`fixed inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 charm-modal-backdrop animate-fade-in${
+        shell.closing
+          ? " charm-modal-backdrop--closing charm-modal--closing"
+          : ""
+      }`}
       onClick={shell.onBackdropClick}
     >
       <div
         ref={shell.dialogRef}
-        class="bg-[#FAF7F2] w-full max-w-lg rounded-t-3xl sm:rounded-3xl border-t-4 sm:border-4 border-black p-4 sm:p-6 shadow-chunky max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 outline-none"
+        class={`bg-[#FAF7F2] w-full max-w-lg rounded-t-3xl sm:rounded-3xl border-t-4 sm:border-4 border-black p-4 sm:p-6 shadow-chunky max-h-[92dvh] flex flex-col charm-modal-drawer pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 outline-none${
+          shell.closing
+            ? " charm-modal--closing charm-modal-drawer--closing"
+            : ""
+        }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="library-title"
@@ -831,7 +839,8 @@ export default function LibraryDrawer(
                                     title: c.title || c.short_code,
                                   },
                                 });
-                                onClose();
+                                haptics.light();
+                                shell.requestClose();
                               }}
                               class="min-h-[44px] px-3 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-neutral-100 text-xs font-bold active:scale-95 transition-transform"
                             >
@@ -951,7 +960,8 @@ export default function LibraryDrawer(
                                     title: item.metadata?.title,
                                   },
                                 });
-                                onClose();
+                                haptics.light();
+                                shell.requestClose();
                               }}
                               class="min-h-[44px] px-3 py-1.5 rounded-xl border-2 border-black bg-white hover:bg-neutral-100 text-xs font-bold text-black active:scale-95 transition-transform"
                             >

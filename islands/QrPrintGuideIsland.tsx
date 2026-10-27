@@ -1,7 +1,7 @@
 import { useSignal } from "@preact/signals";
-import { AboutLink, AboutModal } from "./AboutModal.tsx";
-import { KofiButton, KofiModal } from "./KofiModal.tsx";
-import { PricingLink, PricingModal } from "./PricingModal.tsx";
+import { AboutModal } from "./AboutModal.tsx";
+import { PricingModal } from "./PricingModal.tsx";
+import FooterDock from "./FooterDock.tsx";
 
 interface QrPrintGuideProps {
   isSpanish?: boolean;
@@ -20,6 +20,7 @@ export default function QrPrintGuideIsland(
   const distance = useSignal<number>(1.0); // meters
   const unit = useSignal<"metric" | "imperial">("metric");
   const selectedPreset = useSignal<string>("poster");
+  const locale = isSpanish ? "es" : "en";
 
   const presets: ScenarioPreset[] = isSpanish
     ? [
@@ -91,43 +92,30 @@ export default function QrPrintGuideIsland(
   };
 
   return (
-    <div class="min-h-screen bg-[#FAF8F5] text-black font-sans selection:bg-[#FFE5E5] flex flex-col justify-between">
-      {/* Top Banner Navigation */}
-      <nav class="w-full border-b-4 border-black bg-[#FFE5EC] px-4 py-3 sticky top-0 z-30 shadow-[0_4px_0_#000]">
-        <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
+    <div class="min-h-screen flex flex-col items-center justify-start px-4 pb-12 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative text-black font-sans selection:bg-pink-300 selection:text-black">
+      {/* Main Content */}
+      <main id="main-content" class="w-full max-w-2xl space-y-8 sm:space-y-10">
+        {/* Top Breadcrumb Pill Bar */}
+        <div class="flex items-center justify-between gap-1.5 sm:gap-2">
           <a
             href={isSpanish ? "/es" : "/"}
-            class="font-black text-lg sm:text-xl tracking-tight flex items-center gap-2 hover:opacity-80 transition-opacity"
+            class="inline-flex items-center gap-1 px-2.5 sm:px-3 min-h-[36px] bg-white border-2 border-black rounded-full text-xs font-black shadow-chunky hover:-translate-y-0.5 transition-transform shrink-0"
           >
-            <span class="text-2xl">⚡</span>
-            <span>QRBuddy</span>
-            <span class="text-xs bg-black text-[#FFE5EC] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-              {isSpanish ? "Guía & Manifiesto" : "Guide & Manifesto"}
+            <span class="sm:hidden">
+              {isSpanish ? "← Inicio" : "← Home"}
+            </span>
+            <span class="hidden sm:inline">
+              {isSpanish ? "← Volver al inicio" : "← Back to QRBuddy Home"}
             </span>
           </a>
-
-          <div class="flex items-center gap-3">
-            <a
-              href={isSpanish ? "/guide/printing" : "/es/guia/impresion"}
-              class="text-xs font-bold bg-white border-2 border-black px-2.5 py-1 rounded-lg shadow-[2px_2px_0_#000] hover:bg-yellow-100 transition-colors"
-            >
-              {isSpanish ? "🇦🇺 English" : "🇲🇽 Español"}
-            </a>
-            <a
-              href={isSpanish ? "/es" : "/"}
-              class="text-xs font-black bg-black text-white px-3 py-1.5 rounded-lg shadow-[2px_2px_0_#000] hover:bg-gray-800 transition-colors"
-            >
-              {isSpanish ? "Ir al Generador ✨" : "Open Studio ✨"}
-            </a>
-          </div>
+          <span class="inline-flex items-center gap-1 px-2.5 sm:px-3 min-h-[36px] bg-black text-white rounded-full text-[11px] sm:text-xs font-black tracking-wide uppercase truncate">
+            {isSpanish ? "Guía de Impresión QR" : "QR Print Guide"}
+          </span>
         </div>
-      </nav>
 
-      {/* Main Content */}
-      <main class="max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-12">
         {/* Header Hero */}
-        <header class="text-center space-y-4">
-          <div class="inline-block bg-[#E5F9FF] border-2 border-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-[2px_2px_0_#000]">
+        <header class="text-center space-y-2 px-2 animate-fade-in">
+          <div class="inline-block bg-[#E5F9FF] border-2 border-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-chunky">
             {isSpanish
               ? "📐 Guía de Impresión QR 2026"
               : "📐 QR Print Guide & Field Manual"}
@@ -137,7 +125,7 @@ export default function QrPrintGuideIsland(
               ? "Cómo Imprimir Códigos QR y Elegir Enlaces que Sigan Funcionando"
               : "How to Print QR Codes and Keep Their Links Working"}
           </h1>
-          <p class="text-base sm:text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed">
+          <p class="text-base sm:text-lg font-bold text-gray-800 max-w-xl mx-auto leading-relaxed">
             {isSpanish
               ? "Usa la calculadora de tamaño y revisa el destino, los límites y la caducidad antes de imprimir en vinil, papel o menús."
               : "Use the size calculator, then check the destination, limits, and expiry before printing on vinyl, paper, or menus."}
@@ -145,7 +133,7 @@ export default function QrPrintGuideIsland(
         </header>
 
         {/* INTERACTIVE CALCULATOR CARD */}
-        <section class="bg-white border-4 border-black rounded-3xl p-6 sm:p-8 shadow-[8px_8px_0_#000] space-y-6">
+        <section class="bg-white border-4 border-black rounded-3xl p-6 sm:p-8 shadow-chunky space-y-6">
           <div class="flex items-center justify-between border-b-2 border-black pb-4 flex-wrap gap-2">
             <div>
               <h2 class="text-xl sm:text-2xl font-black flex items-center gap-2">
@@ -164,7 +152,7 @@ export default function QrPrintGuideIsland(
             </div>
 
             {/* Unit Switcher */}
-            <div class="flex border-2 border-black rounded-xl overflow-hidden shadow-[2px_2px_0_#000]">
+            <div class="flex border-2 border-black rounded-xl overflow-hidden shadow-chunky">
               <button
                 type="button"
                 onClick={() => (unit.value = "metric")}
@@ -174,7 +162,7 @@ export default function QrPrintGuideIsland(
                     : "bg-white text-black hover:bg-gray-100"
                 }`}
               >
-                Metric (cm)
+                {isSpanish ? "Métrico (cm)" : "Metric (cm)"}
               </button>
               <button
                 type="button"
@@ -185,7 +173,7 @@ export default function QrPrintGuideIsland(
                     : "bg-white text-black hover:bg-gray-100"
                 }`}
               >
-                Inches (in)
+                {isSpanish ? "Pulgadas (in)" : "Inches (in)"}
               </button>
             </div>
           </div>
@@ -206,10 +194,10 @@ export default function QrPrintGuideIsland(
                     key={key}
                     type="button"
                     onClick={() => applyPreset(p, key)}
-                    class={`text-left p-3.5 rounded-2xl border-2 border-black transition-all flex items-start gap-3 shadow-[3px_3px_0_#000] ${
+                    class={`text-left p-3.5 rounded-2xl border-2 border-black transition-all flex items-start gap-3 shadow-chunky ${
                       isSelected
-                        ? "bg-[#FFE5EC] ring-2 ring-black transform -translate-y-0.5"
-                        : "bg-white hover:bg-yellow-50"
+                        ? "bg-amber-200 ring-2 ring-black transform -translate-y-0.5"
+                        : "bg-white hover:bg-amber-50"
                     }`}
                   >
                     <span class="text-2xl shrink-0">{p.icon}</span>
@@ -233,14 +221,14 @@ export default function QrPrintGuideIsland(
           </div>
 
           {/* Custom Distance Slider */}
-          <div class="bg-[#FAF8F5] border-2 border-black rounded-2xl p-4 space-y-2">
+          <div class="bg-qr-cream border-2 border-black rounded-2xl p-4 space-y-2">
             <div class="flex justify-between items-center text-sm font-black">
               <span>
                 {isSpanish
                   ? "Ajustar Distancia Manual:"
                   : "Custom Scanning Distance:"}
               </span>
-              <span class="bg-[#FFE5EC] border-2 border-black px-2.5 py-0.5 rounded-lg text-black font-black">
+              <span class="bg-amber-200 border-2 border-black px-2.5 py-0.5 rounded-lg text-black font-black">
                 {distance.value} {isSpanish ? "metros" : "meters"}{" "}
                 ({(distance.value * 3.28).toFixed(1)} ft)
               </span>
@@ -260,15 +248,19 @@ export default function QrPrintGuideIsland(
               class="w-full accent-black cursor-pointer"
             />
             <div class="flex justify-between text-[10px] font-bold text-gray-500">
-              <span>0.2m (Mano a Mano)</span>
-              <span>2.5m (Vitrina)</span>
-              <span>15.0m (Espectacular)</span>
+              <span>
+                {isSpanish ? "0.2m (Mano a Mano)" : "0.2m (Close-up)"}
+              </span>
+              <span>{isSpanish ? "2.5m (Vitrina)" : "2.5m (Storefront)"}</span>
+              <span>
+                {isSpanish ? "15.0m (Espectacular)" : "15.0m (Billboard)"}
+              </span>
             </div>
           </div>
 
           {/* Results Display */}
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-            <div class="bg-[#E8F8F5] border-3 border-black rounded-2xl p-4 shadow-[4px_4px_0_#000] text-center space-y-1">
+            <div class="bg-[#E8F8F5] border-3 border-black rounded-2xl p-4 shadow-chunky text-center space-y-1">
               <div class="text-xs font-black uppercase text-gray-600">
                 {isSpanish ? "Tamaño Mínimo Absoluto" : "Absolute Minimum Size"}
               </div>
@@ -284,7 +276,7 @@ export default function QrPrintGuideIsland(
               </div>
             </div>
 
-            <div class="bg-[#FFF9E6] border-3 border-black rounded-2xl p-4 shadow-[4px_4px_0_#000] text-center space-y-1 ring-2 ring-black">
+            <div class="bg-[#FFF9E6] border-3 border-black rounded-2xl p-4 shadow-chunky text-center space-y-1 ring-2 ring-black">
               <div class="text-xs font-black uppercase text-amber-900 flex items-center justify-center gap-1">
                 <span>⭐</span>
                 <span>
@@ -303,7 +295,7 @@ export default function QrPrintGuideIsland(
               </div>
             </div>
 
-            <div class="bg-[#F0EBFF] border-3 border-black rounded-2xl p-4 shadow-[4px_4px_0_#000] text-center space-y-1">
+            <div class="bg-[#F0EBFF] border-3 border-black rounded-2xl p-4 shadow-chunky text-center space-y-1">
               <div class="text-xs font-black uppercase text-purple-900">
                 {isSpanish ? "Zona Silenciosa (Margen)" : "Quiet Zone Margin"}
               </div>
@@ -322,9 +314,9 @@ export default function QrPrintGuideIsland(
         </section>
 
         {/* SECTION 2: STATIC CODES AND HOSTED REDIRECTS */}
-        <section class="bg-[#FFF4E8] border-4 border-black rounded-3xl p-6 sm:p-8 shadow-[8px_8px_0_#000] space-y-6">
+        <section class="bg-[#FFF4E8] border-4 border-black rounded-3xl p-6 sm:p-8 shadow-chunky space-y-6">
           <div class="space-y-2">
-            <div class="inline-block bg-red-100 text-red-800 border-2 border-black px-3 py-0.5 rounded-full text-xs font-black uppercase">
+            <div class="inline-block bg-amber-100 text-amber-900 border-2 border-black px-3 py-0.5 rounded-full text-xs font-black uppercase">
               {isSpanish
                 ? "⚠️ Códigos estáticos y redirecciones alojadas"
                 : "⚠️ Static Codes and Hosted Redirects"}
@@ -344,9 +336,9 @@ export default function QrPrintGuideIsland(
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div class="bg-red-50 border-2 border-red-400 rounded-2xl p-4 space-y-2">
-                <div class="font-black text-red-900 flex items-center gap-1.5 text-sm">
-                  <span>❌</span>
+              <div class="bg-amber-50 border-2 border-black rounded-2xl p-4 space-y-2">
+                <div class="font-black text-black flex items-center gap-1.5 text-sm">
+                  <span>🔍</span>
                   <span>
                     {isSpanish
                       ? "Revisa el servicio de redirección"
@@ -377,8 +369,8 @@ export default function QrPrintGuideIsland(
                 </ul>
               </div>
 
-              <div class="bg-green-50 border-2 border-green-500 rounded-2xl p-4 space-y-2">
-                <div class="font-black text-green-900 flex items-center gap-1.5 text-sm">
+              <div class="bg-emerald-50 border-2 border-black rounded-2xl p-4 space-y-2">
+                <div class="font-black text-emerald-950 flex items-center gap-1.5 text-sm">
                   <span>✅</span>
                   <span>
                     {isSpanish ? "Opciones de QRBuddy" : "QRBuddy Options"}
@@ -412,7 +404,7 @@ export default function QrPrintGuideIsland(
         </section>
 
         {/* SECTION 3: 5 GOLDEN RULES OF QR PRINTING */}
-        <section class="bg-white border-4 border-black rounded-3xl p-6 sm:p-8 shadow-[8px_8px_0_#000] space-y-6">
+        <section class="bg-white border-4 border-black rounded-3xl p-6 sm:p-8 shadow-chunky space-y-6">
           <h2 class="text-2xl sm:text-3xl font-black text-black tracking-tight flex items-center gap-2">
             <span>✨</span>
             <span>
@@ -516,13 +508,13 @@ export default function QrPrintGuideIsland(
         </section>
 
         {/* BOTTOM CTA */}
-        <section class="bg-[#FFE5EC] border-4 border-black rounded-3xl p-8 shadow-[8px_8px_0_#000] text-center space-y-4">
-          <h3 class="text-2xl sm:text-3xl font-black text-black">
+        <section class="bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 border-4 border-black rounded-3xl p-6 sm:p-8 shadow-chunky text-center space-y-4">
+          <h3 class="text-2xl sm:text-3xl font-black text-white drop-shadow">
             {isSpanish
               ? "¿Listo para Preparar un Código QR para Imprimir?"
               : "Ready to Make a QR Code for Print?"}
           </h3>
-          <p class="text-sm sm:text-base text-gray-800 max-w-xl mx-auto">
+          <p class="text-sm font-bold text-white/95 max-w-xl mx-auto">
             {isSpanish
               ? "Genera un QR estático que contiene directamente el destino o un QR editable, disponible gratis dentro de sus límites. El Pasaporte QRBuddy cuesta ~$32 USD (A$49) por 365 días y amplía algunos límites, sin renovación automática."
               : "Make a static QR that contains its destination directly, or an editable QR available free within its limits. The ~$32 USD (A$49) QRBuddy Passport lasts 365 days and raises selected limits, with no automatic renewal."}
@@ -530,7 +522,7 @@ export default function QrPrintGuideIsland(
           <div class="pt-2">
             <a
               href={isSpanish ? "/es" : "/"}
-              class="inline-block bg-black text-white font-black text-base px-8 py-3.5 rounded-2xl border-2 border-black shadow-[4px_4px_0_#FFE5E5] hover:bg-gray-800 hover:-translate-y-0.5 transition-all"
+              class="inline-block bg-black text-white font-black text-base px-8 py-3.5 rounded-full border-3 border-black shadow-chunky hover:bg-gray-800 hover:shadow-chunky-hover hover:-translate-y-0.5 transition-all"
             >
               {isSpanish
                 ? "Crear Mi Código QR Ahora →"
@@ -540,61 +532,11 @@ export default function QrPrintGuideIsland(
         </section>
       </main>
 
-      {/* Footer */}
-      <footer class="mt-16 py-8 border-t-4 border-black bg-white">
-        <div class="max-w-4xl mx-auto px-4 text-center space-y-4">
-          <div class="flex items-center justify-center gap-4 flex-wrap">
-            <PricingLink
-              label={isSpanish ? "Pasaporte QRBuddy 🛂" : "Passport 🛂"}
-            />
-            <AboutLink label={isSpanish ? "Acerca de 📖" : "About"} />
-            <KofiButton
-              size="sm"
-              label={isSpanish ? "Propinas ☕" : "Tip Jar ☕"}
-            />
-          </div>
-
-          <div class="flex items-center justify-center gap-2 flex-wrap text-xs font-bold text-gray-700">
-            <a
-              href={isSpanish ? "/es/menus" : "/for/menus"}
-              class="hover:underline"
-            >
-              {isSpanish ? "Menús QR 📜" : "Restaurant Menus 📜"}
-            </a>
-            <span class="text-gray-300">•</span>
-            <a
-              href={isSpanish ? "/es/bodas" : "/for/weddings"}
-              class="hover:underline"
-            >
-              {isSpanish ? "Bodas 📸" : "Weddings & Photos 📸"}
-            </a>
-            <span class="text-gray-300">•</span>
-            <a
-              href={isSpanish ? "/es/musica" : "/for/music"}
-              class="hover:underline"
-            >
-              {isSpanish ? "Música 📼" : "Music Mixtapes 📼"}
-            </a>
-            <span class="text-gray-300">•</span>
-            <a
-              href={isSpanish ? "/es/archivos" : "/for/lockers"}
-              class="hover:underline"
-            >
-              {isSpanish ? "Archivos 🔐" : "Secret Drops 🔐"}
-            </a>
-          </div>
-
-          <p class="text-xs text-gray-500 opacity-70">
-            Made with soul by Pablo • Mexican-Australian • Drop a link. Watch it
-            bloom.
-          </p>
-        </div>
-      </footer>
+      <FooterDock lang={locale} />
 
       {/* Modals */}
-      <PricingModal />
-      <AboutModal />
-      <KofiModal kofiUsername="madebypablo" />
+      <PricingModal lang={locale} />
+      <AboutModal lang={locale} />
     </div>
   );
 }

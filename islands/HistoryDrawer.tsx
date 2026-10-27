@@ -141,7 +141,11 @@ export default function HistoryDrawer(
   return (
     <div
       ref={shell.backdropRef}
-      class="fixed inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+      class={`fixed inset-0 bg-[#2B1A0E]/60 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 charm-modal-backdrop animate-fade-in${
+        shell.closing
+          ? " charm-modal-backdrop--closing charm-modal--closing"
+          : ""
+      }`}
       onClick={shell.onBackdropClick}
     >
       <div
@@ -151,7 +155,11 @@ export default function HistoryDrawer(
         aria-modal="true"
         aria-labelledby="history-drawer-title"
         tabIndex={-1}
-        class="bg-qr-cream w-full max-w-lg border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl p-4 sm:p-6 shadow-chunky max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 outline-none"
+        class={`bg-qr-cream w-full max-w-lg border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl p-4 sm:p-6 shadow-chunky max-h-[92dvh] flex flex-col charm-modal-drawer pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 outline-none${
+          shell.closing
+            ? " charm-modal--closing charm-modal-drawer--closing"
+            : ""
+        }`}
       >
         {/* Header */}
         <div class="pb-3 border-b-2 border-black/10 flex justify-between items-center gap-2">
@@ -319,13 +327,15 @@ export default function HistoryDrawer(
                   class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
                   onClick={() => {
                     onSelect(item);
-                    onClose();
+                    haptics.light();
+                    shell.requestClose();
                   }}
                   onKeyDown={(e: KeyboardEvent) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
                       onSelect(item);
-                      onClose();
+                      haptics.light();
+                      shell.requestClose();
                     }
                   }}
                 >

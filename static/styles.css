@@ -90,6 +90,135 @@ body {
   white-space: normal;
 }
 
+/* Chassis ModalShell (islands/modal/) — single source of truth for open/close
+   physics. useModalShell reads --charm-modal-close-ms off the dialog card so
+   CSS and JS never drift.
+   THE LAW: Entrances are FROM-only + `backwards` fill-mode so `forwards` never
+   permanently owns `transform` and locks hover/active transforms. Exits are
+   TO-only + `forwards` because the element unmounts when the animation ends. */
+:root {
+  --charm-modal-open-ms: 240ms;
+  --charm-modal-close-ms: 180ms;
+  --charm-modal-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes charm-modal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes charm-modal-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes charm-modal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+}
+
+@keyframes charm-modal-pop-out {
+  to {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+}
+
+@keyframes charm-sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+}
+
+@keyframes charm-sheet-down {
+  to {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+}
+
+@keyframes charm-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(32px) scale(0.98);
+  }
+}
+
+@keyframes charm-drawer-out {
+  to {
+    opacity: 0;
+    transform: translateX(32px) scale(0.98);
+  }
+}
+
+/* Backdrop entrance + exit */
+.charm-modal-backdrop,
+.animate-fade-in {
+  animation: charm-modal-fade 180ms ease backwards;
+}
+
+.charm-modal-backdrop--closing,
+.charm-modal-backdrop.charm-modal--closing,
+.animate-fade-in.charm-modal--closing {
+  animation: charm-modal-fade-out var(--charm-modal-close-ms, 180ms) ease
+    forwards;
+}
+
+/* Centered cards (CardModal) */
+.charm-modal-card,
+.charm-modal {
+  animation: charm-modal-pop var(--charm-modal-open-ms, 240ms)
+    var(--charm-modal-ease, cubic-bezier(0.34, 1.56, 0.64, 1)) backwards;
+}
+
+.charm-modal-card.charm-modal--closing,
+.charm-modal.charm-modal--closing {
+  animation: charm-modal-pop-out var(--charm-modal-close-ms, 180ms) ease
+    forwards;
+}
+
+/* Mobile bottom sheets & responsive desktop cards (StyleSelector, GradientCreator, QRReader, CreateModal) */
+.charm-modal-sheet,
+.animate-slide-up {
+  animation: charm-sheet-up var(--charm-modal-open-ms, 240ms)
+    var(--charm-modal-ease, cubic-bezier(0.34, 1.56, 0.64, 1)) backwards;
+}
+
+.charm-modal-sheet.charm-modal--closing,
+.animate-slide-up.charm-modal--closing {
+  animation: charm-sheet-down var(--charm-modal-close-ms, 180ms) ease forwards;
+}
+
+@media (min-width: 640px) {
+  .charm-modal-sheet,
+  .sm\:animate-pop-in {
+    animation: charm-modal-pop var(--charm-modal-open-ms, 240ms)
+      var(--charm-modal-ease, cubic-bezier(0.34, 1.56, 0.64, 1)) backwards;
+  }
+
+  .charm-modal-sheet.charm-modal--closing,
+  .sm\:animate-pop-in.charm-modal--closing {
+    animation: charm-modal-pop-out var(--charm-modal-close-ms, 180ms) ease
+      forwards;
+  }
+}
+
+/* Side drawers (HistoryDrawer, LibraryDrawer) */
+.charm-modal-drawer {
+  animation: charm-drawer-in var(--charm-modal-open-ms, 240ms)
+    var(--charm-modal-ease, cubic-bezier(0.34, 1.56, 0.64, 1)) backwards;
+}
+
+.charm-modal-drawer.charm-modal--closing,
+.charm-modal-drawer--closing {
+  animation: charm-drawer-out var(--charm-modal-close-ms, 180ms) ease forwards;
+}
+
 /* Respect the user's OS-level reduced-motion preference.
    Nuclear but safe: near-instant animations/transitions, no visual breakage.
    The sounds system already honours this; the UI now does too. */
@@ -102,15 +231,6 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Chassis ModalShell (islands/modal/) — close timing lives in CSS, the hook
-   reads this token off the dialog card (single source of truth, no JS
-   constant to drift). qrbuddy's modals keep their own Tailwind skeletons via
-   the useModalShell hook flavor and have always closed instantly, hence 0ms.
-   Raise this token to adopt the fleet's exit fade later. */
-:root {
-  --charm-modal-close-ms: 0ms;
 }
 
 /* Scroll without the native track: a floating OS scrollbar slices through a

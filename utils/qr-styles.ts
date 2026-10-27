@@ -141,12 +141,13 @@ export const QR_STYLES = {
   pool: {
     dots: {
       type: "gradient",
-      shape: "classy-rounded" as const,
+      shape: "rounded" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
           { offset: 0, color: "#0EA5E9" },
+          { offset: 0.5, color: "#0891B2" },
           { offset: 1, color: "#0D9488" },
         ],
       },
@@ -157,18 +158,34 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#ECFEFF" },
-          { offset: 1, color: "#CFFAFE" },
+          { offset: 0, color: "#FFFDF9" },
+          { offset: 1, color: "#F0FDFA" },
         ],
       },
     },
     cornersSquare: {
       shape: "extra-rounded" as const,
-      color: "#0D9488",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#0EA5E9" },
+          { offset: 1, color: "#0D9488" },
+        ],
+      },
     },
     cornersDot: {
       shape: "dot" as const,
-      color: "#0EA5E9",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#0D9488" },
+          { offset: 1, color: "#0891B2" },
+        ],
+      },
     },
   },
 
@@ -210,8 +227,8 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#FFF0F7" },
-          { offset: 1, color: "#F0F9FF" },
+          { offset: 0, color: "#FFF8FB" },
+          { offset: 1, color: "#F5F9FF" },
         ],
       },
     },
@@ -229,19 +246,28 @@ export const QR_STYLES = {
     },
     cornersDot: {
       shape: "dot" as const,
-      color: "#0891B2",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#7C3AED" },
+          { offset: 1, color: "#0891B2" },
+        ],
+      },
     },
   },
 
   vapor: {
     dots: {
       type: "gradient",
-      shape: "extra-rounded" as const,
+      shape: "rounded" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#8B5CF6" },
+          { offset: 0, color: "#6D28D9" },
+          { offset: 0.5, color: "#9333EA" },
           { offset: 1, color: "#DB2777" },
         ],
       },
@@ -252,25 +278,41 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#F5F3FF" },
-          { offset: 1, color: "#FCE7F3" },
+          { offset: 0, color: "#FFFDFB" },
+          { offset: 1, color: "#FAF5FF" },
         ],
       },
     },
     cornersSquare: {
       shape: "extra-rounded" as const,
-      color: "#DB2777",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#6D28D9" },
+          { offset: 1, color: "#DB2777" },
+        ],
+      },
     },
     cornersDot: {
       shape: "dot" as const,
-      color: "#8B5CF6",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#DB2777" },
+          { offset: 1, color: "#9333EA" },
+        ],
+      },
     },
   },
 
   noir: {
     dots: {
       type: "gradient",
-      shape: "classy" as const,
+      shape: "rounded" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
@@ -286,18 +328,34 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#FFFFFF" },
-          { offset: 1, color: "#F1F5F9" },
+          { offset: 0, color: "#FFFDF9" },
+          { offset: 1, color: "#F5F3EE" },
         ],
       },
     },
     cornersSquare: {
       shape: "extra-rounded" as const,
-      color: "#0F172A",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#1E1B4B" },
+          { offset: 1, color: "#0F172A" },
+        ],
+      },
     },
     cornersDot: {
       shape: "dot" as const,
-      color: "#1E1B4B",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#0F172A" },
+          { offset: 1, color: "#1E1B4B" },
+        ],
+      },
     },
   },
 
@@ -322,13 +380,13 @@ export const QR_STYLES = {
   blush: {
     dots: {
       type: "gradient",
-      shape: "classy-rounded" as const,
+      shape: "rounded" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#F43F5E" },
-          { offset: 0.5, color: "#E11D48" },
+          { offset: 0, color: "#E11D48" },
+          { offset: 0.5, color: "#DB2777" },
           { offset: 1, color: "#9D174D" },
         ],
       },
@@ -339,18 +397,34 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#FFF5F7" },
-          { offset: 1, color: "#FFE4E9" },
+          { offset: 0, color: "#FFF9F9" },
+          { offset: 1, color: "#FFF0F3" },
         ],
       },
     },
     cornersSquare: {
       shape: "extra-rounded" as const,
-      color: "#E11D48",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#E11D48" },
+          { offset: 1, color: "#9D174D" },
+        ],
+      },
     },
     cornersDot: {
       shape: "dot" as const,
-      color: "#9D174D",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#9D174D" },
+          { offset: 1, color: "#DB2777" },
+        ],
+      },
     },
   },
 
@@ -363,6 +437,7 @@ export const QR_STYLES = {
         rotation: DIAGONAL,
         colorStops: [
           { offset: 0, color: "#4F46E5" },
+          { offset: 0.5, color: "#7C3AED" },
           { offset: 1, color: "#9333EA" },
         ],
       },
@@ -373,18 +448,34 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#EEF2FF" },
-          { offset: 1, color: "#EDE9FE" },
+          { offset: 0, color: "#FFFDFB" },
+          { offset: 1, color: "#F5F3FF" },
         ],
       },
     },
     cornersSquare: {
       shape: "extra-rounded" as const,
-      color: "#9333EA",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#4F46E5" },
+          { offset: 1, color: "#9333EA" },
+        ],
+      },
     },
     cornersDot: {
       shape: "dot" as const,
-      color: "#4F46E5",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#9333EA" },
+          { offset: 1, color: "#4F46E5" },
+        ],
+      },
     },
   },
 
@@ -396,7 +487,8 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#059669" },
+          { offset: 0, color: "#15803D" },
+          { offset: 0.5, color: "#059669" },
           { offset: 1, color: "#0F766E" },
         ],
       },
@@ -407,18 +499,34 @@ export const QR_STYLES = {
         type: "linear" as const,
         rotation: DIAGONAL,
         colorStops: [
-          { offset: 0, color: "#F2FBF7" },
-          { offset: 1, color: "#DCFCE7" },
+          { offset: 0, color: "#FFFDF9" },
+          { offset: 1, color: "#F4FBF7" },
         ],
       },
     },
     cornersSquare: {
       shape: "extra-rounded" as const,
-      color: "#0F766E",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#15803D" },
+          { offset: 1, color: "#0F766E" },
+        ],
+      },
     },
     cornersDot: {
       shape: "dot" as const,
-      color: "#059669",
+      type: "gradient",
+      gradient: {
+        type: "linear" as const,
+        rotation: DIAGONAL,
+        colorStops: [
+          { offset: 0, color: "#0F766E" },
+          { offset: 1, color: "#059669" },
+        ],
+      },
     },
   },
 };

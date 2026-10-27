@@ -544,7 +544,11 @@ export default function QRReader(
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
         ref={shell.backdropRef}
-        class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm"
+        class={`absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm charm-modal-backdrop animate-fade-in${
+          shell.closing
+            ? " charm-modal-backdrop--closing charm-modal--closing"
+            : ""
+        }`}
         onClick={shell.onBackdropClick}
       />
 
@@ -554,7 +558,9 @@ export default function QRReader(
         aria-modal="true"
         aria-labelledby="qr-reader-title"
         tabindex={-1}
-        class="relative w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col animate-slide-up sm:animate-pop-in overflow-hidden"
+        class={`relative w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col charm-modal-sheet animate-slide-up sm:animate-pop-in overflow-hidden${
+          shell.closing ? " charm-modal--closing" : ""
+        }`}
       >
         <div class="flex items-start justify-between gap-3 p-4 sm:p-6 pb-2 sm:pb-3">
           <div>

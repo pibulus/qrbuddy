@@ -235,7 +235,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
           {/* QR Code Display - FIRST */}
           <div class="flex justify-center animate-slide-up">
-            <div class="shadow-xl rounded-2xl w-full max-w-[300px] sm:max-w-[360px] transition-all duration-300">
+            <div class="w-full max-w-[300px] sm:max-w-[360px] transition-all duration-300">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}

@@ -16,6 +16,7 @@ import {
   validateFile,
 } from "../utils/file-validation.ts";
 import { haptics } from "../utils/haptics.ts";
+import { sounds } from "../utils/sounds.ts";
 import { addToHistory, HistoryItem } from "../utils/history.ts";
 import { decodeQRFromFile } from "../utils/qr-decode.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
@@ -151,12 +152,20 @@ export default function SmartInput(
     onModalStateChange?.(isCreateModalOpen);
   }, [isCreateModalOpen, onModalStateChange]);
 
-  // Snapshot the QR content when the create sheet opens, so closing it can
-  // acknowledge "your QR is ready" — but only when the sheet actually
+  // Snapshot the QR content and style when the create sheet opens, so closing
+  // it can acknowledge "your QR is ready" — but only when the sheet actually
   // changed something (repeat open/close stays quiet).
   const urlAtSheetOpen = useRef("");
+  const styleAtSheetOpen = useRef("");
+  const logoAtSheetOpen = useRef("");
+  const frameAtSheetOpen = useRef("");
   useEffect(() => {
-    if (isCreateModalOpen) urlAtSheetOpen.current = url.value;
+    if (isCreateModalOpen) {
+      urlAtSheetOpen.current = url.value;
+      styleAtSheetOpen.current = qrStyle.value;
+      logoAtSheetOpen.current = logoUrl.value;
+      frameAtSheetOpen.current = JSON.stringify(frameConfig?.value ?? null);
+    }
   }, [isCreateModalOpen]);
 
   // Dynamic QR options
@@ -768,16 +777,25 @@ export default function SmartInput(
         isOpen={isCreateModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false);
+          const contentChanged = url.value.trim() !== "" &&
+            url.value !== urlAtSheetOpen.current;
+          const designChanged = qrStyle.value !== styleAtSheetOpen.current ||
+            logoUrl.value !== logoAtSheetOpen.current ||
+            JSON.stringify(frameConfig?.value ?? null) !==
+              frameAtSheetOpen.current;
           // Bridge the "kicked back to the main page" moment: if the sheet
           // changed the QR, say so and point at the save pill.
-          if (
-            url.value.trim() !== "" && url.value !== urlAtSheetOpen.current
-          ) {
+          if (contentChanged) {
+            haptics.success();
+            sounds.success();
             addToast(
               isSpanish
                 ? "QR listo — toca ↓ Guardar PNG para descargarlo"
                 : "QR ready — tap ↓ Save PNG to keep it",
             );
+          } else if (designChanged) {
+            haptics.light();
+            sounds.click();
           }
         }}
         selectedTemplate={selectedTemplate}
@@ -1120,6 +1138,8 @@ export default function SmartInput(
         createHasUpdates={createHasUpdates}
         onShowHistory={() => setShowHistory(true)}
         onShowReader={() => setShowReader(true)}
+        isBucket={isBucket.value && bucketUrl.value !== ""}
+        isBatchMode={isBatchMode}
         lang={locale}
       />
     </div>

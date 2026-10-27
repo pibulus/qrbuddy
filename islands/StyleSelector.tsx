@@ -117,27 +117,27 @@ export const STYLE_DISPLAY = {
   blush: {
     name: "Blush",
     nameEs: "Rubor",
-    colors: ["#F43F5E", "#E11D48", "#9D174D"],
+    colors: ["#E11D48", "#DB2777", "#9D174D"],
   },
   matcha: {
     name: "Matcha",
     nameEs: "Matcha",
-    colors: ["#059669", "#0F766E"],
+    colors: ["#15803D", "#059669", "#0F766E"],
   },
   pool: {
     name: "Pool",
     nameEs: "Alberca",
-    colors: ["#0EA5E9", "#0D9488"],
+    colors: ["#0EA5E9", "#0891B2", "#0D9488"],
   },
   vapor: {
     name: "Vapor",
     nameEs: "Vapor",
-    colors: ["#8B5CF6", "#DB2777"],
+    colors: ["#6D28D9", "#9333EA", "#DB2777"],
   },
   grape: {
     name: "Grape",
     nameEs: "Uva",
-    colors: ["#4F46E5", "#9333EA"],
+    colors: ["#4F46E5", "#7C3AED", "#9333EA"],
   },
   noir: {
     name: "Licorice",
@@ -192,10 +192,10 @@ export default function StyleSelector(
 
   if (isHidden?.value) return null;
 
-  const handleStyleSelect = (s: string) => {
+  const handleStyleSelect = (s: string, index = 0) => {
     style.value = s;
+    sounds.playAt("bloop", index, { total: 8, force: true });
     haptics.light();
-    sounds.click();
     shell.requestClose();
     const info = STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY];
     addToast(`🎨 ${isSpanish ? (info.nameEs ?? info.name) : info.name}`);
@@ -248,7 +248,7 @@ export default function StyleSelector(
       customStyle.value = candidate;
       style.value = "custom";
       haptics.medium();
-      sounds.click();
+      sounds.sploosh();
       addToast(DICE_QUIPS[Math.floor(Math.random() * DICE_QUIPS.length)]);
     } finally {
       setIsRolling(false);
@@ -311,7 +311,11 @@ export default function StyleSelector(
         <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
           <div
             ref={shell.backdropRef}
-            class="absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm animate-fade-in"
+            class={`absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm charm-modal-backdrop animate-fade-in${
+              shell.closing
+                ? " charm-modal-backdrop--closing charm-modal--closing"
+                : ""
+            }`}
             onClick={shell.onBackdropClick}
           />
           <div
@@ -320,7 +324,9 @@ export default function StyleSelector(
             aria-modal="true"
             aria-labelledby="style-gallery-title"
             tabindex={-1}
-            class="relative z-10 w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover p-4 sm:p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-5 animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto scrollbar-none"
+            class={`relative z-10 w-full max-w-lg bg-qr-cream border-t-4 sm:border-4 border-black rounded-t-3xl sm:rounded-3xl shadow-chunky-hover p-4 sm:p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-5 charm-modal-sheet animate-slide-up sm:animate-pop-in max-h-[92dvh] overflow-y-auto scrollbar-none${
+              shell.closing ? " charm-modal--closing" : ""
+            }`}
           >
             {/* Header */}
             <div class="flex items-start justify-between gap-3">
@@ -356,7 +362,7 @@ export default function StyleSelector(
 
             {/* Grid */}
             <div class="grid grid-cols-2 gap-3">
-              {Object.entries(STYLE_DISPLAY).map(([key, info]) => {
+              {Object.entries(STYLE_DISPLAY).map(([key, info], index) => {
                 const active = style.value === key;
                 const displayName = isSpanish
                   ? (info.nameEs ?? info.name)
@@ -366,7 +372,9 @@ export default function StyleSelector(
                     type="button"
                     key={key}
                     aria-pressed={active}
-                    onClick={() => handleStyleSelect(key)}
+                    onMouseEnter={() =>
+                      sounds.playAt("bloop", index, { total: 8, gain: 0.012 })}
+                    onClick={() => handleStyleSelect(key, index)}
                     class={`group rounded-2xl border-2 p-1.5 text-left transition-all duration-200 ${
                       active
                         ? "border-black bg-amber-200 shadow-chunky"
