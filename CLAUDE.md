@@ -202,11 +202,24 @@ migration preflight and function deployment commands in
 [`supabase/README.md`](./supabase/README.md); skip the `_shared` helper folder
 when deploying functions.
 
-The [13 October launch audit](./docs/LAUNCH-READINESS-2026-10-13.md) is a dated
-evidence snapshot. Use the [release record](./docs/RELEASE-2026-10-13.md) for
-the latest verified payment and deployment state. The
-[feature-flow follow-up](./docs/FEATURE-FLOWS-2026-10-13.md) records real media
-delivery/playback, owner controls, dynamic routing and remaining UX work.
+**Current Release Status (`v2.0.0 SEALED` — 2026-10-27)**:
+
+- **The QRBuddy Passport 🛂✨** (`~$32 USD / A$49` for 365 days, no
+  auto-renewal, `SQUARE_CHECKOUT_ENABLED=true`) is live on production, unified
+  with local/server Library and `#passport=...` fragment QR pairing.
+- **Passport Field Report 🛂** (7d/30d/90d scan analytics, Top Cities &
+  Countries, 24h Peak Rush Hour, Browser split, Track/Photo Leaderboard, and
+  RFC-4180 CSV export) is live on `/edit` and `/f/[code]`.
+- **1080p Camera QR Scanner & Street-Safe Inspector** (`BarcodeDetector` →
+  `zxing-wasm` → `jsQR` with 50% macro crop + `📸 Snap HD Photo` fallback) is
+  live.
+- **6-Agent Gang Audit (`Rex`, `Bumblefuzz`, `The Cryptkeeper`, `The Oracle`,
+  `Stacey`, `The Simplificator`)**, Fleet Standard PWA icon set, and HTTP
+  `X-Robots-Tag: noindex, nofollow` / SEO armor are deployed and verified.
+- Historical Oct 13 audit snapshots live in
+  [`./docs/archive/`](./docs/archive/); active launch and payment docs live in
+  [`./docs/QRBUDDY-HOMEWORK-AND-MONEY-PLAYBOOK.md`](./docs/QRBUDDY-HOMEWORK-AND-MONEY-PLAYBOOK.md)
+  and [`./docs/ETHICAL_PAYMENT_SETUP.md`](./docs/ETHICAL_PAYMENT_SETUP.md).
 
 ## 🎨 Design System
 

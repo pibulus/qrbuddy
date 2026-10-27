@@ -103,63 +103,56 @@ current audit links.
 ```
 qrbuddy/
 ├── routes/               # Fresh routes + API handlers
-│   ├── index.tsx             # Main generator page + SEO/meta
+│   ├── index.tsx             # English studio + SEO/JSON-LD
+│   ├── es/                   # Buena Onda Spanish studio (/es) + verticals
+│   ├── for/                  # English vertical landing pages (menus, weddings, music, lockers)
+│   ├── guide/printing.tsx    # QR print calculator & anti-hostage guide
 │   ├── q.tsx                 # Shared QR showcase
-│   ├── edit.tsx              # Dynamic QR editor
-│   ├── boom.tsx              # Self-destruct landing page
-│   ├── go.tsx                # Free-tier redirect interstitial
-│   ├── r.tsx / r/[code].tsx  # Redirect helpers
-│   ├── f/[code].tsx          # Destructible file download gate
-│   ├── bucket/[code].tsx     # File locker viewer
-│   └── api/download-file.ts  # Server-side file proxy
+│   ├── edit.tsx              # Dynamic QR editor + Passport Field Report
+│   ├── boom.tsx              # Self-destruct KABOOM landing page
+│   ├── r.tsx                 # Dynamic QR redirector + branded Cover Pages
+│   ├── f/[code].tsx          # File drop / slideshow / mixtape share page
+│   ├── bucket/[code].tsx     # Inbound File Locker viewer
+│   ├── note/[code].tsx       # Styled note card viewer
+│   └── api/                  # Server-side endpoints (download-file.ts, peek.ts)
 ├── islands/              # Interactive Preact islands
-│   ├── QRCanvas.tsx          # Core QR rendering + PNG/SVG export
+│   ├── QRCanvas.tsx          # Core QR rendering + 3000px PNG/vector SVG export
 │   ├── SmartInput.tsx        # Smart input (URLs/files/text + dynamic settings)
+│   ├── QRReader.tsx          # 1080p camera QR scanner + Street-Safe Inspector
 │   ├── StyleSelector.tsx     # Gradient selector + custom creator entry
 │   ├── GradientCreator.tsx   # Custom gradient builder modal
 │   ├── CreateModal.tsx       # QR type/options/design creation sheet
-│   ├── LogoUploader.tsx      # Center logo uploader UI
-│   ├── ActionButtons.tsx     # Download + copy triggers
+│   ├── PricingModal.tsx      # QRBuddy Passport checkout + Tactile Passport Card
+│   ├── LibraryDrawer.tsx     # Unified local + server QR Library & 4-word sync
+│   ├── HistoryDrawer.tsx     # Local QR history & encrypted backup drawer
+│   ├── OwnerStrip.tsx        # Share owner bar + Passport Field Report analytics
 │   ├── EditQRForm.tsx        # Dynamic QR edit experience
 │   ├── BucketQR.tsx          # File locker status + QR display
-│   ├── About/Kofi/Pricing modals
-│   ├── EasterEggs.tsx        # Hidden interactions
-│   ├── ToastManager.tsx      # Notification stack
-│   ├── ErrorBoundary.tsx     # QR error guard
-│   ├── Analytics.tsx         # Umami event tracking
-│   ├── edit-qr/             # Dynamic QR edit sub-islands (4)
-│   ├── extras/              # Options/design sub-islands (7)
-│   ├── smart-input/         # Input toolbar sub-islands (2)
-│   └── templates/           # QR type form sub-islands (7)
-├── local-api/            # Local mock Supabase edge function server
-│   └── server.ts             # Upload + dynamic QR emulator for dev
-├── supabase/             # Production schema + edge functions
-│   ├── setup.sql             # Historical one-shot schema snapshot
-│   ├── migrations/           # Historical + incremental production migrations
-│   └── functions/            # Edge function entry points + shared helpers
-├── utils/                # Shared utilities
-│   ├── api.ts                # SUPABASE_URL + auth header helpers
-│   ├── api-request.ts        # Shared JSON/FormData request helpers
-│   ├── constants.ts          # Shared scan/progress/timing constants
-│   ├── file-validation.ts    # Client-side upload validation
-│   ├── haptics.ts            # Haptic wrappers
-│   ├── qr-styles.ts          # Gradient style definitions
-│   └── sounds.ts             # UI soundboard
-├── types/                # Shared ambient/runtime type declarations
-├── static/               # Icons, manifest, robots, sitemap, CSS
-├── tests/                # Offline unit tests + opt-in edge integrations
-└── tailwind.config.ts    # Tailwind design tokens/theme
+│   ├── edit-qr/              # Dynamic QR edit & analytics sub-islands
+│   ├── extras/               # Options/design sub-islands (Batch, Routing, Splash, etc.)
+│   ├── smart-input/          # Input toolbar sub-islands
+│   └── templates/            # QR type form sub-islands
+├── components/           # Server-rendered shared components (VerticalLandingHead)
+├── hooks/                # Custom Preact hooks (useBatchGenerator, useDynamicQR, etc.)
+├── local-api/            # Local mock Supabase edge function server for offline dev
+├── supabase/             # Production schema migrations + Edge Functions
+├── utils/                # Shared utilities (passport, qr-styles, qr-decode, i18n, etc.)
+├── types/                # Shared TypeScript interfaces
+├── static/               # Fleet Standard PWA icons, manifest, robots, sitemap, WASM
+├── tests/                # 107 offline unit tests + opt-in edge integrations
+└── tailwind.config.ts    # Soft Neo-Toybrut design tokens/theme
 ```
 
-## 🎨 Available Styles
+## 🎨 Available Styles (Luminance-Locked ≤ 0.40 for Print & Camera Reliability)
 
-- **Sunset** 🌅 - Warm gradient from peach to pink to purple
-- **Pool** 💧 - Cool aqua blues and teals
-- **Terminal** 💻 - Classic green on black hacker aesthetic
-- **Candy** 🍬 - Playful pink, gold, and teal
-- **Vapor** 🌫️ - Vaporwave magenta and cyan
-- **Classic** ⬜ - Near-black on off-white (the `noir` key)
-- **Brutalist** ⬛ - Bold black on yellow
+- **Sunset** 🌅 — Warm coral-pink to deep plum
+- **Candy** 🍬 — Vibrant magenta to electric indigo
+- **Blush** 🌸 — Rose-crimson to warm berry
+- **Matcha** 🍵 — Deep forest emerald to botanical pine
+- **Pool** 💧 — Ocean teal to deep navy
+- **Vapor** 🌫️ — Neon violet to midnight cyber-blue
+- **Grape** 🍇 — Royal amethyst to deep mulberry
+- **Licorice** 🖤 — Warm espresso-black (`#1e1714`) high-contrast classic
 
 ## 🏃‍♂️ Development
 

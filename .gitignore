@@ -17,15 +17,7 @@ node_modules/
 # macOS
 .DS_Store
 
-# Playwright MCP session artifacts
+# Playwright MCP & local scratch artifacts
 .playwright-mcp/
-
-# Local generator-review captures and environment-specific scratch harnesses
+scratch/
 /docs/verification-artifacts-2026-10-13/
-/scratch/verify_generator_polish.js
-/scratch/verify_review_correction.js
-/scratch/decode_artifacts.ts
-/scratch/decode_review_artifacts.ts
-/scratch/verify_package_1.ts
-/scratch/verify_browser_library.js
-/scratch/inspect_passport_mobile.js
