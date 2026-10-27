@@ -20,55 +20,64 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📦",
-    title: "Estándar GS1 Digital Link",
+    tag: "Caja + Celular",
+    title: "Un Código para Caja y Cliente",
     desc:
-      "Estructura códigos GTIN-8, UPC-12, EAN-13 o GTIN-14 en rutas /01/GTIN/10/LOTE/17/EXP con validación del dígito verificador Mod-10 en vivo.",
+      "Combina el código de barras de caja con enlaces web de producto, lote y fecha de caducidad en un solo código 2D limpio.",
+  },
+  {
+    icon: "✅",
+    tag: "Cero Errores",
+    title: "Verificador de Dígito en Vivo",
+    desc:
+      "Detecta errores de captura en el código de barras al instante y corrige el último dígito verificador con un clic antes de imprimir.",
   },
   {
     icon: "⚡",
-    title: "Ruteo Editable por Lote o SKU",
+    tag: "Ruteo por Lote",
+    title: "Actualiza Certificados sin Reimprimir",
     desc:
-      "Conecta el empaque a enlaces editables de QRBuddy para actualizar certificados de análisis, ingredientes, recetas o avisos sin reimprimir etiquetas.",
+      "Conecta el empaque a enlaces editables para renovar análisis de laboratorio, ingredientes o recetas sin cambiar etiquetas.",
   },
   {
     icon: "📐",
-    title: "SVG Vectorial y Lotes ZIP",
+    tag: "Pre-Prensa Lista",
+    title: "SVG Vectorial y Paquetes ZIP de 50 SKUs",
     desc:
-      "Exporta vectores SVG con contraste WCAG verificado (luminancia <= 0.40) o genera hasta 50 SKUs en un solo archivo ZIP con manifest.csv.",
+      "Descarga curvas SVG limpias para Illustrator o genera hasta 50 códigos de producto de un jalón con manifest.csv para imprenta.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Constructor GS1 Digital Link + Validador Mod-10",
-    free: "Ilimitado, codificación directa, dura para siempre ($0)",
+    feature: "Constructor GS1 + Validador de Dígito",
+    free: "Ilimitado · Dura para siempre ($0)",
     supporter: "Incluido",
   },
   {
-    feature: "SVG vectorial y PNG 3000px para etiquetas",
-    free: "Gratis con verificación de contraste en vivo",
+    feature: "SVG Vectorial y PNG 3000px de Etiqueta",
+    free: "Gratis con contraste verificado",
     supporter: "Incluido",
   },
   {
-    feature: "Lotes ZIP por SKU (PNG + SVG + CSV)",
-    free: "Hasta 50 SKUs por paquete ZIP incluido",
+    feature: "Paquetes ZIP por Lote (PNG + SVG + CSV)",
+    free: "Hasta 50 SKUs por ZIP gratis",
     supporter: "Incluido",
   },
   {
-    feature: "Redirecciones editables de producto / ficha técnica",
-    free: "5 links editables permanentes incluidos gratis",
-    supporter: "100 links editables + ruteo inteligente + CSV de 90 días",
+    feature: "Links Editables de Producto y Lote",
+    free: "5 links editables gratis incluidos",
+    supporter: "100 links editables + CSV de 90 días",
   },
   {
-    feature: "Alojamiento de fichas técnicas y certificados PDF",
+    feature: "Certificados y Fichas Técnicas PDF",
     free: "Archivos de hasta 50 MB",
-    supporter: "Archivos de hasta 500 MB + páginas limpias sin marca",
+    supporter: "Archivos de hasta 500 MB + sin marca",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "Sin compra necesaria",
-    supporter:
-      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
+    free: "$0 · Sin cuenta necesaria",
+    supporter: "~$32 USD (A$49) / año · Sin cobro automático",
   },
 ];
 
@@ -122,7 +131,8 @@ export default function Gs1EsPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         lang="es"
         badge="Empaques GS1 Sunrise 2027"
-        title="Códigos QR 2D GS1 Digital Link para Marcas Independientes."
+        title="Códigos 2D para Empaques."
+        titleHighlight="Hechos para Marcas Independientes."
         tagline="Genera rutas estándar /01/GTIN/10/LOTE/17/EXP con validación Mod-10 en vivo y descarga SVG vectorial listo para imprenta."
         subtagline="Ingresa el dominio de marca, código GTIN, lote y caducidad abajo: descarga el vector directo o activa Editable para rutear escaneos."
         defaultStyle="matcha"

@@ -141,7 +141,8 @@ export default function ComparePage({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         badge="Zero Hostage Fees"
-        title="Kill the $35/mo. QR hostage bill."
+        title="Kill the $35/mo"
+        titleHighlight="QR Hostage Bill."
         tagline="Direct codes stay free forever. Editable links, Vector SVGs, batch ZIPs, and 500 MB mixtape drops — built for print."
         subtagline="Mint a permanent QR below — download 3000px PNG or Vector SVG immediately with zero sign-up."
         defaultStyle="sunset"

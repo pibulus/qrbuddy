@@ -636,7 +636,7 @@ export const COMPETITORS: Record<CompetitorSlug, CompetitorEntry> = {
           title: "Free Vector SVGs, Logos & Gradients",
           tag: "Free Forever",
           desc:
-            "Bitly restricts free users to basic codes without SVG export. QRBuddy unlocks 8 contrast-locked gradients and SVG export at $0.",
+            "Bitly restricts free users to basic codes without SVG export. QRBuddy unlocks 10 contrast-locked palettes and SVG export at $0.",
         },
         {
           icon: "⚡",
@@ -674,7 +674,7 @@ export const COMPETITORS: Record<CompetitorSlug, CompetitorEntry> = {
         {
           feature: "Custom Colors & Logos",
           free: "Paywalled on free tier",
-          supporter: "8 print-verified palettes + logo free",
+          supporter: "10 print-verified palettes + logo free",
         },
         {
           feature: "Edit Link After Print",
@@ -705,7 +705,7 @@ export const COMPETITORS: Record<CompetitorSlug, CompetitorEntry> = {
       faqItems: [
         {
           q: "How does QRBuddy compare to Bitly for printed QR codes?",
-          a: "Bitly started as a text link shortener and gated QR customization (Vector SVG export, custom colors, center logos, and destination URL editing) behind recurring monthly tiers. QRBuddy is built specifically for physical print runs — giving away Vector SVG export, 3000px PNGs, custom logos, and 8 WCAG-verified gradient palettes at $0.",
+          a: "Bitly started as a text link shortener and gated QR customization (Vector SVG export, custom colors, center logos, and destination URL editing) behind recurring monthly tiers. QRBuddy is built specifically for physical print runs — giving away Vector SVG export, 3000px PNGs, custom logos, and 10 WCAG-verified palettes at $0.",
         },
         {
           q: "Can a destination URL be changed after printing in QRBuddy without paying $35/month?",
@@ -751,7 +751,7 @@ export const COMPETITORS: Record<CompetitorSlug, CompetitorEntry> = {
           title: "SVG Vectorial, Logos y Degradados",
           tag: "Gratis Siempre",
           desc:
-            "Bitly limita su plan gratuito a códigos básicos sin SVG. QRBuddy ofrece 8 paletas verificadas y exportación SVG por $0.",
+            "Bitly limita su plan gratuito a códigos básicos sin SVG. QRBuddy ofrece 10 paletas verificadas y exportación SVG por $0.",
         },
         {
           icon: "⚡",
@@ -789,7 +789,7 @@ export const COMPETITORS: Record<CompetitorSlug, CompetitorEntry> = {
         {
           feature: "Colores y Logo Central",
           free: "Bloqueado en plan gratis",
-          supporter: "8 paletas para imprenta + logo gratis",
+          supporter: "10 paletas para imprenta + logo gratis",
         },
         {
           feature: "Editar Link Impreso",
@@ -820,7 +820,7 @@ export const COMPETITORS: Record<CompetitorSlug, CompetitorEntry> = {
       faqItems: [
         {
           q: "¿En qué se diferencia QRBuddy de Bitly para códigos QR impresos?",
-          a: "Bitly nació como acortador de enlaces y bloquea la exportación SVG vectorial, los colores personalizados y la edición de destino en planes mensuales. QRBuddy está diseñado desde cero para impresión física, ofreciendo SVG vectorial, PNG de 3000px, logo central y 8 paletas con contraste verificado por $0.",
+          a: "Bitly nació como acortador de enlaces y bloquea la exportación SVG vectorial, los colores personalizados y la edición de destino en planes mensuales. QRBuddy está diseñado desde cero para impresión física, ofreciendo SVG vectorial, PNG de 3000px, logo central y 10 paletas con contraste verificado por $0.",
         },
         {
           q: "¿Se puede cambiar el enlace de destino después de imprimir sin pagar $35/mes?",

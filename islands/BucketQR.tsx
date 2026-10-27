@@ -205,7 +205,9 @@ export default function BucketQR({
         errorCorrectionLevel: "Q",
       },
       dotsOptions: {
-        type: "rounded",
+        type: "shape" in currentStyle.dots && currentStyle.dots.shape
+          ? currentStyle.dots.shape
+          : "rounded",
         color: "color" in currentStyle.dots
           ? currentStyle.dots.color
           : undefined,
@@ -222,7 +224,11 @@ export default function BucketQR({
           : undefined,
       },
       cornersSquareOptions: {
-        type: "extra-rounded",
+        type:
+          currentStyle.cornersSquare && "shape" in currentStyle.cornersSquare &&
+            currentStyle.cornersSquare.shape
+            ? currentStyle.cornersSquare.shape
+            : "extra-rounded",
         color:
           currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
             ? currentStyle.cornersSquare.color
@@ -233,7 +239,10 @@ export default function BucketQR({
             : undefined,
       },
       cornersDotOptions: {
-        type: "dot",
+        type: currentStyle.cornersDot && "shape" in currentStyle.cornersDot &&
+            currentStyle.cornersDot.shape
+          ? currentStyle.cornersDot.shape
+          : "dot",
         color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
           ? currentStyle.cornersDot.color
           : undefined,

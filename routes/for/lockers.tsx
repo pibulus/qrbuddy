@@ -20,49 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📤",
+    tag: "Instant Drop",
     title: "Drop a File, Mint a QR",
     desc:
       "Drag any PDF, ZIP, image, or audio file onto the input bar to generate a hosted download page and scannable QR code in seconds.",
   },
   {
     icon: "💣",
+    tag: "Auto-Purge",
     title: "Self-Destructing Download Caps",
     desc:
-      "Keep shares open for 30 days or set a strict download limit (1, 5, 10, or 100 claims) that routes to a KABOOM screen once exhausted.",
+      "Keep shares open for 30 days or set a strict download limit (1, 5, 10, or 100 claims) that purges the file once exhausted.",
+  },
+  {
+    icon: "🔐",
+    tag: "PIN Protected",
+    title: "Reusable Inbound File Lockers",
+    desc:
+      "Mint a two-way locker QR so clients or attendees can drop files into a PIN-protected box from any mobile browser.",
   },
   {
     icon: "📦",
-    title: "Up to 500 MB Single-File Drops",
+    tag: "Up to 500 MB",
+    title: "Heavy Transfers Without Login Walls",
     desc:
-      "Free drops handle files up to 50 MB. The QRBuddy Passport unlocks 500 MB presigned Cloudflare R2 transfers and reusable PIN lockers.",
+      "Free drops handle files up to 50 MB. The QRBuddy Passport unlocks 500 MB single-file transfers and white-label share pages.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Static QR Codes",
-    free: "Unlimited; destination is encoded directly in the QR ($0)",
+    feature: "Direct QR Codes",
+    free: "Unlimited · Works forever ($0)",
     supporter: "Included",
   },
   {
     feature: "Single-File QR Drops",
-    free: "Up to 50 MB per file",
-    supporter: "Up to 500 MB per single file (10× larger)",
+    free: "Files up to 50 MB",
+    supporter: "Files up to 500 MB (10× larger)",
   },
   {
     feature: "Download Caps & Self-Destruct",
-    free: "Unlimited or 1 / 5 / 10 / 100 download limits",
+    free: "1 / 5 / 10 / 100 or unlimited claims",
     supporter: "Included + white-label share pages",
   },
   {
-    feature: "File-Share Retention",
-    free: "Expires after 30 days",
-    supporter: "Expires after 30 days + 90-day scan/download analytics",
+    feature: "Retention & Scan Stats",
+    free: "30-day hosting + claim counter",
+    supporter: "30-day hosting + 90-day analytics CSV",
   },
   {
     feature: "QRBuddy Passport",
-    free: "No purchase required",
-    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
+    free: "$0 · No account needed",
+    supporter: "~$32 USD (A$49) / yr · Never auto-renews",
   },
 ];
 
@@ -115,7 +125,8 @@ export default function LockersPage({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         badge="File Drops & Lockers"
-        title="Drop a File. Share the QR. Done."
+        title="Drop a File."
+        titleHighlight="Share the QR. Done."
         tagline="Turn PDFs, ZIPs, photos, or audio tracks into a scannable 30-day download page — with optional self-destructing download caps."
         subtagline="Drag a file onto the input bar below or click the paperclip icon to stage a transfer."
         defaultStyle="pool"

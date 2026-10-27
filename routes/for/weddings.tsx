@@ -20,54 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "💌",
+    tag: "Editable Plans",
     title: "RSVP, Maps & Schedule Links",
     desc:
-      "Encode wedding websites, venue directions, or registry links into a permanent static QR or an editable link that updates as plans evolve.",
+      "Encode wedding websites, venue directions, or registry links into a permanent code or an editable link that updates as plans evolve.",
   },
   {
     icon: "📸",
-    title: "Curated 10-Photo Slideshow Drops",
+    tag: "10-Photo Gallery",
+    title: "Curated Photo Slideshow Drops",
     desc:
-      "Drop up to 10 photos onto the studio to mint a hosted 30-day slideshow page that guests can view and download on any phone browser.",
+      "Drop up to 10 photos onto the studio to mint a hosted 30-day slideshow page that guests view and save on any phone browser.",
   },
   {
     icon: "🎶",
-    title: "Reception Mixtape & Stationery SVG",
+    tag: "Audio Mixtape",
+    title: "Reception Playlist in One Scan",
     desc:
-      "Share a 10-track audio playlist (up to 5 MB per track) or export print-verified Vector SVGs for letterpress invitations and table cards.",
+      "Share a 10-track audio mixtape (up to 5 MB per track) with auto-advance playback — zero apps or logins needed.",
+  },
+  {
+    icon: "📐",
+    tag: "Print & Foil",
+    title: "Stationery-Grade Vector SVG",
+    desc:
+      "Export true Vector SVGs and 3000px PNGs with contrast-verified palettes ready for letterpress invitations, foil, and table cards.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Static Invitation & RSVP QR Codes",
-    free: "Unlimited; destination is encoded directly in the QR ($0)",
+    feature: "Direct Invitation & RSVP QR Codes",
+    free: "Unlimited · Works forever ($0)",
     supporter: "Included",
   },
   {
     feature: "Editable Event & Schedule Links",
-    free: "5 permanent editable links included free",
-    supporter: "100 editable links + custom Cover Pages",
+    free: "5 free editable links included",
+    supporter: "100 editable links + Cover Pages",
   },
   {
-    feature: "Photo Slideshow or Audio Playlist",
-    free: "Up to 10 photos or tracks; audio files up to 5 MB each",
-    supporter: "Same multi-item cap; single-file drops expand to 500 MB",
+    feature: "Photo Slideshow or Audio Mixtape",
+    free: "Up to 10 photos or tracks (5 MB/track)",
+    supporter: "Included + 500 MB single-file drops",
   },
   {
     feature: "White-Label Share Pages",
-    free: "Includes subtle 'Made with QRBuddy' footer pill",
-    supporter: "One-click white-label mode removes footer branding",
-  },
-  {
-    feature: "File-Share Retention",
-    free: "30 days",
-    supporter: "30 days",
+    free: "Subtle 'Made with QRBuddy' footer",
+    supporter: "1-click white-label removes footer",
   },
   {
     feature: "QRBuddy Passport",
-    free: "No purchase required",
-    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
+    free: "$0 · No account needed",
+    supporter: "~$32 USD (A$49) / yr · Never auto-renews",
   },
 ];
 
@@ -120,7 +125,8 @@ export default function WeddingsPage({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         badge="Weddings & Celebrations"
-        title="Wedding QR Codes That Match the Stationery."
+        title="Wedding QR Codes."
+        titleHighlight="Made for Fine Stationery."
         tagline="Link invitations to RSVP pages, venue maps, curated 10-photo slideshows, or reception playlists in one scan."
         subtagline="Paste the wedding website URL or drop up to 10 photos/tracks below — export 3000px PNG or print-shop Vector SVG."
         defaultStyle="blush"

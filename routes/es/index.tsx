@@ -56,10 +56,6 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
-        />
         <link rel="canonical" href="https://qrbuddy.app/es" />
         <link
           rel="alternate"
@@ -69,12 +65,12 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         <link
           rel="alternate"
           hrefLang="en"
-          href="https://qrbuddy.app"
+          href="https://qrbuddy.app/"
         />
         <link
           rel="alternate"
           hrefLang="x-default"
-          href="https://qrbuddy.app"
+          href="https://qrbuddy.app/"
         />
 
         {/* Performance hints */}
@@ -119,16 +115,6 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="QRBuddy" />
 
-        {/* Umami Analytics */}
-        <script
-          defer
-          src="https://cloud.umami.is/script.js"
-          data-website-id="280ec8ac-9eb5-4d06-89fe-369960e40b5d"
-          data-exclude-search="true"
-          data-exclude-hash="true"
-        >
-        </script>
-
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
@@ -162,7 +148,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
                 "name": "Pablo",
               },
               "featureList": [
-                "8 paletas degradadas verificadas para impresión + creador de degradados personalizados",
+                "10 paletas verificadas para impresión (Atardecer, Océano, Bosque, Carmesí, Vaporwave, Cósmico, Dulce, Matrix, Brutal, Clásico) + creador de degradados personalizados",
                 "Exportación PNG de alta resolución (hasta 3000px) y SVG vectorial con contraste WCAG en vivo",
                 "Todos los tipos de QR: URL, Wi-Fi, vCard, Bio Social, Centro Multimedia, Teléfono, SMS, Correo y Texto",
                 "Códigos QR dinámicos editables con rutas por horario (desayuno/comida/cena), iOS/Android y pruebas A/B",

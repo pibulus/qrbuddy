@@ -20,50 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "🎧",
-    title: "Reproductor de Mixtapes de 10 Pistas",
+    tag: "Reproductor de 10 Pistas",
+    title: "Mixtapes Reproducibles en Navegador",
     desc:
-      "Suelta hasta 10 pistas de audio (máx. 5 MB cada una) para crear un reproductor web con avance automático y ranking de reproducciones.",
+      "Suelta hasta 10 pistas de audio (máx. 5 MB cada una) para crear un reproductor web con avance automático al instante.",
   },
   {
     icon: "🔗",
-    title: "Actualiza Stickers y Merch en Gira",
+    tag: "Listo para Gira",
+    title: "Actualiza Stickers y Merch en Vivo",
     desc:
-      "Usa un QR dinámico editable en vinilos, cassettes o carteles y cambia el destino en cada nuevo sencillo o fecha de concierto sin reimprimir.",
+      "Imprime un QR editable en vinilos, cassettes o carteles y cambia el destino en cada nuevo sencillo o fecha de concierto.",
+  },
+  {
+    icon: "📦",
+    tag: "Hasta 500 MB",
+    title: "Envía Masters WAV y Paquetes de Stems",
+    desc:
+      "Comparte archivos de 50 MB gratis o paquetes de hasta 500 MB con el Pasaporte — con opción de autodestrucción por descargas.",
   },
   {
     icon: "🎨",
-    title: "SVG Vectorial para Fundas y Carteles",
+    tag: "SVG para Maquila",
+    title: "Vectores para Fundas, Stickers y Carteles",
     desc:
-      "Elige un degradado de alto contraste, coloca el logo de la banda al centro y exporta PNG de 3000px o SVG vectorial para imprenta.",
+      "Elige una paleta de alto contraste, coloca el logo al centro y exporta PNG de 3000px o SVG vectorial listo para imprenta.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Códigos QR estáticos para lanzamientos",
-    free: "Ilimitados; el destino queda grabado directo en el QR ($0)",
+    feature: "Códigos QR Directos para Lanzamientos",
+    free: "Ilimitados · Dura para siempre ($0)",
     supporter: "Incluidos",
   },
   {
-    feature: "Enlaces editables para giras y merch",
-    free: "5 enlaces editables permanentes incluidos gratis",
-    supporter: "100 enlaces editables + ruteo iOS/Android y por horario",
+    feature: "Links Editables para Giras y Merch",
+    free: "5 links editables gratis incluidos",
+    supporter: "100 links editables + horarios",
   },
   {
-    feature: "Mixtape reproducible de varias pistas",
-    free: "Hasta 10 pistas de hasta 5 MB cada una (30 días en línea)",
-    supporter: "Mismo tope de 10 pistas + ranking por canción y modo sin marca",
+    feature: "Mixtape Reproducible de 10 Pistas",
+    free: "Hasta 10 pistas (5 MB c/u · 30 días)",
+    supporter: "Incluido + ranking por canción",
   },
   {
-    feature: "Envío de archivo individual (WAV / Stems)",
-    free: "Hasta 50 MB por archivo (vigencia de 30 días)",
-    supporter: "Hasta 500 MB por archivo individual (vigencia de 30 días)",
+    feature: "Envío de Master WAV / Stems ZIP",
+    free: "Archivos de hasta 50 MB",
+    supporter: "Archivos de hasta 500 MB + sin marca",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "Sin compra necesaria",
-    supporter:
-      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
+    free: "$0 · Sin cuenta necesaria",
+    supporter: "~$32 USD (A$49) / año · Sin cobro automático",
   },
 ];
 
@@ -117,7 +126,8 @@ export default function MusicaEspanolPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         lang="es"
         badge="Músicos y Sellos Independientes"
-        title="El Mixtape a un Solo Escaneo."
+        title="Pon el Mixtape."
+        titleHighlight="A un Solo Escaneo."
         tagline="Suelta hasta 10 pistas para armar un reproductor web al instante, o genera QRs editables para vinilos, cassettes y carteles."
         subtagline="Pega el link del lanzamiento o suelta audios abajo: descarga PNG de 3000px y SVG vectorial gratis."
         defaultStyle="vapor"

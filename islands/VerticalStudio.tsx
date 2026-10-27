@@ -195,6 +195,7 @@ export default function VerticalStudio({
   // Street-Safe Airlock inline link unmasker state (toolPreset === "inspect")
   const [peekInput, setPeekInput] = useState("https://qrbuddy.app/why");
   const [peekLoading, setPeekLoading] = useState(false);
+  const [peekError, setPeekError] = useState<string | null>(null);
   const [peekResult, setPeekResult] = useState<
     {
       url: string;
@@ -215,18 +216,30 @@ export default function VerticalStudio({
       ? candidate
       : `https://${candidate}`;
     setPeekLoading(true);
+    setPeekError(null);
     try {
       const res = await fetch(
         `/api/peek?url=${encodeURIComponent(normalized)}`,
       );
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.ok) {
-          setPeekResult(data);
-        }
+      const data = await res.json().catch(() => null);
+      if (res.ok && data && data.ok) {
+        setPeekResult(data);
+      } else {
+        setPeekResult(null);
+        setPeekError(
+          data?.error ||
+            (isSpanish
+              ? "No se pudo inspeccionar este enlace (destino privado o inalcanzable)."
+              : "Could not inspect this link (private or unreachable destination)."),
+        );
       }
     } catch {
-      // Best-effort inline preview
+      setPeekResult(null);
+      setPeekError(
+        isSpanish
+          ? "Error de conexión al inspeccionar el enlace."
+          : "Network error while inspecting link.",
+      );
     } finally {
       setPeekLoading(false);
     }
@@ -281,6 +294,7 @@ export default function VerticalStudio({
     enabled: true,
     caption: defaultCaption,
   });
+  const pngSize = useSignal<1000 | 2000 | 3000>(1000);
 
   useEffect(() => {
     if (!toolPreset && defaultUrl && !url.value) {
@@ -889,13 +903,13 @@ export default function VerticalStudio({
               <div class="flex items-center justify-between gap-2">
                 <span class="text-xs font-black uppercase tracking-wider text-[#1e1714]">
                   {isSpanish
-                    ? "🛡️ Escudo Callejero de QR"
-                    : "🛡️ Street-Safe QR Airlock"}
+                    ? "🔍 Escáner y Vista Previa Segura"
+                    : "🔍 Safe QR & Link Preview"}
                 </span>
-                <span class="px-2.5 py-0.5 rounded-full bg-emerald-200 border border-[#1e1714] text-[11px] font-black text-[#1e1714] shrink-0 whitespace-nowrap">
+                <span class="px-2.5 py-0.5 rounded-full bg-[#9ef0c8] border border-[#1e1714] text-[11px] font-black text-[#1e1714] shrink-0 whitespace-nowrap">
                   {isSpanish
-                    ? "Cero apertura automática · Sin cookies"
-                    : "Zero auto-open · No cookies"}
+                    ? "Nada se abre solo · 100% gratis"
+                    : "Nothing auto-opens · 100% free"}
                 </span>
               </div>
 
@@ -911,15 +925,15 @@ export default function VerticalStudio({
                 <span>
                   {isSpanish
                     ? "Escanear con cámara o subir captura de QR"
-                    : "Scan with Camera or Drop QR Screenshot"}
+                    : "Scan with Camera or Drop a Screenshot"}
                 </span>
               </button>
 
               <div class="space-y-2 pt-1">
                 <label class="block text-xs font-black text-[#1e1714]">
                   {isSpanish
-                    ? "🔄 O desenmascara un link corto o destino sospechoso:"
-                    : "🔄 Or unmask a shortlink / suspicious QR URL directly:"}
+                    ? "🔄 O pega un link corto (bit.ly, tinyurl) para ver a dónde lleva:"
+                    : "🔄 Or paste a shortened link (bit.ly, tinyurl) to see where it goes:"}
                 </label>
                 <div class="flex gap-2">
                   <input
@@ -946,8 +960,8 @@ export default function VerticalStudio({
                     class="min-h-[42px] px-4 rounded-xl border-2 border-[#1e1714] bg-amber-200 hover:bg-amber-300 font-black text-xs sm:text-sm text-[#1e1714] shadow-[2px_2px_0_#1e1714] shrink-0 transition-transform active:scale-95 disabled:opacity-50"
                   >
                     {peekLoading
-                      ? (isSpanish ? "Revisando…" : "Peeking…")
-                      : (isSpanish ? "🔍 Revelar" : "🔍 Unmask")}
+                      ? (isSpanish ? "Revisando…" : "Checking…")
+                      : (isSpanish ? "🔍 Ver destino" : "🔍 Reveal Link")}
                   </button>
                 </div>
 
@@ -958,13 +972,13 @@ export default function VerticalStudio({
                   {[
                     {
                       label: isSpanish
-                        ? "🔄 Redirección 301 (/why)"
+                        ? "🔄 Salto de redirección (/why)"
                         : "🔄 Redirect Hop (/why)",
                       target: "https://qrbuddy.app/why",
                     },
                     {
                       label: isSpanish
-                        ? "📜 Menú (/menus)"
+                        ? "📜 Enlace de menú (/menus)"
                         : "📜 Menu Alias (/menus)",
                       target: "https://qrbuddy.app/menus",
                     },
@@ -983,6 +997,12 @@ export default function VerticalStudio({
                   ))}
                 </div>
               </div>
+
+              {peekError && (
+                <div class="rounded-xl border-2 border-[#1e1714] bg-amber-100 p-3 text-xs font-bold text-[#1e1714]">
+                  ⚠️ {peekError}
+                </div>
+              )}
 
               {peekResult && (
                 <div class="rounded-xl border-2 border-[#1e1714] bg-[#fffef7] p-3 space-y-2 shadow-[2px_2px_0_#1e1714]">
@@ -1004,6 +1024,12 @@ export default function VerticalStudio({
                   <p class="text-xs font-black text-[#1e1714] leading-snug">
                     {peekResult.title || peekResult.finalUrl}
                   </p>
+                  {peekResult.description &&
+                    peekResult.description !== peekResult.title && (
+                    <p class="text-[11px] font-medium text-[#57524b] leading-snug line-clamp-2">
+                      {peekResult.description}
+                    </p>
+                  )}
                   {peekResult.redirectChain &&
                     peekResult.redirectChain.length > 1 && (
                     <p class="font-mono text-[11px] font-bold text-[#6f6158] break-all">
@@ -1026,6 +1052,7 @@ export default function VerticalStudio({
             logoUrl={logoUrl}
             qrStyle={style}
             customStyle={customStyle}
+            pngSize={pngSize}
             frameConfig={frameConfig}
             onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
             hidePrimaryInput={Boolean(toolPreset)}
@@ -1228,6 +1255,86 @@ export default function VerticalStudio({
             />
           </div>
         </div>
+
+        {/* Under the Hood — Technical Authority & Pre-Press Spec Plate (For the Suits & Engineers) */}
+        <section
+          aria-label={isSpanish
+            ? "Especificaciones técnicas de impresión y seguridad"
+            : "Under the hood print and security specifications"}
+          class="bg-[#1e1714] text-[#fffef7] border-3 border-[#1e1714] rounded-3xl p-5 sm:p-6 shadow-chunky space-y-4"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#fffef7]/15 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-[#9ef0c8] text-[#1e1714] font-mono text-[11px] font-black uppercase tracking-wider">
+                {isSpanish ? "⚙️ Bajo el Capó" : "⚙️ Under the Hood"}
+              </span>
+              <h2 class="text-xs sm:text-sm font-black tracking-wide uppercase text-[#fffef7]">
+                {isSpanish
+                  ? "Arquitectura de Imprenta, Óptica y Seguridad"
+                  : "Print, Optical & Security Spec"}
+              </h2>
+            </div>
+            <span class="font-mono text-[11px] text-[#fffef7]/70">
+              {isSpanish
+                ? "Sencillo por fuera · Ingeniería real por dentro"
+                : "Friendly on top · Heavy-duty underneath"}
+            </span>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-3 text-xs">
+            <div class="rounded-xl bg-[#fffef7]/5 border border-[#fffef7]/12 p-3 space-y-1">
+              <p class="font-mono text-[11px] font-black text-[#f8de7e] uppercase tracking-wider">
+                {isSpanish
+                  ? "Óptica de Impresión (ISO 18004)"
+                  : "Optical Contrast Floor (ISO 18004)"}
+              </p>
+              <p class="text-[#fffef7]/85 leading-relaxed">
+                {isSpanish
+                  ? "Corrección Reed-Solomon Nivel Q/H (25–30% de recuperación) con luminancia relativa WCAG 2.1 ≤ 0.40 y contraste ≥ 2:1."
+                  : "Reed-Solomon Level Q/H error recovery (25–30%) with enforced WCAG 2.1 dot luminance ≤ 0.40 and ≥ 2:1 module contrast."}
+              </p>
+            </div>
+
+            <div class="rounded-xl bg-[#fffef7]/5 border border-[#fffef7]/12 p-3 space-y-1">
+              <p class="font-mono text-[11px] font-black text-[#f7d0e6] uppercase tracking-wider">
+                {isSpanish
+                  ? "Geometría Vectorial Pura"
+                  : "True Vector SVG 1.1 Geometry"}
+              </p>
+              <p class="text-[#fffef7]/85 leading-relaxed">
+                {isSpanish
+                  ? "Trazos <path> nativos en viewBox 1000×1000 sin foreignObject ni desenfoque bitmap — listos para Illustrator, InDesign y Canva."
+                  : "Native <path> outlines on a 1000×1000 viewBox with zero foreignObject or raster blur — ready for Illustrator, InDesign & Canva."}
+              </p>
+            </div>
+
+            <div class="rounded-xl bg-[#fffef7]/5 border border-[#fffef7]/12 p-3 space-y-1">
+              <p class="font-mono text-[11px] font-black text-[#9ef0c8] uppercase tracking-wider">
+                {isSpanish
+                  ? "Esclusa Anti-Quishing & SSRF Guard"
+                  : "Anti-Quishing Airlock & SSRF Guard"}
+              </p>
+              <p class="text-[#fffef7]/85 leading-relaxed">
+                {isSpanish
+                  ? "Decodificación de imagen 100% local en memoria y rastreo de hasta 5 saltos HTTP 301/302 con filtro anti-SSRF y sin cookies."
+                  : "100% local Canvas image decoding plus an SSRF-guarded redirect resolver tracing up to 5 HTTP 301/302 hops without cookies."}
+              </p>
+            </div>
+
+            <div class="rounded-xl bg-[#fffef7]/5 border border-[#fffef7]/12 p-3 space-y-1">
+              <p class="font-mono text-[11px] font-black text-[#e2d4f8] uppercase tracking-wider">
+                {isSpanish
+                  ? "Estándares GS1 2027 & Cero Cuentas"
+                  : "GS1 Sunrise 2027 & Zero-Log Auth"}
+              </p>
+              <p class="text-[#fffef7]/85 leading-relaxed">
+                {isSpanish
+                  ? "Sintaxis GS1 Digital Link (/01/GTIN/10/LOT/17/EXP) con dígito Mod-10, vCard 3.0, CSV RFC-4180 y llaves #fragmento RFC 3986."
+                  : "GS1 Digital Link (/01/GTIN/10/LOT/17/EXP) with Mod-10 checksums, vCard 3.0, RFC-4180 CSV & RFC 3986 #fragment bearer keys."}
+              </p>
+            </div>
+          </div>
+        </section>
 
         {/* Internal Link Graph — Explore More QR Tools */}
         <nav

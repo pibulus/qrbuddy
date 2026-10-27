@@ -20,50 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📜",
-    title: "Menús Estáticos o Editables",
+    tag: "Sin Reimprimir",
+    title: "Cambia la Carta cuando Quieras",
     desc:
-      "Graba el enlace del menú directamente en un QR estático ($0 para siempre) o activa un enlace editable para actualizar precios y platillos sin reimprimir.",
+      "Imprime los acrílicos de mesa una sola vez. Actualiza enlaces de temporada, precios o especiales en segundos sin tocar el código.",
   },
   {
     icon: "🕰️",
-    title: "Ruteo de Desayuno, Comida y Cena",
+    tag: "Horario Automático",
+    title: "Cambio de Desayuno a Cena",
     desc:
-      "Los enlaces editables admiten horarios automáticos: el mismo QR impreso en la mesa muestra desayunos por la mañana y carta de noche al atardecer.",
+      "Un mismo código en la mesa abre la carta de cafetería por la mañana y pasa al menú de cenas o coctelería por la noche.",
   },
   {
-    icon: "🎨",
-    title: "Contraste Verificado y SVG Vectorial",
+    icon: "🍷",
+    tag: "Luz Tenue",
+    title: "Lectura Rápida con Luz de Vela",
     desc:
-      "Elige una paleta pastel-punk, coloca el logo al centro y descarga PNG de 3000px o SVG vectorial listo para acrílicos de mesa y vitrinas.",
+      "Cada paleta está calibrada con alto contraste para que las cámaras lean a la primera en comedores con luz cálida o terrazas.",
+  },
+  {
+    icon: "📐",
+    tag: "SVG de Imprenta",
+    title: "Listo para Acrílicos, Madera y Papel",
+    desc:
+      "Descarga SVG vectorial real o PNG de 3000px con logo central — además de paquetes ZIP para numerar hasta 50 mesas de un jalón.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Códigos QR estáticos para menú",
-    free: "Ilimitados; el destino queda grabado directo en el gráfico ($0)",
+    feature: "Códigos QR Directos de Menú",
+    free: "Ilimitados · Dura para siempre ($0)",
     supporter: "Incluidos",
   },
   {
-    feature: "Enlaces dinámicos editables",
-    free: "5 enlaces editables permanentes incluidos gratis",
-    supporter: "100 enlaces editables + ruteo por horario y sistema",
+    feature: "Links Editables de Menú",
+    free: "5 links editables gratis incluidos",
+    supporter: "100 links editables + horarios",
   },
   {
-    feature: "Subida de archivos PDF",
-    free: "Hasta 50 MB por archivo; vigencia de 30 días",
-    supporter: "Archivos individuales de hasta 500 MB; vigencia de 30 días",
+    feature: "Subida de Cartas en PDF",
+    free: "Archivos de hasta 50 MB",
+    supporter: "Archivos de hasta 500 MB + sin marca",
   },
   {
-    feature: "Analíticas y hora pico de escaneos",
-    free: "Contador de escaneos en el panel de edición",
-    supporter: "Reporte de Campo de 90 días, horas pico y exportación CSV",
+    feature: "Estadísticas y Hora Pico",
+    free: "Contador total de escaneos",
+    supporter: " Tendencias de 90 días, hora pico y CSV",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "Sin compra necesaria",
-    supporter:
-      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
+    free: "$0 · Sin cuenta necesaria",
+    supporter: "~$32 USD (A$49) / año · Sin cobro automático",
   },
 ];
 
@@ -117,7 +126,8 @@ export default function MenusEspanolPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         lang="es"
         badge="Restaurantes y Cafeterías"
-        title="Códigos QR para Menús que Nunca Secuestran las Mesas."
+        title="Códigos QR para Menús."
+        titleHighlight="Hechos para el Comedor."
         tagline="Genera códigos estáticos eternos o enlaces editables que cambian del desayuno a la cena sin reimprimir acrílicos."
         subtagline="Pega el enlace del menú abajo: descarga PNG de 3000px o SVG vectorial para imprenta sin crear cuenta."
         defaultStyle="matcha"

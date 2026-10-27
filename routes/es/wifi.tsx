@@ -20,50 +20,64 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📶",
+    tag: "Cero Teclado",
     title: "Conexión en un Solo Escaneo",
     desc:
-      "Las cámaras de iPhone y Android leen el formato estándar WIFI: de forma nativa y conectan al instante sin escribir contraseñas.",
+      "Las cámaras de iPhone y Android abren la ventana de conexión Wi-Fi al instante. Cero dictar contraseñas ni errores de dedo.",
   },
   {
     icon: "🔒",
-    title: "100% Local y Privado",
+    tag: "100% En Dispositivo",
+    title: "La Contraseña Queda en Casa",
     desc:
-      "El nombre de red y la contraseña se codifican directamente en el navegador dentro del gráfico. Las claves jamás tocan un servidor.",
+      "El nombre de red y la clave se codifican directamente dentro del navegador. La contraseña jamás se envía a un servidor.",
+  },
+  {
+    icon: "♾️",
+    tag: "$0 Para Siempre",
+    title: "Funciona Sin Internet y No Caduca",
+    desc:
+      "Los datos de la red viven en los cuadritos impresos. Sigue funcionando año tras año sin pagos ni suscripciones.",
   },
   {
     icon: "🖼️",
-    title: "Listo para Enmarcar e Imprimir",
+    tag: "Listo para Imprenta",
+    title: "Hecho para Enmarcar y Mostradores",
     desc:
-      "Descarga PNG de 3000px con marco o SVG vectorial real para mostradores de cafetería, departamentos Airbnb, estudios y oficinas.",
+      "Descarga un PNG de 3000px con marco o un SVG vectorial para mostradores de cafetería, departamentos Airbnb y oficinas.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Generación de QR para Wi-Fi",
-    free: "Ilimitada, codificación directa, dura para siempre ($0)",
+    feature: "Tarjetas QR de Wi-Fi",
+    free: "Ilimitadas · Dura para siempre ($0)",
     supporter: "Incluido",
   },
   {
-    feature: "Privacidad de la contraseña",
-    free: "Procesada localmente en el navegador; nunca sale del dispositivo",
-    supporter: "Misma codificación local privada",
+    feature: "Privacidad de la Contraseña",
+    free: "100% local en navegador · Cero servidor",
+    supporter: "Misma codificación privada",
   },
   {
-    feature: "Exportación SVG vectorial y PNG 3000px",
-    free: "Gratis con marcos y textos personalizados",
-    supporter: "Incluido + lotes ZIP de hasta 50 códigos",
+    feature: "Archivos SVG Vectorial y PNG 3000px",
+    free: "Gratis con marcos y textos",
+    supporter: "Incluido + lotes ZIP de 50 códigos",
   },
   {
-    feature: "Manual de casa o menú digital",
-    free: "Hasta 5 links dinámicos editables y envíos de 50 MB",
-    supporter: "100 links editables, envíos de 500 MB y analíticas de 90 días",
+    feature: "Guía de Huéspedes o Menú (Editable)",
+    free: "5 links editables gratis incluidos",
+    supporter: "100 links editables + stats de 90 días",
+  },
+  {
+    feature: "Manual de Casa en PDF o Fotos",
+    free: "Archivos de hasta 50 MB",
+    supporter: "Archivos de hasta 500 MB + sin marca",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "Sin compra necesaria",
-    supporter:
-      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
+    free: "$0 · Sin cuenta necesaria",
+    supporter: "~$32 USD (A$49) / año · Sin cobro automático",
   },
 ];
 
@@ -117,7 +131,8 @@ export default function WifiEsPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         lang="es"
         badge="Cafeterías, Airbnb y Oficinas"
-        title="Imprime una Tarjeta Wi-Fi en Diez Segundos."
+        title="Imprime una Tarjeta Wi-Fi."
+        titleHighlight="Conexión en un Escaneo."
         tagline="Un escaneo conecta a los invitados a la red. Cero errores de dedo, cero servidores externos y sin fecha de caducidad."
         subtagline="Escribe el nombre de la red y la clave abajo: el código se actualiza en vivo listo para bajar en PNG o SVG vectorial."
         defaultStyle="pool"

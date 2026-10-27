@@ -12,7 +12,6 @@ export default function GuiaImpresionPage() {
       <Head>
         <title>{title}</title>
         <meta name="description" content={description} />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="canonical" href={canonicalUrl} />
         <link rel="alternate" hrefLang="es" href={canonicalUrl} />
         <link
@@ -29,12 +28,18 @@ export default function GuiaImpresionPage() {
         {/* OpenGraph */}
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="QRBuddy" />
+        <meta property="og:locale" content="es_MX" />
+        <meta property="og:locale:alternate" content="en_US" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta
+          property="og:image:alt"
+          content="QRBuddy Calculadora de Tamaño QR y Guía de Impresión"
+        />
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />

@@ -20,49 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "🎧",
-    title: "Hosted 10-Track Mixtape Player",
+    tag: "10-Track Player",
+    title: "Hosted Browser Mixtape Player",
     desc:
-      "Drop up to 10 audio tracks (up to 5 MB each) onto the studio to mint a browser-playable mixtape page with auto-advance and track leaderboards.",
+      "Drop up to 10 audio tracks (up to 5 MB each) onto the studio to mint a browser-playable mixtape page with auto-advance.",
   },
   {
     icon: "🔗",
-    title: "Repoint Merch & Poster QRs on Tour",
+    tag: "Tour Ready",
+    title: "Repoint Merch & Poster QRs Live",
     desc:
-      "Use an editable dynamic QR on vinyl sleeves, cassette J-cards, or tour posters and update the destination for every new release or ticket drop.",
+      "Print one editable QR on vinyl sleeves, cassette J-cards, or tour posters and switch the link for every new single or ticket drop.",
+  },
+  {
+    icon: "📦",
+    tag: "Up to 500 MB",
+    title: "Drop Full WAV Masters & Stem ZIPs",
+    desc:
+      "Send 50 MB files free or up to 500 MB stem packs with the Passport — complete with optional 1-scan self-destruct limits.",
   },
   {
     icon: "🎨",
-    title: "Sticker, Sleeve & Poster Vector SVG",
+    tag: "Pressing Plant SVG",
+    title: "Sticker, Sleeve & Poster Vectors",
     desc:
-      "Pick a luminance-locked gradient, add band or label artwork in the center, and export a 3000px PNG or Vector SVG ready for pressing plants.",
+      "Pick a contrast-locked palette, center band artwork, and export 3000px PNG or pure Vector SVG ready for vinyl and sticker printers.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Static Release & Bandcamp QR Codes",
-    free: "Unlimited; destination is encoded directly in the QR ($0)",
+    feature: "Direct Release & Bandcamp QR Codes",
+    free: "Unlimited · Works forever ($0)",
     supporter: "Included",
   },
   {
     feature: "Editable Tour & Merch Links",
-    free: "5 permanent editable links included free",
-    supporter: "100 editable links + iOS/Android & schedule routing",
+    free: "5 free editable links included",
+    supporter: "100 editable links + schedule routing",
   },
   {
-    feature: "Multi-Track Mixtape Share",
-    free: "Up to 10 audio tracks, up to 5 MB each (30-day hosting)",
-    supporter: "Same 10-track cap + track play leaderboard & white-label mode",
+    feature: "10-Track Mixtape Player",
+    free: "Up to 10 tracks (5 MB each · 30 days)",
+    supporter: "Included + track play leaderboard",
   },
   {
-    feature: "Single WAV / Stem Pack File Drop",
-    free: "Up to 50 MB single file (30-day hosting)",
-    supporter: "Up to 500 MB single file (30-day hosting)",
+    feature: "Single WAV / Stem Pack Drop",
+    free: "Files up to 50 MB",
+    supporter: "Files up to 500 MB + white-label",
   },
   {
     feature: "QRBuddy Passport",
-    free: "No purchase required",
-    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
+    free: "$0 · No account needed",
+    supporter: "~$32 USD (A$49) / yr · Never auto-renews",
   },
 ];
 
@@ -115,7 +125,8 @@ export default function MusicPage({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         badge="Musicians & Independent Labels"
-        title="Put the Mixtape One Scan Away."
+        title="Put the Mixtape."
+        titleHighlight="One Scan Away."
         tagline="Drop up to 10 audio tracks for a browser-playable mixtape page, or mint editable QR codes for vinyl sleeves, zines, and tour posters."
         subtagline="Paste a release link or drop audio files below — export 3000px PNGs and pressing-plant Vector SVGs free."
         defaultStyle="vapor"

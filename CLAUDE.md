@@ -115,7 +115,8 @@ See GLOSSARY.md for complete list organized by category. Key islands:
   SDK v2 (`addElementAtPoint` SVG vector drop) and Figma Community
   (`createNodeFromSvg`) plugin packages
 - **`static/sitemap.xml` & `static/llms.txt`**: Bilingual search + LLM crawler
-  indexes covering all 28 canonical EN/ES routes
+  indexes covering all 30 canonical EN/ES routes (+ 2 legal routes = 32 sitemap
+  nodes)
 - **`utils/api-request.ts`**: Shared API request helpers with automatic auth
   header injection and consistent error handling (eliminates duplicate code
   across hooks)
@@ -243,7 +244,10 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 - **Chunky borders**: 4px black borders with custom shadow classes
 - **Warm pastels**: Cream backgrounds with gradient accents
 - **Spring animations**: Squish, rotate-shuffle, and pop effects
-- **Gradient themes**: 8 pre-defined gradient styles emphasizing visual delight
+- **Gradient & high-contrast themes**: 10 pre-defined print-verified styles
+  (`Sunset`, `Ocean`, `Forest`, `Crimson`, `Vaporwave`, `Cosmic`, `Candy`,
+  `Matrix`, `Brutal`, `Classic`) emphasizing visual delight and optical
+  reliability
 
 ### Layout & Surface Rules
 

@@ -452,43 +452,58 @@ Deno.test("Storage resilience - simulated localStorage quota and corruption hand
   }
 });
 
-Deno.test("QR_STYLES & STYLE_DISPLAY - public presets satisfy scannability floor (luminance <= 0.40, contrast >= 2:1) and stay synced", () => {
+Deno.test("QR_STYLES & STYLE_DISPLAY - public presets satisfy scannability floor (luminance <= 0.40 or high-contrast >= 10:1) and stay synced", () => {
   for (const [key, display] of Object.entries(STYLE_DISPLAY)) {
     const preset = QR_STYLES[key as keyof typeof QR_STYLES];
     assert(preset, `Preset ${key} must exist in QR_STYLES`);
-    assert(
-      "gradient" in preset.dots,
-      `Public preset ${key} must have a dot gradient`,
-    );
 
-    const dotStops = preset.dots.gradient.colorStops.map((s) => s.color);
-    assertEquals(
-      display.colors,
-      dotStops,
-      `STYLE_DISPLAY.${key}.colors must match QR_STYLES.${key} dot colorStops`,
-    );
-
-    const bgColors = "gradient" in preset.background
-      ? preset.background.gradient.colorStops.map((s) => s.color)
-      : [preset.background.color];
-
-    for (const stopColor of dotStops) {
-      const lum = relativeLuminance(stopColor);
-      assert(
-        lum <= 0.40,
-        `Preset ${key} dot stop ${stopColor} has luminance ${
-          lum.toFixed(3)
-        } > 0.40`,
+    if ("gradient" in preset.dots) {
+      const dotStops = preset.dots.gradient.colorStops.map((s) => s.color);
+      assertEquals(
+        display.colors,
+        dotStops,
+        `STYLE_DISPLAY.${key}.colors must match QR_STYLES.${key} dot colorStops`,
       );
-      for (const bgColor of bgColors) {
-        const cr = contrastRatio(stopColor, bgColor);
+
+      const bgColors = "gradient" in preset.background
+        ? preset.background.gradient.colorStops.map((s) => s.color)
+        : [preset.background.color];
+
+      for (const stopColor of dotStops) {
+        const lum = relativeLuminance(stopColor);
         assert(
-          cr >= 2.0,
-          `Preset ${key} dot stop ${stopColor} vs bg ${bgColor} has contrast ${
-            cr.toFixed(2)
-          } < 2.0`,
+          lum <= 0.40,
+          `Preset ${key} dot stop ${stopColor} has luminance ${
+            lum.toFixed(3)
+          } > 0.40`,
         );
+        for (const bgColor of bgColors) {
+          const cr = contrastRatio(stopColor, bgColor);
+          assert(
+            cr >= 2.0,
+            `Preset ${key} dot stop ${stopColor} vs bg ${bgColor} has contrast ${
+              cr.toFixed(2)
+            } < 2.0`,
+          );
+        }
       }
+    } else {
+      assert(
+        "color" in preset.dots && "color" in preset.background,
+        `Solid preset ${key} must define dots.color and background.color`,
+      );
+      assertEquals(
+        display.colors,
+        [preset.dots.color, preset.background.color],
+        `STYLE_DISPLAY.${key}.colors must match [dots.color, background.color]`,
+      );
+      const cr = contrastRatio(preset.dots.color, preset.background.color);
+      assert(
+        cr >= 10.0,
+        `Solid preset ${key} must have high contrast >= 10:1, got ${
+          cr.toFixed(2)
+        }`,
+      );
     }
   }
 });
@@ -621,15 +636,21 @@ Deno.test("GS1 Digital Link - computes Mod-10 check digits and validates GTIN-8/
 
 Deno.test("Pure-TS Vector SVG Builder - generates Canva & Figma compliant SVG 1.1 across all palettes", () => {
   for (const [key, palette] of Object.entries(VECTOR_PALETTES)) {
-    // Luminance floor check on vector palettes
-    assert(
-      relativeLuminance(palette.c1) <= 0.40,
-      `VECTOR_PALETTES.${key}.c1 luminance > 0.40`,
-    );
-    assert(
-      relativeLuminance(palette.c2) <= 0.40,
-      `VECTOR_PALETTES.${key}.c2 luminance > 0.40`,
-    );
+    if (key === "terminal" || key === "brutalist") {
+      assert(
+        contrastRatio(palette.c1, palette.bg) >= 10.0,
+        `VECTOR_PALETTES.${key} contrast must be >= 10:1`,
+      );
+    } else {
+      assert(
+        relativeLuminance(palette.c1) <= 0.40,
+        `VECTOR_PALETTES.${key}.c1 luminance > 0.40`,
+      );
+      assert(
+        relativeLuminance(palette.c2) <= 0.40,
+        `VECTOR_PALETTES.${key}.c2 luminance > 0.40`,
+      );
+    }
 
     const svgFramed = buildQrSvgString({
       data: "https://qrbuddy.app/for/menus",

@@ -20,49 +20,64 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📶",
+    tag: "Zero Typing",
     title: "One Scan Joins the Network",
     desc:
-      "iOS and Android cameras read the standard WIFI: payload natively and prompt to join the network without typing a single character.",
+      "iPhone and Android cameras read the Wi-Fi card natively and connect guests in one tap — no more spelling out long router passwords.",
   },
   {
     icon: "🔒",
-    title: "100% Local & Private",
+    tag: "100% On-Device",
+    title: "Password Never Leaves the Browser",
     desc:
-      "Network names and passwords are encoded directly inside the browser into the graphic squares. Credentials never touch an external server.",
+      "Network names and passwords are baked directly into the QR squares on the device. Credentials are never uploaded to any server.",
+  },
+  {
+    icon: "♾️",
+    tag: "$0 Forever",
+    title: "Works Offline & Never Expires",
+    desc:
+      "A Wi-Fi QR card is a direct graphic with zero middleman server. Print it once for a café wall or Airbnb binder and it works for years.",
   },
   {
     icon: "🖼️",
+    tag: "Print-Ready",
     title: "Table-Tent & Frame Ready",
     desc:
-      "Export a 3000px framed PNG or true Vector SVG for café counters, Airbnb welcome binders, studio walls, and office lobbies.",
+      "Export a 3000px framed PNG or true Vector SVG with a custom 'JOIN WIFI' caption for acrylic stands, stickers, and welcome books.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Wi-Fi QR Code Generation",
-    free: "Unlimited, direct-encoded, works forever ($0)",
+    feature: "Wi-Fi QR Cards",
+    free: "Unlimited · Never expires ($0)",
     supporter: "Included",
   },
   {
     feature: "Password Privacy",
-    free: "Encoded locally in browser; never sent to any server",
-    supporter: "Same zero-knowledge local encoding",
+    free: "100% local in browser",
+    supporter: "Same zero-server privacy",
   },
   {
-    feature: "Vector SVG & 3000px Print PNG",
-    free: "Included free with custom frame captions",
+    feature: "Vector SVG & 3000px PNG",
+    free: "Included free with frames",
     supporter: "Included + 50-code batch ZIPs",
   },
   {
-    feature: "Guest Welcome Page / House Manual",
-    free: "Up to 5 editable dynamic links & 50 MB PDF/photo drops",
-    supporter: "100 editable links, 500 MB drops & 90-day scan stats",
+    feature: "Editable House Manual / Menu Links",
+    free: "5 permanent editable links",
+    supporter: "100 editable links + 90-day stats",
+  },
+  {
+    feature: "Welcome Guide PDF / Photo Drops",
+    free: "Up to 50 MB file drops",
+    supporter: "Up to 500 MB drops + white-label",
   },
   {
     feature: "QRBuddy Passport",
-    free: "No purchase required",
-    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
+    free: "$0 · No account needed",
+    supporter: "~$32/yr once · No auto-renew",
   },
 ];
 
@@ -115,7 +130,8 @@ export default function WifiPage({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         badge="Cafés, Airbnbs & Studios"
-        title="Print a Wi-Fi QR Card in Ten Seconds."
+        title="Print a Wi-Fi QR Card."
+        titleHighlight="Join in One Scan."
         tagline="One camera scan connects guests to the network. Zero password typos, zero server uploads, zero expiration."
         subtagline="Enter the network name and password below — the QR card updates live and exports in high-res PNG or Vector SVG."
         defaultStyle="pool"

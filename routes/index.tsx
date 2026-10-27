@@ -60,13 +60,13 @@ export default function Home({ data }: PageProps<HomeProps>) {
           name="description"
           content="Full-stack QR code studio for print, menus, packaging, and events. Create static & editable dynamic QR codes, Wi-Fi, vCards, branded cover pages, bulk ZIPs, 500 MB media drops, and 90-day analytics without hostage subscriptions."
         />
-        <link rel="canonical" href="https://qrbuddy.app" />
-        <link rel="alternate" hrefLang="en" href="https://qrbuddy.app" />
+        <link rel="canonical" href="https://qrbuddy.app/" />
+        <link rel="alternate" hrefLang="en" href="https://qrbuddy.app/" />
         <link rel="alternate" hrefLang="es" href="https://qrbuddy.app/es" />
         <link
           rel="alternate"
           hrefLang="x-default"
-          href="https://qrbuddy.app"
+          href="https://qrbuddy.app/"
         />
 
         {/* Performance hints */}
@@ -82,7 +82,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <meta property="og:site_name" content="QRBuddy" />
         <meta property="og:locale" content="en_US" />
         <meta property="og:locale:alternate" content="es_MX" />
-        <meta property="og:url" content="https://qrbuddy.app" />
+        <meta property="og:url" content="https://qrbuddy.app/" />
         <meta
           property="og:title"
           content="QRBuddy — Free & Dynamic QR Code Studio (Vector SVG, Logos, Routing & Analytics)"
@@ -101,7 +101,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://qrbuddy.app" />
+        <meta name="twitter:url" content="https://qrbuddy.app/" />
         <meta
           name="twitter:title"
           content="QRBuddy — Free & Dynamic QR Code Studio (Vector SVG, Logos, Routing & Analytics)"
@@ -122,16 +122,6 @@ export default function Home({ data }: PageProps<HomeProps>) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="QRBuddy" />
-
-        {/* Umami Analytics */}
-        <script
-          defer
-          src="https://cloud.umami.is/script.js"
-          data-website-id="280ec8ac-9eb5-4d06-89fe-369960e40b5d"
-          data-exclude-search="true"
-          data-exclude-hash="true"
-        >
-        </script>
 
         {/* JSON-LD Structured Data */}
         <script
@@ -165,7 +155,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
                 "name": "Pablo",
               },
               "featureList": [
-                "8 print-verified gradient palettes (Sunset, Candy, Blush, Matcha, Pool, Vapor, Grape, Licorice) + custom gradient builder",
+                "10 print-verified palettes (Sunset, Ocean, Forest, Crimson, Vaporwave, Cosmic, Candy, Matrix, Brutal, Classic) + custom gradient builder",
                 "High-resolution PNG (up to 3000px) and true vector SVG export with live WCAG contrast verification",
                 "All core QR types: URL, Wi-Fi, Contact Card (vCard), Social Bio Hub, Media Hub, Phone, SMS, Email, Plain Text",
                 "Editable Dynamic QR codes with custom short codes, scan caps, and expiration dates",

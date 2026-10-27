@@ -142,7 +142,8 @@ export default function CompararEspanolPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         lang="es"
         badge="Cero Rentas Trampa"
-        title="Rompe la factura de $35/mes. QRs libres para siempre."
+        title="Rompe la factura de $35/mes."
+        titleHighlight="QRs libres para siempre."
         tagline="Códigos directos gratis para siempre. Links editables, SVG vectorial, ZIP por lotes y mixtapes de 500 MB — hechos para imprenta."
         subtagline="Genera un QR permanente aquí abajo: descarga PNG 3000px o SVG vectorial al instante y sin crear cuenta."
         defaultStyle="sunset"

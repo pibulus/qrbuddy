@@ -17,11 +17,11 @@ export interface VectorPalette {
   c1: string;
   c2: string;
   bg: string;
+  rounded?: boolean;
 }
 
 /**
- * Luminance-locked pastel-punk palettes matching `utils/qr-styles.ts`
- * (every dot stop <= 0.40 relative luminance, >= 2:1 contrast against warm paper).
+ * Luminance-locked pastel-punk & solid palettes matching `utils/qr-styles.ts`.
  */
 export const VECTOR_PALETTES: Record<string, VectorPalette> = {
   sunset: {
@@ -40,42 +40,65 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
   },
   blush: {
     id: "blush",
-    label: "Blush",
+    label: "Crimson",
     c1: "#800F2F",
     c2: "#C9184A",
     bg: "#FFF7F9",
   },
   matcha: {
     id: "matcha",
-    label: "Matcha",
+    label: "Forest",
     c1: "#1B4332",
     c2: "#0F6E56",
     bg: "#F6FBF7",
   },
   pool: {
     id: "pool",
-    label: "Pool",
+    label: "Ocean",
     c1: "#0B4F6C",
     c2: "#1D3557",
     bg: "#F5FAFE",
   },
   vapor: {
     id: "vapor",
-    label: "Vapor",
+    label: "Vaporwave",
     c1: "#7209B7",
     c2: "#006466",
     bg: "#F8F6FF",
   },
   grape: {
     id: "grape",
-    label: "Grape",
+    label: "Cosmic",
     c1: "#3C096C",
     c2: "#7B2CBF",
     bg: "#FBF7FF",
   },
+  terminal: {
+    id: "terminal",
+    label: "Matrix",
+    c1: "#00FF41",
+    c2: "#00FF41",
+    bg: "#0A0A0A",
+    rounded: false,
+  },
+  brutalist: {
+    id: "brutalist",
+    label: "Brutal",
+    c1: "#000000",
+    c2: "#000000",
+    bg: "#FFFF00",
+    rounded: false,
+  },
+  noir: {
+    id: "noir",
+    label: "Classic",
+    c1: "#1E1B4B",
+    c2: "#0F172A",
+    bg: "#FFFDF9",
+  },
   licorice: {
     id: "licorice",
-    label: "Licorice",
+    label: "Classic",
     c1: "#1E1714",
     c2: "#1E1714",
     bg: "#FFFEF7",
@@ -170,7 +193,7 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   const c2 = options.c2 ?? preset.c2;
   const bg = options.bg ?? preset.bg;
   const ecl = options.errorCorrectionLevel ?? "Q";
-  const rounded = options.rounded !== false;
+  const rounded = options.rounded ?? preset.rounded ?? true;
 
   const qr = qrcode(0, ecl);
   qr.addData(payload);

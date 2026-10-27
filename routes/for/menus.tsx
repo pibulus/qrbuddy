@@ -20,49 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📜",
+    tag: "Never Reprint",
     title: "Static or Editable Menu Links",
     desc:
-      "Encode a menu PDF or ordering URL directly into a static QR ($0 forever), or switch to an editable link to update seasonal menus without reprinting table tents.",
+      "Make a permanent direct menu QR ($0 forever), or toggle Editable Link to swap seasonal menus without reprinting table tents.",
   },
   {
     icon: "🕰️",
+    tag: "Smart Schedule",
     title: "Breakfast, Lunch & Dinner Routing",
     desc:
-      "Editable links support time-of-day schedules — one printed table QR can open the breakfast menu at 8 AM and the dinner menu at 6 PM.",
+      "One printed table QR can automatically open the coffee & breakfast menu at 8 AM and the dinner & drinks list at 6 PM.",
+  },
+  {
+    icon: "🍷",
+    tag: "Dim-Light Safe",
+    title: "Scans Fast in Candlelit Bars",
+    desc:
+      "Every palette is locked to high print contrast so older phone cameras scan table cards effortlessly in dim dining rooms.",
   },
   {
     icon: "🎨",
-    title: "Print-Verified Contrast & Vector SVG",
+    tag: "Print-Shop SVG",
+    title: "Vector SVG, Logos & Table ZIPs",
     desc:
-      "Choose a pastel-punk palette, drop a venue logo in the center, and export a 3000px PNG or true Vector SVG for acrylic stands and window decals.",
+      "Drop a venue logo in the center and export a 3000px PNG, true Vector SVG, or a 50-table batch ZIP in one click.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
     feature: "Static Menu QR Codes",
-    free: "Unlimited; destination is encoded directly in the graphic ($0)",
+    free: "Unlimited · Works forever ($0)",
     supporter: "Included",
   },
   {
-    feature: "Editable Dynamic Menu Links",
-    free: "5 permanent editable links included free",
-    supporter: "100 editable links + time-of-day & OS routing",
+    feature: "Editable Menu Links",
+    free: "5 permanent editable links",
+    supporter: "100 editable links + time routing",
   },
   {
-    feature: "Hosted Menu PDF Uploads",
-    free: "Up to 50 MB per file; shares expire after 30 days",
-    supporter: "Single-file uploads up to 500 MB; shares expire after 30 days",
+    feature: "Hosted Menu PDF Drops",
+    free: "Up to 50 MB per menu PDF",
+    supporter: "Up to 500 MB + white-label page",
   },
   {
-    feature: "Scan Analytics & Rush-Hour Report",
-    free: "Live scan counter on edit dashboard",
-    supporter: "90-day Field Report, peak dining hours & CSV export",
+    feature: "Scan Stats & Rush Hours",
+    free: "Live total scan counter",
+    supporter: "90-day Field Report & CSV export",
   },
   {
     feature: "QRBuddy Passport",
-    free: "No purchase required",
-    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
+    free: "$0 · No account needed",
+    supporter: "~$32/yr once · No auto-renew",
   },
 ];
 
@@ -115,7 +125,8 @@ export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         badge="Hospitality & Dining"
-        title="Menu QR Codes Built for the Dining Room."
+        title="Menu QR Codes."
+        titleHighlight="Built for the Dining Room."
         tagline="Mint permanent static menu QRs or editable links that swap from breakfast to dinner without reprinting table tents."
         subtagline="Paste a menu URL below — export 3000px PNGs or print-shop Vector SVGs with zero account wall."
         defaultStyle="matcha"

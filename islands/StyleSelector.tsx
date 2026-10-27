@@ -101,69 +101,62 @@ interface StyleSelectorProps {
 }
 
 export const STYLE_DISPLAY = {
-  // Swatch colors mirror the actual dot gradients in utils/qr-styles.ts —
-  // keep them in sync so the gallery doesn't lie about the output. Order is
-  // warm → cool → dark; eight presets, one family (pastel-punk, 135° sweep).
+  // Swatch colors mirror the actual dot gradients (or dot+bg pair for solid
+  // high-contrast styles) in utils/qr-styles.ts — keep them in sync so the
+  // gallery never lies about the output.
   sunset: {
     name: "Sunset",
     nameEs: "Atardecer",
     colors: ["#F97316", "#FF69B4", "#9370DB"],
+  },
+  pool: {
+    name: "Ocean",
+    nameEs: "Océano",
+    colors: ["#0EA5E9", "#0891B2", "#0D9488"],
+  },
+  matcha: {
+    name: "Forest",
+    nameEs: "Bosque",
+    colors: ["#15803D", "#059669", "#0F766E"],
+  },
+  blush: {
+    name: "Crimson",
+    nameEs: "Carmesí",
+    colors: ["#E11D48", "#DB2777", "#9D174D"],
+  },
+  vapor: {
+    name: "Vaporwave",
+    nameEs: "Vaporwave",
+    colors: ["#6D28D9", "#9333EA", "#DB2777"],
+  },
+  grape: {
+    name: "Cosmic",
+    nameEs: "Cósmico",
+    colors: ["#4F46E5", "#7C3AED", "#9333EA"],
   },
   candy: {
     name: "Candy",
     nameEs: "Dulce",
     colors: ["#FF2E93", "#7C3AED", "#0891B2"],
   },
-  blush: {
-    name: "Blush",
-    nameEs: "Rubor",
-    colors: ["#E11D48", "#DB2777", "#9D174D"],
-  },
-  matcha: {
-    name: "Matcha",
-    nameEs: "Matcha",
-    colors: ["#15803D", "#059669", "#0F766E"],
-  },
-  pool: {
-    name: "Pool",
-    nameEs: "Alberca",
-    colors: ["#0EA5E9", "#0891B2", "#0D9488"],
-  },
-  vapor: {
-    name: "Vapor",
-    nameEs: "Vapor",
-    colors: ["#6D28D9", "#9333EA", "#DB2777"],
-  },
-  grape: {
-    name: "Grape",
-    nameEs: "Uva",
-    colors: ["#4F46E5", "#7C3AED", "#9333EA"],
-  },
-  noir: {
-    name: "Licorice",
-    nameEs: "Regaliz",
-    colors: ["#1E1B4B", "#0F172A"],
-  },
-};
-
-// Styles that still render but left the public gallery: brutalist (the 666
-// easter egg), terminal (1337 easter egg + the locker landing pages' default).
-// The trigger pill needs their names too.
-const HIDDEN_STYLE_DISPLAY: Record<
-  string,
-  { name: string; nameEs?: string; colors: string[] }
-> = {
-  brutalist: {
-    name: "Brutal",
-    nameEs: "Brutal",
-    colors: ["#000000", "#FFFF00"],
-  },
   terminal: {
     name: "Matrix",
     nameEs: "Matrix",
     colors: ["#00FF41", "#0A0A0A"],
   },
+  brutalist: {
+    name: "Brutal",
+    nameEs: "Brutal",
+    colors: ["#000000", "#FFFF00"],
+  },
+  noir: {
+    name: "Classic",
+    nameEs: "Clásico",
+    colors: ["#1E1B4B", "#0F172A"],
+  },
 };
+
+const TOTAL_PRESETS = Object.keys(STYLE_DISPLAY).length;
 
 export default function StyleSelector(
   { style, customStyle, isHidden, lang }: StyleSelectorProps,
@@ -194,7 +187,7 @@ export default function StyleSelector(
 
   const handleStyleSelect = (s: string, index = 0) => {
     style.value = s;
-    sounds.playAt("bloop", index, { total: 8, force: true });
+    sounds.playAt("bloop", index, { total: TOTAL_PRESETS, force: true });
     haptics.light();
     shell.requestClose();
     const info = STYLE_DISPLAY[s as keyof typeof STYLE_DISPLAY];
@@ -262,14 +255,18 @@ export default function StyleSelector(
       colors: ["#9370DB", "#FF69B4"],
     }
     : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY] ??
-      HIDDEN_STYLE_DISPLAY[style.value] ??
-      HIDDEN_STYLE_DISPLAY.brutalist;
+      STYLE_DISPLAY.sunset;
 
   const currentStyleName = isSpanish
     ? (currentStyleInfo.nameEs ?? currentStyleInfo.name)
     : currentStyleInfo.name;
 
-  const getGradientPreview = (colors: string[]) => {
+  const getGradientPreview = (colors: string[], key?: string) => {
+    if ((key === "terminal" || key === "brutalist") && colors.length === 2) {
+      return `linear-gradient(135deg, ${colors[0]} 0%, ${colors[0]} 52%, ${
+        colors[1]
+      } 52%, ${colors[1]} 100%)`;
+    }
     return `linear-gradient(135deg, ${colors.join(", ")})`;
   };
 
@@ -285,7 +282,7 @@ export default function StyleSelector(
             sounds.click();
           }}
           aria-label={isSpanish
-            ? `Elige tu Vibra, estilo actual: ${currentStyleName}`
+            ? `Elige una Vibra, estilo actual: ${currentStyleName}`
             : `Select QR style, current: ${currentStyleName}`}
           aria-haspopup="dialog"
           aria-expanded={isGalleryOpen}
@@ -293,7 +290,12 @@ export default function StyleSelector(
         >
           <div
             class="w-4 h-4 rounded-full border-2 border-black"
-            style={{ background: getGradientPreview(currentStyleInfo.colors) }}
+            style={{
+              background: getGradientPreview(
+                currentStyleInfo.colors,
+                style.value,
+              ),
+            }}
           />
           <span class="hidden sm:inline">
             {currentStyleName}
@@ -335,12 +337,12 @@ export default function StyleSelector(
                   id="style-gallery-title"
                   class="text-2xl font-black text-black tracking-tight leading-tight"
                 >
-                  {isSpanish ? "Elige tu Vibra." : "Pick your Vibe."}
+                  {isSpanish ? "Elige una Vibra." : "Choose a Vibe."}
                 </h2>
                 <p class="text-sm font-bold text-qr-pop">
                   {isSpanish
-                    ? "Paletas pastel-punk escaneables y degradados a tu gusto."
-                    : "Scannable pastel-punk palettes & custom gradients."}
+                    ? "Degradados para imprenta, Matrix, Brutal y paletas propias."
+                    : "Print-verified gradients, Matrix, Brutal & custom palettes."}
                 </p>
               </div>
               <button
@@ -361,7 +363,7 @@ export default function StyleSelector(
             </div>
 
             {/* Grid */}
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-2.5">
               {Object.entries(STYLE_DISPLAY).map(([key, info], index) => {
                 const active = style.value === key;
                 const displayName = isSpanish
@@ -373,7 +375,10 @@ export default function StyleSelector(
                     key={key}
                     aria-pressed={active}
                     onMouseEnter={() =>
-                      sounds.playAt("bloop", index, { total: 8, gain: 0.012 })}
+                      sounds.playAt("bloop", index, {
+                        total: TOTAL_PRESETS,
+                        gain: 0.012,
+                      })}
                     onClick={() => handleStyleSelect(key, index)}
                     class={`group rounded-2xl border-2 p-1.5 text-left transition-all duration-200 ${
                       active
@@ -383,8 +388,10 @@ export default function StyleSelector(
                   >
                     {/* Enamel badge: gradient inside a black ring with a white bezel */}
                     <div
-                      class="h-16 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 transition-transform group-active:scale-95"
-                      style={{ background: getGradientPreview(info.colors) }}
+                      class="h-12 sm:h-13 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 transition-transform group-active:scale-95"
+                      style={{
+                        background: getGradientPreview(info.colors, key),
+                      }}
                     />
                     <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
                       {displayName}
@@ -395,7 +402,7 @@ export default function StyleSelector(
 
               {
                 /* Dice and Custom fill the last row so the grid stays an even
-                2×5 — no full-width stragglers. */
+                2×6 — no full-width stragglers. */
               }
               <button
                 type="button"
@@ -403,13 +410,13 @@ export default function StyleSelector(
                 disabled={isRolling}
                 class="group rounded-2xl border-2 border-black/15 bg-white p-1.5 text-left transition-all duration-200 hover:border-black/60 hover:scale-[1.02] disabled:opacity-60"
               >
-                <div class="h-16 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-200 flex items-center justify-center text-2xl">
+                <div class="h-12 sm:h-13 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-200 flex items-center justify-center text-2xl">
                   <span class="group-hover:rotate-[360deg] transition-transform duration-500">
                     🎲
                   </span>
                 </div>
                 <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
-                  {isSpanish ? "🎲 Sorpréndeme" : "Surprise me"}
+                  {isSpanish ? "Al azar" : "Surprise me"}
                 </span>
               </button>
 
@@ -428,11 +435,11 @@ export default function StyleSelector(
                     : "border-black/15 bg-white hover:border-black/60 hover:scale-[1.02]"
                 }`}
               >
-                <div class="h-16 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 bg-white flex items-center justify-center text-2xl">
+                <div class="h-12 sm:h-13 rounded-xl border-2 border-black ring-2 ring-inset ring-white/70 bg-white flex items-center justify-center text-2xl">
                   {isSpanish ? "🌈" : "🎨"}
                 </div>
                 <span class="block px-1 pt-1.5 font-black text-sm text-black leading-none">
-                  {isSpanish ? "🌈 Crear degradado propio" : "Build your own"}
+                  {isSpanish ? "Degradado propio" : "Custom gradient"}
                 </span>
               </button>
             </div>

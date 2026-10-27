@@ -20,49 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "👤",
-    title: "Saves Straight to Phone Contacts",
+    tag: "One-Tap Save",
+    title: "Saves Straight to Contacts",
     desc:
-      "Encodes a standard RFC 6350 vCard 3.0 payload. One camera scan opens the native 'Add to Contacts' sheet on iOS and Android.",
+      "One camera scan opens the native 'Add to Contacts' sheet on iPhone and Android with name, role, phone, email, and website pre-filled.",
   },
   {
     icon: "✈️",
-    title: "Works Offline at Conferences",
+    tag: "100% Offline",
+    title: "Works Without Cell Signal",
     desc:
-      "Direct vCard QR codes require zero cell reception or Wi-Fi in basement expo halls — the contact details live inside the graphic itself.",
+      "Direct contact cards need zero Wi-Fi or reception in busy expo halls — the contact details live right inside the printed squares.",
   },
   {
     icon: "⚡",
-    title: "Pair With an Editable Portfolio Link",
+    tag: "Editable Option",
+    title: "Pair With an Editable Link",
     desc:
-      "Need to update a portfolio URL or phone number after printing business cards? Use an editable dynamic QR or hosted bio hub.",
+      "Update a portfolio URL or job title after printing 500 cards. Toggle Editable Link to keep the destination flexible.",
+  },
+  {
+    icon: "📐",
+    tag: "Print & Lockscreen",
+    title: "Sharp on Paper or Lockscreens",
+    desc:
+      "Download true Vector SVG for letterpress and print shops, or save a 3000px framed PNG for a phone lockscreen badge.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Direct vCard 3.0 Contact QR",
-    free: "Unlimited, works offline forever ($0)",
+    feature: "Direct Contact Card QR",
+    free: "Unlimited · Works offline ($0)",
     supporter: "Included",
   },
   {
-    feature: "Vector SVG for Print Business Cards",
-    free: "Included free with custom palettes & logos",
-    supporter: "Included + 50-card team batch ZIPs",
+    feature: "Vector SVG for Print Cards",
+    free: "Included free + custom logos",
+    supporter: "Included + 50-card team ZIPs",
   },
   {
-    feature: "Editable Dynamic Bio / Portfolio QRs",
-    free: "5 permanent editable links included free",
-    supporter: "100 editable links + 90-day scan analytics",
+    feature: "Editable Portfolio / Bio Links",
+    free: "5 permanent editable links",
+    supporter: "100 editable links + 90-day stats",
   },
   {
-    feature: "Press Kit / Lookbook PDF Drops",
-    free: "Up to 50 MB file drops (30-day hosting)",
-    supporter: "Up to 500 MB single-file drops + white-label pages",
+    feature: "Press Kit / Lookbook Drops",
+    free: "Up to 50 MB file drops",
+    supporter: "Up to 500 MB drops + white-label",
   },
   {
     feature: "QRBuddy Passport",
-    free: "No purchase required",
-    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
+    free: "$0 · No account needed",
+    supporter: "~$32/yr once · No auto-renew",
   },
 ];
 
@@ -115,8 +125,9 @@ export default function VCardPage({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         badge="Business Cards & Badges"
-        title="One Scan Saves the Contact Card."
-        tagline="Build an offline-ready vCard 3.0 QR for printed business cards, conference lanyards, and phone lockscreens."
+        title="Digital Contact Cards."
+        titleHighlight="Saved in One Scan."
+        tagline="Build an offline-ready vCard QR for printed business cards, conference lanyards, and phone lockscreens."
         subtagline="Fill in the contact fields below — the QR matrix updates live and exports in print-shop Vector SVG or high-res PNG."
         defaultStyle="grape"
         defaultCaption="SAVE CONTACT"

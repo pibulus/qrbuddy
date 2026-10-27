@@ -56,7 +56,6 @@ export default function VerticalLandingHead({
     <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="canonical" href={canonicalUrl} />
       <link rel="alternate" hrefLang={lang} href={canonicalUrl} />
       <link rel="alternate" hrefLang={altLang} href={altHref} />

@@ -20,50 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📤",
+    tag: "Envío al Instante",
     title: "Suelta un Archivo, Obtén un QR",
     desc:
-      "Arrastra cualquier PDF, ZIP, imagen o pista de audio al cuadro principal para generar una página de descarga y su código QR en segundos.",
+      "Arrastra cualquier PDF, ZIP, imagen o audio al cuadro principal para generar una página de descarga y su código QR en segundos.",
   },
   {
     icon: "💣",
-    title: "Límites de Descarga con Autodestrucción",
+    tag: "Autodestrucción",
+    title: "Límites de Descarga por Usos",
     desc:
-      "Mantén el enlace activo por 30 días o fija un tope estricto (1, 5, 10 o 100 descargas) que se autodestruye al agotarse.",
+      "Mantén el enlace activo por 30 días o fija un tope estricto (1, 5, 10 o 100 descargas) que elimina el archivo al agotarse.",
+  },
+  {
+    icon: "🔐",
+    tag: "Protegido con PIN",
+    title: "Buzones Reutilizables de Recepción",
+    desc:
+      "Genera un buzón QR de dos vías para recibir archivos de clientes o invitados dentro de una casilla protegida por PIN.",
   },
   {
     icon: "📦",
-    title: "Envíos Pesados de hasta 500 MB",
+    tag: "Hasta 500 MB",
+    title: "Archivos Pesados Sin Pedir Cuenta",
     desc:
-      "El nivel gratuito admite archivos de hasta 50 MB. El Pasaporte QRBuddy desbloquea envíos individuales de hasta 500 MB y buzones con PIN.",
+      "El nivel gratuito admite archivos de hasta 50 MB. El Pasaporte QRBuddy desbloquea envíos individuales de hasta 500 MB y modo sin marca.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Códigos QR estáticos",
-    free: "Ilimitados; el destino queda grabado directo en el QR ($0)",
+    feature: "Códigos QR Directos",
+    free: "Ilimitados · Dura para siempre ($0)",
     supporter: "Incluidos",
   },
   {
-    feature: "Envío de archivo individual por QR",
-    free: "Hasta 50 MB por archivo",
-    supporter: "Hasta 500 MB por archivo individual (10× más grande)",
+    feature: "Envío de Archivo por QR",
+    free: "Archivos de hasta 50 MB",
+    supporter: "Archivos de hasta 500 MB (10× más grande)",
   },
   {
-    feature: "Límite de descargas y autodestrucción",
-    free: "Ilimitado o tope de 1 / 5 / 10 / 100 descargas",
+    feature: "Límite de Descargas y Autodestrucción",
+    free: "1 / 5 / 10 / 100 o descargas ilimitadas",
     supporter: "Incluido + páginas limpias sin marca",
   },
   {
-    feature: "Vigencia del enlace",
-    free: "Vence a los 30 días",
-    supporter: "Vence a los 30 días + analíticas de 90 días",
+    feature: "Vigencia y Estadísticas",
+    free: "30 días en línea + contador",
+    supporter: "30 días + analíticas CSV de 90 días",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "Sin compra necesaria",
-    supporter:
-      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
+    free: "$0 · Sin cuenta necesaria",
+    supporter: "~$32 USD (A$49) / año · Sin cobro automático",
   },
 ];
 
@@ -117,7 +126,8 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         lang="es"
         badge="Envío de Archivos y Buzones"
-        title="Suelta un Archivo. Comparte el QR. Listo."
+        title="Suelta un Archivo."
+        titleHighlight="Comparte el QR. Listo."
         tagline="Convierte PDFs, paquetes ZIP, fotos o audios en un código QR descargable con vigencia de 30 días o autodestrucción por usos."
         subtagline="Arrastra un archivo al cuadro de abajo o toca el clip para preparar el envío."
         defaultStyle="pool"

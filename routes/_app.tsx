@@ -25,6 +25,14 @@ export default function App({ Component, url }: PageProps) {
           data-site="qrbuddy.app"
         >
         </script>
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="280ec8ac-9eb5-4d06-89fe-369960e40b5d"
+          data-exclude-search="true"
+          data-exclude-hash="true"
+        >
+        </script>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"

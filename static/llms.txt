@@ -6,8 +6,14 @@
 - **Direct Static QR Codes ($0 forever)**: URLs, Wi-Fi (`WIFI:`), vCard 3.0 contacts, GS1 Digital Links, SMS, Email, Phone, and plain text are encoded directly into the graphic modules client-side. They never touch a redirect server and never expire.
 - **Free Editable Dynamic QR Codes ($0)**: Includes 5 permanent editable dynamic QR codes per device with zero 7-day or 14-day trial deactivation.
 - **The QRBuddy Passport (~$32 USD / A$49 AUD for 365 days)**: One-time annual pass with **zero automatic renewal**. Unlocks 100 editable dynamic QR codes, 500 MB single-file transfers, 90-day privacy-safe scan analytics (top cities, peak hours, track/photo leaderboards, RFC-4180 CSV export), and white-label share pages.
-- **Print-Shop Exports ($0)**: True Vector SVG 1.1 and up to 3000px PNG exports with live WCAG luminance verification (dot luminance <= 0.40, >= 2:1 contrast), custom center logos, custom frame captions (`SCAN ME`, `VIEW MENU`, `JOIN WIFI`), and 50-code batch ZIPs (`manifest.csv` + PNG + SVG).
+- **Print-Shop Exports ($0)**: 10 print-verified palettes (`Sunset`, `Ocean`, `Forest`, `Crimson`, `Vaporwave`, `Cosmic`, `Candy`, `Matrix`, `Brutal`, `Classic`) + custom gradient builder, true Vector SVG 1.1 and up to 3000px PNG exports with live WCAG luminance verification (dot luminance <= 0.40, >= 2:1 contrast), custom center logos, custom frame captions (`SCAN ME`, `VIEW MENU`, `JOIN WIFI`), and 50-code batch ZIPs (`manifest.csv` + PNG + SVG).
 - **Zero Mandatory Account Wall**: Syncs across laptop and phone via a cryptographic 4-word Sovereign Passport phrase or `#` fragment QR code.
+
+## Under the Hood / Technical Specifications
+- **Optical & Error Recovery**: ISO/IEC 18004 Reed-Solomon Level Q/H (25–30% symbol recovery) with WCAG 2.1 relative dot luminance <= 0.40 and >= 2:1 contrast ratio against warm paper.
+- **Pre-Press & Vector Output**: Pure `<path>` Vector SVG 1.1 on a 1000x1000 `viewBox` (zero `foreignObject` or raster blobs), 3000px PNG, and 50-code batch ZIPs with RFC-4180 `manifest.csv`.
+- **Street-Safe Scanner & SSRF Airlock**: 3-tier local browser decoder (`BarcodeDetector` -> `zxing-wasm` -> `jsQR`) + server-side 5-hop HTTP 301/302 redirect resolver with private-IP / IPv4-mapped IPv6 SSRF protection.
+- **Standards & Sovereign Auth**: GS1 Digital Link URI (`/01/GTIN/10/LOT/21/SER/17/EXP`) with live Mod-10 checksums, vCard 3.0 (RFC 6350), `WIFI:` schema, and client-side `#fragment` bearer keys (RFC 3986).
 
 ## Interactive Tool Routes (English)
 - [QRBuddy Main Studio](https://qrbuddy.app/): Full QR studio (URLs, files, photo slideshows, audio mixtapes, Street-Safe QR Inspector).

@@ -20,50 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "👤",
+    tag: "En Un Toque",
     title: "Directo a la Agenda del Celular",
     desc:
-      "Codifica una tarjeta estándar vCard 3.0 (RFC 6350). Un escaneo abre la ficha nativa de 'Agregar contacto' en iPhone y Android.",
+      "Un escaneo abre la ficha nativa de 'Agregar contacto' en iPhone y Android con nombre, teléfono, correo y sitio web listos.",
   },
   {
     icon: "✈️",
+    tag: "100% Sin Señal",
     title: "Funciona sin Internet en Eventos",
     desc:
-      "Los códigos vCard directos no dependen de señal celular ni Wi-Fi en ferias o congresos: los datos viven dentro del gráfico impreso.",
+      "Las tarjetas de contacto directas no dependen de Wi-Fi ni señal celular en ferias o congresos: los datos viven en el código impreso.",
   },
   {
     icon: "⚡",
-    title: "Combínalo con Links Editables",
+    tag: "Opción Editable",
+    title: "Combínalo con un Link Editable",
     desc:
-      "Para actualizar un portafolio o WhatsApp tras imprimir tarjetas, basta activar un enlace dinámico editable o perfil social.",
+      "Actualiza el portafolio o puesto de trabajo después de imprimir 500 tarjetas activando la opción de enlace editable.",
+  },
+  {
+    icon: "📐",
+    tag: "Papel y Pantalla",
+    title: "Nítido en Papel o Pantalla de Bloqueo",
+    desc:
+      "Descarga SVG vectorial real para imprenta profesional o guarda un PNG de 3000px con marco para la pantalla de bloqueo.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "QR de Contacto vCard 3.0 directo",
-    free: "Ilimitado, funciona sin internet para siempre ($0)",
+    feature: "QR de Contacto Directo (vCard)",
+    free: "Ilimitado · Funciona sin internet ($0)",
     supporter: "Incluido",
   },
   {
-    feature: "SVG vectorial para tarjetas impresas",
-    free: "Gratis con paletas de color y logo central",
-    supporter: "Incluido + lotes ZIP de hasta 50 tarjetas",
+    feature: "Archivos SVG Vectorial y PNG 3000px",
+    free: "Gratis con paletas y logo central",
+    supporter: "Incluido + lotes ZIP de 50 tarjetas",
   },
   {
-    feature: "Links dinámicos editables de portafolio",
-    free: "5 links editables permanentes incluidos gratis",
-    supporter: "100 links editables + analíticas de 90 días",
+    feature: "Links Editables de Portafolio o Bio",
+    free: "5 links editables gratis incluidos",
+    supporter: "100 links editables + stats de 90 días",
   },
   {
-    feature: "Envío de catálogos o press kits (PDF)",
-    free: "Archivos de hasta 50 MB (vigencia de 30 días)",
-    supporter: "Archivos de hasta 500 MB + páginas sin marca",
+    feature: "Envío de Catálogos o Press Kits",
+    free: "Archivos de hasta 50 MB",
+    supporter: "Archivos de hasta 500 MB + sin marca",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "Sin compra necesaria",
-    supporter:
-      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
+    free: "$0 · Sin cuenta necesaria",
+    supporter: "~$32 USD (A$49) / año · Sin cobro automático",
   },
 ];
 
@@ -117,7 +126,8 @@ export default function VCardEsPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         lang="es"
         badge="Tarjetas y Credenciales"
-        title="Un Escaneo Guarda el Contacto."
+        title="Tarjetas de Contacto Digitales."
+        titleHighlight="Guardadas en un Escaneo."
         tagline="Arma un código QR vCard 3.0 que funciona sin internet para tarjetas de presentación, gafetes y pantallas de bloqueo."
         subtagline="Completa los datos abajo: la matriz QR se actualiza al instante lista para exportar en SVG vectorial de imprenta o PNG."
         defaultStyle="grape"

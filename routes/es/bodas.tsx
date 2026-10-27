@@ -20,55 +20,59 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "💌",
-    title: "Confirmaciones, Mapas y Mesas de Regalos",
+    tag: "Planes Editables",
+    title: "Confirmaciones, Mapas y Regalos",
     desc:
-      "Conecta invitaciones al sitio de la boda, ubicación del salón o lista de regalos con un QR estático eterno o un enlace editable.",
+      "Conecta invitaciones al sitio de la boda, ubicación del salón o mesa de regalos con un QR directo eterno o un enlace editable.",
   },
   {
     icon: "📸",
-    title: "Galerías de hasta 10 Fotos",
+    tag: "Galería de 10 Fotos",
+    title: "Presentaciones de Fotos en un Toque",
     desc:
-      "Suelta hasta 10 fotos en el estudio para crear una galería web de 30 días lista para ver y descargar desde cualquier celular.",
+      "Suelta hasta 10 fotos en el estudio para crear una galería web de 30 días lista para ver y guardar desde cualquier celular.",
   },
   {
     icon: "🎶",
-    title: "Mixtape de la Fiesta y SVG para Imprenta",
+    tag: "Mixtape de Audio",
+    title: "Playlist de la Fiesta al Instante",
     desc:
-      "Comparte una playlist de hasta 10 pistas (5 MB por pista) o descarga vectores SVG limpios para invitaciones impresas y tarjetas de mesa.",
+      "Comparte hasta 10 pistas de audio (5 MB por pista) con reproducción continua en el navegador — sin instalar apps.",
+  },
+  {
+    icon: "📐",
+    tag: "Papel y Grabado",
+    title: "SVG Vectorial de Alta Papelería",
+    desc:
+      "Descarga vectores SVG reales y PNG de 3000px con contraste verificado para invitaciones en relieve, serigrafía y tarjetas de mesa.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "Códigos QR estáticos para invitaciones",
-    free: "Ilimitados; el destino queda grabado directo en el QR ($0)",
+    feature: "Códigos QR Directos para Invitaciones",
+    free: "Ilimitados · Dura para siempre ($0)",
     supporter: "Incluidos",
   },
   {
-    feature: "Enlaces dinámicos editables del evento",
-    free: "5 enlaces editables permanentes incluidos gratis",
-    supporter: "100 enlaces editables + portadas personalizadas",
+    feature: "Links Editables del Evento y Horario",
+    free: "5 links editables gratis incluidos",
+    supporter: "100 links editables + Portadas",
   },
   {
-    feature: "Galería de fotos o playlist de audio",
-    free: "Hasta 10 fotos o pistas; audios de hasta 5 MB cada uno",
-    supporter: "Mismo tope múltiple; archivos individuales de hasta 500 MB",
+    feature: "Galería de 10 Fotos o Mixtape de Audio",
+    free: "Hasta 10 fotos o pistas (5 MB/pista)",
+    supporter: "Incluido + archivos de hasta 500 MB",
   },
   {
-    feature: "Páginas limpias sin marca (White-Label)",
-    free: "Incluye sello discreto de QRBuddy al pie",
-    supporter: "Modo sin marca activable en un clic",
-  },
-  {
-    feature: "Vigencia de archivos alojados",
-    free: "30 días",
-    supporter: "30 días",
+    feature: "Páginas Limpias Sin Marca",
+    free: "Sello discreto de QRBuddy al pie",
+    supporter: "Modo sin marca en un clic",
   },
   {
     feature: "Pasaporte QRBuddy",
-    free: "Sin compra necesaria",
-    supporter:
-      "~$32 USD (A$49) una vez por 365 días; sin renovación automática",
+    free: "$0 · Sin cuenta necesaria",
+    supporter: "~$32 USD (A$49) / año · Sin cobro automático",
   },
 ];
 
@@ -122,7 +126,8 @@ export default function BodasEspanolPage({ data }: PageProps<PageData>) {
       <VerticalStudio
         lang="es"
         badge="Bodas y Celebraciones"
-        title="Códigos QR para Bodas a la Altura de la Papelería."
+        title="Códigos QR para Bodas."
+        titleHighlight="A la Altura de la Papelería."
         tagline="Enlaza invitaciones con confirmaciones, mapas del salón, galerías de 10 fotos o playlists en un solo escaneo."
         subtagline="Pega el enlace del evento o suelta fotos/audios abajo: exporta PNG de 3000px o SVG vectorial para imprenta."
         defaultStyle="blush"

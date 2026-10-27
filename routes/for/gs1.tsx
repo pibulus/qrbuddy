@@ -20,54 +20,64 @@ export const handler: Handlers<PageData> = {
 const VALUE_CARDS: ValueCard[] = [
   {
     icon: "📦",
-    title: "GS1 Digital Link URI Syntax",
+    tag: "POS + Phone",
+    title: "One Barcode for Checkout & Web",
     desc:
-      "Formats GTIN-8, UPC-12, EAN-13, or GTIN-14 barcodes into standard /01/GTIN/10/LOT/17/EXP paths with live Mod-10 check-digit verification.",
+      "Carries the product GTIN/UPC barcode for retail checkout lasers while opening ingredients, lab sheets, or reorder pages on phones.",
+  },
+  {
+    icon: "✅",
+    tag: "Mistake-Proof",
+    title: "Live Barcode Check-Digit Fixer",
+    desc:
+      "Catches mistyped UPC or EAN barcode numbers before printing 5,000 labels and fixes the final check digit in one click.",
   },
   {
     icon: "⚡",
-    title: "Editable Batch & Recall Routing",
+    tag: "Batch Routing",
+    title: "Update Lab Sheets After Print",
     desc:
-      "Pair packaging QR codes with QRBuddy editable links to update lab certificates, allergen sheets, recipes, or recall notices after labels are printed.",
+      "Pair packaging codes with QRBuddy editable links to swap batch certificates, recipes, or recall notices anytime.",
   },
   {
     icon: "📐",
+    tag: "Pre-Press Ready",
     title: "Print-House Vector SVG & ZIPs",
     desc:
-      "Export crisp Vector SVGs with verified WCAG contrast (<= 0.40 luminance) or batch-generate up to 50 SKUs in a single ZIP with manifest.csv.",
+      "Export crisp Vector SVGs with verified print contrast or batch-generate up to 50 SKUs in one ZIP with manifest.csv.",
   },
 ];
 
 const COMPARISON_ITEMS: ComparisonItem[] = [
   {
-    feature: "GS1 Digital Link URI Builder + Mod-10 Check",
-    free: "Unlimited, direct-encoded, works forever ($0)",
+    feature: "GS1 2027 Barcode Builder",
+    free: "Unlimited · Direct-encoded ($0)",
     supporter: "Included",
   },
   {
-    feature: "Vector SVG & 3000px Label PNG",
-    free: "Included free with live contrast verification",
+    feature: "Vector SVG & 3000px Labels",
+    free: "Included free + contrast check",
     supporter: "Included",
   },
   {
-    feature: "Bulk SKU Batch ZIP (PNG + SVG + CSV)",
-    free: "Up to 50 SKUs per ZIP manifest included",
+    feature: "Bulk 50-SKU Batch ZIP",
+    free: "PNG + SVG + manifest.csv free",
     supporter: "Included",
   },
   {
-    feature: "Editable Product / Lab-Sheet Redirects",
-    free: "5 permanent editable links included free",
-    supporter: "100 editable links + time/OS routing + 90-day scan CSV",
+    feature: "Editable Product / Batch Links",
+    free: "5 permanent editable links",
+    supporter: "100 editable links + 90-day stats",
   },
   {
-    feature: "Spec Sheet & Certificate PDF Drops",
+    feature: "Lab Sheet & Spec PDF Drops",
     free: "Up to 50 MB file drops",
-    supporter: "Up to 500 MB drops + white-label product pages",
+    supporter: "Up to 500 MB drops + white-label",
   },
   {
     feature: "QRBuddy Passport",
-    free: "No purchase required",
-    supporter: "~$32 USD (A$49) once for 365 days; no automatic renewal",
+    free: "$0 · No account needed",
+    supporter: "~$32/yr once · No auto-renew",
   },
 ];
 
@@ -120,8 +130,9 @@ export default function Gs1Page({ data }: PageProps<PageData>) {
 
       <VerticalStudio
         badge="GS1 Sunrise 2027 Packaging"
-        title="GS1 Digital Link 2D Barcodes for Indie Makers."
-        tagline="Build compliant /01/GTIN/10/LOT/17/EXP packaging QR codes with live Mod-10 check-digit verification and print-house Vector SVG export."
+        title="2D Packaging Barcodes."
+        titleHighlight="Built for Indie Makers."
+        tagline="Create retail-ready /01/GTIN/10/LOT/17/EXP product QR codes with live check-digit verification and print-house Vector SVG export."
         subtagline="Enter the brand domain, GTIN barcode, lot, and expiry below — then download a direct static vector or toggle Editable to route scans."
         defaultStyle="matcha"
         defaultCaption="PRODUCT INFO"

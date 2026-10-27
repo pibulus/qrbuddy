@@ -21,43 +21,49 @@ interface PalettePillsProps {
   lang?: Locale;
 }
 
-/** The 4×2 grid of preset swatch pills — CreateModal's Design tab and the
- * share page's owner strip pick from the same eight. */
+/** The 5×2 grid of preset swatch pills — CreateModal's Design tab and the
+ * share page's owner strip pick from the same ten. */
 export default function PalettePills(
   { value, onChange, disabled = false, trailing, lang }: PalettePillsProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
+  const entries = Object.entries(STYLE_DISPLAY);
   return (
     <div class="space-y-2">
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {Object.entries(STYLE_DISPLAY).map(([key, info], index) => (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={value === key}
-            disabled={disabled}
-            onClick={() => {
-              onChange(key);
-              sounds.playAt?.("bloop", index, { total: 8 });
-              haptics.light();
-            }}
-            class={`w-full justify-start ${PALETTE_PILL} ${
-              pillState(value === key)
-            }`}
-          >
-            <span
-              class="w-4 h-4 rounded-full border-2 border-[#1e1714] shrink-0"
-              style={{
-                background: `linear-gradient(135deg, ${
-                  info.colors.join(", ")
-                })`,
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        {entries.map(([key, info], index) => {
+          const isSolidPair = (key === "terminal" || key === "brutalist") &&
+            info.colors.length === 2;
+          const swatchBg = isSolidPair
+            ? `linear-gradient(135deg, ${info.colors[0]} 0%, ${
+              info.colors[0]
+            } 52%, ${info.colors[1]} 52%, ${info.colors[1]} 100%)`
+            : `linear-gradient(135deg, ${info.colors.join(", ")})`;
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={value === key}
+              disabled={disabled}
+              onClick={() => {
+                onChange(key);
+                sounds.playAt?.("bloop", index, { total: entries.length });
+                haptics.light();
               }}
-            />
-            <span class="truncate">
-              {isSpanish ? (info.nameEs ?? info.name) : info.name}
-            </span>
-          </button>
-        ))}
+              class={`w-full justify-start ${PALETTE_PILL} ${
+                pillState(value === key)
+              }`}
+            >
+              <span
+                class="w-4 h-4 rounded-full border-2 border-[#1e1714] shrink-0"
+                style={{ background: swatchBg }}
+              />
+              <span class="truncate">
+                {isSpanish ? (info.nameEs ?? info.name) : info.name}
+              </span>
+            </button>
+          );
+        })}
       </div>
       {trailing}
     </div>
