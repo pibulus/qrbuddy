@@ -9,6 +9,7 @@ import OwnerStrip, { type ShareItem } from "./OwnerStrip.tsx";
 import ShareActions from "./ShareActions.tsx";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
+import { sounds } from "../utils/sounds.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
@@ -162,6 +163,7 @@ export default function FileSlideshow({
   const [mediaErrorKey, setMediaErrorKey] = useState<string | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [rouletteLanded, setRouletteLanded] = useState(false);
   const [rouletteMode, setRouletteMode] = useState(false);
   const [dailySpinLimit, setDailySpinLimit] = useState<number | null>(null);
   const [spinStatus, setSpinStatus] = useState<DailySpinStatus | null>(null);
@@ -318,22 +320,29 @@ export default function FileSlideshow({
       avoidIdx !== undefined ? avoidIdx : currentIndex,
     );
 
-    const totalSteps = 9;
+    const totalSteps = 11;
     let step = 0;
+    setRouletteLanded(false);
     const tick = () => {
       step += 1;
       if (step < totalSteps) {
         setCurrentIndex((prev) => (prev + 1) % files.length);
         haptics.light();
+        sounds.playAt("select", step, { total: totalSteps, force: true });
+        const delayMs = Math.round(
+          35 + Math.pow(step / totalSteps, 2.15) * 165,
+        );
         spinTimerRef.current = globalThis.setTimeout(
           tick,
-          45 + step * 16,
+          delayMs,
         ) as unknown as number;
       } else {
         setCurrentIndex(targetIdx);
         setTrackSelected(true);
         setIsSpinning(false);
+        setRouletteLanded(true);
         haptics.success();
+        sounds.success();
         const nextStatus = recordDailySpin(
           `share_${fileId}`,
           targetIdx,
@@ -681,7 +690,9 @@ export default function FileSlideshow({
         <div
           class={`relative w-full ${
             isAudio && showPreview ? "" : "aspect-[4/3] md:aspect-video"
-          } rounded-3xl overflow-hidden group ${getCardStyles()}`}
+          } rounded-3xl overflow-hidden group transition-transform ${
+            isSpinning ? "scale-[0.985]" : rouletteLanded ? "animate-pop" : ""
+          } ${getCardStyles()}`}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}

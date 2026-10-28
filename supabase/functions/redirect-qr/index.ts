@@ -437,12 +437,20 @@ serve(async (req) => {
 
       const rouletteBlockHtml = isRouletteMode
         ? `<div id="roulette-stage" class="roulette-box">
+             <div id="roulette-confetti" class="confetti-stage" aria-hidden="true"></div>
              <div id="roulette-badge" class="roulette-badge">🎲 Roulette Draw</div>
-             <div id="roulette-slot" class="roulette-slot">${
+             <div id="roulette-viewport" class="roulette-viewport">
+               <div id="roulette-reel" class="roulette-reel">
+                 <div id="roulette-slot" class="roulette-slot">${
           escapeHtml(destinationUrl)
         }</div>
+               </div>
+             </div>
            </div>
-           <button id="roulette-respin" type="button" class="respin-btn" hidden>🎲 Spin again</button>`
+           <button id="roulette-respin" type="button" class="respin-btn" hidden>
+             <span class="dice-glyph" aria-hidden="true">🎲</span>
+             <span id="roulette-respin-label">Spin again</span>
+           </button>`
         : "";
 
       const rouletteScriptHtml = isRouletteMode
@@ -459,10 +467,103 @@ serve(async (req) => {
         };
               var code = ${JSON.stringify(shortCode).replace(/</g, "\\u003c")};
               var cta = document.getElementById("roulette-cta");
+              var stage = document.getElementById("roulette-stage");
+              var reel = document.getElementById("roulette-reel");
               var slot = document.getElementById("roulette-slot");
               var badge = document.getElementById("roulette-badge");
               var respinBtn = document.getElementById("roulette-respin");
-              if (!cta || !slot || !badge || !urls.length) return;
+              var respinLabel = document.getElementById("roulette-respin-label");
+              var confettiStage = document.getElementById("roulette-confetti");
+              if (!cta || !reel || !badge || !urls.length) return;
+
+              var reducedMotion = window.matchMedia &&
+                window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+              var ROW_H = 38;
+              var SCALE = [392.0, 440.0, 523.25, 587.33, 659.25, 783.99, 880.0, 1046.5];
+              var audioCtx = null;
+
+              function getAudio() {
+                if (reducedMotion) return null;
+                try {
+                  var Ctx = window.AudioContext || window.webkitAudioContext;
+                  if (!Ctx) return null;
+                  if (!audioCtx) audioCtx = new Ctx();
+                  if (audioCtx.state === "suspended") audioCtx.resume();
+                  return audioCtx;
+                } catch (_) {
+                  return null;
+                }
+              }
+
+              function playTick(progress) {
+                var ctx = getAudio();
+                if (!ctx) return;
+                try {
+                  var now = ctx.currentTime;
+                  var osc = ctx.createOscillator();
+                  var filter = ctx.createBiquadFilter();
+                  var gain = ctx.createGain();
+                  var idx = Math.min(SCALE.length - 1, Math.floor(progress * SCALE.length));
+                  var freq = SCALE[idx] * (0.98 + Math.random() * 0.04);
+                  osc.type = "triangle";
+                  osc.frequency.setValueAtTime(freq, now);
+                  osc.frequency.exponentialRampToValueAtTime(freq * 1.12, now + 0.032);
+                  filter.type = "lowpass";
+                  filter.frequency.setValueAtTime(2200, now);
+                  filter.Q.setValueAtTime(2.4, now);
+                  gain.gain.setValueAtTime(0.0001, now);
+                  gain.gain.exponentialRampToValueAtTime(0.035, now + 0.004);
+                  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.038);
+                  osc.connect(filter);
+                  filter.connect(gain);
+                  gain.connect(ctx.destination);
+                  osc.start(now);
+                  osc.stop(now + 0.045);
+                } catch (_) {}
+              }
+
+              function playWinChord() {
+                var ctx = getAudio();
+                if (!ctx) return;
+                try {
+                  var notes = [523.25, 659.25, 783.99, 1046.5];
+                  notes.forEach(function(freq, i) {
+                    var start = ctx.currentTime + i * 0.052;
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.type = i === 3 ? "triangle" : "sine";
+                    osc.frequency.setValueAtTime(freq, start);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 1.015, start + 0.14);
+                    gain.gain.setValueAtTime(0.0001, start);
+                    gain.gain.exponentialRampToValueAtTime(0.04, start + 0.008);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.16);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(start);
+                    osc.stop(start + 0.18);
+                  });
+                } catch (_) {}
+              }
+
+              function burstConfetti() {
+                if (reducedMotion || !confettiStage) return;
+                confettiStage.innerHTML = "";
+                var colors = ["#FF69B4", "#F59E0B", "#10B981", "#8B5CF6", "#3B82F6", "#EC4899"];
+                for (var i = 0; i < 14; i++) {
+                  var p = document.createElement("span");
+                  p.className = "confetti-bit";
+                  var angle = (Math.PI * 2 * i) / 14 + (Math.random() - 0.5) * 0.35;
+                  var dist = 46 + Math.random() * 54;
+                  var tx = Math.cos(angle) * dist;
+                  var ty = Math.sin(angle) * dist - 18;
+                  var rot = (Math.random() - 0.5) * 520;
+                  p.style.background = colors[i % colors.length];
+                  p.style.setProperty("--tx", tx.toFixed(1) + "px");
+                  p.style.setProperty("--ty", ty.toFixed(1) + "px");
+                  p.style.setProperty("--rot", rot.toFixed(0) + "deg");
+                  confettiStage.appendChild(p);
+                }
+              }
 
               function labelFor(raw) {
                 try {
@@ -504,9 +605,20 @@ serve(async (req) => {
                 } catch (_) {}
               }
 
+              function renderStaticSlot(chosen) {
+                reel.style.transform = "translate3d(0, 0px, 0)";
+                reel.style.filter = "none";
+                reel.innerHTML = "";
+                var row = document.createElement("div");
+                row.id = "roulette-slot";
+                row.className = "roulette-slot";
+                row.textContent = labelFor(chosen);
+                reel.appendChild(row);
+              }
+
               function updateUi(chosen, count, locked) {
                 cta.setAttribute("href", chosen);
-                slot.textContent = labelFor(chosen);
+                renderStaticSlot(chosen);
                 if (dailyLimit !== null) {
                   if (locked || count >= dailyLimit) {
                     badge.textContent = "🔒 Daily roll locked (" + Math.min(count, dailyLimit) + "/" + dailyLimit + " today) · Resets tomorrow";
@@ -516,38 +628,84 @@ serve(async (req) => {
                     badge.textContent = "🎲 Roll " + count + " of " + dailyLimit + " today";
                     if (respinBtn) {
                       respinBtn.hidden = rem <= 0;
-                      respinBtn.textContent = "🎲 Spin again (" + rem + " left today)";
+                      if (respinLabel) respinLabel.textContent = "Spin again (" + rem + " left today)";
                     }
                   }
                 } else {
                   badge.textContent = "🎲 Rolled option " + (urls.indexOf(chosen) + 1) + " of " + urls.length;
                   if (respinBtn) {
                     respinBtn.hidden = urls.length < 2;
-                    respinBtn.textContent = "🎲 Spin again";
+                    if (respinLabel) respinLabel.textContent = "Spin again";
                   }
                 }
               }
 
+              var spinning = false;
               function runSpin(targetUrl, onDone) {
-                if (urls.length < 2) {
+                if (urls.length < 2 || reducedMotion) {
                   onDone(targetUrl);
                   return;
                 }
-                var steps = 10;
-                var step = 0;
-                badge.textContent = "🎲 Spinning...";
-                var tick = function() {
-                  step++;
-                  if (step < steps) {
-                    slot.textContent = labelFor(urls[(step + Math.floor(Math.random() * urls.length)) % urls.length]);
-                    if (navigator.vibrate) navigator.vibrate(8);
-                    setTimeout(tick, 45 + step * 14);
-                  } else {
-                    if (navigator.vibrate) navigator.vibrate([15, 30, 20]);
-                    onDone(targetUrl);
+                if (spinning) return;
+                spinning = true;
+                badge.textContent = "🎲 Spinning drum...";
+                if (stage) stage.classList.remove("is-landed");
+
+                var totalRows = 16;
+                reel.innerHTML = "";
+                for (var i = 0; i < totalRows; i++) {
+                  var itemUrl = i === totalRows - 1
+                    ? targetUrl
+                    : urls[(i + Math.floor(Math.random() * urls.length)) % urls.length];
+                  var cell = document.createElement("div");
+                  cell.className = "roulette-slot";
+                  cell.textContent = labelFor(itemUrl);
+                  reel.appendChild(cell);
+                }
+
+                var targetY = (totalRows - 1) * ROW_H;
+                var y = 0;
+                var v = 0;
+                var stiffness = 135;
+                var damping = 14.5;
+                var lastRow = 0;
+                var lastTs = performance.now();
+
+                function frame(nowTs) {
+                  var dt = Math.min(0.032, (nowTs - lastTs) / 1000);
+                  lastTs = nowTs;
+
+                  var force = -stiffness * (y - targetY) - damping * v;
+                  v += force * dt;
+                  y += v * dt;
+
+                  var currentRow = Math.max(0, Math.min(totalRows - 1, Math.round(y / ROW_H)));
+                  if (currentRow !== lastRow) {
+                    lastRow = currentRow;
+                    playTick(currentRow / (totalRows - 1));
+                    if (navigator.vibrate) navigator.vibrate(7);
                   }
-                };
-                tick();
+
+                  var speedBlur = Math.min(1.8, Math.abs(v) / 900);
+                  reel.style.transform = "translate3d(0, " + (-y).toFixed(2) + "px, 0)";
+                  reel.style.filter = speedBlur > 0.25 ? "blur(" + speedBlur.toFixed(2) + "px)" : "none";
+
+                  if (Math.abs(y - targetY) < 0.45 && Math.abs(v) < 6) {
+                    spinning = false;
+                    if (stage) {
+                      stage.classList.remove("is-landed");
+                      void stage.offsetWidth;
+                      stage.classList.add("is-landed");
+                    }
+                    if (navigator.vibrate) navigator.vibrate([18, 35, 25]);
+                    playWinChord();
+                    burstConfetti();
+                    onDone(targetUrl);
+                  } else {
+                    requestAnimationFrame(frame);
+                  }
+                }
+                requestAnimationFrame(frame);
               }
 
               var st = readState();
@@ -564,6 +722,8 @@ serve(async (req) => {
 
               if (respinBtn) {
                 respinBtn.addEventListener("click", function() {
+                  if (spinning) return;
+                  getAudio();
                   var cur = readState();
                   if (dailyLimit !== null && cur.count >= dailyLimit) {
                     updateUi(cur.lastValue || serverPick, cur.count, true);
@@ -672,12 +832,24 @@ serve(async (req) => {
               overflow-wrap: break-word;
             }
             .roulette-box {
+              position: relative;
               background: #fbf1e4;
               border: 3px solid #1e1714;
               border-radius: 18px;
               padding: 14px 16px;
               margin: 0 0 20px 0;
               box-shadow: 3px 3px 0px 0px var(--accent);
+              transform-origin: center center;
+            }
+            .roulette-box.is-landed {
+              animation: slotSquashBounce 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            @keyframes slotSquashBounce {
+              0% { transform: scale(1, 1); }
+              22% { transform: scale(1.045, 0.945) translateY(2px); }
+              55% { transform: scale(0.985, 1.02) translateY(-2px); }
+              80% { transform: scale(1.01, 0.995); }
+              100% { transform: scale(1, 1); }
             }
             .roulette-badge {
               font-size: 11px;
@@ -687,12 +859,61 @@ serve(async (req) => {
               color: #6e6058;
               margin-bottom: 6px;
             }
+            .roulette-viewport {
+              position: relative;
+              height: 38px;
+              overflow: hidden;
+              border-radius: 10px;
+              background: #fffef7;
+              border: 2px solid #1e1714;
+              box-shadow: inset 0 2px 4px rgba(30, 23, 20, 0.08);
+            }
+            .roulette-reel {
+              will-change: transform, filter;
+            }
             .roulette-slot {
+              height: 38px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0 10px;
               font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-              font-size: 15px;
+              font-size: 14px;
               font-weight: 800;
               color: #1e1714;
-              word-break: break-all;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+            .confetti-stage {
+              position: absolute;
+              inset: 0;
+              pointer-events: none;
+              overflow: visible;
+              z-index: 10;
+            }
+            .confetti-bit {
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              width: 9px;
+              height: 9px;
+              border-radius: 3px;
+              border: 1.5px solid #1e1714;
+              animation: confettiPop 680ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @keyframes confettiPop {
+              0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+              }
+              70% {
+                opacity: 1;
+              }
+              100% {
+                opacity: 0;
+                transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1) rotate(var(--rot));
+              }
             }
             .btn {
               display: flex;
@@ -707,22 +928,24 @@ serve(async (req) => {
               text-decoration: none;
               border: 3px solid #1e1714;
               box-shadow: 4px 4px 0px 0px var(--accent);
-              transition: transform 0.1s ease, box-shadow 0.1s ease;
+              transition: transform 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5), box-shadow 250ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
               width: 100%;
               cursor: pointer;
             }
             .btn:hover {
-              transform: translate(-1px, -1px);
-              box-shadow: 5px 5px 0px 0px var(--accent);
+              transform: translate(-2px, -2px);
+              box-shadow: 6px 6px 0px 0px var(--accent);
+              transition: transform 180ms cubic-bezier(0.3, 0.7, 0.4, 1.5), box-shadow 180ms cubic-bezier(0.3, 0.7, 0.4, 1.5);
             }
             .btn:active {
-              transform: translate(2px, 2px);
-              box-shadow: 2px 2px 0px 0px var(--accent);
+              transform: translate(3px, 3px);
+              box-shadow: 1px 1px 0px 0px var(--accent);
+              transition: transform 34ms, box-shadow 34ms;
             }
             .respin-btn {
               margin-top: 12px;
               width: 100%;
-              min-height: 42px;
+              min-height: 44px;
               padding: 10px 16px;
               border-radius: 999px;
               border: 2px solid #1e1714;
@@ -731,7 +954,35 @@ serve(async (req) => {
               font-weight: 800;
               font-size: 13px;
               cursor: pointer;
-              box-shadow: 2px 2px 0px 0px #1e1714;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+              box-shadow: 3px 3px 0px 0px #1e1714;
+              transition: transform 240ms cubic-bezier(0.3, 0.7, 0.4, 1.5), box-shadow 240ms cubic-bezier(0.3, 0.7, 0.4, 1.5), background-color 150ms ease;
+            }
+            .respin-btn[hidden] {
+              display: none !important;
+            }
+            .respin-btn:hover {
+              background: #fde68a;
+              transform: translate(-1.5px, -1.5px);
+              box-shadow: 4.5px 4.5px 0px 0px #1e1714;
+            }
+            .respin-btn:active {
+              transform: translate(2px, 2px);
+              box-shadow: 1px 1px 0px 0px #1e1714;
+              transition: transform 34ms, box-shadow 34ms;
+            }
+            .respin-btn .dice-glyph {
+              display: inline-block;
+              transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .respin-btn:hover .dice-glyph {
+              transform: rotate(180deg) scale(1.18);
+            }
+            .respin-btn:active .dice-glyph {
+              transform: rotate(360deg) scale(0.92);
             }
             .footer-tag {
               margin-top: 24px;
