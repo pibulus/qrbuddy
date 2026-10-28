@@ -698,12 +698,23 @@ Deno.test("validateSplashConfig & isQrUnbranded - preserves unbranded flag and r
   const unbrandedSplash = validateSplashConfig({
     enabled: true,
     title: "VIP Event",
+    brandName: "Brunswick Roasters",
+    accentColor: "#F59E0B",
     unbranded: true,
   });
   assertEquals(unbrandedSplash.ok, true);
   if (unbrandedSplash.ok && unbrandedSplash.value) {
     assertEquals(unbrandedSplash.value.unbranded, true);
+    assertEquals(unbrandedSplash.value.brandName, "Brunswick Roasters");
+    assertEquals(unbrandedSplash.value.accentColor, "#F59E0B");
   }
+
+  const badHex = validateSplashConfig({
+    enabled: true,
+    title: "VIP Event",
+    accentColor: "javascript:alert(1)",
+  });
+  assertEquals(badHex.ok, false);
 
   assertEquals(isQrUnbranded(null), false);
   assertEquals(isQrUnbranded({ unbranded: false, splash_config: null }), false);

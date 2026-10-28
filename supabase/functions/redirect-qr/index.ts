@@ -395,6 +395,8 @@ serve(async (req) => {
         buttonText = isRouletteMode ? "Open result" : "Continue",
         imageUrl,
         description,
+        brandName,
+        accentColor,
       } = splash;
 
       let safeImageUrl: string | null = null;
@@ -410,7 +412,17 @@ serve(async (req) => {
       const safeTitle = escapeHtml(title);
       const safeButtonText = escapeHtml(buttonText);
       const safeDescription = description ? escapeHtml(description) : null;
+      const safeBrandName = typeof brandName === "string" && brandName.trim()
+        ? escapeHtml(brandName.trim().slice(0, 60))
+        : null;
+      const safeAccentColor =
+        typeof accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(accentColor)
+          ? accentColor
+          : "#FF69B4";
       const isUnbranded = isQrUnbranded(qr);
+      const brandHtml = safeBrandName
+        ? `<div class="brand-pill">${safeBrandName}</div>`
+        : "";
       const imgHtml = safeImageUrl
         ? `<div class="image-container"><img src="${
           escapeHtml(safeImageUrl)
@@ -582,6 +594,9 @@ serve(async (req) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${safeTitle}</title>
           <style>
+            :root {
+              --accent: ${safeAccentColor};
+            }
             * {
               box-sizing: border-box;
             }
@@ -607,6 +622,22 @@ serve(async (req) => {
               text-align: center;
               border: 4px solid #1e1714;
               position: relative;
+            }
+            .brand-pill {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              padding: 5px 14px;
+              margin-bottom: 16px;
+              border-radius: 999px;
+              border: 2px solid #1e1714;
+              background: #fbf1e4;
+              color: #1e1714;
+              font-size: 11px;
+              font-weight: 900;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              box-shadow: 2px 2px 0px 0px var(--accent);
             }
             .image-container {
               margin-bottom: 24px;
@@ -646,7 +677,7 @@ serve(async (req) => {
               border-radius: 18px;
               padding: 14px 16px;
               margin: 0 0 20px 0;
-              box-shadow: 3px 3px 0px 0px #1e1714;
+              box-shadow: 3px 3px 0px 0px var(--accent);
             }
             .roulette-badge {
               font-size: 11px;
@@ -675,18 +706,18 @@ serve(async (req) => {
               border-radius: 16px;
               text-decoration: none;
               border: 3px solid #1e1714;
-              box-shadow: 4px 4px 0px 0px #FF69B4;
+              box-shadow: 4px 4px 0px 0px var(--accent);
               transition: transform 0.1s ease, box-shadow 0.1s ease;
               width: 100%;
               cursor: pointer;
             }
             .btn:hover {
               transform: translate(-1px, -1px);
-              box-shadow: 5px 5px 0px 0px #FF69B4;
+              box-shadow: 5px 5px 0px 0px var(--accent);
             }
             .btn:active {
               transform: translate(2px, 2px);
-              box-shadow: 2px 2px 0px 0px #FF69B4;
+              box-shadow: 2px 2px 0px 0px var(--accent);
             }
             .respin-btn {
               margin-top: 12px;
@@ -756,6 +787,7 @@ serve(async (req) => {
         </head>
         <body>
           <div class="card">
+            ${brandHtml}
             ${imgHtml}
             <h1>${safeTitle}</h1>
             ${safeDescription ? `<p>${safeDescription}</p>` : ""}

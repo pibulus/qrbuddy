@@ -30,10 +30,9 @@ const INPUT_RECIPE =
   "w-full min-h-[44px] px-3.5 py-2.5 text-sm border-2 border-black/15 bg-white rounded-2xl text-black focus:border-qr-pop focus:outline-none transition-colors";
 
 const DAILY_SPIN_OPTIONS: Array<{ value: number | null; label: string }> = [
-  { value: null, label: "∞ Unlimited" },
-  { value: 1, label: "1 / day" },
-  { value: 3, label: "3 / day" },
-  { value: 5, label: "5 / day" },
+  { value: null, label: "∞ Open" },
+  { value: 1, label: "1" },
+  { value: 3, label: "3" },
 ];
 
 export default function RoutingConfigForm({
@@ -140,7 +139,7 @@ export default function RoutingConfigForm({
               <span class="block text-[11px] font-black uppercase tracking-wider text-black">
                 Daily spins per device (local memory lock)
               </span>
-              <div class="grid grid-cols-4 gap-1.5">
+              <div class="flex items-center gap-1.5">
                 {DAILY_SPIN_OPTIONS.map((opt) => {
                   const active = dailySpins === opt.value;
                   return (
@@ -148,7 +147,7 @@ export default function RoutingConfigForm({
                       key={String(opt.value)}
                       type="button"
                       onClick={() => setDailySpins(opt.value)}
-                      class={`min-h-[34px] px-2 py-1 rounded-lg border-2 text-[11px] font-black transition-all ${
+                      class={`min-h-[34px] px-2.5 py-1 rounded-lg border-2 text-xs font-black whitespace-nowrap transition-all ${
                         active
                           ? "bg-amber-200 border-black text-black shadow-chunky"
                           : "bg-white border-black/15 text-neutral-700 hover:border-black"
@@ -158,6 +157,32 @@ export default function RoutingConfigForm({
                     </button>
                   );
                 })}
+                <label class="flex-1 min-h-[34px] flex items-center justify-between gap-1 px-2.5 py-1 rounded-lg border-2 border-black bg-white">
+                  <input
+                    type="number"
+                    min={1}
+                    max={99}
+                    inputMode="numeric"
+                    aria-label="Custom daily spins"
+                    value={dailySpins === null ? "" : String(dailySpins)}
+                    placeholder="1–99"
+                    onInput={(e) => {
+                      const raw = (e.target as HTMLInputElement).value.trim();
+                      if (!raw) {
+                        setDailySpins(null);
+                        return;
+                      }
+                      const n = Number.parseInt(raw, 10);
+                      if (Number.isFinite(n)) {
+                        setDailySpins(Math.min(99, Math.max(1, n)));
+                      }
+                    }}
+                    class="w-12 bg-transparent text-xs font-black text-black focus:outline-none text-center"
+                  />
+                  <span class="text-[11px] font-black text-neutral-600 whitespace-nowrap">
+                    / day
+                  </span>
+                </label>
               </div>
             </div>
           )}

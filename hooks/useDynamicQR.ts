@@ -28,6 +28,9 @@ interface UseDynamicQRProps {
     buttonText: string;
     imageUrl?: string;
     description?: string;
+    brandName?: string;
+    accentColor?: string;
+    unbranded?: boolean;
   } | null;
 }
 

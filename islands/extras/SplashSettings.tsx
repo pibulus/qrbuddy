@@ -1,7 +1,9 @@
 import { Signal } from "@preact/signals";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+import { getSupporterPass } from "../../utils/supporter-pass.ts";
+import { openPricingModal } from "../PricingModal.tsx";
 
 export interface SplashConfig {
   enabled: boolean;
@@ -9,7 +11,19 @@ export interface SplashConfig {
   buttonText: string;
   imageUrl?: string;
   description?: string;
+  brandName?: string;
+  accentColor?: string;
+  unbranded?: boolean;
 }
+
+const ACCENT_SWATCHES = [
+  { hex: "#FF69B4", label: "Pink" },
+  { hex: "#F59E0B", label: "Amber" },
+  { hex: "#10B981", label: "Mint" },
+  { hex: "#8B5CF6", label: "Violet" },
+  { hex: "#3B82F6", label: "Cobalt" },
+  { hex: "#EC4899", label: "Rose" },
+];
 
 interface SplashSettingsProps {
   splashConfig: Signal<SplashConfig | null>;
@@ -27,10 +41,29 @@ interface Preset {
   buttonTextEs: string;
   description: string;
   descriptionEs: string;
+  brandName?: string;
+  brandNameEs?: string;
+  accentColor?: string;
   imageUrl?: string;
 }
 
 const PRESETS: Preset[] = [
+  {
+    label: "Roulette Promo",
+    labelEs: "Ruleta Promo",
+    icon: "🎲",
+    title: "Mystery Draw 🎲",
+    titleEs: "Sorteo Misterioso 🎲",
+    buttonText: "Open Reward 🎁",
+    buttonTextEs: "Abrir Premio 🎁",
+    description:
+      "Daily pocket-tool & reward roulette. Tap below to open today's draw.",
+    descriptionEs:
+      "Ruleta diaria de premios y sorpresas. Toca abajo para abrir el giro de hoy.",
+    brandName: "DAILY DROP",
+    brandNameEs: "SORTEO DIARIO",
+    accentColor: "#F59E0B",
+  },
   {
     label: "Menu & Food",
     labelEs: "Menú y Comida",
@@ -40,26 +73,14 @@ const PRESETS: Preset[] = [
     buttonText: "View Full Menu & Drinks 🌯",
     buttonTextEs: "Ver Menú y Bebidas 🌯",
     description:
-      "Welcome to our kitchen! Check out our seasonal tacos, warm sides, and cold craft drinks.",
+      "Seasonal tacos, warm sides, and cold craft drinks fresh from the kitchen.",
     descriptionEs:
-      "¡Bienvenidos a nuestra cocina! Checa nuestros tacos de temporada, guarniciones y bebidas bien frías.",
+      "Tacos de temporada, guarniciones calientes y bebidas artesanales bien frías.",
+    brandName: "HOUSE KITCHEN",
+    brandNameEs: "COCINA DE CASA",
+    accentColor: "#FF69B4",
     imageUrl:
       "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    label: "Wedding & Party",
-    labelEs: "Boda y Fiesta",
-    icon: "🥂",
-    title: "Welcome to Our Big Day! 🥂",
-    titleEs: "¡Bienvenidos a Nuestro Gran Día! 🥂",
-    buttonText: "See Timeline & Photos ✨",
-    buttonTextEs: "Ver Itinerario y Fotos ✨",
-    description:
-      "We're so thrilled you're here to celebrate with us. Tap below to view our day schedule and share your snaps to our album!",
-    descriptionEs:
-      "Qué alegría que estés aquí para celebrar con nosotros. Toca abajo para ver el programa y subir tus fotos al álbum.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
   },
   {
     label: "Music & Beats",
@@ -70,9 +91,12 @@ const PRESETS: Preset[] = [
     buttonText: "Listen to the Master 🔊",
     buttonTextEs: "Escuchar el Master 🔊",
     description:
-      "Exclusive unreleased master before it hits streaming. Plug in your headphones and turn this all the way up.",
+      "Exclusive unreleased master before streaming release. Headphones recommended.",
     descriptionEs:
-      "Master exclusivo antes de salir en plataformas. Ponte los audífonos y súbele todo el volumen.",
+      "Master exclusivo antes de salir en plataformas. Mejor con audífonos.",
+    brandName: "STUDIO CUT",
+    brandNameEs: "CORTE DE ESTUDIO",
+    accentColor: "#8B5CF6",
     imageUrl:
       "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=800&q=80",
   },
@@ -80,14 +104,17 @@ const PRESETS: Preset[] = [
     label: "Art & Studio",
     labelEs: "Arte y Estudio",
     icon: "🎨",
-    title: "Welcome to the Studio ✨",
-    titleEs: "Bienvenidos al Estudio ✨",
+    title: "Studio Drop ✨",
+    titleEs: "Edición de Estudio ✨",
     buttonText: "Explore the Gallery 🖼️",
     buttonTextEs: "Explorar la Galería 🖼️",
     description:
       "Independent craft, designs, and software experiments made with love and caffeine.",
     descriptionEs:
       "Diseño independiente, arte y experimentos hechos con cariño y buen café.",
+    brandName: "ATELIER",
+    brandNameEs: "TALLER",
+    accentColor: "#10B981",
     imageUrl:
       "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&q=80",
   },
@@ -137,8 +164,15 @@ export default function SplashSettings(
       buttonText: isSpanish ? "Continuar" : "Continue",
       description: "",
       imageUrl: "",
+      brandName: "",
+      accentColor: "#FF69B4",
     },
   );
+  const [hasPass, setHasPass] = useState(false);
+
+  useEffect(() => {
+    setHasPass(Boolean(getSupporterPass()));
+  }, []);
 
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const [imageError, setImageError] = useState(false);
@@ -159,6 +193,10 @@ export default function SplashSettings(
       title: isSpanish ? preset.titleEs : preset.title,
       buttonText: isSpanish ? preset.buttonTextEs : preset.buttonText,
       description: isSpanish ? preset.descriptionEs : preset.description,
+      brandName: isSpanish
+        ? (preset.brandNameEs ?? preset.brandName ?? "")
+        : (preset.brandName ?? ""),
+      accentColor: preset.accentColor || "#FF69B4",
       imageUrl: preset.imageUrl,
     };
     setLocalConfig(newConfig);
@@ -176,36 +214,39 @@ export default function SplashSettings(
     })()
     : null;
 
+  const activeAccent = localConfig.accentColor || "#FF69B4";
+  const isUnbranded = Boolean(hasPass || localConfig.unbranded);
+
   return (
-    <div class="space-y-4 bg-white border-3 border-black rounded-2xl p-4 sm:p-5 shadow-chunky animate-slide-down">
+    <div class="space-y-4 bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 sm:p-5 shadow-[3px_3px_0_#1e1714] animate-slide-down">
       {/* Header & Tab switch */}
-      <div class="flex items-center justify-between border-b-2 border-gray-100 pb-3">
+      <div class="flex items-center justify-between border-b-2 border-[#1e1714]/10 pb-3">
         <div>
-          <h3 class="text-sm font-black text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
+          <h3 class="text-sm font-black text-[#1e1714] uppercase tracking-wide flex items-center gap-1.5">
             <span>✨</span>
             <span>
-              {isSpanish ? "Portada de Bienvenida" : "Cover Page Designer"}
+              {isSpanish ? "Portada y Marca" : "Cover & Brand Card"}
             </span>
           </h3>
-          <p class="text-xs text-gray-500 font-medium mt-0.5">
+          <p class="text-xs text-[#6e6058] font-bold mt-0.5">
             {isSpanish
-              ? "Muestra una tarjeta de bienvenida antes de abrir tu link."
-              : "Gives scanners a custom intro card before opening your link."}
+              ? "Personaliza el título, insignia de marca, color e imagen."
+              : "Custom headline, brand badge, accent color, and cover image."}
           </p>
         </div>
 
         {/* Edit / Preview pill toggle */}
-        <div class="flex bg-gray-100 p-1 rounded-xl border-2 border-black shrink-0">
+        <div class="flex bg-[#fbf1e4] p-1 rounded-xl border-2 border-[#1e1714] shrink-0">
           <button
             type="button"
             onClick={() => {
               setActiveTab("edit");
               haptics.light();
             }}
-            class={`min-h-[36px] px-3.5 py-1 rounded-lg text-xs font-black transition-all ${
+            class={`min-h-[34px] px-3 py-1 rounded-lg text-xs font-black transition-all ${
               activeTab === "edit"
-                ? "bg-white text-black shadow-sm"
-                : "text-gray-500 hover:text-black"
+                ? "bg-[#fffef7] text-[#1e1714] border border-[#1e1714]"
+                : "text-[#6e6058] hover:text-[#1e1714]"
             }`}
           >
             {isSpanish ? "✏️ Editar" : "✏️ Edit"}
@@ -216,10 +257,10 @@ export default function SplashSettings(
               setActiveTab("preview");
               haptics.light();
             }}
-            class={`min-h-[36px] px-3.5 py-1 rounded-lg text-xs font-black transition-all ${
+            class={`min-h-[34px] px-3 py-1 rounded-lg text-xs font-black transition-all ${
               activeTab === "preview"
-                ? "bg-black text-white shadow-sm"
-                : "text-gray-500 hover:text-black"
+                ? "bg-[#1e1714] text-[#fffef7]"
+                : "text-[#6e6058] hover:text-[#1e1714]"
             }`}
           >
             {isSpanish ? "👁️ Vista" : "👁️ Preview"}
@@ -230,10 +271,10 @@ export default function SplashSettings(
       {/* Preset Starters */}
       <div>
         <div class="flex items-center justify-between mb-1.5">
-          <span class="text-[11px] font-black uppercase tracking-wider text-pink-600">
+          <span class="text-[11px] font-black uppercase tracking-wider text-[#ec4899]">
             {isSpanish ? "Plantillas Rápidas" : "Quick Starters"}
           </span>
-          <span class="text-[11px] text-gray-400 font-medium">
+          <span class="text-[11px] text-[#6e6058] font-bold">
             {isSpanish ? "1 toque" : "1-tap fill"}
           </span>
         </div>
@@ -243,10 +284,10 @@ export default function SplashSettings(
               key={preset.label}
               type="button"
               onClick={() => applyPreset(preset)}
-              class="flex items-center gap-1 px-1.5 sm:px-2 py-2 min-h-[44px] rounded-xl border-2 border-black bg-pink-50/70 hover:bg-pink-100 hover:-translate-y-0.5 active:translate-y-0 font-black text-[10px] min-[375px]:text-[11px] sm:text-xs tracking-tight sm:tracking-normal text-gray-800 transition-all text-left shadow-sm"
+              class="flex items-center gap-1 px-2 py-2 min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-amber-100 hover:-translate-y-0.5 active:translate-y-0 font-black text-[11px] sm:text-xs text-[#1e1714] transition-all text-left shadow-[2px_2px_0_#1e1714]"
               title={isSpanish ? preset.titleEs : preset.title}
             >
-              <span class="text-xs min-[375px]:text-sm shrink-0">
+              <span class="text-sm shrink-0">
                 {preset.icon}
               </span>
               <span class="truncate">
@@ -260,13 +301,84 @@ export default function SplashSettings(
       {/* Main Content: Form or Preview */}
       {activeTab === "edit" && (
         <div class="space-y-3.5 pt-1">
+          {/* Brand Badge & Accent Color */}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#fbf1e4] border-2 border-[#1e1714]/20 rounded-xl p-3">
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="block text-[11px] font-black uppercase tracking-wide text-[#1e1714]">
+                  {isSpanish ? "Insignia de marca" : "Brand / Host badge"}
+                </label>
+                <span class="text-[10px] font-bold text-[#6e6058]">
+                  {(localConfig.brandName || "").length}/60
+                </span>
+              </div>
+              <input
+                type="text"
+                maxLength={60}
+                value={localConfig.brandName || ""}
+                onInput={(e) =>
+                  updateConfig({
+                    brandName: (e.target as HTMLInputElement).value,
+                  })}
+                class="w-full px-3 py-1.5 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-xs font-black uppercase tracking-wider bg-[#fffef7] text-[#1e1714]"
+                placeholder={isSpanish
+                  ? "ej. CAFÉ BRUNSWICK"
+                  : "e.g. BRUNSWICK ROASTERS"}
+              />
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-black uppercase tracking-wide text-[#1e1714] mb-1">
+                {isSpanish ? "Color de marca" : "Brand accent color"}
+              </label>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                {ACCENT_SWATCHES.map((swatch) => {
+                  const selected =
+                    activeAccent.toLowerCase() === swatch.hex.toLowerCase();
+                  return (
+                    <button
+                      key={swatch.hex}
+                      type="button"
+                      onClick={() => {
+                        updateConfig({ accentColor: swatch.hex });
+                        haptics.light();
+                      }}
+                      aria-label={swatch.label}
+                      class={`w-7 h-7 rounded-full border-2 border-[#1e1714] transition-transform ${
+                        selected
+                          ? "scale-110 ring-2 ring-[#1e1714] ring-offset-1"
+                          : "hover:scale-105"
+                      }`}
+                      style={{ backgroundColor: swatch.hex }}
+                    />
+                  );
+                })}
+                <label
+                  class="w-7 h-7 rounded-full border-2 border-dashed border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-[11px] font-black cursor-pointer hover:bg-amber-50"
+                  title={isSpanish ? "Color personalizado" : "Custom hex color"}
+                >
+                  +
+                  <input
+                    type="color"
+                    value={activeAccent}
+                    onInput={(e) =>
+                      updateConfig({
+                        accentColor: (e.target as HTMLInputElement).value,
+                      })}
+                    class="sr-only"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
           {/* Title */}
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-black uppercase tracking-wide text-gray-700">
+              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
                 {isSpanish ? "Título principal *" : "Headline / Title *"}
               </label>
-              <span class="text-[10px] font-bold text-gray-400">
+              <span class="text-[10px] font-bold text-[#6e6058]">
                 {localConfig.title.length}/100
               </span>
             </div>
@@ -276,20 +388,20 @@ export default function SplashSettings(
               value={localConfig.title}
               onInput={(e) =>
                 updateConfig({ title: (e.target as HTMLInputElement).value })}
-              class="w-full px-3 py-2 border-2 border-black rounded-xl focus:border-pink-500 focus:outline-none text-sm font-bold bg-white"
+              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
               placeholder={isSpanish
-                ? "ej. ¡Bienvenidos a Nuestra Boda!"
-                : "e.g. Welcome to Our Wedding!"}
+                ? "ej. Ruleta Diaria de Premios"
+                : "e.g. Daily Mystery Draw"}
             />
           </div>
 
           {/* Button Text */}
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-black uppercase tracking-wide text-gray-700">
+              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
                 {isSpanish ? "Texto del botón *" : "Button Text *"}
               </label>
-              <span class="text-[10px] font-bold text-gray-400">
+              <span class="text-[10px] font-bold text-[#6e6058]">
                 {localConfig.buttonText.length}/50
               </span>
             </div>
@@ -301,22 +413,20 @@ export default function SplashSettings(
                 updateConfig({
                   buttonText: (e.target as HTMLInputElement).value,
                 })}
-              class="w-full px-3 py-2 border-2 border-black rounded-xl focus:border-pink-500 focus:outline-none text-sm font-bold bg-white"
-              placeholder={isSpanish
-                ? "ej. Abrir el sitio"
-                : "e.g. Continue to Website"}
+              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
+              placeholder={isSpanish ? "ej. Abrir premio" : "e.g. Open reward"}
             />
           </div>
 
           {/* Description */}
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-black uppercase tracking-wide text-gray-700">
+              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
                 {isSpanish
-                  ? "Mensaje de bienvenida / Nota"
-                  : "Welcome Message / Note"}
+                  ? "Nota o reglas del sorteo"
+                  : "Welcome Note / Promo Rules"}
               </label>
-              <span class="text-[10px] font-bold text-gray-400">
+              <span class="text-[10px] font-bold text-[#6e6058]">
                 {(localConfig.description || "").length}/500
               </span>
             </div>
@@ -327,21 +437,21 @@ export default function SplashSettings(
                 updateConfig({
                   description: (e.target as HTMLTextAreaElement).value,
                 })}
-              class="w-full px-3 py-2 border-2 border-black rounded-xl focus:border-pink-500 focus:outline-none text-sm font-medium resize-none bg-white"
-              rows={3}
+              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-medium resize-none bg-[#fffef7] text-[#1e1714]"
+              rows={2}
               placeholder={isSpanish
-                ? "Agrega instrucciones, un saludo cálido o detalles de lo que verán..."
-                : "Add instructions, warm greeting, playlist description, or menu teasers..."}
+                ? "Detalles del sorteo, menú o instrucciones en barra..."
+                : "Show at the counter, daily spin rules, or release notes..."}
             />
           </div>
 
           {/* Cover Image URL */}
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-black uppercase tracking-wide text-gray-700">
+              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
                 {isSpanish
-                  ? "URL de imagen de portada (Opcional)"
-                  : "Header Cover Image URL (Optional)"}
+                  ? "Logo o imagen de portada (URL)"
+                  : "Logo or Cover Image URL (Optional)"}
               </label>
               {localConfig.imageUrl && (
                 <button
@@ -350,7 +460,7 @@ export default function SplashSettings(
                     updateConfig({ imageUrl: "" });
                     haptics.light();
                   }}
-                  class="text-[10px] font-bold text-red-500 hover:underline"
+                  class="text-[10px] font-black text-[#4a3f39] hover:text-[#1e1714] underline"
                 >
                   {isSpanish ? "✕ Quitar imagen" : "✕ Clear image"}
                 </button>
@@ -363,13 +473,13 @@ export default function SplashSettings(
                 updateConfig({
                   imageUrl: (e.target as HTMLInputElement).value,
                 })}
-              class="w-full px-3 py-2 border-2 border-black rounded-xl focus:border-pink-500 focus:outline-none text-xs font-mono bg-white"
-              placeholder="https://example.com/banner.jpg"
+              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-xs font-mono bg-[#fffef7] text-[#1e1714]"
+              placeholder="https://example.com/logo-or-banner.jpg"
             />
 
             {/* Quick image inspiration chips */}
             <div class="flex items-center gap-1.5 flex-wrap mt-2">
-              <span class="text-[10px] font-bold text-gray-400">
+              <span class="text-[10px] font-bold text-[#6e6058]">
                 {isSpanish ? "Fondos:" : "Presets:"}
               </span>
               {CURATED_IMAGES.map((img) => (
@@ -380,12 +490,45 @@ export default function SplashSettings(
                     updateConfig({ imageUrl: img.url });
                     haptics.light();
                   }}
-                  class="text-[11px] font-bold px-2 py-0.5 rounded-lg border border-gray-300 bg-gray-50 hover:border-black hover:bg-white transition-colors"
+                  class="text-[11px] font-bold px-2 py-0.5 rounded-lg border border-[#1e1714]/30 bg-[#fbf1e4] hover:border-[#1e1714] hover:bg-[#fffef7] transition-colors text-[#1e1714]"
                 >
                   {isSpanish ? img.labelEs : img.label}
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* White-Label / Paid Customer Branding Row */}
+          <div class="pt-1">
+            {isUnbranded
+              ? (
+                <div class="flex items-center justify-between gap-2 rounded-xl border-2 border-[#1e1714] bg-emerald-100 px-3 py-2 text-xs font-black text-[#1e1714]">
+                  <span>
+                    {isSpanish
+                      ? "✓ Marca blanca activa · Sin sello de QRBuddy"
+                      : "✓ White-label active · QRBuddy footer hidden"}
+                  </span>
+                </div>
+              )
+              : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.light();
+                    openPricingModal();
+                  }}
+                  class="w-full flex items-center justify-between gap-2 rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-amber-100 px-3 py-2 text-left text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] transition-all"
+                >
+                  <span>
+                    {isSpanish
+                      ? "✨ Ocultar sello «Hecho con QRBuddy» (Marca blanca)"
+                      : "✨ Hide 'Built with QRBuddy' footer (White-label)"}
+                  </span>
+                  <span class="shrink-0 rounded-full border border-[#1e1714] bg-amber-200 px-2 py-0.5 text-[10px] font-black uppercase">
+                    {isSpanish ? "Pase Plus" : "Supporter Pass"}
+                  </span>
+                </button>
+              )}
           </div>
         </div>
       )}
@@ -393,10 +536,22 @@ export default function SplashSettings(
       {/* Live Preview Card */}
       {activeTab === "preview" && (
         <div class="py-2 animate-pop-in">
-          <div class="rounded-2xl border-3 border-black bg-[#FAF8F5] p-5 shadow-[4px_4px_0px_0px_#000] text-center max-w-sm mx-auto space-y-3 relative overflow-hidden">
+          <div class="rounded-2xl border-3 border-[#1e1714] bg-[#fffef7] p-5 shadow-[4px_4px_0px_0px_#1e1714] text-center max-w-sm mx-auto space-y-3 relative overflow-hidden">
+            {/* Brand pill */}
+            {localConfig.brandName?.trim() && (
+              <div>
+                <span
+                  class="inline-flex items-center justify-center px-3 py-1 rounded-full border-2 border-[#1e1714] bg-[#fbf1e4] text-[10px] font-black uppercase tracking-wider text-[#1e1714]"
+                  style={{ boxShadow: `2px 2px 0px 0px ${activeAccent}` }}
+                >
+                  {localConfig.brandName.trim()}
+                </span>
+              </div>
+            )}
+
             {/* Cover image */}
             {localConfig.imageUrl && !imageError && (
-              <div class="rounded-xl border-2 border-black overflow-hidden bg-pink-50 max-h-44 shadow-sm">
+              <div class="rounded-xl border-2 border-[#1e1714] overflow-hidden bg-pink-50 max-h-44 shadow-sm">
                 <img
                   src={localConfig.imageUrl}
                   alt={isSpanish ? "Imagen de portada" : "Cover image"}
@@ -407,20 +562,23 @@ export default function SplashSettings(
             )}
 
             {/* Title */}
-            <h4 class="text-xl font-black text-gray-950 tracking-tight leading-tight pt-1 break-words">
+            <h4 class="text-xl font-black text-[#1e1714] tracking-tight leading-tight pt-1 break-words">
               {localConfig.title || (isSpanish ? "¡Hola!" : "Welcome!")}
             </h4>
 
             {/* Description */}
             {localConfig.description && (
-              <p class="text-xs text-gray-600 font-medium leading-relaxed whitespace-pre-wrap max-h-28 overflow-y-auto px-1 break-words">
+              <p class="text-xs text-[#4a3f39] font-semibold leading-relaxed whitespace-pre-wrap max-h-28 overflow-y-auto px-1 break-words">
                 {localConfig.description}
               </p>
             )}
 
             {/* Button */}
             <div class="pt-2">
-              <div class="w-full min-h-[46px] rounded-xl border-3 border-black bg-black text-white font-extrabold text-sm py-2.5 px-4 shadow-[3px_3px_0px_0px_#FF69B4] flex items-center justify-center gap-1.5 cursor-default">
+              <div
+                class="w-full min-h-[46px] rounded-xl border-3 border-[#1e1714] bg-[#1e1714] text-[#fffef7] font-extrabold text-sm py-2.5 px-4 flex items-center justify-center gap-1.5 cursor-default"
+                style={{ boxShadow: `3px 3px 0px 0px ${activeAccent}` }}
+              >
                 <span>
                   {localConfig.buttonText ||
                     (isSpanish ? "Continuar" : "Continue")}
@@ -428,37 +586,39 @@ export default function SplashSettings(
                 <span>→</span>
               </div>
               {cleanDestDomain && (
-                <p class="text-[10px] text-gray-400 font-semibold mt-1.5 truncate">
+                <p class="text-[10px] text-[#6e6058] font-semibold mt-1.5 truncate">
                   {isSpanish ? "Abre:" : "Opens:"} {cleanDestDomain}
                 </p>
               )}
             </div>
 
             {/* Footer enamel badge */}
-            <div class="pt-3 border-t border-gray-200/80 flex items-center justify-center">
-              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-black bg-pink-100 text-[10px] font-black text-gray-900 shadow-[1.5px_1.5px_0px_0px_#000]">
-                <span>⚡</span>
-                <span>
-                  {isSpanish
-                    ? (
-                      <>
-                        Hecho con <strong>QRBuddy</strong> · Gratis siempre
-                      </>
-                    )
-                    : (
-                      <>
-                        Built with <strong>QRBuddy</strong> · Free forever
-                      </>
-                    )}
-                </span>
+            {!isUnbranded && (
+              <div class="pt-3 border-t border-[#1e1714]/10 flex items-center justify-center">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-[#1e1714] bg-pink-100 text-[10px] font-black text-[#1e1714] shadow-[1.5px_1.5px_0px_0px_#1e1714]">
+                  <span>⚡</span>
+                  <span>
+                    {isSpanish
+                      ? (
+                        <>
+                          Hecho con <strong>QRBuddy</strong> · Gratis siempre
+                        </>
+                      )
+                      : (
+                        <>
+                          Built with <strong>QRBuddy</strong> · Free forever
+                        </>
+                      )}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          <p class="text-center text-[11px] text-gray-500 font-medium mt-3">
+          <p class="text-center text-[11px] text-[#6e6058] font-bold mt-3">
             {isSpanish
-              ? "✨ Al escanear, tus visitantes verán esta portada antes de abrir tu destino."
-              : "✨ When scanned, your visitors see this card before reaching your destination."}
+              ? "✨ Vista previa de la tarjeta al escanear el código."
+              : "✨ Preview of the card shown on each scan."}
           </p>
         </div>
       )}

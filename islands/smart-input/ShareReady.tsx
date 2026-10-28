@@ -172,6 +172,34 @@ export default function ShareReady(
                   </button>
                 );
               })}
+              {rouletteEnabled && (
+                <label class="inline-flex items-center gap-0.5 px-1.5 rounded-lg border border-[#1e1714]/20 bg-[#fbf1e4]">
+                  <input
+                    type="number"
+                    min={1}
+                    max={99}
+                    inputMode="numeric"
+                    aria-label={isSpanish ? "Giros por día" : "Spins per day"}
+                    value={rouletteSpins === null ? "" : String(rouletteSpins)}
+                    placeholder="N"
+                    onInput={(e) => {
+                      const raw = (e.target as HTMLInputElement).value.trim();
+                      if (!raw) {
+                        applyRoulette(true, null);
+                        return;
+                      }
+                      const n = Number.parseInt(raw, 10);
+                      if (Number.isFinite(n)) {
+                        applyRoulette(true, Math.min(99, Math.max(1, n)));
+                      }
+                    }}
+                    class="w-7 bg-transparent text-[11px] font-black text-[#1e1714] focus:outline-none text-center"
+                  />
+                  <span class="text-[10px] font-black text-[#6e6058]">
+                    /{isSpanish ? "d" : "d"}
+                  </span>
+                </label>
+              )}
             </div>
           </div>
           {rouletteEnabled && (

@@ -217,6 +217,9 @@ export default function SmartInput(
       buttonText: string;
       imageUrl?: string;
       description?: string;
+      brandName?: string;
+      accentColor?: string;
+      unbranded?: boolean;
     } | null
   >(null);
 

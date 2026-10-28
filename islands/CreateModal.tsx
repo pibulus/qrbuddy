@@ -81,6 +81,9 @@ interface CreateModalProps {
       buttonText: string;
       imageUrl?: string;
       description?: string;
+      brandName?: string;
+      accentColor?: string;
+      unbranded?: boolean;
     } | null
   >;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
@@ -1072,6 +1075,20 @@ export default function CreateModal({
                 setRandomSequence={setRandomSequence}
                 dailySpins={dailySpins}
                 setDailySpins={setDailySpins}
+                brandCardActive={splashActive}
+                onToggleBrandCard={() => {
+                  splashConfig.value = splashActive ? null : {
+                    enabled: true,
+                    title: isSpanish
+                      ? "Sorteo Misterioso 🎲"
+                      : "Mystery Draw 🎲",
+                    buttonText: isSpanish
+                      ? "Abrir Premio 🎁"
+                      : "Open Reward 🎁",
+                    brandName: isSpanish ? "SORTEO DIARIO" : "DAILY DROP",
+                    accentColor: "#F59E0B",
+                  };
+                }}
                 lang={locale}
               />
             )}

@@ -12,6 +12,8 @@ export interface SplashConfig {
   buttonText: string;
   imageUrl?: string;
   description?: string;
+  brandName?: string;
+  accentColor?: string;
   unbranded?: boolean;
 }
 
@@ -30,6 +32,8 @@ export function isQrUnbranded(
 const MAX_TITLE = 100;
 const MAX_BUTTON = 50;
 const MAX_DESCRIPTION = 500;
+const MAX_BRAND_NAME = 60;
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 function isHttpUrl(value: string): boolean {
   try {
@@ -118,6 +122,43 @@ export function validateSplashConfig(
     imageUrl = cfg.imageUrl;
   }
 
+  let brandName: string | undefined;
+  if (
+    cfg.brandName !== undefined && cfg.brandName !== null &&
+    cfg.brandName !== ""
+  ) {
+    if (typeof cfg.brandName !== "string") {
+      return {
+        ok: false,
+        error: "splash_config.brandName must be a string",
+      };
+    }
+    if (cfg.brandName.length > MAX_BRAND_NAME) {
+      return {
+        ok: false,
+        error:
+          `splash_config.brandName must be <= ${MAX_BRAND_NAME} characters`,
+      };
+    }
+    brandName = cfg.brandName.trim() || undefined;
+  }
+
+  let accentColor: string | undefined;
+  if (
+    cfg.accentColor !== undefined && cfg.accentColor !== null &&
+    cfg.accentColor !== ""
+  ) {
+    if (
+      typeof cfg.accentColor !== "string" || !HEX_COLOR_RE.test(cfg.accentColor)
+    ) {
+      return {
+        ok: false,
+        error: "splash_config.accentColor must be a #RRGGBB hex color",
+      };
+    }
+    accentColor = cfg.accentColor;
+  }
+
   return {
     ok: true,
     value: {
@@ -126,6 +167,8 @@ export function validateSplashConfig(
       buttonText,
       description,
       imageUrl,
+      ...(brandName ? { brandName } : {}),
+      ...(accentColor ? { accentColor } : {}),
       ...(cfg.unbranded === true ? { unbranded: true } : {}),
     },
   };
