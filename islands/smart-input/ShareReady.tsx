@@ -1,6 +1,11 @@
 import type { Signal } from "@preact/signals";
+import { useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+import {
+  buildRouletteShareUrl,
+  parseRouletteParams,
+} from "../../utils/roulette-lock.ts";
 import { addToast } from "../ToastManager.tsx";
 
 export type ShareKind = "slideshow" | "playlist" | "file" | "pack";
@@ -15,6 +20,7 @@ export interface LastShare {
 interface ShareReadyProps {
   share: LastShare;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
+  onUpdateUrl?: (nextUrl: string) => void;
   lang?: Locale;
 }
 
@@ -24,36 +30,56 @@ const KIND_COPY: Record<
 > = {
   slideshow: {
     label: "Slideshow is live",
-    labelEs: "Tu galería está lista",
+    labelEs: "Galería lista",
     glyph: "🖼️",
   },
   playlist: {
     label: "Mixtape is live",
-    labelEs: "Tu mixtape está listo",
+    labelEs: "Mixtape listo",
     glyph: "🎵",
   },
   pack: {
     label: "Pack is live",
-    labelEs: "Tu paquete está listo",
+    labelEs: "Paquete listo",
     glyph: "📦",
   },
   file: {
     label: "File is live",
-    labelEs: "Tu archivo está listo",
+    labelEs: "Archivo listo",
     glyph: "📄",
   },
 };
 
 const PILL =
-  "min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-black px-4 text-sm font-black shadow-chunky transition-all hover:scale-105 active:scale-95";
+  "min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-[#1e1714] px-4 text-sm font-black shadow-chunky transition-all hover:scale-105 active:scale-95";
 
 /** The "it's alive" strip under the input once a share has uploaded: open
  * it, copy it, or stamp a SCAN ME sticker — the three things people do next. */
 export default function ShareReady(
-  { share, frameConfig: _frameConfig, lang }: ShareReadyProps,
+  { share, frameConfig: _frameConfig, onUpdateUrl, lang }: ShareReadyProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const copy = KIND_COPY[share.kind];
+  const initialRoulette = parseRouletteParams(
+    share.url.includes("?") ? share.url.slice(share.url.indexOf("?")) : "",
+  );
+  const [rouletteEnabled, setRouletteEnabled] = useState(
+    initialRoulette.roulette,
+  );
+  const [rouletteSpins, setRouletteSpins] = useState<number | null>(
+    initialRoulette.dailySpins,
+  );
+
+  const applyRoulette = (enabled: boolean, spins: number | null) => {
+    setRouletteEnabled(enabled);
+    setRouletteSpins(spins);
+    const nextUrl = buildRouletteShareUrl(share.url, enabled, spins);
+    onUpdateUrl?.(nextUrl);
+    haptics.light();
+  };
+
+  const canRoulette = share.count > 1 &&
+    (share.kind === "slideshow" || share.kind === "playlist");
 
   const handleCopy = async () => {
     try {
@@ -104,22 +130,84 @@ export default function ShareReady(
           </p>
         </div>
       </div>
+      {canRoulette && (
+        <div class="bg-[#fbf1e4] border-2 border-[#1e1714]/20 rounded-xl px-3 py-2 space-y-1">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-black text-[#1e1714]">
+              🎲 {isSpanish ? "Modo Ruleta" : "Roulette draw"}
+            </span>
+            <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-[#fffef7] p-0.5 gap-0.5">
+              {[
+                {
+                  enabled: false,
+                  spins: null,
+                  label: isSpanish ? "No" : "Off",
+                },
+                { enabled: true, spins: null, label: "∞" },
+                {
+                  enabled: true,
+                  spins: 1,
+                  label: isSpanish ? "1/día" : "1/day",
+                },
+                {
+                  enabled: true,
+                  spins: 3,
+                  label: isSpanish ? "3/día" : "3/day",
+                },
+              ].map((opt) => {
+                const active = rouletteEnabled === opt.enabled &&
+                  (opt.enabled ? rouletteSpins === opt.spins : true);
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => applyRoulette(opt.enabled, opt.spins)}
+                    class={`min-h-[28px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
+                      active
+                        ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                        : "text-[#4a3f39] hover:text-[#1e1714]"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {rouletteEnabled && (
+            <p class="text-[11px] font-semibold text-[#6e6058]">
+              {rouletteSpins !== null
+                ? (isSpanish
+                  ? `Cada escaneo gira al azar y bloquea a ${rouletteSpins}/día en memoria local.`
+                  : `Each scan spins a random item and locks to ${rouletteSpins}/day in local memory.`)
+                : (isSpanish
+                  ? "Cada escaneo gira un elemento al azar."
+                  : "Each scan spins a random item.")}
+            </p>
+          )}
+        </div>
+      )}
+
       <div class="grid grid-cols-3 gap-2">
         <a
           href={share.url}
           target="_blank"
           rel="noopener noreferrer"
-          class={`${PILL} bg-black text-white`}
+          class={`${PILL} bg-[#1e1714] text-[#fffef7]`}
         >
           {isSpanish ? "Abrir ↗" : "Open ↗"}
         </a>
-        <button type="button" onClick={handleCopy} class={`${PILL} bg-white`}>
+        <button
+          type="button"
+          onClick={handleCopy}
+          class={`${PILL} bg-[#fffef7] text-[#1e1714]`}
+        >
           {isSpanish ? "Copiar" : "Copy"}
         </button>
         <button
           type="button"
           onClick={handleSticker}
-          class={`${PILL} bg-qr-pop text-white hover:bg-qr-popDeep`}
+          class={`${PILL} bg-qr-pop text-[#fffef7] hover:bg-qr-popDeep`}
         >
           {isSpanish ? "Sticker" : "Sticker"}
         </button>

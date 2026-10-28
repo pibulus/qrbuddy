@@ -16,6 +16,8 @@ interface EditableLinkSettingsProps {
   onCreate: () => void;
   isSequential?: boolean;
   sequentialUrls?: string[];
+  randomSequence?: boolean;
+  dailySpins?: number | null;
   lang?: Locale;
 }
 
@@ -26,6 +28,8 @@ export default function EditableLinkSettings({
   onCreate,
   isSequential,
   sequentialUrls,
+  randomSequence = false,
+  dailySpins = null,
   lang,
 }: EditableLinkSettingsProps) {
   const isSpanish = getClientLocale(lang) === "es";
@@ -86,18 +90,26 @@ export default function EditableLinkSettings({
               <span class="font-black text-xs text-[#1e1714] truncate">
                 {isSequential
                   ? (hasSequentialRoutes
-                    ? (isSpanish
-                      ? `Envuelve ${validSeqCount} links rotativos`
-                      : `Wraps ${validSeqCount} rotating links`)
+                    ? (randomSequence
+                      ? (isSpanish
+                        ? `Ruleta con ${validSeqCount} links${
+                          dailySpins ? ` (${dailySpins}/día)` : ""
+                        }`
+                        : `Roulette with ${validSeqCount} links${
+                          dailySpins ? ` (${dailySpins}/day)` : ""
+                        }`)
+                      : (isSpanish
+                        ? `Envuelve ${validSeqCount} links rotativos`
+                        : `Wraps ${validSeqCount} rotating links`))
                     : (isSpanish
                       ? `Agrega ${
                         validSeqCount === 1
                           ? "un link más"
                           : "al menos dos links"
-                      } abajo`
+                      } arriba`
                       : `Add ${
                         validSeqCount === 1 ? "one more" : "at least two"
-                      } valid links below`))
+                      } valid links above`))
                   : hasLink
                   ? (isSpanish
                     ? `Apunta a ${pendingUrl}`
@@ -141,6 +153,8 @@ export default function EditableLinkSettings({
               ? (isSpanish
                 ? `Límite gratis alcanzado (${quota?.used_count}/${quota?.total_allowed})`
                 : `Free limit reached (${quota?.used_count}/${quota?.total_allowed})`)
+              : isSequential && randomSequence
+              ? (isSpanish ? "🎲 Crear QR de ruleta" : "🎲 Create roulette QR")
               : (isSpanish
                 ? "✦ Crear link editable"
                 : "✦ Create editable link")}

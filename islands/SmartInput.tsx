@@ -1025,6 +1025,10 @@ export default function SmartInput(
           <ShareReady
             share={lastShare}
             frameConfig={frameConfig}
+            onUpdateUrl={(nextUrl) => {
+              url.value = nextUrl;
+              setLastShare((prev) => prev ? { ...prev, url: nextUrl } : null);
+            }}
             lang={locale}
           />
         )}

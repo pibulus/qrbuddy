@@ -1005,24 +1005,12 @@ export default function CreateModal({
           <p class="text-xs font-semibold text-[#6f6158] px-1">
             {isDynamic.value
               ? (isSpanish
-                ? "Un link corto que puedes redirigir después de imprimir, con estadísticas sin rastreo."
-                : "A short link you can repoint after printing, with coarse privacy-safe scan stats.")
+                ? "Un link corto redirigido después de imprimir, con estadísticas sin rastreo."
+                : "A short link repointed after printing, with coarse privacy-safe scan stats.")
               : (isSpanish
                 ? "El contenido vive directo en los cuadritos. Funciona para siempre y sin internet."
                 : "Content lives directly inside the QR squares. Works forever, offline, zero servers.")}
           </p>
-
-          {isDynamic.value && (
-            <EditableLinkSettings
-              editUrl={editUrl}
-              pendingUrl={url.value}
-              isCreating={isCreatingEditable}
-              onCreate={onCreateEditable}
-              isSequential={isSequential}
-              sequentialUrls={sequentialUrls}
-              lang={locale}
-            />
-          )}
         </section>
 
         {isDynamic.value && (
@@ -1092,7 +1080,7 @@ export default function CreateModal({
               icon="✨"
               title={isSpanish ? "Portada de bienvenida" : "Intro page"}
               description={isSpanish
-                ? "Muestra una tarjeta de bienvenida antes de abrir tu link."
+                ? "Muestra una tarjeta de bienvenida antes de abrir el destino."
                 : "Show a short landing page before redirecting."}
               active={splashActive}
               onClick={() => {
@@ -1111,6 +1099,18 @@ export default function CreateModal({
                 lang={locale}
               />
             )}
+
+            <EditableLinkSettings
+              editUrl={editUrl}
+              pendingUrl={url.value}
+              isCreating={isCreatingEditable}
+              onCreate={onCreateEditable}
+              isSequential={isSequential}
+              sequentialUrls={sequentialUrls}
+              randomSequence={randomSequence}
+              dailySpins={dailySpins}
+              lang={locale}
+            />
           </section>
         )}
       </div>
@@ -1388,26 +1388,62 @@ export default function CreateModal({
         </div>
 
         <div class="p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
-          <button
-            type="button"
-            onClick={() => {
-              globalThis.dispatchEvent(new CustomEvent("qrb-modal-bloom"));
-              shell.requestClose();
-            }}
-            class="qr-pitch-cta"
-          >
-            <span>
-              {hasCompletion
-                ? (isSpanish
-                  ? "Listo — Volver al inicio ✨"
-                  : "Done — Back to Home ✨")
-                : activeTab === "design"
-                ? (isSpanish
-                  ? "Listo — Aplicar diseño ✨"
-                  : "Done — Apply Design ✨")
-                : (isSpanish ? "Listo — Ver mi QR ✨" : "Done — View QR ✨")}
-            </span>
-          </button>
+          {(() => {
+            const validSeqCount = sequentialUrls.filter((u) => u.trim() !== "")
+              .length;
+            const needsDynamicMint = activeTab === "options" &&
+              isDynamic.value && !editUrl.value;
+            const canMintDynamic = needsDynamicMint &&
+              (isSequential ? validSeqCount >= 2 : url.value.trim() !== "");
+
+            return (
+              <button
+                type="button"
+                disabled={isCreatingEditable}
+                onClick={() => {
+                  if (canMintDynamic) {
+                    onCreateEditable();
+                    return;
+                  }
+                  globalThis.dispatchEvent(new CustomEvent("qrb-modal-bloom"));
+                  shell.requestClose();
+                }}
+                class="qr-pitch-cta disabled:opacity-50"
+              >
+                <span>
+                  {hasCompletion
+                    ? (isSpanish
+                      ? "Listo · Volver al inicio ✨"
+                      : "Done · Back to Home ✨")
+                    : activeTab === "design"
+                    ? (isSpanish
+                      ? "Listo · Aplicar diseño ✨"
+                      : "Done · Apply Design ✨")
+                    : isCreatingEditable
+                    ? (isSpanish
+                      ? (isSequential && randomSequence
+                        ? "Creando QR ruleta…"
+                        : "Creando link editable…")
+                      : (isSequential && randomSequence
+                        ? "Creating roulette QR…"
+                        : "Creating editable link…"))
+                    : canMintDynamic
+                    ? (isSpanish
+                      ? (isSequential && randomSequence
+                        ? "🎲 Crear QR ruleta ✨"
+                        : isSequential
+                        ? "🔄 Crear QR multi-link ✨"
+                        : "✦ Crear link editable ✨")
+                      : (isSequential && randomSequence
+                        ? "🎲 Create roulette QR ✨"
+                        : isSequential
+                        ? "🔄 Create multi-link QR ✨"
+                        : "✦ Create editable link ✨"))
+                    : (isSpanish ? "Listo · Ver QR ✨" : "Done · View QR ✨")}
+                </span>
+              </button>
+            );
+          })()}
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ interface MultiLinkSettingsProps {
 const DAILY_SPIN_OPTIONS: Array<
   { value: number | null; label: string; labelEs: string }
 > = [
-  { value: null, label: "∞ Unlimited", labelEs: "∞ Sin límite" },
+  { value: null, label: "∞ Open", labelEs: "∞ Libre" },
   { value: 1, label: "1 / day", labelEs: "1 / día" },
   { value: 3, label: "3 / day", labelEs: "3 / día" },
   { value: 5, label: "5 / day", labelEs: "5 / día" },
@@ -130,7 +130,7 @@ export default function MultiLinkSettings({
       <div class="space-y-2">
         {sequentialUrls.map((url, index) => (
           <div key={index} class="flex items-center gap-2">
-            <span class="text-xs font-bold text-gray-400 w-4">
+            <span class="text-xs font-black text-[#6e6058] w-4 text-right shrink-0">
               {index + 1}.
             </span>
             <input
@@ -142,7 +142,7 @@ export default function MultiLinkSettings({
                 newUrls[index] = (e.target as HTMLInputElement).value;
                 setSequentialUrls(newUrls);
               }}
-              class="flex-1 min-h-[44px] px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-indigo-500 focus:outline-none"
+              class="flex-1 min-h-[42px] px-3 py-1.5 text-sm font-bold text-[#1e1714] bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-xl focus:border-[#1e1714] focus:outline-none transition-colors"
             />
             {sequentialUrls.length > 2 && (
               <button
@@ -153,12 +153,12 @@ export default function MultiLinkSettings({
                   );
                   haptics.medium();
                 }}
-                class="min-w-[44px] min-h-[44px] rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50 px-1"
+                class="min-w-[38px] min-h-[38px] rounded-full border-2 border-[#1e1714]/20 bg-[#fbf1e4] hover:border-[#1e1714] hover:bg-amber-200 text-[#1e1714] font-black text-xs transition-all active:scale-95"
                 aria-label={isSpanish
                   ? `Quitar link ${index + 1}`
                   : `Remove link ${index + 1}`}
               >
-                ×
+                ✕
               </button>
             )}
           </div>
@@ -169,9 +169,9 @@ export default function MultiLinkSettings({
             setSequentialUrls([...sequentialUrls, ""]);
             haptics.light();
           }}
-          class="w-full min-h-[44px] py-2 text-xs font-bold text-indigo-600 border-2 border-black/15 rounded-full hover:border-black/60 transition-colors"
+          class="w-full min-h-[40px] py-2 text-xs font-black text-[#1e1714] bg-[#fbf1e4] border-2 border-[#1e1714] rounded-full shadow-[2px_2px_0_#1e1714] hover:bg-amber-200 active:scale-[0.99] transition-all"
         >
-          {isSpanish ? "+ Agregar link" : "+ Add Link"}
+          {isSpanish ? "+ Agregar link" : "+ Add link"}
         </button>
       </div>
     </div>
