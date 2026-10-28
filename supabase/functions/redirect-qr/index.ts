@@ -652,11 +652,25 @@ serve(async (req) => {
                 if (stage) stage.classList.remove("is-landed");
 
                 var totalRows = 16;
+                var targetIdx = Math.max(0, urls.indexOf(targetUrl));
                 reel.innerHTML = "";
+                var prevUrl = "";
                 for (var i = 0; i < totalRows; i++) {
-                  var itemUrl = i === totalRows - 1
-                    ? targetUrl
-                    : urls[(i + Math.floor(Math.random() * urls.length)) % urls.length];
+                  var itemUrl;
+                  if (i === totalRows - 1) {
+                    itemUrl = targetUrl;
+                  } else if (urls.length === 2) {
+                    // Alternate cleanly (A -> B -> A -> B) so the final step lands on targetUrl
+                    var stepsFromEnd = totalRows - 1 - i;
+                    itemUrl = urls[(targetIdx + stepsFromEnd) % 2];
+                  } else {
+                    var candidate = urls[(i + Math.floor(Math.random() * urls.length)) % urls.length];
+                    if (candidate === prevUrl || (i === totalRows - 2 && candidate === targetUrl)) {
+                      candidate = urls[(urls.indexOf(candidate) + 1) % urls.length];
+                    }
+                    itemUrl = candidate;
+                  }
+                  prevUrl = itemUrl;
                   var cell = document.createElement("div");
                   cell.className = "roulette-slot";
                   cell.textContent = labelFor(itemUrl);
@@ -731,9 +745,9 @@ serve(async (req) => {
                   }
                   var currentHref = cta.getAttribute("href") || serverPick;
                   var curIdx = urls.indexOf(currentHref);
-                  var nextIdx = urls.length > 1
-                    ? (curIdx + 1 + Math.floor(Math.random() * (urls.length - 1))) % urls.length
-                    : 0;
+                  var nextIdx = urls.length <= 2
+                    ? Math.floor(Math.random() * urls.length)
+                    : (curIdx + 1 + Math.floor(Math.random() * (urls.length - 1))) % urls.length;
                   var nextPick = urls[nextIdx];
                   runSpin(nextPick, function(finalUrl) {
                     var nextCount = cur.count + 1;
