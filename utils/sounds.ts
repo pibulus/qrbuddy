@@ -23,6 +23,8 @@ export interface WeightlessPartial {
 export interface WeightlessVoice {
   type: OscillatorType;
   lowpass?: number;
+  lowpassDecayTo?: number;
+  lowpassDecaySec?: number;
   q?: number;
   attack?: number;
   bendCents?: number;
@@ -78,6 +80,8 @@ export interface SoundEffects {
   bloop: (options?: WeightlessPlayOptions) => boolean;
   sclop: (options?: WeightlessPlayOptions) => boolean;
   sploosh: (options?: WeightlessPlayOptions) => boolean;
+  gradientShimmer: (index?: number) => boolean;
+  rouletteSpin: () => boolean;
   shuffle: () => void;
   success: (options?: WeightlessPlayOptions) => boolean;
   copy: (options?: WeightlessPlayOptions) => boolean;
@@ -100,73 +104,111 @@ export interface SoundEffects {
 
 /**
  * Default Voice Presets — Elsewhere Liquid & Soft Neo-Toybrut Voices
+ * Attack times softened to 10ms–14ms with a warm 1100Hz -> 650Hz lowpass decay
+ * so UI clicks feel like warm wooden/felt taps instead of digital pops.
  */
 export const WEIGHTLESS_VOICES: Record<string, WeightlessVoice> = {
   bloop: {
     type: "sine",
-    lowpass: 2200,
-    q: 3.2,
-    attack: 0.005,
-    bendCents: 240,
-    partials: [{ ratio: 2.0, gain: 0.16, type: "sine" }],
+    lowpass: 1400,
+    lowpassDecayTo: 720,
+    lowpassDecaySec: 0.06,
+    q: 2.6,
+    attack: 0.012,
+    bendCents: 220,
+    partials: [{ ratio: 2.0, gain: 0.14, type: "sine" }],
   },
   sclop: {
     type: "triangle",
-    lowpass: 1600,
-    q: 2.8,
-    attack: 0.006,
-    bendCents: -190,
+    lowpass: 1150,
+    lowpassDecayTo: 650,
+    lowpassDecaySec: 0.06,
+    q: 2.4,
+    attack: 0.012,
+    bendCents: -180,
     partials: [
       { ratio: 0.667, gain: 0.22, type: "sine" },
-      { ratio: 1.5, gain: 0.12, type: "sine" },
+      { ratio: 1.5, gain: 0.1, type: "sine" },
     ],
   },
   sploosh: {
     type: "sine",
-    lowpass: 2600,
-    q: 3.6,
-    attack: 0.005,
-    bendCents: 160,
+    lowpass: 1800,
+    lowpassDecayTo: 820,
+    lowpassDecaySec: 0.075,
+    q: 2.8,
+    attack: 0.012,
+    bendCents: 150,
     partials: [
-      { ratio: 1.5, gain: 0.18, type: "triangle" },
-      { ratio: 2.02, gain: 0.12, type: "sine" },
+      { ratio: 1.5, gain: 0.16, type: "triangle" },
+      { ratio: 2.02, gain: 0.1, type: "sine" },
     ],
   },
   tap: {
     type: "triangle",
-    lowpass: 2800,
+    lowpass: 1100,
+    lowpassDecayTo: 650,
+    lowpassDecaySec: 0.06,
     q: 1.8,
-    attack: 0.006,
-    bendCents: 80,
-    partials: [{ ratio: 2.01, gain: 0.2, type: "sine" }],
+    attack: 0.011,
+    bendCents: 65,
+    partials: [{ ratio: 2.01, gain: 0.16, type: "sine" }],
   },
   bloom: {
     type: "sine",
-    lowpass: 3800,
+    lowpass: 2400,
+    lowpassDecayTo: 980,
+    lowpassDecaySec: 0.09,
     q: 1.4,
-    attack: 0.01,
+    attack: 0.014,
     partials: [{ ratio: 1.5, gain: 0.12, type: "triangle" }],
   },
   knock: {
     type: "sine",
-    lowpass: 1400,
+    lowpass: 1100,
+    lowpassDecayTo: 650,
+    lowpassDecaySec: 0.06,
     q: 2.0,
-    attack: 0.005,
+    attack: 0.012,
     bendCents: -60,
   },
   sparkle: {
     type: "sine",
-    lowpass: 4300,
+    lowpass: 2800,
+    lowpassDecayTo: 1200,
+    lowpassDecaySec: 0.08,
     q: 1.5,
-    attack: 0.004,
-    partials: [{ ratio: 2, gain: 0.15, type: "sine" }],
+    attack: 0.011,
+    partials: [{ ratio: 2, gain: 0.14, type: "sine" }],
   },
   warn: {
     type: "sine",
-    lowpass: 1200,
+    lowpass: 1100,
+    lowpassDecayTo: 650,
+    lowpassDecaySec: 0.06,
     q: 2.2,
-    attack: 0.007,
+    attack: 0.012,
     bendCents: -45,
+  },
+  shimmer: {
+    type: "triangle",
+    lowpass: 1550,
+    lowpassDecayTo: 780,
+    lowpassDecaySec: 0.14,
+    q: 1.6,
+    attack: 0.014,
+    bendCents: 35,
+    partials: [{ ratio: 2, gain: 0.1, type: "sine" }],
+  },
+  marimba: {
+    type: "triangle",
+    lowpass: 1100,
+    lowpassDecayTo: 650,
+    lowpassDecaySec: 0.06,
+    q: 2.1,
+    attack: 0.010,
+    bendCents: -25,
+    partials: [{ ratio: 3.98, gain: 0.09, type: "sine" }],
   },
 };
 
@@ -626,7 +668,12 @@ export class Weightless implements SoundEffects {
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(voice.lowpass, startAt);
       filter.Q.setValueAtTime(voice.q ?? 0.7, startAt);
-      if (voice.bendCents) {
+      if (voice.lowpassDecayTo) {
+        filter.frequency.exponentialRampToValueAtTime(
+          Math.max(120, voice.lowpassDecayTo),
+          startAt + (voice.lowpassDecaySec ?? 0.06),
+        );
+      } else if (voice.bendCents) {
         const targetCutoff = Math.max(
           160,
           Math.min(12000, voice.lowpass * centsToRatio(voice.bendCents * 0.5)),
@@ -651,7 +698,7 @@ export class Weightless implements SoundEffects {
     noteGain.gain.setValueAtTime(MIN_GAIN, startAt);
     noteGain.gain.exponentialRampToValueAtTime(
       gainValue,
-      startAt + (voice.attack || 0.005),
+      startAt + (voice.attack || 0.011),
     );
     noteGain.gain.exponentialRampToValueAtTime(MIN_GAIN, startAt + duration);
 
@@ -797,6 +844,91 @@ export class Weightless implements SoundEffects {
 
   sploosh(options?: WeightlessPlayOptions): boolean {
     return this.play("sploosh", options);
+  }
+
+  /**
+   * Two-note "Gradient" Shimmer:
+   * Two soft triangle-wave voices spaced a major 7th (1100 cents) or major 9th
+   * (1400 cents) apart where the first note crossfades into the second over 140ms,
+   * acoustically mirroring a two-stop color gradient.
+   */
+  gradientShimmer(index = 0): boolean {
+    if (!this.enabled || prefersReducedMotion()) return false;
+    const now = Date.now();
+    this.lastRichCueTime = now;
+    this.lastPlayed.set("gradientShimmer", now);
+
+    const rootFreq = this.noteAt(index, { total: 6 }) ?? 392.0;
+    const intervalCents = index % 2 === 0 ? 1100 : 1400; // Major 7th or Major 9th
+    const topFreq = rootFreq * centsToRatio(intervalCents);
+
+    const shimmerCue: WeightlessCue = {
+      detuneCents: 6,
+      variants: [
+        [
+          {
+            frequency: rootFreq,
+            offset: 0,
+            duration: 0.14,
+            gain: 0.028,
+            voice: "shimmer",
+          },
+          {
+            frequency: topFreq,
+            offset: 0.055,
+            duration: 0.16,
+            gain: 0.024,
+            voice: "shimmer",
+          },
+        ],
+      ],
+    };
+    void this._executePlay(shimmerCue, { force: true });
+    return true;
+  }
+
+  /**
+   * Roulette Wheel Ratchet:
+   * A warm, damped marimba-style pitch climb across our pentatonic scale that
+   * gradually slows down before landing on a warm root + fifth chord.
+   */
+  rouletteSpin(): boolean {
+    if (!this.enabled || prefersReducedMotion()) return false;
+    const now = Date.now();
+    this.lastRichCueTime = now;
+    this.lastPlayed.set("rouletteSpin", now);
+
+    const steps = [392.0, 440.0, 523.25, 587.33, 659.25, 783.99];
+    const offsets = [0, 0.042, 0.092, 0.152, 0.224, 0.31];
+    const notes: WeightlessNote[] = steps.map((freq, idx) => ({
+      frequency: freq,
+      offset: offsets[idx],
+      duration: 0.065,
+      gain: 0.022 + idx * 0.0015,
+      voice: "marimba",
+    }));
+    // Landing warm root + fifth chord
+    notes.push(
+      {
+        frequency: 523.25,
+        offset: 0.405,
+        duration: 0.16,
+        gain: 0.028,
+        voice: "bloom",
+      },
+      {
+        frequency: 783.99,
+        offset: 0.425,
+        duration: 0.18,
+        gain: 0.024,
+        voice: "shimmer",
+      },
+    );
+
+    void this._executePlay({ detuneCents: 5, variants: [notes] }, {
+      force: true,
+    });
+    return true;
   }
 
   shuffle(): void {

@@ -509,18 +509,19 @@ serve(async (req) => {
                   var freq = SCALE[idx] * (0.98 + Math.random() * 0.04);
                   osc.type = "triangle";
                   osc.frequency.setValueAtTime(freq, now);
-                  osc.frequency.exponentialRampToValueAtTime(freq * 1.12, now + 0.032);
+                  osc.frequency.exponentialRampToValueAtTime(freq * 1.06, now + 0.045);
                   filter.type = "lowpass";
-                  filter.frequency.setValueAtTime(2200, now);
-                  filter.Q.setValueAtTime(2.4, now);
+                  filter.frequency.setValueAtTime(1100, now);
+                  filter.frequency.exponentialRampToValueAtTime(650, now + 0.055);
+                  filter.Q.setValueAtTime(2.1, now);
                   gain.gain.setValueAtTime(0.0001, now);
-                  gain.gain.exponentialRampToValueAtTime(0.035, now + 0.004);
-                  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.038);
+                  gain.gain.exponentialRampToValueAtTime(0.032, now + 0.011);
+                  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.058);
                   osc.connect(filter);
                   filter.connect(gain);
                   gain.connect(ctx.destination);
                   osc.start(now);
-                  osc.stop(now + 0.045);
+                  osc.stop(now + 0.065);
                 } catch (_) {}
               }
 

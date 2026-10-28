@@ -22,7 +22,6 @@ const ACCENT_SWATCHES = [
   { hex: "#10B981", label: "Mint" },
   { hex: "#8B5CF6", label: "Violet" },
   { hex: "#3B82F6", label: "Cobalt" },
-  { hex: "#EC4899", label: "Rose" },
 ];
 
 interface SplashSettingsProps {
@@ -52,8 +51,8 @@ interface Preset {
 
 const PRESETS: Preset[] = [
   {
-    label: "Roulette Promo",
-    labelEs: "Ruleta Promo",
+    label: "Roulette",
+    labelEs: "Ruleta",
     icon: "🎲",
     title: "Mystery Draw 🎲",
     titleEs: "Sorteo Misterioso 🎲",
@@ -68,8 +67,8 @@ const PRESETS: Preset[] = [
     accentColor: "#EC4899",
   },
   {
-    label: "Menu & Food",
-    labelEs: "Menú y Comida",
+    label: "Menu",
+    labelEs: "Menú",
     icon: "🌮",
     title: "Tonight's Specials",
     titleEs: "Especiales de Hoy",
@@ -86,9 +85,9 @@ const PRESETS: Preset[] = [
       "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80",
   },
   {
-    label: "Music & Beats",
-    labelEs: "Música y Beats",
-    icon: "🎧",
+    label: "Music",
+    labelEs: "Música",
+    icon: "🎵",
     title: "New Track Incoming! 🎧",
     titleEs: "¡Nuevo Track Recién Salido! 🎧",
     buttonText: "Listen to the Master 🔊",
@@ -104,8 +103,8 @@ const PRESETS: Preset[] = [
       "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=800&q=80",
   },
   {
-    label: "Art & Studio",
-    labelEs: "Arte y Estudio",
+    label: "Shop",
+    labelEs: "Tienda",
     icon: "🎨",
     title: "Studio Drop ✨",
     titleEs: "Edición de Estudio ✨",
@@ -309,7 +308,7 @@ export default function SplashSettings(
               <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714] mb-1 whitespace-nowrap">
                 {isSpanish ? "Color de acento" : "Accent color"}
               </label>
-              <div class="flex items-center gap-1.5 flex-wrap min-h-[36px]">
+              <div class="flex items-center gap-1.5 flex-nowrap min-h-[36px]">
                 {ACCENT_SWATCHES.map((swatch) => {
                   const selected =
                     activeAccent.toLowerCase() === swatch.hex.toLowerCase();
@@ -322,7 +321,7 @@ export default function SplashSettings(
                         haptics.light();
                       }}
                       aria-label={swatch.label}
-                      class={`w-7 h-7 rounded-full border-2 border-[#1e1714] transition-transform ${
+                      class={`w-7 h-7 shrink-0 rounded-full border-2 border-[#1e1714] transition-transform ${
                         selected
                           ? "scale-110 ring-2 ring-[#1e1714] ring-offset-1"
                           : "hover:scale-105"
@@ -332,7 +331,7 @@ export default function SplashSettings(
                   );
                 })}
                 <label
-                  class="w-7 h-7 rounded-full border-2 border-dashed border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-[11px] font-black cursor-pointer hover:bg-[var(--qr-theme-tint,#fce7f3)]"
+                  class="w-7 h-7 shrink-0 rounded-full border-2 border-dashed border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-[11px] font-black cursor-pointer hover:bg-[var(--qr-theme-tint,#fce7f3)]"
                   title={isSpanish ? "Color personalizado" : "Custom hex color"}
                 >
                   +

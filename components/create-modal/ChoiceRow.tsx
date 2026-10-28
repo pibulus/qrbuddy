@@ -5,6 +5,10 @@ interface ChoiceRowProps {
   title: string;
   description?: string;
   active?: boolean;
+  /** Optional chromatic pastel/gradient background for the icon square. */
+  iconBg?: string;
+  /** Optional subtle shimmy/float on the icon tile for flagship cards. */
+  shimmer?: boolean;
   /** Tall variant: icon on top, room for a full sentence. */
   rich?: boolean;
   /** Show trailing step chevron `→` (default true on standard rows without custom trailing). */
@@ -29,6 +33,8 @@ export default function ChoiceRow(
     title,
     description,
     active = false,
+    iconBg,
+    shimmer = false,
     rich = false,
     chevron = true,
     accordion = false,
@@ -41,6 +47,10 @@ export default function ChoiceRow(
   const shell = active
     ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-chunky"
     : "border-[#1e1714]/15 bg-[#fffef7] hover:border-[#1e1714]/60";
+  const iconStyle = iconBg ? { background: iconBg } : undefined;
+  const iconShimmy = shimmer
+    ? "transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
+    : "transition-transform duration-200 group-hover:scale-105";
 
   if (rich) {
     return (
@@ -50,7 +60,10 @@ export default function ChoiceRow(
         aria-pressed={active}
         class={`group w-full h-full rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.98] flex flex-col gap-2 ${shell}`}
       >
-        <span class="w-11 h-11 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-xl">
+        <span
+          style={iconStyle}
+          class={`w-11 h-11 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-xl ${iconShimmy}`}
+        >
           {icon}
         </span>
         <span class="font-black text-[#1e1714] text-lg leading-tight">
@@ -92,7 +105,10 @@ export default function ChoiceRow(
               : "hover:bg-[var(--qr-theme-tint,#fce7f3)]/50"
           }`}
         >
-          <span class="w-8 h-8 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-base shrink-0">
+          <span
+            style={iconStyle}
+            class={`w-8 h-8 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-base shrink-0 ${iconShimmy}`}
+          >
             {icon}
           </span>
           <span class="min-w-0 flex-1">
@@ -146,9 +162,12 @@ export default function ChoiceRow(
           onClick();
         }
       }}
-      class={`group w-full min-h-[60px] rounded-2xl border-2 px-3 py-2.5 text-left transition-all active:scale-[0.98] flex items-center gap-3 cursor-pointer select-none ${shell}`}
+      class={`group w-full min-h-[64px] rounded-2xl border-2 px-3 py-2.5 text-left transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] flex items-center gap-3 cursor-pointer select-none ${shell}`}
     >
-      <span class="w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-lg shrink-0">
+      <span
+        style={iconStyle}
+        class={`w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-lg shrink-0 shadow-[1.5px_1.5px_0_#1e1714] ${iconShimmy}`}
+      >
         {icon}
       </span>
       <span class="min-w-0 flex-1">

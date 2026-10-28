@@ -10,6 +10,8 @@ import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface EditableLinkSettingsProps {
   editUrl: Signal<string>;
+  /** Optional direct URL signal so users can enter a destination link inline in Behavior. */
+  url?: Signal<string>;
   /** The URL currently in the main input — what the editable QR will wrap. */
   pendingUrl: string;
   isCreating?: boolean;
@@ -23,6 +25,7 @@ interface EditableLinkSettingsProps {
 
 export default function EditableLinkSettings({
   editUrl,
+  url,
   pendingUrl,
   isSequential,
   sequentialUrls,
@@ -111,13 +114,7 @@ export default function EditableLinkSettings({
                   ? (isSpanish
                     ? `Apunta a ${pendingUrl}`
                     : `Wraps ${pendingUrl}`)
-                  : hasContent
-                  ? (isSpanish
-                    ? "Necesita un link web (https://…)"
-                    : "Editable needs a web link (https://…)")
-                  : (isSpanish
-                    ? "Agrega un link de destino en Contenido"
-                    : "Add a destination link in Content first")}
+                  : (isSpanish ? "Link de destino" : "Destination link")}
               </span>
             </div>
 
@@ -134,6 +131,21 @@ export default function EditableLinkSettings({
               </button>
             )}
           </div>
+
+          {!isSequential && !hasLink && url && (
+            <input
+              type="url"
+              value={url.value}
+              onInput={(e) => {
+                url.value = (e.target as HTMLInputElement).value;
+              }}
+              placeholder={isSpanish
+                ? "https://sitio-destino.com"
+                : "https://destination-url.com"}
+              aria-label={isSpanish ? "Link de destino" : "Destination URL"}
+              class="w-full min-h-[42px] px-3 py-1.5 text-sm font-bold text-[#1e1714] bg-[#fffef7] border-2 border-[#1e1714] rounded-xl focus:border-[var(--qr-theme-accent,#ec4899)] focus:outline-none transition-colors"
+            />
+          )}
 
           {isOverQuota && (
             <p class="text-xs font-black text-[#4a3f39]">

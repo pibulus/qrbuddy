@@ -547,9 +547,8 @@ export default function QRCanvas(
     }
   };
 
-  // Derive the ambient-glow gradient from the ACTIVE style's dot colors so the
-  // glow matches the QR (it used to be hardcoded sunset — looked like a bug on
-  // Terminal/Brutalist). Falls back to the sunset tokens if colors are missing.
+  // Derive the ambient radial aura from the ACTIVE style's dot colors so the
+  // QR card projects a soft TalkType-style glow onto the warm cream canvas.
   const getGlowGradient = (): string => {
     const s = getCurrentStyle();
     const dots = s?.dots as
@@ -557,12 +556,14 @@ export default function QRCanvas(
       | undefined;
     const stops = dots?.gradient?.colorStops?.map((cs) => cs.color);
     if (stops && stops.length >= 2) {
-      return `linear-gradient(135deg, ${stops.join(", ")})`;
+      return `radial-gradient(circle at 50% 50%, ${stops[0]} 0%, ${
+        stops[1]
+      } 48%, transparent 76%)`;
     }
     if (dots?.color) {
-      return `linear-gradient(135deg, ${dots.color}, ${dots.color})`;
+      return `radial-gradient(circle at 50% 50%, ${dots.color} 0%, transparent 74%)`;
     }
-    return "linear-gradient(135deg, #FF8C42, #FF69B4, #9370DB)";
+    return "radial-gradient(circle at 50% 50%, #F97316 0%, #FF69B4 48%, transparent 76%)";
   };
 
   useEffect(() => {
@@ -783,54 +784,46 @@ export default function QRCanvas(
         )}
       </div>
       <div
-        class="absolute -z-10 inset-0 opacity-20 blur-xl rounded-chunky"
+        class="absolute -z-10 -inset-6 opacity-25 blur-2xl rounded-full pointer-events-none transition-all duration-500"
         style={{ background: getGlowGradient() }}
       />
 
       {/* Frame caption preview — the downloaded PNG bakes this in */}
       {frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== "" &&
         (
-          <div class="bg-white border-4 border-t-0 border-black rounded-b-chunky -mt-3 pt-3 pb-7 text-center animate-slide-down">
-            <span class="font-chunky font-black text-xl sm:text-2xl tracking-wide text-black uppercase">
+          <div class="bg-[#fffef7] border-4 border-t-0 border-[#1e1714] rounded-b-chunky -mt-3 pt-3 pb-7 text-center animate-slide-down">
+            <span class="font-chunky font-black text-xl sm:text-2xl tracking-wide text-[#1e1714] uppercase">
               {frameConfig.value.caption}
             </span>
           </div>
         )}
 
-      {
-        /* Empty state is shown, not told: full color always (a faded QR read
-          as broken), but the card sits slightly small and grows to full size
-          on the first character. The save pill is ALWAYS present and is a REAL
-          button (regular users don't click posters) — always a SOLID cream
-          surface (a translucent pill over the QR read as mush), popping in
-          with a bounce when real content lands, overlapping the bottom-right
-          corner of the card or frame without adding an extra chin below. */
-      }
+      {/* Signature TalkType Gold Save Pill — immediately visible against the white QR card */}
       <div
         key={url.value ? "chip-live" : "chip-idle"}
         class={`absolute ${
           frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== ""
             ? "-bottom-5"
             : "-bottom-4"
-        } -right-3 min-h-[44px] p-0.5 rounded-full bg-qr-cream border-3 border-black shadow-chunky inline-flex items-center z-10 ${
+        } -right-3 min-h-[44px] p-0.5 rounded-full bg-[#F6B93B] border-3 border-[#1e1714] shadow-chunky inline-flex items-center z-10 ${
           url.value ? "animate-bounce-in" : ""
         }`}
       >
         <button
           type="button"
           onClick={handleDownloadClick}
-          class="min-h-[38px] pl-3.5 pr-2.5 rounded-l-full flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-all hover:bg-amber-100/80 active:scale-95"
+          class="min-h-[38px] pl-3.5 pr-2.5 rounded-l-full flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-all hover:bg-[#fffef7]/40 active:scale-95"
           aria-label={isSpanish
             ? "Descargar código QR como PNG"
             : "Download QR code as PNG"}
         >
           {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
         </button>
-        <span class="w-[2px] h-5 bg-[#1e1714]/20" aria-hidden="true" />
+        <span class="w-[2px] h-5 bg-[#1e1714]/25" aria-hidden="true" />
         <button
           type="button"
           onClick={handleSvgDownloadClick}
-          class="min-h-[38px] pl-2.5 pr-3.5 rounded-r-full flex items-center justify-center text-xs font-black text-[#1e1714] transition-all hover:bg-amber-100/80 active:scale-95"
+          class="min-h-[38px] pl-2.5 pr-3.5 rounded-r-full flex items-center justify-center text-xs font-black text-[#1e1714] transition-all hover:bg-[#fffef7]/40 active:scale-95"
           aria-label={isSpanish
             ? "Descargar código QR como SVG vectorial"
             : "Download QR code as vector SVG"}

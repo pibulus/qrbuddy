@@ -5,7 +5,7 @@ import { sounds } from "../../utils/sounds.ts";
 import { STYLE_DISPLAY } from "../../islands/StyleSelector.tsx";
 
 export const PALETTE_PILL =
-  "min-h-[42px] inline-flex items-center gap-1.5 rounded-2xl border-2 px-2.5 text-xs sm:text-[13px] font-black transition-all hover:-translate-y-0.5 active:translate-y-0";
+  "min-h-[42px] inline-flex items-center gap-2 rounded-2xl border-2 px-3 text-xs sm:text-[13px] font-black transition-all hover:-translate-y-0.5 active:translate-y-0";
 
 export const pillState = (active: boolean) =>
   active
@@ -21,8 +21,8 @@ interface PalettePillsProps {
   lang?: Locale;
 }
 
-/** The 5×2 grid of preset swatch pills — CreateModal's Design tab and the
- * share page's owner strip pick from the same ten. */
+/** The 3×2 grid of 6 high-contrast vibe archetypes — CreateModal's Design tab
+ * and the share page's owner strip pick from the same six. */
 export default function PalettePills(
   { value, onChange, disabled = false, trailing, lang }: PalettePillsProps,
 ) {
@@ -30,7 +30,7 @@ export default function PalettePills(
   const entries = Object.entries(STYLE_DISPLAY);
   return (
     <div class="space-y-2">
-      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {entries.map(([key, info], index) => {
           const isSolidPair = (key === "terminal" || key === "brutalist") &&
             info.colors.length === 2;
@@ -47,7 +47,7 @@ export default function PalettePills(
               disabled={disabled}
               onClick={() => {
                 onChange(key);
-                sounds.playAt?.("bloop", index, { total: entries.length });
+                sounds.gradientShimmer(index);
                 haptics.light();
               }}
               class={`w-full justify-start ${PALETTE_PILL} ${
@@ -58,7 +58,7 @@ export default function PalettePills(
                 class="w-4 h-4 rounded-full border-2 border-[#1e1714] shrink-0"
                 style={{ background: swatchBg }}
               />
-              <span class="truncate">
+              <span class="whitespace-nowrap">
                 {isSpanish ? (info.nameEs ?? info.name) : info.name}
               </span>
             </button>

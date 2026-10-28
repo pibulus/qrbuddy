@@ -719,15 +719,14 @@ export default function SmartInput(
       !isUploading;
     const rightPadding = hasValidBadge ? "pr-20" : "pr-14";
     const baseClass = `
-      w-full pl-5 ${rightPadding} py-4 text-lg
-      bg-white border-3 border-black
-      rounded-xl shadow-chunky
+      w-full pl-5 ${rightPadding} py-4 text-lg font-bold text-[#1e1714]
+      bg-[#fffef7] border-3 border-[#1e1714]
+      rounded-2xl shadow-[0_4px_0_#1e1714]
       focus:outline-none focus:border-pink-500
-      focus:scale-[1.03] focus:shadow-2xl
-      focus:animate-glow-pulse
-      transition-all duration-500 ease-out
-      placeholder:text-gray-400
-      hover:scale-[1.01] hover:shadow-lg
+      focus:scale-[1.02] focus:shadow-[0_6px_0_#1e1714]
+      transition-all duration-300 ease-out
+      placeholder:text-[#7c7267] placeholder:font-semibold
+      hover:translate-y-[-1px] hover:shadow-[0_5px_0_#1e1714]
     `;
 
     if (isDragging) {

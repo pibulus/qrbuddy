@@ -384,7 +384,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const handleRerollMoniker = (e: Event) => {
     e.stopPropagation();
     haptics.light();
-    sounds.shuffle?.();
+    sounds.gradientShimmer(Math.floor(Math.random() * 6));
     const updated = rerollPassportIdentity(passport);
     setPassport(updated);
     addToast(
@@ -398,7 +398,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const handleRollSkin = () => {
     const next = (skinIndex + 1) % HOLO_THEMES.length;
     setSkinIndex(next);
-    sounds.playAt?.("bloop", next, { total: HOLO_THEMES.length });
+    sounds.gradientShimmer(next);
     haptics.light();
   };
 

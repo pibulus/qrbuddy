@@ -25,6 +25,7 @@ import { getOwnerToken } from "../utils/token-vault.ts";
 import { isPlusLibraryEnabled } from "../utils/auth.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
+import { sounds } from "../utils/sounds.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface LibraryDrawerProps {
@@ -173,6 +174,7 @@ export default function LibraryDrawer(
   const handleRerollMoniker = () => {
     if (!passport) return;
     haptics.light();
+    sounds.gradientShimmer(Math.floor(Math.random() * 6));
     const updated = rerollPassportIdentity(passport);
     setPassport(updated);
     addToast(

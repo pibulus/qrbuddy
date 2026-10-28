@@ -1,4 +1,5 @@
 import { haptics } from "../../utils/haptics.ts";
+import { sounds } from "../../utils/sounds.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface MultiLinkSettingsProps {
@@ -60,6 +61,7 @@ export default function MultiLinkSettings({
             onClick={() => {
               setRandomSequence?.(true);
               haptics.light();
+              sounds.rouletteSpin();
             }}
             class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
               randomSequence ? activeSegment : inactiveSegment

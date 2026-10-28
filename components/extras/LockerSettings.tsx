@@ -279,30 +279,20 @@ export default function LockerSettings({
 
             {lockerError && <p class="text-xs text-red-500">{lockerError}</p>}
 
-            <div class="grid grid-cols-1 sm:grid-cols-[auto_auto] gap-2">
-              <button
-                type="button"
-                class="min-h-[48px] px-4 py-2 rounded-xl border-2 border-black bg-black text-white text-sm font-bold shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                onClick={handleConfirm}
-                disabled={isCreating}
-              >
+            <button
+              type="button"
+              class="qr-pitch-cta disabled:opacity-60 disabled:cursor-not-allowed"
+              onClick={handleConfirm}
+              disabled={isCreating}
+            >
+              <span>
                 {isCreating
-                  ? (isSpanish ? "Creando buzón..." : "Creating locker...")
-                  : (isSpanish ? "Crear buzón" : "Create locker")}
-              </button>
-              <button
-                type="button"
-                class="min-h-[48px] px-4 py-2 rounded-xl border-2 border-gray-300 text-sm font-semibold text-gray-700 bg-white hover:border-gray-500 transition"
-                onClick={() => {
-                  onClose();
-                  setLockerError(null);
-                  setLockerRequirePin(false);
-                  resetLockerPin();
-                }}
-              >
-                {isSpanish ? "Cancelar" : "Cancel"}
-              </button>
-            </div>
+                  ? (isSpanish ? "Creando buzón…" : "Creating file locker…")
+                  : (isSpanish
+                    ? "📥 Crear buzón de archivos ✨"
+                    : "📥 Create file locker ✨")}
+              </span>
+            </button>
           </div>
         )}
     </div>

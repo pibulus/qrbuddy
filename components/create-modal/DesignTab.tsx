@@ -64,7 +64,7 @@ interface DesignTabProps {
  * caption frame, and compact 1-row export controls. */
 export default function DesignTab(
   {
-    url,
+    url: _url,
     qrStyle,
     logoUrl,
     frameConfig,
@@ -78,7 +78,6 @@ export default function DesignTab(
   const isSpanish = locale === "es";
   const frameActive = frameConfig?.value?.enabled ?? false;
   const isCustom = qrStyle.value === "custom";
-  const currentPngSize = pngSize?.value ?? 1000;
   const defaultFrameCaption = isSpanish ? "ESCANÉAME" : "SCAN ME";
 
   const activePreset = (QR_STYLES[qrStyle.value as keyof typeof QR_STYLES] ??
@@ -125,18 +124,6 @@ export default function DesignTab(
     sounds.click();
   };
 
-  const exportAs = (format: "png" | "svg") => {
-    globalThis.dispatchEvent(
-      new CustomEvent("qr-export", {
-        detail: {
-          format,
-          size: currentPngSize,
-        },
-      }),
-    );
-    haptics.medium();
-  };
-
   const handleResetDesign = () => {
     qrStyle.value = "sunset";
     if (customStyle) customStyle.value = null;
@@ -157,31 +144,43 @@ export default function DesignTab(
 
   return (
     <div class="space-y-4">
-      {/* Palette — balanced 4×2 grid + Custom gradient pill in header */}
+      {/* Palette — balanced 3×2 grid + Custom gradient + Reset pill in header */}
       <section class="space-y-2">
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
             {isSpanish ? "Paleta" : "Palette"}
           </h3>
-          <button
-            type="button"
-            aria-pressed={isCustom}
-            onClick={() => {
-              onClose();
-              globalThis.dispatchEvent(
-                new CustomEvent("open-gradient-creator"),
-              );
-              haptics.light();
-              sounds.click();
-            }}
-            class={`min-h-[32px] inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-xs font-black transition-all hover:-translate-y-0.5 active:translate-y-0 ${
-              isCustom
-                ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
-                : "border-[#1e1714]/20 bg-[#fffef7] text-[#1e1714] hover:border-[#1e1714]"
-            }`}
-          >
-            {isSpanish ? "🎨 Degradado propio →" : "🎨 Custom gradient →"}
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleResetDesign}
+              class="min-h-[32px] px-2.5 py-1 rounded-full border-2 border-[#1e1714]/15 bg-[#fffef7] text-xs font-black text-neutral-600 hover:border-[#1e1714] hover:text-[#1e1714] active:scale-95 transition-all whitespace-nowrap"
+              aria-label={isSpanish
+                ? "Restablecer diseño original"
+                : "Reset design to default"}
+            >
+              {isSpanish ? "↺ Reset" : "↺ Reset"}
+            </button>
+            <button
+              type="button"
+              aria-pressed={isCustom}
+              onClick={() => {
+                onClose();
+                globalThis.dispatchEvent(
+                  new CustomEvent("open-gradient-creator"),
+                );
+                haptics.light();
+                sounds.click();
+              }}
+              class={`min-h-[32px] inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1 text-xs font-black transition-all hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap ${
+                isCustom
+                  ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
+                  : "border-[#1e1714]/20 bg-[#fffef7] text-[#1e1714] hover:border-[#1e1714]"
+              }`}
+            >
+              {isSpanish ? "🎨 Propio →" : "🎨 Custom →"}
+            </button>
+          </div>
         </div>
         <PalettePills
           value={qrStyle.value}
@@ -299,105 +298,6 @@ export default function DesignTab(
             )}
           </ChoiceRow>
         )}
-      </section>
-
-      {/* Export — 1 header row + 1 action row */}
-      <section class="space-y-2">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-            {isSpanish ? "Descargar" : "Download"}
-          </h3>
-          <div class="flex items-center gap-1.5">
-            <div
-              class="flex items-center gap-0.5 bg-[#fbf1e4] p-0.5 rounded-full border-2 border-[#1e1714]/15"
-              role="group"
-              aria-label={isSpanish
-                ? "Tamaño de exportación PNG"
-                : "PNG export size"}
-            >
-              {([1000, 2000, 3000] as const).map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => {
-                    if (pngSize) pngSize.value = size;
-                    haptics.light();
-                    sounds.click();
-                  }}
-                  aria-pressed={currentPngSize === size}
-                  class={`px-2 py-0.5 rounded-full text-[11px] font-black transition-all ${
-                    currentPngSize === size
-                      ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border border-[#1e1714] text-[#1e1714]"
-                      : "text-neutral-600 hover:text-[#1e1714] border border-transparent"
-                  }`}
-                >
-                  {size}px
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={handleResetDesign}
-              class="min-h-[30px] px-2.5 py-0.5 rounded-full border-2 border-[#1e1714]/15 bg-[#fffef7] text-[11px] font-black text-neutral-600 hover:border-[#1e1714] hover:text-[#1e1714] active:scale-95 transition-all"
-              aria-label={isSpanish
-                ? "Restablecer diseño original"
-                : "Reset design to default"}
-            >
-              {isSpanish ? "↺ Reset" : "↺ Reset"}
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => exportAs("png")}
-            class="min-h-[44px] rounded-2xl border-2 border-[#1e1714] bg-[#1e1714] px-3 text-sm font-black text-[#fffef7] shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 active:translate-y-0 transition-all"
-          >
-            ⬇ PNG
-          </button>
-          <button
-            type="button"
-            onClick={() => exportAs("svg")}
-            class="min-h-[44px] rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] px-3 text-sm font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 active:translate-y-0 transition-all"
-          >
-            ⬇ SVG
-          </button>
-          <button
-            type="button"
-            onClick={async () => {
-              const { qrToTextArt } = await import("../../utils/qr-ascii.ts");
-              const art = qrToTextArt(url.value || "https://qrbuddy.app");
-              if (!art) {
-                addToast(
-                  isSpanish
-                    ? "Demasiados datos para arte de texto 😅"
-                    : "Too much data for text art 😅",
-                );
-                return;
-              }
-              try {
-                await navigator.clipboard.writeText(art);
-                haptics.success();
-                sounds.copy();
-                addToast(
-                  isSpanish
-                    ? "QR en arte de texto copiado 📋"
-                    : "Text-art QR copied 📋",
-                );
-              } catch {
-                addToast(
-                  isSpanish
-                    ? "No se pudo copiar al portapapeles 😞"
-                    : "Couldn't reach the clipboard 😞",
-                );
-              }
-            }}
-            class="min-h-[44px] rounded-2xl border-2 border-[#1e1714]/20 bg-[#fffef7] px-2 text-xs font-black font-mono text-[#1e1714] hover:border-[#1e1714] transition-all truncate"
-          >
-            {isSpanish ? "▀▄█ Texto" : "▀▄█ Text art"}
-          </button>
-        </div>
       </section>
     </div>
   );
