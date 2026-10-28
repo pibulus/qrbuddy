@@ -122,15 +122,40 @@ export function validateRoutingConfig(
   }
 
   if (mode === "sequential") {
-    if (!onlyKeys(config, ["urls", "loop"]) || !Array.isArray(config.urls)) {
+    if (
+      !onlyKeys(config, ["urls", "loop", "random", "dailySpins"]) ||
+      !Array.isArray(config.urls)
+    ) {
       return {
         ok: false,
         error:
-          "Sequential routing requires a URLs array and optional loop flag",
+          "Sequential routing requires a URLs array and optional loop/random/dailySpins flags",
       };
     }
     if (config.loop !== undefined && typeof config.loop !== "boolean") {
       return { ok: false, error: "Sequential routing loop must be a boolean" };
+    }
+    if (config.random !== undefined && typeof config.random !== "boolean") {
+      return {
+        ok: false,
+        error: "Sequential routing random must be a boolean",
+      };
+    }
+    let dailySpins: number | null = null;
+    if (config.dailySpins !== undefined && config.dailySpins !== null) {
+      if (
+        typeof config.dailySpins !== "number" ||
+        !Number.isInteger(config.dailySpins) ||
+        config.dailySpins < 1 ||
+        config.dailySpins > 99
+      ) {
+        return {
+          ok: false,
+          error:
+            "Sequential routing dailySpins must be an integer between 1 and 99",
+        };
+      }
+      dailySpins = config.dailySpins;
     }
 
     const urls: string[] = [];
@@ -154,7 +179,12 @@ export function validateRoutingConfig(
     return {
       ok: true,
       mode,
-      value: { urls, loop: config.loop === true },
+      value: {
+        urls,
+        loop: config.loop === true,
+        ...(config.random === true ? { random: true } : {}),
+        ...(dailySpins !== null ? { dailySpins } : {}),
+      },
     };
   }
 

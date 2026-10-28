@@ -59,6 +59,10 @@ interface CreateModalProps {
   setSequentialUrls: (urls: string[]) => void;
   loopSequence: boolean;
   setLoopSequence: (loop: boolean) => void;
+  randomSequence?: boolean;
+  setRandomSequence?: (random: boolean) => void;
+  dailySpins?: number | null;
+  setDailySpins?: (spins: number | null) => void;
   batchUrls: string;
   setBatchUrls: (urls: string) => void;
   isGeneratingBatch: boolean;
@@ -196,6 +200,10 @@ export default function CreateModal({
   setSequentialUrls,
   loopSequence,
   setLoopSequence,
+  randomSequence,
+  setRandomSequence,
+  dailySpins,
+  setDailySpins,
   batchUrls,
   setBatchUrls,
   isGeneratingBatch,
@@ -1053,11 +1061,13 @@ export default function CreateModal({
             )}
 
             <ChoiceRow
-              icon="🔁"
-              title={isSpanish ? "Rotación de links" : "Link rotation"}
+              icon="🎲"
+              title={isSpanish
+                ? "Rotación o ruleta de links"
+                : "Link rotation & roulette"}
               description={isSpanish
-                ? "Cada escaneo avanza al siguiente link de tu lista."
-                : "Each scan moves to the next URL in your list."}
+                ? "Avanza en orden o gira al azar entre varios links."
+                : "Cycle in order or roll a random link on each scan."}
               active={isSequential}
               onClick={() => {
                 setIsSequential(!isSequential);
@@ -1070,6 +1080,10 @@ export default function CreateModal({
                 setSequentialUrls={setSequentialUrls}
                 loopSequence={loopSequence}
                 setLoopSequence={setLoopSequence}
+                randomSequence={randomSequence}
+                setRandomSequence={setRandomSequence}
+                dailySpins={dailySpins}
+                setDailySpins={setDailySpins}
                 lang={locale}
               />
             )}

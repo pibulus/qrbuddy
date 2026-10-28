@@ -950,3 +950,113 @@ Deno.test("Batch Generator — parseBatchRows and buildBatchManifestCsv support 
     '2,"Patio, Table 2",https://cafe.example/t2,qr_02_patio_table_2.png,qr_02_patio_table_2.svg',
   );
 });
+
+Deno.test("Roulette & Daily Spin Lock — validateRoutingConfig + local daily spin tracker", async () => {
+  const { validateRoutingConfig } = await import(
+    "../supabase/functions/_shared/routing-config.ts"
+  );
+  const {
+    buildRouletteShareUrl,
+    canSpinToday,
+    parseRouletteParams,
+    pickRouletteIndex,
+    recordDailySpin,
+  } = await import("../utils/roulette-lock.ts");
+
+  // 1. validateRoutingConfig accepts random + dailySpins on sequential mode
+  const validRoulette = validateRoutingConfig("sequential", {
+    urls: ["https://qrbuddy.app/a", "https://qrbuddy.app/b"],
+    loop: false,
+    random: true,
+    dailySpins: 1,
+  });
+  assertEquals(validRoulette, {
+    ok: true,
+    mode: "sequential",
+    value: {
+      urls: ["https://qrbuddy.app/a", "https://qrbuddy.app/b"],
+      loop: false,
+      random: true,
+      dailySpins: 1,
+    },
+  });
+
+  // Invalid dailySpins rejected
+  const invalidSpins = validateRoutingConfig("sequential", {
+    urls: ["https://qrbuddy.app/a", "https://qrbuddy.app/b"],
+    random: true,
+    dailySpins: 0,
+  });
+  assertEquals(invalidSpins.ok, false);
+
+  // 2. Local memory daily spin tracking and lock
+  const store = new Map<string, string>();
+  const mockStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      store.set(k, v);
+    },
+  };
+  const day1 = new Date(2026, 9, 28, 12, 0, 0);
+  const day2 = new Date(2026, 9, 29, 9, 0, 0);
+
+  const before = canSpinToday("promo_42", 2, day1, mockStorage);
+  assertEquals(before.allowed, true);
+  assertEquals(before.used, 0);
+  assertEquals(before.remaining, 2);
+
+  const after1 = recordDailySpin(
+    "promo_42",
+    1,
+    "item-b",
+    2,
+    day1,
+    mockStorage,
+  );
+  assertEquals(after1.allowed, true);
+  assertEquals(after1.used, 1);
+  assertEquals(after1.remaining, 1);
+  assertEquals(after1.lockedIndex, 1);
+
+  const after2 = recordDailySpin(
+    "promo_42",
+    0,
+    "item-a",
+    2,
+    day1,
+    mockStorage,
+  );
+  assertEquals(after2.allowed, false);
+  assertEquals(after2.used, 2);
+  assertEquals(after2.remaining, 0);
+  assertEquals(after2.lockedIndex, 0);
+  assertEquals(after2.lockedValue, "item-a");
+
+  // Next calendar day unlocks automatically
+  const nextDayCheck = canSpinToday("promo_42", 2, day2, mockStorage);
+  assertEquals(nextDayCheck.allowed, true);
+  assertEquals(nextDayCheck.used, 0);
+  assertEquals(nextDayCheck.remaining, 2);
+
+  // 3. pickRouletteIndex never repeats avoidIndex when totalItems >= 2
+  for (let i = 0; i < 20; i++) {
+    const picked = pickRouletteIndex(4, 2);
+    assert(picked >= 0 && picked < 4 && picked !== 2);
+  }
+
+  // 4. URL param helpers
+  const built = buildRouletteShareUrl(
+    "https://qrbuddy.app/f/abc123",
+    true,
+    3,
+  );
+  assertEquals(built, "https://qrbuddy.app/f/abc123?roulette=1&spins=3");
+  assertEquals(parseRouletteParams("?roulette=1&spins=3"), {
+    roulette: true,
+    dailySpins: 3,
+  });
+  assertEquals(
+    buildRouletteShareUrl(built, false, null),
+    "https://qrbuddy.app/f/abc123",
+  );
+});

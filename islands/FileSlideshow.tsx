@@ -12,6 +12,13 @@ import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
+import {
+  canSpinToday,
+  type DailySpinStatus,
+  parseRouletteParams,
+  pickRouletteIndex,
+  recordDailySpin,
+} from "../utils/roulette-lock.ts";
 
 const SLIDE_MS = 4500;
 
@@ -154,6 +161,11 @@ export default function FileSlideshow({
   const [trackSelected, setTrackSelected] = useState(false);
   const [mediaErrorKey, setMediaErrorKey] = useState<string | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [rouletteMode, setRouletteMode] = useState(false);
+  const [dailySpinLimit, setDailySpinLimit] = useState<number | null>(null);
+  const [spinStatus, setSpinStatus] = useState<DailySpinStatus | null>(null);
+  const spinTimerRef = useRef<number | null>(null);
 
   const hasMultipleFiles = files && files.length > 1;
   const isAllAudio = Boolean(
@@ -277,20 +289,111 @@ export default function FileSlideshow({
     setCurrentIndex((prev) => (prev - 1 + files!.length) % files!.length);
   };
 
+  const isDailySpinLocked = Boolean(
+    dailySpinLimit !== null && spinStatus && !spinStatus.allowed,
+  );
+
+  const spinRoulette = (avoidIdx?: number | null) => {
+    if (!files || files.length < 2 || isSpinning) return;
+    const status = canSpinToday(`share_${fileId}`, dailySpinLimit);
+    setSpinStatus(status);
+    if (!status.allowed) {
+      if (
+        status.lockedIndex !== null &&
+        status.lockedIndex >= 0 &&
+        status.lockedIndex < files.length
+      ) {
+        setCurrentIndex(status.lockedIndex);
+      }
+      setIsPlaying(false);
+      haptics.light();
+      return;
+    }
+
+    setIsPlaying(false);
+    setIsSpinning(true);
+    setMediaErrorKey(null);
+    const targetIdx = pickRouletteIndex(
+      files.length,
+      avoidIdx !== undefined ? avoidIdx : currentIndex,
+    );
+
+    const totalSteps = 9;
+    let step = 0;
+    const tick = () => {
+      step += 1;
+      if (step < totalSteps) {
+        setCurrentIndex((prev) => (prev + 1) % files.length);
+        haptics.light();
+        spinTimerRef.current = globalThis.setTimeout(
+          tick,
+          45 + step * 16,
+        ) as unknown as number;
+      } else {
+        setCurrentIndex(targetIdx);
+        setTrackSelected(true);
+        setIsSpinning(false);
+        haptics.success();
+        const nextStatus = recordDailySpin(
+          `share_${fileId}`,
+          targetIdx,
+          files[targetIdx]?.id ?? null,
+          dailySpinLimit,
+        );
+        setSpinStatus(nextStatus);
+      }
+    };
+    tick();
+  };
+
+  useEffect(() => {
+    if (!hasMultipleFiles || !files) return;
+    const { roulette, dailySpins } = parseRouletteParams(
+      globalThis.location?.search ?? "",
+    );
+    setRouletteMode(roulette);
+    setDailySpinLimit(dailySpins);
+    const status = canSpinToday(`share_${fileId}`, dailySpins);
+    setSpinStatus(status);
+
+    if (dailySpins !== null && !status.allowed) {
+      setIsPlaying(false);
+      if (
+        status.lockedIndex !== null &&
+        status.lockedIndex >= 0 &&
+        status.lockedIndex < files.length
+      ) {
+        setCurrentIndex(status.lockedIndex);
+      }
+    } else if (roulette) {
+      setIsPlaying(false);
+      spinRoulette(null);
+    }
+
+    return () => {
+      if (spinTimerRef.current !== null) {
+        clearTimeout(spinTimerRef.current);
+      }
+    };
+  }, [fileId, hasMultipleFiles]);
+
   // Manual navigation takes the wheel from autoplay.
   const goNext = () => {
+    if (isDailySpinLocked || isSpinning) return;
     setIsPlaying(false);
     setTrackSelected(true);
     setMediaErrorKey(null);
     nextSlide();
   };
   const goPrev = () => {
+    if (isDailySpinLocked || isSpinning) return;
     setIsPlaying(false);
     setTrackSelected(true);
     setMediaErrorKey(null);
     prevSlide();
   };
   const goTo = (idx: number) => {
+    if (isDailySpinLocked || isSpinning) return;
     // Changing autoPlay on an already mounted audio element does not start it.
     // Start the selected track in this tap's user gesture, including a replay.
     if (idx === currentIndex && audioRef.current) {
@@ -532,6 +635,46 @@ export default function FileSlideshow({
               ? prettyName(displayFileName)
               : `${fileKindLabel} • ${fileSizeLabel}`}
           </p>
+          {hasMultipleFiles && showPreview && (
+            <div class="pt-1 flex flex-wrap items-center justify-center gap-2">
+              {isDailySpinLocked
+                ? (
+                  <span
+                    role="status"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border-2 border-[#1e1714] bg-amber-100 text-[#1e1714] text-xs font-black shadow-chunky"
+                  >
+                    🔒 {isSpanish
+                      ? `Giro diario bloqueado (${spinStatus?.used}/${spinStatus?.limit} hoy)`
+                      : `Daily roll locked (${spinStatus?.used}/${spinStatus?.limit} today)`}
+                  </span>
+                )
+                : (
+                  <button
+                    type="button"
+                    disabled={isSpinning}
+                    onClick={() => spinRoulette(currentIndex)}
+                    class="min-h-[38px] inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border-2 border-[#1e1714] bg-amber-200 hover:bg-amber-300 text-[#1e1714] text-xs font-black shadow-chunky transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
+                  >
+                    <span>🎲</span>
+                    <span>
+                      {isSpinning
+                        ? (isSpanish ? "Girando…" : "Spinning…")
+                        : dailySpinLimit !== null && spinStatus
+                        ? (isSpanish
+                          ? `Girar ruleta (${
+                            spinStatus.remaining ?? dailySpinLimit
+                          } hoy)`
+                          : `Roll roulette (${
+                            spinStatus.remaining ?? dailySpinLimit
+                          } left today)`)
+                        : rouletteMode
+                        ? (isSpanish ? "Girar de nuevo" : "Spin again")
+                        : (isSpanish ? "Girar al azar" : "Roll random")}
+                    </span>
+                  </button>
+                )}
+            </div>
+          )}
         </header>
 
         {/* Main Content Card */}

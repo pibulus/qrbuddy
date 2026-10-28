@@ -6,40 +6,126 @@ interface MultiLinkSettingsProps {
   setSequentialUrls: (urls: string[]) => void;
   loopSequence: boolean;
   setLoopSequence: (loop: boolean) => void;
+  randomSequence?: boolean;
+  setRandomSequence?: (random: boolean) => void;
+  dailySpins?: number | null;
+  setDailySpins?: (spins: number | null) => void;
   lang?: Locale;
 }
+
+const DAILY_SPIN_OPTIONS: Array<
+  { value: number | null; label: string; labelEs: string }
+> = [
+  { value: null, label: "∞ Unlimited", labelEs: "∞ Sin límite" },
+  { value: 1, label: "1 / day", labelEs: "1 / día" },
+  { value: 3, label: "3 / day", labelEs: "3 / día" },
+  { value: 5, label: "5 / day", labelEs: "5 / día" },
+];
 
 export default function MultiLinkSettings({
   sequentialUrls,
   setSequentialUrls,
   loopSequence,
   setLoopSequence,
+  randomSequence = false,
+  setRandomSequence,
+  dailySpins = null,
+  setDailySpins,
   lang,
 }: MultiLinkSettingsProps) {
   const isSpanish = getClientLocale(lang) === "es";
   return (
-    <div class="bg-white border-2 border-black rounded-2xl p-4 mb-4 animate-slide-down">
-      <div class="flex items-center justify-between mb-2">
-        <h4 class="font-bold text-sm text-indigo-900">
-          {isSpanish ? "Rotación de links" : "Rotating links"}
+    <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 mb-4 space-y-3 animate-slide-down">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h4 class="font-black text-xs uppercase tracking-wider text-[#1e1714]">
+          {isSpanish ? "Modo de rotación" : "Rotation mode"}
         </h4>
-        <button
-          type="button"
-          onClick={() => {
-            setLoopSequence(!loopSequence);
-            haptics.light();
-          }}
-          class={`min-h-[44px] text-xs font-bold px-3 py-2 rounded-xl border-2 transition-colors ${
-            loopSequence
-              ? "bg-indigo-500 text-white border-indigo-600"
-              : "bg-white text-gray-500 border-gray-300"
-          }`}
-        >
-          {loopSequence
-            ? (isSpanish ? "En bucle 🔄" : "Looping 🔄")
-            : (isSpanish ? "Bucle: No" : "Loop: Off")}
-        </button>
+        <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5">
+          <button
+            type="button"
+            onClick={() => {
+              setRandomSequence?.(false);
+              setLoopSequence(true);
+              haptics.light();
+            }}
+            class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+              !randomSequence && loopSequence
+                ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                : "text-[#4a3f39] hover:text-[#1e1714]"
+            }`}
+          >
+            {isSpanish ? "Bucle 🔄" : "Loop 🔄"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setRandomSequence?.(true);
+              haptics.light();
+            }}
+            class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+              randomSequence
+                ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                : "text-[#4a3f39] hover:text-[#1e1714]"
+            }`}
+          >
+            {isSpanish ? "Ruleta 🎲" : "Roulette 🎲"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setRandomSequence?.(false);
+              setLoopSequence(false);
+              haptics.light();
+            }}
+            class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+              !randomSequence && !loopSequence
+                ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                : "text-[#4a3f39] hover:text-[#1e1714]"
+            }`}
+          >
+            {isSpanish ? "1 vez" : "Once"}
+          </button>
+        </div>
       </div>
+
+      {randomSequence && setDailySpins && (
+        <div class="bg-[#fbf1e4] border-2 border-[#1e1714]/20 rounded-xl p-2.5 space-y-1.5 animate-slide-down">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] font-black uppercase tracking-wider text-[#1e1714]">
+              {isSpanish
+                ? "Giros por día (memoria local)"
+                : "Daily spins per device"}
+            </span>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5">
+            {DAILY_SPIN_OPTIONS.map((opt) => {
+              const active = dailySpins === opt.value;
+              return (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  onClick={() => {
+                    setDailySpins(opt.value);
+                    haptics.light();
+                  }}
+                  class={`min-h-[34px] px-2 py-1 rounded-lg border-2 text-[11px] font-black transition-all ${
+                    active
+                      ? "bg-amber-200 border-[#1e1714] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
+                      : "bg-[#fffef7] border-[#1e1714]/20 text-[#4a3f39] hover:border-[#1e1714]"
+                  }`}
+                >
+                  {isSpanish ? opt.labelEs : opt.label}
+                </button>
+              );
+            })}
+          </div>
+          <p class="text-[11px] font-semibold text-[#6e6058]">
+            {isSpanish
+              ? "Guarda el resultado del día en el teléfono para evitar giros repetidos en promos."
+              : "Locks each phone's daily roll in local memory for promo draws."}
+          </p>
+        </div>
+      )}
 
       <div class="space-y-2">
         {sequentialUrls.map((url, index) => (

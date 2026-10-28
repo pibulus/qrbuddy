@@ -16,7 +16,12 @@ interface UseDynamicQRProps {
   scanLimit: number | null;
   expiryDate: string;
   routingMode?: "simple" | "sequential";
-  routingConfig?: { urls: string[]; loop: boolean };
+  routingConfig?: {
+    urls: string[];
+    loop: boolean;
+    random?: boolean;
+    dailySpins?: number | null;
+  };
   splashConfig?: {
     enabled: boolean;
     title: string;

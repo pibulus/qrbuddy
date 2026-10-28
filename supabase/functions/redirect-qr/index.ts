@@ -272,6 +272,9 @@ serve(async (req) => {
     // 2. SMART ROUTING ENGINE
     // --------------------------------------------------------------------------
     let destinationUrl = qr.destination_url;
+    let isRouletteMode = false;
+    let rouletteUrls: string[] = [];
+    let rouletteDailySpins: number | null = null;
 
     if (qr.routing_mode === "sequential" && qr.routing_config) {
       try {
@@ -279,12 +282,27 @@ serve(async (req) => {
           ? JSON.parse(qr.routing_config)
           : qr.routing_config;
 
-        const urls = config.urls || [];
+        const urls = (config.urls || []).filter(
+          (u: unknown): u is string =>
+            typeof u === "string" && isValidRedirectUrl(u),
+        );
         const loop = config.loop || false;
+        const random = config.random === true;
+        const dailySpins = typeof config.dailySpins === "number" &&
+            Number.isInteger(config.dailySpins) &&
+            config.dailySpins >= 1 &&
+            config.dailySpins <= 99
+          ? config.dailySpins
+          : null;
 
         if (urls.length > 0) {
           let index = 0;
-          if (loop) {
+          if (random) {
+            index = Math.floor(Math.random() * urls.length);
+            isRouletteMode = true;
+            rouletteUrls = urls;
+            rouletteDailySpins = dailySpins;
+          } else if (loop) {
             index = scanIndex % urls.length;
           } else {
             index = Math.min(scanIndex, urls.length - 1);
@@ -365,15 +383,19 @@ serve(async (req) => {
     }
 
     // --------------------------------------------------------------------------
-    // 3. SPLASH PAGE MIDDLEWARE
+    // 3. SPLASH PAGE & ROULETTE DAILY LOCK MIDDLEWARE
     // --------------------------------------------------------------------------
-    if (qr.splash_config && qr.splash_config.enabled) {
+    if (
+      (qr.splash_config && qr.splash_config.enabled) ||
+      (isRouletteMode && rouletteDailySpins !== null)
+    ) {
+      const splash = qr.splash_config || {};
       const {
-        title = "Welcome",
-        buttonText = "Continue",
+        title = isRouletteMode ? "Roulette Draw" : "Welcome",
+        buttonText = isRouletteMode ? "Open result" : "Continue",
         imageUrl,
         description,
-      } = qr.splash_config;
+      } = splash;
 
       let safeImageUrl: string | null = null;
       if (imageUrl) {
@@ -401,6 +423,157 @@ serve(async (req) => {
               </a>
             </div>`;
 
+      const rouletteBlockHtml = isRouletteMode
+        ? `<div id="roulette-stage" class="roulette-box">
+             <div id="roulette-badge" class="roulette-badge">🎲 Roulette Draw</div>
+             <div id="roulette-slot" class="roulette-slot">${
+          escapeHtml(destinationUrl)
+        }</div>
+           </div>
+           <button id="roulette-respin" type="button" class="respin-btn" hidden>🎲 Spin again</button>`
+        : "";
+
+      const rouletteScriptHtml = isRouletteMode
+        ? `<script>
+            (function() {
+              var urls = ${
+          JSON.stringify(rouletteUrls).replace(/</g, "\\u003c")
+        };
+              var serverPick = ${
+          JSON.stringify(destinationUrl).replace(/</g, "\\u003c")
+        };
+              var dailyLimit = ${
+          rouletteDailySpins === null ? "null" : String(rouletteDailySpins)
+        };
+              var code = ${JSON.stringify(shortCode).replace(/</g, "\\u003c")};
+              var cta = document.getElementById("roulette-cta");
+              var slot = document.getElementById("roulette-slot");
+              var badge = document.getElementById("roulette-badge");
+              var respinBtn = document.getElementById("roulette-respin");
+              if (!cta || !slot || !badge || !urls.length) return;
+
+              function labelFor(raw) {
+                try {
+                  var u = new URL(raw);
+                  var p = u.pathname && u.pathname !== "/" ? u.pathname : "";
+                  return (u.hostname.replace(/^www\\./, "") + p).slice(0, 42);
+                } catch (_) {
+                  return String(raw).slice(0, 42);
+                }
+              }
+
+              var now = new Date();
+              var dayKey = now.getFullYear() + "-" +
+                String(now.getMonth() + 1).padStart(2, "0") + "-" +
+                String(now.getDate()).padStart(2, "0");
+              var storageKey = "qrb_spin_qr_" + code.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + dayKey;
+
+              function readState() {
+                try {
+                  var raw = localStorage.getItem(storageKey);
+                  if (!raw) return { count: 0, lastValue: null };
+                  var p = JSON.parse(raw);
+                  return {
+                    count: Number.isInteger(p.count) && p.count >= 0 ? p.count : 0,
+                    lastValue: typeof p.lastValue === "string" && urls.indexOf(p.lastValue) !== -1 ? p.lastValue : null
+                  };
+                } catch (_) {
+                  return { count: 0, lastValue: null };
+                }
+              }
+
+              function writeState(count, lastValue) {
+                try {
+                  localStorage.setItem(storageKey, JSON.stringify({
+                    count: count,
+                    lastIndex: urls.indexOf(lastValue),
+                    lastValue: lastValue
+                  }));
+                } catch (_) {}
+              }
+
+              function updateUi(chosen, count, locked) {
+                cta.setAttribute("href", chosen);
+                slot.textContent = labelFor(chosen);
+                if (dailyLimit !== null) {
+                  if (locked || count >= dailyLimit) {
+                    badge.textContent = "🔒 Daily roll locked (" + Math.min(count, dailyLimit) + "/" + dailyLimit + " today) · Resets tomorrow";
+                    if (respinBtn) respinBtn.hidden = true;
+                  } else {
+                    var rem = Math.max(0, dailyLimit - count);
+                    badge.textContent = "🎲 Roll " + count + " of " + dailyLimit + " today";
+                    if (respinBtn) {
+                      respinBtn.hidden = rem <= 0;
+                      respinBtn.textContent = "🎲 Spin again (" + rem + " left today)";
+                    }
+                  }
+                } else {
+                  badge.textContent = "🎲 Rolled option " + (urls.indexOf(chosen) + 1) + " of " + urls.length;
+                  if (respinBtn) {
+                    respinBtn.hidden = urls.length < 2;
+                    respinBtn.textContent = "🎲 Spin again";
+                  }
+                }
+              }
+
+              function runSpin(targetUrl, onDone) {
+                if (urls.length < 2) {
+                  onDone(targetUrl);
+                  return;
+                }
+                var steps = 10;
+                var step = 0;
+                badge.textContent = "🎲 Spinning...";
+                var tick = function() {
+                  step++;
+                  if (step < steps) {
+                    slot.textContent = labelFor(urls[(step + Math.floor(Math.random() * urls.length)) % urls.length]);
+                    if (navigator.vibrate) navigator.vibrate(8);
+                    setTimeout(tick, 45 + step * 14);
+                  } else {
+                    if (navigator.vibrate) navigator.vibrate([15, 30, 20]);
+                    onDone(targetUrl);
+                  }
+                };
+                tick();
+              }
+
+              var st = readState();
+              if (dailyLimit !== null && st.count >= dailyLimit && st.lastValue) {
+                updateUi(st.lastValue, st.count, true);
+              } else {
+                var initialPick = urls.indexOf(serverPick) !== -1 ? serverPick : urls[0];
+                runSpin(initialPick, function(finalUrl) {
+                  var nextCount = st.count + 1;
+                  writeState(nextCount, finalUrl);
+                  updateUi(finalUrl, nextCount, false);
+                });
+              }
+
+              if (respinBtn) {
+                respinBtn.addEventListener("click", function() {
+                  var cur = readState();
+                  if (dailyLimit !== null && cur.count >= dailyLimit) {
+                    updateUi(cur.lastValue || serverPick, cur.count, true);
+                    return;
+                  }
+                  var currentHref = cta.getAttribute("href") || serverPick;
+                  var curIdx = urls.indexOf(currentHref);
+                  var nextIdx = urls.length > 1
+                    ? (curIdx + 1 + Math.floor(Math.random() * (urls.length - 1))) % urls.length
+                    : 0;
+                  var nextPick = urls[nextIdx];
+                  runSpin(nextPick, function(finalUrl) {
+                    var nextCount = cur.count + 1;
+                    writeState(nextCount, finalUrl);
+                    updateUi(finalUrl, nextCount, false);
+                  });
+                });
+              }
+            })();
+          </script>`
+        : "";
+
       const html = `
         <!DOCTYPE html>
         <html lang="en">
@@ -422,26 +595,26 @@ serve(async (req) => {
               min-height: 100dvh;
               margin: 0;
               padding: 24px;
-              color: #111827;
+              color: #1e1714;
             }
             .card {
-              background: white;
+              background: #fffef7;
               border-radius: 28px;
-              box-shadow: 6px 6px 0px 0px #000;
+              box-shadow: 6px 6px 0px 0px #1e1714;
               padding: 36px 28px;
               width: 100%;
               max-width: 420px;
               text-align: center;
-              border: 4px solid black;
+              border: 4px solid #1e1714;
               position: relative;
             }
             .image-container {
               margin-bottom: 24px;
               border-radius: 18px;
               overflow: hidden;
-              border: 3px solid black;
+              border: 3px solid #1e1714;
               background: #fdf2f8;
-              box-shadow: 3px 3px 0px 0px #000;
+              box-shadow: 3px 3px 0px 0px #1e1714;
             }
             img {
               width: 100%;
@@ -454,31 +627,54 @@ serve(async (req) => {
               font-size: 26px;
               font-weight: 900;
               margin: 0 0 12px 0;
-              color: #000;
+              color: #1e1714;
               letter-spacing: -0.02em;
               word-break: break-word;
               overflow-wrap: break-word;
             }
             p {
               color: #4b5563;
-              margin: 0 0 28px 0;
+              margin: 0 0 24px 0;
               line-height: 1.6;
               font-size: 15px;
               word-break: break-word;
               overflow-wrap: break-word;
             }
+            .roulette-box {
+              background: #fbf1e4;
+              border: 3px solid #1e1714;
+              border-radius: 18px;
+              padding: 14px 16px;
+              margin: 0 0 20px 0;
+              box-shadow: 3px 3px 0px 0px #1e1714;
+            }
+            .roulette-badge {
+              font-size: 11px;
+              font-weight: 900;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+              color: #6e6058;
+              margin-bottom: 6px;
+            }
+            .roulette-slot {
+              font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+              font-size: 15px;
+              font-weight: 800;
+              color: #1e1714;
+              word-break: break-all;
+            }
             .btn {
               display: flex;
               align-items: center;
               justify-content: center;
-              background: #000;
-              color: white;
+              background: #1e1714;
+              color: #fffef7;
               font-weight: 800;
               font-size: 18px;
               padding: 16px 24px;
               border-radius: 16px;
               text-decoration: none;
-              border: 3px solid #000;
+              border: 3px solid #1e1714;
               box-shadow: 4px 4px 0px 0px #FF69B4;
               transition: transform 0.1s ease, box-shadow 0.1s ease;
               width: 100%;
@@ -492,6 +688,20 @@ serve(async (req) => {
               transform: translate(2px, 2px);
               box-shadow: 2px 2px 0px 0px #FF69B4;
             }
+            .respin-btn {
+              margin-top: 12px;
+              width: 100%;
+              min-height: 42px;
+              padding: 10px 16px;
+              border-radius: 999px;
+              border: 2px solid #1e1714;
+              background: #fef3c7;
+              color: #1e1714;
+              font-weight: 800;
+              font-size: 13px;
+              cursor: pointer;
+              box-shadow: 2px 2px 0px 0px #1e1714;
+            }
             .footer-tag {
               margin-top: 24px;
               display: flex;
@@ -503,23 +713,23 @@ serve(async (req) => {
               align-items: center;
               gap: 6px;
               background: #fdf2f8;
-              border: 2px solid #000;
+              border: 2px solid #1e1714;
               padding: 6px 14px;
               border-radius: 999px;
               font-size: 11px;
               font-weight: 800;
-              color: #000;
+              color: #1e1714;
               text-decoration: none;
-              box-shadow: 2px 2px 0px 0px #000;
+              box-shadow: 2px 2px 0px 0px #1e1714;
               transition: transform 0.1s ease, box-shadow 0.1s ease;
             }
             .footer-pill:hover {
               transform: translate(-1px, -1px);
-              box-shadow: 3px 3px 0px 0px #000;
+              box-shadow: 3px 3px 0px 0px #1e1714;
             }
             .footer-pill:active {
               transform: translate(1px, 1px);
-              box-shadow: 1px 1px 0px 0px #000;
+              box-shadow: 1px 1px 0px 0px #1e1714;
             }
             @media (max-width: 480px) {
               body {
@@ -549,11 +759,13 @@ serve(async (req) => {
             ${imgHtml}
             <h1>${safeTitle}</h1>
             ${safeDescription ? `<p>${safeDescription}</p>` : ""}
-            <a href="${
+            ${rouletteBlockHtml}
+            <a id="roulette-cta" href="${
         escapeHtml(destinationUrl)
       }" class="btn">${safeButtonText} →</a>
             ${footerHtml}
           </div>
+          ${rouletteScriptHtml}
         </body>
         </html>
       `;

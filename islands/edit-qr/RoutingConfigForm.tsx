@@ -6,6 +6,10 @@ interface RoutingConfigFormProps {
   setSequentialUrls: (urls: string[]) => void;
   loopSequence: boolean;
   setLoopSequence: (loop: boolean) => void;
+  randomSequence?: boolean;
+  setRandomSequence?: (random: boolean) => void;
+  dailySpins?: number | null;
+  setDailySpins?: (spins: number | null) => void;
   iosUrl: string;
   setIosUrl: (url: string) => void;
   androidUrl: string;
@@ -25,6 +29,13 @@ interface RoutingConfigFormProps {
 const INPUT_RECIPE =
   "w-full min-h-[44px] px-3.5 py-2.5 text-sm border-2 border-black/15 bg-white rounded-2xl text-black focus:border-qr-pop focus:outline-none transition-colors";
 
+const DAILY_SPIN_OPTIONS: Array<{ value: number | null; label: string }> = [
+  { value: null, label: "∞ Unlimited" },
+  { value: 1, label: "1 / day" },
+  { value: 3, label: "3 / day" },
+  { value: 5, label: "5 / day" },
+];
+
 export default function RoutingConfigForm({
   routingMode,
   destinationUrl,
@@ -33,6 +44,10 @@ export default function RoutingConfigForm({
   setSequentialUrls,
   loopSequence,
   setLoopSequence,
+  randomSequence = false,
+  setRandomSequence,
+  dailySpins = null,
+  setDailySpins,
   iosUrl,
   setIosUrl,
   androidUrl,
@@ -75,22 +90,77 @@ export default function RoutingConfigForm({
         <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
           <div class="flex flex-wrap items-center justify-between gap-2 pb-1">
             <span class="text-xs font-black text-black uppercase tracking-wider">
-              URL Sequence
+              URL Sequence / Roulette
             </span>
-            <label
-              htmlFor="routing-loop-sequence"
-              class="min-h-[44px] inline-flex items-center gap-2 text-xs font-black text-black cursor-pointer"
-            >
-              <input
-                id="routing-loop-sequence"
-                type="checkbox"
-                checked={loopSequence}
-                onChange={(e) => setLoopSequence(e.currentTarget.checked)}
-                class="w-4 h-4 rounded border-2 border-black text-qr-pop focus:ring-qr-pop"
-              />
-              <span>Loop Sequence 🔄</span>
-            </label>
+            <div class="inline-flex rounded-xl border-2 border-black bg-qr-cream p-0.5 gap-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setRandomSequence?.(false);
+                  setLoopSequence(true);
+                }}
+                class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                  !randomSequence && loopSequence
+                    ? "bg-amber-200 text-black border border-black"
+                    : "text-neutral-600 hover:text-black"
+                }`}
+              >
+                Loop 🔄
+              </button>
+              <button
+                type="button"
+                onClick={() => setRandomSequence?.(true)}
+                class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                  randomSequence
+                    ? "bg-amber-200 text-black border border-black"
+                    : "text-neutral-600 hover:text-black"
+                }`}
+              >
+                Roulette 🎲
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setRandomSequence?.(false);
+                  setLoopSequence(false);
+                }}
+                class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                  !randomSequence && !loopSequence
+                    ? "bg-amber-200 text-black border border-black"
+                    : "text-neutral-600 hover:text-black"
+                }`}
+              >
+                Once
+              </button>
+            </div>
           </div>
+
+          {randomSequence && setDailySpins && (
+            <div class="bg-qr-cream border-2 border-black/20 rounded-xl p-2.5 space-y-1.5">
+              <span class="block text-[11px] font-black uppercase tracking-wider text-black">
+                Daily spins per device (local memory lock)
+              </span>
+              <div class="grid grid-cols-4 gap-1.5">
+                {DAILY_SPIN_OPTIONS.map((opt) => {
+                  const active = dailySpins === opt.value;
+                  return (
+                    <button
+                      key={String(opt.value)}
+                      type="button"
+                      onClick={() => setDailySpins(opt.value)}
+                      class={`min-h-[34px] px-2 py-1 rounded-lg border-2 text-[11px] font-black transition-all ${
+                        active
+                          ? "bg-amber-200 border-black text-black shadow-chunky"
+                          : "bg-white border-black/15 text-neutral-700 hover:border-black"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {sequentialUrls.map((seqUrl, index) => (
             <div key={index} class="flex gap-2 items-center">

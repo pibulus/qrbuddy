@@ -36,6 +36,10 @@ import { openPricingModal, pricingModalOpen } from "./PricingModal.tsx";
 import { addToast } from "./ToastManager.tsx";
 import PalettePills from "./create-modal/PalettePills.tsx";
 import QRCanvas from "./QRCanvas.tsx";
+import {
+  buildRouletteShareUrl,
+  parseRouletteParams,
+} from "../utils/roulette-lock.ts";
 
 export interface ShareItem {
   id: string;
@@ -155,6 +159,31 @@ export default function OwnerStrip(
 
   // Sticker: a QR of this share, framed SCAN ME, exported on demand.
   const qrUrl = useSignal(shareUrl);
+  const initialRoulette = parseRouletteParams(
+    globalThis.location?.search ?? "",
+  );
+  const [rouletteEnabled, setRouletteEnabled] = useState(
+    initialRoulette.roulette,
+  );
+  const [rouletteSpins, setRouletteSpins] = useState<number | null>(
+    initialRoulette.dailySpins,
+  );
+
+  const applyRouletteSetting = (enabled: boolean, spins: number | null) => {
+    setRouletteEnabled(enabled);
+    setRouletteSpins(spins);
+    const base = shareUrl || globalThis.location?.href || "";
+    const nextUrl = buildRouletteShareUrl(base, enabled, spins);
+    qrUrl.value = nextUrl;
+    if (typeof globalThis.history?.replaceState === "function") {
+      try {
+        globalThis.history.replaceState(null, "", nextUrl);
+      } catch {
+        // Ignore history state errors
+      }
+    }
+    haptics.light();
+  };
   const qrStyle = useSignal<keyof typeof QR_STYLES | "custom">(
     theme as keyof typeof QR_STYLES,
   );
@@ -928,6 +957,70 @@ export default function OwnerStrip(
         </div>
       )}
 
+      {files.length > 1 && (
+        <div class="bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl px-3 py-2.5 space-y-1.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-black text-[#1e1714]">
+              🎲 {isSpanish
+                ? "Modo Ruleta (QR / Link)"
+                : "Roulette mode (QR / Link)"}
+            </span>
+            <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-qr-cream p-0.5 gap-0.5">
+              {[
+                {
+                  enabled: false,
+                  spins: null,
+                  label: isSpanish ? "No" : "Off",
+                },
+                { enabled: true, spins: null, label: "∞" },
+                {
+                  enabled: true,
+                  spins: 1,
+                  label: isSpanish ? "1/día" : "1/day",
+                },
+                {
+                  enabled: true,
+                  spins: 3,
+                  label: isSpanish ? "3/día" : "3/day",
+                },
+              ].map((opt) => {
+                const active = rouletteEnabled === opt.enabled &&
+                  (opt.enabled ? rouletteSpins === opt.spins : true);
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => applyRouletteSetting(opt.enabled, opt.spins)}
+                    class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
+                      active
+                        ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                        : "text-[#4a3f39] hover:text-[#1e1714]"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {rouletteEnabled && (
+            <p class="text-[11px] font-semibold text-[#6e6058]">
+              {rouletteSpins !== null
+                ? (isSpanish
+                  ? `El Sticker QR abre al azar y bloquea a ${rouletteSpins} giro${
+                    rouletteSpins === 1 ? "" : "s"
+                  }/día en memoria local.`
+                  : `Sticker QR spins a random item and locks to ${rouletteSpins} roll${
+                    rouletteSpins === 1 ? "" : "s"
+                  }/day in local memory.`)
+                : (isSpanish
+                  ? "El Sticker QR abre un elemento al azar en cada escaneo."
+                  : "Sticker QR spins a random item on every scan.")}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Items with reorder ↑/↓ and remove ✕ — tucked in a compact drawer so OwnerStrip stays short */}
       {canEditPayload && files.length > 1 && (
         <details class="group bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl px-3 py-2">
@@ -967,7 +1060,8 @@ export default function OwnerStrip(
                     </button>
                     <button
                       type="button"
-                      onClick={() => void moveItem(i, 1)}
+                      onClick={() =>
+                        void moveItem(i, 1)}
                       disabled={i === files.length - 1 || mutationBusy}
                       aria-label={`Move ${prettyName(f.name)} down`}
                       class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"

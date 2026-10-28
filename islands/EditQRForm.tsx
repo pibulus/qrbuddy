@@ -96,6 +96,8 @@ export default function EditQRForm() {
   // Sequential state
   const [sequentialUrls, setSequentialUrls] = useState<string[]>(["", ""]);
   const [loopSequence, setLoopSequence] = useState(false);
+  const [randomSequence, setRandomSequence] = useState(false);
+  const [dailySpins, setDailySpins] = useState<number | null>(null);
 
   // Device Routing state
   const [iosUrl, setIosUrl] = useState("");
@@ -145,6 +147,8 @@ export default function EditQRForm() {
       // stored schema so old malformed records cannot break the editor.
       setSequentialUrls(["", ""]);
       setLoopSequence(false);
+      setRandomSequence(false);
+      setDailySpins(null);
       setIosUrl("");
       setAndroidUrl("");
       setFallbackUrl("");
@@ -160,6 +164,15 @@ export default function EditQRForm() {
           : [];
         setSequentialUrls(urls.length ? urls : ["", ""]);
         setLoopSequence(config.loop === true);
+        setRandomSequence(config.random === true);
+        setDailySpins(
+          typeof config.dailySpins === "number" &&
+            Number.isInteger(config.dailySpins) &&
+            config.dailySpins >= 1 &&
+            config.dailySpins <= 99
+            ? config.dailySpins
+            : null,
+        );
       } else if (config && mode === "device") {
         setIosUrl(stringField(config, "ios"));
         setAndroidUrl(stringField(config, "android"));
@@ -198,6 +211,8 @@ export default function EditQRForm() {
       routingConfig = {
         urls: validUrls,
         loop: loopSequence,
+        ...(randomSequence ? { random: true } : {}),
+        ...(randomSequence && dailySpins ? { dailySpins } : {}),
       };
     } else if (routingMode === "device") {
       const normIos = iosUrl.trim() ? normalizeUrl(iosUrl) : "";
@@ -322,6 +337,10 @@ export default function EditQRForm() {
           setSequentialUrls={setSequentialUrls}
           loopSequence={loopSequence}
           setLoopSequence={setLoopSequence}
+          randomSequence={randomSequence}
+          setRandomSequence={setRandomSequence}
+          dailySpins={dailySpins}
+          setDailySpins={setDailySpins}
           iosUrl={iosUrl}
           setIosUrl={setIosUrl}
           androidUrl={androidUrl}

@@ -202,6 +202,8 @@ export default function SmartInput(
   const [isSequential, setIsSequential] = useState(false);
   const [sequentialUrls, setSequentialUrls] = useState<string[]>(["", ""]);
   const [loopSequence, setLoopSequence] = useState(false);
+  const [randomSequence, setRandomSequence] = useState(false);
+  const [dailySpins, setDailySpins] = useState<number | null>(null);
 
   // Bulk create options
   const [isBatchMode, setIsBatchMode] = useState(false);
@@ -229,6 +231,8 @@ export default function SmartInput(
       ? {
         urls: sequentialUrls.filter((u) => u.trim() !== ""),
         loop: loopSequence,
+        ...(randomSequence ? { random: true } : {}),
+        ...(randomSequence && dailySpins ? { dailySpins } : {}),
       }
       : undefined,
     splashConfig: splashConfig.value,
@@ -849,6 +853,10 @@ export default function SmartInput(
         setSequentialUrls={setSequentialUrls}
         loopSequence={loopSequence}
         setLoopSequence={setLoopSequence}
+        randomSequence={randomSequence}
+        setRandomSequence={setRandomSequence}
+        dailySpins={dailySpins}
+        setDailySpins={setDailySpins}
         batchUrls={batchUrls}
         setBatchUrls={setBatchUrls}
         isGeneratingBatch={isGeneratingBatch}
