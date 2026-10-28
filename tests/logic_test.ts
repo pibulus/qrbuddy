@@ -34,7 +34,7 @@ import {
   buildSevenDayActivity,
   findPeakHourWindow,
   formatRelativeVisit,
-} from "../islands/edit-qr/AnalyticsDashboard.tsx";
+} from "../islands/edit-qr/FieldReportCard.tsx";
 
 import {
   isQrUnbranded,

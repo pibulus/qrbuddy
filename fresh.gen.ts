@@ -55,7 +55,6 @@ import * as $why from "./routes/why.tsx";
 import * as $wifi from "./routes/wifi.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
-import * as $Analytics from "./islands/Analytics.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
 import * as $CreateModal from "./islands/CreateModal.tsx";
 import * as $DesignPreferencesSync from "./islands/DesignPreferencesSync.tsx";
@@ -87,7 +86,7 @@ import * as $create_modal_ChoiceRow from "./islands/create-modal/ChoiceRow.tsx";
 import * as $create_modal_CompletionState from "./islands/create-modal/CompletionState.tsx";
 import * as $create_modal_DesignTab from "./islands/create-modal/DesignTab.tsx";
 import * as $create_modal_PalettePills from "./islands/create-modal/PalettePills.tsx";
-import * as $edit_qr_AnalyticsDashboard from "./islands/edit-qr/AnalyticsDashboard.tsx";
+import * as $edit_qr_FieldReportCard from "./islands/edit-qr/FieldReportCard.tsx";
 import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
 import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
 import * as $edit_qr_RoutingModeSelector from "./islands/edit-qr/RoutingModeSelector.tsx";
@@ -170,7 +169,6 @@ const manifest = {
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
     "./islands/ActionButtons.tsx": $ActionButtons,
-    "./islands/Analytics.tsx": $Analytics,
     "./islands/BucketQR.tsx": $BucketQR,
     "./islands/CreateModal.tsx": $CreateModal,
     "./islands/DesignPreferencesSync.tsx": $DesignPreferencesSync,
@@ -203,7 +201,7 @@ const manifest = {
     "./islands/create-modal/CompletionState.tsx": $create_modal_CompletionState,
     "./islands/create-modal/DesignTab.tsx": $create_modal_DesignTab,
     "./islands/create-modal/PalettePills.tsx": $create_modal_PalettePills,
-    "./islands/edit-qr/AnalyticsDashboard.tsx": $edit_qr_AnalyticsDashboard,
+    "./islands/edit-qr/FieldReportCard.tsx": $edit_qr_FieldReportCard,
     "./islands/edit-qr/QRStatusCard.tsx": $edit_qr_QRStatusCard,
     "./islands/edit-qr/RoutingConfigForm.tsx": $edit_qr_RoutingConfigForm,
     "./islands/edit-qr/RoutingModeSelector.tsx": $edit_qr_RoutingModeSelector,

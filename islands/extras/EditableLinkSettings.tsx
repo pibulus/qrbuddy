@@ -12,8 +12,8 @@ interface EditableLinkSettingsProps {
   editUrl: Signal<string>;
   /** The URL currently in the main input — what the editable QR will wrap. */
   pendingUrl: string;
-  isCreating: boolean;
-  onCreate: () => void;
+  isCreating?: boolean;
+  onCreate?: () => void;
   isSequential?: boolean;
   sequentialUrls?: string[];
   randomSequence?: boolean;
@@ -24,8 +24,6 @@ interface EditableLinkSettingsProps {
 export default function EditableLinkSettings({
   editUrl,
   pendingUrl,
-  isCreating,
-  onCreate,
   isSequential,
   sequentialUrls,
   randomSequence = false,
@@ -78,7 +76,6 @@ export default function EditableLinkSettings({
     : hasContent && looksLikeUrl(pendingUrl);
 
   const isOverQuota = libraryEnabled && quota && !quota.can_create;
-  const canSubmit = hasLink && !isCreating && !isOverQuota;
 
   return (
     <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3.5 space-y-2.5 animate-slide-down shadow-[2px_2px_0_#1e1714]">
@@ -138,27 +135,13 @@ export default function EditableLinkSettings({
             )}
           </div>
 
-          <button
-            type="button"
-            disabled={!canSubmit}
-            onClick={() => {
-              haptics.medium();
-              onCreate();
-            }}
-            class="qr-pitch-cta min-h-[44px] py-2 text-sm"
-          >
-            {isCreating
-              ? (isSpanish ? "Creando…" : "Creating…")
-              : isOverQuota
-              ? (isSpanish
+          {isOverQuota && (
+            <p class="text-xs font-black text-[#4a3f39]">
+              {isSpanish
                 ? `Límite gratis alcanzado (${quota?.used_count}/${quota?.total_allowed})`
-                : `Free limit reached (${quota?.used_count}/${quota?.total_allowed})`)
-              : isSequential && randomSequence
-              ? (isSpanish ? "🎲 Crear QR de ruleta" : "🎲 Create roulette QR")
-              : (isSpanish
-                ? "✦ Crear link editable"
-                : "✦ Create editable link")}
-          </button>
+                : `Free limit reached (${quota?.used_count}/${quota?.total_allowed})`}
+            </p>
+          )}
         </div>
       )}
       {editUrl.value && (

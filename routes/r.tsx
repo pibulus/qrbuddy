@@ -105,11 +105,19 @@ export const handler: Handlers = {
         }
       }
 
-      // Handle HTML responses (e.g. Intro / Splash Page)
+      // Handle HTML responses (e.g. Intro / Splash Page & Roulette Spin Card).
+      // Supabase Edge Runtime's gateway rewrites Content-Type to text/plain on
+      // *.supabase.co/functions/v1/*, so detect HTML payloads and serve them as
+      // text/html; charset=utf-8 so browsers render the card instead of raw text.
       if (response.status === 200) {
-        const contentType = response.headers.get("Content-Type") ||
-          "text/html; charset=utf-8";
         const body = await response.text();
+        const trimmed = body.trimStart();
+        const isHtml = /^<!doctype\s+html/i.test(trimmed) ||
+          /^<html[\s>]/i.test(trimmed);
+        const contentType = isHtml
+          ? "text/html; charset=utf-8"
+          : (response.headers.get("Content-Type") ||
+            "text/html; charset=utf-8");
         return new Response(body, {
           status: 200,
           headers: {

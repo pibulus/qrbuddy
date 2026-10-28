@@ -6,7 +6,7 @@ import { normalizeUrl } from "../utils/url.ts";
 import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
-import AnalyticsDashboard from "./edit-qr/AnalyticsDashboard.tsx";
+import AnalyticsDashboard from "./edit-qr/FieldReportCard.tsx";
 import QRStatusCard from "./edit-qr/QRStatusCard.tsx";
 import RoutingModeSelector from "./edit-qr/RoutingModeSelector.tsx";
 import RoutingConfigForm from "./edit-qr/RoutingConfigForm.tsx";

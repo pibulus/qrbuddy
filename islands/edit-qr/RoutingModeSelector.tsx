@@ -19,7 +19,7 @@ export default function RoutingModeSelector(
       <div class="grid grid-cols-2 gap-2.5">
         {[
           { id: "simple", label: "Simple Redirect", icon: "🔗" },
-          { id: "sequential", label: "Sequential", icon: "⛓️" },
+          { id: "sequential", label: "Rotation / Roulette", icon: "🎲" },
           { id: "device", label: "Device Target", icon: "📱" },
           { id: "time", label: "Time Schedule", icon: "⏰" },
         ].map((mode) => {

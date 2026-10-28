@@ -958,97 +958,76 @@ export default function OwnerStrip(
       )}
 
       {files.length > 1 && (
-        <div class="bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl px-3 py-2.5 space-y-1.5">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-xs font-black text-[#1e1714]">
-              🎲 {isSpanish
-                ? "Modo Ruleta (QR / Link)"
-                : "Roulette mode (QR / Link)"}
-            </span>
-            <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-qr-cream p-0.5 gap-0.5">
-              {[
-                {
-                  enabled: false,
-                  spins: null,
-                  label: isSpanish ? "No" : "Off",
-                },
-                { enabled: true, spins: null, label: "∞" },
-                {
-                  enabled: true,
-                  spins: 1,
-                  label: isSpanish ? "1/día" : "1/day",
-                },
-                {
-                  enabled: true,
-                  spins: 3,
-                  label: isSpanish ? "3/día" : "3/day",
-                },
-              ].map((opt) => {
-                const active = rouletteEnabled === opt.enabled &&
-                  (opt.enabled ? rouletteSpins === opt.spins : true);
-                return (
-                  <button
-                    key={opt.label}
-                    type="button"
-                    onClick={() => applyRouletteSetting(opt.enabled, opt.spins)}
-                    class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
-                      active
-                        ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
-                        : "text-[#4a3f39] hover:text-[#1e1714]"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-              {rouletteEnabled && (
-                <label class="inline-flex items-center gap-0.5 px-1.5 rounded-lg border border-[#1e1714]/20 bg-[#fffef7]">
-                  <input
-                    type="number"
-                    min={1}
-                    max={99}
-                    inputMode="numeric"
-                    aria-label={isSpanish ? "Giros por día" : "Spins per day"}
-                    value={rouletteSpins === null ? "" : String(rouletteSpins)}
-                    placeholder="N"
-                    onInput={(e) => {
-                      const raw = (e.target as HTMLInputElement).value.trim();
-                      if (!raw) {
-                        applyRouletteSetting(true, null);
-                        return;
-                      }
-                      const n = Number.parseInt(raw, 10);
-                      if (Number.isFinite(n)) {
-                        applyRouletteSetting(
-                          true,
-                          Math.min(99, Math.max(1, n)),
-                        );
-                      }
-                    }}
-                    class="w-7 bg-transparent text-[11px] font-black text-[#1e1714] focus:outline-none text-center"
-                  />
-                  <span class="text-[10px] font-black text-[#6e6058]">
-                    /d
-                  </span>
-                </label>
-              )}
-            </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl px-3 py-2">
+          <span class="text-xs font-black text-[#1e1714]">
+            🎲 {isSpanish ? "Ruleta (QR / Link)" : "Roulette draw"}
+          </span>
+          <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-qr-cream p-0.5 gap-0.5">
+            <button
+              type="button"
+              onClick={() => applyRouletteSetting(false, null)}
+              class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
+                !rouletteEnabled
+                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  : "text-[#4a3f39] hover:text-[#1e1714]"
+              }`}
+            >
+              {isSpanish ? "No" : "Off"}
+            </button>
+            <button
+              type="button"
+              onClick={() => applyRouletteSetting(true, null)}
+              class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
+                rouletteEnabled && rouletteSpins === null
+                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  : "text-[#4a3f39] hover:text-[#1e1714]"
+              }`}
+            >
+              {isSpanish ? "∞ Libre" : "∞ Open"}
+            </button>
+            <label
+              onClick={() => {
+                if (!rouletteEnabled || rouletteSpins === null) {
+                  applyRouletteSetting(true, 1);
+                }
+              }}
+              class={`min-h-[30px] inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[11px] font-black cursor-pointer transition-all ${
+                rouletteEnabled && rouletteSpins !== null
+                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  : "text-[#4a3f39] hover:text-[#1e1714]"
+              }`}
+            >
+              <input
+                type="number"
+                min={1}
+                max={99}
+                inputMode="numeric"
+                aria-label={isSpanish ? "Giros por día" : "Spins per day"}
+                value={rouletteEnabled && rouletteSpins !== null
+                  ? String(rouletteSpins)
+                  : ""}
+                placeholder="1"
+                onInput={(e) => {
+                  const raw = (e.target as HTMLInputElement).value.trim();
+                  if (!raw) {
+                    applyRouletteSetting(true, null);
+                    return;
+                  }
+                  const n = Number.parseInt(raw, 10);
+                  if (Number.isFinite(n)) {
+                    applyRouletteSetting(
+                      true,
+                      Math.min(99, Math.max(1, n)),
+                    );
+                  }
+                }}
+                class="w-7 bg-transparent text-[11px] font-black text-[#1e1714] placeholder:text-[#6e6058] focus:outline-none text-center"
+              />
+              <span class="text-[10px] font-black">
+                /{isSpanish ? "día" : "day"}
+              </span>
+            </label>
           </div>
-          {rouletteEnabled && (
-            <p class="text-[11px] font-semibold text-[#6e6058]">
-              {rouletteSpins !== null
-                ? (isSpanish
-                  ? `El Sticker QR abre al azar y bloquea a ${rouletteSpins} giro${
-                    rouletteSpins === 1 ? "" : "s"
-                  }/día en memoria local.`
-                  : `Sticker QR spins a random item and locks to ${rouletteSpins} roll${
-                    rouletteSpins === 1 ? "" : "s"
-                  }/day in local memory.`)
-                : (isSpanish
-                  ? "El Sticker QR abre un elemento al azar en cada escaneo."
-                  : "Sticker QR spins a random item on every scan.")}
-            </p>
-          )}
         </div>
       )}
 
@@ -1091,8 +1070,7 @@ export default function OwnerStrip(
                     </button>
                     <button
                       type="button"
-                      onClick={() =>
-                        void moveItem(i, 1)}
+                      onClick={() => void moveItem(i, 1)}
                       disabled={i === files.length - 1 || mutationBusy}
                       aria-label={`Move ${prettyName(f.name)} down`}
                       class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"

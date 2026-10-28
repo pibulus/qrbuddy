@@ -7,7 +7,6 @@ import StyleSelector from "../../islands/StyleSelector.tsx";
 import EasterEggs from "../../islands/EasterEggs.tsx";
 import ErrorBoundary from "../../islands/ErrorBoundary.tsx";
 import ToastManager from "../../islands/ToastManager.tsx";
-import Analytics from "../../islands/Analytics.tsx";
 
 import { AboutModal } from "../../islands/AboutModal.tsx";
 import { PricingModal } from "../../islands/PricingModal.tsx";
@@ -172,13 +171,6 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
 
       <div class="min-h-[100dvh] flex flex-col items-center justify-start px-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
         <ToastManager />
-        <Analytics
-          url={url}
-          style={style}
-          isDynamic={isDynamic}
-          isDestructible={isDestructible}
-          logoUrl={logoUrl}
-        />
 
         <EasterEggs url={url} style={style} />
         <DesignPreferencesSync

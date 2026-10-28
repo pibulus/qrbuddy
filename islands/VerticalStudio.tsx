@@ -6,7 +6,6 @@ import StyleSelector from "./StyleSelector.tsx";
 import EasterEggs from "./EasterEggs.tsx";
 import ErrorBoundary from "./ErrorBoundary.tsx";
 import ToastManager from "./ToastManager.tsx";
-import Analytics from "./Analytics.tsx";
 import { AboutModal } from "./AboutModal.tsx";
 import { PricingLink, PricingModal } from "./PricingModal.tsx";
 import FooterDock from "./FooterDock.tsx";
@@ -368,13 +367,6 @@ export default function VerticalStudio({
       </a>
 
       <ToastManager />
-      <Analytics
-        url={url}
-        style={style}
-        isDynamic={isDynamic}
-        isDestructible={isDestructible}
-        logoUrl={logoUrl}
-      />
 
       <EasterEggs url={url} style={style} />
 

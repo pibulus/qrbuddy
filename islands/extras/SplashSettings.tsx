@@ -28,6 +28,7 @@ const ACCENT_SWATCHES = [
 interface SplashSettingsProps {
   splashConfig: Signal<SplashConfig | null>;
   destinationUrl?: string;
+  isRoulette?: boolean;
   lang?: Locale;
 }
 
@@ -120,41 +121,9 @@ const PRESETS: Preset[] = [
   },
 ];
 
-const CURATED_IMAGES = [
-  {
-    label: "🌮 Food",
-    labelEs: "🌮 Comida",
-    url:
-      "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    label: "💐 Floral",
-    labelEs: "💐 Flores",
-    url:
-      "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    label: "🎶 Vinyl",
-    labelEs: "🎶 Vinilo",
-    url:
-      "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    label: "🌅 Sunset",
-    labelEs: "🌅 Atardecer",
-    url:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    label: "👾 Cyber",
-    labelEs: "👾 Cyber",
-    url:
-      "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=800&q=80",
-  },
-];
-
 export default function SplashSettings(
-  { splashConfig, destinationUrl, lang }: SplashSettingsProps,
+  { splashConfig, destinationUrl, isRoulette = false, lang }:
+    SplashSettingsProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const [localConfig, setLocalConfig] = useState<SplashConfig>(
@@ -268,35 +237,37 @@ export default function SplashSettings(
         </div>
       </div>
 
-      {/* Preset Starters */}
-      <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-[11px] font-black uppercase tracking-wider text-[#ec4899]">
-            {isSpanish ? "Plantillas Rápidas" : "Quick Starters"}
-          </span>
-          <span class="text-[11px] text-[#6e6058] font-bold">
-            {isSpanish ? "1 toque" : "1-tap fill"}
-          </span>
+      {/* Preset Starters (hidden in Roulette mode where Roulette defaults are already loaded) */}
+      {!isRoulette && (
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-black uppercase tracking-wider text-[#ec4899]">
+              {isSpanish ? "Plantillas Rápidas" : "Quick Starters"}
+            </span>
+            <span class="text-[11px] text-[#6e6058] font-bold">
+              {isSpanish ? "1 toque" : "1-tap fill"}
+            </span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => applyPreset(preset)}
+                class="flex items-center gap-1 px-2 py-2 min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-amber-100 hover:-translate-y-0.5 active:translate-y-0 font-black text-[11px] sm:text-xs text-[#1e1714] transition-all text-left shadow-[2px_2px_0_#1e1714]"
+                title={isSpanish ? preset.titleEs : preset.title}
+              >
+                <span class="text-sm shrink-0">
+                  {preset.icon}
+                </span>
+                <span class="truncate">
+                  {isSpanish ? preset.labelEs : preset.label}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              onClick={() => applyPreset(preset)}
-              class="flex items-center gap-1 px-2 py-2 min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-amber-100 hover:-translate-y-0.5 active:translate-y-0 font-black text-[11px] sm:text-xs text-[#1e1714] transition-all text-left shadow-[2px_2px_0_#1e1714]"
-              title={isSpanish ? preset.titleEs : preset.title}
-            >
-              <span class="text-sm shrink-0">
-                {preset.icon}
-              </span>
-              <span class="truncate">
-                {isSpanish ? preset.labelEs : preset.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Main Content: Form or Preview */}
       {activeTab === "edit" && (
@@ -372,50 +343,53 @@ export default function SplashSettings(
             </div>
           </div>
 
-          {/* Title */}
-          <div>
-            <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
-                {isSpanish ? "Título principal *" : "Headline / Title *"}
-              </label>
-              <span class="text-[10px] font-bold text-[#6e6058]">
-                {localConfig.title.length}/100
-              </span>
+          {/* Title & Button Text */}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
+                  {isSpanish ? "Título *" : "Headline *"}
+                </label>
+                <span class="text-[10px] font-bold text-[#6e6058]">
+                  {localConfig.title.length}/100
+                </span>
+              </div>
+              <input
+                type="text"
+                maxLength={100}
+                value={localConfig.title}
+                onInput={(e) =>
+                  updateConfig({ title: (e.target as HTMLInputElement).value })}
+                class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
+                placeholder={isSpanish
+                  ? "ej. Ruleta Diaria"
+                  : "e.g. Mystery Draw"}
+              />
             </div>
-            <input
-              type="text"
-              maxLength={100}
-              value={localConfig.title}
-              onInput={(e) =>
-                updateConfig({ title: (e.target as HTMLInputElement).value })}
-              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
-              placeholder={isSpanish
-                ? "ej. Ruleta Diaria de Premios"
-                : "e.g. Daily Mystery Draw"}
-            />
-          </div>
 
-          {/* Button Text */}
-          <div>
-            <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
-                {isSpanish ? "Texto del botón *" : "Button Text *"}
-              </label>
-              <span class="text-[10px] font-bold text-[#6e6058]">
-                {localConfig.buttonText.length}/50
-              </span>
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
+                  {isSpanish ? "Botón *" : "Button Text *"}
+                </label>
+                <span class="text-[10px] font-bold text-[#6e6058]">
+                  {localConfig.buttonText.length}/50
+                </span>
+              </div>
+              <input
+                type="text"
+                maxLength={50}
+                value={localConfig.buttonText}
+                onInput={(e) =>
+                  updateConfig({
+                    buttonText: (e.target as HTMLInputElement).value,
+                  })}
+                class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
+                placeholder={isSpanish
+                  ? "ej. Abrir premio"
+                  : "e.g. Open reward"}
+              />
             </div>
-            <input
-              type="text"
-              maxLength={50}
-              value={localConfig.buttonText}
-              onInput={(e) =>
-                updateConfig({
-                  buttonText: (e.target as HTMLInputElement).value,
-                })}
-              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
-              placeholder={isSpanish ? "ej. Abrir premio" : "e.g. Open reward"}
-            />
           </div>
 
           {/* Description */}
@@ -423,8 +397,8 @@ export default function SplashSettings(
             <div class="flex justify-between items-center mb-1">
               <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
                 {isSpanish
-                  ? "Nota o reglas del sorteo"
-                  : "Welcome Note / Promo Rules"}
+                  ? "Nota o reglas (opcional)"
+                  : "Subtitle / Rules (Optional)"}
               </label>
               <span class="text-[10px] font-bold text-[#6e6058]">
                 {(localConfig.description || "").length}/500
@@ -440,7 +414,7 @@ export default function SplashSettings(
               class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-medium resize-none bg-[#fffef7] text-[#1e1714]"
               rows={2}
               placeholder={isSpanish
-                ? "Detalles del sorteo, menú o instrucciones en barra..."
+                ? "Detalles del sorteo, menú o instrucciones..."
                 : "Show at the counter, daily spin rules, or release notes..."}
             />
           </div>
@@ -450,8 +424,8 @@ export default function SplashSettings(
             <div class="flex justify-between items-center mb-1">
               <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
                 {isSpanish
-                  ? "Logo o imagen de portada (URL)"
-                  : "Logo or Cover Image URL (Optional)"}
+                  ? "Logo o imagen (URL opcional)"
+                  : "Logo / Image URL (Optional)"}
               </label>
               {localConfig.imageUrl && (
                 <button
@@ -462,7 +436,7 @@ export default function SplashSettings(
                   }}
                   class="text-[10px] font-black text-[#4a3f39] hover:text-[#1e1714] underline"
                 >
-                  {isSpanish ? "✕ Quitar imagen" : "✕ Clear image"}
+                  {isSpanish ? "✕ Quitar" : "✕ Clear"}
                 </button>
               )}
             </div>
@@ -476,26 +450,6 @@ export default function SplashSettings(
               class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-xs font-mono bg-[#fffef7] text-[#1e1714]"
               placeholder="https://example.com/logo-or-banner.jpg"
             />
-
-            {/* Quick image inspiration chips */}
-            <div class="flex items-center gap-1.5 flex-wrap mt-2">
-              <span class="text-[10px] font-bold text-[#6e6058]">
-                {isSpanish ? "Fondos:" : "Presets:"}
-              </span>
-              {CURATED_IMAGES.map((img) => (
-                <button
-                  key={img.label}
-                  type="button"
-                  onClick={() => {
-                    updateConfig({ imageUrl: img.url });
-                    haptics.light();
-                  }}
-                  class="text-[11px] font-bold px-2 py-0.5 rounded-lg border border-[#1e1714]/30 bg-[#fbf1e4] hover:border-[#1e1714] hover:bg-[#fffef7] transition-colors text-[#1e1714]"
-                >
-                  {isSpanish ? img.labelEs : img.label}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* White-Label / Paid Customer Branding Row */}

@@ -8,6 +8,7 @@ import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import { sounds } from "../utils/sounds.ts";
+import { looksLikeUrl } from "../utils/url.ts";
 import ChoiceRow from "./create-modal/ChoiceRow.tsx";
 import CompletionState, {
   type CompletionKind,
@@ -1016,107 +1017,114 @@ export default function CreateModal({
           </p>
         </section>
 
-        {isDynamic.value && (
-          <section class="space-y-2 animate-slide-down">
-            <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
-              {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
-            </h3>
+        <section class="space-y-2 animate-slide-down">
+          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+            {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
+          </h3>
 
-            <ChoiceRow
-              icon="⏳"
-              title={isSpanish
-                ? "Límite de escaneos o fecha"
-                : "Scan & date limits"}
-              description={isSpanish
-                ? "Desactiva el QR después de ciertos escaneos o en una fecha."
-                : "Stop the QR after a scan count or expiry date."}
-              active={isLimitSettingsOpen}
-              onClick={() => {
-                const next = !isLimitSettingsOpen;
-                if (!next) {
-                  setScanLimit(null);
-                  setExpiryDate("");
-                }
-                setIsLimitSettingsOpen(next);
-                haptics.light();
-              }}
+          <ChoiceRow
+            icon="🎲"
+            title={isSpanish
+              ? "Rotación o ruleta de links"
+              : "Link rotation & roulette"}
+            description={isSpanish
+              ? "Avanza en orden o gira al azar entre varios links."
+              : "Cycle in order or roll a random link on each scan."}
+            active={isDynamic.value && isSequential}
+            onClick={() => {
+              if (!isDynamic.value) activateDynamicBase();
+              setIsSequential(!isSequential);
+              haptics.light();
+            }}
+          />
+          {isDynamic.value && isSequential && (
+            <MultiLinkSettings
+              sequentialUrls={sequentialUrls}
+              setSequentialUrls={setSequentialUrls}
+              loopSequence={loopSequence}
+              setLoopSequence={setLoopSequence}
+              randomSequence={randomSequence}
+              setRandomSequence={setRandomSequence}
+              dailySpins={dailySpins}
+              setDailySpins={setDailySpins}
+              lang={locale}
             />
-            {isLimitSettingsOpen && (
-              <TimeBombSettings
-                scanLimit={scanLimit}
-                setScanLimit={setScanLimit}
-                expiryDate={expiryDate}
-                setExpiryDate={setExpiryDate}
-                lang={locale}
-              />
-            )}
+          )}
 
-            <ChoiceRow
-              icon="🎲"
-              title={isSpanish
-                ? "Rotación o ruleta de links"
-                : "Link rotation & roulette"}
-              description={isSpanish
-                ? "Avanza en orden o gira al azar entre varios links."
-                : "Cycle in order or roll a random link on each scan."}
-              active={isSequential}
-              onClick={() => {
-                setIsSequential(!isSequential);
-                haptics.light();
-              }}
-            />
-            {isSequential && (
-              <MultiLinkSettings
-                sequentialUrls={sequentialUrls}
-                setSequentialUrls={setSequentialUrls}
-                loopSequence={loopSequence}
-                setLoopSequence={setLoopSequence}
-                randomSequence={randomSequence}
-                setRandomSequence={setRandomSequence}
-                dailySpins={dailySpins}
-                setDailySpins={setDailySpins}
-                brandCardActive={splashActive}
-                onToggleBrandCard={() => {
-                  splashConfig.value = splashActive ? null : {
-                    enabled: true,
-                    title: isSpanish
-                      ? "Sorteo Misterioso 🎲"
-                      : "Mystery Draw 🎲",
-                    buttonText: isSpanish
-                      ? "Abrir Premio 🎁"
-                      : "Open Reward 🎁",
-                    brandName: isSpanish ? "SORTEO DIARIO" : "DAILY DROP",
-                    accentColor: "#F59E0B",
-                  };
-                }}
-                lang={locale}
-              />
-            )}
-
-            <ChoiceRow
-              icon="✨"
-              title={isSpanish ? "Portada de bienvenida" : "Intro page"}
-              description={isSpanish
+          <ChoiceRow
+            icon={isSequential && randomSequence ? "🎨" : "✨"}
+            title={isSequential && randomSequence
+              ? (isSpanish
+                ? "Personalizar tarjeta de ruleta"
+                : "Brand spin card")
+              : (isSpanish ? "Portada de bienvenida" : "Intro page")}
+            description={isSequential && randomSequence
+              ? (isSpanish
+                ? "Insignia de marca, título, color, logo y marca blanca."
+                : "Brand badge, headline, color, logo, and white-label.")
+              : (isSpanish
                 ? "Muestra una tarjeta de bienvenida antes de abrir el destino."
-                : "Show a short landing page before redirecting."}
-              active={splashActive}
-              onClick={() => {
-                splashConfig.value = splashActive ? null : {
+                : "Show a short landing page before redirecting.")}
+            active={isDynamic.value && splashActive}
+            onClick={() => {
+              if (!isDynamic.value) activateDynamicBase();
+              const isRoulette = isSequential && randomSequence;
+              splashConfig.value = splashActive ? null : isRoulette
+                ? {
+                  enabled: true,
+                  title: isSpanish ? "Sorteo Misterioso 🎲" : "Mystery Draw 🎲",
+                  buttonText: isSpanish ? "Abrir Premio 🎁" : "Open Reward 🎁",
+                  brandName: isSpanish ? "SORTEO DIARIO" : "DAILY DROP",
+                  accentColor: "#F59E0B",
+                }
+                : {
                   enabled: true,
                   title: isSpanish ? "¡Hola!" : "Welcome!",
                   buttonText: isSpanish ? "Continuar" : "Continue",
                 };
-                haptics.light();
-              }}
+              haptics.light();
+            }}
+          />
+          {isDynamic.value && splashActive && (
+            <SplashSettings
+              splashConfig={splashConfig}
+              destinationUrl={url.value}
+              isRoulette={isSequential && randomSequence}
+              lang={locale}
             />
-            {splashActive && (
-              <SplashSettings
-                splashConfig={splashConfig}
-                destinationUrl={url.value}
-                lang={locale}
-              />
-            )}
+          )}
 
+          <ChoiceRow
+            icon="⏳"
+            title={isSpanish
+              ? "Límite de escaneos o fecha"
+              : "Scan & date limits"}
+            description={isSpanish
+              ? "Desactiva el QR después de ciertos escaneos o en una fecha."
+              : "Stop the QR after a scan count or expiry date."}
+            active={isDynamic.value && isLimitSettingsOpen}
+            onClick={() => {
+              if (!isDynamic.value) activateDynamicBase();
+              const next = !isLimitSettingsOpen;
+              if (!next) {
+                setScanLimit(null);
+                setExpiryDate("");
+              }
+              setIsLimitSettingsOpen(next);
+              haptics.light();
+            }}
+          />
+          {isDynamic.value && isLimitSettingsOpen && (
+            <TimeBombSettings
+              scanLimit={scanLimit}
+              setScanLimit={setScanLimit}
+              expiryDate={expiryDate}
+              setExpiryDate={setExpiryDate}
+              lang={locale}
+            />
+          )}
+
+          {isDynamic.value && (
             <EditableLinkSettings
               editUrl={editUrl}
               pendingUrl={url.value}
@@ -1128,8 +1136,8 @@ export default function CreateModal({
               dailySpins={dailySpins}
               lang={locale}
             />
-          </section>
-        )}
+          )}
+        </section>
       </div>
     );
   };
@@ -1406,20 +1414,40 @@ export default function CreateModal({
 
         <div class="p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
           {(() => {
-            const validSeqCount = sequentialUrls.filter((u) => u.trim() !== "")
+            const validSeqCount = sequentialUrls.filter((u) => looksLikeUrl(u))
               .length;
             const needsDynamicMint = activeTab === "options" &&
               isDynamic.value && !editUrl.value;
             const canMintDynamic = needsDynamicMint &&
-              (isSequential ? validSeqCount >= 2 : url.value.trim() !== "");
+              (isSequential ? validSeqCount >= 2 : looksLikeUrl(url.value));
 
             return (
               <button
                 type="button"
                 disabled={isCreatingEditable}
                 onClick={() => {
-                  if (canMintDynamic) {
-                    onCreateEditable();
+                  if (needsDynamicMint) {
+                    if (canMintDynamic) {
+                      onCreateEditable();
+                      return;
+                    }
+                    haptics.error();
+                    if (isSequential) {
+                      addToast(
+                        isSpanish
+                          ? "Agrega al menos 2 links válidos arriba 🎲"
+                          : "Add at least 2 valid links above first 🎲",
+                        2600,
+                      );
+                    } else {
+                      addToast(
+                        isSpanish
+                          ? "Agrega un link de destino en Contenido primero 🔗"
+                          : "Add a destination link in Content first 🔗",
+                        2600,
+                      );
+                      setActiveTab("type");
+                    }
                     return;
                   }
                   globalThis.dispatchEvent(new CustomEvent("qrb-modal-bloom"));
@@ -1444,7 +1472,7 @@ export default function CreateModal({
                       : (isSequential && randomSequence
                         ? "Creating roulette QR…"
                         : "Creating editable link…"))
-                    : canMintDynamic
+                    : needsDynamicMint
                     ? (isSpanish
                       ? (isSequential && randomSequence
                         ? "🎲 Crear QR ruleta ✨"

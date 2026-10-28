@@ -5,7 +5,7 @@ import { addToast } from "../ToastManager.tsx";
 import { QRData } from "../../hooks/useQRData.ts";
 import type { QR_STYLES } from "../../utils/qr-styles.ts";
 import QRCanvas from "../QRCanvas.tsx";
-import { formatRelativeVisit } from "./AnalyticsDashboard.tsx";
+import { formatRelativeVisit } from "./FieldReportCard.tsx";
 
 interface QRStatusCardProps {
   qrData: QRData;

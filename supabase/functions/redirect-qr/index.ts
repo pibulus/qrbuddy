@@ -383,11 +383,11 @@ serve(async (req) => {
     }
 
     // --------------------------------------------------------------------------
-    // 3. SPLASH PAGE & ROULETTE DAILY LOCK MIDDLEWARE
+    // 3. SPLASH PAGE & ROULETTE SPIN CARD MIDDLEWARE
     // --------------------------------------------------------------------------
     if (
       (qr.splash_config && qr.splash_config.enabled) ||
-      (isRouletteMode && rouletteDailySpins !== null)
+      isRouletteMode
     ) {
       const splash = qr.splash_config || {};
       const {

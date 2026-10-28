@@ -29,12 +29,6 @@ interface RoutingConfigFormProps {
 const INPUT_RECIPE =
   "w-full min-h-[44px] px-3.5 py-2.5 text-sm border-2 border-black/15 bg-white rounded-2xl text-black focus:border-qr-pop focus:outline-none transition-colors";
 
-const DAILY_SPIN_OPTIONS: Array<{ value: number | null; label: string }> = [
-  { value: null, label: "∞ Open" },
-  { value: 1, label: "1" },
-  { value: 3, label: "3" },
-];
-
 export default function RoutingConfigForm({
   routingMode,
   destinationUrl,
@@ -135,37 +129,40 @@ export default function RoutingConfigForm({
           </div>
 
           {randomSequence && setDailySpins && (
-            <div class="bg-qr-cream border-2 border-black/20 rounded-xl p-2.5 space-y-1.5">
-              <span class="block text-[11px] font-black uppercase tracking-wider text-black">
-                Daily spins per device (local memory lock)
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-qr-cream border-2 border-black/20 rounded-xl px-3 py-2">
+              <span class="text-xs font-black text-black">
+                Daily spins per phone
               </span>
-              <div class="flex items-center gap-1.5">
-                {DAILY_SPIN_OPTIONS.map((opt) => {
-                  const active = dailySpins === opt.value;
-                  return (
-                    <button
-                      key={String(opt.value)}
-                      type="button"
-                      onClick={() => setDailySpins(opt.value)}
-                      class={`min-h-[34px] px-2.5 py-1 rounded-lg border-2 text-xs font-black whitespace-nowrap transition-all ${
-                        active
-                          ? "bg-amber-200 border-black text-black shadow-chunky"
-                          : "bg-white border-black/15 text-neutral-700 hover:border-black"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-                <label class="flex-1 min-h-[34px] flex items-center justify-between gap-1 px-2.5 py-1 rounded-lg border-2 border-black bg-white">
+              <div class="inline-flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setDailySpins(null)}
+                  class={`min-h-[34px] px-3 py-1 rounded-lg border-2 text-xs font-black whitespace-nowrap transition-all ${
+                    dailySpins === null
+                      ? "bg-amber-200 border-black text-black shadow-chunky"
+                      : "bg-white border-black/15 text-neutral-700 hover:border-black"
+                  }`}
+                >
+                  ∞ Open
+                </button>
+                <label
+                  onClick={() => {
+                    if (dailySpins === null) setDailySpins(1);
+                  }}
+                  class={`min-h-[34px] inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border-2 cursor-pointer transition-all ${
+                    dailySpins !== null
+                      ? "bg-amber-200 border-black text-black shadow-chunky"
+                      : "bg-white border-black/15 text-neutral-700 hover:border-black"
+                  }`}
+                >
                   <input
                     type="number"
                     min={1}
                     max={99}
                     inputMode="numeric"
-                    aria-label="Custom daily spins"
+                    aria-label="Daily spins per phone"
                     value={dailySpins === null ? "" : String(dailySpins)}
-                    placeholder="1–99"
+                    placeholder="1"
                     onInput={(e) => {
                       const raw = (e.target as HTMLInputElement).value.trim();
                       if (!raw) {
@@ -177,9 +174,9 @@ export default function RoutingConfigForm({
                         setDailySpins(Math.min(99, Math.max(1, n)));
                       }
                     }}
-                    class="w-12 bg-transparent text-xs font-black text-black focus:outline-none text-center"
+                    class="w-9 bg-transparent text-xs font-black text-black placeholder:text-neutral-500 focus:outline-none text-center"
                   />
-                  <span class="text-[11px] font-black text-neutral-600 whitespace-nowrap">
+                  <span class="text-[11px] font-black whitespace-nowrap">
                     / day
                   </span>
                 </label>

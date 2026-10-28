@@ -10,18 +10,8 @@ interface MultiLinkSettingsProps {
   setRandomSequence?: (random: boolean) => void;
   dailySpins?: number | null;
   setDailySpins?: (spins: number | null) => void;
-  brandCardActive?: boolean;
-  onToggleBrandCard?: () => void;
   lang?: Locale;
 }
-
-const DAILY_SPIN_PRESETS: Array<
-  { value: number | null; label: string; labelEs: string }
-> = [
-  { value: null, label: "∞ Open", labelEs: "∞ Libre" },
-  { value: 1, label: "1", labelEs: "1" },
-  { value: 3, label: "3", labelEs: "3" },
-];
 
 export default function MultiLinkSettings({
   sequentialUrls,
@@ -32,8 +22,6 @@ export default function MultiLinkSettings({
   setRandomSequence,
   dailySpins = null,
   setDailySpins,
-  brandCardActive = false,
-  onToggleBrandCard,
   lang,
 }: MultiLinkSettingsProps) {
   const isSpanish = getClientLocale(lang) === "es";
@@ -92,47 +80,38 @@ export default function MultiLinkSettings({
       </div>
 
       {randomSequence && setDailySpins && (
-        <div class="bg-[#fbf1e4] border-2 border-[#1e1714]/20 rounded-xl p-2.5 space-y-2 animate-slide-down">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-[11px] font-black uppercase tracking-wider text-[#1e1714]">
-              {isSpanish
-                ? "Giros por día (memoria local)"
-                : "Daily spins per device"}
-            </span>
-            <span class="text-[10px] font-bold text-[#6e6058]">
-              {dailySpins === null
-                ? (isSpanish ? "Sin límite" : "No daily cap")
-                : `${dailySpins} / ${isSpanish ? "día" : "day"}`}
-            </span>
-          </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-[#fbf1e4] border-2 border-[#1e1714]/20 rounded-xl px-3 py-2 animate-slide-down">
+          <span class="text-xs font-black text-[#1e1714]">
+            {isSpanish ? "Giros por teléfono" : "Daily spins per phone"}
+          </span>
 
-          <div class="flex items-center gap-1.5">
-            {DAILY_SPIN_PRESETS.map((opt) => {
-              const active = dailySpins === opt.value;
-              return (
-                <button
-                  key={String(opt.value)}
-                  type="button"
-                  onClick={() => {
-                    setDailySpins(opt.value);
-                    haptics.light();
-                  }}
-                  class={`min-h-[36px] px-2.5 py-1 rounded-lg border-2 text-xs font-black whitespace-nowrap transition-all ${
-                    active
-                      ? "bg-amber-200 border-[#1e1714] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
-                      : "bg-[#fffef7] border-[#1e1714]/20 text-[#4a3f39] hover:border-[#1e1714]"
-                  }`}
-                >
-                  {isSpanish ? opt.labelEs : opt.label}
-                </button>
-              );
-            })}
+          <div class="inline-flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setDailySpins(null);
+                haptics.light();
+              }}
+              class={`min-h-[34px] px-3 py-1 rounded-lg border-2 text-xs font-black whitespace-nowrap transition-all ${
+                dailySpins === null
+                  ? "bg-amber-200 border-[#1e1714] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
+                  : "bg-[#fffef7] border-[#1e1714]/20 text-[#4a3f39] hover:border-[#1e1714]"
+              }`}
+            >
+              {isSpanish ? "∞ Libre" : "∞ Open"}
+            </button>
 
             <label
-              class={`flex-1 min-h-[36px] flex items-center justify-between gap-1 px-2.5 py-1 rounded-lg border-2 transition-all ${
+              onClick={() => {
+                if (dailySpins === null) {
+                  setDailySpins(1);
+                  haptics.light();
+                }
+              }}
+              class={`min-h-[34px] inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border-2 cursor-pointer transition-all ${
                 dailySpins !== null
-                  ? "bg-[#fffef7] border-[#1e1714] shadow-[2px_2px_0_#1e1714]"
-                  : "bg-[#fffef7] border-[#1e1714]/20"
+                  ? "bg-amber-200 border-[#1e1714] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
+                  : "bg-[#fffef7] border-[#1e1714]/20 text-[#4a3f39] hover:border-[#1e1714]"
               }`}
             >
               <input
@@ -141,10 +120,10 @@ export default function MultiLinkSettings({
                 max={99}
                 inputMode="numeric"
                 aria-label={isSpanish
-                  ? "Número de giros por día"
-                  : "Custom daily spins"}
+                  ? "Giros por día"
+                  : "Daily spins per phone"}
                 value={dailySpins === null ? "" : String(dailySpins)}
-                placeholder="1–99"
+                placeholder="1"
                 onInput={(e) => {
                   const raw = (e.target as HTMLInputElement).value.trim();
                   if (!raw) {
@@ -156,41 +135,13 @@ export default function MultiLinkSettings({
                     setDailySpins(Math.min(99, Math.max(1, n)));
                   }
                 }}
-                class="w-12 bg-transparent text-xs font-black text-[#1e1714] focus:outline-none text-center"
+                class="w-9 bg-transparent text-xs font-black text-[#1e1714] placeholder:text-[#6e6058] focus:outline-none text-center"
               />
-              <span class="text-[11px] font-black text-[#6e6058] whitespace-nowrap">
+              <span class="text-[11px] font-black whitespace-nowrap">
                 / {isSpanish ? "día" : "day"}
               </span>
             </label>
           </div>
-
-          <p class="text-[11px] font-semibold text-[#6e6058]">
-            {isSpanish
-              ? "Guarda el resultado del día en el teléfono para sorteos y promos."
-              : "Locks each phone's daily roll in local memory for promo draws."}
-          </p>
-
-          {onToggleBrandCard && (
-            <button
-              type="button"
-              onClick={() => {
-                onToggleBrandCard();
-                haptics.light();
-              }}
-              class={`w-full min-h-[36px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] text-xs font-black flex items-center justify-between gap-2 transition-all ${
-                brandCardActive
-                  ? "bg-amber-200 text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
-                  : "bg-[#fffef7] text-[#1e1714] hover:bg-amber-100 shadow-[2px_2px_0_#1e1714]"
-              }`}
-            >
-              <span>
-                {isSpanish
-                  ? "🎨 Personalizar tarjeta de ruleta (marca, logo y color)"
-                  : "🎨 Brand spin card (Title, logo, color & white-label)"}
-              </span>
-              <span>{brandCardActive ? "✓" : "→"}</span>
-            </button>
-          )}
         </div>
       )}
 
