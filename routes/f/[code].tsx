@@ -54,6 +54,13 @@ export const handler: Handlers = {
       });
     }
 
+    if (code === "demo") {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: "/demo/drop" },
+      });
+    }
+
     const supabaseUrl = getSupabaseUrl();
 
     if (!supabaseUrl) {

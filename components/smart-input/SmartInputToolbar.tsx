@@ -106,7 +106,7 @@ export default function SmartInputToolbar({
         <span
           class={`text-xs font-black truncate ${
             isSpecialMode
-              ? "rounded-full border border-black bg-amber-200 px-2 py-0.5 text-black"
+              ? "rounded-full border border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] px-2 py-0.5 text-[#1e1714]"
               : "text-gray-600"
           } ${
             hasHistory

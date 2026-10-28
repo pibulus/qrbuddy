@@ -1,6 +1,9 @@
 import { useEffect, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
-import { CardModal, CardPrimaryButton } from "./modal/CardModal.tsx";
+import {
+  CardModal,
+  CardPrimaryButton,
+} from "../components/modal/CardModal.tsx";
 import { openPricingModal } from "./PricingModal.tsx";
 import { MAKER_URL } from "../utils/constants.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";

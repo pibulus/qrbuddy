@@ -11,6 +11,7 @@ import * as $api_peek from "./routes/api/peek.ts";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $compare from "./routes/compare.tsx";
+import * as $demo_slug_ from "./routes/demo/[...slug].tsx";
 import * as $edit from "./routes/edit.tsx";
 import * as $es_archivos from "./routes/es/archivos.tsx";
 import * as $es_bodas from "./routes/es/bodas.tsx";
@@ -56,23 +57,15 @@ import * as $wifi from "./routes/wifi.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
-import * as $CreateModal from "./islands/CreateModal.tsx";
 import * as $DesignPreferencesSync from "./islands/DesignPreferencesSync.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
 import * as $EditQRForm from "./islands/EditQRForm.tsx";
 import * as $ErrorBoundary from "./islands/ErrorBoundary.tsx";
 import * as $FileSlideshow from "./islands/FileSlideshow.tsx";
 import * as $FooterDock from "./islands/FooterDock.tsx";
-import * as $GradientCreator from "./islands/GradientCreator.tsx";
-import * as $HistoryDrawer from "./islands/HistoryDrawer.tsx";
-import * as $KofiModal from "./islands/KofiModal.tsx";
-import * as $LibraryDrawer from "./islands/LibraryDrawer.tsx";
-import * as $LogoUploader from "./islands/LogoUploader.tsx";
 import * as $NoteCard from "./islands/NoteCard.tsx";
-import * as $OwnerStrip from "./islands/OwnerStrip.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
-import * as $QRReader from "./islands/QRReader.tsx";
 import * as $QrPrintGuideIsland from "./islands/QrPrintGuideIsland.tsx";
 import * as $RotatingTitle from "./islands/RotatingTitle.tsx";
 import * as $ShareActions from "./islands/ShareActions.tsx";
@@ -80,36 +73,6 @@ import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
 import * as $VerticalStudio from "./islands/VerticalStudio.tsx";
-import * as $bucket_qr_BucketContentDisplay from "./islands/bucket-qr/BucketContentDisplay.tsx";
-import * as $bucket_qr_PasswordUnlock from "./islands/bucket-qr/PasswordUnlock.tsx";
-import * as $create_modal_ChoiceRow from "./islands/create-modal/ChoiceRow.tsx";
-import * as $create_modal_CompletionState from "./islands/create-modal/CompletionState.tsx";
-import * as $create_modal_DesignTab from "./islands/create-modal/DesignTab.tsx";
-import * as $create_modal_PalettePills from "./islands/create-modal/PalettePills.tsx";
-import * as $edit_qr_FieldReportCard from "./islands/edit-qr/FieldReportCard.tsx";
-import * as $edit_qr_QRStatusCard from "./islands/edit-qr/QRStatusCard.tsx";
-import * as $edit_qr_RoutingConfigForm from "./islands/edit-qr/RoutingConfigForm.tsx";
-import * as $edit_qr_RoutingModeSelector from "./islands/edit-qr/RoutingModeSelector.tsx";
-import * as $extras_BatchSettings from "./islands/extras/BatchSettings.tsx";
-import * as $extras_EditableLinkSettings from "./islands/extras/EditableLinkSettings.tsx";
-import * as $extras_LockerSettings from "./islands/extras/LockerSettings.tsx";
-import * as $extras_MultiLinkSettings from "./islands/extras/MultiLinkSettings.tsx";
-import * as $extras_SplashSettings from "./islands/extras/SplashSettings.tsx";
-import * as $extras_TimeBombSettings from "./islands/extras/TimeBombSettings.tsx";
-import * as $modal_CardModal from "./islands/modal/CardModal.tsx";
-import * as $modal_ModalShell from "./islands/modal/ModalShell.tsx";
-import * as $modal_useModalShell from "./islands/modal/useModalShell.ts";
-import * as $smart_input_FileUploadOptions from "./islands/smart-input/FileUploadOptions.tsx";
-import * as $smart_input_ShareReady from "./islands/smart-input/ShareReady.tsx";
-import * as $smart_input_SmartInputToolbar from "./islands/smart-input/SmartInputToolbar.tsx";
-import * as $templates_EmailForm from "./islands/templates/EmailForm.tsx";
-import * as $templates_MediaHubForm from "./islands/templates/MediaHubForm.tsx";
-import * as $templates_PhoneForm from "./islands/templates/PhoneForm.tsx";
-import * as $templates_SMSForm from "./islands/templates/SMSForm.tsx";
-import * as $templates_SocialHubForm from "./islands/templates/SocialHubForm.tsx";
-import * as $templates_VCardForm from "./islands/templates/VCardForm.tsx";
-import * as $templates_WebsiteForm from "./islands/templates/WebsiteForm.tsx";
-import * as $templates_WiFiForm from "./islands/templates/WiFiForm.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -123,6 +86,7 @@ const manifest = {
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/compare.tsx": $compare,
+    "./routes/demo/[...slug].tsx": $demo_slug_,
     "./routes/edit.tsx": $edit,
     "./routes/es/archivos.tsx": $es_archivos,
     "./routes/es/bodas.tsx": $es_bodas,
@@ -170,23 +134,15 @@ const manifest = {
     "./islands/AboutModal.tsx": $AboutModal,
     "./islands/ActionButtons.tsx": $ActionButtons,
     "./islands/BucketQR.tsx": $BucketQR,
-    "./islands/CreateModal.tsx": $CreateModal,
     "./islands/DesignPreferencesSync.tsx": $DesignPreferencesSync,
     "./islands/EasterEggs.tsx": $EasterEggs,
     "./islands/EditQRForm.tsx": $EditQRForm,
     "./islands/ErrorBoundary.tsx": $ErrorBoundary,
     "./islands/FileSlideshow.tsx": $FileSlideshow,
     "./islands/FooterDock.tsx": $FooterDock,
-    "./islands/GradientCreator.tsx": $GradientCreator,
-    "./islands/HistoryDrawer.tsx": $HistoryDrawer,
-    "./islands/KofiModal.tsx": $KofiModal,
-    "./islands/LibraryDrawer.tsx": $LibraryDrawer,
-    "./islands/LogoUploader.tsx": $LogoUploader,
     "./islands/NoteCard.tsx": $NoteCard,
-    "./islands/OwnerStrip.tsx": $OwnerStrip,
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
-    "./islands/QRReader.tsx": $QRReader,
     "./islands/QrPrintGuideIsland.tsx": $QrPrintGuideIsland,
     "./islands/RotatingTitle.tsx": $RotatingTitle,
     "./islands/ShareActions.tsx": $ShareActions,
@@ -194,39 +150,6 @@ const manifest = {
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/ToastManager.tsx": $ToastManager,
     "./islands/VerticalStudio.tsx": $VerticalStudio,
-    "./islands/bucket-qr/BucketContentDisplay.tsx":
-      $bucket_qr_BucketContentDisplay,
-    "./islands/bucket-qr/PasswordUnlock.tsx": $bucket_qr_PasswordUnlock,
-    "./islands/create-modal/ChoiceRow.tsx": $create_modal_ChoiceRow,
-    "./islands/create-modal/CompletionState.tsx": $create_modal_CompletionState,
-    "./islands/create-modal/DesignTab.tsx": $create_modal_DesignTab,
-    "./islands/create-modal/PalettePills.tsx": $create_modal_PalettePills,
-    "./islands/edit-qr/FieldReportCard.tsx": $edit_qr_FieldReportCard,
-    "./islands/edit-qr/QRStatusCard.tsx": $edit_qr_QRStatusCard,
-    "./islands/edit-qr/RoutingConfigForm.tsx": $edit_qr_RoutingConfigForm,
-    "./islands/edit-qr/RoutingModeSelector.tsx": $edit_qr_RoutingModeSelector,
-    "./islands/extras/BatchSettings.tsx": $extras_BatchSettings,
-    "./islands/extras/EditableLinkSettings.tsx": $extras_EditableLinkSettings,
-    "./islands/extras/LockerSettings.tsx": $extras_LockerSettings,
-    "./islands/extras/MultiLinkSettings.tsx": $extras_MultiLinkSettings,
-    "./islands/extras/SplashSettings.tsx": $extras_SplashSettings,
-    "./islands/extras/TimeBombSettings.tsx": $extras_TimeBombSettings,
-    "./islands/modal/CardModal.tsx": $modal_CardModal,
-    "./islands/modal/ModalShell.tsx": $modal_ModalShell,
-    "./islands/modal/useModalShell.ts": $modal_useModalShell,
-    "./islands/smart-input/FileUploadOptions.tsx":
-      $smart_input_FileUploadOptions,
-    "./islands/smart-input/ShareReady.tsx": $smart_input_ShareReady,
-    "./islands/smart-input/SmartInputToolbar.tsx":
-      $smart_input_SmartInputToolbar,
-    "./islands/templates/EmailForm.tsx": $templates_EmailForm,
-    "./islands/templates/MediaHubForm.tsx": $templates_MediaHubForm,
-    "./islands/templates/PhoneForm.tsx": $templates_PhoneForm,
-    "./islands/templates/SMSForm.tsx": $templates_SMSForm,
-    "./islands/templates/SocialHubForm.tsx": $templates_SocialHubForm,
-    "./islands/templates/VCardForm.tsx": $templates_VCardForm,
-    "./islands/templates/WebsiteForm.tsx": $templates_WebsiteForm,
-    "./islands/templates/WiFiForm.tsx": $templates_WiFiForm,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;

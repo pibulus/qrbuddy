@@ -3,11 +3,11 @@ import { useEffect, useState } from "preact/hooks";
 import QRCodeStyling from "qr-code-styling";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
-import GradientCreator from "./GradientCreator.tsx";
+import GradientCreator from "../components/GradientCreator.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
 import { addToast } from "./ToastManager.tsx";
 import { checkBlobScannability } from "../utils/qr-decode.ts";
-import { useModalShell } from "./modal/useModalShell.ts";
+import { useModalShell } from "../components/modal/useModalShell.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 const DICE_PROBE_DATA = "https://qrbuddy.app";
@@ -187,6 +187,7 @@ export default function StyleSelector(
 
   const handleStyleSelect = (s: string, index = 0) => {
     style.value = s;
+    if (customStyle) customStyle.value = null;
     sounds.playAt("bloop", index, { total: TOTAL_PRESETS, force: true });
     haptics.light();
     shell.requestClose();
@@ -382,7 +383,7 @@ export default function StyleSelector(
                     onClick={() => handleStyleSelect(key, index)}
                     class={`group rounded-2xl border-2 p-1.5 text-left transition-all duration-200 ${
                       active
-                        ? "border-black bg-amber-200 shadow-chunky"
+                        ? "border-black bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-chunky"
                         : "border-black/15 bg-white hover:border-black/60 hover:scale-[1.02]"
                     }`}
                   >
@@ -431,7 +432,7 @@ export default function StyleSelector(
                 }}
                 class={`group rounded-2xl border-2 p-1.5 text-left transition-all duration-200 ${
                   style.value === "custom"
-                    ? "border-black bg-amber-200 shadow-chunky"
+                    ? "border-black bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-chunky"
                     : "border-black/15 bg-white hover:border-black/60 hover:scale-[1.02]"
                 }`}
               >

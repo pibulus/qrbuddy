@@ -80,10 +80,16 @@ let zxingPromise: Promise<ZXingReader> | null = null;
 
 function loadZXing(): Promise<ZXingReader> {
   zxingPromise ??= import("zxing-wasm/reader").then((mod) => {
+    const origin = typeof globalThis.location?.origin === "string" &&
+        globalThis.location.origin !== "null"
+      ? globalThis.location.origin
+      : "";
     mod.prepareZXingModule({
       overrides: {
         locateFile: (path: string, prefix: string) =>
-          path.endsWith(".wasm") ? "/zxing_reader.wasm" : prefix + path,
+          path.endsWith(".wasm")
+            ? `${origin}/zxing_reader.wasm`
+            : prefix + path,
       },
     });
     return mod;

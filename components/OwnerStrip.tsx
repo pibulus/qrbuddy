@@ -32,10 +32,13 @@ import {
 } from "../utils/share-stats.ts";
 import type { QR_STYLES } from "../utils/qr-styles.ts";
 import { updateHistoryItem } from "../utils/history.ts";
-import { openPricingModal, pricingModalOpen } from "./PricingModal.tsx";
-import { addToast } from "./ToastManager.tsx";
+import {
+  openPricingModal,
+  pricingModalOpen,
+} from "../islands/PricingModal.tsx";
+import { addToast } from "../islands/ToastManager.tsx";
 import PalettePills from "./create-modal/PalettePills.tsx";
-import QRCanvas from "./QRCanvas.tsx";
+import QRCanvas from "../islands/QRCanvas.tsx";
 import {
   buildRouletteShareUrl,
   parseRouletteParams,
@@ -959,16 +962,16 @@ export default function OwnerStrip(
 
       {files.length > 1 && (
         <div class="flex flex-wrap items-center justify-between gap-2 bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl px-3 py-2">
-          <span class="text-xs font-black text-[#1e1714]">
+          <span class="text-xs font-black text-[#1e1714] whitespace-nowrap">
             🎲 {isSpanish ? "Ruleta (QR / Link)" : "Roulette draw"}
           </span>
           <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-qr-cream p-0.5 gap-0.5">
             <button
               type="button"
               onClick={() => applyRouletteSetting(false, null)}
-              class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
+              class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
                 !rouletteEnabled
-                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >
@@ -977,9 +980,9 @@ export default function OwnerStrip(
             <button
               type="button"
               onClick={() => applyRouletteSetting(true, null)}
-              class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
+              class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
                 rouletteEnabled && rouletteSpins === null
-                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >
@@ -991,9 +994,9 @@ export default function OwnerStrip(
                   applyRouletteSetting(true, 1);
                 }
               }}
-              class={`min-h-[30px] inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[11px] font-black cursor-pointer transition-all ${
+              class={`min-h-[30px] inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[11px] font-black cursor-pointer whitespace-nowrap transition-all ${
                 rouletteEnabled && rouletteSpins !== null
-                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >

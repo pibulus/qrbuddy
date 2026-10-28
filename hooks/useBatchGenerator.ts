@@ -1,6 +1,4 @@
 import { useState } from "preact/hooks";
-// @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
-import JSZip from "jszip";
 import QRCodeStyling from "qr-code-styling";
 import { haptics } from "../utils/haptics.ts";
 import { Signal } from "@preact/signals";
@@ -146,6 +144,12 @@ export function useBatchGenerator(
       const includePng = format === "png" || format === "both";
       const includeSvg = format === "svg" || format === "both";
 
+      const { default: JSZip } = (await import("jszip")) as unknown as {
+        default: new () => {
+          file: (name: string, data: Blob | Uint8Array | string) => void;
+          generateAsync: (opts: { type: "blob" }) => Promise<Blob>;
+        };
+      };
       const zip = new JSZip();
       const baseOptions = {
         width: 1000,

@@ -130,7 +130,7 @@ export default function LockersPage({ data }: PageProps<PageData>) {
         tagline="Turn PDFs, ZIPs, photos, or audio tracks into a scannable 30-day download page — with optional self-destructing download caps."
         subtagline="Drag a file onto the input bar below or click the paperclip icon to stage a transfer."
         defaultStyle="pool"
-        defaultUrl="https://qrbuddy.app/f/demo"
+        defaultUrl="https://qrbuddy.app/demo/drop"
         defaultCaption="OPEN FILE"
         featuresTitle="Built for Fast Hand-Offs, Print Proofs & Ephemeral Transfers"
         faqTitle="File Drop & Locker Questions"

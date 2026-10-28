@@ -1,7 +1,7 @@
 import { Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
-import { addToast } from "./ToastManager.tsx";
+import { addToast } from "../islands/ToastManager.tsx";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface LogoUploaderProps {
@@ -165,8 +165,8 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
       <div
         class={`w-full min-h-[60px] rounded-2xl border-2 px-3 py-2.5 flex items-center gap-3 transition-all ${
           logoUrl.value
-            ? "border-black bg-amber-200 shadow-chunky"
-            : "border-black/15 bg-white"
+            ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-chunky"
+            : "border-[#1e1714]/15 bg-[#fffef7]"
         }`}
       >
         {logoUrl.value

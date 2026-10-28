@@ -6,7 +6,11 @@ import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
-import { QR_STYLES } from "../utils/qr-styles.ts";
+import {
+  getQRThemeStyleVars,
+  getQRThemeTokens,
+  QR_STYLES,
+} from "../utils/qr-styles.ts";
 import { sounds } from "../utils/sounds.ts";
 import { looksLikeUrl } from "../utils/url.ts";
 import ChoiceRow from "./create-modal/ChoiceRow.tsx";
@@ -14,7 +18,7 @@ import CompletionState, {
   type CompletionKind,
 } from "./create-modal/CompletionState.tsx";
 import DesignTab from "./create-modal/DesignTab.tsx";
-import { STYLE_DISPLAY } from "./StyleSelector.tsx";
+import { STYLE_DISPLAY } from "../islands/StyleSelector.tsx";
 import BatchSettings from "./extras/BatchSettings.tsx";
 import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
 import LockerSettings from "./extras/LockerSettings.tsx";
@@ -30,7 +34,7 @@ import SocialHubForm from "./templates/SocialHubForm.tsx";
 import VCardForm from "./templates/VCardForm.tsx";
 import WebsiteForm from "./templates/WebsiteForm.tsx";
 import WiFiForm from "./templates/WiFiForm.tsx";
-import { addToast } from "./ToastManager.tsx";
+import { addToast } from "../islands/ToastManager.tsx";
 
 type ActiveTab = "type" | "options" | "design";
 type TypeIntent = "qr" | "share-file" | "collect-files";
@@ -797,12 +801,12 @@ export default function CreateModal({
                     haptics.light();
                     sounds.toggleOff?.();
                   }}
-                  class="min-h-[40px] inline-flex items-center gap-1.5 rounded-full border-2 border-black bg-white px-3.5 py-1.5 text-xs font-black text-black shadow-chunky hover:bg-amber-50 hover:scale-105 active:scale-95 transition-all"
+                  class="min-h-[40px] inline-flex items-center gap-1.5 rounded-full border-2 border-black bg-white px-3.5 py-1.5 text-xs font-black text-black shadow-chunky hover:bg-[var(--qr-theme-tint,#fce7f3)] hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
                 >
                   {isSpanish ? "← Todos los tipos" : "← All QR types"}
                 </button>
 
-                <span class="min-h-[36px] inline-flex items-center gap-1.5 rounded-full border-2 border-black bg-amber-200 px-3 py-1 text-xs font-black text-black shadow-chunky truncate">
+                <span class="min-h-[36px] inline-flex items-center gap-1.5 rounded-full border-2 border-black bg-[var(--qr-theme-tint-strong,#fbcfe8)] px-3 py-1 text-xs font-black text-black shadow-chunky truncate whitespace-nowrap">
                   <span aria-hidden="true">{activeStageBadge.icon}</span>
                   <span class="truncate">{activeStageBadge.label}</span>
                 </span>
@@ -868,9 +872,9 @@ export default function CreateModal({
                               sounds.click();
                             }}
                             aria-pressed={selectedTemplate === seg.key}
-                            class={`min-h-[44px] rounded-full border-2 px-2 font-black text-sm transition-all ${
+                            class={`min-h-[44px] rounded-full border-2 px-2 font-black text-sm whitespace-nowrap transition-all ${
                               selectedTemplate === seg.key
-                                ? "border-black bg-amber-200 text-black shadow-chunky"
+                                ? "border-black bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-black shadow-chunky"
                                 : "border-black/15 bg-white text-neutral-700 hover:border-black/60"
                             }`}
                           >
@@ -896,10 +900,10 @@ export default function CreateModal({
                           haptics.light();
                           sounds.click();
                         }}
-                        class="min-h-[44px] rounded-full border-2 border-black bg-white px-3.5 py-2 text-xs font-black text-black shadow-chunky hover:bg-amber-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                        class="min-h-[44px] rounded-full border-2 border-black bg-white px-3.5 py-2 text-xs font-black text-black shadow-chunky hover:bg-[var(--qr-theme-tint,#fce7f3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
                       >
                         {isSpanish
-                          ? "🔗 Comportamiento (Editable / Límites) →"
+                          ? "🔗 Comportamiento →"
                           : "🔗 Behavior (Editable / Limits) →"}
                       </button>
                       <button
@@ -910,7 +914,7 @@ export default function CreateModal({
                           haptics.light();
                           sounds.click();
                         }}
-                        class="min-h-[44px] rounded-full border-2 border-black bg-amber-200 px-3.5 py-2 text-xs font-black text-black shadow-chunky hover:bg-amber-300 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                        class="min-h-[44px] rounded-full border-2 border-black bg-[var(--qr-theme-tint-strong,#fbcfe8)] px-3.5 py-2 text-xs font-black text-black shadow-chunky hover:bg-[var(--qr-theme-cta-bg,#f9a8d4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
                       >
                         {isSpanish ? "🎨 Estilo y Logo →" : "🎨 Style & Logo →"}
                       </button>
@@ -925,7 +929,7 @@ export default function CreateModal({
                         haptics.light();
                         sounds.click();
                       }}
-                      class="w-full min-h-[44px] rounded-full border-2 border-black bg-amber-200 px-4 py-2 text-xs sm:text-sm font-black text-black shadow-chunky hover:bg-amber-300 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                      class="w-full min-h-[44px] rounded-full border-2 border-black bg-[var(--qr-theme-tint-strong,#fbcfe8)] px-4 py-2 text-xs sm:text-sm font-black text-black shadow-chunky hover:bg-[var(--qr-theme-cta-bg,#f9a8d4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
                     >
                       {isSpanish
                         ? "🎨 Siguiente: Estilo y Logo →"
@@ -939,16 +943,19 @@ export default function CreateModal({
     );
   };
 
+  const themeTokens = getQRThemeTokens(qrStyle.value, customStyle?.value);
+  const themeStyleVars = getQRThemeStyleVars(qrStyle.value, customStyle?.value);
+
   const renderOptionsTab = () => {
     const isStaticActive = !isDynamic.value && !isBatchMode && !lockerActive;
     return (
       <div class="space-y-4">
         <section class="space-y-2">
-          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500 whitespace-nowrap">
             {isSpanish ? "Comportamiento del link" : "Link behavior"}
           </h3>
 
-          {/* Compact 2-pill segmented toggle (replaces two 5-line cards that clipped on scroll) */}
+          {/* Compact 2-pill segmented toggle */}
           <div
             role="group"
             aria-label={isSpanish ? "Modo de enlace QR" : "QR link mode"}
@@ -972,10 +979,10 @@ export default function CreateModal({
                 haptics.light();
                 sounds.toggleOff?.();
               }}
-              class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 ${
+              class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center gap-1.5 ${
                 isStaticActive
                   ? "bg-[#1e1714] text-[#fffef7] shadow-sm"
-                  : "text-neutral-700 hover:bg-amber-100"
+                  : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
               }`}
             >
               <span>⚡ {isSpanish ? "Estático" : "Static"}</span>
@@ -994,10 +1001,10 @@ export default function CreateModal({
                 }
                 haptics.light();
               }}
-              class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 ${
+              class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center gap-1.5 ${
                 isDynamic.value
-                  ? "bg-amber-200 text-[#1e1714] border-2 border-[#1e1714] shadow-sm"
-                  : "text-neutral-700 hover:bg-amber-100"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-2 border-[#1e1714] shadow-sm"
+                  : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
               }`}
             >
               <span>
@@ -1005,67 +1012,49 @@ export default function CreateModal({
               </span>
             </button>
           </div>
-
-          <p class="text-xs font-semibold text-[#6f6158] px-1">
-            {isDynamic.value
-              ? (isSpanish
-                ? "Un link corto redirigido después de imprimir, con estadísticas sin rastreo."
-                : "A short link repointed after printing, with coarse privacy-safe scan stats.")
-              : (isSpanish
-                ? "El contenido vive directo en los cuadritos. Funciona para siempre y sin internet."
-                : "Content lives directly inside the QR squares. Works forever, offline, zero servers.")}
-          </p>
         </section>
 
-        <section class="space-y-2 animate-slide-down">
-          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500">
+        <section class="space-y-2.5 animate-slide-down">
+          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500 whitespace-nowrap">
             {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
           </h3>
 
           <ChoiceRow
             icon="🎲"
             title={isSpanish
-              ? "Rotación o ruleta de links"
+              ? "Rotación y ruleta de links"
               : "Link rotation & roulette"}
-            description={isSpanish
-              ? "Avanza en orden o gira al azar entre varios links."
-              : "Cycle in order or roll a random link on each scan."}
             active={isDynamic.value && isSequential}
+            accordion
             onClick={() => {
               if (!isDynamic.value) activateDynamicBase();
               setIsSequential(!isSequential);
               haptics.light();
             }}
-          />
-          {isDynamic.value && isSequential && (
-            <MultiLinkSettings
-              sequentialUrls={sequentialUrls}
-              setSequentialUrls={setSequentialUrls}
-              loopSequence={loopSequence}
-              setLoopSequence={setLoopSequence}
-              randomSequence={randomSequence}
-              setRandomSequence={setRandomSequence}
-              dailySpins={dailySpins}
-              setDailySpins={setDailySpins}
-              lang={locale}
-            />
-          )}
+          >
+            {isDynamic.value && isSequential && (
+              <MultiLinkSettings
+                sequentialUrls={sequentialUrls}
+                setSequentialUrls={setSequentialUrls}
+                loopSequence={loopSequence}
+                setLoopSequence={setLoopSequence}
+                randomSequence={randomSequence}
+                setRandomSequence={setRandomSequence}
+                dailySpins={dailySpins}
+                setDailySpins={setDailySpins}
+                embedded
+                lang={locale}
+              />
+            )}
+          </ChoiceRow>
 
           <ChoiceRow
             icon={isSequential && randomSequence ? "🎨" : "✨"}
             title={isSequential && randomSequence
-              ? (isSpanish
-                ? "Personalizar tarjeta de ruleta"
-                : "Brand spin card")
+              ? (isSpanish ? "Tarjeta de ruleta" : "Brand spin card")
               : (isSpanish ? "Portada de bienvenida" : "Intro page")}
-            description={isSequential && randomSequence
-              ? (isSpanish
-                ? "Insignia de marca, título, color, logo y marca blanca."
-                : "Brand badge, headline, color, logo, and white-label.")
-              : (isSpanish
-                ? "Muestra una tarjeta de bienvenida antes de abrir el destino."
-                : "Show a short landing page before redirecting.")}
             active={isDynamic.value && splashActive}
+            accordion
             onClick={() => {
               if (!isDynamic.value) activateDynamicBase();
               const isRoulette = isSequential && randomSequence;
@@ -1075,34 +1064,36 @@ export default function CreateModal({
                   title: isSpanish ? "Sorteo Misterioso 🎲" : "Mystery Draw 🎲",
                   buttonText: isSpanish ? "Abrir Premio 🎁" : "Open Reward 🎁",
                   brandName: isSpanish ? "SORTEO DIARIO" : "DAILY DROP",
-                  accentColor: "#F59E0B",
+                  accentColor: themeTokens.accent,
                 }
                 : {
                   enabled: true,
                   title: isSpanish ? "¡Hola!" : "Welcome!",
                   buttonText: isSpanish ? "Continuar" : "Continue",
+                  accentColor: themeTokens.accent,
                 };
               haptics.light();
             }}
-          />
-          {isDynamic.value && splashActive && (
-            <SplashSettings
-              splashConfig={splashConfig}
-              destinationUrl={url.value}
-              isRoulette={isSequential && randomSequence}
-              lang={locale}
-            />
-          )}
+          >
+            {isDynamic.value && splashActive && (
+              <SplashSettings
+                splashConfig={splashConfig}
+                destinationUrl={url.value}
+                isRoulette={isSequential && randomSequence}
+                defaultAccentColor={themeTokens.accent}
+                embedded
+                lang={locale}
+              />
+            )}
+          </ChoiceRow>
 
           <ChoiceRow
             icon="⏳"
             title={isSpanish
               ? "Límite de escaneos o fecha"
               : "Scan & date limits"}
-            description={isSpanish
-              ? "Desactiva el QR después de ciertos escaneos o en una fecha."
-              : "Stop the QR after a scan count or expiry date."}
             active={isDynamic.value && isLimitSettingsOpen}
+            accordion
             onClick={() => {
               if (!isDynamic.value) activateDynamicBase();
               const next = !isLimitSettingsOpen;
@@ -1113,16 +1104,18 @@ export default function CreateModal({
               setIsLimitSettingsOpen(next);
               haptics.light();
             }}
-          />
-          {isDynamic.value && isLimitSettingsOpen && (
-            <TimeBombSettings
-              scanLimit={scanLimit}
-              setScanLimit={setScanLimit}
-              expiryDate={expiryDate}
-              setExpiryDate={setExpiryDate}
-              lang={locale}
-            />
-          )}
+          >
+            {isDynamic.value && isLimitSettingsOpen && (
+              <TimeBombSettings
+                scanLimit={scanLimit}
+                setScanLimit={setScanLimit}
+                expiryDate={expiryDate}
+                setExpiryDate={setExpiryDate}
+                embedded
+                lang={locale}
+              />
+            )}
+          </ChoiceRow>
 
           {isDynamic.value && (
             <EditableLinkSettings
@@ -1258,6 +1251,7 @@ export default function CreateModal({
         aria-modal="true"
         aria-labelledby="create-modal-title"
         tabindex={-1}
+        style={themeStyleVars}
         class={`relative w-full max-w-lg bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col overflow-hidden ${
           shell.closing
             ? "charm-modal--closing animate-modal-exit"
@@ -1328,7 +1322,10 @@ export default function CreateModal({
                   ? (isSpanish ? "Listo para compartir." : "Ready to share.")
                   : (isSpanish ? "Haz que haga trucos." : "Make it do tricks.")}
               </h2>
-              <p class="text-xs sm:text-sm font-bold text-[#ec4899] truncate">
+              <p
+                class="text-xs sm:text-sm font-bold truncate"
+                style={{ color: "var(--qr-theme-accent, #ec4899)" }}
+              >
                 {hasCompletion
                   ? (isSpanish
                     ? "Tu QR ya apunta a la nueva página."
@@ -1378,10 +1375,10 @@ export default function CreateModal({
                   }}
                   aria-selected={activeTab === tab.id}
                   role="tab"
-                  class={`min-h-[38px] px-1 rounded-full text-xs min-[380px]:text-sm font-black transition-all flex items-center justify-center min-w-0 ${
+                  class={`min-h-[38px] px-1 rounded-full text-xs min-[380px]:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center min-w-0 ${
                     activeTab === tab.id
                       ? "bg-[#1e1714] text-[#fffef7]"
-                      : "text-neutral-600 hover:bg-amber-100"
+                      : "text-neutral-600 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
                   }`}
                 >
                   <span class="truncate">{tab.label}</span>

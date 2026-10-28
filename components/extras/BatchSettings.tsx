@@ -66,10 +66,10 @@ export default function BatchSettings({
             aria-pressed={format === opt.id}
             onClick={() => setFormat(opt.id)}
             disabled={isGeneratingBatch}
-            class={`min-h-[44px] px-3 py-2 text-xs font-black rounded-xl border-2 border-black transition-all ${
+            class={`min-h-[44px] px-3 py-2 text-xs font-black rounded-xl border-2 border-[#1e1714] transition-all ${
               format === opt.id
-                ? "bg-amber-200 text-black shadow-chunky-xs"
-                : "bg-qr-cream text-gray-700 hover:bg-amber-50"
+                ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-chunky-xs"
+                : "bg-qr-cream text-gray-700 hover:bg-[var(--qr-theme-tint,#fdf2f8)]"
             }`}
           >
             {opt.label}

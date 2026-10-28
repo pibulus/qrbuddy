@@ -130,7 +130,7 @@ export default function RestaurantMenusPage({ data }: PageProps<PageData>) {
         tagline="Mint permanent static menu QRs or editable links that swap from breakfast to dinner without reprinting table tents."
         subtagline="Paste a menu URL below — export 3000px PNGs or print-shop Vector SVGs with zero account wall."
         defaultStyle="matcha"
-        defaultUrl="https://brunswick-bistro.com/menu"
+        defaultUrl="https://qrbuddy.app/demo/menu"
         defaultCaption="VIEW MENU"
         featuresTitle="Built for Cafés, Bars, Food Trucks & Print Shops"
         faqTitle="Restaurant Menu QR Questions"

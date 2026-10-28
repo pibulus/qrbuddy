@@ -35,8 +35,8 @@ export default function RoutingModeSelector(
               }}
               class={`min-h-[48px] p-3 rounded-2xl border-2 text-left transition-all ${
                 active
-                  ? "bg-amber-200 border-black shadow-chunky"
-                  : "bg-white border-black/15 hover:border-black/60"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border-[#1e1714] shadow-chunky"
+                  : "bg-[#fffef7] border-[#1e1714]/15 hover:border-[#1e1714]/60"
               }`}
             >
               <div class="text-xl mb-1">{mode.icon}</div>

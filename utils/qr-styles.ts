@@ -141,7 +141,7 @@ export const QR_STYLES = {
   pool: {
     dots: {
       type: "gradient",
-      shape: "rounded" as const,
+      shape: "extra-rounded" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
@@ -261,7 +261,7 @@ export const QR_STYLES = {
   vapor: {
     dots: {
       type: "gradient",
-      shape: "rounded" as const,
+      shape: "dots" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
@@ -380,7 +380,7 @@ export const QR_STYLES = {
   blush: {
     dots: {
       type: "gradient",
-      shape: "rounded" as const,
+      shape: "classy-rounded" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
@@ -403,7 +403,7 @@ export const QR_STYLES = {
       },
     },
     cornersSquare: {
-      shape: "extra-rounded" as const,
+      shape: "dot" as const,
       type: "gradient",
       gradient: {
         type: "linear" as const,
@@ -431,7 +431,7 @@ export const QR_STYLES = {
   grape: {
     dots: {
       type: "gradient",
-      shape: "rounded" as const,
+      shape: "classy" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
@@ -482,7 +482,7 @@ export const QR_STYLES = {
   matcha: {
     dots: {
       type: "gradient",
-      shape: "rounded" as const,
+      shape: "classy-rounded" as const,
       gradient: {
         type: "linear" as const,
         rotation: DIAGONAL,
@@ -532,3 +532,198 @@ export const QR_STYLES = {
 };
 
 export const STYLE_NAMES = Object.keys(QR_STYLES) as (keyof typeof QR_STYLES)[];
+
+export interface QRThemeTokens {
+  /** Vibrant accent hex (#RRGGBB) for close buttons, badges, and scan card shadows */
+  accent: string;
+  /** Deeper accent hex (#RRGGBB) for hover states on vibrant elements */
+  accentDeep: string;
+  /** Soft pastel surface tint (#RRGGBB) for subtle hover states */
+  tint: string;
+  /** Richer pastel fill (#RRGGBB) for active pills/toggles & enabled accordion headers (high contrast with #1e1714 ink) */
+  tintStrong: string;
+  /** Primary bottom CTA background (#RRGGBB) paired with #1e1714 ink */
+  ctaBg: string;
+  /** Primary bottom CTA hover background (#RRGGBB) */
+  ctaHover: string;
+  /** Primary bottom CTA active background (#RRGGBB) */
+  ctaActive: string;
+}
+
+export const QR_THEME_TOKENS: Record<keyof typeof QR_STYLES, QRThemeTokens> = {
+  sunset: {
+    accent: "#EC4899",
+    accentDeep: "#DB2777",
+    tint: "#FCE7F3",
+    tintStrong: "#FBCFE8",
+    ctaBg: "#F9A8D4",
+    ctaHover: "#F472B6",
+    ctaActive: "#EC4899",
+  },
+  pool: {
+    accent: "#0891B2",
+    accentDeep: "#0E7490",
+    tint: "#E0F2FE",
+    tintStrong: "#BAE6FD",
+    ctaBg: "#7DD3FC",
+    ctaHover: "#38BDF8",
+    ctaActive: "#0EA5E9",
+  },
+  matcha: {
+    accent: "#059669",
+    accentDeep: "#047857",
+    tint: "#D1FAE5",
+    tintStrong: "#A7F3D0",
+    ctaBg: "#6EE7B7",
+    ctaHover: "#34D399",
+    ctaActive: "#10B981",
+  },
+  blush: {
+    accent: "#E11D48",
+    accentDeep: "#BE123C",
+    tint: "#FFE4E6",
+    tintStrong: "#FECDD3",
+    ctaBg: "#FDA4AF",
+    ctaHover: "#FB7185",
+    ctaActive: "#F43F5E",
+  },
+  vapor: {
+    accent: "#9333EA",
+    accentDeep: "#7E22CE",
+    tint: "#F3E8FF",
+    tintStrong: "#E9D5FF",
+    ctaBg: "#D8B4FE",
+    ctaHover: "#C084FC",
+    ctaActive: "#B46EF9",
+  },
+  grape: {
+    accent: "#7C3AED",
+    accentDeep: "#6D28D9",
+    tint: "#EDE9FE",
+    tintStrong: "#DDD6FE",
+    ctaBg: "#C4B5FD",
+    ctaHover: "#A78BFA",
+    ctaActive: "#9D74F7",
+  },
+  candy: {
+    accent: "#FF2E93",
+    accentDeep: "#DB2777",
+    tint: "#FCE7F3",
+    tintStrong: "#FBCFE8",
+    ctaBg: "#F9A8D4",
+    ctaHover: "#F472B6",
+    ctaActive: "#EC4899",
+  },
+  terminal: {
+    accent: "#10B981",
+    accentDeep: "#059669",
+    tint: "#DCFCE7",
+    tintStrong: "#BBF7D0",
+    ctaBg: "#86EFAC",
+    ctaHover: "#4ADE80",
+    ctaActive: "#22C55E",
+  },
+  brutalist: {
+    accent: "#EAB308",
+    accentDeep: "#CA8A04",
+    tint: "#FEF9C3",
+    tintStrong: "#FEF08A",
+    ctaBg: "#FDE047",
+    ctaHover: "#FACC15",
+    ctaActive: "#EAB308",
+  },
+  noir: {
+    accent: "#4F46E5",
+    accentDeep: "#4338CA",
+    tint: "#E0E7FF",
+    tintStrong: "#C7D2FE",
+    ctaBg: "#A5B4FC",
+    ctaHover: "#93A2FA",
+    ctaActive: "#818CF8",
+  },
+};
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+  return (
+    "#" +
+    [clamp(r), clamp(g), clamp(b)]
+      .map((v) => v.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase()
+  );
+}
+
+function mixWithWarmPaper(
+  rgb: [number, number, number],
+  weight: number,
+): string {
+  // Blend with warm near-white (#FFFEF7 -> [255, 254, 247])
+  const paper: [number, number, number] = [255, 254, 247];
+  return rgbToHex(
+    paper[0] + (rgb[0] - paper[0]) * weight,
+    paper[1] + (rgb[1] - paper[1]) * weight,
+    paper[2] + (rgb[2] - paper[2]) * weight,
+  );
+}
+
+export function getQRThemeTokens(
+  styleKey: string,
+  customStyle?: {
+    dots?: {
+      color?: string;
+      gradient?: { colorStops?: Array<{ color: string }> };
+    };
+  } | null,
+): QRThemeTokens {
+  if (
+    styleKey !== "custom" &&
+    Object.prototype.hasOwnProperty.call(QR_THEME_TOKENS, styleKey)
+  ) {
+    return QR_THEME_TOKENS[styleKey as keyof typeof QR_STYLES];
+  }
+
+  if (styleKey === "custom" && customStyle?.dots) {
+    const rawColor = customStyle.dots.gradient?.colorStops?.[0]?.color ??
+      customStyle.dots.color;
+    if (rawColor) {
+      try {
+        const rgb = parseColorToRgb(rawColor);
+        return {
+          accent: rgbToHex(rgb[0], rgb[1], rgb[2]),
+          accentDeep: rgbToHex(rgb[0] * 0.85, rgb[1] * 0.85, rgb[2] * 0.85),
+          tint: mixWithWarmPaper(rgb, 0.14),
+          tintStrong: mixWithWarmPaper(rgb, 0.24),
+          ctaBg: mixWithWarmPaper(rgb, 0.34),
+          ctaHover: mixWithWarmPaper(rgb, 0.42),
+          ctaActive: mixWithWarmPaper(rgb, 0.50),
+        };
+      } catch {
+        // Fall through to sunset default
+      }
+    }
+  }
+
+  return QR_THEME_TOKENS.sunset;
+}
+
+export function getQRThemeStyleVars(
+  styleKey: string,
+  customStyle?: {
+    dots?: {
+      color?: string;
+      gradient?: { colorStops?: Array<{ color: string }> };
+    };
+  } | null,
+): Record<string, string> {
+  const t = getQRThemeTokens(styleKey, customStyle);
+  return {
+    "--qr-theme-accent": t.accent,
+    "--qr-theme-accent-deep": t.accentDeep,
+    "--qr-theme-tint": t.tint,
+    "--qr-theme-tint-strong": t.tintStrong,
+    "--qr-theme-cta-bg": t.ctaBg,
+    "--qr-theme-cta-hover": t.ctaHover,
+    "--qr-theme-cta-active": t.ctaActive,
+  };
+}

@@ -11,7 +11,7 @@ import {
   generateSyncPhrase,
   importSyncBundle,
 } from "../utils/sync-phrase.ts";
-import { addToast } from "./ToastManager.tsx";
+import { addToast } from "../islands/ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 import { isPlusLibraryEnabled } from "../utils/auth.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";

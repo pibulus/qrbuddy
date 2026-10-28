@@ -1,7 +1,7 @@
 import { type Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
-import { addToast } from "./ToastManager.tsx";
+import { addToast } from "../islands/ToastManager.tsx";
 import {
   decodeQRFromFile,
   decodeQRFromImageData,

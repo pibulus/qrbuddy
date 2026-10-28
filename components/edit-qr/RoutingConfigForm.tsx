@@ -80,22 +80,22 @@ export default function RoutingConfigForm({
       )}
 
       {routingMode === "sequential" && (
-        <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
-          <div class="flex flex-wrap items-center justify-between gap-2 pb-1">
-            <span class="text-xs font-black text-black uppercase tracking-wider">
-              URL Sequence / Roulette
+        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 space-y-3 animate-slide-down">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-black text-[#1e1714] uppercase tracking-wider whitespace-nowrap">
+              Rotation mode
             </span>
-            <div class="inline-flex rounded-xl border-2 border-black bg-qr-cream p-0.5 gap-0.5">
+            <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5">
               <button
                 type="button"
                 onClick={() => {
                   setRandomSequence?.(false);
                   setLoopSequence(true);
                 }}
-                class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                   !randomSequence && loopSequence
-                    ? "bg-amber-200 text-black border border-black"
-                    : "text-neutral-600 hover:text-black"
+                    ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
+                    : "text-neutral-600 hover:text-[#1e1714]"
                 }`}
               >
                 Loop 🔄
@@ -103,10 +103,10 @@ export default function RoutingConfigForm({
               <button
                 type="button"
                 onClick={() => setRandomSequence?.(true)}
-                class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                   randomSequence
-                    ? "bg-amber-200 text-black border border-black"
-                    : "text-neutral-600 hover:text-black"
+                    ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
+                    : "text-neutral-600 hover:text-[#1e1714]"
                 }`}
               >
                 Roulette 🎲
@@ -117,10 +117,10 @@ export default function RoutingConfigForm({
                   setRandomSequence?.(false);
                   setLoopSequence(false);
                 }}
-                class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                   !randomSequence && !loopSequence
-                    ? "bg-amber-200 text-black border border-black"
-                    : "text-neutral-600 hover:text-black"
+                    ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
+                    : "text-neutral-600 hover:text-[#1e1714]"
                 }`}
               >
                 Once
@@ -129,18 +129,18 @@ export default function RoutingConfigForm({
           </div>
 
           {randomSequence && setDailySpins && (
-            <div class="flex flex-wrap items-center justify-between gap-2 bg-qr-cream border-2 border-black/20 rounded-xl px-3 py-2">
-              <span class="text-xs font-black text-black">
-                Daily spins per phone
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+              <span class="text-xs font-black text-[#4a3f39] uppercase tracking-wider whitespace-nowrap">
+                Daily spins
               </span>
-              <div class="inline-flex items-center gap-1.5">
+              <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5">
                 <button
                   type="button"
                   onClick={() => setDailySpins(null)}
-                  class={`min-h-[34px] px-3 py-1 rounded-lg border-2 text-xs font-black whitespace-nowrap transition-all ${
+                  class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                     dailySpins === null
-                      ? "bg-amber-200 border-black text-black shadow-chunky"
-                      : "bg-white border-black/15 text-neutral-700 hover:border-black"
+                      ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border border-[#1e1714] text-[#1e1714]"
+                      : "text-neutral-600 hover:text-[#1e1714]"
                   }`}
                 >
                   ∞ Open
@@ -149,10 +149,10 @@ export default function RoutingConfigForm({
                   onClick={() => {
                     if (dailySpins === null) setDailySpins(1);
                   }}
-                  class={`min-h-[34px] inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border-2 cursor-pointer transition-all ${
+                  class={`min-h-[30px] inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-black cursor-pointer whitespace-nowrap transition-all ${
                     dailySpins !== null
-                      ? "bg-amber-200 border-black text-black shadow-chunky"
-                      : "bg-white border-black/15 text-neutral-700 hover:border-black"
+                      ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border border-[#1e1714] text-[#1e1714]"
+                      : "text-neutral-600 hover:text-[#1e1714]"
                   }`}
                 >
                   <input
@@ -174,7 +174,7 @@ export default function RoutingConfigForm({
                         setDailySpins(Math.min(99, Math.max(1, n)));
                       }
                     }}
-                    class="w-9 bg-transparent text-xs font-black text-black placeholder:text-neutral-500 focus:outline-none text-center"
+                    class="w-8 bg-transparent text-xs font-black text-[#1e1714] placeholder:text-neutral-500 focus:outline-none text-center"
                   />
                   <span class="text-[11px] font-black whitespace-nowrap">
                     / day

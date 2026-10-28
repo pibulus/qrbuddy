@@ -1,10 +1,10 @@
 import { useSignal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
-import { addToast } from "../ToastManager.tsx";
+import { addToast } from "../../islands/ToastManager.tsx";
 import { QRData } from "../../hooks/useQRData.ts";
 import type { QR_STYLES } from "../../utils/qr-styles.ts";
-import QRCanvas from "../QRCanvas.tsx";
+import QRCanvas from "../../islands/QRCanvas.tsx";
 import { formatRelativeVisit } from "./FieldReportCard.tsx";
 
 interface QRStatusCardProps {

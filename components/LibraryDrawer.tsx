@@ -23,7 +23,7 @@ import {
 import { exportSyncBundle, importSyncBundle } from "../utils/sync-phrase.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 import { isPlusLibraryEnabled } from "../utils/auth.ts";
-import { addToast } from "./ToastManager.tsx";
+import { addToast } from "../islands/ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 

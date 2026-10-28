@@ -23,19 +23,22 @@ import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 import { looksLikeUrl } from "../utils/url.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
-import CreateModal from "./CreateModal.tsx";
-import HistoryDrawer from "./HistoryDrawer.tsx";
-import LibraryDrawer from "./LibraryDrawer.tsx";
+import CreateModal from "../components/CreateModal.tsx";
+import HistoryDrawer from "../components/HistoryDrawer.tsx";
+import LibraryDrawer from "../components/LibraryDrawer.tsx";
 import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
-import QRReader from "./QRReader.tsx";
-import SmartInputToolbar from "./smart-input/SmartInputToolbar.tsx";
+import QRReader from "../components/QRReader.tsx";
+import SmartInputToolbar from "../components/smart-input/SmartInputToolbar.tsx";
 import FileUploadOptions, {
   shareKindOf,
-} from "./smart-input/FileUploadOptions.tsx";
-import ShareReady, { type LastShare } from "./smart-input/ShareReady.tsx";
+} from "../components/smart-input/FileUploadOptions.tsx";
+import ShareReady, {
+  type LastShare,
+} from "../components/smart-input/ShareReady.tsx";
 import { prepImages } from "../utils/image-prep.ts";
+import { getQRThemeStyleVars, getQRThemeTokens } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 
 interface SmartInputProps {
@@ -223,6 +226,49 @@ export default function SmartInput(
     } | null
   >(null);
 
+  const activeThemeTokens = getQRThemeTokens(qrStyle.value, customStyle?.value);
+  const prevThemeAccentRef = useRef<string>(activeThemeTokens.accent);
+
+  // Sync active QR theme CSS custom properties onto :root so modals, pills,
+  // and CTAs stay bound to the chosen QR palette.
+  useEffect(() => {
+    const root = globalThis.document?.documentElement;
+    if (root) {
+      const vars = getQRThemeStyleVars(qrStyle.value, customStyle?.value);
+      for (const [k, v] of Object.entries(vars)) {
+        root.style.setProperty(k, v);
+      }
+    }
+    const prevAccent = prevThemeAccentRef.current;
+    const nextAccent = activeThemeTokens.accent;
+    if (
+      splashConfig.value &&
+      (!splashConfig.value.accentColor ||
+        splashConfig.value.accentColor.toLowerCase() ===
+          prevAccent.toLowerCase())
+    ) {
+      splashConfig.value = {
+        ...splashConfig.value,
+        accentColor: nextAccent,
+      };
+    }
+    prevThemeAccentRef.current = nextAccent;
+  }, [qrStyle.value, customStyle?.value, activeThemeTokens.accent]);
+
+  const effectiveSplashConfig = splashConfig.value
+    ? {
+      ...splashConfig.value,
+      accentColor: splashConfig.value.accentColor || activeThemeTokens.accent,
+    }
+    : (isSequential && randomSequence)
+    ? {
+      enabled: true,
+      title: isSpanish ? "Sorteo de Ruleta" : "Roulette Draw",
+      buttonText: isSpanish ? "Abrir resultado" : "Open result",
+      accentColor: activeThemeTokens.accent,
+    }
+    : null;
+
   // Custom hooks
   const { isCreating: isCreatingDynamic, createDynamicQR } = useDynamicQR({
     url,
@@ -238,7 +284,7 @@ export default function SmartInput(
         ...(randomSequence && dailySpins ? { dailySpins } : {}),
       }
       : undefined,
-    splashConfig: splashConfig.value,
+    splashConfig: effectiveSplashConfig,
   });
 
   const { isUploading, uploadProgress, uploadError, uploadFile } =

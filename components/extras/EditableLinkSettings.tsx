@@ -1,7 +1,7 @@
 import { Signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
-import { addToast } from "../ToastManager.tsx";
+import { addToast } from "../../islands/ToastManager.tsx";
 import { looksLikeUrl } from "../../utils/url.ts";
 import { isPlusLibraryEnabled } from "../../utils/auth.ts";
 import { fetchLibraryQuota, LibraryQuota } from "../../utils/library.ts";
@@ -126,7 +126,7 @@ export default function EditableLinkSettings({
                 type="button"
                 onClick={() =>
                   globalThis.dispatchEvent(new CustomEvent("qrb-open-library"))}
-                class="px-2.5 py-1 text-[11px] font-black rounded-full border border-[#1e1714] bg-amber-100 hover:bg-amber-200 active:scale-95 transition-transform shrink-0"
+                class="px-2.5 py-1 text-[11px] font-black rounded-full border border-[#1e1714] bg-[var(--qr-theme-tint,#fce7f3)] hover:bg-[var(--qr-theme-tint-strong,#fbcfe8)] active:scale-95 transition-transform shrink-0 whitespace-nowrap"
               >
                 {passport?.avatarEmoji || "🦎"} {quota
                   ? `${quota.used_count}/${quota.total_allowed}`
@@ -198,7 +198,7 @@ export default function EditableLinkSettings({
                   );
                 }
               }}
-              class="min-h-[40px] px-3.5 py-1.5 bg-[#fbbf24] text-[#1e1714] border-2 border-[#1e1714] rounded-xl font-black text-xs shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 transition-transform"
+              class="min-h-[40px] px-3.5 py-1.5 bg-[var(--qr-theme-cta-bg,#f9a8d4)] hover:bg-[var(--qr-theme-cta-hover,#f472b6)] text-[#1e1714] border-2 border-[#1e1714] rounded-xl font-black text-xs shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 transition-transform whitespace-nowrap"
             >
               {isSpanish ? "Copiar" : "Copy"}
             </button>

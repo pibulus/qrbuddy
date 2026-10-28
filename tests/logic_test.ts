@@ -20,7 +20,7 @@ import {
 } from "../types/qr-templates.ts";
 
 import { formatFileSize, validateFile } from "../utils/file-validation.ts";
-import { shareKindOf } from "../islands/smart-input/FileUploadOptions.tsx";
+import { shareKindOf } from "../components/smart-input/FileUploadOptions.tsx";
 import {
   buildCards,
   buildShareStatsCsv,
@@ -28,13 +28,13 @@ import {
   nextStatsRange,
   reorderItems,
 } from "../utils/share-stats.ts";
-import { deriveQRStatus } from "../islands/edit-qr/QRStatusCard.tsx";
+import { deriveQRStatus } from "../components/edit-qr/QRStatusCard.tsx";
 import {
   buildAnalyticsCsv,
   buildSevenDayActivity,
   findPeakHourWindow,
   formatRelativeVisit,
-} from "../islands/edit-qr/FieldReportCard.tsx";
+} from "../components/edit-qr/FieldReportCard.tsx";
 
 import {
   isQrUnbranded,

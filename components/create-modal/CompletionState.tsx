@@ -1,7 +1,7 @@
 import type { Signal } from "@preact/signals";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { QR_STYLES } from "../../utils/qr-styles.ts";
-import QRCanvas from "../QRCanvas.tsx";
+import QRCanvas from "../../islands/QRCanvas.tsx";
 
 export type CompletionKind = "share-file" | "collect-files" | "text-card";
 

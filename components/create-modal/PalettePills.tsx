@@ -2,14 +2,14 @@ import type { ComponentChildren } from "preact";
 import { haptics } from "../../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { sounds } from "../../utils/sounds.ts";
-import { STYLE_DISPLAY } from "../StyleSelector.tsx";
+import { STYLE_DISPLAY } from "../../islands/StyleSelector.tsx";
 
 export const PALETTE_PILL =
   "min-h-[42px] inline-flex items-center gap-1.5 rounded-2xl border-2 px-2.5 text-xs sm:text-[13px] font-black transition-all hover:-translate-y-0.5 active:translate-y-0";
 
 export const pillState = (active: boolean) =>
   active
-    ? "border-[#1e1714] bg-amber-200 text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
+    ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
     : "border-[#1e1714]/15 bg-[#fffef7] text-neutral-800 hover:border-[#1e1714]/60";
 
 interface PalettePillsProps {

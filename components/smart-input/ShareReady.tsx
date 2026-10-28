@@ -6,7 +6,7 @@ import {
   buildRouletteShareUrl,
   parseRouletteParams,
 } from "../../utils/roulette-lock.ts";
-import { addToast } from "../ToastManager.tsx";
+import { addToast } from "../../islands/ToastManager.tsx";
 
 export type ShareKind = "slideshow" | "playlist" | "file" | "pack";
 
@@ -118,7 +118,7 @@ export default function ShareReady(
   return (
     <div class="mt-4 bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 space-y-3 animate-slide-down shadow-[2px_2px_0_#1e1714]">
       <div class="flex items-center gap-3">
-        <span class="w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-amber-200 flex items-center justify-center text-lg shrink-0">
+        <span class="w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] flex items-center justify-center text-lg shrink-0">
           {copy.glyph}
         </span>
         <div class="min-w-0 flex-1">
@@ -132,16 +132,16 @@ export default function ShareReady(
       </div>
       {canRoulette && (
         <div class="flex flex-wrap items-center justify-between gap-2 bg-[#fbf1e4] border-2 border-[#1e1714]/20 rounded-xl px-3 py-2">
-          <span class="text-xs font-black text-[#1e1714]">
+          <span class="text-xs font-black text-[#1e1714] whitespace-nowrap">
             🎲 {isSpanish ? "Ruleta" : "Roulette draw"}
           </span>
           <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-[#fffef7] p-0.5 gap-0.5">
             <button
               type="button"
               onClick={() => applyRoulette(false, null)}
-              class={`min-h-[28px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
+              class={`min-h-[28px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
                 !rouletteEnabled
-                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >
@@ -150,9 +150,9 @@ export default function ShareReady(
             <button
               type="button"
               onClick={() => applyRoulette(true, null)}
-              class={`min-h-[28px] px-2.5 py-0.5 rounded-lg text-[11px] font-black transition-all ${
+              class={`min-h-[28px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
                 rouletteEnabled && rouletteSpins === null
-                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >
@@ -164,9 +164,9 @@ export default function ShareReady(
                   applyRoulette(true, 1);
                 }
               }}
-              class={`min-h-[28px] inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[11px] font-black cursor-pointer transition-all ${
+              class={`min-h-[28px] inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[11px] font-black cursor-pointer whitespace-nowrap transition-all ${
                 rouletteEnabled && rouletteSpins !== null
-                  ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >

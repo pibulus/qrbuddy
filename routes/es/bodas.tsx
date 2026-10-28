@@ -131,7 +131,7 @@ export default function BodasEspanolPage({ data }: PageProps<PageData>) {
         tagline="Enlaza invitaciones con confirmaciones, mapas del salón, galerías de 10 fotos o playlists en un solo escaneo."
         subtagline="Pega el enlace del evento o suelta fotos/audios abajo: exporta PNG de 3000px o SVG vectorial para imprenta."
         defaultStyle="blush"
-        defaultUrl="https://nuestraboda.love/rsvp"
+        defaultUrl="https://qrbuddy.app/demo/wedding?lang=es"
         defaultCaption="NUESTRO DÍA"
         homeUrl="/es"
         homeLabel="← Volver al estudio"

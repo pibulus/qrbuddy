@@ -10,6 +10,7 @@ interface MultiLinkSettingsProps {
   setRandomSequence?: (random: boolean) => void;
   dailySpins?: number | null;
   setDailySpins?: (spins: number | null) => void;
+  embedded?: boolean;
   lang?: Locale;
 }
 
@@ -22,16 +23,25 @@ export default function MultiLinkSettings({
   setRandomSequence,
   dailySpins = null,
   setDailySpins,
+  embedded = false,
   lang,
 }: MultiLinkSettingsProps) {
   const isSpanish = getClientLocale(lang) === "es";
+  const shellClass = embedded
+    ? "space-y-3"
+    : "bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 mb-4 space-y-3 animate-slide-down";
+  const activeSegment =
+    "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]";
+  const inactiveSegment =
+    "text-[#4a3f39] hover:text-[#1e1714] border border-transparent";
+
   return (
-    <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 mb-4 space-y-3 animate-slide-down">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <h4 class="font-black text-xs uppercase tracking-wider text-[#1e1714]">
-          {isSpanish ? "Modo de rotación" : "Rotation mode"}
+    <div class={shellClass}>
+      <div class="flex items-center justify-between gap-2">
+        <h4 class="font-black text-xs uppercase tracking-wider text-[#1e1714] whitespace-nowrap">
+          {isSpanish ? "Modo" : "Rotation mode"}
         </h4>
-        <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5">
+        <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5 shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -39,10 +49,8 @@ export default function MultiLinkSettings({
               setLoopSequence(true);
               haptics.light();
             }}
-            class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
-              !randomSequence && loopSequence
-                ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
-                : "text-[#4a3f39] hover:text-[#1e1714]"
+            class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
+              !randomSequence && loopSequence ? activeSegment : inactiveSegment
             }`}
           >
             {isSpanish ? "Bucle 🔄" : "Loop 🔄"}
@@ -53,10 +61,8 @@ export default function MultiLinkSettings({
               setRandomSequence?.(true);
               haptics.light();
             }}
-            class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
-              randomSequence
-                ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
-                : "text-[#4a3f39] hover:text-[#1e1714]"
+            class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
+              randomSequence ? activeSegment : inactiveSegment
             }`}
           >
             {isSpanish ? "Ruleta 🎲" : "Roulette 🎲"}
@@ -68,10 +74,8 @@ export default function MultiLinkSettings({
               setLoopSequence(false);
               haptics.light();
             }}
-            class={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
-              !randomSequence && !loopSequence
-                ? "bg-amber-200 text-[#1e1714] border border-[#1e1714]"
-                : "text-[#4a3f39] hover:text-[#1e1714]"
+            class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
+              !randomSequence && !loopSequence ? activeSegment : inactiveSegment
             }`}
           >
             {isSpanish ? "1 vez" : "Once"}
@@ -80,22 +84,20 @@ export default function MultiLinkSettings({
       </div>
 
       {randomSequence && setDailySpins && (
-        <div class="flex flex-wrap items-center justify-between gap-2 bg-[#fbf1e4] border-2 border-[#1e1714]/20 rounded-xl px-3 py-2 animate-slide-down">
-          <span class="text-xs font-black text-[#1e1714]">
-            {isSpanish ? "Giros por teléfono" : "Daily spins per phone"}
+        <div class="flex items-center justify-between gap-2 animate-slide-down">
+          <span class="text-xs font-black uppercase tracking-wider text-[#1e1714] whitespace-nowrap">
+            {isSpanish ? "Giros / teléfono" : "Daily spins"}
           </span>
 
-          <div class="inline-flex items-center gap-1.5">
+          <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5 shrink-0">
             <button
               type="button"
               onClick={() => {
                 setDailySpins(null);
                 haptics.light();
               }}
-              class={`min-h-[34px] px-3 py-1 rounded-lg border-2 text-xs font-black whitespace-nowrap transition-all ${
-                dailySpins === null
-                  ? "bg-amber-200 border-[#1e1714] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
-                  : "bg-[#fffef7] border-[#1e1714]/20 text-[#4a3f39] hover:border-[#1e1714]"
+              class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
+                dailySpins === null ? activeSegment : inactiveSegment
               }`}
             >
               {isSpanish ? "∞ Libre" : "∞ Open"}
@@ -108,10 +110,8 @@ export default function MultiLinkSettings({
                   haptics.light();
                 }
               }}
-              class={`min-h-[34px] inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border-2 cursor-pointer transition-all ${
-                dailySpins !== null
-                  ? "bg-amber-200 border-[#1e1714] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
-                  : "bg-[#fffef7] border-[#1e1714]/20 text-[#4a3f39] hover:border-[#1e1714]"
+              class={`min-h-[32px] inline-flex items-center gap-1 px-2.5 py-1 rounded-lg cursor-pointer transition-all ${
+                dailySpins !== null ? activeSegment : inactiveSegment
               }`}
             >
               <input
@@ -135,7 +135,7 @@ export default function MultiLinkSettings({
                     setDailySpins(Math.min(99, Math.max(1, n)));
                   }
                 }}
-                class="w-9 bg-transparent text-xs font-black text-[#1e1714] placeholder:text-[#6e6058] focus:outline-none text-center"
+                class="w-8 bg-transparent text-xs font-black text-[#1e1714] placeholder:text-[#6e6058] focus:outline-none text-center"
               />
               <span class="text-[11px] font-black whitespace-nowrap">
                 / {isSpanish ? "día" : "day"}
@@ -145,7 +145,7 @@ export default function MultiLinkSettings({
         </div>
       )}
 
-      <div class="space-y-2">
+      <div class="space-y-2 pt-0.5">
         {sequentialUrls.map((url, index) => (
           <div key={index} class="flex items-center gap-2">
             <span class="text-xs font-black text-[#6e6058] w-4 text-right shrink-0">
@@ -171,7 +171,7 @@ export default function MultiLinkSettings({
                   );
                   haptics.medium();
                 }}
-                class="min-w-[38px] min-h-[38px] rounded-full border-2 border-[#1e1714]/20 bg-[#fbf1e4] hover:border-[#1e1714] hover:bg-amber-200 text-[#1e1714] font-black text-xs transition-all active:scale-95"
+                class="min-w-[38px] min-h-[38px] rounded-full border-2 border-[#1e1714]/20 bg-[#fbf1e4] hover:border-[#1e1714] hover:bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] font-black text-xs transition-all active:scale-95"
                 aria-label={isSpanish
                   ? `Quitar link ${index + 1}`
                   : `Remove link ${index + 1}`}
@@ -187,7 +187,7 @@ export default function MultiLinkSettings({
             setSequentialUrls([...sequentialUrls, ""]);
             haptics.light();
           }}
-          class="w-full min-h-[40px] py-2 text-xs font-black text-[#1e1714] bg-[#fbf1e4] border-2 border-[#1e1714] rounded-full shadow-[2px_2px_0_#1e1714] hover:bg-amber-200 active:scale-[0.99] transition-all"
+          class="w-full min-h-[40px] py-2 text-xs font-black text-[#1e1714] bg-[#fbf1e4] border-2 border-[#1e1714] rounded-full shadow-[2px_2px_0_#1e1714] hover:bg-[var(--qr-theme-tint-strong,#fbcfe8)] active:scale-[0.99] transition-all whitespace-nowrap"
         >
           {isSpanish ? "+ Agregar link" : "+ Add link"}
         </button>

@@ -131,7 +131,7 @@ export default function ArchivosEspanolPage({ data }: PageProps<PageData>) {
         tagline="Convierte PDFs, paquetes ZIP, fotos o audios en un código QR descargable con vigencia de 30 días o autodestrucción por usos."
         subtagline="Arrastra un archivo al cuadro de abajo o toca el clip para preparar el envío."
         defaultStyle="pool"
-        defaultUrl="https://qrbuddy.app/f/demo"
+        defaultUrl="https://qrbuddy.app/demo/drop?lang=es"
         defaultCaption="ABRIR ARCHIVO"
         homeUrl="/es"
         homeLabel="← Volver al estudio"

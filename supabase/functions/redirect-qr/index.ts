@@ -446,8 +446,10 @@ serve(async (req) => {
         }</div>
                </div>
              </div>
-           </div>
-           <button id="roulette-respin" type="button" class="respin-btn" hidden>
+           </div>`
+        : "";
+      const rouletteRespinHtml = isRouletteMode
+        ? `<button id="roulette-respin" type="button" class="respin-btn" hidden>
              <span class="dice-glyph" aria-hidden="true">🎲</span>
              <span id="roulette-respin-label">Spin again</span>
            </button>`
@@ -621,14 +623,14 @@ serve(async (req) => {
                 renderStaticSlot(chosen);
                 if (dailyLimit !== null) {
                   if (locked || count >= dailyLimit) {
-                    badge.textContent = "🔒 Daily roll locked (" + Math.min(count, dailyLimit) + "/" + dailyLimit + " today) · Resets tomorrow";
+                    badge.textContent = "🔒 Daily roll locked (" + Math.min(count, dailyLimit) + "/" + dailyLimit + ") · Resets tomorrow";
                     if (respinBtn) respinBtn.hidden = true;
                   } else {
                     var rem = Math.max(0, dailyLimit - count);
                     badge.textContent = "🎲 Roll " + count + " of " + dailyLimit + " today";
                     if (respinBtn) {
                       respinBtn.hidden = rem <= 0;
-                      if (respinLabel) respinLabel.textContent = "Spin again (" + rem + " left today)";
+                      if (respinLabel) respinLabel.textContent = "Spin again";
                     }
                   }
                 } else {
@@ -957,13 +959,14 @@ serve(async (req) => {
               transition: transform 34ms, box-shadow 34ms;
             }
             .respin-btn {
-              margin-top: 12px;
+              margin-top: 14px;
               width: 100%;
               min-height: 44px;
               padding: 10px 16px;
               border-radius: 999px;
               border: 2px solid #1e1714;
-              background: #fef3c7;
+              background: #fbf1e4;
+              background: color-mix(in srgb, var(--accent) 16%, #fffef7);
               color: #1e1714;
               font-weight: 800;
               font-size: 13px;
@@ -979,7 +982,8 @@ serve(async (req) => {
               display: none !important;
             }
             .respin-btn:hover {
-              background: #fde68a;
+              background: #fce7f3;
+              background: color-mix(in srgb, var(--accent) 26%, #fffef7);
               transform: translate(-1.5px, -1.5px);
               box-shadow: 4.5px 4.5px 0px 0px #1e1714;
             }
@@ -1008,7 +1012,8 @@ serve(async (req) => {
               display: inline-flex;
               align-items: center;
               gap: 6px;
-              background: #fdf2f8;
+              background: #fbf1e4;
+              background: color-mix(in srgb, var(--accent) 10%, #fffef7);
               border: 2px solid #1e1714;
               padding: 6px 14px;
               border-radius: 999px;
@@ -1060,6 +1065,7 @@ serve(async (req) => {
             <a id="roulette-cta" href="${
         escapeHtml(destinationUrl)
       }" class="btn">${safeButtonText} →</a>
+            ${rouletteRespinHtml}
             ${footerHtml}
           </div>
           ${rouletteScriptHtml}

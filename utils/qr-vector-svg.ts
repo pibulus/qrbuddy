@@ -10,6 +10,7 @@
 
 import qrcode from "qrcode-generator";
 import { escapeXml, measureCaptionUnicodeFallback } from "./svg-export.ts";
+import type { CornerSquareShape, DotShape } from "../types/qr-types.ts";
 
 export interface VectorPalette {
   id: string;
@@ -18,6 +19,8 @@ export interface VectorPalette {
   c2: string;
   bg: string;
   rounded?: boolean;
+  dotShape?: DotShape;
+  cornerSquareShape?: CornerSquareShape;
 }
 
 /**
@@ -30,6 +33,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#C9184A",
     c2: "#5A189A",
     bg: "#FFF8F6",
+    dotShape: "rounded",
+    cornerSquareShape: "extra-rounded",
   },
   candy: {
     id: "candy",
@@ -37,6 +42,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#B5179E",
     c2: "#3F37C9",
     bg: "#FDF7FF",
+    dotShape: "dots",
+    cornerSquareShape: "dot",
   },
   blush: {
     id: "blush",
@@ -44,6 +51,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#800F2F",
     c2: "#C9184A",
     bg: "#FFF7F9",
+    dotShape: "classy-rounded",
+    cornerSquareShape: "dot",
   },
   matcha: {
     id: "matcha",
@@ -51,6 +60,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#1B4332",
     c2: "#0F6E56",
     bg: "#F6FBF7",
+    dotShape: "classy-rounded",
+    cornerSquareShape: "extra-rounded",
   },
   pool: {
     id: "pool",
@@ -58,6 +69,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#0B4F6C",
     c2: "#1D3557",
     bg: "#F5FAFE",
+    dotShape: "extra-rounded",
+    cornerSquareShape: "extra-rounded",
   },
   vapor: {
     id: "vapor",
@@ -65,6 +78,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#7209B7",
     c2: "#006466",
     bg: "#F8F6FF",
+    dotShape: "dots",
+    cornerSquareShape: "extra-rounded",
   },
   grape: {
     id: "grape",
@@ -72,6 +87,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#3C096C",
     c2: "#7B2CBF",
     bg: "#FBF7FF",
+    dotShape: "classy",
+    cornerSquareShape: "extra-rounded",
   },
   terminal: {
     id: "terminal",
@@ -80,6 +97,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c2: "#00FF41",
     bg: "#0A0A0A",
     rounded: false,
+    dotShape: "square",
+    cornerSquareShape: "square",
   },
   brutalist: {
     id: "brutalist",
@@ -88,6 +107,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c2: "#000000",
     bg: "#FFFF00",
     rounded: false,
+    dotShape: "square",
+    cornerSquareShape: "square",
   },
   noir: {
     id: "noir",
@@ -95,6 +116,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#1E1B4B",
     c2: "#0F172A",
     bg: "#FFFDF9",
+    dotShape: "rounded",
+    cornerSquareShape: "extra-rounded",
   },
   licorice: {
     id: "licorice",
@@ -102,6 +125,8 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
     c1: "#1E1714",
     c2: "#1E1714",
     bg: "#FFFEF7",
+    dotShape: "rounded",
+    cornerSquareShape: "extra-rounded",
   },
 };
 
@@ -115,6 +140,8 @@ export interface BuildQrSvgOptions {
   size?: number;
   errorCorrectionLevel?: "L" | "M" | "Q" | "H";
   rounded?: boolean;
+  dotShape?: DotShape;
+  cornerSquareShape?: CornerSquareShape;
 }
 
 function isFinderModule(row: number, col: number, count: number): boolean {
@@ -156,11 +183,49 @@ function roundedRectPath(
   ].join("");
 }
 
+function circlePath(cx: number, cy: number, r: number): string {
+  const rx = Number(r.toFixed(2));
+  const d = Number((r * 2).toFixed(2));
+  const x1 = Number((cx - r).toFixed(2));
+  const y = Number(cy.toFixed(2));
+  return `M${x1},${y}a${rx},${rx} 0 1,0 ${d},0a${rx},${rx} 0 1,0 -${d},0Z`;
+}
+
+function leafRectPath(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+): string {
+  const rad = Math.min(r, w / 2, h / 2);
+  if (rad <= 0) {
+    return `M${x},${y}h${w}v${h}h-${w}Z`;
+  }
+  const x1 = Number(x.toFixed(2));
+  const y1 = Number(y.toFixed(2));
+  const x2 = Number((x + w).toFixed(2));
+  const y2 = Number((y + h).toFixed(2));
+  const rx = Number(rad.toFixed(2));
+  const sx = Number((x + rad).toFixed(2));
+  return [
+    `M${sx},${y1}`,
+    `H${x2}`,
+    `V${Number((y2 - rad).toFixed(2))}`,
+    `A${rx},${rx} 0 0 1 ${Number((x2 - rad).toFixed(2))},${y2}`,
+    `H${x1}`,
+    `V${Number((y + rad).toFixed(2))}`,
+    `A${rx},${rx} 0 0 1 ${sx},${y1}`,
+    "Z",
+  ].join("");
+}
+
 function finderPatternPaths(
   originX: number,
   originY: number,
   cellSize: number,
   rounded: boolean,
+  cornerSquareShape?: CornerSquareShape,
 ): string {
   const outerSize = cellSize * 7;
   const innerCutX = originX + cellSize;
@@ -170,15 +235,58 @@ function finderPatternPaths(
   const dotY = originY + cellSize * 2;
   const dotSize = cellSize * 3;
 
-  const outerR = rounded ? cellSize * 1.6 : 0;
-  const innerR = rounded ? cellSize * 1.1 : 0;
-  const dotR = rounded ? cellSize * 0.85 : 0;
+  const effectiveCorner = !rounded
+    ? "square"
+    : (cornerSquareShape ?? "extra-rounded");
+
+  const outerR = effectiveCorner === "square"
+    ? 0
+    : effectiveCorner === "dot"
+    ? cellSize * 3.5
+    : cellSize * 1.6;
+  const innerR = effectiveCorner === "square"
+    ? 0
+    : effectiveCorner === "dot"
+    ? cellSize * 2.5
+    : cellSize * 1.1;
+  const dotR = effectiveCorner === "square"
+    ? 0
+    : effectiveCorner === "dot"
+    ? cellSize * 1.5
+    : cellSize * 0.85;
 
   return [
     roundedRectPath(originX, originY, outerSize, outerSize, outerR),
     roundedRectPath(innerCutX, innerCutY, innerCutSize, innerCutSize, innerR),
     roundedRectPath(dotX, dotY, dotSize, dotSize, dotR),
   ].join("");
+}
+
+function dataModulePath(
+  x: number,
+  y: number,
+  cellSize: number,
+  dotShape: DotShape,
+): string {
+  switch (dotShape) {
+    case "square":
+      return roundedRectPath(x, y, cellSize, cellSize, 0);
+    case "dots":
+      return circlePath(
+        x + cellSize / 2,
+        y + cellSize / 2,
+        cellSize * 0.44,
+      );
+    case "classy-rounded":
+      return leafRectPath(x, y, cellSize, cellSize, cellSize * 0.45);
+    case "classy":
+      return leafRectPath(x, y, cellSize, cellSize, cellSize * 0.28);
+    case "extra-rounded":
+      return roundedRectPath(x, y, cellSize, cellSize, cellSize * 0.46);
+    case "rounded":
+    default:
+      return roundedRectPath(x, y, cellSize, cellSize, cellSize * 0.34);
+  }
 }
 
 /**
@@ -194,6 +302,13 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   const bg = options.bg ?? preset.bg;
   const ecl = options.errorCorrectionLevel ?? "Q";
   const rounded = options.rounded ?? preset.rounded ?? true;
+  const dotShape: DotShape = !rounded
+    ? "square"
+    : (options.dotShape ?? preset.dotShape ?? "rounded");
+  const cornerSquareShape: CornerSquareShape = !rounded
+    ? "square"
+    : (options.cornerSquareShape ?? preset.cornerSquareShape ??
+      "extra-rounded");
 
   const qr = qrcode(0, ecl);
   qr.addData(payload);
@@ -221,30 +336,31 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
 
   // 3 Finder patterns
   pathChunks.push(
-    finderPatternPaths(offsetX, offsetY, cellSize, rounded),
+    finderPatternPaths(offsetX, offsetY, cellSize, rounded, cornerSquareShape),
     finderPatternPaths(
       offsetX + (moduleCount - 7) * cellSize,
       offsetY,
       cellSize,
       rounded,
+      cornerSquareShape,
     ),
     finderPatternPaths(
       offsetX,
       offsetY + (moduleCount - 7) * cellSize,
       cellSize,
       rounded,
+      cornerSquareShape,
     ),
   );
 
   // Data modules
-  const dotRadius = rounded ? cellSize * 0.34 : 0;
   for (let r = 0; r < moduleCount; r++) {
     for (let c = 0; c < moduleCount; c++) {
       if (isFinderModule(r, c, moduleCount)) continue;
       if (!qr.isDark(r, c)) continue;
       const x = offsetX + c * cellSize;
       const y = offsetY + r * cellSize;
-      pathChunks.push(roundedRectPath(x, y, cellSize, cellSize, dotRadius));
+      pathChunks.push(dataModulePath(x, y, cellSize, dotShape));
     }
   }
 

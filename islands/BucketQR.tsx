@@ -17,8 +17,8 @@ import { uploadViaR2 } from "../utils/r2-upload.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
 import type { BucketContentMetadata } from "../types/bucket-types.ts";
-import BucketContentDisplay from "./bucket-qr/BucketContentDisplay.tsx";
-import PasswordUnlock from "./bucket-qr/PasswordUnlock.tsx";
+import BucketContentDisplay from "../components/bucket-qr/BucketContentDisplay.tsx";
+import PasswordUnlock from "../components/bucket-qr/PasswordUnlock.tsx";
 import { addToast } from "./ToastManager.tsx";
 
 // Repeated chunky-CTA button idioms — used 3x, 3x, and 2x below.

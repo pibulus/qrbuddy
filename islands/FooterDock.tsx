@@ -7,7 +7,7 @@
  */
 import { useEffect, useRef, useState } from "preact/hooks";
 import { openAboutModal } from "./AboutModal.tsx";
-// import { KofiButton } from "./KofiModal.tsx"; — Tip Jar parked, see below.
+// import { KofiButton } from "../components/KofiModal.tsx"; — Tip Jar parked, see below.
 import { openPricingModal } from "./PricingModal.tsx";
 import { MAKER_URL } from "../utils/constants.ts";
 import {
@@ -21,7 +21,7 @@ type Lang = Locale;
 const COPY = {
   en: {
     made: "Made by Pablo",
-    solutions: "Solutions",
+    solutions: "Uses",
     about: "About",
     privacy: "Privacy",
     terms: "Terms",
@@ -30,16 +30,16 @@ const COPY = {
     switchLabel: "🇲🇽 ES",
     switchAria: "Cambiar idioma a español (México / LatAm)",
     links: [
-      { href: "/for/inspect", label: "Safe QR Inspector 🛡️" },
       { href: "/for/menus", label: "Restaurant Menus 📜" },
       { href: "/for/wifi", label: "Wi-Fi Cards 📶" },
       { href: "/for/vcard", label: "Contact Cards (vCard) 👤" },
-      { href: "/for/gs1", label: "GS1 2027 Packaging 📦" },
       { href: "/for/weddings", label: "Weddings & Photo Drops 📸" },
       { href: "/for/music", label: "Music Mixtapes 📼" },
-      { href: "/for/lockers", label: "Secret Drops 🔐" },
-      { href: "/guide/printing", label: "Print Calculator & Guide 📐" },
+      { href: "/for/lockers", label: "File Drops & Lockers 🔐" },
+      { href: "/for/inspect", label: "Safe QR Scanner 🛡️" },
+      { href: "/guide/printing", label: "Print Size Calculator 📐" },
       { href: "/compare", label: "Compare vs. $35/mo Traps ⚖️" },
+      { href: "/for/gs1", label: "GS1 2027 Packaging 📦" },
     ],
   },
   es: {
@@ -53,16 +53,16 @@ const COPY = {
     switchLabel: "EN",
     switchAria: "Switch language to English",
     links: [
-      { href: "/es/escanear", label: "Inspector Seguro de QR 🛡️" },
       { href: "/es/menus", label: "Menús para Restaurantes 📜" },
       { href: "/es/wifi", label: "Tarjetas Wi-Fi 📶" },
       { href: "/es/vcard", label: "Tarjetas de Contacto 👤" },
-      { href: "/es/gs1", label: "Empaques GS1 2027 📦" },
       { href: "/es/bodas", label: "Bodas y Álbum de Fotos 📸" },
       { href: "/es/musica", label: "Mixtapes y Música 📼" },
       { href: "/es/archivos", label: "Buzón de Archivos 🔐" },
+      { href: "/es/escanear", label: "Escáner Seguro de QR 🛡️" },
       { href: "/es/guia/impresion", label: "Calculadora de Impresión 📐" },
       { href: "/es/comparar", label: "Comparar vs. Trampas de $35/mes ⚖️" },
+      { href: "/es/gs1", label: "Empaques GS1 2027 📦" },
     ],
   },
 } as const;

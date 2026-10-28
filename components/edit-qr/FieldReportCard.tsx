@@ -4,7 +4,10 @@ import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { haptics } from "../../utils/haptics.ts";
 import { getOrCreatePassport } from "../../utils/passport.ts";
 import { getSupporterPass } from "../../utils/supporter-pass.ts";
-import { openPricingModal, pricingModalOpen } from "../PricingModal.tsx";
+import {
+  openPricingModal,
+  pricingModalOpen,
+} from "../../islands/PricingModal.tsx";
 
 interface AnalyticsDashboardProps {
   analytics: QRData["analytics"];

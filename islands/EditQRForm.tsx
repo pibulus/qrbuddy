@@ -6,10 +6,10 @@ import { normalizeUrl } from "../utils/url.ts";
 import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
-import AnalyticsDashboard from "./edit-qr/FieldReportCard.tsx";
-import QRStatusCard from "./edit-qr/QRStatusCard.tsx";
-import RoutingModeSelector from "./edit-qr/RoutingModeSelector.tsx";
-import RoutingConfigForm from "./edit-qr/RoutingConfigForm.tsx";
+import AnalyticsDashboard from "../components/edit-qr/FieldReportCard.tsx";
+import QRStatusCard from "../components/edit-qr/QRStatusCard.tsx";
+import RoutingModeSelector from "../components/edit-qr/RoutingModeSelector.tsx";
+import RoutingConfigForm from "../components/edit-qr/RoutingConfigForm.tsx";
 
 function toLocalDateTimeInput(value: string): string {
   const date = new Date(value);

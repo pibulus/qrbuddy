@@ -3,7 +3,7 @@ import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { getSupporterPass } from "../../utils/supporter-pass.ts";
-import { openPricingModal } from "../PricingModal.tsx";
+import { openPricingModal } from "../../islands/PricingModal.tsx";
 
 export interface SplashConfig {
   enabled: boolean;
@@ -29,6 +29,8 @@ interface SplashSettingsProps {
   splashConfig: Signal<SplashConfig | null>;
   destinationUrl?: string;
   isRoulette?: boolean;
+  defaultAccentColor?: string;
+  embedded?: boolean;
   lang?: Locale;
 }
 
@@ -63,7 +65,7 @@ const PRESETS: Preset[] = [
       "Ruleta diaria de premios y sorpresas. Toca abajo para abrir el giro de hoy.",
     brandName: "DAILY DROP",
     brandNameEs: "SORTEO DIARIO",
-    accentColor: "#F59E0B",
+    accentColor: "#EC4899",
   },
   {
     label: "Menu & Food",
@@ -122,8 +124,14 @@ const PRESETS: Preset[] = [
 ];
 
 export default function SplashSettings(
-  { splashConfig, destinationUrl, isRoulette = false, lang }:
-    SplashSettingsProps,
+  {
+    splashConfig,
+    destinationUrl,
+    isRoulette = false,
+    defaultAccentColor = "#EC4899",
+    embedded = false,
+    lang,
+  }: SplashSettingsProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const [localConfig, setLocalConfig] = useState<SplashConfig>(
@@ -134,7 +142,7 @@ export default function SplashSettings(
       description: "",
       imageUrl: "",
       brandName: "",
-      accentColor: "#FF69B4",
+      accentColor: defaultAccentColor,
     },
   );
   const [hasPass, setHasPass] = useState(false);
@@ -165,7 +173,7 @@ export default function SplashSettings(
       brandName: isSpanish
         ? (preset.brandNameEs ?? preset.brandName ?? "")
         : (preset.brandName ?? ""),
-      accentColor: preset.accentColor || "#FF69B4",
+      accentColor: preset.accentColor || defaultAccentColor,
       imageUrl: preset.imageUrl,
     };
     setLocalConfig(newConfig);
@@ -183,39 +191,35 @@ export default function SplashSettings(
     })()
     : null;
 
-  const activeAccent = localConfig.accentColor || "#FF69B4";
+  const activeAccent = localConfig.accentColor || defaultAccentColor;
   const isUnbranded = Boolean(hasPass || localConfig.unbranded);
+  const shellClass = embedded
+    ? "space-y-3.5"
+    : "space-y-4 bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 sm:p-5 shadow-[3px_3px_0_#1e1714] animate-slide-down";
 
   return (
-    <div class="space-y-4 bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 sm:p-5 shadow-[3px_3px_0_#1e1714] animate-slide-down">
-      {/* Header & Tab switch */}
-      <div class="flex items-center justify-between border-b-2 border-[#1e1714]/10 pb-3">
-        <div>
-          <h3 class="text-sm font-black text-[#1e1714] uppercase tracking-wide flex items-center gap-1.5">
-            <span>✨</span>
-            <span>
-              {isSpanish ? "Portada y Marca" : "Cover & Brand Card"}
-            </span>
-          </h3>
-          <p class="text-xs text-[#6e6058] font-bold mt-0.5">
-            {isSpanish
-              ? "Personaliza el título, insignia de marca, color e imagen."
-              : "Custom headline, brand badge, accent color, and cover image."}
-          </p>
-        </div>
+    <div class={shellClass}>
+      {/* Single-line Header & Edit / Preview switch */}
+      <div class="flex items-center justify-between gap-2 border-b border-[#1e1714]/10 pb-2.5">
+        <h3 class="text-xs font-black text-[#1e1714] uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
+          <span>✨</span>
+          <span>
+            {isSpanish ? "Portada" : "Cover Card"}
+          </span>
+        </h3>
 
         {/* Edit / Preview pill toggle */}
-        <div class="flex bg-[#fbf1e4] p-1 rounded-xl border-2 border-[#1e1714] shrink-0">
+        <div class="inline-flex bg-[#fbf1e4] p-0.5 gap-0.5 rounded-xl border-2 border-[#1e1714] shrink-0">
           <button
             type="button"
             onClick={() => {
               setActiveTab("edit");
               haptics.light();
             }}
-            class={`min-h-[34px] px-3 py-1 rounded-lg text-xs font-black transition-all ${
+            class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
               activeTab === "edit"
-                ? "bg-[#fffef7] text-[#1e1714] border border-[#1e1714]"
-                : "text-[#6e6058] hover:text-[#1e1714]"
+                ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
+                : "text-[#6e6058] hover:text-[#1e1714] border border-transparent"
             }`}
           >
             {isSpanish ? "✏️ Editar" : "✏️ Edit"}
@@ -226,10 +230,10 @@ export default function SplashSettings(
               setActiveTab("preview");
               haptics.light();
             }}
-            class={`min-h-[34px] px-3 py-1 rounded-lg text-xs font-black transition-all ${
+            class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
               activeTab === "preview"
-                ? "bg-[#1e1714] text-[#fffef7]"
-                : "text-[#6e6058] hover:text-[#1e1714]"
+                ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
+                : "text-[#6e6058] hover:text-[#1e1714] border border-transparent"
             }`}
           >
             {isSpanish ? "👁️ Vista" : "👁️ Preview"}
@@ -241,10 +245,13 @@ export default function SplashSettings(
       {!isRoulette && (
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <span class="text-[11px] font-black uppercase tracking-wider text-[#ec4899]">
+            <span
+              class="text-[11px] font-black uppercase tracking-wider whitespace-nowrap"
+              style={{ color: "var(--qr-theme-accent, #ec4899)" }}
+            >
               {isSpanish ? "Plantillas Rápidas" : "Quick Starters"}
             </span>
-            <span class="text-[11px] text-[#6e6058] font-bold">
+            <span class="text-[11px] text-[#6e6058] font-bold whitespace-nowrap">
               {isSpanish ? "1 toque" : "1-tap fill"}
             </span>
           </div>
@@ -254,13 +261,13 @@ export default function SplashSettings(
                 key={preset.label}
                 type="button"
                 onClick={() => applyPreset(preset)}
-                class="flex items-center gap-1 px-2 py-2 min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-amber-100 hover:-translate-y-0.5 active:translate-y-0 font-black text-[11px] sm:text-xs text-[#1e1714] transition-all text-left shadow-[2px_2px_0_#1e1714]"
+                class="flex items-center gap-1 px-2 py-2 min-h-[40px] rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[var(--qr-theme-tint,#fce7f3)] hover:-translate-y-0.5 active:translate-y-0 font-black text-[11px] sm:text-xs text-[#1e1714] transition-all text-left shadow-[2px_2px_0_#1e1714]"
                 title={isSpanish ? preset.titleEs : preset.title}
               >
                 <span class="text-sm shrink-0">
                   {preset.icon}
                 </span>
-                <span class="truncate">
+                <span class="truncate whitespace-nowrap">
                   {isSpanish ? preset.labelEs : preset.label}
                 </span>
               </button>
@@ -271,13 +278,13 @@ export default function SplashSettings(
 
       {/* Main Content: Form or Preview */}
       {activeTab === "edit" && (
-        <div class="space-y-3.5 pt-1">
-          {/* Brand Badge & Accent Color */}
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#fbf1e4] border-2 border-[#1e1714]/20 rounded-xl p-3">
+        <div class="space-y-3 pt-0.5">
+          {/* Brand Badge & Accent Color (flattened — no extra nested box) */}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <div class="flex justify-between items-center mb-1">
-                <label class="block text-[11px] font-black uppercase tracking-wide text-[#1e1714]">
-                  {isSpanish ? "Insignia de marca" : "Brand / Host badge"}
+                <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714] whitespace-nowrap">
+                  {isSpanish ? "Insignia de marca" : "Brand badge"}
                 </label>
                 <span class="text-[10px] font-bold text-[#6e6058]">
                   {(localConfig.brandName || "").length}/60
@@ -291,7 +298,7 @@ export default function SplashSettings(
                   updateConfig({
                     brandName: (e.target as HTMLInputElement).value,
                   })}
-                class="w-full px-3 py-1.5 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-xs font-black uppercase tracking-wider bg-[#fffef7] text-[#1e1714]"
+                class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[var(--qr-theme-accent,#ec4899)] focus:outline-none text-xs font-black uppercase tracking-wider bg-[#fffef7] text-[#1e1714]"
                 placeholder={isSpanish
                   ? "ej. CAFÉ BRUNSWICK"
                   : "e.g. BRUNSWICK ROASTERS"}
@@ -299,10 +306,10 @@ export default function SplashSettings(
             </div>
 
             <div>
-              <label class="block text-[11px] font-black uppercase tracking-wide text-[#1e1714] mb-1">
-                {isSpanish ? "Color de marca" : "Brand accent color"}
+              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714] mb-1 whitespace-nowrap">
+                {isSpanish ? "Color de acento" : "Accent color"}
               </label>
-              <div class="flex items-center gap-1.5 flex-wrap">
+              <div class="flex items-center gap-1.5 flex-wrap min-h-[36px]">
                 {ACCENT_SWATCHES.map((swatch) => {
                   const selected =
                     activeAccent.toLowerCase() === swatch.hex.toLowerCase();
@@ -325,7 +332,7 @@ export default function SplashSettings(
                   );
                 })}
                 <label
-                  class="w-7 h-7 rounded-full border-2 border-dashed border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-[11px] font-black cursor-pointer hover:bg-amber-50"
+                  class="w-7 h-7 rounded-full border-2 border-dashed border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-[11px] font-black cursor-pointer hover:bg-[var(--qr-theme-tint,#fce7f3)]"
                   title={isSpanish ? "Color personalizado" : "Custom hex color"}
                 >
                   +
@@ -347,7 +354,7 @@ export default function SplashSettings(
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <div class="flex justify-between items-center mb-1">
-                <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
+                <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714] whitespace-nowrap">
                   {isSpanish ? "Título *" : "Headline *"}
                 </label>
                 <span class="text-[10px] font-bold text-[#6e6058]">
@@ -360,7 +367,7 @@ export default function SplashSettings(
                 value={localConfig.title}
                 onInput={(e) =>
                   updateConfig({ title: (e.target as HTMLInputElement).value })}
-                class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
+                class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[var(--qr-theme-accent,#ec4899)] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
                 placeholder={isSpanish
                   ? "ej. Ruleta Diaria"
                   : "e.g. Mystery Draw"}
@@ -369,7 +376,7 @@ export default function SplashSettings(
 
             <div>
               <div class="flex justify-between items-center mb-1">
-                <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
+                <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714] whitespace-nowrap">
                   {isSpanish ? "Botón *" : "Button Text *"}
                 </label>
                 <span class="text-[10px] font-bold text-[#6e6058]">
@@ -384,7 +391,7 @@ export default function SplashSettings(
                   updateConfig({
                     buttonText: (e.target as HTMLInputElement).value,
                   })}
-                class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
+                class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[var(--qr-theme-accent,#ec4899)] focus:outline-none text-sm font-bold bg-[#fffef7] text-[#1e1714]"
                 placeholder={isSpanish
                   ? "ej. Abrir premio"
                   : "e.g. Open reward"}
@@ -395,7 +402,7 @@ export default function SplashSettings(
           {/* Description */}
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
+              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714] whitespace-nowrap">
                 {isSpanish
                   ? "Nota o reglas (opcional)"
                   : "Subtitle / Rules (Optional)"}
@@ -411,7 +418,7 @@ export default function SplashSettings(
                 updateConfig({
                   description: (e.target as HTMLTextAreaElement).value,
                 })}
-              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-sm font-medium resize-none bg-[#fffef7] text-[#1e1714]"
+              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[var(--qr-theme-accent,#ec4899)] focus:outline-none text-sm font-medium resize-none bg-[#fffef7] text-[#1e1714]"
               rows={2}
               placeholder={isSpanish
                 ? "Detalles del sorteo, menú o instrucciones..."
@@ -422,7 +429,7 @@ export default function SplashSettings(
           {/* Cover Image URL */}
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714]">
+              <label class="block text-xs font-black uppercase tracking-wide text-[#1e1714] whitespace-nowrap">
                 {isSpanish
                   ? "Logo o imagen (URL opcional)"
                   : "Logo / Image URL (Optional)"}
@@ -434,7 +441,7 @@ export default function SplashSettings(
                     updateConfig({ imageUrl: "" });
                     haptics.light();
                   }}
-                  class="text-[10px] font-black text-[#4a3f39] hover:text-[#1e1714] underline"
+                  class="text-[10px] font-black text-[#4a3f39] hover:text-[#1e1714] underline whitespace-nowrap"
                 >
                   {isSpanish ? "✕ Quitar" : "✕ Clear"}
                 </button>
@@ -447,13 +454,13 @@ export default function SplashSettings(
                 updateConfig({
                   imageUrl: (e.target as HTMLInputElement).value,
                 })}
-              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[#ec4899] focus:outline-none text-xs font-mono bg-[#fffef7] text-[#1e1714]"
+              class="w-full px-3 py-2 border-2 border-[#1e1714] rounded-xl focus:border-[var(--qr-theme-accent,#ec4899)] focus:outline-none text-xs font-mono bg-[#fffef7] text-[#1e1714]"
               placeholder="https://example.com/logo-or-banner.jpg"
             />
           </div>
 
           {/* White-Label / Paid Customer Branding Row */}
-          <div class="pt-1">
+          <div class="pt-0.5">
             {isUnbranded
               ? (
                 <div class="flex items-center justify-between gap-2 rounded-xl border-2 border-[#1e1714] bg-emerald-100 px-3 py-2 text-xs font-black text-[#1e1714]">
@@ -471,15 +478,15 @@ export default function SplashSettings(
                     haptics.light();
                     openPricingModal();
                   }}
-                  class="w-full flex items-center justify-between gap-2 rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-amber-100 px-3 py-2 text-left text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] transition-all"
+                  class="w-full flex items-center justify-between gap-2 rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[var(--qr-theme-tint,#fce7f3)] px-3 py-2 text-left text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] transition-all"
                 >
-                  <span>
+                  <span class="truncate">
                     {isSpanish
-                      ? "✨ Ocultar sello «Hecho con QRBuddy» (Marca blanca)"
-                      : "✨ Hide 'Built with QRBuddy' footer (White-label)"}
+                      ? "✨ Ocultar sello «Hecho con QRBuddy»"
+                      : "✨ Hide 'Built with QRBuddy' footer"}
                   </span>
-                  <span class="shrink-0 rounded-full border border-[#1e1714] bg-amber-200 px-2 py-0.5 text-[10px] font-black uppercase">
-                    {isSpanish ? "Pase Plus" : "Supporter Pass"}
+                  <span class="shrink-0 rounded-full border border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] px-2 py-0.5 text-[10px] font-black uppercase whitespace-nowrap">
+                    {isSpanish ? "Pase Plus" : "Passport"}
                   </span>
                 </button>
               )}

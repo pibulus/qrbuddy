@@ -9,6 +9,7 @@ import { addToHistory } from "../utils/history.ts";
 import { haptics } from "../utils/haptics.ts";
 import { checkQRScannability } from "../utils/qr-decode.ts";
 import { createFramedSvg, measureCaptionWidth } from "../utils/svg-export.ts";
+import { buildQrSvgString, toSvgDataUrl } from "../utils/qr-vector-svg.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface QRCanvasProps {
@@ -174,12 +175,37 @@ export default function QRCanvas(
   // as anything (URL param, EasterEggs, an older shared link) — an unknown key
   // used to return `undefined` here, then blow up 4 lines later at `.dots`.
   // Falls back to "sunset", the app's own default (routes/index.tsx).
-  const getCurrentStyle = () => {
+  const getCurrentStyle = (): QRStyle => {
     if (style.value === "custom" && customStyle?.value) {
       return customStyle.value;
     }
-    return QR_STYLES[style.value as keyof typeof QR_STYLES] ??
-      QR_STYLES.sunset;
+    const base = (QR_STYLES[style.value as keyof typeof QR_STYLES] ??
+      QR_STYLES.sunset) as QRStyle;
+    const overrides = customStyle?.value;
+    if (!overrides) return base;
+    return {
+      ...base,
+      dots: {
+        ...base.dots,
+        ...(overrides.dots?.shape ? { shape: overrides.dots.shape } : {}),
+      },
+      cornersSquare: base.cornersSquare
+        ? {
+          ...base.cornersSquare,
+          ...(overrides.cornersSquare?.shape
+            ? { shape: overrides.cornersSquare.shape }
+            : {}),
+        }
+        : overrides.cornersSquare,
+      cornersDot: base.cornersDot
+        ? {
+          ...base.cornersDot,
+          ...(overrides.cornersDot?.shape
+            ? { shape: overrides.cornersDot.shape }
+            : {}),
+        }
+        : overrides.cornersDot,
+    };
   };
 
   const getQrOptions = (renderSize: number) => {
@@ -544,16 +570,28 @@ export default function QRCanvas(
 
     const qrCode = new QRCodeStyling(getQrOptions(1000));
 
-    // Remove any stale canvas but keep the SSR placeholder <img> (it's Preact's
+    // Remove any stale canvas/svg but keep the SSR placeholder <img> (it's Preact's
     // to remove, via qrReady) — it covers the canvas until drawing settles.
     canvasRef.current.querySelectorAll("canvas, svg").forEach((n) =>
       n.remove()
     );
     qrCode.append(canvasRef.current);
     qrCodeRef.current = qrCode;
-    // ponytail: fixed 300ms handoff — qr-code-styling has no public "painted"
-    // promise; swap to one if the library ever exposes it.
-    const readyTimer = setTimeout(() => setQrReady(true), 300);
+    // Verify the <canvas> has actually mounted and sized before lifting the
+    // SSR vector preview, so no route ever flashes an empty white card.
+    const markReadyIfPainted = () => {
+      const c = canvasRef.current?.querySelector("canvas");
+      if (c && c.width > 0) {
+        setQrReady(true);
+        return true;
+      }
+      return false;
+    };
+    const readyTimer = setTimeout(() => {
+      if (!markReadyIfPainted()) {
+        setTimeout(() => markReadyIfPainted(), 350);
+      }
+    }, 220);
     return () => clearTimeout(readyTimer);
   }, []);
 
@@ -716,13 +754,28 @@ export default function QRCanvas(
         title={isSpanish ? "Clic para descargar" : "Click to download"}
       >
         {
-          /* SSR'd first-paint QR (the default render, pre-baked) — the live
-          canvas is appended underneath and this lifts once it has painted */
+          /* SSR'd first-paint QR — uses /qr-default.png on the blank home sunset
+          state, and a live inline vector SVG on pre-populated vertical/tool
+          studios (/for/*, /vs/*, /compare) so no route ever renders an empty
+          white square before hydration or when scripts are delayed. */
         }
-        {!qrReady && !url.value && (
+        {!qrReady && (
           <img
-            src="/qr-default.png"
-            alt=""
+            src={!url.value && style.value === "sunset"
+              ? "/qr-default.png"
+              : toSvgDataUrl(
+                buildQrSvgString({
+                  data: url.value || "https://qrbuddy.app",
+                  palette: style.value === "custom" ? "sunset" : style.value,
+                  dotShape: getCurrentStyle().dots?.shape,
+                  cornerSquareShape: getCurrentStyle().cornersSquare?.shape as
+                    | "dot"
+                    | "square"
+                    | "extra-rounded"
+                    | undefined,
+                }),
+              )}
+            alt={isSpanish ? "Vista previa del código QR" : "QR code preview"}
             width={720}
             height={720}
             class="absolute inset-0 w-full h-full rounded-lg pointer-events-none"

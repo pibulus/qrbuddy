@@ -130,7 +130,7 @@ export default function WeddingsPage({ data }: PageProps<PageData>) {
         tagline="Link invitations to RSVP pages, venue maps, curated 10-photo slideshows, or reception playlists in one scan."
         subtagline="Paste the wedding website URL or drop up to 10 photos/tracks below — export 3000px PNG or print-shop Vector SVG."
         defaultStyle="blush"
-        defaultUrl="https://ourwedding.love/rsvp"
+        defaultUrl="https://qrbuddy.app/demo/wedding"
         defaultCaption="OUR DAY"
         featuresTitle="Designed for Invitations, Save-the-Dates & Table Cards"
         faqTitle="Wedding & Stationery QR Questions"

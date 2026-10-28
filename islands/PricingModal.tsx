@@ -6,7 +6,7 @@ import {
   CardModal,
   CardPrimaryButton,
   CardSecondaryButton,
-} from "./modal/CardModal.tsx";
+} from "../components/modal/CardModal.tsx";
 import { getApiUrl } from "../utils/api.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
 import { haptics } from "../utils/haptics.ts";

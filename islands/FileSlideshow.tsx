@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-// @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
-import JSZip from "jszip";
 import { formatFileSize } from "../utils/file-validation.ts";
 import { prettyName } from "../utils/image-prep.ts";
 import { getApiUrl, getAuthHeaders } from "../utils/api.ts";
 import { safeZipEntryNames } from "../utils/zip-names.ts";
-import OwnerStrip, { type ShareItem } from "./OwnerStrip.tsx";
+import OwnerStrip, { type ShareItem } from "../components/OwnerStrip.tsx";
 import ShareActions from "./ShareActions.tsx";
 import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
@@ -536,6 +534,12 @@ export default function FileSlideshow({
 
     try {
       setIsZipping(true);
+      const { default: JSZip } = (await import("jszip")) as unknown as {
+        default: new () => {
+          file: (name: string, data: Blob | Uint8Array | string) => void;
+          generateAsync: (opts: { type: "blob" }) => Promise<Blob>;
+        };
+      };
       const zip = new JSZip();
       const entryNames = safeZipEntryNames(files.map((file) => file.name));
 
@@ -662,7 +666,7 @@ export default function FileSlideshow({
                     type="button"
                     disabled={isSpinning}
                     onClick={() => spinRoulette(currentIndex)}
-                    class="min-h-[38px] inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border-2 border-[#1e1714] bg-amber-200 hover:bg-amber-300 text-[#1e1714] text-xs font-black shadow-chunky transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
+                    class="min-h-[38px] inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] hover:bg-[var(--qr-theme-cta-bg,#f472b6)] text-[#1e1714] text-xs font-black shadow-chunky transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
                   >
                     <span>🎲</span>
                     <span>

@@ -17,11 +17,14 @@ import {
 } from "../utils/design-preferences.ts";
 import {
   contrastRatio,
+  getQRThemeStyleVars,
+  getQRThemeTokens,
   QR_STYLES,
+  QR_THEME_TOKENS,
   relativeLuminance,
 } from "../utils/qr-styles.ts";
 import { rollGradient, STYLE_DISPLAY } from "../islands/StyleSelector.tsx";
-import { QUICK_PICK_COLORS } from "../islands/GradientCreator.tsx";
+import { QUICK_PICK_COLORS } from "../components/GradientCreator.tsx";
 import { TEXT_CARD_THEMES } from "../utils/bucket-qr-themes.ts";
 import {
   getCardStylesFor,
@@ -39,6 +42,7 @@ import {
   validateCanvaSvgCompliance,
   VECTOR_PALETTES,
 } from "../utils/qr-vector-svg.ts";
+import { DEMO_CONFIGS } from "../routes/demo/[...slug].tsx";
 import {
   COMPETITOR_SLUGS,
   COMPETITORS,
@@ -731,5 +735,172 @@ Deno.test("Competitor Comparisons & i18n - complete EN/ES coverage and Sovereign
   for (const [enPath, esPath] of pairs) {
     assertEquals(getLanguageSwitchHref(enPath, "es"), esPath);
     assertEquals(getLanguageSwitchHref(esPath, "en"), enPath);
+  }
+});
+
+Deno.test("QR_THEME_TOKENS & getQRThemeTokens - sync active QR palette across all presets + custom gradients with sharp #1e1714 contrast", () => {
+  const ink = "#1e1714";
+  for (const key of Object.keys(QR_STYLES)) {
+    assert(
+      key in QR_THEME_TOKENS,
+      `Missing QR_THEME_TOKENS entry for style "${key}"`,
+    );
+    const tokens = getQRThemeTokens(key);
+    const vars = getQRThemeStyleVars(key);
+    assertEquals(vars["--qr-theme-accent"], tokens.accent);
+    assertEquals(vars["--qr-theme-tint-strong"], tokens.tintStrong);
+    assertEquals(vars["--qr-theme-cta-bg"], tokens.ctaBg);
+
+    for (
+      const [tokenName, hex] of [
+        ["tint", tokens.tint],
+        ["tintStrong", tokens.tintStrong],
+        ["ctaBg", tokens.ctaBg],
+        ["ctaHover", tokens.ctaHover],
+        ["ctaActive", tokens.ctaActive],
+      ] as const
+    ) {
+      const ratio = contrastRatio(hex, ink);
+      assert(
+        ratio >= 4.5,
+        `Style "${key}" token ${tokenName} (${hex}) contrast against #1e1714 is ${
+          ratio.toFixed(2)
+        } (< 4.5:1)`,
+      );
+    }
+  }
+
+  // Custom gradient style derives theme tokens from the custom stop
+  const customStyle: QRStyle = {
+    dots: {
+      type: "gradient",
+      gradient: {
+        type: "linear",
+        rotation: 45,
+        colorStops: [
+          { offset: 0, color: "#0D47A1" },
+          { offset: 1, color: "#00695C" },
+        ],
+      },
+    },
+    background: { color: "#FFFFFF" },
+  };
+  const customTokens = getQRThemeTokens("custom", customStyle);
+  assertEquals(customTokens.accent, "#0D47A1");
+  assert(contrastRatio(customTokens.tintStrong, ink) >= 4.5);
+  assert(contrastRatio(customTokens.ctaBg, ink) >= 4.5);
+});
+
+Deno.test("Roulette Scan Page - CTA hierarchy, 14px button gap, themed respin tint, and deduplicated quota copy", async () => {
+  const redirectSrc = await Deno.readTextFile(
+    new URL("../supabase/functions/redirect-qr/index.ts", import.meta.url),
+  );
+
+  // 1. Primary payoff CTA (#roulette-cta) renders BEFORE secondary respin button (${rouletteRespinHtml})
+  const ctaIdx = redirectSrc.indexOf('id="roulette-cta"');
+  const respinIdx = redirectSrc.indexOf("${rouletteRespinHtml}");
+  assert(ctaIdx !== -1 && respinIdx !== -1, "Both CTAs must exist in template");
+  assert(
+    ctaIdx < respinIdx,
+    "Open Winner (#roulette-cta) must precede Spin again (${rouletteRespinHtml}) in DOM order",
+  );
+
+  // 2. .respin-btn uses >= 14px top margin to clear the 4px neo-brutalist offset shadow and binds to var(--accent)
+  assert(redirectSrc.includes("margin-top: 14px;"));
+  assert(
+    redirectSrc.includes("color-mix(in srgb, var(--accent) 16%, #fffef7)"),
+  );
+  assertEquals(redirectSrc.includes("#fef3c7"), false);
+
+  // 3. Spin quota is shown in #roulette-badge and not duplicated as "(X left today)" inside #roulette-respin-label
+  assertEquals(redirectSrc.includes("left today)"), false);
+});
+
+Deno.test("FooterDock & VerticalStudio - Uses menu label, popularity ordering, SSR QR fallback, and live /demo/* destinations", async () => {
+  const footerSrc = await Deno.readTextFile(
+    new URL("../islands/FooterDock.tsx", import.meta.url),
+  );
+  assert(
+    footerSrc.includes('solutions: "Uses"'),
+    'FooterDock EN menu trigger must say "Uses" instead of heavy "Solutions"',
+  );
+  assert(
+    footerSrc.includes('solutions: "Usos"'),
+    'FooterDock ES menu trigger must say "Usos"',
+  );
+
+  // Popularity ordering: Menus -> Wi-Fi -> vCard -> Weddings -> Music -> Lockers -> Inspect -> Print -> Compare -> GS1
+  const menusIdx = footerSrc.indexOf('href: "/for/menus"');
+  const wifiIdx = footerSrc.indexOf('href: "/for/wifi"');
+  const vcardIdx = footerSrc.indexOf('href: "/for/vcard"');
+  const weddingsIdx = footerSrc.indexOf('href: "/for/weddings"');
+  const musicIdx = footerSrc.indexOf('href: "/for/music"');
+  const lockersIdx = footerSrc.indexOf('href: "/for/lockers"');
+  const gs1Idx = footerSrc.indexOf('href: "/for/gs1"');
+  assert(
+    menusIdx < wifiIdx &&
+      wifiIdx < vcardIdx &&
+      vcardIdx < weddingsIdx &&
+      weddingsIdx < musicIdx &&
+      musicIdx < lockersIdx &&
+      lockersIdx < gs1Idx,
+    "FooterDock links must be ordered by real-world popularity and usability",
+  );
+
+  // QRCanvas SSR vector fallback is always rendered when !qrReady (not gated behind !url.value)
+  const canvasSrc = await Deno.readTextFile(
+    new URL("../islands/QRCanvas.tsx", import.meta.url),
+  );
+  assertEquals(
+    canvasSrc.includes("{!qrReady && !url.value &&"),
+    false,
+    "QRCanvas must not gate the pre-hydration QR image on !url.value",
+  );
+  assert(
+    canvasSrc.includes("{!qrReady && ("),
+    "QRCanvas must render an inline vector SVG or default image whenever !qrReady",
+  );
+
+  // All 6 DEMO_CONFIGS exist with both front items and back-of-card Field Report stats
+  for (
+    const key of [
+      "menu",
+      "wedding",
+      "mixtape",
+      "drop",
+      "vcard",
+      "gs1",
+    ] as const
+  ) {
+    const cfg = DEMO_CONFIGS[key];
+    assert(cfg, `Missing DEMO_CONFIGS.${key}`);
+    assert(cfg.frontItems.length >= 3, `${key} must have >= 3 front items`);
+    assertEquals(cfg.stats.bars.length, 7);
+    assert(cfg.stats.scans30d.length > 0);
+  }
+
+  // Tailored module & eye shapes in buildQrSvgString
+  for (
+    const shape of [
+      "rounded",
+      "dots",
+      "classy-rounded",
+      "classy",
+      "extra-rounded",
+      "square",
+    ] as const
+  ) {
+    const svg = buildQrSvgString({
+      data: "https://qrbuddy.app/demo/menu",
+      palette: "sunset",
+      dotShape: shape,
+      cornerSquareShape: shape === "dots" ? "dot" : "extra-rounded",
+    });
+    const compliance = validateCanvaSvgCompliance(svg);
+    assertEquals(
+      compliance.valid,
+      true,
+      `Shape ${shape} failed SVG compliance: ${compliance.errors.join(", ")}`,
+    );
   }
 });

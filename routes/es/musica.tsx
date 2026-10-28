@@ -131,7 +131,7 @@ export default function MusicaEspanolPage({ data }: PageProps<PageData>) {
         tagline="Suelta hasta 10 pistas para armar un reproductor web al instante, o genera QRs editables para vinilos, cassettes y carteles."
         subtagline="Pega el link del lanzamiento o suelta audios abajo: descarga PNG de 3000px y SVG vectorial gratis."
         defaultStyle="vapor"
-        defaultUrl="https://bandcamp.com/album"
+        defaultUrl="https://qrbuddy.app/demo/mixtape?lang=es"
         defaultCaption="ESCUCHAR"
         homeUrl="/es"
         homeLabel="← Volver al estudio"

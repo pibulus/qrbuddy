@@ -131,7 +131,7 @@ export default function MenusEspanolPage({ data }: PageProps<PageData>) {
         tagline="Genera códigos estáticos eternos o enlaces editables que cambian del desayuno a la cena sin reimprimir acrílicos."
         subtagline="Pega el enlace del menú abajo: descarga PNG de 3000px o SVG vectorial para imprenta sin crear cuenta."
         defaultStyle="matcha"
-        defaultUrl="https://bistro-roma.mx/menu"
+        defaultUrl="https://qrbuddy.app/demo/menu?lang=es"
         defaultCaption="VER MENÚ"
         homeUrl="/es"
         homeLabel="← Volver al estudio"

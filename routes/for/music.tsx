@@ -130,7 +130,7 @@ export default function MusicPage({ data }: PageProps<PageData>) {
         tagline="Drop up to 10 audio tracks for a browser-playable mixtape page, or mint editable QR codes for vinyl sleeves, zines, and tour posters."
         subtagline="Paste a release link or drop audio files below — export 3000px PNGs and pressing-plant Vector SVGs free."
         defaultStyle="vapor"
-        defaultUrl="https://bandcamp.com/album"
+        defaultUrl="https://qrbuddy.app/demo/mixtape"
         defaultCaption="LISTEN NOW"
         featuresTitle="Built for Vinyl Sleeves, Cassette J-Cards, Posters & Merch"
         faqTitle="Music & Mixtape QR Questions"

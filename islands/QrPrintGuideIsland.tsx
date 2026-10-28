@@ -2,6 +2,7 @@ import { useSignal } from "@preact/signals";
 import { AboutModal } from "./AboutModal.tsx";
 import { PricingModal } from "./PricingModal.tsx";
 import FooterDock from "./FooterDock.tsx";
+import { buildQrSvgString, toSvgDataUrl } from "../utils/qr-vector-svg.ts";
 
 interface QrPrintGuideProps {
   isSpanish?: boolean;
@@ -85,6 +86,15 @@ export default function QrPrintGuideIsland(
   const minWidthInches = (parseFloat(minWidthCm) / 2.54).toFixed(1);
   const safeWidthInches = (parseFloat(safeWidthCm) / 2.54).toFixed(1);
   const quietZoneMm = (parseFloat(minWidthCm) * 1.5).toFixed(1);
+  const specimenSvgDataUrl = toSvgDataUrl(
+    buildQrSvgString({
+      data: isSpanish
+        ? "https://qrbuddy.app/demo/menu?lang=es"
+        : "https://qrbuddy.app/demo/menu",
+      palette: "matcha",
+      caption: isSpanish ? "VER MENÚ" : "VIEW MENU",
+    }),
+  );
 
   const applyPreset = (preset: ScenarioPreset, key: string) => {
     selectedPreset.value = key;
@@ -308,6 +318,75 @@ export default function QrPrintGuideIsland(
                 {isSpanish
                   ? "Margen blanco indispensable"
                   : "4-module clean border required"}
+              </div>
+            </div>
+          </div>
+
+          {/* Live Scannable Print Proof Specimen */}
+          <div class="bg-[#fbf1e4] border-3 border-[#1e1714] rounded-2xl p-4 sm:p-5 shadow-chunky flex flex-col sm:flex-row items-center gap-5">
+            <div class="relative shrink-0 bg-[#fffef7] border-2 border-dashed border-[#1e1714]/50 rounded-2xl p-3 flex flex-col items-center">
+              <img
+                src={specimenSvgDataUrl}
+                alt={isSpanish
+                  ? "Muestra de código QR vectorial listo para imprenta"
+                  : "Print-ready vector QR code specimen"}
+                width={156}
+                height={180}
+                class="w-36 sm:w-40 h-auto rounded-xl shadow-[3px_3px_0_#1e1714]"
+              />
+              <span class="mt-2 px-2.5 py-0.5 rounded-full bg-[#9ef0c8] border border-[#1e1714] font-mono text-[11px] font-black text-[#1e1714] whitespace-nowrap">
+                {unit.value === "metric"
+                  ? `${safeWidthCm} × ${safeWidthCm} cm`
+                  : `${safeWidthInches}″ × ${safeWidthInches}″`}
+              </span>
+            </div>
+
+            <div class="space-y-2 text-center sm:text-left flex-1">
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#fffef7] border border-[#1e1714] text-[11px] font-black uppercase tracking-wider text-[#1e1714]">
+                <span>🔍</span>
+                <span>
+                  {isSpanish
+                    ? "Muestra Real Escaneable (SVG 1.1)"
+                    : "Live Scannable Print Specimen (SVG 1.1)"}
+                </span>
+              </div>
+              <h3 class="text-base sm:text-lg font-black text-[#1e1714] leading-snug">
+                {isSpanish
+                  ? `Para escanear a ${distance.value}m, imprime al menos a ${
+                    unit.value === "metric"
+                      ? `${safeWidthCm} cm`
+                      : `${safeWidthInches}″`
+                  } de ancho con ≥ ${quietZoneMm} mm de margen limpio.`
+                  : `At ${distance.value}m viewing distance, print at ${
+                    unit.value === "metric"
+                      ? `${safeWidthCm} cm`
+                      : `${safeWidthInches}″`
+                  } wide with a ≥ ${quietZoneMm} mm quiet zone.`}
+              </h3>
+              <p class="text-xs font-bold text-[#57524b] leading-relaxed">
+                {isSpanish
+                  ? "Escanea este código con la cámara del teléfono o abre la página de ejemplo para ver el menú interactivo y el reverso con estadísticas de escaneo."
+                  : "Point a phone camera at this specimen or open the live example to see the interactive bistro menu and its live Field Report stats."}
+              </p>
+              <div class="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <a
+                  href={isSpanish ? "/demo/menu?lang=es" : "/demo/menu"}
+                  class="inline-flex items-center gap-1.5 px-3.5 min-h-[36px] rounded-full border-2 border-[#1e1714] bg-[#f8de7e] text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 transition-transform"
+                >
+                  <span>
+                    {isSpanish
+                      ? "↗ Ver a dónde lleva este QR"
+                      : "↗ See where this QR leads"}
+                  </span>
+                </a>
+                <a
+                  href={isSpanish ? "/es/menus" : "/for/menus"}
+                  class="inline-flex items-center gap-1.5 px-3.5 min-h-[36px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] hover:bg-[#fbf1e4] transition-colors"
+                >
+                  <span>
+                    {isSpanish ? "Crear QR para menú →" : "Create a menu QR →"}
+                  </span>
+                </a>
               </div>
             </div>
           </div>

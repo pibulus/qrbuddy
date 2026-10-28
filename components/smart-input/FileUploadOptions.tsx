@@ -6,7 +6,7 @@ import { UNLIMITED_SCANS } from "../../utils/constants.ts";
 import { prettyName } from "../../utils/image-prep.ts";
 import { reorderItems } from "../../utils/share-stats.ts";
 import { getSupporterPass } from "../../utils/supporter-pass.ts";
-import { openPricingModal } from "../PricingModal.tsx";
+import { openPricingModal } from "../../islands/PricingModal.tsx";
 import type { ShareKind } from "./ShareReady.tsx";
 
 interface FileUploadOptionsProps {

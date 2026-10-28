@@ -79,28 +79,28 @@ export interface VerticalStudioProps {
 
 const EXPLORE_LINKS = {
   en: [
-    { href: "/for/inspect", label: "Safe QR Inspector 🛡️" },
     { href: "/for/menus", label: "Restaurant Menus 📜" },
     { href: "/for/wifi", label: "Wi-Fi Cards 📶" },
     { href: "/for/vcard", label: "Contact vCards 👤" },
-    { href: "/for/gs1", label: "GS1 2027 Barcodes 📦" },
     { href: "/for/weddings", label: "Weddings & Photos 📸" },
     { href: "/for/music", label: "Music Mixtapes 📼" },
     { href: "/for/lockers", label: "File Drops 🔐" },
+    { href: "/for/inspect", label: "Safe QR Scanner 🛡️" },
     { href: "/guide/printing", label: "Print Size Guide 📐" },
     { href: "/compare", label: "Compare vs. $35/mo Traps ⚖️" },
+    { href: "/for/gs1", label: "GS1 2027 Barcodes 📦" },
   ],
   es: [
-    { href: "/es/escanear", label: "Inspector Seguro de QR 🛡️" },
     { href: "/es/menus", label: "Menús de Restaurante 📜" },
     { href: "/es/wifi", label: "Tarjetas Wi-Fi 📶" },
     { href: "/es/vcard", label: "Tarjetas vCard 👤" },
-    { href: "/es/gs1", label: "Códigos GS1 2027 📦" },
     { href: "/es/bodas", label: "Bodas y Fotos 📸" },
     { href: "/es/musica", label: "Mixtapes de Música 📼" },
     { href: "/es/archivos", label: "Envío de Archivos 🔐" },
+    { href: "/es/escanear", label: "Escáner Seguro de QR 🛡️" },
     { href: "/es/guia/impresion", label: "Guía de Impresión 📐" },
     { href: "/es/comparar", label: "Comparativa Honesta ⚖️" },
+    { href: "/es/gs1", label: "Códigos GS1 2027 📦" },
   ],
 } as const;
 
@@ -183,13 +183,14 @@ export default function VerticalStudio({
   );
   const [vcardPhone, setVcardPhone] = useState("+61 400 123 456");
   const [vcardEmail, setVcardEmail] = useState("elena@studiomirador.co");
-  const [vcardWeb, setVcardWeb] = useState("https://studiomirador.co");
+  const [vcardWeb, setVcardWeb] = useState("https://qrbuddy.app/demo/vcard");
 
-  const [gs1Domain, setGs1Domain] = useState("https://solbotanicals.co");
+  const [gs1Domain, setGs1Domain] = useState("https://qrbuddy.app/demo/gs1");
   const [gs1Gtin, setGs1Gtin] = useState("09312345678907");
   const [gs1Lot, setGs1Lot] = useState("BATCH-04");
   const [gs1Expiry, setGs1Expiry] = useState("271231");
   const [gs1Serial, setGs1Serial] = useState("");
+  const [cardFace, setCardFace] = useState<"front" | "back">("front");
 
   // Street-Safe Airlock inline link unmasker state (toolPreset === "inspect")
   const [peekInput, setPeekInput] = useState("https://qrbuddy.app/why");
@@ -528,27 +529,298 @@ export default function VerticalStudio({
           );
         })()}
 
-        {/* Interactive QR Generator Canvas — same pyramid proportions as routes/index.tsx */}
-        <div class="max-w-md mx-auto w-full space-y-6 sm:space-y-8">
-          <div class="flex justify-center animate-slide-up">
-            <div class="w-full max-w-[300px] sm:max-w-[340px] transition-all duration-300">
-              <ErrorBoundary>
-                <QRCanvas
-                  url={url}
-                  style={style}
-                  customStyle={customStyle}
-                  triggerDownload={triggerDownload}
-                  isDestructible={isDestructible}
-                  isDynamic={isDynamic}
-                  logoUrl={logoUrl}
-                  maxDownloads={maxDownloads}
-                  frameConfig={frameConfig}
-                  listenForExportEvents
-                  lang={locale}
-                />
-              </ErrorBoundary>
-            </div>
-          </div>
+        {/* Interactive QR Generator Canvas — with Front (Printed QR) & Back (Live Stats & Routing) flip */}
+        <div class="max-w-md mx-auto w-full space-y-5 sm:space-y-6">
+          {(() => {
+            const demoPreviewHref = (() => {
+              if (toolPreset === "vcard") {
+                return isSpanish ? "/demo/vcard?lang=es" : "/demo/vcard";
+              }
+              if (toolPreset === "gs1") {
+                return isSpanish ? "/demo/gs1?lang=es" : "/demo/gs1";
+              }
+              if (url.value.includes("/demo/")) {
+                try {
+                  const u = new URL(url.value, "https://qrbuddy.app");
+                  return `${u.pathname}${u.search}`;
+                } catch {
+                  return "/demo/menu";
+                }
+              }
+              return isSpanish ? "/demo/menu?lang=es" : "/demo/menu";
+            })();
+
+            const backStats = (() => {
+              if (defaultStyle === "matcha") {
+                return {
+                  code: "bistro-07",
+                  scans30d: "1,842",
+                  peak: "7pm–9pm",
+                  cities: isSpanish
+                    ? "CDMX (76%) · GDL (15%) · MTY (9%)"
+                    : "Melbourne (78%) · Fitzroy (14%) · Sydney (8%)",
+                  rule: isSpanish
+                    ? "🕰️ Horario: 7am Desayuno → 5pm Cena (sin reimprimir)"
+                    : "🕰️ Schedule: 7am Breakfast → 5pm Dinner (no reprint)",
+                  bars: [42, 36, 48, 55, 88, 100, 74],
+                };
+              }
+              if (defaultStyle === "blush") {
+                return {
+                  code: "elena-mateo",
+                  scans30d: "418",
+                  peak: "4pm–6pm",
+                  cities: isSpanish
+                    ? "CDMX (64%) · Oaxaca (21%) · Madrid (15%)"
+                    : "Melbourne (62%) · Auckland (19%) · CDMX (19%)",
+                  rule: isSpanish
+                    ? "💌 Portada activa + cambio de RSVP a Galería de 10 fotos"
+                    : "💌 Cover Card + repoints from RSVP to 10-Photo Gallery",
+                  bars: [18, 22, 25, 34, 62, 100, 84],
+                };
+              }
+              if (defaultStyle === "vapor") {
+                return {
+                  code: "tape-04",
+                  scans30d: "964",
+                  peak: "10pm–12am",
+                  cities: isSpanish
+                    ? "CDMX (51%) · Buenos Aires (28%) · Bogotá (21%)"
+                    : "Melbourne (48%) · Berlin (27%) · Tokyo (25%)",
+                  rule: isSpanish
+                    ? "🎧 Mixtape 10 pistas · #1 Lluvia Analógica (318 repr.)"
+                    : "🎧 10-Track Player · #1 Warm Analog Rain (318 plays)",
+                  bars: [28, 31, 40, 52, 79, 100, 68],
+                };
+              }
+              if (toolPreset === "gs1" || defaultStyle === "grape") {
+                return {
+                  code: "gs1-sol04",
+                  scans30d: "3,410",
+                  peak: "12pm–2pm",
+                  cities: isSpanish
+                    ? "CDMX (49%) · GDL (31%) · QRO (20%)"
+                    : "Melbourne (44%) · Sydney (36%) · Brisbane (20%)",
+                  rule: isSpanish
+                    ? "📦 GS1 Digital Link · Lote BATCH-04 + aviso dinámico"
+                    : "📦 GS1 Digital Link · BATCH-04 + live recall/origin page",
+                  bars: [54, 62, 70, 68, 85, 100, 78],
+                };
+              }
+              return {
+                code: "studio-qr",
+                scans30d: "1,290",
+                peak: "6pm–8pm",
+                cities: isSpanish
+                  ? "CDMX (61%) · Guadalajara (22%) · Madrid (17%)"
+                  : "Melbourne (64%) · Sydney (21%) · London (15%)",
+                rule: isSpanish
+                  ? "🔗 Destino editable en vivo + Horario / Ruleta + CSV"
+                  : "🔗 Live editable destination + Schedule / Roulette + CSV",
+                bars: [35, 48, 52, 64, 92, 100, 70],
+              };
+            })();
+
+            const dayInitials = isSpanish
+              ? ["L", "M", "X", "J", "V", "S", "D"]
+              : ["M", "T", "W", "T", "F", "S", "S"];
+
+            return (
+              <div class="space-y-3">
+                {/* Front / Back Card Flip Segmented Pill */}
+                <div class="flex justify-center">
+                  <div
+                    role="group"
+                    aria-label={isSpanish
+                      ? "Alternar entre el código QR impreso y el reverso de estadísticas"
+                      : "Toggle between printed QR front and live stats back"}
+                    class="inline-flex items-center gap-1 p-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] shadow-chunky"
+                  >
+                    <button
+                      type="button"
+                      aria-pressed={cardFace === "front"}
+                      onClick={() => setCardFace("front")}
+                      class={`px-3 min-h-[34px] rounded-full text-xs font-black whitespace-nowrap transition-all ${
+                        cardFace === "front"
+                          ? "bg-[#f8de7e] text-[#1e1714] border border-[#1e1714]"
+                          : "text-[#57524b] hover:text-[#1e1714]"
+                      }`}
+                    >
+                      {isSpanish
+                        ? "🔳 Frente: QR Impreso"
+                        : "🔳 Front: Printed QR"}
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={cardFace === "back"}
+                      onClick={() => setCardFace("back")}
+                      class={`px-3 min-h-[34px] rounded-full text-xs font-black whitespace-nowrap transition-all ${
+                        cardFace === "back"
+                          ? "bg-[#9ef0c8] text-[#1e1714] border border-[#1e1714]"
+                          : "text-[#57524b] hover:text-[#1e1714]"
+                      }`}
+                    >
+                      {isSpanish
+                        ? "📊 Reverso: Estadísticas"
+                        : "📊 Back: Stats & Routing"}
+                    </button>
+                  </div>
+                </div>
+
+                {cardFace === "front"
+                  ? (
+                    <div class="space-y-3">
+                      <div class="flex justify-center animate-slide-up">
+                        <div class="w-full max-w-[300px] sm:max-w-[340px] transition-all duration-300">
+                          <ErrorBoundary>
+                            <QRCanvas
+                              url={url}
+                              style={style}
+                              customStyle={customStyle}
+                              triggerDownload={triggerDownload}
+                              isDestructible={isDestructible}
+                              isDynamic={isDynamic}
+                              logoUrl={logoUrl}
+                              maxDownloads={maxDownloads}
+                              frameConfig={frameConfig}
+                              listenForExportEvents
+                              lang={locale}
+                            />
+                          </ErrorBoundary>
+                        </div>
+                      </div>
+
+                      {/* Where Does This Sample QR Lead? + Quick Flip Callout */}
+                      <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+                        <a
+                          href={demoPreviewHref}
+                          class="inline-flex items-center gap-1.5 px-3 min-h-[32px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f8de7e] text-[11px] sm:text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] transition-all whitespace-nowrap"
+                        >
+                          <span>
+                            {isSpanish
+                              ? "↗ Ver página de ejemplo a donde lleva este QR"
+                              : "↗ See the live example page this QR opens"}
+                          </span>
+                        </a>
+                      </div>
+                    </div>
+                  )
+                  : (
+                    /* BACK OF THE CARD: Live Field Report & Smart Routing Preview */
+                    <div class="w-full max-w-[340px] sm:max-w-[380px] mx-auto bg-[#fbf1e4] border-4 border-[#1e1714] rounded-3xl p-4 sm:p-5 shadow-chunky space-y-3.5 animate-pop-in">
+                      <div class="flex items-center justify-between gap-2 border-b-2 border-[#1e1714]/15 pb-2.5">
+                        <div>
+                          <span class="block font-mono text-[10px] font-black uppercase tracking-wider text-[#57524b]">
+                            {isSpanish
+                              ? "REVERSO DEL QR · REPORTE DE CAMPO"
+                              : "BACK OF THE CARD · FIELD REPORT"}
+                          </span>
+                          <h3 class="text-base font-black text-[#1e1714] leading-tight">
+                            /r?code={backStats.code}
+                          </h3>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full border-2 border-[#1e1714] bg-[#9ef0c8] text-[11px] font-black text-[#1e1714] shrink-0 whitespace-nowrap">
+                          Active ✓
+                        </span>
+                      </div>
+
+                      {/* 3 KPI Mini-Tiles */}
+                      <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center">
+                          <span class="block text-[10px] font-black uppercase text-[#57524b]">
+                            {isSpanish ? "30 Días" : "30d Scans"}
+                          </span>
+                          <span class="font-mono text-base font-black text-[#1e1714]">
+                            {backStats.scans30d}
+                          </span>
+                        </div>
+                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center">
+                          <span class="block text-[10px] font-black uppercase text-[#57524b]">
+                            {isSpanish ? "Hora Pico" : "Peak Rush"}
+                          </span>
+                          <span class="font-mono text-xs sm:text-sm font-black text-[#1e1714]">
+                            {backStats.peak}
+                          </span>
+                        </div>
+                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center">
+                          <span class="block text-[10px] font-black uppercase text-[#57524b]">
+                            {isSpanish ? "Límite" : "Remaining"}
+                          </span>
+                          <span class="font-mono text-base font-black text-[#1e1714]">
+                            ∞
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 7-Day Spark Bars */}
+                      <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] font-black text-[#1e1714]">
+                          <span>
+                            {isSpanish
+                              ? "Escaneos por día (7d · 30d · 90d)"
+                              : "Daily Scans (7d · 30d · 90d)"}
+                          </span>
+                          <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#f8de7e] border border-[#1e1714]">
+                            ↓ CSV
+                          </span>
+                        </div>
+                        <div class="h-16 flex items-end justify-between gap-1.5 pt-1">
+                          {backStats.bars.map((pct, idx) => (
+                            <div
+                              key={idx}
+                              class="flex-1 flex flex-col items-center gap-1"
+                            >
+                              <div
+                                class="w-full rounded-t border-2 border-[#1e1714]"
+                                style={{
+                                  height: `${
+                                    Math.max(8, Math.round(pct * 0.42))
+                                  }px`,
+                                  backgroundColor: pct >= 85
+                                    ? "#ff6b9d"
+                                    : "#9ef0c8",
+                                }}
+                              />
+                              <span class="font-mono text-[9px] font-black text-[#1e1714]">
+                                {dayInitials[idx]}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Cities & Routing Rule */}
+                      <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3 space-y-1.5 text-xs">
+                        <p class="font-black text-[#1e1714] leading-snug">
+                          {backStats.rule}
+                        </p>
+                        <p class="text-[11px] font-bold text-[#57524b]">
+                          📍 {backStats.cities}
+                        </p>
+                      </div>
+
+                      <div class="flex items-center justify-between gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setCardFace("front")}
+                          class="px-3 min-h-[34px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f8de7e] text-xs font-black text-[#1e1714] transition-colors"
+                        >
+                          {isSpanish ? "↺ Volver al QR" : "↺ Flip to QR"}
+                        </button>
+                        <a
+                          href={`${demoPreviewHref}#back-of-card`}
+                          class="px-3 min-h-[34px] inline-flex items-center rounded-full border-2 border-[#1e1714] bg-[#f8de7e] text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 transition-transform"
+                        >
+                          {isSpanish
+                            ? "Ver demo completo ↗"
+                            : "Full live example ↗"}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+              </div>
+            );
+          })()}
 
           {/* Specialized Job-to-be-Done Quick-Builders */}
           {toolPreset === "wifi" && (
