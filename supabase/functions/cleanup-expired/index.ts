@@ -251,12 +251,37 @@ serve(async (req) => {
     // owner dashboard, not grow forever. Keep 90 days.
     const scanLogCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
       .toISOString();
-    const { count: prunedScanLogs, error: scanLogError } = await supabase
-      .from("scan_logs")
-      .delete({ count: "exact" })
-      .lt("scanned_at", scanLogCutoff);
 
-    if (scanLogError) console.error("Scan log pruning error:", scanLogError);
+    // Fold the old rows into monthly per-code counts BEFORE deleting them, so
+    // an owner still sees "March: 12,480 scans" after the raw rows are gone.
+    // Falls back to the plain delete if the RPC is not deployed yet — a
+    // missing rollup must never stop the pruning that protects the database.
+    let prunedScanLogs = 0;
+    let rolledMonths = 0;
+    const { data: purgeResult, error: purgeError } = await supabase.rpc(
+      "purge_old_scan_logs",
+      { p_keep_days: 90 },
+    );
+
+    if (purgeError) {
+      console.error(
+        "Scan log rollup unavailable, falling back to plain delete:",
+        purgeError.message,
+      );
+      const { count, error: scanLogError } = await supabase
+        .from("scan_logs")
+        .delete({ count: "exact" })
+        .lt("scanned_at", scanLogCutoff);
+      if (scanLogError) console.error("Scan log pruning error:", scanLogError);
+      prunedScanLogs = count ?? 0;
+    } else {
+      prunedScanLogs = Number(
+        (purgeResult as { rows_purged?: number } | null)?.rows_purged ?? 0,
+      );
+      rolledMonths = Number(
+        (purgeResult as { months_rolled?: number } | null)?.months_rolled ?? 0,
+      );
+    }
 
     // Share stats ledger: same 90-day window. Lifetime tallies on the share
     // row keep the totals; only the day-by-day detail ages out.
@@ -447,7 +472,8 @@ serve(async (req) => {
         deleted_files: deletedFiles,
         deleted_buckets: deletedBuckets,
         deactivated_dynamic_qrs: deactivatedQRs ?? 0,
-        pruned_scan_logs: prunedScanLogs ?? 0,
+        pruned_scan_logs: prunedScanLogs,
+        rolled_scan_months: rolledMonths,
         reaped_r2_objects: reapedR2Objects,
         reaped_storage_objects: reapedStorageObjects,
         cleaned_pending_uploads: cleanedPendingUploads,
