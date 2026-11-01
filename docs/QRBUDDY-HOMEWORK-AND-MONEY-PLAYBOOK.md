@@ -181,7 +181,7 @@ I built QRBuddy (https://qrbuddy.app) out of two frustrations with the QR code e
 
 What QRBuddy does differently:
 
-- Luminance-locked gradients (<= 0.40 relative luminance, >= 2:1 contrast): 8 pastel-punk presets + a dice roller locked to the jewel hue arc (135° emerald through violet/magenta to 35° coral) so codes never land in muddy olive/brown and always scan on the first try (we test-decode generated codes in the browser).
+- Luminance-locked gradients (<= 0.40 relative luminance, >= 2:1 contrast): curated pastel-punk presets + a custom gradient builder with jewel-tone quick picks, so codes never land in muddy olive/brown and always scan on the first try (generated codes are test-decoded in the browser).
 - Agency-grade exports & Batch ZIPs: Up to 3000px PNG + true vector SVG, or paste up to 50 URLs (or `Label | URL` rows) to download a single ZIP with PNGs, vector SVGs, and a print-shop `manifest.csv`.
 - Street-Safe Mini-Browser Inspector: Click "Inspect" to scan with your camera (BarcodeDetector + zxing-wasm + 50% macro crop) or drop a screenshot of any QR code. Our `/api/peek` endpoint manually walks up to 5 redirect hops (blocking private/ULA/CGNAT/IPv6-mapped IPs on every hop against SSRF), checks HTTPS status, and shows you the unrolled redirect chain + a visual webpage preview before you ever visit the site.
 - Smart Conditional Routing: Point one printed dynamic QR code to different URLs by Time-of-Day (Breakfast/Lunch/Dinner menus), Device OS (iOS vs. Android), or A/B split.
@@ -209,7 +209,7 @@ Every time a friend opened a café, put up band posters, or printed wedding tabl
 
 So I built **QRBuddy** (https://qrbuddy.app — and in Spanish at https://qrbuddy.app/es):
 
-- **Scannable Pastel-Punk Gradients + Vector SVG:** 8 presets + a "Surprise me" dice roller that mathematically enforces WCAG luminance (<= 0.40) and live-tests scannability so your code looks like a sticker, not a prison barcode.
+- **Scannable Pastel-Punk Gradients + Vector SVG:** curated presets + a custom gradient builder whose quick-pick chips all sit under 0.40 luminance, so the code looks like a sticker, not a prison barcode.
 - **Bulk / Batch ZIP Generator:** Paste up to 50 URLs (or `Table 1 | https://...` rows) and export a single ZIP with PNGs, vector SVGs, and a print-shop `manifest.csv`.
 - **Street-Safe QR Inspector (🔍 Inspect):** Scan any sketchy QR code on the street (or drop a screenshot) to unroll up to 5 redirect hops, check SSL, and see a live mini-browser preview of the destination webpage before opening it.
 - **Drop Photos, Audio, or Files:** Drop photos to create an instant slideshow, drop MP3s/WAVs to create a playable mixtape, or set a self-destructing scan limit ("KABOOM" after N downloads).

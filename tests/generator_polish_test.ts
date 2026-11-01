@@ -23,7 +23,7 @@ import {
   QR_THEME_TOKENS,
   relativeLuminance,
 } from "../utils/qr-styles.ts";
-import { rollGradient, STYLE_DISPLAY } from "../islands/StyleSelector.tsx";
+import { STYLE_DISPLAY } from "../islands/StyleSelector.tsx";
 import { QUICK_PICK_COLORS } from "../components/GradientCreator.tsx";
 import { TEXT_CARD_THEMES } from "../utils/bucket-qr-themes.ts";
 import {
@@ -186,7 +186,7 @@ Deno.test("isValidColor - validates supported generated formats and rejects inva
   assertEquals(isValidColor("#123456"), true);
   assertEquals(isValidColor("#12345678"), true);
 
-  // HSL / HSLA formats (used by dice roller and style pickers)
+  // HSL / HSLA formats (legacy saved custom styles)
   assertEquals(isValidColor("hsl(120, 65%, 45%)"), true);
   assertEquals(isValidColor("hsl(210, 60%, 96%)"), true);
   assertEquals(isValidColor("hsla(210, 60%, 96%, 0.8)"), true);
@@ -272,7 +272,7 @@ Deno.test("validateDesignPreferences - rejects malformed nested customStyle (e.g
   assertEquals(badStopOffset?.customStyle, null);
 });
 
-Deno.test("validateDesignPreferences - preserves legitimate custom styles from GradientCreator and dice roller", () => {
+Deno.test("validateDesignPreferences - preserves GradientCreator styles and legacy HSL custom styles", () => {
   const gradientCreatorStyle: QRStyle = {
     dots: {
       type: "gradient",
@@ -309,7 +309,8 @@ Deno.test("validateDesignPreferences - preserves legitimate custom styles from G
   assertEquals(validated?.style, "custom");
   assertEquals(validated?.customStyle, gradientCreatorStyle);
 
-  const diceRollerStyle: QRStyle = {
+  // Saved before the style dice was retired — HSL stops must still load.
+  const legacyHslStyle: QRStyle = {
     dots: {
       type: "gradient",
       gradient: {
@@ -343,14 +344,14 @@ Deno.test("validateDesignPreferences - preserves legitimate custom styles from G
       },
     },
   };
-  assertEquals(isValidCustomStyle(diceRollerStyle), true);
-  const validatedDice = validateDesignPreferences({
+  assertEquals(isValidCustomStyle(legacyHslStyle), true);
+  const validatedLegacy = validateDesignPreferences({
     version: 1,
     style: "custom",
-    customStyle: diceRollerStyle,
+    customStyle: legacyHslStyle,
   });
-  assertEquals(validatedDice?.style, "custom");
-  assertEquals(validatedDice?.customStyle, diceRollerStyle);
+  assertEquals(validatedLegacy?.style, "custom");
+  assertEquals(validatedLegacy?.customStyle, legacyHslStyle);
 });
 
 Deno.test("validateDesignPreferences - invalid types, obsolete versions, and defaults", () => {
@@ -507,46 +508,6 @@ Deno.test("QR_STYLES & STYLE_DISPLAY - public presets satisfy scannability floor
         `Solid preset ${key} must have high contrast >= 10:1, got ${
           cr.toFixed(2)
         }`,
-      );
-    }
-  }
-});
-
-Deno.test("rollGradient - avoids muddy olive/brown hues (45°-95°) and satisfies scannability floor", () => {
-  for (let i = 0; i < 200; i++) {
-    const rolled = rollGradient();
-    assert("gradient" in rolled.dots && rolled.dots.gradient);
-    assert("color" in rolled.background && rolled.background.color);
-
-    const stops = rolled.dots.gradient.colorStops;
-    assertEquals(stops.length, 2);
-
-    const bgColor = rolled.background.color;
-    for (const stop of stops) {
-      const match = /^hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)$/.exec(stop.color);
-      assert(match, `Expected HSL stop color, got ${stop.color}`);
-      const hue = Number(match[1]);
-      const sat = Number(match[2]);
-      assert(
-        hue < 45 || hue > 95,
-        `Rolled hue ${hue}° fell into muddy dark-yellow/olive zone (45°–95°)`,
-      );
-      assert(
-        sat >= 75 && sat <= 90,
-        `Rolled saturation ${sat}% outside 75%–90%`,
-      );
-
-      const lum = relativeLuminance(stop.color);
-      assert(
-        lum <= 0.40,
-        `Rolled stop ${stop.color} luminance ${lum.toFixed(3)} > 0.40`,
-      );
-      const cr = contrastRatio(stop.color, bgColor);
-      assert(
-        cr >= 2.0,
-        `Rolled stop ${stop.color} vs ${bgColor} contrast ${
-          cr.toFixed(2)
-        } < 2.0`,
       );
     }
   }

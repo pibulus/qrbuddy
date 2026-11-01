@@ -36,13 +36,54 @@ import WebsiteForm from "./templates/WebsiteForm.tsx";
 import WiFiForm from "./templates/WiFiForm.tsx";
 import { addToast } from "../islands/ToastManager.tsx";
 
-type ActiveTab = "type" | "options" | "design";
+export type ActiveTab = "type" | "options" | "design";
+
+// The sheet header names the open tab so the title explains the screen —
+// one plain sentence of what, one of the choices on it.
+const SHEET_HEADINGS: Record<
+  ActiveTab,
+  Record<"en" | "es", { title: string; sub: string }>
+> = {
+  type: {
+    en: {
+      title: "What the QR holds.",
+      sub: "Link, Wi-Fi, contact card, file, text…",
+    },
+    es: {
+      title: "Qué lleva el QR.",
+      sub: "Enlace, Wi-Fi, contacto, archivo, texto…",
+    },
+  },
+  options: {
+    en: {
+      title: "How the QR behaves.",
+      sub: "Editable link, scan limits, roulette, cover page.",
+    },
+    es: {
+      title: "Cómo se comporta el QR.",
+      sub: "Link editable, límites, ruleta, portada.",
+    },
+  },
+  design: {
+    en: {
+      title: "How the QR looks.",
+      sub: "Palette, logo, print frame, dot shapes.",
+    },
+    es: {
+      title: "Cómo se ve el QR.",
+      sub: "Paleta, logo, marco, forma de los puntos.",
+    },
+  },
+};
 type TypeIntent = "qr" | "share-file" | "collect-files";
 type ContentStep = "pick" | "fill";
 
 interface CreateModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Tab to land on when the sheet opens; the home row's Design button
+   * jumps straight to Design, everything else starts at Content. */
+  initialTab?: ActiveTab;
   selectedTemplate: QRTemplateType;
   onSelectTemplate: (template: QRTemplateType) => void;
   url: Signal<string>;
@@ -183,6 +224,7 @@ const QR_TYPE_COPY: Partial<
 export default function CreateModal({
   isOpen,
   onClose,
+  initialTab = "type",
   selectedTemplate,
   onSelectTemplate,
   url,
@@ -279,6 +321,8 @@ export default function CreateModal({
       setContentStep("pick");
       setCompletionKind(null);
       setShowLockerSettings(false);
+    } else {
+      setActiveTab(initialTab);
     }
   }, [isOpen]);
 
@@ -1497,7 +1541,7 @@ export default function CreateModal({
               >
                 {hasCompletion
                   ? (isSpanish ? "Listo para compartir." : "Ready to share.")
-                  : (isSpanish ? "Haz que haga trucos." : "Make it do tricks.")}
+                  : SHEET_HEADINGS[activeTab][isSpanish ? "es" : "en"].title}
               </h2>
               <p
                 class="text-xs sm:text-sm font-bold truncate"
@@ -1505,11 +1549,9 @@ export default function CreateModal({
               >
                 {hasCompletion
                   ? (isSpanish
-                    ? "Tu QR ya apunta a la nueva página."
+                    ? "El QR ya apunta a la nueva página."
                     : "The QR now points at the new page.")
-                  : (isSpanish
-                    ? "Qué lleva, cómo reacciona y cómo se ve."
-                    : "What it does, how it reacts, how it looks.")}
+                  : SHEET_HEADINGS[activeTab][isSpanish ? "es" : "en"].sub}
               </p>
             </div>
           </div>
@@ -1643,12 +1685,10 @@ export default function CreateModal({
                   <span>
                     {hasCompletion
                       ? (isSpanish
-                        ? "Listo · Volver al inicio ✨"
-                        : "Done · Back to Home ✨")
+                        ? "Listo · Volver al inicio"
+                        : "Done · Back to home")
                       : activeTab === "design"
-                      ? (isSpanish
-                        ? "Listo · Aplicar diseño ✨"
-                        : "Done · Apply Design ✨")
+                      ? (isSpanish ? "Aplicar diseño" : "Apply design")
                       : isCreatingEditable
                       ? (isSpanish
                         ? (isSequential && randomSequence
@@ -1660,16 +1700,16 @@ export default function CreateModal({
                       : needsDynamicMint
                       ? (isSpanish
                         ? (isSequential && randomSequence
-                          ? "🎲 Crear QR ruleta ✨"
+                          ? "Crear QR ruleta"
                           : isSequential
-                          ? "🔄 Crear QR multi-link ✨"
-                          : "✦ Crear link editable ✨")
+                          ? "Crear QR multi-link"
+                          : "Crear link editable")
                         : (isSequential && randomSequence
-                          ? "🎲 Create roulette QR ✨"
+                          ? "Create roulette QR"
                           : isSequential
-                          ? "🔄 Create multi-link QR ✨"
-                          : "✦ Create editable link ✨"))
-                      : (isSpanish ? "Listo · Ver QR ✨" : "Done · View QR ✨")}
+                          ? "Create multi-link QR"
+                          : "Create editable link"))
+                      : (isSpanish ? "Listo · Ver QR" : "Done · View QR")}
                   </span>
                 </button>
               );

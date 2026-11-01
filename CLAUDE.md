@@ -244,10 +244,10 @@ QRBuddy follows Pablo's "Soft Brutal" aesthetic:
 - **Chunky borders**: 4px black borders with custom shadow classes
 - **Warm pastels**: Cream backgrounds with gradient accents
 - **Spring animations**: Squish, rotate-shuffle, and pop effects
-- **Gradient & high-contrast themes**: 10 pre-defined print-verified styles
+- **Gradient & high-contrast themes**: 10 print-verified styles in `QR_STYLES`
   (`Sunset`, `Ocean`, `Forest`, `Crimson`, `Vaporwave`, `Cosmic`, `Candy`,
-  `Matrix`, `Brutal`, `Classic`) emphasizing visual delight and optical
-  reliability
+  `Matrix`, `Brutal`, `Classic`); 6 sit in the public gallery, the rest stay for
+  easter eggs and locker pages
 
 ### Layout & Surface Rules
 
@@ -283,18 +283,22 @@ adding surfaces:
   never a per-feature tint. Scroll containers inside cards use `scrollbar-none`
   (styles.css) so the native track never cuts a corner radius. The tab strip is
   warm milk (`bg-amber-50`), never clinical white.
-- **Info dialogs** (About/Kofi/Pricing): always `islands/modal/CardModal.tsx` —
-  centered cream card at all sizes, `max-w-[460px]`, `border-4` + `rounded-3xl`,
-  mascot badge hanging half over the top edge (tilted sticker), circular `✕`
-  top-right with a 44px hit area, same backdrop/z as sheets. The dialog is a
-  non-scrolling frame and the card scrolls inside it, so the badge never clips
-  and the `✕` stays put. No gradient header bars. Titles are
-  `font-black text-2xl tracking-tight`, two lines max, second line `qr-pop`
-  pink; primary action is one full-width `rounded-full` pill
-  (`CardPrimaryButton`), secondaries are white bordered pills. Copy is a
-  manifesto, not a spec sheet. The first-visit intro asks for nothing (no
-  Supporter/tip buttons); every face ends in the "Made by Pablo" signature
-  (`MAKER_URL`).
+- **Info dialogs** (About/Intro/Passport/Kofi): always
+  `components/modal/CardModal.tsx` — centered cream card at all sizes,
+  `max-w-[440px]`, `border-3` + `rounded-3xl`, emoji badge tile centered at the
+  top, circular pink `✕` top-right, same backdrop/z as sheets. The dialog is a
+  non-scrolling frame and the card scrolls inside it, so the `✕` stays put. A
+  face is the kit in order and sets no sizes of its own: `CardBody` (the one
+  rhythm, `space-y-4 sm:space-y-5`) → `CardHeading` (title
+  `text-[1.55rem] sm:text-3xl leading-[1.15]`, punchline word in `.qr-marker`,
+  one pink tagline) → `.qr-pitch-lines` (intro: three plain centred lines) or
+  `.qr-pitch-copy` (one sentence of why + a `.qr-pitch-list` of three) →
+  `CardPrimaryButton` → `CardSignature` ("Made by Pablo ☕ in Melbourne" +
+  `CardQuietLink`s). Drill-in faces open with `CardBackBar` instead of a badge.
+  Copy is TalkType-length: one line per idea, no em-dash sub-clauses, no CTA
+  garnish, no instructional captions, never "you"/"we". The first-visit intro
+  asks for nothing. Mirrors TalkType's `tt-pitch-*` kit in `app.css` — when one
+  changes, change the other.
 - **Footer dock**: `islands/FooterDock.tsx` — one white capsule (About ·
   Solutions · pink bordered Supporter pill inset), never a wrap of loose pills.
   Item padding/type are `clamp()`ed so it stays one line down to 320px in both
@@ -302,9 +306,21 @@ adding surfaces:
   left of it on desktop. Solutions pops upward and light-dismisses. Tip Jar is
   parked (commented out). Home routes pin it to the viewport bottom edge
   (`min-h-[100dvh]` shell, `mt-auto` footer).
-- **Top rail**: just the style picker pill
+- **Home action row** (`components/smart-input/SmartInputToolbar.tsx`): under
+  the input, a grid of chunky bordered tiles named for what they open —
+  `[🔗
+  Link ▾]` (current QR type → Content tab) · `Design` (→ Design tab) ·
+  `Inspect` (→ scanner) · `🕰️` (History, only once there is some). Business
+  users and kids read the same labels; no mystery pill, no caption, no
+  parenthetical. The sheet's own header names the open tab (`SHEET_HEADINGS`:
+  "What the QR holds." / "How the QR behaves." / "How the QR looks.").
+  Static/Editable stays in-flow between input and row; its segments are two
+  words each so they never wrap at 320px.
+- **Top rail**: just the vibe-cycler pill
   (`min-h-[36px] rounded-full border-2 text-xs font-black shadow-chunky`). No
-  language toggle — `/es` is reached via hreflang/search, not a switch.
+  language toggle — `/es` is reached via hreflang/search, not a switch. No
+  random-colour dice (retired 2026-11-01: it ate rail space and rolled ugly);
+  custom colours live only in Design tab → gradient builder.
 - **Voice**: QRBuddy is the entity. Never "we"/"us" in UI copy.
 - **Palette presets** (`utils/qr-styles.ts` + `STYLE_DISPLAY`): one family —
   pastel-punk, two-tone, the same 135° diagonal (`DIAGONAL` rad). Scannability

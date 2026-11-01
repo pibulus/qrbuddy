@@ -23,14 +23,18 @@ import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 import { looksLikeUrl } from "../utils/url.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
-import CreateModal from "../components/CreateModal.tsx";
+import CreateModal, {
+  type ActiveTab as CreateTab,
+} from "../components/CreateModal.tsx";
 import HistoryDrawer from "../components/HistoryDrawer.tsx";
 import LibraryDrawer from "../components/LibraryDrawer.tsx";
 import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
 import QRReader from "../components/QRReader.tsx";
-import SmartInputToolbar from "../components/smart-input/SmartInputToolbar.tsx";
+import SmartInputToolbar, {
+  STAGE_SURFACE,
+} from "../components/smart-input/SmartInputToolbar.tsx";
 import FileUploadOptions, {
   shareKindOf,
 } from "../components/smart-input/FileUploadOptions.tsx";
@@ -114,6 +118,7 @@ export default function SmartInput(
     "url",
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createModalTab, setCreateModalTab] = useState<CreateTab>("type");
   const [createHasUpdates, setCreateHasUpdates] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   // Snapshot of the original destination URL before wrapping it in an editable
@@ -722,7 +727,7 @@ export default function SmartInput(
       w-full pl-5 ${rightPadding} py-4 text-lg font-bold text-[#1e1714]
       bg-[#fffef7] border-3 border-[#1e1714]
       rounded-2xl shadow-[0_4px_0_#1e1714]
-      focus:outline-none focus:border-pink-500
+      focus:outline-none focus:border-[var(--qr-theme-accent,#ec4899)]
       focus:scale-[1.02] focus:shadow-[0_6px_0_#1e1714]
       transition-all duration-300 ease-out
       placeholder:text-[#7c7267] placeholder:font-semibold
@@ -730,7 +735,7 @@ export default function SmartInput(
     `;
 
     if (isDragging) {
-      return `${baseClass} border-purple-500 bg-purple-50 scale-[1.03]`;
+      return `${baseClass} border-[var(--qr-theme-accent,#ec4899)] bg-[var(--qr-theme-tint,#fdf2f8)] scale-[1.03]`;
     }
 
     if (!touched || validationState === "idle") {
@@ -739,12 +744,14 @@ export default function SmartInput(
 
     if (validationState === "valid") {
       return `${baseClass} ${
-        isDestructible.value ? "border-orange-500" : "border-green-500"
+        isDestructible.value
+          ? "border-orange-500"
+          : "border-[var(--qr-theme-accent,#ec4899)]"
       }`;
     }
 
     if (validationState === "invalid") {
-      return `${baseClass} border-red-500 animate-shake`;
+      return `${baseClass} border-amber-500 animate-shake`;
     }
 
     return baseClass;
@@ -853,6 +860,7 @@ export default function SmartInput(
       {/* Create Modal - Rendered here for mobile layout flow */}
       <CreateModal
         isOpen={isCreateModalOpen}
+        initialTab={createModalTab}
         onClose={() => {
           setIsCreateModalOpen(false);
           const contentChanged = url.value.trim() !== "" &&
@@ -1010,7 +1018,7 @@ export default function SmartInput(
           (
             <p
               id="input-error"
-              class="text-red-600 text-sm mt-2 text-center animate-slide-down"
+              class="text-amber-800 text-sm font-bold mt-2 text-center animate-slide-down"
               role="alert"
             >
               {isSpanish
@@ -1022,7 +1030,7 @@ export default function SmartInput(
         {/* Upload error */}
         {uploadError && (
           <p
-            class="text-red-600 text-sm mt-2 text-center animate-slide-down"
+            class="text-amber-800 text-sm font-bold mt-2 text-center animate-slide-down"
             role="alert"
           >
             {uploadError}
@@ -1086,83 +1094,89 @@ export default function SmartInput(
           !isDestructible.value &&
           !(lastShare && url.value === lastShare.url) &&
           (looksLikeUrl(url.value) || Boolean(editUrl.value)) && (
-          <div class="mt-2.5 space-y-2 animate-slide-down">
+          <div class="mt-3 space-y-3 animate-slide-down">
+            {
+              /* Two segments on the stage paper; the sub-label is the whole
+                explanation, so no caption underneath. Active = theme tint. */
+            }
             <div
               role="group"
               aria-label={isSpanish ? "Modo de enlace QR" : "QR link mode"}
-              class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl border-2 border-black bg-[#fbf1e4] shadow-chunky"
+              class={`${STAGE_SURFACE} grid grid-cols-2 gap-1 p-1`}
             >
-              <button
-                type="button"
-                aria-pressed={!editUrl.value && !isCreatingDynamic}
-                onClick={() => {
-                  if (editUrl.value) {
-                    if (staticSourceUrl) {
-                      url.value = staticSourceUrl;
-                    }
-                    editUrl.value = "";
-                    isDynamic.value = false;
-                    haptics.light();
-                  }
-                }}
-                class={`min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                  !editUrl.value && !isCreatingDynamic
-                    ? "bg-[#1e1714] text-[#fffef7] shadow-sm"
-                    : "text-neutral-700 hover:bg-amber-100/80"
-                }`}
-              >
-                <span>
-                  {isSpanish
-                    ? "🔒 Estático · Gratis siempre"
-                    : "🔒 Static · Free forever"}
-                </span>
-              </button>
+              {(() => {
+                const staticActive = !editUrl.value && !isCreatingDynamic;
+                const seg = (active: boolean) =>
+                  `min-h-[46px] px-2 rounded-xl flex flex-col items-center justify-center leading-tight transition-all border-2 ${
+                    active
+                      ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border-[#1e1714] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
+                      : "border-transparent text-[#57524b] hover:bg-[var(--qr-theme-tint,#fdf2f8)] hover:text-[#1e1714]"
+                  }`;
+                const title = "text-sm font-black whitespace-nowrap";
+                const sub =
+                  "text-[10px] font-bold opacity-75 whitespace-nowrap truncate max-w-full";
+                return (
+                  <>
+                    <button
+                      type="button"
+                      aria-pressed={staticActive}
+                      onClick={() => {
+                        if (editUrl.value) {
+                          if (staticSourceUrl) {
+                            url.value = staticSourceUrl;
+                          }
+                          editUrl.value = "";
+                          isDynamic.value = false;
+                          haptics.light();
+                        }
+                      }}
+                      class={seg(staticActive)}
+                    >
+                      <span class={title}>
+                        {isSpanish ? "Estático" : "Static"}
+                      </span>
+                      <span class={sub}>
+                        {isSpanish ? "gratis para siempre" : "free forever"}
+                      </span>
+                    </button>
 
-              <button
-                type="button"
-                disabled={isCreatingDynamic}
-                aria-pressed={Boolean(editUrl.value) || isCreatingDynamic}
-                onClick={() => {
-                  if (!editUrl.value && !isCreatingDynamic) {
-                    handleCreateEditable();
-                  }
-                }}
-                class={`min-h-[40px] px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                  editUrl.value || isCreatingDynamic
-                    ? "bg-[#9370DB] text-[#fffef7] border border-black shadow-sm"
-                    : "text-purple-900 bg-purple-100/70 hover:bg-purple-200/80"
-                }`}
-              >
-                <span>
-                  {isCreatingDynamic
-                    ? (isSpanish
-                      ? "Creando link editable…"
-                      : "Creating editable link…")
-                    : editUrl.value
-                    ? (isSpanish
-                      ? "⚡ Editable + Analíticas ✓"
-                      : "⚡ Editable + Scan Stats ✓")
-                    : (isSpanish
-                      ? "⚡ Editable tras imprimir + Stats"
-                      : "⚡ Editable after print + Stats")}
-                </span>
-              </button>
+                    <button
+                      type="button"
+                      disabled={isCreatingDynamic}
+                      aria-pressed={!staticActive}
+                      onClick={() => {
+                        if (!editUrl.value && !isCreatingDynamic) {
+                          handleCreateEditable();
+                        }
+                      }}
+                      class={seg(!staticActive)}
+                    >
+                      <span class={title}>Editable</span>
+                      <span class={sub}>
+                        {isCreatingDynamic
+                          ? (isSpanish ? "creando…" : "creating…")
+                          : editUrl.value
+                          ? (isSpanish
+                            ? "activo · con stats"
+                            : "live · stats on")
+                          : (isSpanish
+                            ? "cambia el destino · 5 gratis"
+                            : "repoint after print · 5 free")}
+                      </span>
+                    </button>
+                  </>
+                );
+              })()}
             </div>
 
-            {!editUrl.value && !isCreatingDynamic && (
-              <p class="text-[11px] font-bold text-[#57524b] text-center px-2">
-                {isSpanish
-                  ? "Estático fija el link en la tinta · Editable cambia el destino tras imprimir (5 gratis)"
-                  : "Static locks the URL into the ink · Editable repoints after printing (5 free)"}
-              </p>
-            )}
-
             {editUrl.value && (
-              <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border-2 border-black bg-[#fffef7] text-xs font-bold text-[#1e1714] shadow-sm">
+              <div
+                class={`${STAGE_SURFACE} flex items-center justify-between gap-2 px-3 py-2 bg-[var(--qr-theme-tint,#fdf2f8)] text-xs font-bold text-[#1e1714]`}
+              >
                 <span class="truncate">
                   {isSpanish
-                    ? "QR editable activo — cambia el destino cuando quieras"
-                    : "Editable QR active — repoint destination anytime"}
+                    ? "Este QR se puede redirigir cuando sea"
+                    : "This QR can be repointed anytime"}
                 </span>
                 <div class="flex items-center gap-1.5 shrink-0">
                   <button
@@ -1180,13 +1194,13 @@ export default function SmartInput(
                         haptics.error();
                       }
                     }}
-                    class="px-2.5 py-1 rounded-lg border border-black bg-[#fbf1e4] hover:bg-amber-100 font-black transition-colors"
+                    class="min-h-[32px] px-2.5 rounded-lg border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[var(--qr-theme-tint-strong,#fbcfe8)] font-black transition-colors"
                   >
-                    {isSpanish ? "Copiar llave" : "Copy edit key"}
+                    {isSpanish ? "Copiar llave" : "Copy key"}
                   </button>
                   <a
                     href={editUrl.value}
-                    class="px-2.5 py-1 rounded-lg border border-black bg-[#9370DB] text-[#fffef7] hover:bg-[#6B46A8] font-black transition-colors"
+                    class="min-h-[32px] inline-flex items-center px-2.5 rounded-lg border-2 border-[#1e1714] bg-[#1e1714] text-[#fffef7] hover:bg-[#3b2e25] font-black transition-colors"
                   >
                     {isSpanish ? "Panel ↗" : "Manage ↗"}
                   </a>
@@ -1199,10 +1213,10 @@ export default function SmartInput(
         {/* Editable mode needs a URL — plain text stays a static QR */}
         {isDynamic.value && !editUrl.value && !isBucket.value &&
           url.value.trim() !== "" && !looksLikeUrl(url.value) && (
-          <p class="text-purple-700 text-xs mt-2 text-center animate-slide-down">
+          <p class="text-[#57524b] text-xs font-bold mt-2 text-center animate-slide-down">
             {isSpanish
-              ? "Los QRs editables necesitan un link. Este texto crea un QR estático — para alojar una nota, usa Personalizar → Texto."
-              : "Editable QRs need a link. This text makes a static QR — for a hosted note, use Customize → Plain text."}
+              ? "Los QR editables necesitan un link; el texto suelto hace un QR estático."
+              : "Editable QRs need a link; plain text makes a static QR."}
           </p>
         )}
 
@@ -1231,8 +1245,11 @@ export default function SmartInput(
       {/* Toolbar - Below input so users enter data first, then customize */}
       <SmartInputToolbar
         selectedTemplate={selectedTemplate}
-        setIsCreateModalOpen={setIsCreateModalOpen}
-        setCreateHasUpdates={setCreateHasUpdates}
+        onOpenCreate={(tab) => {
+          setCreateModalTab(tab);
+          setIsCreateModalOpen(true);
+          setCreateHasUpdates(false);
+        }}
         createHasUpdates={createHasUpdates}
         onShowHistory={() => setShowHistory(true)}
         onShowReader={() => setShowReader(true)}

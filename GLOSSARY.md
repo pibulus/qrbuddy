@@ -29,7 +29,7 @@
 
 **Modals & Overlays:**
 
-- `AboutModal` - Manifesto card (first-visit intro poster + about)
+- `AboutModal` - Intro poster (first visit) + About manifesto, on `CardModal`
 - `KofiModal` - Ko-fi support modal
 - `PricingModal` - Single-tier Supporter unlock card
 - `FooterDock` - Bottom capsule (About/Solutions/Supporter) with maker, Privacy,
@@ -67,7 +67,8 @@
 
 - `FileUploadOptions` - Staged-upload panel: file summary, download limit
   picker, confirm/cancel
-- `SmartInputToolbar` - Input mode toolbar
+- `SmartInputToolbar` - Home action row (`Link ▾` · Design · Inspect · History)
+  plus the exported `STAGE_SURFACE`/`STAGE_PRESS` recipe the whole stage shares
 
 **Sub-Islands (templates/):**
 
@@ -138,8 +139,6 @@
   clipboard paste, or camera; URL opens are protocol-restricted to http/https
 - **Caption Frames** - "SCAN ME" borders previewed on the card and baked into
   PNG downloads (SVG downloads stay frameless)
-- **Style Dice** - random two-stop gradient with luma-aware lightness so every
-  roll stays scannable
 - **Destructible QRs** - One-time QR codes (URLs OR files) that self-destruct
   after 1 scan → KABOOM page
 - **Finite Multi-File Shares** - Multi-image limited shares are delivered as one

@@ -224,8 +224,8 @@ export async function checkQRScannability(
 }
 
 /**
- * Decode straight from an off-DOM render (no live canvas needed) — used to
- * probe a candidate style BEFORE committing it, e.g. the style dice. Draws
+ * Decode straight from an off-DOM render (no live canvas needed) — for
+ * probing a candidate style BEFORE committing it. Draws
  * the blob at the same small size checkQRScannability uses, so a probe and
  * a post-render check agree on the same pass/fail bar.
  */

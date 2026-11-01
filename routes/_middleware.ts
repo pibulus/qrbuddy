@@ -6,7 +6,7 @@ import { getSupabaseUrl } from "../utils/api.ts";
  *
  * QRBuddy was serving NONE of these — not even HSTS. Added 2026-07-31.
  * CSP added 2026-08-12, Playwright-verified against the running app
- * (every style preset, dice roll, wasm scan-check, Ko-fi embed).
+ * (every style preset, custom gradient, wasm scan-check, Ko-fi embed).
  *
  * X-Frame-Options is DENY here, unlike ProMapper's SAMEORIGIN. QRBuddy embeds
  * Ko-fi in an iframe (islands/KofiModal.tsx), but that direction is governed by

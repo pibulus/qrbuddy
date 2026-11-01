@@ -1,0 +1,114 @@
+# Home stage + card kit pass — 2026-11-01
+
+One session, three jobs: retire the random-colour dice, put every info dialog on
+one card kit, and make the controls under the QR read like a tool instead of a
+pill with a joke on it. This is the "why" behind the rules that now live in
+`CLAUDE.md` → Design System → Layout & Surface Rules.
+
+## 1. The dice is gone
+
+`islands/StyleSelector.tsx` lost the 🎲 roller, its 24 `CURATED_HARMONIC_PAIRS`,
+the off-DOM `QRCodeStyling` scan-probe loop and the "Nat 20 energy" quips (426 →
+~190 lines). It ate top-rail space and the rolls looked bad. Colour now comes
+from two places only: the six curated presets, and Design tab → gradient builder
+(six jewel quick-picks + manual pickers). The HSL-validation test in
+`tests/generator_polish_test.ts` stays — dice-era prefs still sit in people's
+localStorage and must keep loading.
+
+## 2. One card kit for every info dialog
+
+`components/modal/CardModal.tsx` now exports the whole kit:
+
+| Piece                 | Job                                                                  |
+| --------------------- | -------------------------------------------------------------------- |
+| `CardModal`           | cream card, 3px sepia border, `rounded-3xl`, pink ✕, badge slot      |
+| `CardBody`            | the one rhythm — `space-y-4 sm:space-y-5`                            |
+| `CardHeading`         | `text-[1.55rem] sm:text-3xl leading-[1.15]` title + one pink tagline |
+| `CardBackBar`         | drill-in header: ← Back pill + eyebrow                               |
+| `CardSignature`       | "Made by Pablo ☕ in Melbourne" + optional quiet links               |
+| `CardQuietLink`       | underlined text link/button for the signature row                    |
+| `CardPrimaryButton`   | `.qr-pitch-cta`                                                      |
+| `CardSecondaryButton` | cream bordered pill                                                  |
+
+A face is those pieces in that order and sets no sizes of its own. About, Intro,
+Passport (pitch / redeem / pair) and the parked Kofi face all use it. The CSS
+half (`.qr-marker`, `.qr-pitch-copy`, `.qr-pitch-list`, `.qr-pitch-lines`,
+`.qr-pitch-cta`) in `static/styles.css` mirrors TalkType's `tt-pitch-*` kit —
+**layout and rhythm are shared; words are not.** Each app has its own
+catchphrase. QRBuddy's is "Drop a link. Watch it bloom." (intro, manifest) and
+"Nice QR codes. No ransom." (about). Nothing from TalkType's copy deck ("…the
+best, kick out the rest", "fast, fun, freaky good", "Let's go") belongs here.
+
+Copy rules that came out of the pass:
+
+- One idea per line, no em-dash sub-clauses, `text-wrap: pretty` on paragraphs
+  so no orphans.
+- No CTA garnish (✨ ✦ 🎲 on buttons), no instructional captions ("tap the card
+  to roll skins"), no "you"/"your"/"we".
+- Say the real thing: other QR sites look like tax forms, hide the download
+  behind a signup, bill monthly, and printed codes die when the card does. Chill
+  tone, specific claims.
+- The badge on About/Intro is the actual PWA icon (`/icon-192.png`, rendered
+  bare via `badgeTile={false}`), not an emoji stand-in. Passport keeps 🛂 in the
+  tile.
+
+Verified: `favicon.svg` + `favicon.ico` + `apple-touch-icon.png` + manifest
+icons (192/512, any + maskable) are all linked from `routes/_app.tsx`.
+
+## 3. The stage under the QR
+
+Before: input → "✨ Make it do tricks (Wi-Fi · Drops · Roulette)" → 🔍 micro
+link. A week earlier it had been a row of three real buttons (Customize ·
+Inspect · History) which the Oct 28 "stage hierarchy" pass collapsed. The
+collapse hid three different jobs behind one eager pill — that was the problem,
+not the button count.
+
+Now (`components/smart-input/SmartInputToolbar.tsx`):
+
+```
+[ 🔗 Link ▾ ]  [ Design ]  [ Inspect ]  [ 🕰️ ]
+```
+
+- `Link ▾` shows the current QR type and opens the sheet on **Content**.
+- `Design` opens the sheet on **Design** (new `initialTab` prop on
+  `CreateModal`).
+- `Inspect` opens the scanner. `🕰️` appears once there is history.
+- The sheet header names the open tab (`SHEET_HEADINGS`): _What the QR holds /
+  How the QR behaves / How the QR looks_, each with a one-line list of the
+  choices. No more "Make it do tricks."
+
+Static/Editable stays in-flow between input and row. Its segments carry their
+own explanation as a sub-label (_Static — free forever_ / _Editable — repoint
+after print · 5 free_), so the caption under it is gone.
+
+### The stage recipe
+
+Everything under the QR is the same paper, exported from the toolbar:
+
+```
+STAGE_SURFACE = bg-[#fffef7] border-3 border-[#1e1714] rounded-2xl shadow-[0_4px_0_#1e1714]
+STAGE_PRESS   = hover:-translate-y-px hover:shadow-[0_5px_0_#1e1714]
+                active:translate-y-[2px] active:shadow-[0_2px_0_#1e1714]
+```
+
+"The current thing" is marked with the theme tint (`--qr-theme-tint` /
+`--qr-theme-tint-strong`, set from the active palette by `getQRThemeStyleVars`):
+the active mode segment, the `Link ▾` tile, hover on the cream tiles, the
+input's focus/valid border. Pick Ocean and the whole stage goes blue. The
+hard-coded `#9370DB` purple and the inverted-black segment are gone; `Manage ↗`
+is sepia ink like the Design tab's `Upload`. Invalid input is amber + shake, not
+red (fleet law).
+
+## Verifying
+
+```bash
+deno fmt && deno lint && deno task check && deno task test:unit
+```
+
+`test:unit` has two failures that pre-date this pass and are unrelated: two
+tests `Deno.readTextFile` source files but the task has no `--allow-read`.
+
+Visual check used Playwright (from `daysay/node_modules`) against
+`deno task start` at 390×844 and 1280×860, EN and `/es`: intro, about, passport
+pitch/redeem, home empty, home with a URL typed, Content and Design tabs, and
+the Ocean palette to confirm the tint follows.

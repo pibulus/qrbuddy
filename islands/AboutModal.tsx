@@ -1,8 +1,13 @@
 import { useEffect, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import {
+  CardBody,
+  CardDot,
+  CardHeading,
   CardModal,
   CardPrimaryButton,
+  CardQuietLink,
+  CardSignature,
 } from "../components/modal/CardModal.tsx";
 import { openPricingModal } from "./PricingModal.tsx";
 import { MAKER_URL } from "../utils/constants.ts";
@@ -26,18 +31,33 @@ export function closeAboutModal() {
 
 const INTRO_SEEN_KEY = "qrbuddy_intro_seen";
 
-const PITCH_ITEMS = {
+// Intro poster: three plain lines that say what the thing does.
+const INTRO_LINES = {
   en: [
-    "8 print-ready palettes, custom logos & frames",
-    "Editable links, photo slideshows & lockers",
-    "Street-safe QR Inspector — unmask mystery codes",
-    "Zero accounts, zero hostage links — free forever",
+    "Paste a link, pick a palette, save a print-ready PNG or SVG.",
+    "Wi-Fi cards, contact cards, photo drops and file lockers too.",
+    "No account needed. Static codes stay free and work forever.",
   ],
   es: [
-    "8 paletas listas para imprimir, logos y marcos",
-    "Links editables, galerías de fotos y buzones",
-    "Inspector seguro — revela QRs sospechosos",
-    "Cero cuentas, cero links secuestrados — gratis",
+    "Pega un link, elige una paleta y guarda un PNG o SVG listo para imprimir.",
+    "También tarjetas Wi-Fi, de contacto, fotos y buzones de archivos.",
+    "Sin cuenta. Los códigos estáticos son gratis y funcionan para siempre.",
+  ],
+};
+
+// About manifesto: what's wrong with the others, then what this one does.
+const PITCH_ITEMS = {
+  en: [
+    "Print-ready codes from one paste.",
+    "Static codes free forever, no account.",
+    "Editable links and scan stats on a flat yearly Passport. No auto-renew.",
+    "Wi-Fi and contact cards, photo drops, mixtapes, file lockers.",
+  ],
+  es: [
+    "Códigos listos para imprimir con un solo pegado.",
+    "Códigos estáticos gratis para siempre, sin cuenta.",
+    "Links editables y estadísticas con un Pasaporte anual fijo. Sin renovación automática.",
+    "Tarjetas Wi-Fi y de contacto, fotos, mixtapes, buzones de archivos.",
   ],
 };
 
@@ -48,21 +68,6 @@ const PABLO_EMOJIS = ["☕", "🌴", "🍸", "🌮"];
 function handOff(open: () => void) {
   closeAboutModal();
   setTimeout(open, 60);
-}
-
-function openInspectorFromAbout(isSpanish: boolean) {
-  closeAboutModal();
-  const g = globalThis as typeof globalThis & {
-    __qrbInspectorListener?: boolean;
-  };
-  if (g.__qrbInspectorListener) {
-    setTimeout(
-      () => globalThis.dispatchEvent(new CustomEvent("qrb-open-inspector")),
-      60,
-    );
-  } else if (typeof globalThis.location !== "undefined") {
-    globalThis.location.href = isSpanish ? "/es?inspect=1" : "/?inspect=1";
-  }
 }
 
 export function AboutModal({ lang }: { lang?: Locale } = {}) {
@@ -115,26 +120,34 @@ export function AboutModal({ lang }: { lang?: Locale } = {}) {
     }
   }, []);
 
-  const privacyHref = isSpanish ? "/privacy?lang=es" : "/privacy";
-  const termsHref = isSpanish ? "/terms?lang=es" : "/terms";
+  const shuffleCharm = () => {
+    setEmojiIdx((i) => (i + 1) % PABLO_EMOJIS.length);
+    sounds.bloop?.();
+  };
 
   return (
     <CardModal
       open={isOpen}
       onClose={closeAboutModal}
       labelledby="about-title"
-      badge="🌸"
-      badgeClass="from-amber-200 via-pink-300 to-purple-400"
+      badge={
+        <img
+          src="/icon-192.png"
+          alt=""
+          width={64}
+          height={64}
+          class="w-16 h-16 select-none"
+        />
+      }
+      badgeTile={false}
     >
-      <div class="text-center space-y-4">
-        <div class="space-y-1">
-          <h2
-            id="about-title"
-            class="font-black text-2xl sm:text-[26px] tracking-tight leading-tight text-[#1e1714]"
-          >
-            {isIntro
-              ? (
-                isSpanish
+      <CardBody>
+        {isIntro
+          ? (
+            <>
+              <CardHeading
+                id="about-title"
+                title={isSpanish
                   ? (
                     <>
                       Pega un link.<br />
@@ -146,118 +159,86 @@ export function AboutModal({ lang }: { lang?: Locale } = {}) {
                       Drop a link.<br />
                       <span class="qr-marker">Watch it bloom.</span>
                     </>
-                  )
-              )
-              : (
-                isSpanish
+                  )}
+                tagline={isSpanish
+                  ? "Códigos QR listos para imprimir, gratis para siempre."
+                  : "Print-ready QR codes, free forever."}
+              />
+
+              <div class="qr-pitch-lines">
+                {INTRO_LINES[locale].map((line) => <p key={line}>{line}</p>)}
+              </div>
+
+              <div class="pt-1">
+                <CardPrimaryButton onClick={closeAboutModal}>
+                  {isSpanish ? "Crear un QR" : "Make a QR code"}
+                </CardPrimaryButton>
+              </div>
+            </>
+          )
+          : (
+            <>
+              <CardHeading
+                id="about-title"
+                title={isSpanish
                   ? (
                     <>
-                      QRBuddy es lo <span class="qr-marker">máximo.</span>
-                      <br />
-                      Olvida el resto.
+                      QR bonitos.<br />
+                      <span class="qr-marker">Sin rescate.</span>
                     </>
                   )
                   : (
                     <>
-                      QRBuddy’s the <span class="qr-marker">best.</span>
-                      <br />
-                      Kick out the rest.
+                      Nice QR codes.<br />
+                      <span class="qr-marker">No ransom.</span>
                     </>
-                  )
-              )}
-          </h2>
-          <p class="text-base font-bold text-[#ec4899]">
-            {isSpanish
-              ? "Es rápido, divertido y ridículamente bueno."
-              : "It’s fast, it’s fun, it’s freaky good."}
-          </p>
-        </div>
+                  )}
+                tagline={isSpanish
+                  ? "Pega un link. Imprímelo grande. Para siempre."
+                  : "Paste a link. Print it big. Keep it forever."}
+              />
 
-        <p class="qr-pitch-copy">
-          {isSpanish
-            ? "Otros generadores parecen errores de impresora y secuestran tus links con cobros mensuales. QRBuddy crea códigos hermosos, listos para imprimir y gratis para siempre."
-            : "Other QR tools look like printer errors and hold links hostage behind monthly subscriptions. QRBuddy makes gorgeous, print-ready codes that stay free forever."}
-        </p>
+              <div class="qr-pitch-copy">
+                <p>
+                  {isSpanish
+                    ? "La mayoría de los sitios de QR parecen un formulario de impuestos, esconden la descarga tras un registro y cobran cada mes mientras el código siga impreso. Deja de pagar y cada menú, sticker y póster se muere."
+                    : "Most QR sites look like a tax form, hide the download behind a signup, then bill monthly for as long as the code is in print. Stop paying and every menu, sticker and poster goes dead."}
+                </p>
+                <p>
+                  {isSpanish
+                    ? "Me harté, así que hice QRBuddy."
+                    : "I got sick of it, so I made QRBuddy."}
+                </p>
+                <ul class="qr-pitch-list">
+                  {PITCH_ITEMS[locale].map((item) => <li key={item}>{item}
+                  </li>)}
+                </ul>
+              </div>
 
-        <ul class="qr-pitch-list">
-          {PITCH_ITEMS[locale].map((item) => <li key={item}>{item}</li>)}
-        </ul>
+              <div class="pt-1">
+                <CardPrimaryButton onClick={() => handOff(openPricingModal)}>
+                  {isSpanish ? "Pasaporte QRBuddy" : "QRBuddy Passport"}
+                </CardPrimaryButton>
+              </div>
+            </>
+          )}
 
-        <div class="pt-1">
-          {isIntro
-            ? (
-              <CardPrimaryButton onClick={closeAboutModal}>
-                {isSpanish ? "Crear un código QR ✨" : "Make a QR code ✨"}
-              </CardPrimaryButton>
-            )
-            : (
-              <CardPrimaryButton onClick={() => handOff(openPricingModal)}>
-                {isSpanish ? "Pasaporte QRBuddy" : "QRBuddy Passport"}
-              </CardPrimaryButton>
-            )}
-        </div>
-
-        {/* Signature row — matches TalkType Pitch Kit */}
-        <p class="text-xs font-medium text-[#6f6158] flex items-center justify-center gap-1 flex-wrap pt-0.5">
-          <span>{isSpanish ? "Hecho por" : "Made by"}</span>
-          <a
-            href={MAKER_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="font-bold text-[#1e1714] underline decoration-2 decoration-[#ec4899]/50 underline-offset-2 hover:text-[#ec4899] transition-colors"
-          >
-            Pablo
-          </a>
-          <button
-            type="button"
-            onClick={() => {
-              setEmojiIdx((i) => (i + 1) % PABLO_EMOJIS.length);
-              sounds.bloop?.();
-            }}
-            class="inline-block text-sm leading-none hover:scale-125 active:scale-95 transition-transform cursor-pointer select-none"
-            aria-label="Change vibe"
-          >
-            {PABLO_EMOJIS[emojiIdx]}
-          </button>
-          <span>{isSpanish ? "en Melbourne" : "in Melbourne"}</span>
-          <span aria-hidden="true">·</span>
-          {isIntro
-            ? (
-              <button
-                type="button"
-                onClick={() => (aboutModalMode.value = "about")}
-                class="font-bold text-[#1e1714] hover:text-[#ec4899] underline underline-offset-2 transition-colors"
-              >
+        <CardSignature
+          isSpanish={isSpanish}
+          makerUrl={MAKER_URL}
+          charm={PABLO_EMOJIS[emojiIdx]}
+          onCharm={shuffleCharm}
+        >
+          {isIntro && (
+            <>
+              <CardDot />
+              <CardQuietLink onClick={() => (aboutModalMode.value = "about")}>
                 {isSpanish ? "Toda la historia →" : "The whole story →"}
-              </button>
-            )
-            : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => openInspectorFromAbout(isSpanish)}
-                  class="font-bold text-[#1e1714] hover:text-[#ec4899] underline underline-offset-2 transition-colors"
-                >
-                  {isSpanish ? "🔍 Revisar QR" : "🔍 Inspect QR"}
-                </button>
-                <span aria-hidden="true">·</span>
-                <a
-                  href={privacyHref}
-                  class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
-                >
-                  {isSpanish ? "Privacidad" : "Privacy"}
-                </a>
-                <span aria-hidden="true">·</span>
-                <a
-                  href={termsHref}
-                  class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
-                >
-                  {isSpanish ? "Términos" : "Terms"}
-                </a>
-              </>
-            )}
-        </p>
-      </div>
+              </CardQuietLink>
+            </>
+          )}
+        </CardSignature>
+      </CardBody>
     </CardModal>
   );
 }
@@ -276,7 +257,7 @@ export function AboutLink({
     <button
       type="button"
       onClick={() => openAboutModal()}
-      class={`inline-flex items-center justify-center px-4 min-h-[44px] rounded-full border-2 border-black bg-white text-sm font-bold text-black shadow-chunky transition-all hover:scale-105 active:scale-95 ${className}`}
+      class={`inline-flex items-center justify-center px-4 min-h-[44px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-sm font-bold text-[#1e1714] shadow-chunky transition-all hover:scale-105 active:scale-95 ${className}`}
     >
       {label}
     </button>

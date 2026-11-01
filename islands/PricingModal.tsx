@@ -3,8 +3,13 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { formatInternationalPrice, PRICING_TIERS } from "../types/pricing.ts";
 import { addToast } from "./ToastManager.tsx";
 import {
+  CardBackBar,
+  CardBody,
+  CardDot,
+  CardHeading,
   CardModal,
   CardPrimaryButton,
+  CardQuietLink,
   CardSecondaryButton,
 } from "../components/modal/CardModal.tsx";
 import { getApiUrl } from "../utils/api.ts";
@@ -103,16 +108,16 @@ const HOLO_THEMES = [
 
 const PITCH_PERKS = {
   en: [
-    "100 editable links — repoint printed QRs anytime",
-    "500 MB file drops — 10× larger 30-day transfers",
-    "90-day Field Report — scan stats, cities & CSV",
-    "Clean white-label share pages & 4-word sync",
+    "100 editable links, repointed anytime.",
+    "500 MB drops, ten times the free size.",
+    "90-day Field Report with cities and CSV.",
+    "White-label pages and four-word sync.",
   ],
   es: [
-    "100 links editables — redirige QRs impresos",
-    "Archivos de 500 MB — envíos 10× más grandes",
-    "Reporte de Campo — 90 días, ciudades y CSV",
-    "Páginas sin marca y sincronización de 4 palabras",
+    "100 links editables, siempre redirigibles.",
+    "Archivos de 500 MB, diez veces más.",
+    "Reporte de Campo: 90 días, ciudades y CSV.",
+    "Páginas sin marca y sync de 4 palabras.",
   ],
 };
 
@@ -155,8 +160,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       setHasPass(getSupporterPass() !== null);
       addToast(
         isSpanish
-          ? "✨ ¡Sincronizado con tu Pasaporte QRBuddy!"
-          : "✨ Synced with your QRBuddy Passport!",
+          ? "Pasaporte sincronizado en este dispositivo ✨"
+          : "Passport synced on this device ✨",
         3500,
       );
     } else {
@@ -419,8 +424,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       await navigator.clipboard.writeText(syncUrl);
       addToast(
         isSpanish
-          ? "📋 ¡Link de sincronización copiado!"
-          : "📋 Sync link copied! Open on any device to pair",
+          ? "Link de sincronización copiado. Ábrelo en otro dispositivo."
+          : "Sync link copied. Open it on any device to pair.",
         3000,
       );
     } catch {
@@ -473,8 +478,6 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
 
   const expiry = hasPass ? supporterPassExpiry() : null;
   const intlPrice = formatInternationalPrice(PRICING_TIERS.pro);
-  const privacyHref = isSpanish ? "/privacy?lang=es" : "/privacy";
-  const termsHref = isSpanish ? "/terms?lang=es" : "/terms";
   const activeSkin = HOLO_THEMES[skinIndex] ?? HOLO_THEMES[0];
   const shortPasskey = passport
     ? passport.phrase.split(/[-_\s]+/).filter(Boolean).slice(0, 4).join("-")
@@ -485,54 +488,50 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       open={isOpen}
       onClose={closePricingModal}
       labelledby="pricing-modal-title"
-      badge={view === "pitch"
-        ? (
-          <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-100 via-pink-200 to-purple-300 text-2xl leading-none select-none">
-            🛂
-          </div>
-        )
-        : undefined}
+      badge="🛂"
+      badgeClass="from-amber-100 via-pink-200 to-purple-300"
     >
       {view === "redeem"
         ? (
-          <div class="text-center space-y-4">
-            <div class="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  setView("pitch");
-                  sounds.toggleOff?.();
-                }}
-                class="min-h-[38px] px-3 rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 transition-transform"
-              >
-                ← {isSpanish ? "Volver" : "Back"}
-              </button>
-              <span class="text-xs font-black uppercase tracking-wider text-[#6f6158]">
-                {isSpanish ? "Restaurar Pasaporte" : "Redeem Passkey"}
-              </span>
-            </div>
+          <CardBody>
+            <CardBackBar
+              onBack={() => {
+                setView("pitch");
+                sounds.toggleOff?.();
+              }}
+              back={isSpanish ? "Volver" : "Back"}
+              eyebrow={isSpanish ? "Restaurar Pasaporte" : "Redeem Passkey"}
+            />
 
-            <div class="space-y-1">
-              <h2
-                id="pricing-modal-title"
-                class="font-black text-2xl tracking-tight text-[#1e1714]"
-              >
+            <CardHeading
+              id="pricing-modal-title"
+              title={isSpanish
+                ? (
+                  <>
+                    Restaurar un <span class="qr-marker">Pasaporte.</span>
+                  </>
+                )
+                : (
+                  <>
+                    Restore a <span class="qr-marker">Passport.</span>
+                  </>
+                )}
+              tagline={isSpanish
+                ? "Un Pasaporte vale en cualquier navegador."
+                : "One Passport works in any browser."}
+            />
+
+            <div class="qr-pitch-copy">
+              <p>
                 {isSpanish
-                  ? "Ingresa tu clave de Pasaporte"
-                  : "Enter your Passport key"}
-              </h2>
-              <p class="text-sm font-semibold text-[#6f6158]">
-                {isSpanish
-                  ? "Pega la clave de tu compra para desbloquear este navegador."
-                  : "Paste your Passport license key to unlock this browser."}
+                  ? "La clave llegó en el correo de compra. También se copia desde un dispositivo donde el Pasaporte ya esté activo, con Copiar clave."
+                  : "The key arrived in the purchase email. It can also be copied from any device where the Passport is already active, under Copy key."}
               </p>
             </div>
 
             <div class="space-y-2.5 text-left">
               <label class="sr-only" for="restore-passport-input">
-                {isSpanish
-                  ? "Pega tu clave de Pasaporte"
-                  : "Paste your Passport key"}
+                {isSpanish ? "Clave de Pasaporte" : "Passport key"}
               </label>
               <input
                 id="restore-passport-input"
@@ -541,53 +540,60 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                 onInput={(e) =>
                   setPastedPass((e.target as HTMLInputElement).value)}
                 placeholder={isSpanish
-                  ? "Pega tu clave de Pasaporte…"
-                  : "Paste your Passport key…"}
-                class="w-full min-h-[48px] px-4 py-2.5 border-2 border-[#1e1714] rounded-2xl text-sm font-mono bg-[#fffef7] focus:border-[#ec4899] focus:outline-none"
+                  ? "Clave de Pasaporte…"
+                  : "Passport key…"}
+                class="w-full min-h-[48px] px-4 py-2.5 border-2 border-[#1e1714] rounded-2xl text-sm font-mono bg-[#fffef7] focus:border-[#db2777] focus:outline-none"
               />
               <CardPrimaryButton
                 onClick={handlePastePass}
                 disabled={pastedPass.trim() === ""}
               >
-                {isSpanish ? "Activar Pasaporte ✨" : "Activate Passport ✨"}
+                {isSpanish ? "Activar Pasaporte" : "Activate Passport"}
               </CardPrimaryButton>
             </div>
-          </div>
+
+            <p class="text-xs font-semibold text-[#6f6158]">
+              {isSpanish ? "Sin Pasaporte todavía: " : "No Passport yet: "}
+              <CardQuietLink
+                onClick={() => {
+                  setView("pitch");
+                  sounds.click?.();
+                }}
+              >
+                {isSpanish ? "ver qué incluye" : "see what it includes"}
+              </CardQuietLink>
+            </p>
+          </CardBody>
         )
         : view === "sync" && passport
         ? (
-          <div class="text-center space-y-4">
-            <div class="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  setView("pitch");
-                  sounds.toggleOff?.();
-                }}
-                class="min-h-[38px] px-3 rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 transition-transform"
-              >
-                ← {isSpanish ? "Volver" : "Back"}
-              </button>
-              <span class="text-xs font-black uppercase tracking-wider text-[#6f6158]">
-                {isSpanish ? "Vincular dispositivo" : "Pair Device"}
-              </span>
-            </div>
+          <CardBody>
+            <CardBackBar
+              onBack={() => {
+                setView("pitch");
+                sounds.toggleOff?.();
+              }}
+              back={isSpanish ? "Volver" : "Back"}
+              eyebrow={isSpanish ? "Vincular dispositivo" : "Pair Device"}
+            />
 
-            <div class="space-y-1">
-              <h2
-                id="pricing-modal-title"
-                class="font-black text-2xl tracking-tight text-[#1e1714]"
-              >
-                {isSpanish
-                  ? "Escanea para vincular"
-                  : "Scan to pair another device"}
-              </h2>
-              <p class="text-sm font-semibold text-[#6f6158]">
-                {isSpanish
-                  ? "Abre la cámara de tu teléfono o copia el link privado."
-                  : "Point your phone camera here or copy the private sync link."}
-              </p>
-            </div>
+            <CardHeading
+              id="pricing-modal-title"
+              title={isSpanish
+                ? (
+                  <>
+                    Escanea para <span class="qr-marker">vincular.</span>
+                  </>
+                )
+                : (
+                  <>
+                    Scan to <span class="qr-marker">pair.</span>
+                  </>
+                )}
+              tagline={isSpanish
+                ? "Cámara del otro teléfono aquí, o el link privado."
+                : "Point the other phone here, or copy the private link."}
+            />
 
             <div class="mx-auto w-40 h-40 bg-[#fffef7] rounded-2xl p-2.5 border-2 border-[#1e1714] shadow-[2px_2px_0_#1e1714] flex items-center justify-center">
               <div
@@ -616,67 +622,59 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
             </div>
 
             <CardPrimaryButton onClick={handleCopySyncUrl}>
-              {isSpanish
-                ? "📋 Copiar link de sincronización"
-                : "📋 Copy Sync Link"}
+              {isSpanish ? "Copiar link de sincronización" : "Copy sync link"}
             </CardPrimaryButton>
-          </div>
+          </CardBody>
         )
         : (
-          <div class="text-center space-y-4">
-            <div class="space-y-1 pr-6 sm:pr-0">
-              <h2
-                id="pricing-modal-title"
-                class="font-black text-2xl sm:text-[26px] tracking-tight leading-tight text-[#1e1714]"
-              >
-                {hasPass
-                  ? (
-                    isSpanish
-                      ? (
-                        <>
-                          Pasaporte <span class="qr-marker">activo.</span>
-                        </>
-                      )
-                      : (
-                        <>
-                          Passport <span class="qr-marker">active.</span>
-                        </>
-                      )
-                  )
-                  : (
-                    isSpanish
-                      ? (
-                        <>
-                          Desbloquea{" "}
-                          <span class="qr-marker">todo el poder.</span>
-                        </>
-                      )
-                      : (
-                        <>
-                          Unlock the full{" "}
-                          <span class="qr-marker">caboodle.</span>
-                        </>
-                      )
-                  )}
-              </h2>
-              <p class="text-base font-bold text-[#ec4899]">
-                {hasPass
-                  ? (isSpanish
-                    ? "Todo el equipo Pro desbloqueado en este dispositivo."
-                    : "Full Pro gear unlocked on this device.")
-                  : (isSpanish
-                    ? "El Pasaporte QRBuddy. Todo lo bueno."
-                    : "The QRBuddy Passport. All the good stuff.")}
-              </p>
-            </div>
+          <CardBody>
+            <CardHeading
+              id="pricing-modal-title"
+              title={hasPass
+                ? (
+                  isSpanish
+                    ? (
+                      <>
+                        Pasaporte <span class="qr-marker">activo.</span>
+                      </>
+                    )
+                    : (
+                      <>
+                        Passport <span class="qr-marker">active.</span>
+                      </>
+                    )
+                )
+                : (
+                  isSpanish
+                    ? (
+                      <>
+                        Desbloquea <span class="qr-marker">todo el poder.</span>
+                      </>
+                    )
+                    : (
+                      <>
+                        Unlock the full <span class="qr-marker">caboodle.</span>
+                      </>
+                    )
+                )}
+              tagline={hasPass
+                ? (isSpanish
+                  ? "Todo el equipo Pro desbloqueado en este dispositivo."
+                  : "Full Pro gear unlocked on this device.")
+                : (isSpanish
+                  ? "El Pasaporte QRBuddy. Todo lo bueno."
+                  : "The QRBuddy Passport. All the good stuff.")}
+            />
 
-            <ul class="qr-pitch-list">
-              {PITCH_PERKS[locale].map((perk) => <li key={perk}>{perk}</li>)}
-            </ul>
+            <div class="qr-pitch-copy">
+              <ul class="qr-pitch-list">
+                {PITCH_PERKS[locale].map((perk) => <li key={perk}>{perk}</li>)}
+              </ul>
+            </div>
 
             {/* Interactive Holographic Passport Preview Card (TalkType gold standard) */}
             {passport && (
-              <div class="space-y-1.5">
+              <div>
                 <div
                   role="button"
                   tabIndex={0}
@@ -748,11 +746,6 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                     </div>
                   </div>
                 </div>
-                <p class="text-[11px] font-semibold text-[#6f6158]">
-                  {isSpanish
-                    ? "✦ Toca la tarjeta para cambiar diseño · Inclina para brillar"
-                    : "✦ Tap card to roll holo skins · Tilt to shine"}
-                </p>
               </div>
             )}
 
@@ -773,11 +766,11 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                       : "Square has not confirmed the payment yet. Check again in a moment.")
                     : claimStatus === "missing"
                     ? (isSpanish
-                      ? "No encontramos esa referencia de pago."
-                      : "We couldn't find that checkout reference.")
+                      ? "Esa referencia de pago no apareció."
+                      : "That checkout reference didn't turn up.")
                     : (isSpanish
-                      ? "No se pudo comprobar el Pasaporte. Inténtalo de nuevo."
-                      : "We couldn't check the Passport. Try again in a moment.")}
+                      ? "La comprobación del Pasaporte no pasó. Otro intento en un momento."
+                      : "The Passport check didn't go through. Try again in a moment.")}
                 </p>
                 {(claimStatus === "waiting" || claimStatus === "error") && (
                   <button
@@ -837,8 +830,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                         ? "No se pudo comprobar el pago"
                         : "Checkout status unavailable")
                       : (isSpanish
-                        ? "✦ + ¡Obtener el Pasaporte QRBuddy!"
-                        : "✦ + Grab the QRBuddy Passport!")}
+                        ? "Conseguir el Pasaporte"
+                        : "Grab the Passport")}
                   </CardPrimaryButton>
 
                   {checkoutAvailability === "error" && (
@@ -855,8 +848,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
 
                   <p class="text-xs text-[#6f6158] font-bold">
                     {isSpanish
-                      ? `${intlPrice} por todo un año · sin suscripción`
-                      : `${intlPrice} for a whole year · no subscription`}
+                      ? `${intlPrice} al año · sin suscripción`
+                      : `${intlPrice} a year · no subscription`}
                   </p>
 
                   {checkoutError && (
@@ -873,57 +866,35 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                 </div>
               )}
 
-            {/* Quiet footer links — matches TalkType's "I have a passkey" row */}
-            <div class="pt-1 flex items-center justify-center gap-x-1.5 gap-y-1 flex-wrap text-[11px] font-bold text-[#6f6158]">
+            {/* Quiet footer links — TalkType's "I have a passkey" row */}
+            <p class="text-xs font-semibold text-[#6f6158] flex items-center justify-center gap-x-1.5 gap-y-1 flex-wrap">
               {!hasPass && (
                 <>
-                  <button
-                    type="button"
+                  <CardQuietLink
                     onClick={() => {
                       setView("redeem");
                       sounds.click?.();
                     }}
-                    class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
                   >
                     {isSpanish ? "Tengo clave" : "I have a passkey"}
-                  </button>
-                  <span aria-hidden="true">·</span>
+                  </CardQuietLink>
+                  <CardDot />
                 </>
               )}
-              <button
-                type="button"
+              <CardQuietLink
                 onClick={() => {
                   setView("sync");
                   sounds.click?.();
                 }}
-                class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
               >
                 {isSpanish ? "Vincular" : "Pair device"}
-              </button>
-              <span aria-hidden="true">·</span>
-              <button
-                type="button"
-                onClick={openLibrary}
-                class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
-              >
+              </CardQuietLink>
+              <CardDot />
+              <CardQuietLink onClick={openLibrary}>
                 {isSpanish ? "Biblioteca" : "Library"}
-              </button>
-              <span aria-hidden="true">·</span>
-              <a
-                href={privacyHref}
-                class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
-              >
-                {isSpanish ? "Privacidad" : "Privacy"}
-              </a>
-              <span aria-hidden="true">·</span>
-              <a
-                href={termsHref}
-                class="hover:text-[#1e1714] underline underline-offset-2 transition-colors"
-              >
-                {isSpanish ? "Términos" : "Terms"}
-              </a>
-            </div>
-          </div>
+              </CardQuietLink>
+            </p>
+          </CardBody>
         )}
     </CardModal>
   );

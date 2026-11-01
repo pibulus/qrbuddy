@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals";
-import { CardModal } from "./modal/CardModal.tsx";
+import { CardHeading, CardModal } from "./modal/CardModal.tsx";
 
 // Global signal for modal state
 export const kofiModalOpen = signal(false);
@@ -32,21 +32,18 @@ export function KofiModal({
       labelledby="kofi-modal-title"
       badge="☕"
       badgeClass="from-amber-200 via-orange-300 to-qr-pop"
-      maxWidthClass="max-w-[480px]"
-      padClass="p-6 sm:p-8 pb-0 sm:pb-0"
+      padClass="p-6 sm:p-7 pb-0 sm:pb-0"
     >
-      <div class="text-center space-y-1.5 mb-4">
-        <h2
+      <div class="text-center mb-4 sm:mb-5">
+        <CardHeading
           id="kofi-modal-title"
-          class="font-black text-2xl sm:text-3xl tracking-tight leading-tight text-black"
-        >
-          {title}
-        </h2>
-        <p class="text-base font-bold text-qr-pop">{description}</p>
+          title={title}
+          tagline={description}
+        />
       </div>
 
       {/* Ko-fi embed bleeds to the card edge — the card is the frame */}
-      <div class="-mx-6 sm:-mx-8 border-t-4 border-black rounded-b-[20px] overflow-hidden bg-white">
+      <div class="-mx-6 sm:-mx-7 border-t-3 border-[#1e1714] rounded-b-[20px] overflow-hidden bg-[#fffef7]">
         <iframe
           src={`https://ko-fi.com/${kofiUsername}/?hidefeed=true&widget=true&embed=true`}
           style="border: none; width: 100%; height: 560px; background: transparent;"

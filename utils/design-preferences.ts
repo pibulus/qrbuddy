@@ -26,7 +26,7 @@ export const DEFAULT_DESIGN_PREFERENCES: DesignPreferences = {
  * Validates supported generated colour syntax:
  * - Hex colours: #RGB, #RGBA, #RRGGBB, #RRGGBBAA
  * - RGB / RGBA: rgb(r, g, b), rgba(r, g, b, a), rgb(r g b / a)
- * - HSL / HSLA: hsl(h, s, l), hsla(h, s, l, a) (used by style dice roller)
+ * - HSL / HSLA: hsl(h, s, l), hsla(h, s, l, a) (legacy saved custom styles)
  * - Named CSS keywords: transparent, black, white
  * Rejects arbitrary strings (e.g. "not-a-colour").
  */
