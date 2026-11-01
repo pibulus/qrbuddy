@@ -19,20 +19,82 @@ const TEMPLATE_LABELS_ES: Record<QRTemplateType, string> = {
 };
 
 /**
- * The stage recipe: everything under the QR — the input, the Static/Editable
- * bar, the live-link strip and these tiles — is the same paper. Cream
- * surface, 3px sepia border, squircle radius, a 4px bottom shadow that
- * presses flat. Theme tint (`--qr-theme-*`, set from the active palette)
- * marks "the current thing", so the stage recolours with the QR.
+ * The stage under the QR is three tiers of the same warm paper, told apart
+ * by how far they stand off the page. The QR card is the hero (its own
+ * recipe in QRCanvas). Below it:
+ *
+ *  - STAGE_INPUT    the URL bar: 3px sepia border, 3px lip. Border stays
+ *                   sepia at rest even when valid; the ✓ does that job.
+ *                   Theme accent only on focus.
+ *  - STAGE_WELL     a recessed track for mode switches: 2px border, no
+ *                   outer shadow, creamy ground with a hairline inset lip.
+ *                   Only the active segment inside it lifts 1.5px.
+ *  - STAGE_TOOL_BTN panel triggers: 2px border, 2px lip, neutral paper.
+ *                   The one whose panel is open latches down (see LATCHED).
  */
-export const STAGE_SURFACE =
-  "bg-[#fffef7] border-3 border-[#1e1714] rounded-2xl shadow-[0_4px_0_#1e1714]";
+export const STAGE_INPUT =
+  "bg-[#fffef7] border-3 border-[#1e1714] rounded-2xl shadow-[0_3px_0_#1e1714]";
 
+export const STAGE_WELL =
+  "bg-[#f7ecdc] border-2 border-[#1e1714] rounded-xl shadow-[inset_0_2px_0_rgba(30,23,20,0.08)] p-1";
+
+export const STAGE_TOOL_BTN =
+  "bg-[#fffef7] border-2 border-[#1e1714] rounded-xl shadow-[0_2px_0_#1e1714]";
+
+/** Keycap physics: lift a hair on hover, click into the surface on press. */
 export const STAGE_PRESS =
-  "transition-all duration-150 hover:-translate-y-px hover:shadow-[0_5px_0_#1e1714] active:translate-y-[2px] active:shadow-[0_2px_0_#1e1714]";
+  "transition-[transform,box-shadow,background-color] duration-[70ms] ease-out hover:-translate-y-px hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none";
+
+const LATCHED =
+  "translate-y-[2px] shadow-none bg-[var(--qr-theme-tint,#fdf2f8)] hover:translate-y-[2px] hover:shadow-none";
 
 const TILE =
-  `${STAGE_SURFACE} ${STAGE_PRESS} min-h-[52px] flex items-center justify-center gap-1.5 font-black text-[#1e1714] text-sm whitespace-nowrap`;
+  `${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[44px] flex items-center justify-center gap-1.5 font-black text-[#1e1714] text-sm whitespace-nowrap hover:bg-[var(--qr-theme-tint,#fdf2f8)]`;
+
+export type StagePanel = ActiveTab | "inspect" | "history";
+
+type Glyph = QRTemplateType | "bucket" | "batch" | "history";
+
+/** Monochrome 16px line glyphs so the row never leans on emoji. */
+function StageGlyph({ kind }: { kind: Glyph }) {
+  const paths: Record<Glyph, string> = {
+    url:
+      "M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07",
+    text: "M4 6h16M4 12h16M4 18h10",
+    wifi:
+      "M2 8.5a16 16 0 0 1 20 0M5.5 12.5a11 11 0 0 1 13 0M9 16.5a5 5 0 0 1 6 0M12 20h.01",
+    vcard:
+      "M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM8 13a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM4.5 17a4 4 0 0 1 7 0M14 9h5M14 13h5",
+    sms:
+      "M21 12a8 8 0 0 1-8 8H8l-5 3 1.2-4.6A8 8 0 1 1 21 12zM8 12h.01M12 12h.01M16 12h.01",
+    email: "M3 6h18v12H3zM3 7l9 6 9-6",
+    phone:
+      "M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z",
+    social:
+      "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18",
+    media:
+      "M4 5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM14 3v6h6",
+    bucket: "M4 7h16l-1.5 13h-13zM4 7l2-4h12l2 4",
+    batch: "M3 7l9-4 9 4-9 4zM3 7v10l9 4 9-4V7M12 11v10",
+    history: "M12 3a9 9 0 1 1-6.36 2.64M3 3v5h5M12 7v5l3 2",
+  };
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.4"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="shrink-0"
+    >
+      <path d={paths[kind]} />
+    </svg>
+  );
+}
 
 interface SmartInputToolbarProps {
   selectedTemplate: QRTemplateType;
@@ -40,6 +102,8 @@ interface SmartInputToolbarProps {
   createHasUpdates: boolean;
   onShowHistory: () => void;
   onShowReader: () => void;
+  /** Which panel is open right now, so its trigger can latch down. */
+  openPanel?: StagePanel | null;
   isBucket?: boolean;
   isBatchMode?: boolean;
   lang?: Locale;
@@ -51,19 +115,18 @@ export default function SmartInputToolbar({
   createHasUpdates,
   onShowHistory,
   onShowReader,
+  openPanel = null,
   isBucket = false,
   isBatchMode = false,
   lang,
 }: SmartInputToolbarProps) {
   const isSpanish = getClientLocale(lang) === "es";
   const templateMeta = QR_TEMPLATES[selectedTemplate];
-  const activeIcon = isBatchMode
-    ? "📦"
+  const activeGlyph: Glyph = isBatchMode
+    ? "batch"
     : isBucket
-    ? "🪣"
-    : selectedTemplate === "vcard"
-    ? "🪪"
-    : templateMeta.icon;
+    ? "bucket"
+    : selectedTemplate;
   const activeLabel = isBatchMode
     ? (isSpanish ? "Lote" : "Bulk")
     : isBucket
@@ -89,19 +152,25 @@ export default function SmartInputToolbar({
     sounds.click();
   };
 
+  const latch = (panel: StagePanel | StagePanel[]) => {
+    const list = Array.isArray(panel) ? panel : [panel];
+    return openPanel && list.includes(openPanel) ? LATCHED : "";
+  };
+
   return (
     <div
-      class={`grid gap-3 w-full ${
+      class={`grid gap-2 w-full ${
         hasHistory
-          ? "grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
-          : "grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]"
+          ? "grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+          : "grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]"
       }`}
     >
-      {/* What the QR holds — the current type, tinted like the QR itself */}
+      {/* What the QR holds — current type, opens Content (and Behavior) */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("type"))}
-        class={`${TILE} relative min-w-0 px-3 bg-[var(--qr-theme-tint,#fdf2f8)] hover:bg-[var(--qr-theme-tint-strong,#fbcfe8)]`}
+        aria-expanded={openPanel === "type" || openPanel === "options"}
+        class={`${TILE} ${latch(["type", "options"])} relative min-w-0 px-3`}
         title={isSpanish
           ? "Cambiar el tipo de QR: enlace, Wi-Fi, contacto, archivo…"
           : "Change the QR type: link, Wi-Fi, contact card, file…"}
@@ -109,9 +178,7 @@ export default function SmartInputToolbar({
           ? `Tipo de QR: ${activeLabel}. Cambiar tipo`
           : `QR type: ${activeLabel}. Change type`}
       >
-        <span aria-hidden="true" class="text-base leading-none shrink-0">
-          {activeIcon}
-        </span>
+        <StageGlyph kind={activeGlyph} />
         <span class="truncate">{activeLabel}</span>
         <span aria-hidden="true" class="text-[10px] opacity-60 shrink-0">
           ▾
@@ -125,7 +192,8 @@ export default function SmartInputToolbar({
       <button
         type="button"
         onClick={press(() => onOpenCreate("design"))}
-        class={`${TILE} px-2 hover:bg-[var(--qr-theme-tint,#fdf2f8)]`}
+        aria-expanded={openPanel === "design"}
+        class={`${TILE} ${latch("design")} px-2`}
         title={isSpanish
           ? "Colores, logo, marco y forma de los módulos"
           : "Colours, logo, print frame and dot shapes"}
@@ -137,7 +205,8 @@ export default function SmartInputToolbar({
       <button
         type="button"
         onClick={press(onShowReader)}
-        class={`${TILE} px-2 hover:bg-[var(--qr-theme-tint,#fdf2f8)]`}
+        aria-expanded={openPanel === "inspect"}
+        class={`${TILE} ${latch("inspect")} px-2`}
         title={isSpanish
           ? "Ver a dónde lleva un QR antes de abrirlo: imagen, captura o cámara"
           : "See where a QR goes before opening it: image, screenshot or camera"}
@@ -150,11 +219,12 @@ export default function SmartInputToolbar({
         <button
           type="button"
           onClick={press(onShowHistory)}
-          class={`${TILE} w-[52px] hover:bg-[var(--qr-theme-tint,#fdf2f8)] animate-pop-in`}
+          aria-expanded={openPanel === "history"}
+          class={`${TILE} ${latch("history")} w-[44px] animate-pop-in`}
           title={isSpanish ? "Historial" : "History"}
           aria-label={isSpanish ? "Abrir historial" : "Open QR history"}
         >
-          <span aria-hidden="true" class="text-lg leading-none">🕰️</span>
+          <StageGlyph kind="history" />
         </button>
       )}
     </div>

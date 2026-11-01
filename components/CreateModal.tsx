@@ -84,6 +84,8 @@ interface CreateModalProps {
   /** Tab to land on when the sheet opens; the home row's Design button
    * jumps straight to Design, everything else starts at Content. */
   initialTab?: ActiveTab;
+  /** Fires when the open sheet changes tab, so the stage trigger can latch. */
+  onTabChange?: (tab: ActiveTab) => void;
   selectedTemplate: QRTemplateType;
   onSelectTemplate: (template: QRTemplateType) => void;
   url: Signal<string>;
@@ -225,6 +227,7 @@ export default function CreateModal({
   isOpen,
   onClose,
   initialTab = "type",
+  onTabChange,
   selectedTemplate,
   onSelectTemplate,
   url,
@@ -325,6 +328,10 @@ export default function CreateModal({
       setActiveTab(initialTab);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) onTabChange?.(activeTab);
+  }, [isOpen, activeTab]);
 
   useEffect(() => {
     if (!isOpen || activeTab !== "type" || contentStep !== "fill") return;

@@ -52,13 +52,15 @@ export default function QRCanvas(
   const [isDragHover, setIsDragHover] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
   const [showSuccessFlash, setShowSuccessFlash] = useState(false);
-  // "Watch it bloom": a tiny scale tick every time the QR data changes, and a
-  // springy pop when the style changes — the card acknowledges every update.
-  const [bloomTick, setBloomTick] = useState(false);
+  // The re-encode pulse: every time the matrix changes (data, palette, mode)
+  // the card dips to 0.985 and springs back, so the update is felt, not read.
+  const [pulse, setPulse] = useState(false);
+  const pulseArmed = useRef(false);
+  // "Copied PNG" pill after a tap on the matrix itself.
+  const [copied, setCopied] = useState(false);
+  const copiedTimerRef = useRef<number | null>(null);
   const [stylePop, setStylePop] = useState(false);
   const stylePopTimerRef = useRef<number | null>(null);
-  const prevStyleRef = useRef(style.value);
-  const prevCustomRef = useRef(customStyle?.value);
   // Decode-check verdict for the current render: silence means scannable.
   const [scanWarning, setScanWarning] = useState(false);
   const scanCheckToken = useRef(0);
@@ -68,11 +70,15 @@ export default function QRCanvas(
   const [qrReady, setQrReady] = useState(false);
 
   useEffect(() => {
-    if (!url.value) return;
-    setBloomTick(true);
-    const t = setTimeout(() => setBloomTick(false), 180);
+    // Skip the mount render; pulse only on real changes.
+    if (!pulseArmed.current) {
+      pulseArmed.current = true;
+      return;
+    }
+    setPulse(true);
+    const t = setTimeout(() => setPulse(false), 140);
     return () => clearTimeout(t);
-  }, [url.value]);
+  }, [url.value, style.value, customStyle?.value, isDynamic?.value]);
 
   // Coarse Umami event tracking lives inside QRCanvas instead of a dedicated
   // `islands/Analytics.tsx` island so Fresh never emits an `island-analytics.js`
@@ -121,29 +127,11 @@ export default function QRCanvas(
       if (stylePopTimerRef.current !== null) {
         clearTimeout(stylePopTimerRef.current);
       }
-    };
-  }, []);
-
-  useEffect(() => {
-    const styleChanged = prevStyleRef.current !== style.value;
-    const customChanged = prevCustomRef.current !== customStyle?.value;
-    if (!styleChanged && !customChanged) return;
-    prevStyleRef.current = style.value;
-    prevCustomRef.current = customStyle?.value;
-    if (stylePopTimerRef.current !== null) {
-      clearTimeout(stylePopTimerRef.current);
-    }
-    setStylePop(true);
-    stylePopTimerRef.current = setTimeout(() => {
-      setStylePop(false);
-      stylePopTimerRef.current = null;
-    }, 380) as unknown as number;
-    return () => {
-      if (stylePopTimerRef.current !== null) {
-        clearTimeout(stylePopTimerRef.current);
+      if (copiedTimerRef.current !== null) {
+        clearTimeout(copiedTimerRef.current);
       }
     };
-  }, [style.value, customStyle?.value]);
+  }, []);
 
   const handleDragOver = (event: DragEvent) => {
     event.preventDefault();
@@ -485,9 +473,7 @@ export default function QRCanvas(
       await downloadSvg();
       haptics.success();
       addToast(
-        isSpanish
-          ? "¡Descarga SVG vectorial iniciada! 📐"
-          : "Vector SVG download started! 📐",
+        isSpanish ? "Descarga SVG iniciada" : "SVG download started",
       );
       setShowSuccessFlash(true);
       setTimeout(() => setShowSuccessFlash(false), 600);
@@ -496,8 +482,45 @@ export default function QRCanvas(
       haptics.error();
       addToast(
         isSpanish
-          ? "No se pudo descargar el SVG ❌"
-          : "Couldn't start SVG download ❌",
+          ? "No se pudo descargar el SVG"
+          : "Couldn't start SVG download",
+      );
+    }
+  };
+
+  // Tap the matrix itself: the PNG lands on the clipboard. Browsers without
+  // image clipboard support (Firefox) fall through to the download.
+  const handleCanvasTap = async () => {
+    if (!qrCodeRef.current) return;
+    const canWriteImage = typeof ClipboardItem !== "undefined" &&
+      typeof navigator.clipboard?.write === "function";
+    if (!canWriteImage) {
+      await handleDownloadClick();
+      return;
+    }
+    setIsClicking(true);
+    setTimeout(() => setIsClicking(false), 150);
+    try {
+      const exportQr = new QRCodeStyling(getQrOptions(1000));
+      const raw = await exportQr.getRawData("png");
+      if (!raw) throw new Error("QR image could not be created");
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": raw as Blob }),
+      ]);
+      haptics.success();
+      if (copiedTimerRef.current !== null) {
+        clearTimeout(copiedTimerRef.current);
+      }
+      setCopied(true);
+      copiedTimerRef.current = setTimeout(() => {
+        setCopied(false);
+        copiedTimerRef.current = null;
+      }, 1200) as unknown as number;
+    } catch (err) {
+      console.error("Failed to copy PNG:", err);
+      haptics.error();
+      addToast(
+        isSpanish ? "No se pudo copiar el PNG" : "Couldn't copy the PNG",
       );
     }
   };
@@ -514,7 +537,7 @@ export default function QRCanvas(
       await downloadPng();
       haptics.success();
       addToast(
-        isSpanish ? "¡Descarga PNG iniciada! 🖼️" : "PNG download started! 🖼️",
+        isSpanish ? "Descarga PNG iniciada" : "PNG download started",
       );
       setShowSuccessFlash(true);
       setTimeout(() => setShowSuccessFlash(false), 600);
@@ -523,8 +546,8 @@ export default function QRCanvas(
       haptics.error();
       addToast(
         isSpanish
-          ? "No se pudo descargar el PNG ❌"
-          : "Couldn't start PNG download ❌",
+          ? "No se pudo descargar el PNG"
+          : "Couldn't start PNG download",
       );
       return;
     }
@@ -631,15 +654,15 @@ export default function QRCanvas(
       void downloadPng().then(() => {
         haptics.success();
         addToast(
-          isSpanish ? "¡Descarga PNG iniciada! 🖼️" : "PNG download started! 🖼️",
+          isSpanish ? "Descarga PNG iniciada" : "PNG download started",
         );
       }).catch((err) => {
         console.error("Failed to start PNG download:", err);
         haptics.error();
         addToast(
           isSpanish
-            ? "No se pudo descargar el PNG ❌"
-            : "Couldn't start PNG download ❌",
+            ? "No se pudo descargar el PNG"
+            : "Couldn't start PNG download",
         );
       });
       triggerDownload.value = false;
@@ -669,17 +692,13 @@ export default function QRCanvas(
           await downloadSvg({ frame: effectiveFrame });
           haptics.success();
           addToast(
-            isSpanish
-              ? "¡Descarga SVG iniciada! 📐"
-              : "SVG download started! 📐",
+            isSpanish ? "Descarga SVG iniciada" : "SVG download started",
           );
         } else {
           await downloadPng({ size: exportSize, frame: effectiveFrame });
           haptics.success();
           addToast(
-            isSpanish
-              ? "¡Descarga PNG iniciada! 🖼️"
-              : "PNG download started! 🖼️",
+            isSpanish ? "Descarga PNG iniciada" : "PNG download started",
           );
         }
       } catch (err) {
@@ -687,8 +706,8 @@ export default function QRCanvas(
         haptics.error();
         addToast(
           isSpanish
-            ? `No se pudo descargar el ${format.toUpperCase()} ❌`
-            : `Couldn't start ${format.toUpperCase()} download ❌`,
+            ? `No se pudo descargar el ${format.toUpperCase()}`
+            : `Couldn't start ${format.toUpperCase()} download`,
         );
       }
     };
@@ -706,11 +725,11 @@ export default function QRCanvas(
     >
       <div
         ref={canvasRef}
-        onClick={handleDownloadClick}
+        onClick={handleCanvasTap}
         onKeyDown={(e: KeyboardEvent) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            handleDownloadClick();
+            void handleCanvasTap();
           }
         }}
         onDragOver={handleDragOver}
@@ -721,38 +740,39 @@ export default function QRCanvas(
         role="button"
         tabIndex={0}
         aria-label={isSpanish
-          ? "Descargar código QR como PNG"
-          : "Download QR code as PNG"}
+          ? "Copiar código QR como PNG"
+          : "Copy QR code as PNG"}
         class={`
-          bg-white rounded-chunky border-4
-          ${showSuccessFlash ? "border-green-500" : "border-black"}
+          bg-[#fffef7] rounded-chunky border-4
+          ${
+          showSuccessFlash
+            ? "border-[var(--qr-theme-accent,#ec4899)]"
+            : "border-[#1e1714]"
+        }
           shadow-chunky-hover cursor-pointer
-          transition-all duration-300
+          ${
+          pulse
+            ? "transition-transform duration-[140ms] ease-out"
+            : "transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+        }
           relative aspect-square
           w-full flex justify-center items-center
           [&>canvas]:w-full [&>canvas]:h-auto
-          focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-pink-400
+          focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--qr-theme-accent,#ec4899)]
           ${
-          isClicking
-            ? "scale-95"
-            : bloomTick
-            ? "scale-[1.02]"
+          isClicking || pulse
+            ? "scale-[0.985]"
             : !url.value
             ? "scale-[0.97] hover:scale-100"
-            : "hover:scale-105"
+            : "hover:scale-[1.03]"
         }
           ${
           isDragHover
-            ? "ring-8 ring-pink-400 ring-opacity-60 animate-pulse"
-            : ""
-        }
-          ${
-          !isClicking && !isDragHover
-            ? "hover:shadow-[0_0_30px_rgba(255,105,180,0.4)]"
+            ? "ring-8 ring-[var(--qr-theme-accent,#ec4899)] ring-opacity-60 animate-pulse"
             : ""
         }
         `}
-        title={isSpanish ? "Clic para descargar" : "Click to download"}
+        title={isSpanish ? "Tocar para copiar el PNG" : "Tap to copy the PNG"}
       >
         {
           /* SSR'd first-paint QR — uses /qr-default.png on the blank home sunset
@@ -782,6 +802,16 @@ export default function QRCanvas(
             class="absolute inset-0 w-full h-full rounded-lg pointer-events-none"
           />
         )}
+        {copied && (
+          <div
+            class="absolute inset-0 flex items-center justify-center pointer-events-none"
+            aria-live="polite"
+          >
+            <span class="px-4 py-2 rounded-full bg-[#fffef7] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] text-sm font-black text-[#1e1714] animate-pop-in">
+              {isSpanish ? "PNG copiado" : "Copied PNG"}
+            </span>
+          </div>
+        )}
       </div>
       <div
         class="absolute -z-10 -inset-6 opacity-25 blur-2xl rounded-full pointer-events-none transition-all duration-500"
@@ -798,32 +828,35 @@ export default function QRCanvas(
           </div>
         )}
 
-      {/* Signature TalkType Gold Save Pill — immediately visible against the white QR card */}
+      {/* Save pill — Tier 2 paper, two keycaps in one capsule */}
       <div
         key={url.value ? "chip-live" : "chip-idle"}
         class={`absolute ${
           frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== ""
             ? "-bottom-5"
             : "-bottom-4"
-        } -right-3 min-h-[44px] p-0.5 rounded-full bg-[#F6B93B] border-3 border-[#1e1714] shadow-chunky inline-flex items-center z-10 ${
+        } -right-3 min-h-[40px] rounded-full bg-[#fffef7] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-stretch overflow-hidden z-10 ${
           url.value ? "animate-bounce-in" : ""
         }`}
       >
         <button
           type="button"
-          onClick={handleDownloadClick}
-          class="min-h-[38px] pl-3.5 pr-2.5 rounded-l-full flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-all hover:bg-[#fffef7]/40 active:scale-95"
+          onClick={(e: MouseEvent) => {
+            e.stopPropagation();
+            void handleDownloadClick();
+          }}
+          class="min-h-[36px] pl-3.5 pr-2.5 flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[var(--qr-theme-tint,#fdf2f8)] active:translate-y-[1.5px]"
           aria-label={isSpanish
             ? "Descargar código QR como PNG"
             : "Download QR code as PNG"}
         >
           {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
         </button>
-        <span class="w-[2px] h-5 bg-[#1e1714]/25" aria-hidden="true" />
+        <span class="w-[2px] self-stretch bg-[#1e1714]" aria-hidden="true" />
         <button
           type="button"
           onClick={handleSvgDownloadClick}
-          class="min-h-[38px] pl-2.5 pr-3.5 rounded-r-full flex items-center justify-center text-xs font-black text-[#1e1714] transition-all hover:bg-[#fffef7]/40 active:scale-95"
+          class="min-h-[36px] pl-2.5 pr-3.5 flex items-center justify-center text-xs font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[var(--qr-theme-tint,#fdf2f8)] active:translate-y-[1.5px]"
           aria-label={isSpanish
             ? "Descargar código QR como SVG vectorial"
             : "Download QR code as vector SVG"}
@@ -846,10 +879,14 @@ export default function QRCanvas(
         </div>
       )}
 
-      {/* Dynamic QR badge */}
+      {/* Editable mode tag — the artifact itself shows the mode changed */}
       {isDynamic?.value && !isDestructible?.value && (
-        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float will-change-transform z-10 pointer-events-none select-none">
-          🔗 editable
+        <div class="absolute -top-3 -left-3 inline-flex items-center gap-1.5 bg-[#fffef7] text-[#1e1714] pl-2.5 pr-3 py-1 rounded-full border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] text-xs font-black animate-pop-in z-10 pointer-events-none select-none">
+          <span
+            aria-hidden="true"
+            class="w-2 h-2 rounded-full bg-[var(--qr-theme-accent,#ec4899)] border border-[#1e1714]"
+          />
+          Editable
         </div>
       )}
 

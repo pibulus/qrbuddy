@@ -33,7 +33,9 @@ import { addToast } from "./ToastManager.tsx";
 // Sub-components
 import QRReader from "../components/QRReader.tsx";
 import SmartInputToolbar, {
-  STAGE_SURFACE,
+  STAGE_PRESS,
+  STAGE_TOOL_BTN,
+  STAGE_WELL,
 } from "../components/smart-input/SmartInputToolbar.tsx";
 import FileUploadOptions, {
   shareKindOf,
@@ -726,31 +728,20 @@ export default function SmartInput(
     const baseClass = `
       w-full pl-5 ${rightPadding} py-4 text-lg font-bold text-[#1e1714]
       bg-[#fffef7] border-3 border-[#1e1714]
-      rounded-2xl shadow-[0_4px_0_#1e1714]
+      rounded-2xl shadow-[0_3px_0_#1e1714]
       focus:outline-none focus:border-[var(--qr-theme-accent,#ec4899)]
-      focus:scale-[1.02] focus:shadow-[0_6px_0_#1e1714]
-      transition-all duration-300 ease-out
+      focus:shadow-[0_3px_0_var(--qr-theme-accent,#ec4899)]
+      transition-[border-color,box-shadow,transform,background-color] duration-150 ease-out
       placeholder:text-[#7c7267] placeholder:font-semibold
-      hover:translate-y-[-1px] hover:shadow-[0_5px_0_#1e1714]
     `;
 
     if (isDragging) {
-      return `${baseClass} border-[var(--qr-theme-accent,#ec4899)] bg-[var(--qr-theme-tint,#fdf2f8)] scale-[1.03]`;
+      return `${baseClass} border-[var(--qr-theme-accent,#ec4899)] bg-[var(--qr-theme-tint,#fdf2f8)] scale-[1.02]`;
     }
 
-    if (!touched || validationState === "idle") {
-      return baseClass;
-    }
-
-    if (validationState === "valid") {
-      return `${baseClass} ${
-        isDestructible.value
-          ? "border-orange-500"
-          : "border-[var(--qr-theme-accent,#ec4899)]"
-      }`;
-    }
-
-    if (validationState === "invalid") {
+    // Valid stays sepia: the ✓ badge already says so. Invalid is amber + a
+    // shake, never red (fleet law).
+    if (touched && validationState === "invalid") {
       return `${baseClass} border-amber-500 animate-shake`;
     }
 
@@ -830,7 +821,7 @@ export default function SmartInput(
   ]);
 
   return (
-    <div class="w-full space-y-4">
+    <div class="w-full space-y-3">
       <HistoryDrawer
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
@@ -861,6 +852,7 @@ export default function SmartInput(
       <CreateModal
         isOpen={isCreateModalOpen}
         initialTab={createModalTab}
+        onTabChange={setCreateModalTab}
         onClose={() => {
           setIsCreateModalOpen(false);
           const contentChanged = url.value.trim() !== "" &&
@@ -1094,27 +1086,27 @@ export default function SmartInput(
           !isDestructible.value &&
           !(lastShare && url.value === lastShare.url) &&
           (looksLikeUrl(url.value) || Boolean(editUrl.value)) && (
-          <div class="mt-3 space-y-3 animate-slide-down">
+          <div class="mt-2 space-y-2 animate-slide-down">
             {
-              /* Two segments on the stage paper; the sub-label is the whole
-                explanation, so no caption underneath. Active = theme tint. */
+              /* A recessed track, not a card: the switch modifies the link,
+                it isn't an action. Only the active segment lifts. */
             }
             <div
               role="group"
               aria-label={isSpanish ? "Modo de enlace QR" : "QR link mode"}
-              class={`${STAGE_SURFACE} grid grid-cols-2 gap-1 p-1`}
+              class={`${STAGE_WELL} grid grid-cols-2 gap-1`}
             >
               {(() => {
                 const staticActive = !editUrl.value && !isCreatingDynamic;
                 const seg = (active: boolean) =>
-                  `min-h-[46px] px-2 rounded-xl flex flex-col items-center justify-center leading-tight transition-all border-2 ${
+                  `min-h-[36px] px-2 py-1 rounded-lg flex items-baseline justify-center gap-1.5 leading-none transition-[transform,box-shadow,background-color] duration-[70ms] border-2 ${
                     active
-                      ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border-[#1e1714] text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
-                      : "border-transparent text-[#57524b] hover:bg-[var(--qr-theme-tint,#fdf2f8)] hover:text-[#1e1714]"
+                      ? "bg-[var(--qr-theme-tint,#fdf2f8)] border-[#1e1714] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                      : "border-transparent text-[#57524b] hover:text-[#1e1714] hover:bg-[#fffef7]/70 active:translate-y-px"
                   }`;
-                const title = "text-sm font-black whitespace-nowrap";
+                const title = "text-[13px] font-black whitespace-nowrap";
                 const sub =
-                  "text-[10px] font-bold opacity-75 whitespace-nowrap truncate max-w-full";
+                  "text-[10px] font-bold opacity-70 whitespace-nowrap truncate";
                 return (
                   <>
                     <button
@@ -1136,7 +1128,7 @@ export default function SmartInput(
                         {isSpanish ? "Estático" : "Static"}
                       </span>
                       <span class={sub}>
-                        {isSpanish ? "gratis para siempre" : "free forever"}
+                        {isSpanish ? "gratis" : "free"}
                       </span>
                     </button>
 
@@ -1156,12 +1148,10 @@ export default function SmartInput(
                         {isCreatingDynamic
                           ? (isSpanish ? "creando…" : "creating…")
                           : editUrl.value
-                          ? (isSpanish
-                            ? "activo · con stats"
-                            : "live · stats on")
+                          ? (isSpanish ? "activo" : "live")
                           : (isSpanish
-                            ? "cambia el destino · 5 gratis"
-                            : "repoint after print · 5 free")}
+                            ? "redirigible · 5 gratis"
+                            : "repoint · 5 free")}
                       </span>
                     </button>
                   </>
@@ -1171,14 +1161,14 @@ export default function SmartInput(
 
             {editUrl.value && (
               <div
-                class={`${STAGE_SURFACE} flex items-center justify-between gap-2 px-3 py-2 bg-[var(--qr-theme-tint,#fdf2f8)] text-xs font-bold text-[#1e1714]`}
+                class={`${STAGE_WELL} flex items-center justify-between gap-2 pl-3 pr-1 py-1 bg-[var(--qr-theme-tint,#fdf2f8)] text-xs font-bold text-[#1e1714]`}
               >
                 <span class="truncate">
                   {isSpanish
                     ? "Este QR se puede redirigir cuando sea"
                     : "This QR can be repointed anytime"}
                 </span>
-                <div class="flex items-center gap-1.5 shrink-0">
+                <div class="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
                     onClick={async () => {
@@ -1194,13 +1184,13 @@ export default function SmartInput(
                         haptics.error();
                       }
                     }}
-                    class="min-h-[32px] px-2.5 rounded-lg border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[var(--qr-theme-tint-strong,#fbcfe8)] font-black transition-colors"
+                    class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] px-2.5 rounded-lg font-black`}
                   >
                     {isSpanish ? "Copiar llave" : "Copy key"}
                   </button>
                   <a
                     href={editUrl.value}
-                    class="min-h-[32px] inline-flex items-center px-2.5 rounded-lg border-2 border-[#1e1714] bg-[#1e1714] text-[#fffef7] hover:bg-[#3b2e25] font-black transition-colors"
+                    class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] inline-flex items-center px-2.5 rounded-lg bg-[#1e1714] text-[#fffef7] hover:bg-[#3b2e25] font-black`}
                   >
                     {isSpanish ? "Panel ↗" : "Manage ↗"}
                   </a>
@@ -1253,6 +1243,13 @@ export default function SmartInput(
         createHasUpdates={createHasUpdates}
         onShowHistory={() => setShowHistory(true)}
         onShowReader={() => setShowReader(true)}
+        openPanel={isCreateModalOpen
+          ? createModalTab
+          : showReader
+          ? "inspect"
+          : showHistory
+          ? "history"
+          : null}
         isBucket={isBucket.value && bucketUrl.value !== ""}
         isBatchMode={isBatchMode}
         lang={locale}

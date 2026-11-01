@@ -68,7 +68,8 @@
 - `FileUploadOptions` - Staged-upload panel: file summary, download limit
   picker, confirm/cancel
 - `SmartInputToolbar` - Home action row (`Link ▾` · Design · Inspect · History)
-  plus the exported `STAGE_SURFACE`/`STAGE_PRESS` recipe the whole stage shares
+  plus the exported `STAGE_INPUT`/`STAGE_WELL`/`STAGE_TOOL_BTN`/`STAGE_PRESS`
+  tier tokens the whole stage shares
 
 **Sub-Islands (templates/):**
 

@@ -81,32 +81,56 @@ Static/Editable stays in-flow between input and row. Its segments carry their
 own explanation as a sub-label (_Static — free forever_ / _Editable — repoint
 after print · 5 free_), so the caption under it is gone.
 
-### The stage recipe
+### The stage recipe (first cut — superseded by §4)
 
-Everything under the QR is the same paper, exported from the toolbar:
+The first cut put every row on the input's own paper, `STAGE_SURFACE` (3px
+border, 4px lip) and marked "the current thing" with the theme tint. That turned
+out to be the chonk problem; §4 has the tiered version that shipped.
 
-```
-STAGE_SURFACE = bg-[#fffef7] border-3 border-[#1e1714] rounded-2xl shadow-[0_4px_0_#1e1714]
-STAGE_PRESS   = hover:-translate-y-px hover:shadow-[0_5px_0_#1e1714]
-                active:translate-y-[2px] active:shadow-[0_2px_0_#1e1714]
-```
+## 4. De-chonking the stack (same day, second pass)
 
-"The current thing" is marked with the theme tint (`--qr-theme-tint` /
-`--qr-theme-tint-strong`, set from the active palette by `getQRThemeStyleVars`):
-the active mode segment, the `Link ▾` tile, hover on the cream tiles, the
-input's focus/valid border. Pick Ocean and the whole stage goes blue. The
-hard-coded `#9370DB` purple and the inverted-black segment are gone; `Manage ↗`
-is sepia ink like the Design tab's `Upload`. Invalid input is amber + shake, not
-red (fleet law).
+The first pass put the mode bar, the strip and the tiles on the _input's_ recipe
+— 3px border, 4px lip, every row. With the footer dock underneath that made four
+tiers of identical masonry and the hierarchy flattened: nothing read as "the
+thing", the tinted `Link ▾` looked permanently open, the mustard Save pill
+fought every palette, and the vibe toast landed on the dock.
+
+Fix: three tiers of the same paper, separated by elevation, not colour.
+
+| Tier | Token            | Border | Lip  | Notes                                               |
+| ---- | ---------------- | ------ | ---- | --------------------------------------------------- |
+| 1    | QR card          | 4px    | soft | hero; pulses 0.985→1 on any matrix change           |
+| 2    | `STAGE_INPUT`    | 3px    | 3px  | sepia at rest even when valid; accent on focus      |
+| 2    | Save pill        | 2px    | 2px  | cream, two keycaps, sepia rule between              |
+| 3    | `STAGE_WELL`     | 2px    | none | recessed cream track; active segment lifts 1.5px    |
+| 3    | `STAGE_TOOL_BTN` | 2px    | 2px  | neutral paper; latches down while its panel is open |
+
+`STAGE_PRESS` is one physics for all keycaps: 70ms, hover −1px, press +2px with
+the lip collapsing to 0. `SmartInputToolbar` takes `openPanel` (the Create sheet
+reports its live tab through a new `onTabChange`) so the trigger sits depressed
+and tinted while its drawer is open — the only place the theme tint appears on
+the tiles.
+
+Other things that moved in this pass:
+
+- Static/Editable dropped ~35% in height: single-line segments, sub-labels are
+  `free` / `repoint · 5 free` / `live`.
+- `🔗` and `🕰️` became inline monochrome SVG glyphs (`StageGlyph`), with a small
+  set covering the other QR types so the tile never leans on emoji.
+- Tapping the QR matrix copies the PNG (`ClipboardItem`), with a cream "Copied
+  PNG" pill inside the card. The Save pill still downloads.
+- Editable mode shows on the artifact: a cream top-left tag with an accent dot
+  replaces the purple→pink `🔗 editable` gradient badge.
+- The vibe pill reveals its name inline for 1.4s on phones instead of toasting;
+  download toasts lost their 🖼️ 📐 ❌ garnish.
+- `deno task test:unit` gained `--allow-read`; the two `NotCapable` failures are
+  gone, 113/113.
 
 ## Verifying
 
 ```bash
 deno fmt && deno lint && deno task check && deno task test:unit
 ```
-
-`test:unit` has two failures that pre-date this pass and are unrelated: two
-tests `Deno.readTextFile` source files but the task has no `--allow-read`.
 
 Visual check used Playwright (from `daysay/node_modules`) against
 `deno task start` at 390×844 and 1280×860, EN and `/es`: intro, about, passport

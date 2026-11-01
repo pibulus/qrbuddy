@@ -207,7 +207,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
               QRBuddy
             </h1>
             <p class="text-lg font-bold text-gray-800">
-              Pega un link. Hazlo brillar. 🌸
+              Pega un link. Hazlo brillar.
             </p>
           </header>
 

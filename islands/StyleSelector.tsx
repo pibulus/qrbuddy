@@ -1,10 +1,9 @@
 import { Signal, useSignal } from "@preact/signals";
-import { useEffect } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import GradientCreator from "../components/GradientCreator.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
-import { addToast } from "./ToastManager.tsx";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface StyleSelectorProps {
@@ -84,6 +83,11 @@ export default function StyleSelector(
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const isCreatorOpen = useSignal(false);
+  // Phones hide the vibe name to keep the rail slim; after a cycle the pill
+  // widens to show it for a beat, right where the tap happened. No toast —
+  // the old one landed on the footer dock.
+  const revealName = useSignal(false);
+  const revealTimer = useRef<number | null>(null);
 
   // The Create modal's Design tab can summon the gradient builder from here
   // so brand-minded users never dead-end on a "colors live elsewhere" note.
@@ -92,8 +96,10 @@ export default function StyleSelector(
       isCreatorOpen.value = true;
     };
     globalThis.addEventListener("open-gradient-creator", openCreator);
-    return () =>
+    return () => {
       globalThis.removeEventListener("open-gradient-creator", openCreator);
+      if (revealTimer.current !== null) clearTimeout(revealTimer.current);
+    };
   }, []);
 
   if (isHidden?.value) return null;
@@ -108,8 +114,12 @@ export default function StyleSelector(
     if (customStyle) customStyle.value = null;
     sounds.gradientShimmer(nextIndex);
     haptics.light();
-    const info = STYLE_DISPLAY[nextKey];
-    addToast(`🎨 ${isSpanish ? (info.nameEs ?? info.name) : info.name}`);
+    revealName.value = true;
+    if (revealTimer.current !== null) clearTimeout(revealTimer.current);
+    revealTimer.current = setTimeout(() => {
+      revealName.value = false;
+      revealTimer.current = null;
+    }, 1400) as unknown as number;
   };
 
   const handleCustomGradient = (gradient: QRStyle) => {
@@ -163,7 +173,7 @@ export default function StyleSelector(
         title={isSpanish
           ? "Clic para cambiar de vibra"
           : "Click to cycle through the 6 vibes"}
-        class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-chunky hover:scale-105 active:scale-95 transition-all"
+        class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] hover:-translate-y-px hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
       >
         <div
           class="w-4 h-4 rounded-full border-2 border-[#1e1714] shrink-0"
@@ -174,7 +184,11 @@ export default function StyleSelector(
             ),
           }}
         />
-        <span class="hidden sm:inline whitespace-nowrap">
+        <span
+          class={`${
+            revealName.value ? "inline animate-pop-in" : "hidden"
+          } sm:inline whitespace-nowrap`}
+        >
           {currentStyleName}
         </span>
       </button>
