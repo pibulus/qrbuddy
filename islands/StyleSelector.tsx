@@ -199,6 +199,7 @@ export default function StyleSelector(
                   type="button"
                   role="menuitem"
                   aria-pressed={active}
+                  aria-current={active ? "true" : undefined}
                   onClick={() => pick(key)}
                   class={`min-h-[64px] rounded-xl border-2 px-1 py-1.5 flex flex-col items-center gap-1 text-[10px] font-black ${
                     active
