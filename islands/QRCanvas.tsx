@@ -4,13 +4,15 @@ import QRRenderer from "../utils/qr-renderer.ts";
 import { resolveQRStyle } from "../utils/qr-design.ts";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import { addToast } from "./ToastManager.tsx";
-import type { QRStyle } from "../types/qr-types.ts";
+import type { BannerTheme, FrameConfig, QRStyle } from "../types/qr-types.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import { addToHistory } from "../utils/history.ts";
 import { haptics } from "../utils/haptics.ts";
 import { checkQRScannability } from "../utils/qr-decode.ts";
 import { createFramedSvg, measureCaptionWidth } from "../utils/svg-export.ts";
 import { buildQrSvgString, toSvgDataUrl } from "../utils/qr-vector-svg.ts";
+import { bannerColors } from "../utils/qr-design.ts";
+import { getQRThemeTokens } from "../utils/qr-styles.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface QRCanvasProps {
@@ -23,7 +25,7 @@ interface QRCanvasProps {
   logoUrl?: Signal<string>;
   maxDownloads?: Signal<number>;
   /** Frame ("SCAN ME") config — previewed on the card, baked into PNGs. */
-  frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
+  frameConfig?: Signal<FrameConfig | null>;
   /** Listen for global "qr-export" events (only the primary canvas should). */
   listenForExportEvents?: boolean;
   lang?: Locale;
@@ -184,9 +186,11 @@ export default function QRCanvas(
   // Proportional scaling ensures 1000, 2000, or 3000px longest edge.
   const downloadFramedPng = async ({
     caption,
+    theme,
     targetSize = 1000,
   }: {
     caption: string;
+    theme?: BannerTheme;
     targetSize?: 1000 | 2000 | 3000;
   }) => {
     const captionText = caption.trim().toUpperCase();
@@ -255,10 +259,39 @@ export default function QRCanvas(
     ctx.stroke();
 
     // One pass: label banner on top, matrix below, single border.
+    if (hasCaption) {
+      const banner = bannerColors(
+        theme,
+        getQRThemeTokens(style.value, customStyle?.value).accent,
+      );
+      ctx.fillStyle = banner.bg;
+      ctx.beginPath();
+      ctx.roundRect(
+        border / 2,
+        border / 2,
+        canvas.width - border,
+        pad + capH - border / 2,
+        [r, r, 0, 0],
+      );
+      ctx.fill();
+    }
+
     ctx.drawImage(img, pad, pad + capH, qrSize, qrSize);
 
     if (hasCaption) {
+      const banner = bannerColors(
+        theme,
+        getQRThemeTokens(style.value, customStyle?.value).accent,
+      );
+      const divider = Math.max(4, Math.round(8 * scale));
       ctx.fillStyle = "#1e1714";
+      ctx.fillRect(
+        border / 2,
+        pad + capH - divider,
+        canvas.width - border,
+        divider,
+      );
+      ctx.fillStyle = banner.ink;
       ctx.font =
         `900 ${fontSize}px 'Inter Black', Inter, system-ui, -apple-system, sans-serif`;
       ctx.textAlign = "center";
@@ -288,7 +321,7 @@ export default function QRCanvas(
     frame,
   }: {
     size?: 1000 | 2000 | 3000;
-    frame?: { enabled: boolean; caption: string } | null;
+    frame?: FrameConfig | null;
   } = {}) => {
     const isFramed = frame !== undefined
       ? (frame?.enabled ?? false)
@@ -300,6 +333,7 @@ export default function QRCanvas(
     if (isFramed) {
       await downloadFramedPng({
         caption: effectiveCaption,
+        theme: frame !== undefined ? frame?.theme : frameConfig?.value?.theme,
         targetSize: size,
       });
       return;
@@ -321,7 +355,7 @@ export default function QRCanvas(
   const downloadSvg = async ({
     frame,
   }: {
-    frame?: { enabled: boolean; caption: string } | null;
+    frame?: FrameConfig | null;
   } = {}) => {
     const isFramed = frame !== undefined
       ? (frame?.enabled ?? false)
@@ -341,7 +375,12 @@ export default function QRCanvas(
 
     if (isFramed) {
       // The helper normalizes the caption before measuring the text it exports.
-      finalSvgText = createFramedSvg(rawText, effectiveCaption);
+      finalSvgText = createFramedSvg(rawText, effectiveCaption, {
+        banner: bannerColors(
+          frame?.theme,
+          getQRThemeTokens(style.value, customStyle?.value).accent,
+        ),
+      });
       fileName = `qrbuddy-${style.value}-framed-${Date.now()}.svg`;
     }
 
@@ -606,6 +645,10 @@ export default function QRCanvas(
       frameConfig.value.caption.trim() !== "",
   );
   const captionText = frameConfig?.value?.caption.trim() ?? "";
+  const banner = bannerColors(
+    frameConfig?.value?.theme,
+    getQRThemeTokens(style.value, customStyle?.value).accent,
+  );
 
   return (
     <div
@@ -614,18 +657,24 @@ export default function QRCanvas(
       {hasCaption && (
         <button
           type="button"
+          data-edit-label
           onClick={(e: MouseEvent) => {
             e.stopPropagation();
             globalThis.dispatchEvent(new CustomEvent("qr-edit-label"));
             haptics.light();
           }}
-          class="block w-full bg-[#fffef7] border-4 border-b-0 border-[#1e1714] rounded-t-chunky px-4 pt-3.5 pb-3 text-center hover:bg-amber-50 transition-colors"
+          style={{
+            background: banner.bg,
+            color: banner.ink,
+            borderBottomColor: "#1e1714",
+          }}
+          class="block w-full border-4 border-b-2 border-[#1e1714] rounded-t-chunky px-4 py-3 text-center transition-colors"
           title={isSpanish ? "Editar la etiqueta" : "Edit the label"}
           aria-label={isSpanish
             ? `Editar etiqueta: ${captionText}`
             : `Edit label: ${captionText}`}
         >
-          <span class="block font-chunky font-extrabold text-lg sm:text-xl tracking-[0.08em] uppercase text-[#1e1714] truncate">
+          <span class="block font-chunky font-black text-xl sm:text-2xl tracking-[0.1em] uppercase truncate">
             {captionText}
           </span>
         </button>

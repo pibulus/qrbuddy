@@ -207,3 +207,23 @@ moved to a banner on TOP of the same pass (banner `border-b-0`, matrix
 exports use the same banner geometry. The centre ring went from a 4.5px hairline
 to an 8px ring at 1000px with a tighter moat, and stamps are drawn at 3.2
 stroke. The `Logo added` toast is gone — the mark is visible on the QR.
+
+## 9. Three sections, one rhythm (sixth pass)
+
+Seven stacked grids read as chaos even when nothing scrolls. Consolidated:
+palette is one evenly spread row (6 swatches + Custom); centre mark is five
+stamps over a 50/50 Upload · monogram row; card label is one bar (text, ✕,
+banner swatch) over four quick-fill chips. Masks and the None tiles are gone —
+stamps/monograms circle, uploads squircle. Every chip uses the same 1.5px sepia
+resting border and 2px ink active border with an accent dot, so nothing is muddy
+beige or permanently "selected".
+
+The banner now carries the palette: Accent, Ink, or Paper, cycled from the
+swatch in the label bar and exported identically. Text is black 900 uppercase
+with a 2px ink divider; label padding measures 12/12 on the card. Spanish
+"Ajustes" replaces the truncating "Comportamiento".
+
+Verified: 402px of 402px body (no scroll, no clipped controls, no truncated
+text, EN/ES phone+desktop), banner seam 0px with a 2px divider, accent/ink
+colours asserted from computed styles, and a 26-case decode sweep plus both
+exports.

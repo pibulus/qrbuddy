@@ -4,10 +4,21 @@ import { haptics } from "../../utils/haptics.ts";
 import { sounds } from "../../utils/sounds.ts";
 import LogoUploader from "../LogoUploader.tsx";
 import PalettePills, { pillState } from "./PalettePills.tsx";
-import type { QRStyle } from "../../types/qr-types.ts";
-import { resolveQRStyle, STAMPS, stampUrl } from "../../utils/qr-design.ts";
+import type {
+  BannerTheme,
+  FrameConfig,
+  QRStyle,
+} from "../../types/qr-types.ts";
+import {
+  BANNER_THEMES,
+  bannerColors,
+  resolveQRStyle,
+  STAMPS,
+  stampUrl,
+} from "../../utils/qr-design.ts";
 import { toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
 import { resetDesignPreferences } from "../../utils/design-preferences.ts";
+import { getQRThemeTokens } from "../../utils/qr-styles.ts";
 import { STYLE_DISPLAY } from "../../islands/StyleSelector.tsx";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
@@ -15,7 +26,7 @@ interface DesignTabProps {
   url: Signal<string>;
   qrStyle: Signal<string>;
   logoUrl: Signal<string>;
-  frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
+  frameConfig?: Signal<FrameConfig | null>;
   customStyle?: Signal<QRStyle | null>;
   pngSize?: Signal<1000 | 2000 | 3000>;
   onClose: () => void;
@@ -23,9 +34,9 @@ interface DesignTabProps {
 }
 
 const KEY =
-  "min-h-[44px] rounded-xl border-2 px-1.5 text-xs font-black transition-[transform,box-shadow] duration-[70ms] active:translate-y-[2px] active:shadow-none";
+  "min-h-[44px] rounded-xl px-1.5 text-xs font-black transition-[transform,box-shadow,border-color] duration-[70ms] active:translate-y-[2px] active:shadow-none";
 
-/** Three levers only: colours, the centre mark, and the card label. */
+/** Three sections, one grid each: palette (7), centre mark (5+2), label (1+4). */
 export default function DesignTab(
   { qrStyle, logoUrl, frameConfig, customStyle, pngSize, onClose, lang }:
     DesignTabProps,
@@ -41,6 +52,7 @@ export default function DesignTab(
   const palette = STYLE_DISPLAY[qrStyle.value as keyof typeof STYLE_DISPLAY] ??
     STYLE_DISPLAY.sunset;
   const paletteName = es ? (palette.nameEs ?? palette.name) : palette.name;
+  const accent = getQRThemeTokens(qrStyle.value, customStyle?.value).accent;
 
   const labelPresets = [
     es ? "ESCANÉAME" : "SCAN ME",
@@ -49,7 +61,6 @@ export default function DesignTab(
     "GUEST PASS",
   ];
   const labelChips = [
-    es ? "Ninguno" : "None",
     "Scan Me",
     es ? "Menú" : "Menu",
     "Wi-Fi",
@@ -58,13 +69,32 @@ export default function DesignTab(
   const caption = frameConfig?.value?.enabled
     ? frameConfig.value.caption.trim()
     : "";
-  const customCaption = caption !== "" && !labelPresets.includes(caption);
+  const theme: BannerTheme = frameConfig?.value?.theme ?? "accent";
+  const banner = bannerColors(theme, accent);
 
-  const setCaption = (next: string | null) => {
+  const writeCaption = (next: string) => {
     if (!frameConfig) return;
-    frameConfig.value = next === null
+    const clean = next.slice(0, 24);
+    frameConfig.value = clean.trim() === ""
       ? null
-      : { enabled: true, caption: next.slice(0, 24) };
+      : { enabled: true, caption: clean, theme };
+  };
+  const cycleBanner = () => {
+    if (!frameConfig) return;
+    const i = BANNER_THEMES.indexOf(theme);
+    frameConfig.value = {
+      enabled: true,
+      caption,
+      theme: BANNER_THEMES[(i + 1) % BANNER_THEMES.length],
+    };
+    tap();
+  };
+
+  const setMark = (url: string, shape: "circle" | "squircle") => {
+    if (customStyle) {
+      customStyle.value = { ...current, centerShape: shape };
+    }
+    logoUrl.value = url;
     tap();
   };
 
@@ -81,8 +111,8 @@ export default function DesignTab(
   };
 
   return (
-    <div class="space-y-4 text-[#1e1714]">
-      <section class="space-y-2" aria-label={es ? "Paleta" : "Palette"}>
+    <div class="space-y-5 text-[#1e1714]">
+      <section class="space-y-2.5" aria-label={es ? "Paleta" : "Palette"}>
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-xs font-black uppercase tracking-wide truncate">
             {es ? "Paleta" : "Palette"}{" "}
@@ -118,7 +148,7 @@ export default function DesignTab(
               }}
               aria-label={es ? "Colores propios" : "Custom colours"}
               title={es ? "Colores propios" : "Custom colours"}
-              class="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full border-2 border-dashed border-[#1e1714] bg-[#fffef7] text-sm font-black hover:scale-105 active:scale-95 transition-transform"
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-[1.5px] border-[#1e1714]/[0.28] bg-[#fffef7] text-base font-black hover:border-[#1e1714] active:scale-95 transition-all"
             >
               +
             </button>
@@ -127,56 +157,57 @@ export default function DesignTab(
       </section>
 
       <section
-        class="space-y-2"
+        class="space-y-2.5"
         aria-label={es ? "Marca central" : "Center mark"}
       >
         <h3 class="text-xs font-black uppercase tracking-wide">
           {es ? "Marca central" : "Center mark"}
         </h3>
-        <div class="grid grid-cols-6 gap-1.5">
-          <button
-            type="button"
-            aria-pressed={!logoUrl.value}
-            class={`${KEY} ${pillState(!logoUrl.value)}`}
-            onClick={() => {
-              globalThis.dispatchEvent(new CustomEvent("qr-design-reset"));
-              logoUrl.value = "";
-              setMonogram("");
-              tap();
-            }}
-          >
-            {es ? "Nada" : "None"}
-          </button>
-          {STAMPS.map((stamp) => (
-            <button
-              key={stamp.id}
-              type="button"
-              aria-label={es ? stamp.es : stamp.en}
-              title={es ? stamp.es : stamp.en}
-              aria-pressed={logoUrl.value === stampUrl(stamp.path)}
-              class={`${KEY} flex items-center justify-center ${
-                pillState(logoUrl.value === stampUrl(stamp.path))
-              }`}
-              onClick={() => {
-                logoUrl.value = stampUrl(stamp.path);
-                setMonogram("");
-                globalThis.dispatchEvent(new CustomEvent("qr-design-reset"));
-                tap();
-              }}
-            >
-              <img src={stampUrl(stamp.path)} alt="" width="22" height="22" />
-            </button>
-          ))}
+        <div class="grid grid-cols-5 gap-2">
+          {STAMPS.map((stamp) => {
+            const active = logoUrl.value === stampUrl(stamp.path);
+            return (
+              <button
+                key={stamp.id}
+                type="button"
+                aria-label={es ? stamp.es : stamp.en}
+                title={es ? stamp.es : stamp.en}
+                aria-pressed={active}
+                class={`${KEY} flex items-center justify-center ${
+                  pillState(active)
+                }`}
+                onClick={() => {
+                  globalThis.dispatchEvent(new CustomEvent("qr-design-reset"));
+                  setMonogram("");
+                  setMark(active ? "" : stampUrl(stamp.path), "circle");
+                }}
+              >
+                <img src={stampUrl(stamp.path)} alt="" width="22" height="22" />
+              </button>
+            );
+          })}
         </div>
-        <div class="flex items-center gap-2">
+        <div class="grid grid-cols-2 gap-2">
           <LogoUploader
             logoUrl={logoUrl}
             lang={locale}
             compact
-            onPicked={() => setMonogram("")}
+            compactLabel={/^data:image\/(png|jpeg|webp)/.test(logoUrl.value)
+              ? (es ? "Cambiar logo" : "Replace logo")
+              : (es ? "Subir logo" : "Upload logo")}
+            onPicked={() => {
+              setMonogram("");
+              setMark(logoUrl.value, "squircle");
+            }}
           />
-          <label class="flex items-center min-h-[44px] w-28 shrink-0 rounded-xl border-2 border-[#1e1714]/20 bg-[#fffef7] focus-within:border-[#1e1714]">
-            <span class="pl-2 text-[10px] font-black uppercase opacity-50">
+          <div
+            class={`flex items-center min-w-0 min-h-[44px] rounded-xl bg-[#fffef7] transition-colors ${
+              logoUrl.value || monogram
+                ? "border-2 border-[#1e1714]"
+                : "border-[1.5px] border-[#1e1714]/[0.28] focus-within:border-2 focus-within:border-[#1e1714]"
+            }`}
+          >
+            <span class="pl-2.5 text-[10px] font-black uppercase opacity-50">
               Aa
             </span>
             <input
@@ -200,78 +231,95 @@ export default function DesignTab(
                   `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><text x="60" y="64" text-anchor="middle" dominant-baseline="middle" font-family="system-ui, sans-serif" font-size="${
                     value.length === 3 ? 50 : 66
                   }" font-weight="900" fill="#1e1714">${value}</text></svg>`;
-                logoUrl.value = value ? toSvgDataUrl(svg) : "";
+                setMark(value ? toSvgDataUrl(svg) : "", "circle");
               }}
             />
-          </label>
-        </div>
-        {logoUrl.value && customStyle && (
-          <div
-            class="grid grid-cols-3 gap-1.5"
-            role="group"
-            aria-label={es ? "Forma de la marca" : "Center mark shape"}
-          >
-            {(["squircle", "circle", "knockout"] as const).map((shape, i) => (
+            {logoUrl.value && (
               <button
                 type="button"
-                class={`${KEY} ${
-                  pillState((current.centerShape ?? "squircle") === shape)
-                }`}
-                aria-pressed={(current.centerShape ?? "squircle") === shape}
                 onClick={() => {
-                  customStyle.value = { ...current, centerShape: shape };
+                  logoUrl.value = "";
+                  setMonogram("");
                   tap();
                 }}
+                aria-label={es ? "Quitar marca central" : "Clear center mark"}
+                class="shrink-0 w-8 h-8 mr-1.5 rounded-full text-sm font-black hover:bg-[#1e1714]/10"
               >
-                {(es
-                  ? ["Suave", "Círculo", "Sin borde"]
-                  : ["Squircle", "Circle", "Knockout"])[i]}
+                ✕
               </button>
-            ))}
+            )}
           </div>
-        )}
+        </div>
       </section>
 
       {frameConfig && (
         <section
-          class="space-y-2"
+          class="space-y-2.5"
           aria-label={es ? "Etiqueta de la tarjeta" : "Card label"}
         >
           <h3 class="text-xs font-black uppercase tracking-wide">
             {es ? "Etiqueta de la tarjeta" : "Card label"}
           </h3>
-          <div class="grid grid-cols-5 gap-1.5">
+          <div
+            class={`flex items-center min-h-[44px] rounded-xl bg-[#fffef7] transition-colors ${
+              caption
+                ? "border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714]"
+                : "border-[1.5px] border-[#1e1714]/[0.28] focus-within:border-2 focus-within:border-[#1e1714]"
+            }`}
+          >
+            <input
+              type="text"
+              maxLength={24}
+              value={caption}
+              placeholder={es
+                ? "Etiqueta (ej. ESCANÉAME)"
+                : "Add a label (e.g. SCAN ME)"}
+              aria-label={es ? "Etiqueta de la tarjeta" : "Card label"}
+              class="min-w-0 flex-1 bg-transparent px-3 text-sm font-black uppercase tracking-wide focus:outline-none"
+              onInput={(e) => writeCaption(e.currentTarget.value)}
+            />
+            <button
+              type="button"
+              data-banner-cycle
+              onClick={cycleBanner}
+              title={es
+                ? `Franja: ${theme} — tocar para cambiar`
+                : `Banner: ${theme} — tap to change`}
+              aria-label={es
+                ? `Franja: ${theme}. Cambiar estilo`
+                : `Banner: ${theme}. Change style`}
+              class="shrink-0 w-7 h-7 rounded-full border-2 border-[#1e1714] mr-1"
+              style={{ background: banner.bg }}
+            />
+            {caption && (
+              <button
+                type="button"
+                onClick={() => writeCaption("")}
+                aria-label={es ? "Quitar etiqueta" : "Clear label"}
+                class="shrink-0 w-7 h-7 mr-1.5 rounded-full text-sm font-black hover:bg-[#1e1714]/10"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div class="grid grid-cols-4 gap-2">
             {labelChips.map((label, i) => {
-              const active = i === 0
-                ? !frameConfig.value?.enabled
-                : caption === labelPresets[i - 1];
+              const active = caption === labelPresets[i];
               return (
                 <button
                   type="button"
-                  class={`${KEY} text-[10px] leading-tight ${
-                    pillState(active)
-                  }`}
+                  class={`${KEY} ${pillState(active)}`}
                   aria-pressed={active}
-                  onClick={() =>
-                    setCaption(i === 0 ? null : labelPresets[i - 1])}
+                  onClick={() => {
+                    writeCaption(active ? "" : labelPresets[i]);
+                    tap();
+                  }}
                 >
                   {label}
                 </button>
               );
             })}
           </div>
-          <input
-            type="text"
-            maxLength={24}
-            value={customCaption ? caption : ""}
-            placeholder={es ? "Etiqueta propia" : "Custom label"}
-            aria-label={es ? "Etiqueta propia" : "Custom label"}
-            class="w-full min-h-[44px] px-3 border-2 border-[#1e1714]/20 rounded-xl bg-[#fffef7] text-sm font-black uppercase tracking-wide focus:border-[#1e1714] focus:outline-none transition-colors"
-            onInput={(e) => {
-              const value = e.currentTarget.value.trim().slice(0, 24);
-              setCaption(value === "" ? null : value);
-            }}
-          />
         </section>
       )}
     </div>

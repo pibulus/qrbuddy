@@ -1,4 +1,5 @@
-import type { QRStyle } from "../types/qr-types.ts";
+import type { BannerTheme, QRStyle } from "../types/qr-types.ts";
+import { relativeLuminance } from "./qr-styles.ts";
 import { QR_STYLES } from "./qr-styles.ts";
 import { toSvgDataUrl } from "./qr-vector-svg.ts";
 
@@ -74,3 +75,21 @@ export function stampSvg(path: string): string {
 export function stampUrl(path: string): string {
   return toSvgDataUrl(stampSvg(path));
 }
+
+/** Three curated banner looks, resolved from the active palette accent. */
+export function bannerColors(
+  theme: BannerTheme = "accent",
+  accent = "#ec4899",
+): { bg: string; ink: string } {
+  if (theme === "ink") return { bg: "#1e1714", ink: "#fffef7" };
+  if (theme === "paper") return { bg: "#fffef7", ink: "#1e1714" };
+  let ink = "#fffef7";
+  try {
+    if (relativeLuminance(accent) > 0.42) ink = "#1e1714";
+  } catch {
+    ink = "#fffef7";
+  }
+  return { bg: accent, ink };
+}
+
+export const BANNER_THEMES: BannerTheme[] = ["accent", "ink", "paper"];

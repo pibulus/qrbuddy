@@ -9,8 +9,8 @@ export const PALETTE_PILL =
 
 export const pillState = (active: boolean) =>
   active
-    ? "border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_2px_0_#1e1714]"
-    : "border-[#1e1714]/20 bg-[#1e1714]/[0.04] text-[#1e1714] shadow-none hover:border-[#1e1714]/60";
+    ? "relative border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_2px_0_#1e1714] after:content-[''] after:absolute after:top-1 after:right-1 after:w-1.5 after:h-1.5 after:rounded-full after:bg-[var(--qr-theme-accent,#ec4899)]"
+    : "border-[1.5px] border-[#1e1714]/[0.22] bg-[#fffef7] text-[#1e1714] hover:border-[#1e1714]/60";
 
 interface PalettePillsProps {
   value: string;
@@ -44,7 +44,7 @@ export default function PalettePills(
 
   if (swatches) {
     return (
-      <div class="flex items-center gap-2">
+      <div class="grid grid-cols-7 gap-2 place-items-center">
         {entries.map(([key, info], index) => {
           const active = value === key;
           return (

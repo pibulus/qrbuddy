@@ -4,7 +4,12 @@ import {
   buildQrSvgString,
   centerCutout,
 } from "../utils/qr-vector-svg.ts";
-import { resolveQRStyle, STAMPS, stampUrl } from "../utils/qr-design.ts";
+import {
+  bannerColors,
+  resolveQRStyle,
+  STAMPS,
+  stampUrl,
+} from "../utils/qr-design.ts";
 import { styledQrSvg } from "../utils/qr-renderer.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
 import { createFramedSvg } from "../utils/svg-export.ts";
@@ -104,6 +109,32 @@ Deno.test("Design: a card label is a banner inside one pass, not a second box", 
   const textY = Number(framed.match(/<text x="[\d.]+" y="(\d+)"/)?.[1]);
   assert(textY > 64 && textY < 234); // centred in the banner
   assert(framed.includes("GUEST PASS"));
+});
+
+Deno.test("Design: three banner looks, auto-contrast, persisted", () => {
+  assertEquals(bannerColors("ink", "#ec4899"), {
+    bg: "#1e1714",
+    ink: "#fffef7",
+  });
+  assertEquals(bannerColors("paper", "#ec4899"), {
+    bg: "#fffef7",
+    ink: "#1e1714",
+  });
+  assertEquals(bannerColors("accent", "#ec4899").bg, "#ec4899");
+  assertEquals(bannerColors("accent", "#ec4899").ink, "#fffef7");
+  assertEquals(bannerColors("accent", "#ffbe0b").ink, "#1e1714"); // bright gold
+  const saved = validateDesignPreferences({
+    version: 1,
+    style: "sunset",
+    frameConfig: { enabled: true, caption: "GUEST PASS", theme: "ink" },
+  });
+  assertEquals(saved?.frameConfig?.theme, "ink");
+  const junk = validateDesignPreferences({
+    version: 1,
+    style: "sunset",
+    frameConfig: { enabled: true, caption: "X", theme: "rainbow" },
+  });
+  assertEquals(junk?.frameConfig?.theme, "accent");
 });
 
 Deno.test("Design: the centre badge is a chunky ring, not a hairline", () => {

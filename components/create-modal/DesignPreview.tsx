@@ -1,9 +1,10 @@
 import type { Signal } from "@preact/signals";
-import type { QRStyle } from "../../types/qr-types.ts";
-import { resolveQRStyle } from "../../utils/qr-design.ts";
+import type { FrameConfig, QRStyle } from "../../types/qr-types.ts";
+import { bannerColors, resolveQRStyle } from "../../utils/qr-design.ts";
 import { styledQrSvg } from "../../utils/qr-renderer.ts";
 import { toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
 import { createFramedSvg } from "../../utils/svg-export.ts";
+import { getQRThemeTokens } from "../../utils/qr-styles.ts";
 
 export default function DesignPreview(
   { url, qrStyle, customStyle, logoUrl, frameConfig, es }: {
@@ -11,7 +12,7 @@ export default function DesignPreview(
     qrStyle: Signal<string>;
     customStyle?: Signal<QRStyle | null>;
     logoUrl: Signal<string>;
-    frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
+    frameConfig?: Signal<FrameConfig | null>;
     es: boolean;
   },
 ) {
@@ -24,7 +25,12 @@ export default function DesignPreview(
     });
     const omitted = logoUrl.value && svg.includes('data-cutout="none"');
     if (frameConfig?.value?.enabled) {
-      svg = createFramedSvg(svg, frameConfig.value.caption);
+      svg = createFramedSvg(svg, frameConfig.value.caption, {
+        banner: bannerColors(
+          frameConfig.value.theme,
+          getQRThemeTokens(qrStyle.value, customStyle?.value).accent,
+        ),
+      });
     }
     return (
       <div

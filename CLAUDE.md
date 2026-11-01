@@ -354,23 +354,29 @@ adding surfaces:
   and row.
 - **Design tab** (`components/create-modal/DesignTab.tsx`): three levers only —
   palette, centre mark, card label — under a 120–136px live preview that sits
-  between the tab strip and the controls. Palette is six 36–40px gradient
-  swatches plus a Custom entry; the active name lives in the section header
-  (`Palette · Sunset`), never under a truncating box. **Center mark** is None,
-  five vector stamps, `Upload image`, or a 3-character monogram, with a Squircle
-  · Circle · Knockout mask. **Card label** is None · Scan Me · Menu · Wi-Fi ·
-  Guest Pass plus an always-visible custom field. QRBuddy keeps its liquid
-  rounded matrix; there is no pattern picker. A centre mark forces H and
-  excavates whole modules with a tight moat and a bold ring; timing, alignment
-  and format modules stay square. H is not a licence to erase function patterns
-  — dense codes omit the mark and say so. Dots/diamond geometry also renders at
-  H, verified by decode sweeps, not by eye.
+  between the tab strip and the controls. Palette is seven evenly spread cells:
+  six 36–40px gradient swatches plus Custom; the active name lives in the header
+  (`Palette · Sunset`). **Center mark** is five stamps, `Upload logo`, or a 1–3
+  character monogram; tapping the active stamp clears it, as does the ✕ in the
+  monogram cell. No None tile, no mask picker: stamps and monograms are circles,
+  uploads are squircles. **Card label** is one bar holding the current text, a
+  clear ✕ and a banner swatch, plus four quick-fill chips (Scan Me · Menu ·
+  Wi-Fi · Guest Pass); a chip toggles back off. Chips share one recipe: `1.5px`
+  sepia resting border, warm-white ground, active = 2px ink + 2px lip + accent
+  dot. QRBuddy keeps its liquid matrix; there is no pattern picker. A centre
+  mark forces H and excavates whole modules with a tight moat and a bold ring;
+  timing, alignment and format modules stay square. H is not a licence to erase
+  function patterns — dense codes omit the mark and say so. Dots/diamond
+  geometry also renders at H, verified by decode sweeps, not by eye.
 - **Card label geometry** (`islands/QRCanvas.tsx`): the label is a banner on top
-  of the same pass — banner `border-b-0` + matrix `border-t-0`, square join,
-  balanced `py-3`, one continuous outline. Never a second box tacked below with
-  a negative margin. Tapping the banner dispatches `qr-edit-label`, which opens
-  the sheet on Design. Exports use the same banner layout (`createFramedSvg`,
-  `downloadFramedPng`), so preview and download agree.
+  of the same pass — banner joins the matrix with a 2px ink divider, balanced
+  `py-3`, one continuous 4px outline. Never a second box tacked below. Three
+  curated looks cycle from a swatch inside the label bar: **Accent** (palette
+  accent, text flips to ink above 0.42 luminance), **Ink** (`#1e1714` +
+  near-white), **Paper** (cream + ink). No font or colour pickers. Tapping the
+  banner dispatches `qr-edit-label`, which opens Design. Exports use the same
+  banner (`createFramedSvg`, `downloadFramedPng`), so preview and download
+  agree.
 - **QR card liveness** (`islands/QRCanvas.tsx`): every matrix change (data,
   palette, Static↔Editable) pulses `scale(0.985)→1` over 140ms. Tapping the
   matrix copies the PNG to the clipboard and shows a cream "Copied PNG" pill for

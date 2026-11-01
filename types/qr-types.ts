@@ -50,3 +50,12 @@ export interface QRStyle {
   cornersSquare?: CornerOptions;
   cornersDot?: CornerOptions;
 }
+
+/** Card label (banner) treatment. Auto-themed; never a font/colour picker. */
+export type BannerTheme = "accent" | "ink" | "paper";
+
+export interface FrameConfig {
+  enabled: boolean;
+  caption: string;
+  theme?: BannerTheme;
+}

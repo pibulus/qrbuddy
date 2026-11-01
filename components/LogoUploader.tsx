@@ -10,10 +10,12 @@ interface LogoUploaderProps {
   compact?: boolean;
   /** Fires after a mark is set, so callers can clear their own monogram text. */
   onPicked?: () => void;
+  /** Compact row label override (e.g. Replace logo when a raster is loaded). */
+  compactLabel?: string;
 }
 
 export default function LogoUploader(
-  { logoUrl, lang, compact = false, onPicked }: LogoUploaderProps,
+  { logoUrl, lang, compact = false, onPicked, compactLabel }: LogoUploaderProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const [isUploading, setIsUploading] = useState(false);
@@ -156,8 +158,9 @@ export default function LogoUploader(
   };
 
   if (compact) {
+    const hasImage = /^data:image\/(png|jpeg|webp)/.test(logoUrl.value);
     return (
-      <div class="flex-1 min-w-0">
+      <div class="min-w-0">
         <input
           ref={fileInputRef}
           type="file"
@@ -169,7 +172,11 @@ export default function LogoUploader(
           type="button"
           onClick={handleFileInputClick}
           disabled={isUploading}
-          class="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] text-xs font-black shadow-[0_2px_0_#1e1714]"
+          class={`w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-[#fffef7] text-[#1e1714] text-xs font-black transition-shadow ${
+            hasImage
+              ? "border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714]"
+              : "border-[1.5px] border-[#1e1714]/[0.28]"
+          }`}
         >
           <svg
             aria-hidden="true"
@@ -182,7 +189,9 @@ export default function LogoUploader(
           >
             <path d="M3 3h18v18H3zM3 16l6-6 5 5 3-3 4 4M16 7h.01" />
           </svg>
-          {isUploading ? "…" : isSpanish ? "Subir imagen" : "Upload image"}
+          {isUploading
+            ? "…"
+            : compactLabel ?? (isSpanish ? "Subir logo" : "Upload logo")}
         </button>
         {error && <p class="text-xs text-amber-800" role="alert">{error}</p>}
       </div>

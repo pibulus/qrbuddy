@@ -1,4 +1,4 @@
-import type { Gradient, QRStyle } from "../types/qr-types.ts";
+import type { FrameConfig, Gradient, QRStyle } from "../types/qr-types.ts";
 import { QR_STYLES } from "./qr-styles.ts";
 
 export interface DesignPreferences {
@@ -6,7 +6,7 @@ export interface DesignPreferences {
   style: string;
   customStyle?: QRStyle | null;
   logoUrl?: string;
-  frameConfig?: { enabled: boolean; caption: string } | null;
+  frameConfig?: FrameConfig | null;
   pngSize?: 1000 | 2000 | 3000;
 }
 
@@ -206,14 +206,17 @@ export function validateDesignPreferences(
   }
 
   // Validate frameConfig
-  let frameConfig: { enabled: boolean; caption: string } | null = null;
+  let frameConfig: FrameConfig | null = null;
   if (obj.frameConfig && typeof obj.frameConfig === "object") {
     const fc = obj.frameConfig as Record<string, unknown>;
     if (typeof fc.enabled === "boolean" && fc.enabled) {
       const caption = typeof fc.caption === "string"
         ? fc.caption.slice(0, 24)
         : "";
-      frameConfig = { enabled: true, caption };
+      const theme = fc.theme === "ink" || fc.theme === "paper"
+        ? fc.theme
+        : "accent";
+      frameConfig = { enabled: true, caption, theme };
     }
   }
 

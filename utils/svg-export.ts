@@ -77,7 +77,10 @@ export const estimateCaptionWidth = measureCaptionWidth;
 export function createFramedSvg(
   rawQrSvg: string,
   caption?: string | null,
-  options?: { measuredWidth?: number },
+  options?: {
+    measuredWidth?: number;
+    banner?: { bg: string; ink: string };
+  },
 ): string {
   const pad = 64;
   const border = 20;
@@ -105,6 +108,7 @@ export function createFramedSvg(
   );
 
   let captionElement = "";
+  const banner = options?.banner;
   if (hasCaption) {
     const textY = pad + capH / 2 + 6;
     const baseFontSize = 92;
@@ -117,18 +121,38 @@ export function createFramedSvg(
       : baseFontSize;
     const escapedCaption = escapeXml(captionText);
 
-    captionElement = `  <text x="${
-      totalWidth / 2
-    }" y="${textY}" fill="#000000" font-family="'Inter Black', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central"${
+    captionElement = `  <text x="${totalWidth / 2}" y="${textY}" fill="${
+      escapeXml(banner?.ink ?? "#000000")
+    }" font-family="'Inter Black', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central"${
       exceedsMax
         ? ` textLength="${maxTextWidth}" lengthAdjust="spacingAndGlyphs"`
         : ""
     }>${escapedCaption}</text>\n`;
   }
 
+  const bannerFill = hasCaption && banner
+    ? (() => {
+      const x = cardX, y = cardY, w = cardWidth;
+      const h = pad + capH - y;
+      const r = cornerRadius;
+      return `  <path d="M${x + r},${y}H${x + w - r}A${r},${r} 0 0 1 ${x + w},${
+        y + r
+      }V${y + h}H${x}V${y + r}A${r},${r} 0 0 1 ${x + r},${y}Z" fill="${
+        escapeXml(banner!.bg)
+      }" />\n`;
+    })()
+    : "";
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}">
   <rect x="${cardX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="${cornerRadius}" ry="${cornerRadius}" fill="#FFFBF5" stroke="#000000" stroke-width="${border}" />
-  ${nestedSvg}
+  ${bannerFill}${nestedSvg}
+  ${
+    hasCaption && banner
+      ? `<rect x="${cardX}" y="${
+        pad + capH - 8
+      }" width="${cardWidth}" height="8" fill="#1e1714" />`
+      : ""
+  }
 ${captionElement}</svg>`;
 }

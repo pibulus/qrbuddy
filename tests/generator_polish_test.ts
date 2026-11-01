@@ -378,7 +378,7 @@ Deno.test("validateDesignPreferences - valid preferences with all fields", () =>
     style: "candy",
     customStyle: null,
     logoUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==",
-    frameConfig: { enabled: true, caption: "HELLO" },
+    frameConfig: { enabled: true, caption: "HELLO", theme: "accent" },
     pngSize: 2000,
   });
 });
