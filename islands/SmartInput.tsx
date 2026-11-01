@@ -821,7 +821,7 @@ export default function SmartInput(
   ]);
 
   return (
-    <div class="w-full space-y-2">
+    <div class="w-full space-y-2.5">
       <HistoryDrawer
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
@@ -853,6 +853,14 @@ export default function SmartInput(
         isOpen={isCreateModalOpen}
         initialTab={createModalTab}
         onTabChange={setCreateModalTab}
+        onInspect={() => {
+          setIsCreateModalOpen(false);
+          setShowReader(true);
+        }}
+        onShowHistory={() => {
+          setIsCreateModalOpen(false);
+          setShowHistory(true);
+        }}
         onClose={() => {
           setIsCreateModalOpen(false);
           const contentChanged = url.value.trim() !== "" &&
@@ -1098,7 +1106,7 @@ export default function SmartInput(
           !isDestructible.value &&
           !(lastShare && url.value === lastShare.url) &&
           (looksLikeUrl(url.value) || Boolean(editUrl.value)) && (
-          <div class="mt-2 space-y-2 animate-slide-down">
+          <div class="mt-3 space-y-2 animate-slide-down">
             {
               /* A recessed track, not a card: the switch modifies the link,
                 it isn't an action. Only the active segment lifts. */
@@ -1248,15 +1256,7 @@ export default function SmartInput(
           setCreateHasUpdates(false);
         }}
         createHasUpdates={createHasUpdates}
-        onShowHistory={() => setShowHistory(true)}
-        onShowReader={() => setShowReader(true)}
-        openPanel={isCreateModalOpen
-          ? createModalTab
-          : showReader
-          ? "inspect"
-          : showHistory
-          ? "history"
-          : null}
+        openPanel={isCreateModalOpen ? createModalTab : null}
         isBucket={isBucket.value && bucketUrl.value !== ""}
         isBatchMode={isBatchMode}
         lang={locale}

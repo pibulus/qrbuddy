@@ -12,6 +12,7 @@ export interface Gradient {
 }
 
 export type DotShape =
+  | "diamond"
   | "rounded"
   | "dots"
   | "classy"
@@ -19,7 +20,7 @@ export type DotShape =
   | "square"
   | "extra-rounded";
 
-export type CornerSquareShape = "dot" | "square" | "extra-rounded";
+export type CornerSquareShape = "dot" | "square" | "extra-rounded" | "octagon";
 export type CornerDotShape = "dot" | "square";
 
 export interface DotsOptions {
@@ -43,6 +44,7 @@ export interface CornerOptions {
 }
 
 export interface QRStyle {
+  centerShape?: "squircle" | "circle" | "knockout";
   dots: DotsOptions;
   background: BackgroundOptions;
   cornersSquare?: CornerOptions;

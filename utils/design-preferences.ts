@@ -109,6 +109,7 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
       "classy-rounded",
       "square",
       "extra-rounded",
+      "diamond",
     ];
     if (typeof dots.shape !== "string" || !validShapes.includes(dots.shape)) {
       return false;
@@ -116,6 +117,10 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
   }
 
   // Must have background options
+  if (
+    s.centerShape !== undefined && (typeof s.centerShape !== "string" ||
+      !["squircle", "circle", "knockout"].includes(s.centerShape))
+  ) return false;
   if (
     !s.background || typeof s.background !== "object" ||
     Array.isArray(s.background)
@@ -180,11 +185,11 @@ export function validateDesignPreferences(
 
   // Validate customStyle: invalid custom data restores safe defaults
   let customStyle: QRStyle | null = null;
-  if (style === "custom") {
+  if (style === "custom" || obj.customStyle != null) {
     if (isValidCustomStyle(obj.customStyle)) {
       customStyle = obj.customStyle;
     } else {
-      style = "sunset";
+      if (style === "custom") style = "sunset";
       customStyle = null;
     }
   }

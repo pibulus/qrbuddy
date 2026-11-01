@@ -7,9 +7,12 @@ import { getClientLocale, type Locale } from "../utils/i18n.ts";
 interface LogoUploaderProps {
   logoUrl: Signal<string>;
   lang?: Locale;
+  compact?: boolean;
 }
 
-export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
+export default function LogoUploader(
+  { logoUrl, lang, compact = false }: LogoUploaderProps,
+) {
   const isSpanish = getClientLocale(lang) === "es";
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +27,10 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
       if (fileInputRef.current) fileInputRef.current.value = "";
     };
     globalThis.addEventListener("qr-design-reset", handleReset);
-    return () => globalThis.removeEventListener("qr-design-reset", handleReset);
+    return () => {
+      uploadGenRef.current++;
+      globalThis.removeEventListener("qr-design-reset", handleReset);
+    };
   }, []);
 
   const handleFileSelect = (file: File) => {
@@ -66,30 +72,16 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
           canvas.height = size;
           const ctx = canvas.getContext("2d");
           if (!ctx) {
-            logoUrl.value = rawDataUrl;
+            setError(isSpanish ? "Imagen no disponible" : "Image unavailable");
             setIsUploading(false);
             return;
           }
 
-          // Draw a Neo-Toybrut rounded-square enamel badge so any uploaded
-          // photo or logo looks crisp and framed inside the QR center.
-          const pad = 16;
-          const badgeSize = size - pad * 2;
-          const radius = 72;
-          ctx.save();
-          ctx.beginPath();
-          ctx.roundRect(pad, pad, badgeSize, badgeSize, radius);
-          ctx.fillStyle = "#fffef7";
-          ctx.fill();
-          ctx.lineWidth = 16;
-          ctx.strokeStyle = "#1e1714";
-          ctx.stroke();
-          ctx.restore();
-
-          // Clip inner area and cover/contain image cleanly
-          const innerPad = 36;
+          // Preserve the image itself. The renderer owns the cutout, moat and
+          // mask, avoiding a second tiny bordered box baked into the logo.
+          const innerPad = 0;
           const innerSize = size - innerPad * 2;
-          const innerRadius = 52;
+          const innerRadius = 0;
           ctx.save();
           ctx.beginPath();
           ctx.roundRect(innerPad, innerPad, innerSize, innerSize, innerRadius);
@@ -107,23 +99,28 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
           logoUrl.value = canvas.toDataURL("image/png");
           haptics.success();
           addToast(
-            isSpanish
-              ? "Logo ajustado y agregado 🖼️"
-              : "Logo fitted & added 🖼️",
+            isSpanish ? "Logo agregado" : "Logo added",
             2000,
           );
           setIsUploading(false);
         };
         img.onerror = () => {
           if (currentGen !== uploadGenRef.current) return;
-          logoUrl.value = rawDataUrl;
+          setError(
+            isSpanish
+              ? "No se pudo abrir la imagen"
+              : "Image could not be opened",
+          );
           setIsUploading(false);
         };
         img.src = rawDataUrl;
       };
       reader.onerror = () => {
         if (currentGen !== uploadGenRef.current) return;
-        throw new Error("Failed to read image file");
+        setError(
+          isSpanish ? "No se pudo leer la imagen" : "Image could not be read",
+        );
+        setIsUploading(false);
       };
       reader.readAsDataURL(file);
     } catch (err) {
@@ -132,7 +129,7 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
       setError(errorMessage);
       setIsUploading(false);
       haptics.error();
-      addToast(`❌ ${errorMessage}`, 3000);
+      addToast(errorMessage, 3000);
     }
   };
 
@@ -159,13 +156,47 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
     }
   };
 
+  if (compact) {
+    return (
+      <div class="flex-1 min-w-0">
+        <input
+          ref={fileInputRef}
+          type="file"
+          class="hidden"
+          accept="image/*"
+          onChange={handleFileInputChange}
+        />
+        <button
+          type="button"
+          onClick={handleFileInputClick}
+          disabled={isUploading}
+          class="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] text-xs font-black shadow-[0_2px_0_#1e1714]"
+        >
+          <svg
+            aria-hidden="true"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M3 3h18v18H3zM3 16l6-6 5 5 3-3 4 4M16 7h.01" />
+          </svg>
+          {isUploading ? "…" : isSpanish ? "Subir imagen" : "Upload image"}
+        </button>
+        {error && <p class="text-xs text-amber-800" role="alert">{error}</p>}
+      </div>
+    );
+  }
+
   return (
     <div class="space-y-2">
       {/* One row: the card says what it is, the trailing control does it */}
       <div
         class={`w-full min-h-[60px] rounded-2xl border-2 px-3 py-2.5 flex items-center gap-3 transition-all ${
           logoUrl.value
-            ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-chunky"
+            ? "border-[#1e1714] bg-[#fffef7] shadow-chunky"
             : "border-[#1e1714]/15 bg-[#fffef7]"
         }`}
       >
@@ -179,7 +210,17 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
           )
           : (
             <span class="w-10 h-10 rounded-xl border-2 border-black bg-white flex items-center justify-center text-lg shrink-0">
-              {isUploading ? "⏳" : "🖼️"}
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 3h18v18H3zM3 16l6-6 5 5 3-3 4 4M16 7h.01" />
+              </svg>
             </span>
           )}
         <span class="min-w-0 flex-1">
@@ -228,7 +269,7 @@ export default function LogoUploader({ logoUrl, lang }: LogoUploaderProps) {
       />
 
       {error && (
-        <p class="text-sm text-red-600 text-center" role="alert">
+        <p class="text-sm text-amber-800 text-center" role="alert">
           {error}
         </p>
       )}

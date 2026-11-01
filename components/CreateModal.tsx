@@ -6,11 +6,7 @@ import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { haptics } from "../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
-import {
-  getQRThemeStyleVars,
-  getQRThemeTokens,
-  QR_STYLES,
-} from "../utils/qr-styles.ts";
+import { getQRThemeStyleVars, getQRThemeTokens } from "../utils/qr-styles.ts";
 import { sounds } from "../utils/sounds.ts";
 import { looksLikeUrl } from "../utils/url.ts";
 import ChoiceRow from "./create-modal/ChoiceRow.tsx";
@@ -18,7 +14,7 @@ import CompletionState, {
   type CompletionKind,
 } from "./create-modal/CompletionState.tsx";
 import DesignTab from "./create-modal/DesignTab.tsx";
-import { STYLE_DISPLAY } from "../islands/StyleSelector.tsx";
+import DesignPreview from "./create-modal/DesignPreview.tsx";
 import BatchSettings from "./extras/BatchSettings.tsx";
 import EditableLinkSettings from "./extras/EditableLinkSettings.tsx";
 import LockerSettings from "./extras/LockerSettings.tsx";
@@ -86,6 +82,9 @@ interface CreateModalProps {
   initialTab?: ActiveTab;
   /** Fires when the open sheet changes tab, so the stage trigger can latch. */
   onTabChange?: (tab: ActiveTab) => void;
+  /** Opens the scanner (Inspect lives here, off the front page). */
+  onInspect?: () => void;
+  onShowHistory?: () => void;
   selectedTemplate: QRTemplateType;
   onSelectTemplate: (template: QRTemplateType) => void;
   url: Signal<string>;
@@ -228,6 +227,8 @@ export default function CreateModal({
   onClose,
   initialTab = "type",
   onTabChange,
+  onInspect,
+  onShowHistory,
   selectedTemplate,
   onSelectTemplate,
   url,
@@ -1385,82 +1386,6 @@ export default function CreateModal({
   ];
   const hasCompletion = completionKind !== null && bucketUrl.value !== "";
 
-  // Live Corner Mini-QR Preview Badge state
-  const isCustomStyle = qrStyle.value === "custom";
-  const presetInfo =
-    STYLE_DISPLAY[qrStyle.value as keyof typeof STYLE_DISPLAY] ??
-      STYLE_DISPLAY.sunset;
-  const presetStyle = QR_STYLES[qrStyle.value as keyof typeof QR_STYLES];
-  const activeStyleObj = isCustomStyle && customStyle?.value
-    ? customStyle.value
-    : presetStyle;
-  const customStopColors = isCustomStyle && customStyle?.value &&
-      "gradient" in customStyle.value.dots &&
-      customStyle.value.dots.gradient
-    ? customStyle.value.dots.gradient.colorStops.map((s) => s.color)
-    : isCustomStyle && customStyle?.value &&
-        "color" in customStyle.value.dots &&
-        customStyle.value.dots.color
-    ? [customStyle.value.dots.color, customStyle.value.dots.color]
-    : null;
-  const miniColors = customStopColors && customStopColors.length > 0
-    ? customStopColors
-    : isCustomStyle
-    ? ["#9370DB", "#FF69B4"]
-    : presetInfo.colors;
-  const miniGradient = `linear-gradient(135deg, ${miniColors.join(", ")})`;
-  const miniBg = activeStyleObj &&
-      "gradient" in activeStyleObj.background &&
-      activeStyleObj.background.gradient
-    ? `linear-gradient(135deg, ${
-      activeStyleObj.background.gradient.colorStops.map((s) => s.color).join(
-        ", ",
-      )
-    })`
-    : activeStyleObj && "color" in activeStyleObj.background &&
-        activeStyleObj.background.color
-    ? activeStyleObj.background.color
-    : "#FFFDF9";
-  const miniDotShape = activeStyleObj &&
-      "shape" in activeStyleObj.dots
-    ? activeStyleObj.dots.shape
-    : "rounded";
-  const miniDotRadius = miniDotShape === "dots"
-    ? "rounded-full"
-    : miniDotShape === "square"
-    ? "rounded-none"
-    : "rounded-[2px]";
-  const miniFrameActive = frameConfig?.value?.enabled ?? false;
-  const miniFrameCaption = frameConfig?.value?.caption ||
-    (isSpanish ? "ESCANÉAME" : "SCAN ME");
-  const MINI_MATRIX = [
-    1,
-    1,
-    1,
-    0,
-    1,
-    1,
-    0,
-    1,
-    1,
-    0,
-    1,
-    1,
-    1,
-    0,
-    1,
-    0,
-    1,
-    0,
-    1,
-    1,
-    1,
-    1,
-    1,
-    0,
-    1,
-  ];
-
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
       <div
@@ -1488,99 +1413,62 @@ export default function CreateModal({
       >
         <div class="flex items-center justify-between gap-3 p-4 sm:px-6 sm:pt-5 pb-2">
           <div class="flex items-center gap-3 min-w-0">
-            {/* Live Corner Mini-QR Badge — mirrors the main QR style, logo, and frame across all tabs */}
-            <button
-              type="button"
-              onClick={() => {
-                setCompletionKind(null);
-                setActiveTab("design");
-                scrollBodyToTop();
-                haptics.light();
-                sounds.bloop?.();
-              }}
-              title={isSpanish
-                ? "Vista previa en vivo — toca para diseñar"
-                : "Live QR preview — tap to style"}
-              aria-label={isSpanish
-                ? "Vista previa en vivo del QR"
-                : "Live QR preview"}
-              class="group relative shrink-0 flex flex-col items-center focus:outline-none"
-            >
-              <div
-                key={`${qrStyle.value}-${
-                  Boolean(logoUrl.value)
-                }-${miniFrameActive}-${url.value.slice(0, 16)}`}
-                class="w-12 h-12 rounded-2xl border-2 border-[#1e1714] p-1.5 flex items-center justify-center relative overflow-hidden shadow-[2px_2px_0_#1e1714] group-hover:scale-105 group-active:scale-95 transition-transform animate-pop"
-                style={{ background: miniBg }}
-              >
-                <div class="grid grid-cols-5 gap-[2px] w-full h-full">
-                  {MINI_MATRIX.map((cell, idx) => (
-                    <span
-                      key={idx}
-                      class={`${miniDotRadius} ${
-                        cell ? "opacity-100" : "opacity-15"
-                      }`}
-                      style={{
-                        background: cell ? miniGradient : "transparent",
-                      }}
-                    />
-                  ))}
-                </div>
-                {logoUrl.value && (
-                  <img
-                    src={logoUrl.value}
-                    alt=""
-                    class="absolute inset-0 m-auto w-5 h-5 rounded-md border border-[#1e1714] bg-[#fffef7] object-contain"
-                  />
-                )}
-              </div>
-              {miniFrameActive && (
-                <span class="-mt-1.5 z-10 px-1.5 py-0.2 rounded border border-[#1e1714] bg-[#1e1714] text-[#fffef7] text-[8px] font-black uppercase tracking-wider leading-tight max-w-[56px] truncate">
-                  {miniFrameCaption}
-                </span>
-              )}
-            </button>
-
             <div class="min-w-0">
               <h2
                 id="create-modal-title"
-                class="font-black text-xl sm:text-2xl tracking-tight text-[#1e1714] leading-tight truncate"
+                class="font-black text-lg sm:text-2xl tracking-tight text-[#1e1714] leading-tight"
               >
                 {hasCompletion
                   ? (isSpanish ? "Listo para compartir." : "Ready to share.")
                   : SHEET_HEADINGS[activeTab][isSpanish ? "es" : "en"].title}
               </h2>
-              <p
-                class="text-xs sm:text-sm font-bold truncate"
-                style={{ color: "var(--qr-theme-accent, #ec4899)" }}
-              >
-                {hasCompletion
-                  ? (isSpanish
-                    ? "El QR ya apunta a la nueva página."
-                    : "The QR now points at the new page.")
-                  : SHEET_HEADINGS[activeTab][isSpanish ? "es" : "en"].sub}
-              </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={shell.requestClose}
-            class="qr-modal-close-btn shrink-0"
-            aria-label={isSpanish ? "Cerrar" : "Close"}
-          >
-            <svg
-              class="w-4 h-4 pointer-events-none"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3.25"
-              stroke-linecap="round"
-              aria-hidden="true"
+          <div class="flex items-center gap-2 shrink-0">
+            {onInspect && !hasCompletion && (
+              <button
+                type="button"
+                onClick={onInspect}
+                class="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] active:translate-y-[2px] active:shadow-none"
+                aria-label={isSpanish ? "Revisar un QR" : "Inspect a QR code"}
+                title={isSpanish
+                  ? "Ver a dónde lleva un QR antes de abrirlo"
+                  : "See where a QR goes before opening it"}
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                >
+                  <path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM21 21l-5.2-5.2" />
+                </svg>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={shell.requestClose}
+              class="qr-modal-close-btn shrink-0"
+              aria-label={isSpanish ? "Cerrar" : "Close"}
             >
-              <path d="M6.5 6.5l11 11m0-11l-11 11" />
-            </svg>
-          </button>
+              <svg
+                class="w-4 h-4 pointer-events-none"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3.25"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M6.5 6.5l11 11m0-11l-11 11" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {!hasCompletion && (
@@ -1614,6 +1502,16 @@ export default function CreateModal({
           </div>
         )}
 
+        {!hasCompletion && activeTab === "design" && (
+          <DesignPreview
+            url={url}
+            qrStyle={qrStyle}
+            customStyle={customStyle}
+            logoUrl={logoUrl}
+            frameConfig={frameConfig}
+            es={isSpanish}
+          />
+        )}
         <div
           ref={bodyScrollRef}
           class="flex-1 overflow-y-auto scrollbar-none p-4 sm:px-6 sm:py-4 pb-5 sm:max-h-[min(520px,64dvh)]"
@@ -1643,7 +1541,17 @@ export default function CreateModal({
             typeIntent === "share-file" ||
             typeIntent === "collect-files")
         ) && (
-          <div class="p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
+          <div class="flex items-center gap-3 p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
+            {onShowHistory && !hasCompletion && (
+              <button
+                type="button"
+                onClick={onShowHistory}
+                class="shrink-0 min-h-[44px] px-1 text-xs font-bold text-[#1e1714] underline underline-offset-2"
+                aria-label={isSpanish ? "Abrir historial" : "Open QR history"}
+              >
+                {isSpanish ? "Historial" : "History"}
+              </button>
+            )}
             {(() => {
               const validSeqCount = sequentialUrls.filter((u) =>
                 looksLikeUrl(u)
@@ -1695,7 +1603,7 @@ export default function CreateModal({
                         ? "Listo · Volver al inicio"
                         : "Done · Back to home")
                       : activeTab === "design"
-                      ? (isSpanish ? "Aplicar diseño" : "Apply design")
+                      ? (isSpanish ? "Listo" : "Done")
                       : isCreatingEditable
                       ? (isSpanish
                         ? (isSequential && randomSequence

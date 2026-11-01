@@ -550,7 +550,7 @@ export interface QRThemeTokens {
   ctaActive: string;
 }
 
-export const QR_THEME_TOKENS: Record<keyof typeof QR_STYLES, QRThemeTokens> = {
+const PALETTE_THEME_TOKENS: Record<keyof typeof QR_STYLES, QRThemeTokens> = {
   sunset: {
     accent: "#EC4899",
     accentDeep: "#DB2777",
@@ -643,6 +643,19 @@ export const QR_THEME_TOKENS: Record<keyof typeof QR_STYLES, QRThemeTokens> = {
   },
 };
 
+const PAYOFF_COLORS = {
+  tint: "#FFFEF7",
+  tintStrong: "#FFFEF7",
+  ctaBg: "#FFBE0B",
+  ctaHover: "#FFD04A",
+  ctaActive: "#F2AC00",
+};
+export const QR_THEME_TOKENS = Object.fromEntries(
+  Object.entries(PALETTE_THEME_TOKENS).map((
+    [key, tokens],
+  ) => [key, { ...tokens, ...PAYOFF_COLORS }]),
+) as Record<keyof typeof QR_STYLES, QRThemeTokens>;
+
 function rgbToHex(r: number, g: number, b: number): string {
   const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
   return (
@@ -651,19 +664,6 @@ function rgbToHex(r: number, g: number, b: number): string {
       .map((v) => v.toString(16).padStart(2, "0"))
       .join("")
       .toUpperCase()
-  );
-}
-
-function mixWithWarmPaper(
-  rgb: [number, number, number],
-  weight: number,
-): string {
-  // Blend with warm near-white (#FFFEF7 -> [255, 254, 247])
-  const paper: [number, number, number] = [255, 254, 247];
-  return rgbToHex(
-    paper[0] + (rgb[0] - paper[0]) * weight,
-    paper[1] + (rgb[1] - paper[1]) * weight,
-    paper[2] + (rgb[2] - paper[2]) * weight,
   );
 }
 
@@ -692,11 +692,7 @@ export function getQRThemeTokens(
         return {
           accent: rgbToHex(rgb[0], rgb[1], rgb[2]),
           accentDeep: rgbToHex(rgb[0] * 0.85, rgb[1] * 0.85, rgb[2] * 0.85),
-          tint: mixWithWarmPaper(rgb, 0.14),
-          tintStrong: mixWithWarmPaper(rgb, 0.24),
-          ctaBg: mixWithWarmPaper(rgb, 0.34),
-          ctaHover: mixWithWarmPaper(rgb, 0.42),
-          ctaActive: mixWithWarmPaper(rgb, 0.50),
+          ...PAYOFF_COLORS,
         };
       } catch {
         // Fall through to sunset default

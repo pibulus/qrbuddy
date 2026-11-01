@@ -1,17 +1,12 @@
 import { useState } from "preact/hooks";
-import QRCodeStyling from "qr-code-styling";
+import QRRenderer from "../utils/qr-renderer.ts";
+import { resolveQRStyle } from "../utils/qr-design.ts";
 import { haptics } from "../utils/haptics.ts";
 import { Signal } from "@preact/signals";
 import { addToast } from "../islands/ToastManager.tsx";
 import { reportFailure } from "../utils/report-failure.ts";
 
-import { QR_STYLES } from "../utils/qr-styles.ts";
-import type {
-  CornerDotShape,
-  CornerSquareShape,
-  DotShape,
-  QRStyle,
-} from "../types/qr-types.ts";
+import type { QRStyle } from "../types/qr-types.ts";
 
 export type BatchExportFormat = "png" | "svg" | "both";
 
@@ -137,9 +132,7 @@ export function useBatchGenerator(
       haptics.medium();
 
       const styleKey = qrStyle?.value || "sunset";
-      const styleConfig: QRStyle = styleKey === "custom" && customStyle?.value
-        ? customStyle.value
-        : (QR_STYLES[styleKey as keyof typeof QR_STYLES] || QR_STYLES.sunset);
+      const styleConfig = resolveQRStyle(styleKey, customStyle?.value);
 
       const includePng = format === "png" || format === "both";
       const includeSvg = format === "svg" || format === "both";
@@ -151,71 +144,27 @@ export function useBatchGenerator(
         };
       };
       const zip = new JSZip();
-      const baseOptions = {
-        width: 1000,
-        height: 1000,
-        image: logoUrl.value || undefined,
-        qrOptions: {
-          errorCorrectionLevel: (logoUrl.value ? "H" : "Q") as "H" | "Q",
-        },
-        dotsOptions: {
-          type: (styleConfig.dots.shape || "rounded") as DotShape,
-          ...("gradient" in styleConfig.dots && styleConfig.dots.gradient
-            ? { gradient: styleConfig.dots.gradient }
-            : { color: styleConfig.dots.color }),
-        },
-        backgroundOptions: {
-          ...("gradient" in styleConfig.background &&
-              styleConfig.background.gradient
-            ? { gradient: styleConfig.background.gradient }
-            : { color: styleConfig.background.color }),
-        },
-        cornersSquareOptions: {
-          type: (styleConfig.cornersSquare?.shape ||
-            "extra-rounded") as CornerSquareShape,
-          ...(styleConfig.cornersSquare &&
-              "gradient" in styleConfig.cornersSquare &&
-              styleConfig.cornersSquare.gradient
-            ? { gradient: styleConfig.cornersSquare.gradient }
-            : { color: styleConfig.cornersSquare?.color }),
-        },
-        cornersDotOptions: {
-          type: (styleConfig.cornersDot?.shape || "dot") as CornerDotShape,
-          ...(styleConfig.cornersDot && "gradient" in styleConfig.cornersDot &&
-              styleConfig.cornersDot.gradient
-            ? { gradient: styleConfig.cornersDot.gradient }
-            : { color: styleConfig.cornersDot?.color }),
-        },
-        imageOptions: {
-          crossOrigin: "anonymous",
-          margin: 10,
-          hideBackgroundDots: true,
-        },
-      };
-
-      const canvasQr = includePng
-        ? new QRCodeStyling({ ...baseOptions, type: "canvas" })
-        : null;
-      const svgQr = includeSvg
-        ? new QRCodeStyling({ ...baseOptions, type: "svg" })
-        : null;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const num = String(row.index).padStart(2, "0");
         const baseName = `qr_${num}_${row.safeSlug}`;
+        const qr = new QRRenderer({
+          size: 1000,
+          data: row.url,
+          style: styleConfig,
+          logoUrl: logoUrl.value,
+        });
 
-        if (canvasQr) {
-          canvasQr.update({ data: row.url });
-          const pngBlob = await canvasQr.getRawData("png");
+        if (includePng) {
+          const pngBlob = await qr.getRawData("png");
           if (pngBlob) {
             zip.file(`${baseName}.png`, pngBlob);
           }
         }
 
-        if (svgQr) {
-          svgQr.update({ data: row.url });
-          const svgBlob = await svgQr.getRawData("svg");
+        if (includeSvg) {
+          const svgBlob = await qr.getRawData("svg");
           if (svgBlob) {
             zip.file(`${baseName}.svg`, svgBlob);
           }

@@ -1,5 +1,3 @@
-import { useEffect, useState } from "preact/hooks";
-import { getHistory } from "../../utils/history.ts";
 import { haptics } from "../../utils/haptics.ts";
 import { sounds } from "../../utils/sounds.ts";
 import { QR_TEMPLATES, type QRTemplateType } from "../../types/qr-templates.ts";
@@ -49,17 +47,12 @@ const LATCHED =
   "translate-y-[2px] shadow-none bg-[var(--qr-theme-tint,#fdf2f8)] hover:translate-y-[2px] hover:shadow-none";
 
 const TILE_BASE =
-  `${STAGE_PRESS} border-2 border-[#1e1714] rounded-xl shadow-[0_2px_0_#1e1714] min-h-[38px] flex items-center justify-center gap-1.5 font-black text-[13px] whitespace-nowrap`;
+  `${STAGE_PRESS} border-2 border-[#1e1714] rounded-xl shadow-[0_2px_0_#1e1714] h-[40px] flex items-center justify-center gap-1.5 font-black text-[13px] whitespace-nowrap`;
 
 const TILE =
   `${TILE_BASE} bg-[#fffef7] text-[#1e1714] hover:bg-[var(--qr-theme-tint,#fdf2f8)]`;
 
-/** The hero keycap: ink fill, so the row has one obvious place to play. */
-const HERO = `${TILE_BASE} bg-[#1e1714] text-[#fffef7] hover:bg-[#3b2e25]`;
-const HERO_LATCHED =
-  "translate-y-[2px] shadow-none hover:translate-y-[2px] hover:shadow-none";
-
-export type StagePanel = ActiveTab | "inspect" | "history";
+export type StagePanel = ActiveTab;
 
 type Glyph =
   | QRTemplateType
@@ -117,8 +110,6 @@ interface SmartInputToolbarProps {
   selectedTemplate: QRTemplateType;
   onOpenCreate: (tab: ActiveTab) => void;
   createHasUpdates: boolean;
-  onShowHistory: () => void;
-  onShowReader: () => void;
   /** Which panel is open right now, so its trigger can latch down. */
   openPanel?: StagePanel | null;
   isBucket?: boolean;
@@ -130,8 +121,6 @@ export default function SmartInputToolbar({
   selectedTemplate,
   onOpenCreate,
   createHasUpdates,
-  onShowHistory,
-  onShowReader,
   openPanel = null,
   isBucket = false,
   isBatchMode = false,
@@ -151,18 +140,6 @@ export default function SmartInputToolbar({
     : isSpanish
     ? (TEMPLATE_LABELS_ES[selectedTemplate] ?? templateMeta.label)
     : templateMeta.label;
-  const [hasHistory, setHasHistory] = useState(false);
-
-  useEffect(() => {
-    setHasHistory(getHistory().length > 0);
-    const handleUpdate = () => {
-      setHasHistory(getHistory().length > 0);
-    };
-    globalThis.addEventListener("history-updated", handleUpdate);
-    return () =>
-      globalThis.removeEventListener("history-updated", handleUpdate);
-  }, []);
-
   const press = (fn: () => void) => () => {
     fn();
     haptics.light();
@@ -175,15 +152,13 @@ export default function SmartInputToolbar({
   };
 
   return (
-    <div class="flex gap-2 w-full">
-      {/* What the QR holds — a type chip (pill), opens Content (and Behavior) */}
+    <div class="grid grid-cols-2 gap-2.5 w-full">
+      {/* What the QR holds — current type, opens Content (and Behavior) */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("type"))}
         aria-expanded={openPanel === "type" || openPanel === "options"}
-        class={`${TILE} ${
-          latch(["type", "options"])
-        } relative shrink-0 min-w-0 max-w-[40%] px-3 rounded-full`}
+        class={`${TILE} ${latch(["type", "options"])} relative min-w-0 px-3`}
         title={isSpanish
           ? "Cambiar el tipo de QR: enlace, Wi-Fi, contacto, archivo…"
           : "Change the QR type: link, Wi-Fi, contact card, file…"}
@@ -201,14 +176,12 @@ export default function SmartInputToolbar({
         )}
       </button>
 
-      {/* How it looks — the 80% job: ink hero, takes the room */}
+      {/* How it looks — palette, logo, frame, shapes */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("design"))}
         aria-expanded={openPanel === "design"}
-        class={`${HERO} ${
-          openPanel === "design" ? HERO_LATCHED : ""
-        } flex-1 min-w-0 px-3`}
+        class={`${TILE} ${latch("design")} min-w-0 px-3`}
         title={isSpanish
           ? "Colores, logo, marco y forma de los módulos"
           : "Colours, logo, print frame and dot shapes"}
@@ -216,38 +189,6 @@ export default function SmartInputToolbar({
         <StageGlyph kind="palette" />
         {isSpanish ? "Diseño" : "Design"}
       </button>
-
-      {/* Check a code before opening it — image, screenshot or camera */}
-      <button
-        type="button"
-        onClick={press(onShowReader)}
-        aria-expanded={openPanel === "inspect"}
-        class={`${TILE} ${latch("inspect")} shrink-0 px-2.5 sm:px-3`}
-        title={isSpanish
-          ? "Ver a dónde lleva un QR antes de abrirlo: imagen, captura o cámara"
-          : "See where a QR goes before opening it: image, screenshot or camera"}
-        aria-label={isSpanish ? "Revisar un QR" : "Inspect a QR code"}
-      >
-        <StageGlyph kind="magnifier" />
-        <span class="hidden sm:inline">
-          {isSpanish ? "Revisar" : "Inspect"}
-        </span>
-      </button>
-
-      {hasHistory && (
-        <button
-          type="button"
-          onClick={press(onShowHistory)}
-          aria-expanded={openPanel === "history"}
-          class={`${TILE} ${
-            latch("history")
-          } shrink-0 w-[38px] px-0 animate-pop-in`}
-          title={isSpanish ? "Historial" : "History"}
-          aria-label={isSpanish ? "Abrir historial" : "Open QR history"}
-        >
-          <StageGlyph kind="history" />
-        </button>
-      )}
     </div>
   );
 }

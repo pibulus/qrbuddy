@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Signal } from "@preact/signals";
-import QRCodeStyling from "qr-code-styling";
+import QRRenderer from "../utils/qr-renderer.ts";
+import { resolveQRStyle } from "../utils/qr-design.ts";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import { addToast } from "./ToastManager.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
@@ -45,7 +46,7 @@ export default function QRCanvas(
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const canvasRef = useRef<HTMLDivElement>(null);
-  const qrCodeRef = useRef<QRCodeStyling | null>(null);
+  const qrCodeRef = useRef<QRRenderer | null>(null);
   // The init effect already renders with the current signal values, so the
   // update effect must skip its OWN first (mount) run to avoid a double render.
   const updateEffectRan = useRef(false);
@@ -164,125 +165,17 @@ export default function QRCanvas(
   // used to return `undefined` here, then blow up 4 lines later at `.dots`.
   // Falls back to "sunset", the app's own default (routes/index.tsx).
   const getCurrentStyle = (): QRStyle => {
-    if (style.value === "custom" && customStyle?.value) {
-      return customStyle.value;
-    }
-    const base = (QR_STYLES[style.value as keyof typeof QR_STYLES] ??
-      QR_STYLES.sunset) as QRStyle;
-    const overrides = customStyle?.value;
-    if (!overrides) return base;
-    return {
-      ...base,
-      dots: {
-        ...base.dots,
-        ...(overrides.dots?.shape ? { shape: overrides.dots.shape } : {}),
-      },
-      cornersSquare: base.cornersSquare
-        ? {
-          ...base.cornersSquare,
-          ...(overrides.cornersSquare?.shape
-            ? { shape: overrides.cornersSquare.shape }
-            : {}),
-        }
-        : overrides.cornersSquare,
-      cornersDot: base.cornersDot
-        ? {
-          ...base.cornersDot,
-          ...(overrides.cornersDot?.shape
-            ? { shape: overrides.cornersDot.shape }
-            : {}),
-        }
-        : overrides.cornersDot,
-    };
+    return resolveQRStyle(style.value, customStyle?.value);
   };
 
   const getQrOptions = (renderSize: number) => {
     const currentStyle = getCurrentStyle();
 
-    const dotShape = (currentStyle.dots && "shape" in currentStyle.dots &&
-        currentStyle.dots.shape)
-      ? currentStyle.dots.shape
-      : (("type" in currentStyle.dots &&
-          currentStyle.dots.type === "gradient")
-        ? "rounded"
-        : "square");
-
-    const cornerSquareShape = (currentStyle.cornersSquare &&
-        "shape" in currentStyle.cornersSquare &&
-        currentStyle.cornersSquare.shape)
-      ? currentStyle.cornersSquare.shape
-      : "extra-rounded";
-
-    const cornerDotShape =
-      (currentStyle.cornersDot && "shape" in currentStyle.cornersDot &&
-          currentStyle.cornersDot.shape)
-        ? currentStyle.cornersDot.shape
-        : "dot";
-
-    const scaleFactor = renderSize / 1000;
-
     return {
-      width: renderSize,
-      height: renderSize,
+      size: renderSize,
       data: url.value || "https://qrbuddy.app",
-      margin: Math.max(1, Math.round(20 * scaleFactor)),
-      image: logoUrl?.value || undefined,
-      qrOptions: {
-        typeNumber: 0 as const,
-        mode: "Byte" as const,
-        // A center logo hides modules — bump error correction to compensate.
-        errorCorrectionLevel: logoUrl?.value ? ("H" as const) : ("Q" as const),
-      },
-      imageOptions: {
-        hideBackgroundDots: true,
-        imageSize: 0.25,
-        margin: Math.max(1, Math.round(6 * scaleFactor)),
-        crossOrigin: "anonymous",
-      },
-      dotsOptions: {
-        type: dotShape as
-          | "rounded"
-          | "dots"
-          | "classy"
-          | "classy-rounded"
-          | "square"
-          | "extra-rounded",
-        color: "color" in currentStyle.dots
-          ? currentStyle.dots.color
-          : undefined,
-        gradient: "gradient" in currentStyle.dots
-          ? currentStyle.dots.gradient
-          : undefined,
-      },
-      backgroundOptions: {
-        color: "color" in currentStyle.background
-          ? currentStyle.background.color
-          : undefined,
-        gradient: "gradient" in currentStyle.background
-          ? currentStyle.background.gradient
-          : undefined,
-      },
-      cornersSquareOptions: {
-        type: cornerSquareShape as "dot" | "square" | "extra-rounded",
-        color:
-          currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
-            ? currentStyle.cornersSquare.color
-            : undefined,
-        gradient:
-          currentStyle.cornersSquare && "gradient" in currentStyle.cornersSquare
-            ? currentStyle.cornersSquare.gradient
-            : undefined,
-      },
-      cornersDotOptions: {
-        type: cornerDotShape as "dot" | "square",
-        color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
-          ? currentStyle.cornersDot.color
-          : undefined,
-        gradient:
-          currentStyle.cornersDot && "gradient" in currentStyle.cornersDot
-            ? currentStyle.cornersDot.gradient
-            : undefined,
-      },
+      style: currentStyle,
+      logoUrl: logoUrl?.value,
     };
   };
 
@@ -335,7 +228,7 @@ export default function QRCanvas(
 
     // Render the QR code directly at target qrSize
     const qrOptions = getQrOptions(qrSize);
-    const exportQr = new QRCodeStyling(qrOptions);
+    const exportQr = new QRRenderer(qrOptions);
     const raw = await exportQr.getRawData("png");
     if (!raw) throw new Error("QR image could not be created");
     const img = await createImageBitmap(raw as Blob);
@@ -412,7 +305,7 @@ export default function QRCanvas(
     }
 
     const qrOptions = getQrOptions(size);
-    const exportQr = new QRCodeStyling(qrOptions);
+    const exportQr = new QRRenderer(qrOptions);
     const raw = await exportQr.getRawData("png");
     if (!raw) throw new Error("QR image could not be created");
 
@@ -437,7 +330,7 @@ export default function QRCanvas(
       : (frameConfig?.value?.caption ?? "");
 
     const qrOptions = getQrOptions(1000);
-    const exportQr = new QRCodeStyling(qrOptions);
+    const exportQr = new QRRenderer(qrOptions);
     const raw = await exportQr.getRawData("svg");
     if (!raw) throw new Error("SVG raw data could not be generated");
     const rawText = await (raw as Blob).text();
@@ -501,7 +394,7 @@ export default function QRCanvas(
     setIsClicking(true);
     setTimeout(() => setIsClicking(false), 150);
     try {
-      const exportQr = new QRCodeStyling(getQrOptions(1000));
+      const exportQr = new QRRenderer(getQrOptions(1000));
       const raw = await exportQr.getRawData("png");
       if (!raw) throw new Error("QR image could not be created");
       await navigator.clipboard.write([
@@ -592,7 +485,10 @@ export default function QRCanvas(
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    const qrCode = new QRCodeStyling(getQrOptions(1000));
+    const qrCode = new QRRenderer(
+      getQrOptions(1000),
+      () => setQrReady(true),
+    );
 
     // Remove any stale canvas/svg but keep the SSR placeholder <img> (it's Preact's
     // to remove, via qrReady) — it covers the canvas until drawing settles.
@@ -601,22 +497,7 @@ export default function QRCanvas(
     );
     qrCode.append(canvasRef.current);
     qrCodeRef.current = qrCode;
-    // Verify the <canvas> has actually mounted and sized before lifting the
-    // SSR vector preview, so no route ever flashes an empty white card.
-    const markReadyIfPainted = () => {
-      const c = canvasRef.current?.querySelector("canvas");
-      if (c && c.width > 0) {
-        setQrReady(true);
-        return true;
-      }
-      return false;
-    };
-    const readyTimer = setTimeout(() => {
-      if (!markReadyIfPainted()) {
-        setTimeout(() => markReadyIfPainted(), 350);
-      }
-    }, 220);
-    return () => clearTimeout(readyTimer);
+    return () => qrCode.dispose();
   }, []);
 
   useEffect(() => {
@@ -831,11 +712,7 @@ export default function QRCanvas(
       {/* Save pill — the payoff, in one saturated gold that pops on every palette */}
       <div
         key={url.value ? "chip-live" : "chip-idle"}
-        class={`absolute ${
-          frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== ""
-            ? "-bottom-5"
-            : "-bottom-4"
-        } -right-3 min-h-[40px] rounded-full bg-[#ffbe0b] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-stretch overflow-hidden z-10 ${
+        class={`absolute -bottom-3 -right-3 min-h-[40px] rounded-full bg-[#ffbe0b] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-stretch overflow-hidden z-10 ${
           url.value ? "animate-bounce-in" : ""
         }`}
       >

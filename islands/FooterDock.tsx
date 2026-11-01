@@ -5,16 +5,12 @@
  * No divider line: the dock is the page's bottom edge, not a fence across
  * the canvas.
  */
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import { openAboutModal } from "./AboutModal.tsx";
 // import { KofiButton } from "../components/KofiModal.tsx"; — Tip Jar parked, see below.
 import { openPricingModal } from "./PricingModal.tsx";
 import { MAKER_URL } from "../utils/constants.ts";
-import {
-  getClientLocale,
-  getLanguageSwitchHref,
-  type Locale,
-} from "../utils/i18n.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 type Lang = Locale;
 
@@ -27,8 +23,6 @@ const COPY = {
     terms: "Terms",
     tip: "Tip Jar ☕",
     supporter: "Passport",
-    switchLabel: "🇲🇽 ES",
-    switchAria: "Cambiar idioma a español (México / LatAm)",
     links: [
       { href: "/for/menus", label: "Restaurant Menus 📜" },
       { href: "/for/wifi", label: "Wi-Fi Cards 📶" },
@@ -50,8 +44,6 @@ const COPY = {
     terms: "Términos",
     tip: "Propina ☕",
     supporter: "Pasaporte",
-    switchLabel: "EN",
-    switchAria: "Switch language to English",
     links: [
       { href: "/es/menus", label: "Menús para Restaurantes 📜" },
       { href: "/es/wifi", label: "Tarjetas Wi-Fi 📶" },
@@ -76,25 +68,8 @@ const ITEM =
 export default function FooterDock({ lang }: { lang?: Lang }) {
   const locale = getClientLocale(lang);
   const t = COPY[locale];
-  const targetLang: Lang = locale === "es" ? "en" : "es";
-  const [switchHref, setSwitchHref] = useState(() =>
-    getLanguageSwitchHref(
-      typeof globalThis.location !== "undefined"
-        ? globalThis.location.pathname
-        : (locale === "es" ? "/es" : "/"),
-      targetLang,
-    )
-  );
   const year = new Date().getFullYear();
   const solutionsRef = useRef<HTMLDetailsElement>(null);
-
-  useEffect(() => {
-    if (typeof globalThis.location !== "undefined") {
-      setSwitchHref(
-        getLanguageSwitchHref(globalThis.location.pathname, targetLang),
-      );
-    }
-  }, [targetLang]);
 
   // Light-dismiss for the Solutions pop-up: a tap anywhere else, or Escape,
   // folds it back into the dock.
@@ -194,13 +169,6 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
             class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
           >
             {t.terms}
-          </a>
-          <a
-            href={switchHref}
-            aria-label={t.switchAria}
-            class="inline-flex min-h-[44px] min-w-[44px] px-2 items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
-          >
-            {t.switchLabel}
           </a>
         </div>
       </div>

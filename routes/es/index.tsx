@@ -181,10 +181,10 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
           pngSize={pngSize}
         />
 
-        {/* Shared flex top-rail container */}
+        {/* Style rail stays out of the column, matching the English home. */}
         <div
           role="region"
-          class="w-full max-w-md flex justify-end mb-2 z-50 animate-fade-in"
+          class="absolute top-7 right-4 sm:top-12 sm:right-6 z-50 animate-fade-in"
           aria-label="Selector de estilos"
         >
           <ErrorBoundary>
@@ -213,7 +213,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
 
           {/* QR Code Display */}
           <div class="flex justify-center animate-slide-up">
-            <div class="w-full max-w-[348px] sm:max-w-[360px] transition-all duration-300">
+            <div class="w-full max-w-[336px] sm:max-w-[360px] transition-all duration-300">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}
@@ -233,7 +233,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
           </div>
 
           {/* Smart Input */}
-          <div class="mx-auto w-full max-w-[348px] sm:max-w-[360px]">
+          <div class="mx-auto w-full max-w-[336px] sm:max-w-[360px] !mt-6">
             <SmartInput
               url={url}
               isDestructible={isDestructible}

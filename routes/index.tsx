@@ -221,7 +221,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
 
           {/* QR Code Display - FIRST */}
           <div class="flex justify-center animate-slide-up">
-            <div class="w-full max-w-[348px] sm:max-w-[360px] transition-all duration-300">
+            <div class="w-full max-w-[336px] sm:max-w-[360px] transition-all duration-300">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}
@@ -240,7 +240,7 @@ export default function Home({ data }: PageProps<HomeProps>) {
           </div>
 
           {/* Smart Input - BELOW QR */}
-          <div class="mx-auto w-full max-w-[348px] sm:max-w-[360px]">
+          <div class="mx-auto w-full max-w-[336px] sm:max-w-[360px] !mt-6">
             <SmartInput
               url={url}
               isDestructible={isDestructible}

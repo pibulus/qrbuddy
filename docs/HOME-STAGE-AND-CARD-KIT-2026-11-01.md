@@ -163,11 +163,30 @@ rounded type chip, `Inspect` icon-only on phones. Phone column widened to
 inline SVG. The headline word was never pastel — it rotates with an opacity fade
 and a shot caught it mid-transition.
 
+## 7. Two cream keys and breathing room (final correction)
+
+Supersedes the row and width choices in §6: Link and Design are equal 40px cream
+keycaps in a two-column grid. Inspect moves into the Create sheet header and
+History into its footer; opening either closes the sheet first. The footer
+language link and its effect are removed. Both home routes share a 336px phone /
+360px desktop column and an absolute style rail (the Spanish rail no longer adds
+a row). Card → input is 24px; the gold Save pill hangs 12px, leaving 12px clear.
+Input → switch is 12px, switch → tools is 10px. Gold and saturated accent badges
+stay.
+
 ## Verifying
 
 ```bash
 deno fmt && deno lint && deno task check && deno task test:unit
 ```
+
+`tests/qr_design_test.ts` covers alignment geometry (including the version-32
+exception), cutout safety, forced H, remote-image refusal, mask differences,
+palette/pattern independence through a save, and the global paper/gold tokens.
+Scannability was checked outside the repo with a jsQR sweep over six palettes ×
+four patterns × URL/Wi-Fi × stamped/unstamped at 250px and 336px, plus the
+downloaded framed PNG and SVG: 98/98. Keep that sweep when changing geometry — a
+passing card render proves nothing about a scanner.
 
 Visual check used Playwright (from `daysay/node_modules`) against
 `deno task start` at 390×844 and 1280×860, EN and `/es`: intro, about, passport

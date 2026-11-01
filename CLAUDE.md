@@ -60,8 +60,11 @@ HTML.
 
 ### Key Technical Decisions
 
-- **QR Generation**: Uses `qr-code-styling` library for gradient support and
-  advanced styling options
+- **QR Generation**: The stage, exports, clipboard and batches all render
+  through `utils/qr-renderer.ts` (`QRRenderer`), which rasterises
+  `utils/qr-vector-svg.ts`. One geometry source means the Design preview, card,
+  PNG, SVG and ZIP cannot drift. `qr-code-styling` remains only in
+  `islands/BucketQR.tsx`.
 - **Styling**: Tailwind CSS with custom theme configuration in
   `tailwind.config.ts`
 - **Build**: No separate bundler configuration is needed. Development uses the
@@ -105,7 +108,16 @@ See GLOSSARY.md for complete list organized by category. Key islands:
 - **`utils/qr-styles.ts`**: Style definitions with gradient configurations -
   each style defines dots, background, cornersSquare, and cornersDot properties
 - **`utils/qr-vector-svg.ts`**: Pure-TypeScript, zero-DOM Vector SVG 1.1 builder
-  with luminance-locked palettes and Canva/Figma compliance validator
+  with luminance-locked palettes and Canva/Figma compliance validator. Owns the
+  four macro geometries, whole-module centre excavation, and the
+  `data-ecl`/`data-cutout`/`data-center-mark` attributes tests assert on.
+- **`utils/qr-design.ts`**: Pattern and stamp registry, `resolveQRStyle()` — the
+  only place palette colour and geometry are combined.
+- **`utils/qr-renderer.ts`**: Browser adapter (`append`/`update`/`getRawData`/
+  `dispose`) with a revision guard so a slow logo load can never paint an older
+  design over a newer one.
+- **`components/create-modal/DesignPreview.tsx`**: Live `Design`-tab preview,
+  framed exactly like the export.
 - **`utils/gs1-digital-link.ts`**: GS1 Sunrise 2027 Digital Link URI builder
   (`/01/GTIN/10/LOT/21/SERIAL/17/EXP`) and GS1 Mod-10 check-digit calculator
 - **`utils/comparisons.ts`**: Bilingual (`en`/`es`), Sovereign-Voice comparison
@@ -256,9 +268,10 @@ adding surfaces:
 
 - **Page shell**: `px-6 pt-8 pb-6` mobile, `sm:pt-12` desktop; footer
   `mt-16 py-8`. Main column `max-w-md`, `space-y-6 sm:space-y-8`.
-- **QR card**: `max-w-[300px] sm:max-w-[360px]` — always narrower than the
-  controls column (pyramid hierarchy). Never fade/desaturate the QR; the empty
-  state is signalled by a subtle `scale-[0.97]` posture, full color always.
+- **QR card and input stack**: shared `max-w-[336px] sm:max-w-[360px]`, flush
+  edges. Input starts 24px below the card; the Save pill hangs 12px below it,
+  leaving 12px clearance. Never fade/desaturate the QR; the empty state is
+  signalled by a subtle `scale-[0.97]` posture, full color always.
 - **Z scale**: content ≤10 · page chrome 40–50 · modals/sheets `z-[60]` ·
   drawers `z-[70]` · toasts `z-[80]` (toasts must beat every modal).
 - **Backdrop**: one recipe everywhere — `bg-[#2B1A0E]/60 backdrop-blur-sm` (warm
@@ -329,23 +342,35 @@ adding surfaces:
   tag all wear saturated `--qr-theme-accent` with `#fffef7` text. Structural
   surfaces stay `#fffef7` + `#1e1714` so the pigment has a stage. Never a
   `--qr-theme-tint` wash as a CTA fill.
-- **Home action row**: under the well, a `flex gap-2` of 38px `STAGE_TOOL_BTN`
-  keycaps named for what they open, weighted 80/20 — `Design` (palette glyph,
-  `flex-1`, ink-filled `HERO`) takes the room; `[Link ▾]` is a `rounded-full`
-  type chip (current QR type → Content tab); `Inspect` is a magnifier, icon-only
-  on phones (`shrink-0`); history clock only once there is some. Never an equal
-  three-column grid. Glyphs are inline monochrome SVGs (`StageGlyph`), never
-  emoji. Business users and kids read the same labels; no mystery pill, no
-  caption, no parenthetical. The sheet's own header names the open tab
-  (`SHEET_HEADINGS`: "What the QR holds." / "How the QR behaves." / "How the QR
-  looks."). Static/Editable stays in-flow between input and row.
+- **Home action row**: two balanced cream keycaps, `[Link ▾]` and `Design`,
+  `grid grid-cols-2 gap-2.5`, 40px tall, `rounded-xl`, 2px sepia border/lip. No
+  ink-filled hero. Inspect lives in the Create sheet header and History in its
+  footer, opening their existing dialogs after closing the sheet. Input → mode
+  switch gap is 12px; mode switch → tools is 10px. Glyphs are inline monochrome
+  SVGs (`StageGlyph`), never emoji. Business users and kids read the same
+  labels; no mystery pill, no caption, no parenthetical. The sheet's own header
+  names the open tab (`SHEET_HEADINGS`: "What the QR holds." / "How the QR
+  behaves." / "How the QR looks."). Static/Editable stays in-flow between input
+  and row.
+- **Design tab** (`components/create-modal/DesignTab.tsx`): a live preview sits
+  between the tab strip and the scrolling controls, so every tap repaints the QR
+  before `Done` closes the sheet. Palette is a compact six-swatch strip; the
+  four **Pattern** tiles (Melt · Dots · Pixel · Spark) each coordinate module
+  shape, finder eye and pupil, with real rendered thumbnails. **Center mark**
+  offers None, six vector stamps and a 3-character monogram plus `Upload image`;
+  the mask toggle is Squircle · Circle · Knockout. **Print frame** is five
+  one-tap presets (None · Scan Me · Menu · Wi-Fi · Custom). A center mark forces
+  H and excavates whole modules with a background moat; timing, alignment and
+  format modules stay square. H is not a licence to erase function patterns —
+  dense codes omit the mark and say so. Sparse Dots/Spark also render at H,
+  verified by decode sweeps, not by eye.
 - **QR card liveness** (`islands/QRCanvas.tsx`): every matrix change (data,
   palette, Static↔Editable) pulses `scale(0.985)→1` over 140ms. Tapping the
   matrix copies the PNG to the clipboard and shows a cream "Copied PNG" pill for
   1.2s (browsers without image clipboard fall through to download). The Save
-  pill is cream, `border-2`, 2px lip, two keycaps split by a sepia rule — never
-  mustard. Editable mode is shown on the artifact: a top-right `editable` tag in
-  saturated accent with a pulsing near-white dot. Download toasts carry no
+  pill is saturated gold `#ffbe0b`, `border-2`, 2px lip, two keycaps split by a
+  sepia rule. Editable mode is shown on the artifact: a top-right `editable` tag
+  in saturated accent with a pulsing near-white dot. Download toasts carry no
   emoji.
 - **Top rail**: just the vibe-cycler pill
   (`min-h-[36px] rounded-full border-2 text-xs font-black`, 2px lip, keycap
