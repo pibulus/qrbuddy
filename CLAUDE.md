@@ -111,6 +111,11 @@ See GLOSSARY.md for complete list organized by category. Key islands:
   with luminance-locked palettes and Canva/Figma compliance validator. Owns the
   module and finder geometry, whole-module centre excavation, and the
   `data-ecl`/`data-cutout`/`data-center-mark` attributes tests assert on.
+- **`utils/softstack-passport/`**: vendored canonical Passport module
+  (`_shared-modules/passport`, local git repo). Owns SS- codes, shared identity,
+  skins/palettes/avatar, `card.css` and the pure `card.html.js` renderer. Never
+  edit the vendored copy alone — change canonical, re-vendor, keep the manifest
+  hashes green. `card.css` is copied to `static/` at dev/build.
 - **`utils/qr-design.ts`**: Stamp registry, `stampUrl()` and `resolveQRStyle()`
   — the only place palette colour and geometry are combined.
 - **`utils/qr-renderer.ts`**: Browser adapter (`append`/`update`/`getRawData`/

@@ -253,6 +253,22 @@ Secret is set in Supabase and both Netlify production environments. Deployed:
 TalkType `f3a3347`, ZipList `e7fdbad`, QRBuddy `e470f78` (function deploy; site
 build followed). Vector tests pin the same code/name in all three.
 
-**Remaining, and it is cosmetic rather than structural:** collapse the two
-`MembershipCard.svelte` forks into one and give QRBuddy the same card. Identity,
-code, token and recovery no longer drift.
+## 7. Card shipped (2026-11-02)
+
+The card extraction is done. Canonical assets in `_shared-modules/passport/`:
+`skins.js`, `palettes.js`, `avatar.js`, `card.css`, `card.html.js` (pure
+renderer). Vendored byte-identically into all three apps; thin wrappers own only
+state and app adapters. TalkType and ZipList card forks are deleted; QRBuddy
+renders the same card through Preact.
+
+Live verification with the vector passport (`SS-03D2-9722-1310`): all three show
+`Glitch Walrus` / `glitch-walrus-ripples-harbourside` / `Grape Soda` / the same
+skin, at 343×216 on desktop. Differences are intentional: the kicker word and
+the per-app QR payload.
+
+QRBuddy's card (DiceBear included) is dynamically imported only when the
+Passport modal opens, so the home bundle does not pay the ~163 KB chunk. Per-app
+deploys: TalkType `5fd4cd5`, ZipList `24f1df2`, QRBuddy `25edb53`.
+
+**One residual:** the canonical module repo has no remote yet — recoverable via
+local history, not off-machine. Add a private GitHub remote when convenient.
