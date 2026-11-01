@@ -19,7 +19,8 @@ export function renderPassportQrSvg(text: string, cellSize = 4): string {
 }
 
 export interface QRBuddyPassport {
-  id: string; // UUID v4 (maps to server library user_id)
+  id: string; // Internal UUID (maps to server library user_id)
+  code?: string; // SoftStack passport code (SS-XXXX-XXXX-XXXX)
   secret: string; // 32-char hex secret for authenticating API requests
   name: string; // Procedural moniker (e.g. "Velvet Axolotl")
   avatarEmoji: string; // Tactile spirit emoji (e.g. "🦎", "🌸", "🦦")

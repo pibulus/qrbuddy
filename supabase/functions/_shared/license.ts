@@ -67,9 +67,14 @@ export interface SupporterPayload {
 }
 
 export async function issueSupporterToken(
-  claims: Record<string, unknown> = {},
-  secret = getLicenseSecret(),
+  claimsOrSecret: Record<string, unknown> | string = {},
+  maybeSecret?: string,
 ): Promise<string> {
+  // Back-compat: older callers passed the signing secret first.
+  const claims = typeof claimsOrSecret === "string" ? {} : claimsOrSecret;
+  const secret = typeof claimsOrSecret === "string"
+    ? claimsOrSecret
+    : (maybeSecret ?? getLicenseSecret());
   const issuedAt = Math.floor(Date.now() / 1000);
   const body = {
     ...claims,

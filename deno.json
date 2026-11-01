@@ -61,4 +61,3 @@
     "build": "deno task build"
   }
 }
-
