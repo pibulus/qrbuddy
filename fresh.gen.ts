@@ -6,9 +6,16 @@ import * as $_404 from "./routes/_404.tsx";
 import * as $_500 from "./routes/_500.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
-import * as $api_path_ from "./routes/api/[...path].ts";
+import * as $api_api_keys from "./routes/api/api-keys.ts";
+import * as $api_create_dynamic_qr from "./routes/api/create-dynamic-qr.ts";
 import * as $api_download_file from "./routes/api/download-file.ts";
+import * as $api_get_dynamic_qr from "./routes/api/get-dynamic-qr.ts";
+import * as $api_health from "./routes/api/health.ts";
+import * as $api_library_stats from "./routes/api/library-stats.ts";
+import * as $api_library from "./routes/api/library.ts";
 import * as $api_peek from "./routes/api/peek.ts";
+import * as $api_redirect_qr from "./routes/api/redirect-qr.ts";
+import * as $api_update_dynamic_qr from "./routes/api/update-dynamic-qr.ts";
 import * as $batch from "./routes/batch.tsx";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
@@ -40,6 +47,8 @@ import * as $for_restaurants from "./routes/for/restaurants.tsx";
 import * as $for_vcard from "./routes/for/vcard.tsx";
 import * as $for_weddings from "./routes/for/weddings.tsx";
 import * as $for_wifi from "./routes/for/wifi.tsx";
+import * as $gateway_fn_ from "./routes/gateway/[fn].ts";
+import * as $gateway_ping from "./routes/gateway/ping.ts";
 import * as $gs1 from "./routes/gs1.tsx";
 import * as $guide_printing from "./routes/guide/printing.tsx";
 import * as $index from "./routes/index.tsx";
@@ -88,9 +97,16 @@ const manifest = {
     "./routes/_500.tsx": $_500,
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
-    "./routes/api/[...path].ts": $api_path_,
+    "./routes/api/api-keys.ts": $api_api_keys,
+    "./routes/api/create-dynamic-qr.ts": $api_create_dynamic_qr,
     "./routes/api/download-file.ts": $api_download_file,
+    "./routes/api/get-dynamic-qr.ts": $api_get_dynamic_qr,
+    "./routes/api/health.ts": $api_health,
+    "./routes/api/library-stats.ts": $api_library_stats,
+    "./routes/api/library.ts": $api_library,
     "./routes/api/peek.ts": $api_peek,
+    "./routes/api/redirect-qr.ts": $api_redirect_qr,
+    "./routes/api/update-dynamic-qr.ts": $api_update_dynamic_qr,
     "./routes/batch.tsx": $batch,
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
@@ -122,6 +138,8 @@ const manifest = {
     "./routes/for/vcard.tsx": $for_vcard,
     "./routes/for/weddings.tsx": $for_weddings,
     "./routes/for/wifi.tsx": $for_wifi,
+    "./routes/gateway/[fn].ts": $gateway_fn_,
+    "./routes/gateway/ping.ts": $gateway_ping,
     "./routes/gs1.tsx": $gs1,
     "./routes/guide/printing.tsx": $guide_printing,
     "./routes/index.tsx": $index,
