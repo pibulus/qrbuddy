@@ -397,6 +397,11 @@ adding surfaces:
   full-width Custom colours row, never a blind cycle. On phones the trigger is
   swatch + ▾ only so it never collides with the wordmark. No language toggle —
   `/es` is reached via hreflang/search. No random-colour dice.
+- **4xx must never be cached**: a 404 served during a deploy rollover once got
+  pinned by Cloudflare for days and killed island hydration on that edge.
+  Middleware forces `Cache-Control: no-store` + `CDN-Cache-Control: no-store` on
+  every response ≥ 400. If an edge still holds a poisoned 404, push a new build
+  (new asset hash) or purge the zone.
 - **Colour gates**: `tailwind.config.ts` maps the `white` and `black` utility
   names to `#fffef7` and `#1e1714`, so legacy classes stay warm. Never write an
   absolute white/black hex, and never use `red`/`rose` families — errors are
