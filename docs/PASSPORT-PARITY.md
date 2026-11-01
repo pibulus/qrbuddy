@@ -229,3 +229,30 @@ So: recovery now behaves the same in all three (email carries what a person
 needs), and QRBuddy's token is shaped for stamps. The identity is still not
 shared — that is the `SS-` module migration in §3/§4, and it cannot be faked by
 copying email HTML.
+
+## 6. Executed 2026-11-02 — identity parity is live
+
+No app has legacy holders, so the cut was clean rather than migrational.
+
+**Canonical module:** `~/Projects/active/_shared-modules/passport/` (`code.js`,
+`identity.js`, `index.js`, `test-vectors.json`, `manifest.json`). Vendored
+byte-for-byte into TalkType `src/lib/softstack-passport`, ZipList
+`src/lib/softstack-passport` and QRBuddy `utils/softstack-passport`.
+
+| Piece          | Now                                                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Code           | `SS-XXXX-XXXX-XXXX` from HMAC(`softstack-passport-code:<seed>`) in all three                                                  |
+| Identity       | SHA-256(`softstack-passport-id:<code>`) → same name/phrase/avatar/skin everywhere                                             |
+| Member id      | The `SS-` code itself, not `TT-`/`ZL-`                                                                                        |
+| Token          | HS256 with `stamps: ["talktype" \| "ziplist" \| "qrbuddy"]`, signed by `SOFTSTACK_PASSPORT_SECRET` in all three               |
+| Recovery email | code + phrase + restore link in all three (QRBuddy adds the key and name)                                                     |
+| Sync           | unchanged `softstack:sync:v2`, per-app prefixes                                                                               |
+| Cards          | still two Svelte forks; QRBuddy has no MembershipCard. Same identity now feeds them, so they render the same name/phrase/skin |
+
+Secret is set in Supabase and both Netlify production environments. Deployed:
+TalkType `f3a3347`, ZipList `e7fdbad`, QRBuddy `e470f78` (function deploy; site
+build followed). Vector tests pin the same code/name in all three.
+
+**Remaining, and it is cosmetic rather than structural:** collapse the two
+`MembershipCard.svelte` forks into one and give QRBuddy the same card. Identity,
+code, token and recovery no longer drift.
