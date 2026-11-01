@@ -238,7 +238,7 @@ export default function VerticalStudio({
       setPeekError(
         isSpanish
           ? "Error de conexión al inspeccionar el enlace."
-          : "Network error while inspecting link.",
+          : "Could not reach that link. Try again.",
       );
     } finally {
       setPeekLoading(false);

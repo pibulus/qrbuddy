@@ -57,7 +57,7 @@ export default function NoteCard({
           setIsAutoDecrypted(true);
         })
         .catch(() => {
-          setDecryptError("Invalid encryption key in QR code");
+          setDecryptError("That key does not match this note");
         });
     }
   }, [encryptedPayload, initialContent]);

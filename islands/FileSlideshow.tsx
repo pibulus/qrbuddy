@@ -570,7 +570,7 @@ export default function FileSlideshow({
       setZipError(null);
     } catch (error) {
       console.error("Failed to zip files:", error);
-      const msg = "Failed to create ZIP. Try downloading files individually.";
+      const msg = "The ZIP did not come together. Try the files one by one.";
       setZipError(msg);
       addToast(msg, 4000);
     } finally {

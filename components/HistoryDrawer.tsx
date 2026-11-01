@@ -128,7 +128,7 @@ export default function HistoryDrawer(
       addToast(
         isSpanish
           ? "Respaldo inválido o frase incorrecta"
-          : "Invalid sync backup or wrong phrase",
+          : "That phrase did not match the backup",
       );
     } finally {
       setIsImporting(false);

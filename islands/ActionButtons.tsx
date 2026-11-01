@@ -42,7 +42,7 @@ export default function ActionButtons(
       sounds.success();
     } catch (err) {
       console.error("Failed to copy URL:", err);
-      addToast("Failed to copy URL 😅", 3000);
+      addToast("Could not copy the link", 3000);
       haptics.error();
       sounds.error();
     }

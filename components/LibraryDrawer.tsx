@@ -244,7 +244,7 @@ export default function LibraryDrawer(
       addToast(
         isSpanish
           ? "Respaldo inválido o frase incorrecta"
-          : "Invalid sync backup or wrong phrase",
+          : "That phrase did not match the backup",
       );
     } finally {
       setIsImportingBackup(false);
@@ -276,8 +276,8 @@ export default function LibraryDrawer(
         addToast(
           res.message ||
             (isSpanish
-              ? "No se pudo reclamar el QR"
-              : "Failed to claim QR code"),
+              ? "Ese código no se pudo reclamar"
+              : "That code could not be claimed"),
           4000,
         );
       }
@@ -286,7 +286,9 @@ export default function LibraryDrawer(
       addToast(
         err instanceof Error
           ? err.message
-          : (isSpanish ? "No se pudo reclamar el QR" : "Failed to claim code"),
+          : (isSpanish
+            ? "Ese código no se pudo reclamar"
+            : "That code could not be claimed"),
         4000,
       );
     } finally {
@@ -331,7 +333,9 @@ export default function LibraryDrawer(
       addToast(
         err instanceof Error
           ? err.message
-          : (isSpanish ? "Error al sincronizar" : "Sync failed"),
+          : (isSpanish
+            ? "La sincronización tuvo un hipo"
+            : "Sync had a hiccup"),
         4000,
       );
     } finally {
