@@ -8,6 +8,7 @@ import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
 import * as $api_download_file from "./routes/api/download-file.ts";
 import * as $api_peek from "./routes/api/peek.ts";
+import * as $batch from "./routes/batch.tsx";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $compare from "./routes/compare.tsx";
@@ -39,6 +40,7 @@ import * as $for_weddings from "./routes/for/weddings.tsx";
 import * as $for_wifi from "./routes/for/wifi.tsx";
 import * as $gs1 from "./routes/gs1.tsx";
 import * as $guide_printing from "./routes/guide/printing.tsx";
+import * as $healthz from "./routes/healthz.ts";
 import * as $index from "./routes/index.tsx";
 import * as $inspect from "./routes/inspect.tsx";
 import * as $lockers from "./routes/lockers.tsx";
@@ -56,6 +58,7 @@ import * as $why from "./routes/why.tsx";
 import * as $wifi from "./routes/wifi.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
+import * as $BatchStudio from "./islands/BatchStudio.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
 import * as $DesignPreferencesSync from "./islands/DesignPreferencesSync.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
@@ -83,6 +86,7 @@ const manifest = {
     "./routes/_middleware.ts": $_middleware,
     "./routes/api/download-file.ts": $api_download_file,
     "./routes/api/peek.ts": $api_peek,
+    "./routes/batch.tsx": $batch,
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/compare.tsx": $compare,
@@ -114,6 +118,7 @@ const manifest = {
     "./routes/for/wifi.tsx": $for_wifi,
     "./routes/gs1.tsx": $gs1,
     "./routes/guide/printing.tsx": $guide_printing,
+    "./routes/healthz.ts": $healthz,
     "./routes/index.tsx": $index,
     "./routes/inspect.tsx": $inspect,
     "./routes/lockers.tsx": $lockers,
@@ -133,6 +138,7 @@ const manifest = {
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
     "./islands/ActionButtons.tsx": $ActionButtons,
+    "./islands/BatchStudio.tsx": $BatchStudio,
     "./islands/BucketQR.tsx": $BucketQR,
     "./islands/DesignPreferencesSync.tsx": $DesignPreferencesSync,
     "./islands/EasterEggs.tsx": $EasterEggs,

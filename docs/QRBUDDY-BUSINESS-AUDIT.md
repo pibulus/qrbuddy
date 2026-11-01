@@ -48,13 +48,18 @@ will not put them in.
 UI surfaces a single integer per code. No time series, no breakdown, no export,
 no "which branch got scanned most this month".
 
-**5. PIN / access control.** No PIN gate exists on the file path
-(`routes/f/[code].tsx` has expiry and download caps, not authentication). A
-"secret locker" QR without a PIN is a public URL with a nice name.
+**5. PIN / access control.** Already exists — an earlier audit missed it by
+grepping the wrong routes. Buckets carry `password_hash`, set in `create-bucket`
+and verified server-side in `download-from-bucket`, `get-bucket-status` and
+`upload-to-bucket`. The remaining work is surface, not security: making it
+obvious in the UI and allowing a PIN on dynamic QR redirects as well as on file
+lockers.
 
-**6. Identity for the buyer, not just the code.** No team seats, no audit trail,
-no per-customer custom domain (`go.acme.com/line-4`), no API. These are what
-turn 400 one-off codes into a contract.
+**6. Identity for the buyer, not just the code.** A Passport-authenticated API
+surface exists (`x-passport-id` in `supabase/functions/_shared/auth.ts`), but
+there are no customer API keys, no docs, no team seats, no audit trail and no
+per-customer custom domain (`go.acme.com/line-4`). These are what turn 400
+one-off codes into a contract.
 
 ## 3. Priority, by what actually unlocks revenue
 
