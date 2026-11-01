@@ -208,9 +208,10 @@ if (maxDownloads === 999999) {
 ### Launch gates
 
 `deno task check && deno task test:unit && deno task build` plus the five audit
-tests are the local gate. Edge-function changes (rate limits) ship separately:
+tests are the local gate. Edge-function changes ship separately:
 `supabase functions deploy …` per `supabase/README.md`; a site push does not
-deploy them.
+deploy them. The five rate-gated functions were deployed 2026-11-02; re-deploy
+them whenever their code changes.
 
 ### Deployment
 

@@ -256,8 +256,10 @@ blocks `/api`, `/edit`, `/r`, `/q` and points at the sitemap. Middleware ships
 HSTS, CSP, frame denial, nosniff, referrer policy and X-Robots on private
 routes. Public edge functions all had rate gates except five; those five
 (`get-file`, `get-file-metadata`, `get-bucket-status`, `finalize-upload`,
-`library`) now call `checkRateLimit` too — **deploy functions separately**, a
-site push does not.
+`library`) now call `checkRateLimit` too. All five were deployed to project
+`aqydpibnvlhcjcwosrti` on 2026-11-02 and verified live (404 for an unknown
+bucket, 404 for an unknown file, 302 for an unknown claim, 403 without a pass,
+404 with the library flag off).
 
 Brand: no red/rose classes remain, `white`/`black` utilities resolve to warm
 paper/ink, exports use `#1e1714` on `#FFFEF7`, forced `<br>` removed from About,
