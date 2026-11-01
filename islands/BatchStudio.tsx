@@ -152,6 +152,11 @@ export default function BatchStudio(
   { supabaseUrl }: { supabaseUrl?: string },
 ) {
   const [raw, setRaw] = useState("");
+  // One page, two products: editable codes (server, tracked) or plain image
+  // files (local, no account, no scan data). The same CSV feeds both, so a
+  // person never has to learn a second tool to change their mind.
+  const [mode, setMode] = useState<"editable" | "images">("editable");
+  const [zipping, setZipping] = useState(false);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(0);
   const [results, setResults] = useState<BatchResult[]>([]);
@@ -219,6 +224,60 @@ export default function BatchStudio(
     }
 
     setRunning(false);
+  }
+
+  /** Static mode: the destination itself is encoded, so the files work
+   *  forever with no server and no account — the opposite trade to an
+   *  editable code, offered side by side instead of hidden elsewhere. */
+  async function downloadStaticZip() {
+    if (!rows.length || zipping) return;
+    setZipping(true);
+    setError("");
+    try {
+      const { default: JSZip } = (await import("jszip")) as unknown as {
+        default: new () => {
+          file: (name: string, data: Blob | string) => void;
+          generateAsync: (opts: { type: "blob" }) => Promise<Blob>;
+        };
+      };
+      const zip = new JSZip();
+      const manifest = ["row,label,destination,file"];
+
+      for (const row of rows) {
+        const svg = buildQrSvgString({
+          data: row.destination,
+          size: 1024,
+          errorCorrectionLevel: "M",
+          caption: row.label || undefined,
+        });
+        const base = `qr-${String(row.index).padStart(3, "0")}`;
+        zip.file(`${base}.svg`, new Blob([svg], { type: "image/svg+xml" }));
+        manifest.push(
+          [
+            row.index,
+            csvCell(row.label),
+            csvCell(row.destination),
+            `${base}.svg`,
+          ]
+            .join(","),
+        );
+      }
+
+      zip.file("manifest.csv", manifest.join("\n"));
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "qrbuddy-static-qr.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Could not build the ZIP",
+      );
+    } finally {
+      setZipping(false);
+    }
   }
 
   function exportCsv() {
@@ -341,16 +400,63 @@ https://acme.test/menu,Table 2"
             {parsed.error || error}
           </p>
         )}
-        <button
-          type="button"
-          onClick={run}
-          disabled={running || !rows.length}
-          class="mt-4 w-full rounded-2xl border-2 border-stone-900 bg-pink-400 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
+        <div
+          class="mt-4 grid grid-cols-2 gap-2"
+          role="group"
+          aria-label="Batch mode"
         >
-          {running
-            ? `Creating ${done} / ${rows.length}…`
-            : `Create ${rows.length || ""} code${rows.length === 1 ? "" : "s"}`}
-        </button>
+          {([
+            ["editable", "Editable codes"],
+            ["images", "Image files"],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMode(value)}
+              aria-pressed={mode === value}
+              class={`rounded-xl border-2 border-stone-900 px-3 py-2 text-xs font-black transition ${
+                mode === value
+                  ? "bg-stone-900 text-amber-100"
+                  : "bg-white hover:bg-stone-100"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p class="mt-2 text-[11px] leading-snug text-stone-500">
+          {mode === "editable"
+            ? "Editable: every row becomes a tracked code you can re-point later. Needs a connection."
+            : "Image files: the destination is inside the graphic. No account, no tracking, works forever offline."}
+        </p>
+
+        {mode === "editable"
+          ? (
+            <button
+              type="button"
+              onClick={run}
+              disabled={running || !rows.length}
+              class="mt-4 w-full rounded-2xl border-2 border-stone-900 bg-pink-400 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
+            >
+              {running
+                ? `Creating ${done} / ${rows.length}…`
+                : `Create ${rows.length || ""} code${
+                  rows.length === 1 ? "" : "s"
+                }`}
+            </button>
+          )
+          : (
+            <button
+              type="button"
+              onClick={downloadStaticZip}
+              disabled={zipping || !rows.length}
+              class="mt-4 w-full rounded-2xl border-2 border-stone-900 bg-yellow-300 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
+            >
+              {zipping
+                ? "Building the ZIP…"
+                : `Download ${rows.length || ""} SVG files`}
+            </button>
+          )}
       </section>
 
       {results.length > 0 && (

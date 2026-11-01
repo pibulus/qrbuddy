@@ -119,6 +119,20 @@ export default function BatchSettings({
               : "Download Batch ZIP (QRs + manifest.csv)"}
           </button>
         )}
+
+      {
+        /* The other half of the same job, one link away: a static ZIP is final
+          the moment it is printed, an editable code is not. Both belong to the
+          same CSV, so the door out of here is a link, not a second tool. */
+      }
+      <a
+        href="/batch"
+        class="block text-center text-xs font-black text-neutral-700 underline decoration-2 decoration-black/20 underline-offset-2 hover:text-black"
+      >
+        {isSpanish
+          ? "¿Necesitas códigos editables (y hoja de impresión)? Abre Lote →"
+          : "Need editable codes and a print sheet? Open Batch →"}
+      </a>
     </div>
   );
 }
