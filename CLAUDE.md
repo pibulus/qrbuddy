@@ -215,6 +215,11 @@ them whenever their code changes.
 
 ### Deployment
 
+- **Deploy budget**: Deno Deploy allows **15 deployments per hour** on this
+  plan. Rapid pushes past that are silently not built (the site keeps serving
+  the last good revision). Check with
+  `deno deploy deployments list --org pibulus --app qrbuddy --token "$DENO_DEPLOY_TOKEN_NEW" --non-interactive --json`
+  before assuming a push is live, and space out release passes.
 - **Production app**: https://qrbuddy.app
 - **Deno Deploy alias**: https://qrbuddy.pibulus.deno.net
 - **Supabase project ref**: `aqydpibnvlhcjcwosrti`
