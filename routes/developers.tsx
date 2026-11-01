@@ -1,6 +1,12 @@
 import { Head } from "$fresh/runtime.ts";
 import ApiKeysPanel from "../islands/ApiKeysPanel.tsx";
 
+// The base that is verified working today. `qrbuddy.app/v1` is built and
+// staged in the repo but its routes do not survive this deployment's router
+// yet (see docs/DEPLOY-RUNBOOK.md); pointing the docs at a promise would be
+// worse than pointing them at a working host.
+const API_BASE = "https://aqydpibnvlhcjcwosrti.supabase.co/functions/v1";
+
 const ENDPOINTS = [
   {
     method: "POST",
@@ -79,9 +85,12 @@ export default function ApiPage() {
             or as a bearer token. Keys are free to mint and are shown once.
           </p>
           <Code>
-            {`curl https://qrbuddy.app/v1 \\
+            {`curl ${API_BASE}/api-keys \\
   -H "x-api-key: qb_your_key_here"`}
           </Code>
+          <p class="mt-2 break-all text-xs text-stone-500">
+            Base URL: <code>{API_BASE}</code>
+          </p>
         </section>
 
         <section class="mt-6 space-y-3">
@@ -114,7 +123,7 @@ export default function ApiPage() {
           </p>
           <Code>
             {`while IFS=, read -r url title; do
-  curl -s https://qrbuddy.app/v1/create-dynamic-qr \\
+  curl -s ${API_BASE}/create-dynamic-qr \\
     -H "x-api-key: qb_your_key_here" \\
     -H "content-type: application/json" \\
     -d "{\\"destination_url\\":\\"$url\\",\\"title\\":\\"$title\\"}"

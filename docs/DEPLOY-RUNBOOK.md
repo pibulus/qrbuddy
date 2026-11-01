@@ -32,6 +32,27 @@ manifest naming routes that are not in the bundle, and the request dies before
 any handler runs. Rebuilding first is the fix, and it is now part of the routine
 below.
 
+## 1c. The /api and /v1 proxy failure (open, 2026-11-02)
+
+Symptom matrix, measured against production and the *.deno.net preview host:
+
+| Path                              | Old file?    | Result                                         |
+| --------------------------------- | ------------ | ---------------------------------------------- |
+| `/api/peek`, `/api/download-file` | yes          | works (400 / 302)                              |
+| `/api/health`, `/api/api-keys`    | added later  | 520 on the domain, connection reset on preview |
+| `/v1/[fn]`, `/v1/ping`            | new folder   | 520 / 500                                      |
+| `/stats`, `/batch`, `/developers` | new, at root | 200                                            |
+
+Ruled out: route shape (literal handler and factory both fail), imports
+(self-contained file fails too), the manifest (`fresh.gen.ts` lists them
+correctly), Cloudflare (the preview host fails the same way), and a stale
+`_fresh` (rebuilt before deploy, no change).
+
+Next thing to try: deploy with `--ignore _fresh` so the platform builds its own
+snapshot instead of reusing the uploaded one, and compare. Until then the docs
+name the verified base URL (the Supabase functions host) and `qrbuddy.app/v1`
+stays staged but unpromised.
+
 ## 2. Deploy
 
 ```sh

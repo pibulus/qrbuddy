@@ -11,7 +11,10 @@ import {
 
 // Our own host, not the Supabase project URL: the /api proxy disappears the
 // vendor hostname, and a future custom domain won't require a resubmission.
-const API_BASE_URL = "https://qrbuddy.app/v1";
+// Verified working host. The branded qrbuddy.app/v1 proxy is staged in the
+// repo; switch this the moment it serves (see docs/DEPLOY-RUNBOOK.md).
+const API_BASE_URL =
+  "https://aqydpibnvlhcjcwosrti.supabase.co/functions/v1";
 
 export const App = () => {
   const [url, setUrl] = useState("https://");

@@ -53,6 +53,7 @@ import * as $r from "./routes/r.tsx";
 import * as $stats from "./routes/stats.tsx";
 import * as $terms from "./routes/terms.tsx";
 import * as $v1_fn_ from "./routes/v1/[fn].ts";
+import * as $v1_ping from "./routes/v1/ping.ts";
 import * as $vcard from "./routes/vcard.tsx";
 import * as $vs_slug_ from "./routes/vs/[slug].tsx";
 import * as $weddings from "./routes/weddings.tsx";
@@ -135,6 +136,7 @@ const manifest = {
     "./routes/stats.tsx": $stats,
     "./routes/terms.tsx": $terms,
     "./routes/v1/[fn].ts": $v1_fn_,
+    "./routes/v1/ping.ts": $v1_ping,
     "./routes/vcard.tsx": $vcard,
     "./routes/vs/[slug].tsx": $vs_slug_,
     "./routes/weddings.tsx": $weddings,
