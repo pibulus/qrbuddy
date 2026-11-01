@@ -724,10 +724,10 @@ export default function CreateModal({
                 <ChoiceRow
                   icon="🔗"
                   iconBg="linear-gradient(135deg, #FEF3C7, #FDE68A)"
-                  title={isSpanish ? "Sitio web o Nota" : "Website or Note"}
+                  title={isSpanish ? "Web" : "Website"}
                   description={isSpanish
-                    ? "Link directo o nota de texto sin internet."
-                    : "Direct website link or offline text note."}
+                    ? "Un link o una nota de texto."
+                    : "A link or a plain text note."}
                   active={typeIntent === "qr" && !isBatchMode &&
                     !lockerActive && WEB_NOTE_TYPES.includes(selectedTemplate)}
                   badge={typeIntent === "qr" && !isBatchMode &&
@@ -748,10 +748,10 @@ export default function CreateModal({
                 <ChoiceRow
                   icon="📶"
                   iconBg="linear-gradient(135deg, #FFEDD5, #FED7AA)"
-                  title={isSpanish ? "Red Wi-Fi" : "WiFi"}
+                  title="Wi-Fi"
                   description={isSpanish
-                    ? "Conéctate sin escribir la contraseña."
-                    : "Join network in one scan — no typing."}
+                    ? "Conéctate sin escribir la clave."
+                    : "Join a network in one scan."}
                   active={typeIntent === "qr" && !isBatchMode &&
                     !lockerActive && selectedTemplate === "wifi"}
                   badge={typeIntent === "qr" && !isBatchMode &&
@@ -766,10 +766,10 @@ export default function CreateModal({
                 <ChoiceRow
                   icon="🪪"
                   iconBg="linear-gradient(135deg, #FCE7F3, #FBCFE8)"
-                  title={isSpanish ? "Contacto y Redes" : "Contact & Socials"}
+                  title={isSpanish ? "Contacto" : "Contact Card"}
                   description={isSpanish
-                    ? "Tarjeta vCard, links en bio, llamada o SMS."
-                    : "vCard, social bio links, call, or text."}
+                    ? "vCard, teléfono, correo y redes."
+                    : "vCard, phone, email, socials."}
                   active={typeIntent === "qr" && !isBatchMode &&
                     !lockerActive &&
                     CONTACT_HUB_TYPES.includes(selectedTemplate)}
@@ -792,12 +792,10 @@ export default function CreateModal({
                   icon="📦"
                   iconBg="linear-gradient(135deg, #E0F2FE, #BAE6FD)"
                   shimmer
-                  title={isSpanish
-                    ? "Archivos, Audio o Fotos"
-                    : "Drop Files, Audio or Photos"}
+                  title={isSpanish ? "Archivo o Audio" : "File or Audio"}
                   description={isSpanish
-                    ? "Página de descarga, galería o mixtape."
-                    : "Download page, photo gallery, or mixtape."}
+                    ? "Un archivo, PDF o canción."
+                    : "Share a file, PDF, or track."}
                   active={typeIntent === "share-file"}
                   onClick={handleShareFileSelect}
                 />
@@ -807,10 +805,10 @@ export default function CreateModal({
                   icon="📥"
                   iconBg="linear-gradient(135deg, #D1FAE5, #A7F3D0)"
                   shimmer
-                  title={isSpanish ? "Buzón de Archivos" : "File Locker"}
+                  title={isSpanish ? "Buzón de Fotos" : "Photo Drop"}
                   description={isSpanish
-                    ? "Buzón donde la gente te sube archivos."
-                    : "Shared locker people drop files into."}
+                    ? "Carpeta donde la gente sube fotos."
+                    : "Shared folder people upload into."}
                   active={typeIntent === "collect-files" || lockerActive}
                   badge={lockerActive
                     ? (isSpanish ? "Activo" : "Live")
@@ -1141,7 +1139,7 @@ export default function CreateModal({
     return (
       <div class="space-y-4">
         <section class="space-y-2">
-          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500 whitespace-nowrap">
+          <h3 class="text-sm font-black text-[#1e1714] whitespace-nowrap">
             {isSpanish ? "Comportamiento del link" : "Link behavior"}
           </h3>
 
@@ -1207,7 +1205,7 @@ export default function CreateModal({
         </section>
 
         <section class="space-y-2.5 animate-slide-down">
-          <h3 class="text-xs font-black uppercase tracking-wide text-neutral-500 whitespace-nowrap">
+          <h3 class="text-sm font-black text-[#1e1714] whitespace-nowrap">
             {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
           </h3>
 
@@ -1405,7 +1403,7 @@ export default function CreateModal({
         aria-labelledby="create-modal-title"
         tabindex={-1}
         style={themeStyleVars}
-        class={`relative w-full max-w-lg bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover max-h-[92dvh] flex flex-col overflow-hidden ${
+        class={`relative w-full max-w-lg h-[min(92dvh,760px)] sm:h-[min(600px,88dvh)] bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover flex flex-col overflow-hidden focus:outline-none focus-visible:outline-none ${
           shell.closing
             ? "charm-modal--closing animate-modal-exit"
             : "animate-slide-up sm:animate-pop-in"
@@ -1426,6 +1424,29 @@ export default function CreateModal({
           </div>
 
           <div class="flex items-center gap-2 shrink-0">
+            {onShowHistory && !hasCompletion && (
+              <button
+                type="button"
+                onClick={onShowHistory}
+                class="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] active:translate-y-[2px] active:shadow-none"
+                aria-label={isSpanish ? "Abrir historial" : "Open QR history"}
+                title={isSpanish ? "Historial" : "History"}
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 3a9 9 0 1 1-6.36 2.64M3 3v5h5M12 7v5l3 2" />
+                </svg>
+              </button>
+            )}
             {onInspect && !hasCompletion && (
               <button
                 type="button"
@@ -1473,7 +1494,7 @@ export default function CreateModal({
 
         {!hasCompletion && (
           <div class="px-4 sm:px-6 pt-1.5 pb-2 bg-[#fbf1e4] border-b-2 border-[#1e1714]/10 z-10">
-            <div class="grid grid-cols-3 gap-1 rounded-full bg-[#fffef7] p-1 border-2 border-[#1e1714] shadow-[2px_2px_0_#1e1714]">
+            <div class="grid grid-cols-3 gap-1 rounded-full bg-[#efe9dc] p-1 border-2 border-[#1e1714]">
               {tabs.map((tab) => (
                 <button
                   type="button"
@@ -1489,10 +1510,10 @@ export default function CreateModal({
                   }}
                   aria-selected={activeTab === tab.id}
                   role="tab"
-                  class={`min-h-[38px] px-1 rounded-full text-xs min-[380px]:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center min-w-0 ${
+                  class={`min-h-[40px] px-1 rounded-full text-xs min-[380px]:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center min-w-0 border-2 ${
                     activeTab === tab.id
-                      ? "bg-[#1e1714] text-[#fffef7]"
-                      : "text-neutral-600 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
+                      ? "bg-[#fffef7] text-[#1e1714] border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                      : "text-[#1e1714]/70 border-transparent hover:bg-[#fffef7]/60"
                   }`}
                 >
                   <span class="truncate">{tab.label}</span>
@@ -1514,7 +1535,7 @@ export default function CreateModal({
         )}
         <div
           ref={bodyScrollRef}
-          class="flex-1 overflow-y-auto scrollbar-none p-4 sm:px-6 sm:py-4 pb-5 sm:max-h-[min(520px,64dvh)]"
+          class="flex-1 min-h-0 overflow-y-auto scrollbar-none p-4 sm:px-6 sm:py-4 pb-5"
         >
           {hasCompletion ? renderCompletionState() : (
             <>
@@ -1541,17 +1562,8 @@ export default function CreateModal({
             typeIntent === "share-file" ||
             typeIntent === "collect-files")
         ) && (
-          <div class="flex items-center gap-3 p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
-            {onShowHistory && !hasCompletion && (
-              <button
-                type="button"
-                onClick={onShowHistory}
-                class="shrink-0 min-h-[44px] px-1 text-xs font-bold text-[#1e1714] underline underline-offset-2"
-                aria-label={isSpanish ? "Abrir historial" : "Open QR history"}
-              >
-                {isSpanish ? "Historial" : "History"}
-              </button>
-            )}
+          <div class="p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
+            {false && onShowHistory}
             {(() => {
               const validSeqCount = sequentialUrls.filter((u) =>
                 looksLikeUrl(u)

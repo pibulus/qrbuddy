@@ -14,8 +14,6 @@ interface StyleSelectorProps {
 }
 
 export const STYLE_DISPLAY = {
-  // 6 High-Contrast Archetypes — swatch colors mirror the actual dot gradients
-  // (or dot+bg pair for solid high-contrast styles) in utils/qr-styles.ts.
   sunset: {
     name: "Sunset",
     nameEs: "Atardecer",
@@ -78,49 +76,44 @@ const ARCHETYPE_KEYS = Object.keys(
   STYLE_DISPLAY,
 ) as (keyof typeof STYLE_DISPLAY)[];
 
+/** The vibe pill opens a gallery: six looks in one tap, not a blind cycle. */
 export default function StyleSelector(
   { style, customStyle, isHidden, lang }: StyleSelectorProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const isCreatorOpen = useSignal(false);
-  // Phones hide the vibe name to keep the rail slim; after a cycle the pill
-  // widens to show it for a beat, right where the tap happened. No toast —
-  // the old one landed on the footer dock.
-  const revealName = useSignal(false);
-  const revealTimer = useRef<number | null>(null);
+  const isOpen = useSignal(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  // The Create modal's Design tab can summon the gradient builder from here
-  // so brand-minded users never dead-end on a "colors live elsewhere" note.
   useEffect(() => {
     const openCreator = () => {
       isCreatorOpen.value = true;
     };
     globalThis.addEventListener("open-gradient-creator", openCreator);
-    return () => {
+    return () =>
       globalThis.removeEventListener("open-gradient-creator", openCreator);
-      if (revealTimer.current !== null) clearTimeout(revealTimer.current);
-    };
   }, []);
 
-  if (isHidden?.value) return null;
+  useEffect(() => {
+    if (!isOpen.value) return;
+    const dismiss = (event: Event) => {
+      if (event instanceof KeyboardEvent) {
+        if (event.key === "Escape") isOpen.value = false;
+        return;
+      }
+      if (!rootRef.current?.contains(event.target as Node)) {
+        isOpen.value = false;
+      }
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("keydown", dismiss);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss);
+      document.removeEventListener("keydown", dismiss);
+    };
+  }, [isOpen.value]);
 
-  const handleCycleVibe = () => {
-    const currentIndex = ARCHETYPE_KEYS.indexOf(
-      style.value as keyof typeof STYLE_DISPLAY,
-    );
-    const nextIndex = (currentIndex + 1) % ARCHETYPE_KEYS.length;
-    const nextKey = ARCHETYPE_KEYS[nextIndex];
-    style.value = nextKey;
-    if (customStyle) customStyle.value = null;
-    sounds.gradientShimmer(nextIndex);
-    haptics.light();
-    revealName.value = true;
-    if (revealTimer.current !== null) clearTimeout(revealTimer.current);
-    revealTimer.current = setTimeout(() => {
-      revealName.value = false;
-      revealTimer.current = null;
-    }, 1400) as unknown as number;
-  };
+  if (isHidden?.value) return null;
 
   const handleCustomGradient = (gradient: QRStyle) => {
     if (customStyle) {
@@ -136,11 +129,7 @@ export default function StyleSelector(
     : ["#9370DB", "#FF69B4"];
 
   const currentStyleInfo = style.value === "custom"
-    ? {
-      name: "Custom",
-      nameEs: "Propio",
-      colors: customStops,
-    }
+    ? { name: "Custom", nameEs: "Propio", colors: customStops }
     : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY] ??
       LEGACY_STYLE_DISPLAY[style.value] ??
       STYLE_DISPLAY.sunset;
@@ -149,7 +138,7 @@ export default function StyleSelector(
     ? (currentStyleInfo.nameEs ?? currentStyleInfo.name)
     : currentStyleInfo.name;
 
-  const getGradientPreview = (colors: string[], key?: string) => {
+  const gradientFor = (colors: string[], key?: string) => {
     if ((key === "terminal" || key === "brutalist") && colors.length === 2) {
       return `linear-gradient(135deg, ${colors[0]} 0%, ${colors[0]} 52%, ${
         colors[1]
@@ -158,46 +147,94 @@ export default function StyleSelector(
     return `linear-gradient(135deg, ${colors.join(", ")})`;
   };
 
+  const pick = (key: keyof typeof STYLE_DISPLAY) => {
+    style.value = key;
+    if (customStyle) customStyle.value = null;
+    sounds.gradientShimmer(ARCHETYPE_KEYS.indexOf(key));
+    haptics.light();
+    isOpen.value = false;
+  };
+
   return (
-    <>
-      {
-        /* Vibe cycler — the whole top rail. Custom colours live in the
-          Design tab → gradient builder, never in a random roll. */
-      }
+    <div ref={rootRef} class="relative">
       <button
         type="button"
-        onClick={handleCycleVibe}
+        onClick={() => {
+          isOpen.value = !isOpen.value;
+          haptics.light();
+        }}
+        aria-expanded={isOpen.value}
+        aria-haspopup="menu"
         aria-label={isSpanish
-          ? `Cambiar vibra (actual: ${currentStyleName})`
-          : `Cycle QR vibe (current: ${currentStyleName})`}
-        title={isSpanish
-          ? "Clic para cambiar de vibra"
-          : "Click to cycle through the 6 vibes"}
-        class="inline-flex items-center gap-1.5 px-3 min-h-[36px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] hover:-translate-y-px hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
+          ? `Elegir tema (actual: ${currentStyleName})`
+          : `Choose theme (current: ${currentStyleName})`}
+        class="inline-flex items-center gap-2 px-3 min-h-[38px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] hover:-translate-y-px hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
       >
-        <div
+        <span
           class="w-4 h-4 rounded-full border-2 border-[#1e1714] shrink-0"
           style={{
-            background: getGradientPreview(
-              currentStyleInfo.colors,
-              style.value,
-            ),
+            background: gradientFor(currentStyleInfo.colors, style.value),
           }}
         />
-        <span
-          class={`${
-            revealName.value ? "inline animate-pop-in" : "hidden"
-          } sm:inline whitespace-nowrap`}
-        >
+        <span class="hidden sm:inline whitespace-nowrap">
           {currentStyleName}
         </span>
+        <span aria-hidden="true" class="text-[10px] opacity-60">▾</span>
       </button>
 
-      {/* Custom Gradient Creator Modal (summoned from Design tab) */}
+      {isOpen.value && (
+        <div
+          role="menu"
+          aria-label={isSpanish ? "Temas" : "Themes"}
+          class="absolute right-0 top-[calc(100%+8px)] w-[252px] p-2 rounded-2xl border-2 border-[#1e1714] bg-[#fbf1e4] shadow-[0_6px_0_#1e1714] z-[60] animate-pop-in"
+        >
+          <div class="grid grid-cols-3 gap-1.5">
+            {ARCHETYPE_KEYS.map((key) => {
+              const info = STYLE_DISPLAY[key as keyof typeof STYLE_DISPLAY];
+              const active = style.value === key;
+              const name = isSpanish ? (info.nameEs ?? info.name) : info.name;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  role="menuitem"
+                  aria-pressed={active}
+                  onClick={() => pick(key)}
+                  class={`min-h-[64px] rounded-xl border-2 px-1 py-1.5 flex flex-col items-center gap-1 text-[10px] font-black ${
+                    active
+                      ? "border-[#1e1714] bg-[#fffef7] shadow-[0_2px_0_#1e1714]"
+                      : "border-[#1e1714]/20 bg-[#fffef7]/60 hover:border-[#1e1714]"
+                  }`}
+                >
+                  <span
+                    class="w-6 h-6 rounded-full border-2 border-[#1e1714]"
+                    style={{ background: gradientFor(info.colors, key) }}
+                  />
+                  <span class="truncate w-full text-center">{name}</span>
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                isOpen.value = false;
+                isCreatorOpen.value = true;
+                sounds.click();
+              }}
+              class="col-span-3 min-h-[44px] rounded-xl border-[1.5px] border-[#1e1714]/25 bg-[#fffef7]/60 px-2 flex items-center justify-center gap-1.5 text-[11px] font-black hover:border-[#1e1714]"
+            >
+              <span class="text-base leading-none">+</span>
+              {isSpanish ? "Colores propios" : "Custom colours"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <GradientCreator
         isOpen={isCreatorOpen}
         onCustomGradient={handleCustomGradient}
       />
-    </>
+    </div>
   );
 }

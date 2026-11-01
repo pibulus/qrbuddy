@@ -54,18 +54,6 @@ export default function DesignTab(
   const paletteName = es ? (palette.nameEs ?? palette.name) : palette.name;
   const accent = getQRThemeTokens(qrStyle.value, customStyle?.value).accent;
 
-  const labelPresets = [
-    es ? "ESCANÉAME" : "SCAN ME",
-    es ? "MENÚ" : "MENU",
-    "WI-FI",
-    "GUEST PASS",
-  ];
-  const labelChips = [
-    "Scan Me",
-    es ? "Menú" : "Menu",
-    "Wi-Fi",
-    "Guest Pass",
-  ];
   const caption = frameConfig?.value?.enabled
     ? frameConfig.value.caption.trim()
     : "";
@@ -114,7 +102,7 @@ export default function DesignTab(
     <div class="space-y-5 text-[#1e1714]">
       <section class="space-y-2.5" aria-label={es ? "Paleta" : "Palette"}>
         <div class="flex items-center justify-between gap-2">
-          <h3 class="text-xs font-black uppercase tracking-wide truncate">
+          <h3 class="text-sm font-black truncate">
             {es ? "Paleta" : "Palette"}{" "}
             <span class="opacity-50">· {paletteName}</span>
           </h3>
@@ -160,7 +148,7 @@ export default function DesignTab(
         class="space-y-2.5"
         aria-label={es ? "Marca central" : "Center mark"}
       >
-        <h3 class="text-xs font-black uppercase tracking-wide">
+        <h3 class="text-sm font-black">
           {es ? "Marca central" : "Center mark"}
         </h3>
         <div class="grid grid-cols-5 gap-2">
@@ -207,7 +195,7 @@ export default function DesignTab(
                 : "border-[1.5px] border-[#1e1714]/[0.28] focus-within:border-2 focus-within:border-[#1e1714]"
             }`}
           >
-            <span class="pl-2.5 text-[10px] font-black uppercase opacity-50">
+            <span class="pl-2.5 text-[10px] font-black opacity-50">
               Aa
             </span>
             <input
@@ -217,7 +205,7 @@ export default function DesignTab(
               placeholder="VIP"
               aria-label={es
                 ? "Texto de la marca, hasta 3 caracteres"
-                : "Badge text, up to 3 characters"}
+                : "Monogram, up to 3 characters"}
               class="min-w-0 flex-1 bg-transparent px-1 text-sm font-black uppercase focus:outline-none"
               onInput={(e) => {
                 const value = e.currentTarget.value.replace(
@@ -257,7 +245,7 @@ export default function DesignTab(
           class="space-y-2.5"
           aria-label={es ? "Etiqueta de la tarjeta" : "Card label"}
         >
-          <h3 class="text-xs font-black uppercase tracking-wide">
+          <h3 class="text-sm font-black">
             {es ? "Etiqueta de la tarjeta" : "Card label"}
           </h3>
           <div
@@ -272,10 +260,10 @@ export default function DesignTab(
               maxLength={24}
               value={caption}
               placeholder={es
-                ? "Etiqueta (ej. ESCANÉAME)"
-                : "Add a label (e.g. SCAN ME)"}
+                ? "Etiqueta opcional, ej. Escanéame"
+                : "Optional label, e.g. Scan me"}
               aria-label={es ? "Etiqueta de la tarjeta" : "Card label"}
-              class="min-w-0 flex-1 bg-transparent px-3 text-sm font-black uppercase tracking-wide focus:outline-none"
+              class="min-w-0 flex-1 bg-transparent px-3 text-sm font-black focus:outline-none"
               onInput={(e) => writeCaption(e.currentTarget.value)}
             />
             <button
@@ -301,24 +289,6 @@ export default function DesignTab(
                 ✕
               </button>
             )}
-          </div>
-          <div class="grid grid-cols-4 gap-2">
-            {labelChips.map((label, i) => {
-              const active = caption === labelPresets[i];
-              return (
-                <button
-                  type="button"
-                  class={`${KEY} ${pillState(active)}`}
-                  aria-pressed={active}
-                  onClick={() => {
-                    writeCaption(active ? "" : labelPresets[i]);
-                    tap();
-                  }}
-                >
-                  {label}
-                </button>
-              );
-            })}
           </div>
         </section>
       )}

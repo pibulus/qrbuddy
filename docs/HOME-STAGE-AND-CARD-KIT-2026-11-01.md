@@ -227,3 +227,22 @@ Verified: 402px of 402px body (no scroll, no clipped controls, no truncated
 text, EN/ES phone+desktop), banner seam 0px with a 2px divider, accent/ink
 colours asserted from computed styles, and a 26-case decode sweep plus both
 exports.
+
+## 10. Weight back, one modal (seventh pass)
+
+The stage had gone airy and the sheet had grown form bloat. Restored: the QR
+quiet zone is 2 modules (still 26/26 decode), Link and Design are 46px on a
+1fr/1.15fr split, the theme pill is a six-swatch gallery again (trigger shows
+only the swatch on phones), and Static/Editable stays on the stage even when the
+input is empty.
+
+CreateModal is now one size across tabs (`h-[min(92dvh,760px)]`, `600px`
+desktop): header + tab strip + flex body + footer. Tabs are cream keycaps in a
+warm-sand well. The footer is a single full-width CTA; History moved to a header
+icon. Content titles are short and wrap (Website · Wi-Fi · Contact Card · File
+or Audio · Photo Drop · Bulk ZIP), with no arrow column and no ellipsis.
+Behaviour's intro page is two fields — Headline and Button text — with no
+counters, quick starters, Edit/Preview toggle, or second accent picker. The
+Design label bar lost its four preset chips; headers and placeholders are
+sentence case. Uses is five plain use-cases, and the /for/* stage lost its demo
+pill.

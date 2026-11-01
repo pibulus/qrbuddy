@@ -39,7 +39,7 @@ export default function MultiLinkSettings({
   return (
     <div class={shellClass}>
       <div class="flex items-center justify-between gap-2">
-        <h4 class="font-black text-xs uppercase tracking-wider text-[#1e1714] whitespace-nowrap">
+        <h4 class="font-black text-sm text-[#1e1714] whitespace-nowrap">
           {isSpanish ? "Modo" : "Rotation mode"}
         </h4>
         <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5 shrink-0">
@@ -87,7 +87,7 @@ export default function MultiLinkSettings({
 
       {randomSequence && setDailySpins && (
         <div class="flex items-center justify-between gap-2 animate-slide-down">
-          <span class="text-xs font-black uppercase tracking-wider text-[#1e1714] whitespace-nowrap">
+          <span class="text-xs font-black text-[#1e1714] whitespace-nowrap">
             {isSpanish ? "Giros / teléfono" : "Daily spins"}
           </span>
 

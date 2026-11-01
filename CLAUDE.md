@@ -342,16 +342,15 @@ adding surfaces:
   tag all wear saturated `--qr-theme-accent` with `#fffef7` text. Structural
   surfaces stay `#fffef7` + `#1e1714` so the pigment has a stage. Never a
   `--qr-theme-tint` wash as a CTA fill.
-- **Home action row**: two balanced cream keycaps, `[Link ▾]` and `Design`,
-  `grid grid-cols-2 gap-2.5`, 40px tall, `rounded-xl`, 2px sepia border/lip. No
-  ink-filled hero. Inspect lives in the Create sheet header and History in its
-  footer, opening their existing dialogs after closing the sheet. Input → mode
-  switch gap is 12px; mode switch → tools is 10px. Glyphs are inline monochrome
-  SVGs (`StageGlyph`), never emoji. Business users and kids read the same
-  labels; no mystery pill, no caption, no parenthetical. The sheet's own header
-  names the open tab (`SHEET_HEADINGS`: "What the QR holds." / "How the QR
-  behaves." / "How the QR looks."). Static/Editable stays in-flow between input
-  and row.
+- **Home action row**: two chunky cream keycaps, `[Link ▾]` and `Design`,
+  `grid-cols-[1fr_1.15fr] gap-2.5`, 46px tall, `rounded-2xl`, 2px sepia
+  border/lip. No ink-filled hero. Inspect and History live as header icons in
+  the Create sheet, opening their dialogs after closing it. Input → mode switch
+  gap is 12px; mode switch → tools is 10px. Glyphs are inline monochrome SVGs
+  (`StageGlyph`), never emoji. Business users and kids read the same labels; no
+  mystery pill, no caption, no parenthetical. The sheet's own header names the
+  open tab (`SHEET_HEADINGS`: "What the QR holds." / "How the QR behaves." /
+  "How the QR looks."). Static/Editable stays in-flow between input and row.
 - **Design tab** (`components/create-modal/DesignTab.tsx`): three levers only —
   palette, centre mark, card label — under a 120–136px live preview that sits
   between the tab strip and the controls. Palette is seven evenly spread cells:
@@ -385,13 +384,10 @@ adding surfaces:
   sepia rule. Editable mode is shown on the artifact: a top-right `editable` tag
   in saturated accent with a pulsing near-white dot. Download toasts carry no
   emoji.
-- **Top rail**: just the vibe-cycler pill
-  (`min-h-[36px] rounded-full border-2 text-xs font-black`, 2px lip, keycap
-  press). On phones the name is hidden; after a cycle the pill widens to show it
-  for 1.4s — no toast (the old `🎨 Ocean` toast landed on the footer dock). No
-  language toggle — `/es` is reached via hreflang/search, not a switch. No
-  random-colour dice (retired 2026-11-01: it ate rail space and rolled ugly);
-  custom colours live only in Design tab → gradient builder.
+- **Top rail**: the theme pill opens a gallery — six swatches with names plus a
+  full-width Custom colours row, never a blind cycle. On phones the trigger is
+  swatch + ▾ only so it never collides with the wordmark. No language toggle —
+  `/es` is reached via hreflang/search. No random-colour dice.
 - **Voice**: QRBuddy is the entity. Never "we"/"us" in UI copy.
 - **Palette presets** (`utils/qr-styles.ts` + `STYLE_DISPLAY`): one family —
   pastel-punk, two-tone, the same 135° diagonal (`DIAGONAL` rad). Scannability

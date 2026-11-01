@@ -405,9 +405,6 @@ export default function QRCanvas(
     try {
       await downloadSvg();
       haptics.success();
-      addToast(
-        isSpanish ? "Descarga SVG iniciada" : "SVG download started",
-      );
       setShowSuccessFlash(true);
       setTimeout(() => setShowSuccessFlash(false), 600);
     } catch (err) {
@@ -469,9 +466,6 @@ export default function QRCanvas(
     try {
       await downloadPng();
       haptics.success();
-      addToast(
-        isSpanish ? "Descarga PNG iniciada" : "PNG download started",
-      );
       setShowSuccessFlash(true);
       setTimeout(() => setShowSuccessFlash(false), 600);
     } catch (err) {
@@ -574,9 +568,6 @@ export default function QRCanvas(
     if (triggerDownload.value && qrCodeRef.current) {
       void downloadPng().then(() => {
         haptics.success();
-        addToast(
-          isSpanish ? "Descarga PNG iniciada" : "PNG download started",
-        );
       }).catch((err) => {
         console.error("Failed to start PNG download:", err);
         haptics.error();
@@ -826,13 +817,27 @@ export default function QRCanvas(
 
       {/* Editable mode tag — the artifact itself shows the mode changed */}
       {isDynamic?.value && !isDestructible?.value && (
-        <div class="absolute -top-3 -right-3 inline-flex items-center gap-1.5 bg-[var(--qr-theme-accent,#ec4899)] text-[#fffef7] px-3 py-1 rounded-full border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] text-xs font-black animate-pop-in z-10 pointer-events-none select-none">
+        <button
+          type="button"
+          onClick={(e: MouseEvent) => {
+            e.stopPropagation();
+            globalThis.dispatchEvent(new CustomEvent("qrb-open-behavior"));
+            haptics.light();
+          }}
+          class="absolute -top-3 -right-3 inline-flex items-center gap-1.5 bg-[var(--qr-theme-accent,#ec4899)] text-[#fffef7] px-3 py-1 rounded-full border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] text-xs font-black animate-pop-in z-10 transition-transform hover:-translate-y-px active:translate-y-[1px] cursor-pointer"
+          aria-label={isSpanish
+            ? "Editable: abrir ajustes de comportamiento"
+            : "Editable: open behavior settings"}
+          title={isSpanish
+            ? "Cambiar link editable"
+            : "Change the editable link"}
+        >
           <span
             aria-hidden="true"
             class="w-2 h-2 rounded-full bg-[#fffef7] animate-pulse"
           />
           editable
-        </div>
+        </button>
       )}
 
       {/* Scannability warning — only appears when a real decoder failed */}

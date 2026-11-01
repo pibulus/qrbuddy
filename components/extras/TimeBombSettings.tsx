@@ -27,7 +27,7 @@ export default function TimeBombSettings({
     <div class={shellClass}>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="space-y-1">
-          <label class="block text-xs font-black text-[#1e1714] uppercase tracking-wide whitespace-nowrap">
+          <label class="block text-xs font-black text-[#1e1714] whitespace-nowrap">
             {isSpanish ? "Límite de escaneos" : "Scan limit"}
           </label>
           <select
@@ -60,7 +60,7 @@ export default function TimeBombSettings({
         </div>
 
         <div class="space-y-1">
-          <label class="block text-xs font-black text-[#1e1714] uppercase tracking-wide whitespace-nowrap">
+          <label class="block text-xs font-black text-[#1e1714] whitespace-nowrap">
             {isSpanish ? "Vencimiento" : "Expiry date"}
           </label>
           <input

@@ -136,7 +136,7 @@ export default function LockerSettings({
             </div>
 
             <div class="space-y-2">
-              <p class="text-xs font-bold uppercase tracking-wide text-gray-600">
+              <p class="text-xs font-bold text-neutral-700">
                 {isSpanish ? "Modo" : "Mode"}
               </p>
               <div class="grid grid-cols-3 gap-2">
@@ -195,7 +195,7 @@ export default function LockerSettings({
             <div class="space-y-3">
               <div class="flex items-center justify-between gap-4">
                 <div>
-                  <p class="text-xs font-bold uppercase tracking-wide text-gray-600">
+                  <p class="text-xs font-bold text-neutral-700">
                     {isSpanish
                       ? "¿Pedir PIN de 4 dígitos?"
                       : "Require 4-digit PIN?"}

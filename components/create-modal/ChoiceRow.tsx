@@ -36,7 +36,7 @@ export default function ChoiceRow(
     iconBg,
     shimmer = false,
     rich = false,
-    chevron = true,
+    chevron = false,
     accordion = false,
     badge,
     trailing,
@@ -112,11 +112,11 @@ export default function ChoiceRow(
             {icon}
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block font-black text-sm text-[#1e1714] leading-tight whitespace-nowrap truncate">
+            <span class="block font-black text-sm text-[#1e1714] leading-tight">
               {title}
             </span>
             {description && (
-              <span class="block text-xs text-neutral-700 leading-snug mt-0.5 truncate">
+              <span class="block text-xs text-neutral-700 leading-snug mt-0.5">
                 {description}
               </span>
             )}
@@ -171,7 +171,7 @@ export default function ChoiceRow(
         {icon}
       </span>
       <span class="min-w-0 flex-1">
-        <span class="block font-black text-[#1e1714] leading-tight whitespace-nowrap truncate">
+        <span class="block font-black text-[#1e1714] leading-tight">
           {title}
         </span>
         {description && (

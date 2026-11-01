@@ -69,7 +69,7 @@ export const STAMPS = [
 ] as const;
 
 export function stampSvg(path: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="-2 -2 28 28"><path d="${path}" fill="none" stroke="#1e1714" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="-5 -5 34 34"><path d="${path}" fill="none" stroke="#1e1714" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 export function stampUrl(path: string): string {

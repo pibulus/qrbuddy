@@ -689,20 +689,6 @@ export default function VerticalStudio({
                           </ErrorBoundary>
                         </div>
                       </div>
-
-                      {/* Where Does This Sample QR Lead? + Quick Flip Callout */}
-                      <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
-                        <a
-                          href={demoPreviewHref}
-                          class="inline-flex items-center gap-1.5 px-3 min-h-[32px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f8de7e] text-[11px] sm:text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] transition-all whitespace-nowrap"
-                        >
-                          <span>
-                            {isSpanish
-                              ? "↗ Ver página de ejemplo a donde lleva este QR"
-                              : "↗ See the live example page this QR opens"}
-                          </span>
-                        </a>
-                      </div>
                     </div>
                   )
                   : (

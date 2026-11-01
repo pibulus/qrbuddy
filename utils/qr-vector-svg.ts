@@ -412,7 +412,7 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   qr.make();
 
   const moduleCount = qr.getModuleCount();
-  const quietZone = 4;
+  const quietZone = 2;
   const totalModules = moduleCount + quietZone * 2;
   const qrBoxSize = options.size ?? 1000;
   const cellSize = qrBoxSize / totalModules;

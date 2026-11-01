@@ -790,22 +790,32 @@ Deno.test("FooterDock & VerticalStudio - Uses menu label, popularity ordering, S
     'FooterDock ES menu trigger must say "Usos"',
   );
 
-  // Popularity ordering: Menus -> Wi-Fi -> vCard -> Weddings -> Music -> Lockers -> Inspect -> Print -> Compare -> GS1
+  // Five human use-cases only: Menus -> Wi-Fi -> vCard -> Weddings -> Drops.
   const menusIdx = footerSrc.indexOf('href: "/for/menus"');
   const wifiIdx = footerSrc.indexOf('href: "/for/wifi"');
   const vcardIdx = footerSrc.indexOf('href: "/for/vcard"');
   const weddingsIdx = footerSrc.indexOf('href: "/for/weddings"');
-  const musicIdx = footerSrc.indexOf('href: "/for/music"');
   const lockersIdx = footerSrc.indexOf('href: "/for/lockers"');
-  const gs1Idx = footerSrc.indexOf('href: "/for/gs1"');
   assert(
     menusIdx < wifiIdx &&
       wifiIdx < vcardIdx &&
       vcardIdx < weddingsIdx &&
-      weddingsIdx < musicIdx &&
-      musicIdx < lockersIdx &&
-      lockersIdx < gs1Idx,
+      weddingsIdx < lockersIdx,
     "FooterDock links must be ordered by real-world popularity and usability",
+  );
+  for (
+    const retired of ["/for/gs1", "/for/inspect", "/guide/printing", "/compare"]
+  ) {
+    assertEquals(
+      footerSrc.includes(retired),
+      false,
+      `Retired nerd link still in Uses: ${retired}`,
+    );
+  }
+  assertEquals(
+    /label: "[^"]*[\u{1F300}-\u{1FAFF}]/u.test(footerSrc),
+    false,
+    "Uses menu labels must not carry emoji garnish",
   );
 
   // QRCanvas SSR vector fallback is always rendered when !qrReady (not gated behind !url.value)

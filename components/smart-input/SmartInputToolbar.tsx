@@ -47,7 +47,7 @@ const LATCHED =
   "translate-y-[2px] shadow-none bg-[var(--qr-theme-tint,#fdf2f8)] hover:translate-y-[2px] hover:shadow-none";
 
 const TILE_BASE =
-  `${STAGE_PRESS} border-2 border-[#1e1714] rounded-xl shadow-[0_2px_0_#1e1714] h-[40px] flex items-center justify-center gap-1.5 font-black text-[13px] whitespace-nowrap`;
+  `${STAGE_PRESS} border-2 border-[#1e1714] rounded-2xl shadow-[0_2px_0_#1e1714] h-[46px] flex items-center justify-center gap-2 font-black text-sm whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2`;
 
 const TILE =
   `${TILE_BASE} bg-[#fffef7] text-[#1e1714] hover:bg-[var(--qr-theme-tint,#fdf2f8)]`;
@@ -152,13 +152,13 @@ export default function SmartInputToolbar({
   };
 
   return (
-    <div class="grid grid-cols-2 gap-2.5 w-full">
+    <div class="grid grid-cols-[1fr_1.15fr] gap-2.5 w-full">
       {/* What the QR holds — current type, opens Content (and Behavior) */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("type"))}
         aria-expanded={openPanel === "type" || openPanel === "options"}
-        class={`${TILE} ${latch(["type", "options"])} relative min-w-0 px-3`}
+        class={`${TILE} ${latch(["type", "options"])} relative min-w-0 px-4`}
         title={isSpanish
           ? "Cambiar el tipo de QR: enlace, Wi-Fi, contacto, archivo…"
           : "Change the QR type: link, Wi-Fi, contact card, file…"}
@@ -181,7 +181,7 @@ export default function SmartInputToolbar({
         type="button"
         onClick={press(() => onOpenCreate("design"))}
         aria-expanded={openPanel === "design"}
-        class={`${TILE} ${latch("design")} min-w-0 px-3`}
+        class={`${TILE} ${latch("design")} min-w-0 px-4`}
         title={isSpanish
           ? "Colores, logo, marco y forma de los módulos"
           : "Colours, logo, print frame and dot shapes"}

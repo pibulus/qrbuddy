@@ -157,7 +157,15 @@ export default function SmartInput(
     };
     globalThis.addEventListener("qrb-open-library", handleOpenLibrary);
     globalThis.addEventListener("qrb-open-inspector", handleOpenInspector);
+    const handleOpenBehavior = () => {
+      setShowHistory(false);
+      setShowReader(false);
+      setShowLibrary(false);
+      setCreateModalTab("options");
+      setIsCreateModalOpen(true);
+    };
     globalThis.addEventListener("qr-edit-label", handleEditLabel);
+    globalThis.addEventListener("qrb-open-behavior", handleOpenBehavior);
 
     const params = new URLSearchParams(globalThis.location?.search ?? "");
     let mutatedParams = false;
@@ -189,6 +197,7 @@ export default function SmartInput(
       globalThis.removeEventListener("qrb-open-library", handleOpenLibrary);
       globalThis.removeEventListener("qrb-open-inspector", handleOpenInspector);
       globalThis.removeEventListener("qr-edit-label", handleEditLabel);
+      globalThis.removeEventListener("qrb-open-behavior", handleOpenBehavior);
     };
   }, []);
 
@@ -1113,8 +1122,7 @@ export default function SmartInput(
         {/* In-flow Link Mode Bar (OwnQR 80% conversion pattern): Static vs Editable */}
         {!stagedFiles && !isUploading && !isBucket.value &&
           !isDestructible.value &&
-          !(lastShare && url.value === lastShare.url) &&
-          (looksLikeUrl(url.value) || Boolean(editUrl.value)) && (
+          !(lastShare && url.value === lastShare.url) && (
           <div class="mt-3 space-y-2 animate-slide-down">
             {
               /* A recessed track, not a card: the switch modifies the link,
