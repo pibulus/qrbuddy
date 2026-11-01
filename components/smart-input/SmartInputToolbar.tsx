@@ -48,8 +48,16 @@ export const STAGE_PRESS =
 const LATCHED =
   "translate-y-[2px] shadow-none bg-[var(--qr-theme-tint,#fdf2f8)] hover:translate-y-[2px] hover:shadow-none";
 
+const TILE_BASE =
+  `${STAGE_PRESS} border-2 border-[#1e1714] rounded-xl shadow-[0_2px_0_#1e1714] min-h-[38px] flex items-center justify-center gap-1.5 font-black text-[13px] whitespace-nowrap`;
+
 const TILE =
-  `${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[38px] flex items-center justify-center gap-1.5 font-black text-[#1e1714] text-[13px] whitespace-nowrap hover:bg-[var(--qr-theme-tint,#fdf2f8)]`;
+  `${TILE_BASE} bg-[#fffef7] text-[#1e1714] hover:bg-[var(--qr-theme-tint,#fdf2f8)]`;
+
+/** The hero keycap: ink fill, so the row has one obvious place to play. */
+const HERO = `${TILE_BASE} bg-[#1e1714] text-[#fffef7] hover:bg-[#3b2e25]`;
+const HERO_LATCHED =
+  "translate-y-[2px] shadow-none hover:translate-y-[2px] hover:shadow-none";
 
 export type StagePanel = ActiveTab | "inspect" | "history";
 
@@ -168,14 +176,14 @@ export default function SmartInputToolbar({
 
   return (
     <div class="flex gap-2 w-full">
-      {/* What the QR holds — current type, opens Content (and Behavior) */}
+      {/* What the QR holds — a type chip (pill), opens Content (and Behavior) */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("type"))}
         aria-expanded={openPanel === "type" || openPanel === "options"}
         class={`${TILE} ${
           latch(["type", "options"])
-        } relative shrink-0 min-w-0 max-w-[40%] px-3`}
+        } relative shrink-0 min-w-0 max-w-[40%] px-3 rounded-full`}
         title={isSpanish
           ? "Cambiar el tipo de QR: enlace, Wi-Fi, contacto, archivo…"
           : "Change the QR type: link, Wi-Fi, contact card, file…"}
@@ -193,14 +201,14 @@ export default function SmartInputToolbar({
         )}
       </button>
 
-      {/* How it looks — the 80% job, so it takes the room and a hint of tint */}
+      {/* How it looks — the 80% job: ink hero, takes the room */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("design"))}
         aria-expanded={openPanel === "design"}
-        class={`${TILE} ${
-          latch("design")
-        } flex-1 min-w-0 px-3 bg-[var(--qr-theme-tint,#fdf2f8)]/50 hover:bg-[var(--qr-theme-tint,#fdf2f8)]`}
+        class={`${HERO} ${
+          openPanel === "design" ? HERO_LATCHED : ""
+        } flex-1 min-w-0 px-3`}
         title={isSpanish
           ? "Colores, logo, marco y forma de los módulos"
           : "Colours, logo, print frame and dot shapes"}
@@ -214,14 +222,14 @@ export default function SmartInputToolbar({
         type="button"
         onClick={press(onShowReader)}
         aria-expanded={openPanel === "inspect"}
-        class={`${TILE} ${latch("inspect")} shrink-0 px-3`}
+        class={`${TILE} ${latch("inspect")} shrink-0 px-2.5 sm:px-3`}
         title={isSpanish
           ? "Ver a dónde lleva un QR antes de abrirlo: imagen, captura o cámara"
           : "See where a QR goes before opening it: image, screenshot or camera"}
         aria-label={isSpanish ? "Revisar un QR" : "Inspect a QR code"}
       >
         <StageGlyph kind="magnifier" />
-        <span class="hidden min-[360px]:inline">
+        <span class="hidden sm:inline">
           {isSpanish ? "Revisar" : "Inspect"}
         </span>
       </button>

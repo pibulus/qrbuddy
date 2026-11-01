@@ -167,12 +167,8 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
           <button
             type="button"
             onClick={openPricingModal}
-            class="inline-flex items-center justify-center gap-1.5 px-[clamp(8px,2.4vw,14px)] min-h-[44px] rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] text-[clamp(12px,3.4vw,14px)] font-black whitespace-nowrap transition-all hover:bg-[var(--qr-theme-cta-bg,#f9a8d4)] active:scale-95"
+            class="inline-flex items-center justify-center gap-1.5 px-[clamp(8px,2.4vw,14px)] min-h-[44px] rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-accent,#ec4899)] text-[#fffef7] text-[clamp(12px,3.4vw,14px)] font-black whitespace-nowrap transition-all hover:bg-[var(--qr-theme-accent-deep,#db2777)] active:scale-95"
           >
-            <span
-              aria-hidden="true"
-              class="w-2 h-2 rounded-full bg-[var(--qr-theme-accent,#ec4899)] border border-[#1e1714] shrink-0"
-            />
             {t.supporter}
           </button>
         </nav>

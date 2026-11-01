@@ -977,11 +977,23 @@ export default function SmartInput(
                 onClick={handleFileInputClick}
                 class="absolute right-3 top-1/2 transform -translate-y-1/2
                      w-11 h-11 flex items-center justify-center rounded-lg
-                     text-2xl hover:bg-gray-100 hover:scale-110 transition-all"
+                     text-[#1e1714] hover:bg-[#1e1714]/[0.06] hover:scale-110 transition-all"
                 aria-label={isSpanish ? "Subir archivo" : "Upload file"}
                 title={isSpanish ? "Subir archivo" : "Upload file"}
               >
-                📎
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 11.5 12.5 20a5.5 5.5 0 0 1-7.8-7.8l9-9a3.5 3.5 0 0 1 5 5l-9 9a1.5 1.5 0 0 1-2.1-2.1L16 6.7" />
+                </svg>
               </button>
             )}
 
@@ -1101,12 +1113,12 @@ export default function SmartInput(
                 const seg = (active: boolean) =>
                   `min-h-[30px] px-2 rounded-[9px] flex items-center justify-center gap-1.5 leading-none transition-[transform,box-shadow,background-color] duration-[70ms] border-2 ${
                     active
-                      ? "bg-[var(--qr-theme-tint,#fdf2f8)] border-[#1e1714] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
-                      : "border-transparent text-[#57524b] hover:text-[#1e1714] hover:bg-[#fffef7]/70 active:translate-y-px"
+                      ? "bg-[#fffef7] border-[#1e1714] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                      : "border-transparent text-[#1e1714] hover:bg-[#fffef7]/70 active:translate-y-px"
                   }`;
                 const title = "text-[13px] font-black whitespace-nowrap";
                 const badge =
-                  "text-[10px] font-black leading-none px-1.5 py-0.5 rounded-full bg-[#1e1714]/10 whitespace-nowrap";
+                  "text-[10px] font-black leading-none px-1.5 py-0.5 rounded-full bg-[var(--qr-theme-accent,#ec4899)] text-[#fffef7] border border-[#1e1714] whitespace-nowrap";
                 return (
                   <>
                     <button

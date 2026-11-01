@@ -213,7 +213,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
 
           {/* QR Code Display */}
           <div class="flex justify-center animate-slide-up">
-            <div class="w-full max-w-[300px] sm:max-w-[360px] transition-all duration-300">
+            <div class="w-full max-w-[348px] sm:max-w-[360px] transition-all duration-300">
               <ErrorBoundary>
                 <QRCanvas
                   url={url}
@@ -233,7 +233,7 @@ export default function SpanishHome({ data }: PageProps<SpanishHomeProps>) {
           </div>
 
           {/* Smart Input */}
-          <div class="mx-auto w-full max-w-[300px] sm:max-w-[360px]">
+          <div class="mx-auto w-full max-w-[348px] sm:max-w-[360px]">
             <SmartInput
               url={url}
               isDestructible={isDestructible}
