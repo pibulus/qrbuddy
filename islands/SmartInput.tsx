@@ -148,8 +148,16 @@ export default function SmartInput(
       setShowLibrary(false);
       setShowReader(true);
     };
+    const handleEditLabel = () => {
+      setShowHistory(false);
+      setShowReader(false);
+      setShowLibrary(false);
+      setCreateModalTab("design");
+      setIsCreateModalOpen(true);
+    };
     globalThis.addEventListener("qrb-open-library", handleOpenLibrary);
     globalThis.addEventListener("qrb-open-inspector", handleOpenInspector);
+    globalThis.addEventListener("qr-edit-label", handleEditLabel);
 
     const params = new URLSearchParams(globalThis.location?.search ?? "");
     let mutatedParams = false;
@@ -180,6 +188,7 @@ export default function SmartInput(
       g.__qrbInspectorListener = false;
       globalThis.removeEventListener("qrb-open-library", handleOpenLibrary);
       globalThis.removeEventListener("qrb-open-inspector", handleOpenInspector);
+      globalThis.removeEventListener("qr-edit-label", handleEditLabel);
     };
   }, []);
 

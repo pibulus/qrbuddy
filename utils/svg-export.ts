@@ -96,15 +96,17 @@ export function createFramedSvg(
   // Clean raw SVG: remove XML declaration if present
   const cleanSvg = rawQrSvg.replace(/<\?xml[^>]*\?>\s*/i, "").trim();
 
-  // Replace root <svg...> tag with nested <svg x="64" y="64" width="1000" height="1000" viewBox="0 0 1000 1000">
+  // Nest the QR inside the pass. A label is a banner on TOP of the same
+  // card, never a second box below it.
+  const qrY = hasCaption ? pad + capH : pad;
   const nestedSvg = cleanSvg.replace(
     /<svg\b[^>]*>/i,
-    `<svg x="${pad}" y="${pad}" width="${qrSize}" height="${qrSize}" viewBox="0 0 ${qrSize} ${qrSize}">`,
+    `<svg x="${pad}" y="${qrY}" width="${qrSize}" height="${qrSize}" viewBox="0 0 ${qrSize} ${qrSize}">`,
   );
 
   let captionElement = "";
   if (hasCaption) {
-    const textY = qrSize + pad + capH / 2 + 12;
+    const textY = pad + capH / 2 + 6;
     const baseFontSize = 92;
     const maxTextWidth = totalWidth - pad * 2; // 1000
     const measuredWidth = options?.measuredWidth ??

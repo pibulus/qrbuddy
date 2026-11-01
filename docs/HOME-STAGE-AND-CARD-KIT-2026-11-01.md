@@ -182,13 +182,28 @@ deno fmt && deno lint && deno task check && deno task test:unit
 
 `tests/qr_design_test.ts` covers alignment geometry (including the version-32
 exception), cutout safety, forced H, remote-image refusal, mask differences,
-palette/pattern independence through a save, and the global paper/gold tokens.
-Scannability was checked outside the repo with a jsQR sweep over six palettes ×
-four patterns × URL/Wi-Fi × stamped/unstamped at 250px and 336px, plus the
-downloaded framed PNG and SVG: 98/98. Keep that sweep when changing geometry — a
-passing card render proves nothing about a scanner.
+geometry/palette independence through a save, the banner card-label layout, the
+bold centre ring, and the global paper/gold tokens. Scannability was checked
+outside the repo with a jsQR sweep over six palettes × URL/Wi-Fi ×
+stamped/unstamped × three masks at 250px and 336px, plus the downloaded framed
+PNG and SVG: 50/50. Keep that sweep when changing geometry — a passing card
+render proves nothing about a scanner.
 
 Visual check used Playwright (from `daysay/node_modules`) against
 `deno task start` at 390×844 and 1280×860, EN and `/es`: intro, about, passport
 pitch/redeem, home empty, home with a URL typed, Content and Design tabs, and
 the Ocean palette to confirm the tint follows.
+
+## 8. Three levers, one pass (fifth pass)
+
+The pattern picker was bloat: four boxes for geometry nobody could see, and it
+cost the vertical room that centre mark and label needed. Deleted. The sheet is
+now palette swatches (active name in the header, no truncation), centre mark
+(None, five stamps, upload, 3-character monogram, three masks), and card label
+(None, Scan Me, Menu, Wi-Fi, Guest Pass, plus a custom field) under a 120–136px
+preview — everything above the Done bar at 390×844, no clipped rows. The label
+moved to a banner on TOP of the same pass (banner `border-b-0`, matrix
+`border-t-0`, balanced padding, one outline) and is tappable to reopen Design;
+exports use the same banner geometry. The centre ring went from a 4.5px hairline
+to an 8px ring at 1000px with a tighter moat, and stamps are drawn at 3.2
+stroke. The `Logo added` toast is gone — the mark is visible on the QR.

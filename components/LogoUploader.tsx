@@ -8,10 +8,12 @@ interface LogoUploaderProps {
   logoUrl: Signal<string>;
   lang?: Locale;
   compact?: boolean;
+  /** Fires after a mark is set, so callers can clear their own monogram text. */
+  onPicked?: () => void;
 }
 
 export default function LogoUploader(
-  { logoUrl, lang, compact = false }: LogoUploaderProps,
+  { logoUrl, lang, compact = false, onPicked }: LogoUploaderProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const [isUploading, setIsUploading] = useState(false);
@@ -98,11 +100,8 @@ export default function LogoUploader(
           ctx.restore();
           logoUrl.value = canvas.toDataURL("image/png");
           haptics.success();
-          addToast(
-            isSpanish ? "Logo agregado" : "Logo added",
-            2000,
-          );
           setIsUploading(false);
+          onPicked?.();
         };
         img.onerror = () => {
           if (currentGen !== uploadGenRef.current) return;

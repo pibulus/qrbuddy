@@ -109,10 +109,10 @@ See GLOSSARY.md for complete list organized by category. Key islands:
   each style defines dots, background, cornersSquare, and cornersDot properties
 - **`utils/qr-vector-svg.ts`**: Pure-TypeScript, zero-DOM Vector SVG 1.1 builder
   with luminance-locked palettes and Canva/Figma compliance validator. Owns the
-  four macro geometries, whole-module centre excavation, and the
+  module and finder geometry, whole-module centre excavation, and the
   `data-ecl`/`data-cutout`/`data-center-mark` attributes tests assert on.
-- **`utils/qr-design.ts`**: Pattern and stamp registry, `resolveQRStyle()` — the
-  only place palette colour and geometry are combined.
+- **`utils/qr-design.ts`**: Stamp registry, `stampUrl()` and `resolveQRStyle()`
+  — the only place palette colour and geometry are combined.
 - **`utils/qr-renderer.ts`**: Browser adapter (`append`/`update`/`getRawData`/
   `dispose`) with a revision guard so a slow logo load can never paint an older
   design over a newer one.
@@ -352,18 +352,25 @@ adding surfaces:
   names the open tab (`SHEET_HEADINGS`: "What the QR holds." / "How the QR
   behaves." / "How the QR looks."). Static/Editable stays in-flow between input
   and row.
-- **Design tab** (`components/create-modal/DesignTab.tsx`): a live preview sits
-  between the tab strip and the scrolling controls, so every tap repaints the QR
-  before `Done` closes the sheet. Palette is a compact six-swatch strip; the
-  four **Pattern** tiles (Melt · Dots · Pixel · Spark) each coordinate module
-  shape, finder eye and pupil, with real rendered thumbnails. **Center mark**
-  offers None, six vector stamps and a 3-character monogram plus `Upload image`;
-  the mask toggle is Squircle · Circle · Knockout. **Print frame** is five
-  one-tap presets (None · Scan Me · Menu · Wi-Fi · Custom). A center mark forces
-  H and excavates whole modules with a background moat; timing, alignment and
-  format modules stay square. H is not a licence to erase function patterns —
-  dense codes omit the mark and say so. Sparse Dots/Spark also render at H,
-  verified by decode sweeps, not by eye.
+- **Design tab** (`components/create-modal/DesignTab.tsx`): three levers only —
+  palette, centre mark, card label — under a 120–136px live preview that sits
+  between the tab strip and the controls. Palette is six 36–40px gradient
+  swatches plus a Custom entry; the active name lives in the section header
+  (`Palette · Sunset`), never under a truncating box. **Center mark** is None,
+  five vector stamps, `Upload image`, or a 3-character monogram, with a Squircle
+  · Circle · Knockout mask. **Card label** is None · Scan Me · Menu · Wi-Fi ·
+  Guest Pass plus an always-visible custom field. QRBuddy keeps its liquid
+  rounded matrix; there is no pattern picker. A centre mark forces H and
+  excavates whole modules with a tight moat and a bold ring; timing, alignment
+  and format modules stay square. H is not a licence to erase function patterns
+  — dense codes omit the mark and say so. Dots/diamond geometry also renders at
+  H, verified by decode sweeps, not by eye.
+- **Card label geometry** (`islands/QRCanvas.tsx`): the label is a banner on top
+  of the same pass — banner `border-b-0` + matrix `border-t-0`, square join,
+  balanced `py-3`, one continuous outline. Never a second box tacked below with
+  a negative margin. Tapping the banner dispatches `qr-edit-label`, which opens
+  the sheet on Design. Exports use the same banner layout (`createFramedSvg`,
+  `downloadFramedPng`), so preview and download agree.
 - **QR card liveness** (`islands/QRCanvas.tsx`): every matrix change (data,
   palette, Static↔Editable) pulses `scale(0.985)→1` over 140ms. Tapping the
   matrix copies the PNG to the clipboard and shows a cream "Copied PNG" pill for

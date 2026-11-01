@@ -503,7 +503,8 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   let markElement = "";
   if (cutout) {
     const holeSize = (cutout.end - cutout.start) * cellSize;
-    const moat = Math.min(qrBoxSize * 0.025, holeSize * 0.18);
+    // A tight moat makes the mark read as a centrepiece, not a watermark.
+    const moat = Math.min(qrBoxSize * 0.012, holeSize * 0.1);
     const markSize = holeSize - moat * 2;
     const x = offsetX + cutout.start * cellSize + moat;
     const y = offsetY + cutout.start * cellSize + moat;
@@ -511,14 +512,22 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       ? markSize / 2
       : options.centerShape === "knockout"
       ? 0
-      : markSize * 0.22;
+      : markSize * 0.26;
+    // Chunky ring drawn INSIDE the mark so it never spills into the moat.
+    // Knockout omits the box but keeps a paper ground for legibility.
+    const ring = qrBoxSize * 0.008;
+    const inset = ring / 2;
     const badge = options.centerShape === "knockout"
       ? ""
-      : `<rect x="${x}" y="${y}" width="${markSize}" height="${markSize}" rx="${radius}" fill="none" stroke="#1e1714" stroke-width="${
-        qrBoxSize * 0.0045
-      }"/>`;
+      : `<rect x="${x + inset}" y="${y + inset}" width="${
+        markSize - ring
+      }" height="${markSize - ring}" rx="${
+        Math.max(0, radius - inset)
+      }" fill="none" stroke="#1e1714" stroke-width="${ring}"/>`;
     markElement =
-      `<defs><clipPath id="qrb-mark-clip"><rect x="${x}" y="${y}" width="${markSize}" height="${markSize}" rx="${radius}"/></clipPath></defs><image data-center-mark="true" x="${x}" y="${y}" width="${markSize}" height="${markSize}" preserveAspectRatio="xMidYMid meet" clip-path="url(#qrb-mark-clip)" href="${
+      `<rect x="${x}" y="${y}" width="${markSize}" height="${markSize}" rx="${radius}" fill="${
+        escapeXml(bg)
+      }"/><defs><clipPath id="qrb-mark-clip"><rect x="${x}" y="${y}" width="${markSize}" height="${markSize}" rx="${radius}"/></clipPath></defs><image data-center-mark="true" x="${x}" y="${y}" width="${markSize}" height="${markSize}" preserveAspectRatio="xMidYMid meet" clip-path="url(#qrb-mark-clip)" href="${
         escapeXml(options.logoUrl!)
       }" xlink:href="${escapeXml(options.logoUrl!)}"/>` + badge;
   }

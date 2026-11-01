@@ -5,14 +5,10 @@ import { sounds } from "../../utils/sounds.ts";
 import LogoUploader from "../LogoUploader.tsx";
 import PalettePills, { pillState } from "./PalettePills.tsx";
 import type { QRStyle } from "../../types/qr-types.ts";
-import {
-  PATTERNS,
-  resolveQRStyle,
-  STAMPS,
-  stampUrl,
-} from "../../utils/qr-design.ts";
-import { buildQrSvgString, toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
+import { resolveQRStyle, STAMPS, stampUrl } from "../../utils/qr-design.ts";
+import { toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
 import { resetDesignPreferences } from "../../utils/design-preferences.ts";
+import { STYLE_DISPLAY } from "../../islands/StyleSelector.tsx";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface DesignTabProps {
@@ -27,8 +23,9 @@ interface DesignTabProps {
 }
 
 const KEY =
-  "min-h-[44px] rounded-xl border-2 px-2 text-xs font-black transition-[transform,box-shadow] duration-[70ms] active:translate-y-[2px] active:shadow-none";
+  "min-h-[44px] rounded-xl border-2 px-1.5 text-xs font-black transition-[transform,box-shadow] duration-[70ms] active:translate-y-[2px] active:shadow-none";
 
+/** Three levers only: colours, the centre mark, and the card label. */
 export default function DesignTab(
   { qrStyle, logoUrl, frameConfig, customStyle, pngSize, onClose, lang }:
     DesignTabProps,
@@ -36,67 +33,82 @@ export default function DesignTab(
   const locale = getClientLocale(lang);
   const es = locale === "es";
   const current = resolveQRStyle(qrStyle.value, customStyle?.value);
-  const [customLabel, setCustomLabel] = useState(() =>
-    Boolean(
-      frameConfig?.value?.enabled &&
-        !["SCAN ME", "ESCANÉAME", "MENU", "MENÚ", "WI-FI"].includes(
-          frameConfig.value.caption,
-        ),
-    )
-  );
   const [monogram, setMonogram] = useState("");
   const tap = () => {
     haptics.light();
     sounds.click();
   };
-  const frameCaption = frameConfig?.value?.enabled
-    ? frameConfig.value.caption
-    : "";
-  const captions = [
+  const palette = STYLE_DISPLAY[qrStyle.value as keyof typeof STYLE_DISPLAY] ??
+    STYLE_DISPLAY.sunset;
+  const paletteName = es ? (palette.nameEs ?? palette.name) : palette.name;
+
+  const labelPresets = [
     es ? "ESCANÉAME" : "SCAN ME",
     es ? "MENÚ" : "MENU",
     "WI-FI",
+    "GUEST PASS",
   ];
-  const frameLabels = [
+  const labelChips = [
     es ? "Ninguno" : "None",
     "Scan Me",
     es ? "Menú" : "Menu",
     "Wi-Fi",
-    es ? "Propio" : "Custom",
+    "Guest Pass",
   ];
+  const caption = frameConfig?.value?.enabled
+    ? frameConfig.value.caption.trim()
+    : "";
+  const customCaption = caption !== "" && !labelPresets.includes(caption);
+
+  const setCaption = (next: string | null) => {
+    if (!frameConfig) return;
+    frameConfig.value = next === null
+      ? null
+      : { enabled: true, caption: next.slice(0, 24) };
+    tap();
+  };
+
   const reset = () => {
     qrStyle.value = "sunset";
     if (customStyle) customStyle.value = null;
     logoUrl.value = "";
     if (frameConfig) frameConfig.value = null;
     if (pngSize) pngSize.value = 1000;
-    setCustomLabel(false);
     setMonogram("");
     resetDesignPreferences();
     globalThis.dispatchEvent(new CustomEvent("qr-design-reset"));
     tap();
   };
+
   return (
     <div class="space-y-4 text-[#1e1714]">
       <section class="space-y-2" aria-label={es ? "Paleta" : "Palette"}>
-        <div class="flex items-center justify-between">
-          <h3 class="text-xs font-black uppercase tracking-wide">
-            {es ? "Paleta" : "Palette"}
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-xs font-black uppercase tracking-wide truncate">
+            {es ? "Paleta" : "Palette"}{" "}
+            <span class="opacity-50">· {paletteName}</span>
           </h3>
-          <div class="flex gap-2">
+          <button
+            type="button"
+            onClick={reset}
+            class="shrink-0 min-h-[32px] px-1 text-xs font-bold underline underline-offset-2"
+            aria-label={es
+              ? "Restablecer diseño original"
+              : "Reset design to default"}
+          >
+            ↺ Reset
+          </button>
+        </div>
+        <PalettePills
+          swatches
+          value={qrStyle.value}
+          onChange={(key) => {
+            qrStyle.value = key;
+          }}
+          lang={locale}
+          trailing={
             <button
               type="button"
-              onClick={reset}
-              class="min-h-[44px] px-2 text-xs font-bold"
-              aria-label={es
-                ? "Restablecer diseño original"
-                : "Reset design to default"}
-            >
-              ↺ Reset
-            </button>
-            <button
-              type="button"
-              class="min-h-[44px] px-2 text-xs font-black underline underline-offset-2"
               onClick={() => {
                 onClose();
                 globalThis.dispatchEvent(
@@ -104,74 +116,16 @@ export default function DesignTab(
                 );
                 tap();
               }}
+              aria-label={es ? "Colores propios" : "Custom colours"}
+              title={es ? "Colores propios" : "Custom colours"}
+              class="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full border-2 border-dashed border-[#1e1714] bg-[#fffef7] text-sm font-black hover:scale-105 active:scale-95 transition-transform"
             >
-              {es ? "Propio" : "Custom"} →
+              +
             </button>
-          </div>
-        </div>
-        <PalettePills
-          compact
-          value={qrStyle.value}
-          onChange={(key) => {
-            qrStyle.value = key;
-          }}
-          lang={locale}
+          }
         />
       </section>
-      {customStyle && (
-        <section class="space-y-2" aria-label={es ? "Patrón" : "Pattern"}>
-          <h3 class="text-xs font-black uppercase tracking-wide">
-            {es ? "Patrón" : "Pattern"}
-          </h3>
-          <div class="grid grid-cols-4 gap-2">
-            {PATTERNS.map((p) => {
-              const active = (current.dots.shape === p.dot ||
-                (p.id === "melt" &&
-                  current.dots.shape === "extra-rounded")) &&
-                current.cornersSquare?.shape === p.eye;
-              return (
-                <button
-                  type="button"
-                  aria-pressed={active}
-                  class={`${KEY} ${
-                    pillState(active)
-                  } flex flex-col items-center gap-1 py-2 px-1`}
-                  onClick={() => {
-                    customStyle.value = {
-                      ...current,
-                      dots: { ...current.dots, shape: p.dot },
-                      cornersSquare: { ...current.cornersSquare, shape: p.eye },
-                      cornersDot: { ...current.cornersDot, shape: p.pupil },
-                    };
-                    tap();
-                  }}
-                >
-                  <img
-                    alt=""
-                    width="52"
-                    height="52"
-                    class="rounded-md"
-                    src={toSvgDataUrl(
-                      buildQrSvgString({
-                        data: "QRBuddy",
-                        c1: "#1e1714",
-                        c2: "#1e1714",
-                        bg: "#fffef7",
-                        dotShape: p.dot,
-                        cornerSquareShape: p.eye,
-                      }).replace(
-                        'viewBox="0 0 1000 1000"',
-                        'viewBox="100 100 520 520"',
-                      ),
-                    )}
-                  />
-                  {es ? p.es : p.en}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
+
       <section
         class="space-y-2"
         aria-label={es ? "Marca central" : "Center mark"}
@@ -179,11 +133,11 @@ export default function DesignTab(
         <h3 class="text-xs font-black uppercase tracking-wide">
           {es ? "Marca central" : "Center mark"}
         </h3>
-        <div class="grid grid-cols-7 gap-1">
+        <div class="grid grid-cols-6 gap-1.5">
           <button
             type="button"
             aria-pressed={!logoUrl.value}
-            class={`${KEY} px-0 ${pillState(!logoUrl.value)}`}
+            class={`${KEY} ${pillState(!logoUrl.value)}`}
             onClick={() => {
               globalThis.dispatchEvent(new CustomEvent("qr-design-reset"));
               logoUrl.value = "";
@@ -195,11 +149,12 @@ export default function DesignTab(
           </button>
           {STAMPS.map((stamp) => (
             <button
+              key={stamp.id}
               type="button"
               aria-label={es ? stamp.es : stamp.en}
               title={es ? stamp.es : stamp.en}
               aria-pressed={logoUrl.value === stampUrl(stamp.path)}
-              class={`${KEY} px-0 flex items-center justify-center ${
+              class={`${KEY} flex items-center justify-center ${
                 pillState(logoUrl.value === stampUrl(stamp.path))
               }`}
               onClick={() => {
@@ -209,33 +164,46 @@ export default function DesignTab(
                 tap();
               }}
             >
-              <img src={stampUrl(stamp.path)} alt="" width="24" height="24" />
+              <img src={stampUrl(stamp.path)} alt="" width="22" height="22" />
             </button>
           ))}
         </div>
         <div class="flex items-center gap-2">
-          <LogoUploader logoUrl={logoUrl} lang={locale} compact />
-          <input
-            type="text"
-            maxLength={3}
-            value={monogram}
-            placeholder="VIP"
-            aria-label={es
-              ? "Iniciales, hasta 3 caracteres"
-              : "Monogram, up to 3 characters"}
-            class="w-16 min-h-[44px] border-2 border-[#1e1714]/20 rounded-xl bg-[#fffef7] px-2 text-center text-sm font-black uppercase"
-            onInput={(e) => {
-              globalThis.dispatchEvent(new CustomEvent("qr-design-reset"));
-              const value = e.currentTarget.value.replace(/[^\p{L}\p{N}]/gu, "")
-                .slice(0, 3).toUpperCase();
-              setMonogram(value);
-              const svg =
-                `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><text x="60" y="65" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="${
-                  value.length === 3 ? 48 : 62
-                }" font-weight="900" fill="#1e1714">${value}</text></svg>`;
-              logoUrl.value = value ? toSvgDataUrl(svg) : "";
-            }}
+          <LogoUploader
+            logoUrl={logoUrl}
+            lang={locale}
+            compact
+            onPicked={() => setMonogram("")}
           />
+          <label class="flex items-center min-h-[44px] w-28 shrink-0 rounded-xl border-2 border-[#1e1714]/20 bg-[#fffef7] focus-within:border-[#1e1714]">
+            <span class="pl-2 text-[10px] font-black uppercase opacity-50">
+              Aa
+            </span>
+            <input
+              type="text"
+              maxLength={3}
+              value={monogram}
+              placeholder="VIP"
+              aria-label={es
+                ? "Texto de la marca, hasta 3 caracteres"
+                : "Badge text, up to 3 characters"}
+              class="min-w-0 flex-1 bg-transparent px-1 text-sm font-black uppercase focus:outline-none"
+              onInput={(e) => {
+                const value = e.currentTarget.value.replace(
+                  /[^\p{L}\p{N}]/gu,
+                  "",
+                )
+                  .slice(0, 3).toUpperCase();
+                globalThis.dispatchEvent(new CustomEvent("qr-design-reset"));
+                setMonogram(value);
+                const svg =
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><text x="60" y="64" text-anchor="middle" dominant-baseline="middle" font-family="system-ui, sans-serif" font-size="${
+                    value.length === 3 ? 50 : 66
+                  }" font-weight="900" fill="#1e1714">${value}</text></svg>`;
+                logoUrl.value = value ? toSvgDataUrl(svg) : "";
+              }}
+            />
+          </label>
         </div>
         {logoUrl.value && customStyle && (
           <div
@@ -263,57 +231,47 @@ export default function DesignTab(
           </div>
         )}
       </section>
+
       {frameConfig && (
         <section
           class="space-y-2"
-          aria-label={es ? "Marco para imprimir" : "Print frame"}
+          aria-label={es ? "Etiqueta de la tarjeta" : "Card label"}
         >
           <h3 class="text-xs font-black uppercase tracking-wide">
-            {es ? "Marco para imprimir" : "Print frame"}
+            {es ? "Etiqueta de la tarjeta" : "Card label"}
           </h3>
-          <div class="grid grid-cols-5 gap-1">
-            {frameLabels.map((label, i) => {
+          <div class="grid grid-cols-5 gap-1.5">
+            {labelChips.map((label, i) => {
               const active = i === 0
                 ? !frameConfig.value?.enabled
-                : i === 4
-                ? customLabel
-                : !customLabel && frameCaption === captions[i - 1];
+                : caption === labelPresets[i - 1];
               return (
                 <button
                   type="button"
-                  class={`${KEY} text-[10px] px-1 ${pillState(active)}`}
+                  class={`${KEY} text-[10px] leading-tight ${
+                    pillState(active)
+                  }`}
                   aria-pressed={active}
-                  onClick={() => {
-                    setCustomLabel(i === 4);
-                    frameConfig.value = i === 0 ? null : {
-                      enabled: true,
-                      caption: i === 4
-                        ? (frameCaption || captions[0])
-                        : captions[i - 1],
-                    };
-                    tap();
-                  }}
+                  onClick={() =>
+                    setCaption(i === 0 ? null : labelPresets[i - 1])}
                 >
                   {label}
                 </button>
               );
             })}
           </div>
-          {customLabel && (
-            <input
-              type="text"
-              maxLength={24}
-              value={frameCaption}
-              onInput={(e) => {
-                frameConfig.value = {
-                  enabled: true,
-                  caption: e.currentTarget.value,
-                };
-              }}
-              aria-label={es ? "Texto del marco" : "Frame caption"}
-              class="w-full min-h-[44px] px-3 border-2 border-[#1e1714] rounded-xl bg-[#fffef7] text-sm font-black"
-            />
-          )}
+          <input
+            type="text"
+            maxLength={24}
+            value={customCaption ? caption : ""}
+            placeholder={es ? "Etiqueta propia" : "Custom label"}
+            aria-label={es ? "Etiqueta propia" : "Custom label"}
+            class="w-full min-h-[44px] px-3 border-2 border-[#1e1714]/20 rounded-xl bg-[#fffef7] text-sm font-black uppercase tracking-wide focus:border-[#1e1714] focus:outline-none transition-colors"
+            onInput={(e) => {
+              const value = e.currentTarget.value.trim().slice(0, 24);
+              setCaption(value === "" ? null : value);
+            }}
+          />
         </section>
       )}
     </div>

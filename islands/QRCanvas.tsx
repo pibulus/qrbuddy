@@ -254,10 +254,11 @@ export default function QRCanvas(
     ctx.strokeStyle = "#000000";
     ctx.stroke();
 
-    ctx.drawImage(img, pad, pad, qrSize, qrSize);
+    // One pass: label banner on top, matrix below, single border.
+    ctx.drawImage(img, pad, pad + capH, qrSize, qrSize);
 
     if (hasCaption) {
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = "#1e1714";
       ctx.font =
         `900 ${fontSize}px 'Inter Black', Inter, system-ui, -apple-system, sans-serif`;
       ctx.textAlign = "center";
@@ -265,7 +266,7 @@ export default function QRCanvas(
       ctx.fillText(
         captionText,
         canvas.width / 2,
-        pad + qrSize + capH / 2 + Math.round(12 * scale),
+        pad + capH / 2 + Math.round(6 * scale),
         maxTextWidth,
       );
     }
@@ -600,10 +601,35 @@ export default function QRCanvas(
       );
   }, [listenForExportEvents]);
 
+  const hasCaption = Boolean(
+    frameConfig?.value?.enabled &&
+      frameConfig.value.caption.trim() !== "",
+  );
+  const captionText = frameConfig?.value?.caption.trim() ?? "";
+
   return (
     <div
       class={`relative max-w-full w-full ${stylePop ? "animate-pop-in" : ""}`}
     >
+      {hasCaption && (
+        <button
+          type="button"
+          onClick={(e: MouseEvent) => {
+            e.stopPropagation();
+            globalThis.dispatchEvent(new CustomEvent("qr-edit-label"));
+            haptics.light();
+          }}
+          class="block w-full bg-[#fffef7] border-4 border-b-0 border-[#1e1714] rounded-t-chunky px-4 pt-3.5 pb-3 text-center hover:bg-amber-50 transition-colors"
+          title={isSpanish ? "Editar la etiqueta" : "Edit the label"}
+          aria-label={isSpanish
+            ? `Editar etiqueta: ${captionText}`
+            : `Edit label: ${captionText}`}
+        >
+          <span class="block font-chunky font-extrabold text-lg sm:text-xl tracking-[0.08em] uppercase text-[#1e1714] truncate">
+            {captionText}
+          </span>
+        </button>
+      )}
       <div
         ref={canvasRef}
         onClick={handleCanvasTap}
@@ -625,6 +651,7 @@ export default function QRCanvas(
           : "Copy QR code as PNG"}
         class={`
           bg-[#fffef7] rounded-chunky border-4
+          ${hasCaption ? "border-t-0 rounded-t-none" : ""}
           ${
           showSuccessFlash
             ? "border-[var(--qr-theme-accent,#ec4899)]"
@@ -644,7 +671,9 @@ export default function QRCanvas(
           isClicking || pulse
             ? "scale-[0.985]"
             : !url.value
-            ? "scale-[0.97] hover:scale-100"
+            ? "scale-[0.97]"
+            : hasCaption
+            ? ""
             : "hover:scale-[1.03]"
         }
           ${
@@ -698,16 +727,6 @@ export default function QRCanvas(
         class="absolute -z-10 -inset-6 opacity-25 blur-2xl rounded-full pointer-events-none transition-all duration-500"
         style={{ background: getGlowGradient() }}
       />
-
-      {/* Frame caption preview — the downloaded PNG bakes this in */}
-      {frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== "" &&
-        (
-          <div class="bg-[#fffef7] border-4 border-t-0 border-[#1e1714] rounded-b-chunky -mt-3 pt-3 pb-7 text-center animate-slide-down">
-            <span class="font-chunky font-black text-xl sm:text-2xl tracking-wide text-[#1e1714] uppercase">
-              {frameConfig.value.caption}
-            </span>
-          </div>
-        )}
 
       {/* Save pill — the payoff, in one saturated gold that pops on every palette */}
       <div

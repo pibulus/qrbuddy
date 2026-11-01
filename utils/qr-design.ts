@@ -2,41 +2,6 @@ import type { QRStyle } from "../types/qr-types.ts";
 import { QR_STYLES } from "./qr-styles.ts";
 import { toSvgDataUrl } from "./qr-vector-svg.ts";
 
-export const PATTERNS = [
-  {
-    id: "melt",
-    en: "Melt",
-    es: "Fluido",
-    dot: "rounded",
-    eye: "extra-rounded",
-    pupil: "dot",
-  },
-  {
-    id: "dots",
-    en: "Dots",
-    es: "Puntos",
-    dot: "dots",
-    eye: "dot",
-    pupil: "dot",
-  },
-  {
-    id: "pixel",
-    en: "Pixel",
-    es: "Píxel",
-    dot: "square",
-    eye: "square",
-    pupil: "square",
-  },
-  {
-    id: "spark",
-    en: "Spark",
-    es: "Chispa",
-    dot: "diamond",
-    eye: "octagon",
-    pupil: "square",
-  },
-] as const;
-
 /** Palette colours and geometry are independent, including restored designs. */
 export function resolveQRStyle(
   key: string,
@@ -100,16 +65,10 @@ export const STAMPS = [
     es: "Estrella",
     path: "m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z",
   },
-  {
-    id: "heart",
-    en: "Heart",
-    es: "Corazón",
-    path: "M12 21 3 12C-3 4 7-2 12 6c5-8 15-2 9 6z",
-  },
 ] as const;
 
 export function stampSvg(path: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="-2 -2 28 28"><path d="${path}" fill="none" stroke="#1e1714" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="-2 -2 28 28"><path d="${path}" fill="none" stroke="#1e1714" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 export function stampUrl(path: string): string {

@@ -1381,7 +1381,7 @@ export default function CreateModal({
   // footer-charm exception doesn't cover.
   const tabs: Array<{ id: ActiveTab; label: string }> = [
     { id: "type", label: isSpanish ? "Contenido" : "Content" },
-    { id: "options", label: isSpanish ? "Comportamiento" : "Behavior" },
+    { id: "options", label: isSpanish ? "Ajustes" : "Behavior" },
     { id: "design", label: isSpanish ? "Diseño" : "Design" },
   ];
   const hasCompletion = completionKind !== null && bucketUrl.value !== "";

@@ -4,14 +4,10 @@ import {
   buildQrSvgString,
   centerCutout,
 } from "../utils/qr-vector-svg.ts";
-import {
-  PATTERNS,
-  resolveQRStyle,
-  STAMPS,
-  stampUrl,
-} from "../utils/qr-design.ts";
+import { resolveQRStyle, STAMPS, stampUrl } from "../utils/qr-design.ts";
 import { styledQrSvg } from "../utils/qr-renderer.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
+import { createFramedSvg } from "../utils/svg-export.ts";
 import { getQRThemeTokens, QR_THEME_TOKENS } from "../utils/qr-styles.ts";
 
 Deno.test("Design: alignment geometry includes the version-32 exception", () => {
@@ -71,33 +67,53 @@ Deno.test("Design: marks force H, remote images cannot enter exports, masks diff
   assert(knockout.includes('rx="0"'));
 });
 
-Deno.test("Design: four coordinated geometries survive palette changes and reload", () => {
-  const variants = PATTERNS.map((p) => {
-    const base = resolveQRStyle("sunset");
-    const override = {
-      ...base,
-      dots: { ...base.dots, shape: p.dot },
-      cornersSquare: { ...base.cornersSquare, shape: p.eye },
-      centerShape: "circle" as const,
-    };
-    const restored = validateDesignPreferences({
-      version: 1,
-      style: "pool",
-      customStyle: override,
-    });
-    assert(restored?.customStyle);
-    const resolved = resolveQRStyle(restored.style, restored.customStyle);
-    assertEquals(resolved.dots.shape, p.dot);
-    assertEquals(resolved.cornersSquare?.shape, p.eye);
-    assertEquals(resolved.centerShape, "circle");
-    assertNotEquals(resolved.dots.gradient, base.dots.gradient);
-    return styledQrSvg({
+Deno.test("Design: geometry and palette survive a reload independently", () => {
+  const base = resolveQRStyle("sunset");
+  const override = {
+    ...base,
+    dots: { ...base.dots, shape: "dots" as const },
+    cornersSquare: { ...base.cornersSquare, shape: "dot" as const },
+    centerShape: "circle" as const,
+  };
+  const restored = validateDesignPreferences({
+    version: 1,
+    style: "pool",
+    customStyle: override,
+  });
+  assert(restored?.customStyle);
+  const resolved = resolveQRStyle(restored.style, restored.customStyle);
+  assertEquals(resolved.dots.shape, "dots");
+  assertEquals(resolved.cornersSquare?.shape, "dot");
+  assertEquals(resolved.centerShape, "circle");
+  assertNotEquals(resolved.dots.gradient, base.dots.gradient);
+  assert(
+    styledQrSvg({
       size: 1000,
       data: "https://example.com/menu",
       style: resolved,
-    });
+    })
+      .includes("data-ecl"),
+  );
+});
+
+Deno.test("Design: a card label is a banner inside one pass, not a second box", () => {
+  const qr = buildQrSvgString({ data: "https://example.com/menu", size: 1000 });
+  const framed = createFramedSvg(qr, "GUEST PASS");
+  assertEquals(framed.match(/<rect\b/g)?.length, 2); // card + QR ground
+  assert(framed.includes('y="234" width="1000" height="1000"')); // matrix below banner
+  const textY = Number(framed.match(/<text x="[\d.]+" y="(\d+)"/)?.[1]);
+  assert(textY > 64 && textY < 234); // centred in the banner
+  assert(framed.includes("GUEST PASS"));
+});
+
+Deno.test("Design: the centre badge is a chunky ring, not a hairline", () => {
+  const svg = buildQrSvgString({
+    data: "https://example.com/menu",
+    logoUrl: stampUrl(STAMPS[0].path),
   });
-  assertEquals(new Set(variants).size, 4);
+  const ring = Number(svg.match(/stroke-width="([\d.]+)"\/>/)?.[1]);
+  assert(ring >= 7.5 && ring <= 8.5); // 8px at 1000px, ~2.7px on a 336px card
+  assert(!svg.includes('stroke-width="4.5"'));
 });
 
 Deno.test("Design: sparse patterns use H even without a center mark", () => {
