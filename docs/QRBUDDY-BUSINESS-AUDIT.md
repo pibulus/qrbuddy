@@ -98,6 +98,19 @@ The Passport and recovery work (`SOFTSTACK-PASSPORT.md`,
 export makes it _sellable to a business_. Both are needed before a real launch,
 and batch is the one that converts.
 
+## 5b. Shipped 2026-11-02
+
+- **Batch**: `/batch` — CSV in, one editable code per row, print sheet, results
+  CSV.
+- **PIN locks** on dynamic codes, enforced server-side, with a PIN page and a
+  12-hour unlock cookie. Locked codes do not consume a scan.
+- **CSV export** of the library.
+- **API keys**: hashed at rest, shown once, revocable, act as the Passport. Live
+  on Supabase, verified end to end (create → use → revoke → 401).
+- **`qrbuddy.app/api/<function>`** proxy, so the API lives on our own host.
+- **`/developers`** documentation page, linked from the footer and the sitemap.
+- **Cover-page branding**: brand name and accent colour now persist.
+
 ## 6. Decisions taken 2026-11-02 (and why)
 
 **Tiers: yes, three — but one price per app, never a bundle.** Free (5 dynamic

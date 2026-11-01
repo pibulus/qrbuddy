@@ -136,6 +136,31 @@ done < codes.csv`}
           </ul>
         </section>
 
+        <section class="mt-6 rounded-2xl border-2 border-stone-900 bg-[#fffef7] p-4">
+          <h2 class="text-sm font-black uppercase tracking-wider">Errors</h2>
+          <ul class="mt-2 space-y-1.5 text-sm text-stone-600">
+            <li>
+              <code>401</code> — no key, or a revoked one.
+            </li>
+            <li>
+              <code>402</code> — allowance reached; the body names the limit.
+            </li>
+            <li>
+              <code>404</code> — unknown endpoint or code.
+            </li>
+            <li>
+              <code>413</code> — body over 256 KB.
+            </li>
+            <li>
+              <code>429</code> — slow down; <code>Retry-After</code>{" "}
+              says how long.
+            </li>
+            <li>
+              <code>502</code> — the engine is restarting. Retry shortly.
+            </li>
+          </ul>
+        </section>
+
         <div class="mt-8">
           <ApiKeysPanel />
         </div>
