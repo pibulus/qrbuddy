@@ -21,6 +21,7 @@ const COPY = {
     about: "About",
     privacy: "Privacy",
     terms: "Terms",
+    developers: "Developers",
     tip: "Tip Jar ☕",
     supporter: "Passport",
     links: [
@@ -37,6 +38,7 @@ const COPY = {
     about: "Qué es",
     privacy: "Privacidad",
     terms: "Términos",
+    developers: "API",
     tip: "Propina ☕",
     supporter: "Pasaporte",
     links: [
@@ -153,6 +155,12 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
             class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
           >
             {t.privacy}
+          </a>
+          <a
+            href="/developers"
+            class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
+          >
+            {t.developers}
           </a>
           <a
             href={locale === "es" ? "/terms?lang=es" : "/terms"}

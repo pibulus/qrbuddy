@@ -68,6 +68,16 @@ const handlerValue: Handlers = {
 };
 
 async function proxy(req: Request, path: string): Promise<Response> {
+  // Validate the path before anything else: a malformed endpoint must be a 404
+  // whether or not this deployment happens to have a backend configured.
+  const name = path.replace(/^\/+|\/+$/g, "");
+  if (!/^[a-z0-9][a-z0-9-]{1,60}$/.test(name)) {
+    return new Response(JSON.stringify({ error: "Unknown endpoint" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+    });
+  }
+
   const supabaseUrl = getSupabaseUrl();
   if (!supabaseUrl) {
     return new Response(
@@ -77,15 +87,6 @@ async function proxy(req: Request, path: string): Promise<Response> {
         headers: { "Content-Type": "application/json", ...corsHeaders(req) },
       },
     );
-  }
-
-  // Only a single path segment: no traversal, no query smuggling into the host.
-  const name = path.replace(/^\/+|\/+$/g, "");
-  if (!/^[a-z0-9][a-z0-9-]{1,60}$/.test(name)) {
-    return new Response(JSON.stringify({ error: "Unknown endpoint" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json", ...corsHeaders(req) },
-    });
   }
 
   const incoming = new URL(req.url);

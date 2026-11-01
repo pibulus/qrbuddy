@@ -44,8 +44,11 @@ export default function ApiKeysPanel() {
   }
 
   useEffect(() => {
-    setHasPassport(Boolean(getStoredPassport()));
-    load();
+    const passport = getStoredPassport();
+    setHasPassport(Boolean(passport));
+    // No Passport, no keys: asking the API would only produce a confusing
+    // "failed to fetch" before the person has made their first code.
+    if (passport) load();
   }, []);
 
   async function createKey() {

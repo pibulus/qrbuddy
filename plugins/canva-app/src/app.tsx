@@ -9,8 +9,9 @@ import {
   toSvgDataUrl,
 } from "./qrbuddy-svg";
 
-const SUPABASE_FUNCTIONS_URL =
-  "https://aqydpibnvlhcjcwosrti.supabase.co/functions/v1";
+// Our own host, not the Supabase project URL: the /api proxy disappears the
+// vendor hostname, and a future custom domain won't require a resubmission.
+const API_BASE_URL = "https://qrbuddy.app/api";
 
 export const App = () => {
   const [url, setUrl] = useState("https://");
@@ -43,7 +44,7 @@ export const App = () => {
       let targetUrl = cleanUrl;
 
       if (isEditable) {
-        const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/create-dynamic-qr`, {
+        const res = await fetch(`${API_BASE_URL}/create-dynamic-qr`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
