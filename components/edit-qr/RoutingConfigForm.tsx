@@ -214,7 +214,7 @@ export default function RoutingConfigForm({
                     );
                     setSequentialUrls(newUrls);
                   }}
-                  class="min-w-[44px] min-h-[44px] rounded-full border-2 border-black/15 hover:border-black hover:bg-rose-100 text-black font-black text-sm transition-colors"
+                  class="min-w-[44px] min-h-[44px] rounded-full border-2 border-black/15 hover:border-black hover:bg-amber-100 text-black font-black text-sm transition-colors"
                   aria-label={`Remove step ${index + 1}`}
                 >
                   ✕

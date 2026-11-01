@@ -1403,7 +1403,7 @@ export default function CreateModal({
         aria-labelledby="create-modal-title"
         tabindex={-1}
         style={themeStyleVars}
-        class={`relative w-full max-w-lg h-[min(92dvh,760px)] sm:h-[min(600px,88dvh)] bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover flex flex-col overflow-hidden focus:outline-none focus-visible:outline-none ${
+        class={`relative w-full max-w-lg h-[min(92dvh,760px)] sm:h-[min(744px,88dvh)] bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover flex flex-col overflow-hidden focus:outline-none focus-visible:outline-none ${
           shell.closing
             ? "charm-modal--closing animate-modal-exit"
             : "animate-slide-up sm:animate-pop-in"

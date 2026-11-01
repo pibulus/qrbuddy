@@ -83,7 +83,7 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
   const statusBadgeClass = isActive
     ? "bg-emerald-200 text-black border-black"
     : exhausted || expired
-    ? "bg-rose-200 text-black border-black"
+    ? "bg-amber-200 text-black border-black"
     : "bg-amber-200 text-black border-black";
 
   const handleDownloadSticker = () => {

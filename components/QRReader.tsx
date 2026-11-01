@@ -526,7 +526,7 @@ export default function QRReader(
       addToast(isSpanish ? "¡Copiado! 📋" : "Copied! 📋");
       haptics.copy();
     } catch {
-      addToast(isSpanish ? "No se pudo copiar ❌" : "Couldn't copy ❌");
+      addToast(isSpanish ? "No se pudo copiar" : "Could not copy");
       haptics.error();
     }
   };
@@ -789,7 +789,7 @@ export default function QRReader(
 
               {(decodeError || cameraError) && (
                 <p
-                  class="text-red-600 text-sm text-center animate-slide-down"
+                  class="text-amber-800 text-sm text-center animate-slide-down"
                   role="alert"
                 >
                   {decodeError || cameraError}
@@ -872,7 +872,7 @@ export default function QRReader(
                         >
                           <div class="flex items-center justify-between gap-2 px-3 py-2 bg-amber-50 border-b-2 border-black">
                             <div class="flex items-center gap-1.5 shrink-0">
-                              <span class="w-2.5 h-2.5 rounded-full bg-red-400 border border-black" />
+                              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 border border-black" />
                               <span class="w-2.5 h-2.5 rounded-full bg-amber-300 border border-black" />
                               <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-black" />
                             </div>
@@ -940,7 +940,7 @@ export default function QRReader(
                                 class="flex items-center gap-1.5 shrink-0"
                                 aria-hidden="true"
                               >
-                                <span class="w-2.5 h-2.5 rounded-full bg-red-400 border border-black" />
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 border border-black" />
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-300 border border-black" />
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-black" />
                               </div>
@@ -960,8 +960,8 @@ export default function QRReader(
                                   </span>
                                 )
                                 : (
-                                  <span class="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-red-900 bg-red-100 border border-red-400 px-2 py-0.5 rounded-full">
-                                    <span>⚠️</span>
+                                  <span class="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-amber-900 bg-amber-100 border border-amber-400 px-2 py-0.5 rounded-full">
+                                    <span></span>
                                     <span>
                                       {isSpanish
                                         ? "No seguro (HTTP)"

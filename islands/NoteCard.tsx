@@ -165,7 +165,7 @@ export default function NoteCard({
                   class="w-full text-center font-mono text-sm px-3 py-2.5 rounded-xl border-2 border-black focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
                 {decryptError && (
-                  <p class="text-xs font-bold text-red-600 animate-shake">
+                  <p class="text-xs font-bold text-amber-800 animate-shake">
                     {decryptError}
                   </p>
                 )}

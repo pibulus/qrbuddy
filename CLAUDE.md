@@ -205,6 +205,13 @@ if (maxDownloads === 999999) {
 4. Action signals (triggerDownload/triggerCopy) are set to true, consumed by
    QRCanvas, then reset to false
 
+### Launch gates
+
+`deno task check && deno task test:unit && deno task build` plus the five audit
+tests are the local gate. Edge-function changes (rate limits) ship separately:
+`supabase functions deploy …` per `supabase/README.md`; a site push does not
+deploy them.
+
 ### Deployment
 
 - **Production app**: https://qrbuddy.app
@@ -283,10 +290,11 @@ adding surfaces:
   border-black sm:rounded-3xl`, `sm:animate-pop-in`);
   `max-h-[92dvh]`; header/body `p-4 sm:p-6`; bottom padding respects the home
   indicator: `pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6`.
-- **CreateModal footprint**: `max-w-lg`, cream card, body fixed at
-  `sm:h-[min(480px,56dvh)]` so the three tabs never change the dialog's height —
-  content scrolls inside. Every selectable is `ChoiceRow` (`rich` variant for
-  the Behavior tab): state by inversion only — active is
+- **CreateModal footprint**: `max-w-lg`, cream card, fixed height
+  `h-[min(92dvh,760px)]` / `sm:h-[min(744px,88dvh)]` so the three tabs never
+  change the dialog's height; only the body scrolls (320px phones scroll the
+  Design tab, 390 and up do not). Every selectable is `ChoiceRow` (`rich`
+  variant for the Behavior tab): state by inversion only — active is
   `bg-amber-200 border-black shadow-chunky`, inactive `border-black/15`. No
   "Active" pills, no eyebrow tags, no dashed boxes, no tinted wrapper cards, no
   "what you just picked" header card inside a form. Inputs share one recipe:
@@ -388,6 +396,12 @@ adding surfaces:
   full-width Custom colours row, never a blind cycle. On phones the trigger is
   swatch + ▾ only so it never collides with the wordmark. No language toggle —
   `/es` is reached via hreflang/search. No random-colour dice.
+- **Colour gates**: `tailwind.config.ts` maps the `white` and `black` utility
+  names to `#fffef7` and `#1e1714`, so legacy classes stay warm. Never write an
+  absolute white/black hex, and never use `red`/`rose` families — errors are
+  amber surfaces with ink text, destructive actions use muted clay `#c4607a`.
+  `tests/audit_test.ts` enforces both, plus canonical coverage, robots/sitemap,
+  security headers and edge-function rate gates.
 - **Voice**: QRBuddy is the entity. Never "we"/"us" in UI copy.
 - **Palette presets** (`utils/qr-styles.ts` + `STYLE_DISPLAY`): one family —
   pastel-punk, two-tone, the same 135° diagonal (`DIAGONAL` rad). Scannability

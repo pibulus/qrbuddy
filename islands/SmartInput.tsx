@@ -622,7 +622,11 @@ export default function SmartInput(
             4500,
           );
         } else {
-          addToast(`❌ ${validation.error}`, 4000);
+          addToast(
+            validation.error ??
+              (isSpanish ? "Archivo no válido" : "That file is not valid"),
+            4000,
+          );
         }
         haptics.error();
         return;

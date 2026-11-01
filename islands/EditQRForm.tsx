@@ -293,7 +293,6 @@ export default function EditQRForm() {
         class="bg-qr-cream border-4 border-black rounded-3xl p-8 text-center shadow-chunky space-y-2"
         role="alert"
       >
-        <div class="text-4xl mb-2">❌</div>
         <p class="text-black font-black text-lg">
           {error || "QR code not found"}
         </p>

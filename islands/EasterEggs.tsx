@@ -20,7 +20,7 @@ const EASTER_EGGS = {
 
 export default function EasterEggs({ url, style }: EasterEggsProps) {
   const [message, setMessage] = useState<string | null>(null);
-  const [color, setColor] = useState<string>("#000000");
+  const [color, setColor] = useState<string>("#1e1714");
   const [showEffect, setShowEffect] = useState(false);
 
   useEffect(() => {

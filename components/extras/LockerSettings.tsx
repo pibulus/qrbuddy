@@ -109,7 +109,7 @@ export default function LockerSettings({
               </button>
               <button
                 type="button"
-                class="min-h-[44px] px-4 py-2 rounded-xl border-2 border-red-500 text-sm font-semibold text-red-600 bg-white hover:bg-red-50 transition"
+                class="min-h-[44px] px-4 py-2 rounded-xl border-2 border-amber-400 text-sm font-semibold text-amber-800 bg-white hover:bg-amber-50 transition"
                 onClick={handleDisable}
               >
                 {isSpanish ? "Olvidar este buzón" : "Forget this locker"}
@@ -277,7 +277,7 @@ export default function LockerSettings({
               )}
             </div>
 
-            {lockerError && <p class="text-xs text-red-500">{lockerError}</p>}
+            {lockerError && <p class="text-xs text-amber-700">{lockerError}</p>}
 
             <button
               type="button"

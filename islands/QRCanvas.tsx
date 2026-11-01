@@ -244,7 +244,7 @@ export default function QRCanvas(
     if (!ctx) throw new Error("Canvas is unavailable");
 
     // Cream card with a fat black border, soft-brutal style.
-    ctx.fillStyle = "#FFFBF5";
+    ctx.fillStyle = "#FFFEF7";
     ctx.beginPath();
     ctx.roundRect(
       border / 2,
@@ -255,7 +255,7 @@ export default function QRCanvas(
     );
     ctx.fill();
     ctx.lineWidth = border;
-    ctx.strokeStyle = "#000000";
+    ctx.strokeStyle = "#1e1714";
     ctx.stroke();
 
     // One pass: label banner on top, matrix below, single border.
@@ -806,7 +806,7 @@ export default function QRCanvas(
 
       {/* Destructible badge */}
       {isDestructible?.value && (
-        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float will-change-transform z-10 pointer-events-none select-none">
+        <div class="absolute -top-3 -right-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full border-2 border-black shadow-lg text-sm font-bold animate-float will-change-transform z-10 pointer-events-none select-none">
           💣 {maxDownloads?.value === UNLIMITED_SCANS
             ? "∞"
             : maxDownloads?.value || 1} {isSpanish
@@ -848,7 +848,7 @@ export default function QRCanvas(
             ? "Puede costar trabajo escanear esta combinación — prueba colores más oscuros o un link más corto"
             : "A scanner may struggle with this combo — try darker colors or a shorter link"}
         >
-          {isSpanish ? "⚠️ difícil de escanear" : "⚠️ hard to scan"}
+          {isSpanish ? "Mejor con más contraste" : "Better with more contrast"}
         </div>
       )}
     </div>

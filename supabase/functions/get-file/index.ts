@@ -6,6 +6,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // @ts-expect-error — esm.sh's jszip types omit the default export the runtime ESM build has
 import JSZip from "https://esm.sh/jszip@3.10.1";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  getClientIP,
+} from "../_shared/rate-limit.ts";
 import { isR2Path, presignGet } from "../_shared/r2.ts";
 import { safeZipEntryNames } from "../../../utils/zip-names.ts";
 
@@ -82,6 +87,15 @@ serve(async (req) => {
   let claimedFileId: string | null = null;
 
   try {
+    const rateLimitResult = await checkRateLimit(getClientIP(req), {
+      scope: "get-file",
+      windowMs: 60 * 60 * 1000,
+      maxRequests: 120,
+    });
+    if (rateLimitResult.isLimited) {
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+    }
+
     const url = new URL(req.url);
     const fileId = url.searchParams.get("id");
 

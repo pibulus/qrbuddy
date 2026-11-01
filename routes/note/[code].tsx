@@ -86,6 +86,7 @@ export default function NotePage({ data }: PageProps<NotePageData>) {
       <Head>
         <title>Message | QRBuddy</title>
         <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href="https://qrbuddy.app/note" />
         <meta
           name="description"
           content={preview || "A QRBuddy text card."}

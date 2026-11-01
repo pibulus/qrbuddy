@@ -246,3 +246,21 @@ counters, quick starters, Edit/Preview toggle, or second accent picker. The
 Design label bar lost its four preset chips; headers and placeholders are
 sentence case. Uses is five plain use-cases, and the /for/* stage lost its demo
 pill.
+
+## 11. Launch audit (2026-11-02)
+
+Repo clean; `check`, 128 unit tests and `build` green; CI runs the same three.
+Metadata: every rendered route has a canonical (or is an intentional noindex /
+301 alias), sitemap has 32 canonical URLs with no redirect aliases, robots
+blocks `/api`, `/edit`, `/r`, `/q` and points at the sitemap. Middleware ships
+HSTS, CSP, frame denial, nosniff, referrer policy and X-Robots on private
+routes. Public edge functions all had rate gates except five; those five
+(`get-file`, `get-file-metadata`, `get-bucket-status`, `finalize-upload`,
+`library`) now call `checkRateLimit` too — **deploy functions separately**, a
+site push does not.
+
+Brand: no red/rose classes remain, `white`/`black` utilities resolve to warm
+paper/ink, exports use `#1e1714` on `#FFFEF7`, forced `<br>` removed from About,
+download success toasts are silent. Layout: 320 / 390 / 768 / 1280 all have zero
+horizontal overflow and zero clipped controls; Design fits without scrolling at
+390 and up; modal height is identical across tabs at every width.

@@ -1250,7 +1250,7 @@ export default function VerticalStudio({
 
               {peekError && (
                 <div class="rounded-xl border-2 border-[#1e1714] bg-amber-100 p-3 text-xs font-bold text-[#1e1714]">
-                  ⚠️ {peekError}
+                  {peekError}
                 </div>
               )}
 
@@ -1267,7 +1267,7 @@ export default function VerticalStudio({
                         </span>
                       )}
                       <span class="px-2 py-0.5 rounded-full bg-emerald-100 border border-[#1e1714] text-[10px] font-black text-[#1e1714]">
-                        {peekResult.isHttps !== false ? "🔒 HTTPS" : "⚠️ HTTP"}
+                        {peekResult.isHttps !== false ? "HTTPS" : "HTTP"}
                       </span>
                     </div>
                   </div>

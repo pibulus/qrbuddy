@@ -75,7 +75,7 @@ export default function SocialHubForm({ url }: Props) {
     {
       id: "youtube",
       label: "YouTube",
-      color: "bg-red-50 border-red-400 text-red-600",
+      color: "bg-amber-50 border-amber-400 text-amber-800",
     },
     {
       id: "linkedin",

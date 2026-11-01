@@ -71,8 +71,8 @@ Deno.test("createFramedSvg - unframed/empty caption generates correct vector car
   // Dimensions for no caption: 1128x1128
   assertNotEquals(framed.indexOf('width="1128"'), -1);
   assertNotEquals(framed.indexOf('height="1128"'), -1);
-  assertNotEquals(framed.indexOf('fill="#FFFBF5"'), -1);
-  assertNotEquals(framed.indexOf('stroke="#000000"'), -1);
+  assertNotEquals(framed.indexOf('fill="#FFFEF7"'), -1);
+  assertNotEquals(framed.indexOf('stroke="#1e1714"'), -1);
   assertNotEquals(
     framed.indexOf('x="64" y="64" width="1000" height="1000"'),
     -1,

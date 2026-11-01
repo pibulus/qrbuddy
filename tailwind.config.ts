@@ -146,6 +146,10 @@ export default {
       },
 
       colors: {
+        // No absolute #fff or #000 in the house: the utility names resolve
+        // to warm paper and warm ink so every existing class obeys the law.
+        white: "#fffef7",
+        black: "#1e1714",
         qr: {
           // Sunset gradient
           sunset1: "#FFE5B4",

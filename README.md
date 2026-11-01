@@ -12,10 +12,10 @@ walls, or $35/month hostage subscriptions.
 - **Full-Stack QR Studio** - Create URLs, Wi-Fi cards, Contact Cards (vCard),
   Social Bio Hubs, Media Hubs, Phone/SMS/Email triggers, and Plain Text from one
   smart auto-detecting input bar
-- **Print-Verified Design Engine** - 8 luminance-tested gradient palettes (≤
-  0.40 contrast), custom 2-stop linear/radial gradients, dot & corner geometry,
-  center logo stamp, SCAN ME frames, live WCAG contrast badge, and 3000px PNG +
-  vector SVG export
+- **Print-Verified Design Engine** - 10 luminance-tested palettes (6 in the
+  public gallery, ≤ 0.40 luminance), custom 2-stop linear/radial gradients,
+  module, eye and centre-mark geometry, centre logo or monogram, palette-aware
+  card labels, live WCAG contrast badge, and 3000px PNG + vector SVG export
 - **Smart Dynamic QR Codes** - Edit destinations after printing, route by
   time-of-day (Breakfast/Lunch/Dinner menus), split by iOS/Android or A/B
   weights, rotate sequential links, or set scan caps and expiration dates

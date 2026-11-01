@@ -612,6 +612,12 @@ export default function DemoDestinationPage({ data }: PageProps<DemoPageData>) {
           content={isSpanish ? cfg.subtitleEs : cfg.subtitleEn}
         />
         <meta name="robots" content="index, follow" />
+        <link
+          rel="canonical"
+          href={`https://qrbuddy.app/demo/${cfg.key}${
+            isSpanish ? "?lang=es" : ""
+          }`}
+        />
       </Head>
 
       <div class="min-h-screen flex flex-col items-center justify-start px-4 pb-12 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 text-[#1e1714] selection:bg-pink-300 selection:text-[#1e1714]">

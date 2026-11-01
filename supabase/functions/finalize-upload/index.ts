@@ -7,6 +7,11 @@
 import { serve } from "https://deno.land/std@0.216.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  getClientIP,
+} from "../_shared/rate-limit.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
 import { deleteObjects, headObjectSize } from "../_shared/r2.ts";
 import { generateOwnerToken } from "../_shared/visitor.ts";
@@ -96,6 +101,15 @@ serve(async (req) => {
   }
 
   try {
+    const rateLimitResult = await checkRateLimit(getClientIP(req), {
+      scope: "finalize-upload",
+      windowMs: 60 * 60 * 1000,
+      maxRequests: 60,
+    });
+    if (rateLimitResult.isLimited) {
+      return createRateLimitResponse(rateLimitResult, getCorsHeaders(req));
+    }
+
     const hasPass = await requestHasValidPass(req);
     if (!hasPass) {
       return jsonResponse(

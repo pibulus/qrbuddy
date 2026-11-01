@@ -10,6 +10,7 @@ export default function Boom() {
           content="This QR code has already self-destructed"
         />
         <meta name="robots" content="noindex" />
+        <link rel="canonical" href="https://qrbuddy.app/boom" />
       </Head>
 
       <main class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-400 via-red-400 to-yellow-400 relative overflow-hidden">

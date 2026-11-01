@@ -5,7 +5,7 @@
  * ModalShell.tsx classes light up.
  *
  * Theme via CSS custom props on any ancestor (all fallbacks are the fleet's
- * warm palette — NEVER absolute #fff/#000, warm near-white/near-black/cream):
+ * warm palette — NEVER absolute white/black, warm near-white/near-black/cream):
  *   --charm-modal-z              stacking. Fleet modal scale is 9999.
  *   --charm-modal-scrim          backdrop wash (warm near-black, never cold)
  *   --charm-modal-blur           backdrop-filter blur radius

@@ -127,8 +127,8 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
       </div>
 
       {error && (
-        <p class="text-red-600 text-sm text-center animate-slide-down">
-          ❌ {error}
+        <p class="text-amber-800 text-sm text-center animate-slide-down">
+          {error}
         </p>
       )}
 

@@ -37,7 +37,7 @@ export const STYLE_DISPLAY = {
   brutalist: {
     name: "Brutal",
     nameEs: "Brutal",
-    colors: ["#000000", "#FFFF00"],
+    colors: ["#1e1714", "#FFE94A"],
   },
   noir: {
     name: "Classic",

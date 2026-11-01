@@ -150,13 +150,13 @@ export function AboutModal({ lang }: { lang?: Locale } = {}) {
                 title={isSpanish
                   ? (
                     <>
-                      Pega un link.<br />
+                      Pega un link.
                       <span class="qr-marker">Hazlo brillar.</span>
                     </>
                   )
                   : (
                     <>
-                      Drop a link.<br />
+                      Drop a link.
                       <span class="qr-marker">Watch it bloom.</span>
                     </>
                   )}
@@ -183,13 +183,13 @@ export function AboutModal({ lang }: { lang?: Locale } = {}) {
                 title={isSpanish
                   ? (
                     <>
-                      QR bonitos.<br />
+                      QR bonitos.
                       <span class="qr-marker">Sin rescate.</span>
                     </>
                   )
                   : (
                     <>
-                      Nice QR codes.<br />
+                      Nice QR codes.
                       <span class="qr-marker">No ransom.</span>
                     </>
                   )}

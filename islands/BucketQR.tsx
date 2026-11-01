@@ -25,7 +25,7 @@ import { addToast } from "./ToastManager.tsx";
 const BTN_PRIMARY_UPLOAD =
   "w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50";
 const BTN_PRIMARY_DOWNLOAD =
-  "w-full py-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50";
+  "w-full py-6 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50";
 const BTN_SECONDARY =
   "w-full min-h-[52px] py-3 bg-white text-gray-900 font-black rounded-xl border-3 border-black shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-50";
 
@@ -604,7 +604,7 @@ export default function BucketQR({
       addToast("Bucket URL copied! 📋");
     } catch (err) {
       console.error("Failed to copy URL:", err);
-      addToast("Failed to copy URL ❌", 3000);
+      addToast("Could not copy the link", 3000);
     }
   };
 
@@ -616,7 +616,7 @@ export default function BucketQR({
           class={`inline-block px-6 py-3 rounded-full border-3 border-black text-lg font-black shadow-chunky ${
             isEmpty
               ? "bg-gradient-to-r from-green-400 to-blue-400 text-white"
-              : "bg-gradient-to-r from-orange-500 to-red-500 text-white animate-pulse"
+              : "bg-gradient-to-r from-amber-400 to-orange-500 text-white animate-pulse"
           }`}
         >
           {isEmpty ? "🪣 Ready for upload" : "💥 File ready"}
@@ -859,8 +859,8 @@ export default function BucketQR({
 
       {/* Error Message */}
       {error && (
-        <div class="bg-red-50 border-3 border-red-400 rounded-xl p-4 text-center">
-          <p class="text-red-700 font-semibold">❌ {error}</p>
+        <div class="bg-amber-50 border-3 border-amber-400 rounded-xl p-4 text-center">
+          <p class="text-amber-800 font-semibold">{error}</p>
         </div>
       )}
     </div>

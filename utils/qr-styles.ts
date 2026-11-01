@@ -362,18 +362,18 @@ export const QR_STYLES = {
   brutalist: {
     dots: {
       shape: "square" as const,
-      color: "#000000",
+      color: "#1e1714",
     },
     background: {
-      color: "#FFFF00",
+      color: "#FFE94A",
     },
     cornersSquare: {
       shape: "square" as const,
-      color: "#000000",
+      color: "#1e1714",
     },
     cornersDot: {
       shape: "square" as const,
-      color: "#000000",
+      color: "#1e1714",
     },
   },
 

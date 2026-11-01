@@ -716,7 +716,7 @@ export default function LibraryDrawer(
                 <div
                   class={`h-full transition-all duration-300 ${
                     quota.used_count >= quota.total_allowed
-                      ? "bg-rose-400"
+                      ? "bg-amber-400"
                       : "bg-emerald-400"
                   }`}
                   style={{
@@ -931,7 +931,7 @@ export default function LibraryDrawer(
                           title={isSpanish
                             ? "Quitar de la biblioteca"
                             : "Remove from library"}
-                          class="shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full border border-black/20 bg-neutral-100 hover:bg-rose-100 text-neutral-700 flex items-center justify-center text-xs font-bold transition-colors"
+                          class="shrink-0 w-11 h-11 -mr-1 -mt-1 rounded-full border border-black/20 bg-neutral-100 hover:bg-amber-100 text-neutral-700 flex items-center justify-center text-xs font-bold transition-colors"
                         >
                           ✕
                         </button>

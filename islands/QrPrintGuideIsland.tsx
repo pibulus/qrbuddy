@@ -397,8 +397,8 @@ export default function QrPrintGuideIsland(
           <div class="space-y-2">
             <div class="inline-block bg-amber-100 text-amber-900 border-2 border-black px-3 py-0.5 rounded-full text-xs font-black uppercase">
               {isSpanish
-                ? "⚠️ Códigos estáticos y redirecciones alojadas"
-                : "⚠️ Static Codes and Hosted Redirects"}
+                ? "Códigos estáticos y redirecciones alojadas"
+                : "Static codes and hosted redirects"}
             </div>
             <h2 class="text-2xl sm:text-3xl font-black text-[#1e1714] tracking-tight">
               {isSpanish

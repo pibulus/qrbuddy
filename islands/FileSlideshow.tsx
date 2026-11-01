@@ -596,7 +596,7 @@ export default function FileSlideshow({
       {isExploding && (
         <div class="fixed inset-0 z-[100] bg-qr-scrim/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in">
           <div class="text-7xl sm:text-9xl animate-bounce mb-4">💥</div>
-          <h2 class="text-3xl sm:text-5xl font-black text-red-500 tracking-tight animate-pulse mb-3">
+          <h2 class="text-3xl sm:text-5xl font-black text-amber-700 tracking-tight animate-pulse mb-3">
             SELF-DESTRUCT INITIATED
           </h2>
           <p class="text-base sm:text-lg font-mono text-yellow-300 font-bold max-w-md">
@@ -746,7 +746,6 @@ export default function FileSlideshow({
                               : "bg-white border-black text-black shadow-chunky"
                           }`}
                         >
-                          <span class="text-4xl">⚠️</span>
                           <p class="font-bold text-sm">
                             Couldn't load photo
                           </p>
@@ -816,7 +815,7 @@ export default function FileSlideshow({
                         Your browser does not support the audio element.
                       </audio>
                       {mediaErrorKey === currentDownloadUrl && (
-                        <div class="p-2.5 rounded-xl border-2 border-red-600 bg-red-100 text-xs font-bold text-red-950 flex items-center justify-between gap-2 animate-slide-down">
+                        <div class="p-2.5 rounded-xl border-2 border-amber-500 bg-amber-100 text-xs font-bold text-amber-900 flex items-center justify-between gap-2 animate-slide-down">
                           <span>Audio failed to load.</span>
                           <button
                             type="button"
@@ -975,7 +974,7 @@ export default function FileSlideshow({
               ? (
                 <p
                   role="status"
-                  class="min-h-[48px] flex items-center justify-center w-full px-4 py-3 rounded-2xl bg-red-100 border-2 border-black text-red-950 font-black text-center text-sm"
+                  class="min-h-[48px] flex items-center justify-center w-full px-4 py-3 rounded-2xl bg-amber-100 border-2 border-black text-amber-900 font-black text-center text-sm"
                 >
                   One-time link used. Your download may take a moment.
                 </p>
@@ -997,7 +996,7 @@ export default function FileSlideshow({
                           : isDarkTheme
                           ? "bg-white text-black border-2 border-white hover:bg-slate-200"
                           : "bg-[#fbbf24] text-[#1e1714] border-2 border-[#1e1714] hover:bg-[#f59e0b]"
-                        : "bg-gradient-to-r from-red-500 to-orange-500 text-white border-2 border-black shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse-glow"
+                        : "bg-gradient-to-r from-[#c4607a] to-[#ffbe0b] text-white border-2 border-black shadow-[0_0_20px_rgba(196,96,122,0.45)] animate-pulse-glow"
                     }`}
                   >
                     {hasMultipleFiles && !isUnlimited
@@ -1029,7 +1028,7 @@ export default function FileSlideshow({
             {zipError && (
               <p
                 role="alert"
-                class="text-xs text-center text-red-950 font-bold bg-red-100 p-2 rounded-xl border-2 border-black animate-slide-down"
+                class="text-xs text-center text-amber-900 font-bold bg-amber-100 p-2 rounded-xl border-2 border-black animate-slide-down"
               >
                 {zipError}
               </p>

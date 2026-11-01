@@ -1085,7 +1085,7 @@ export default function OwnerStrip(
                       onClick={() => void removeItem(f)}
                       disabled={mutationBusy}
                       aria-label={`Remove ${prettyName(f.name)}`}
-                      class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-rose-100 text-xs font-black transition-colors disabled:opacity-50"
+                      class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-amber-100 text-xs font-black transition-colors disabled:opacity-50"
                     >
                       ✕
                     </button>
