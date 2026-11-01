@@ -331,6 +331,11 @@ deno_version = 2
 # body (owner tokens, bucket PINs/passwords, short codes, and rate limits), not
 # Supabase Auth user JWTs. Keep JWT verification disabled so browser
 # publishable keys can invoke them.
+[functions.email-passport]
+# Public by design: the key itself is verified inside the handler, and the
+# endpoint is rate limited. No JWT is needed to email your own key.
+verify_jwt = false
+
 [functions.upload-file]
 verify_jwt = false
 

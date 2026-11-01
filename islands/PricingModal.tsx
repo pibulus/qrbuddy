@@ -136,6 +136,11 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const [claimStatus, setClaimStatus] = useState<ClaimStatus>("idle");
   const [claimRetry, setClaimRetry] = useState(0);
   const [passCopied, setPassCopied] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailValue, setEmailValue] = useState("");
+  const [emailStatus, setEmailStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
   const [checkoutAvailability, setCheckoutAvailability] = useState<
     CheckoutAvailability
   >("idle");
@@ -438,6 +443,32 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
     }
   };
 
+  const handleEmailPass = async () => {
+    const pass = getSupporterPass();
+    if (!pass) return;
+    setEmailStatus("sending");
+    try {
+      await apiRequest(
+        `${getApiUrl()}/email-passport`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: emailValue.trim(), pass }),
+        },
+        locale === "es"
+          ? "No se pudo enviar la clave"
+          : "Could not send the key",
+      );
+      setEmailStatus("sent");
+      setEmailOpen(false);
+      haptics.success();
+      addToast(locale === "es" ? "Clave enviada" : "Key sent");
+    } catch {
+      setEmailStatus("error");
+      haptics.error();
+    }
+  };
+
   const handleCopyPass = async () => {
     const pass = getSupporterPass();
     if (!pass) return;
@@ -524,8 +555,8 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
             <div class="qr-pitch-copy">
               <p>
                 {isSpanish
-                  ? "La clave llegó en el correo de compra. También se copia desde un dispositivo donde el Pasaporte ya esté activo, con Copiar clave."
-                  : "The key arrived in the purchase email. It can also be copied from any device where the Passport is already active, under Copy key."}
+                  ? "La clave se guarda en este navegador al confirmarse el pago. Envíala a tu correo o cópiala desde un dispositivo con el Pasaporte activo."
+                  : "The key is saved in this browser once payment confirms. Email it to yourself, or copy it from any device where the Passport is active."}
               </p>
             </div>
 
@@ -809,6 +840,75 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                       {isSpanish ? "Biblioteca 📚" : "Library 📚"}
                     </CardSecondaryButton>
                   </div>
+                  {emailStatus === "sent"
+                    ? (
+                      <p
+                        class="text-xs font-bold text-[#1e1714]/70 text-center"
+                        role="status"
+                      >
+                        {isSpanish
+                          ? "Clave enviada. Revisa la bandeja."
+                          : "Key sent. Check the inbox."}
+                      </p>
+                    )
+                    : emailOpen
+                    ? (
+                      <div class="flex gap-2">
+                        <input
+                          type="email"
+                          value={emailValue}
+                          onInput={(e) =>
+                            setEmailValue(
+                              (e.target as HTMLInputElement).value,
+                            )}
+                          placeholder={isSpanish
+                            ? "tu@correo.com"
+                            : "you@example.com"}
+                          aria-label={isSpanish
+                            ? "Correo para la clave"
+                            : "Email for the key"}
+                          class="min-w-0 flex-1 min-h-[44px] px-3 border-2 border-[#1e1714] rounded-xl bg-[#fffef7] text-sm font-bold focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleEmailPass}
+                          disabled={emailStatus === "sending" ||
+                            !emailValue.includes("@")}
+                          class="shrink-0 min-h-[44px] px-3 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] text-[#1e1714] text-xs font-black disabled:opacity-50"
+                        >
+                          {emailStatus === "sending"
+                            ? "…"
+                            : isSpanish
+                            ? "Enviar"
+                            : "Send"}
+                        </button>
+                      </div>
+                    )
+                    : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmailOpen(true);
+                          setEmailStatus("idle");
+                          haptics.light();
+                        }}
+                        class="w-full min-h-[36px] text-xs font-bold underline underline-offset-2 text-[#1e1714]/70 hover:text-[#1e1714]"
+                      >
+                        {isSpanish
+                          ? "Enviar la clave a mi correo"
+                          : "Email this key to me"}
+                      </button>
+                    )}
+                  {emailStatus === "error" && (
+                    <p
+                      class="text-xs font-bold text-amber-800 text-center"
+                      role="alert"
+                    >
+                      {isSpanish
+                        ? "No se pudo enviar. Otro intento."
+                        : "Could not send. Try again."}
+                    </p>
+                  )}
                 </div>
               )
               : (

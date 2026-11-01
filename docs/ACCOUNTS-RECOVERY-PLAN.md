@@ -11,14 +11,14 @@
 
 More is already built than it feels like at 2am.
 
-| Piece             | State                                                                            | Evidence                                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Passport identity | **Built** — random UUID + 32-hex secret + moniker + 4-word phrase + tier         | `utils/passport.ts`                                                                                             |
-| Device sync       | **Built** — history, edit tokens, supporter pass, encrypted with a 4-word phrase | `utils/sync-phrase.ts`                                                                                          |
-| Library (server)  | **Built, flag off** — codes, quota, scan counts behind `FEATURE_PLUS_LIBRARY`    | `utils/library.ts`, `utils/auth.ts`, `supabase/migrations/20261014000000_recoverable_library_and_allowance.sql` |
-| Dynamic QR        | **Live** — scan → routing engine → redirect, with per-scan analytics             | `supabase/functions/redirect-qr/index.ts`                                                                       |
-| File storage      | **Live** — Supabase bucket `qr-files`, with an R2 path for big files             | `supabase/functions/upload-to-bucket/index.ts`, `20260812030000_r2_big_files.sql`                               |
-| Email             | **New** — `qrbuddy.app` verified in Resend, send-only key minted                 | this session                                                                                                    |
+| Piece             | State                                                                                                                               | Evidence                                                                                                        |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Passport identity | **Built** — random UUID + 32-hex secret + moniker + 4-word phrase + tier                                                            | `utils/passport.ts`                                                                                             |
+| Device sync       | **Built** — history, edit tokens, supporter pass, encrypted with a 4-word phrase                                                    | `utils/sync-phrase.ts`                                                                                          |
+| Library (server)  | **Built, flag off** — codes, quota, scan counts behind `FEATURE_PLUS_LIBRARY`                                                       | `utils/library.ts`, `utils/auth.ts`, `supabase/migrations/20261014000000_recoverable_library_and_allowance.sql` |
+| Dynamic QR        | **Live** — scan → routing engine → redirect, with per-scan analytics                                                                | `supabase/functions/redirect-qr/index.ts`                                                                       |
+| File storage      | **Live** — Supabase bucket `qr-files`, with an R2 path for big files                                                                | `supabase/functions/upload-to-bucket/index.ts`, `20260812030000_r2_big_files.sql`                               |
+| Email             | **Wired** — `email-passport` sends your own key via Resend (domain verified), 5/hour per IP, key verified server-side, never stored | `supabase/functions/email-passport/index.ts`                                                                    |
 
 So "accounts need to be recoverable" is not a greenfield build. It's one hole in
 something mostly assembled.
