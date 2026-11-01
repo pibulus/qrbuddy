@@ -149,6 +149,20 @@ was three equal bricks.
 - **Rhythm.** `gap-2` everywhere inside the cluster; the gap to the footer dock
   is what's left.
 
+## 6. Pigment back, 80/20 for real (fourth pass)
+
+§5 over-corrected into pastel: Save pill, Passport and the active segment all
+sat on `--qr-theme-tint`, so nothing popped and `Editable 5 free` read as
+disabled. Fixes: Save pill is saturated gold `#ffbe0b` (pops on every QR
+palette); Passport, the `5 free` badge and the card's top-right `editable` tag
+wear saturated `--qr-theme-accent` + near-white text; the active switch segment
+is a raised cream keycap and the inactive one keeps full ink. Action row is
+Approach B: `Design` is an ink-filled hero (`HERO`, `flex-1`), `Link ▾` a
+rounded type chip, `Inspect` icon-only on phones. Phone column widened to
+`max-w-[348px]` so `https://example.com/menu` no longer clips; the 📎 became an
+inline SVG. The headline word was never pastel — it rotates with an opacity fade
+and a shot caught it mid-transition.
+
 ## Verifying
 
 ```bash

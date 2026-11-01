@@ -314,24 +314,26 @@ adding surfaces:
   theme accent only on focus, amber + shake on invalid. `STAGE_WELL` = recessed
   track for Static/Editable: `border-2`, creamy `#f7ecdc` ground, hairline
   inset, no outer shadow; only the active segment gets the theme tint and a
-  1.5px lift; whole switch ~36px tall (`p-0.5`, segments `min-h-[30px]`).
-  Segment copy is the mode name only: `Static` / `Editable` + a `5 free`
-  micro-badge (`bg-[#1e1714]/10`). No prose in a switch. `STAGE_TOOL_BTN` =
-  panel triggers: `border-2`, 2px lip, neutral paper for all of them; the one
-  whose panel is open latches down (`translate-y-[2px] shadow-none` + tint) via
+  1.5px lift; whole switch ~36px tall (`p-0.5`, segments `min-h-[30px]`). Active
+  segment = raised `#fffef7` keycap; inactive stays full ink, never grey. Copy
+  is the mode name only: `Static` / `Editable` + a `5 free` micro-badge in
+  saturated `--qr-theme-accent`. No prose in a switch. `STAGE_TOOL_BTN` = panel
+  triggers: `border-2`, 2px lip, neutral paper for all of them; the one whose
+  panel is open latches down (`translate-y-[2px] shadow-none` + tint) via
   `openPanel`. `STAGE_PRESS` is the keycap physics everywhere: 70ms, hover
   `-1px`, press `+2px` and shadow 0. Cluster rhythm is one `gap-2`/`space-y-2`
   throughout.
-- **One leading colour in the workspace**: the Save pill wears
-  `--qr-theme-cta-bg` (hover/active = `cta-hover`/`cta-active`), and nothing
-  else below the title does. Footer `Passport` is `--qr-theme-tint-strong` with
-  sepia text and an accent dot, never a solid hot-pink fill; secondary
-  navigation must not out-shout the stage.
+- **Bold pigment, not nursery pastel**: the Save pill is saturated gold
+  `#ffbe0b` (hover `#ffd04a`, active `#f2ac00`) with sepia text, which pops on
+  every palette. Footer `Passport`, the `5 free` badge and the card's `editable`
+  tag all wear saturated `--qr-theme-accent` with `#fffef7` text. Structural
+  surfaces stay `#fffef7` + `#1e1714` so the pigment has a stage. Never a
+  `--qr-theme-tint` wash as a CTA fill.
 - **Home action row**: under the well, a `flex gap-2` of 38px `STAGE_TOOL_BTN`
   keycaps named for what they open, weighted 80/20 — `Design` (palette glyph,
-  `flex-1`, resting `--qr-theme-tint`/50) takes the room; `[Link ▾]` (current QR
-  type → Content tab) and `Inspect` (magnifier glyph → scanner) hug their text
-  (`shrink-0 px-3`); history clock only once there is some. Never an equal
+  `flex-1`, ink-filled `HERO`) takes the room; `[Link ▾]` is a `rounded-full`
+  type chip (current QR type → Content tab); `Inspect` is a magnifier, icon-only
+  on phones (`shrink-0`); history clock only once there is some. Never an equal
   three-column grid. Glyphs are inline monochrome SVGs (`StageGlyph`), never
   emoji. Business users and kids read the same labels; no mystery pill, no
   caption, no parenthetical. The sheet's own header names the open tab
@@ -342,8 +344,9 @@ adding surfaces:
   matrix copies the PNG to the clipboard and shows a cream "Copied PNG" pill for
   1.2s (browsers without image clipboard fall through to download). The Save
   pill is cream, `border-2`, 2px lip, two keycaps split by a sepia rule — never
-  mustard. Editable mode is shown on the artifact: a cream top-left tag with a
-  theme-accent dot. Download toasts carry no emoji.
+  mustard. Editable mode is shown on the artifact: a top-right `editable` tag in
+  saturated accent with a pulsing near-white dot. Download toasts carry no
+  emoji.
 - **Top rail**: just the vibe-cycler pill
   (`min-h-[36px] rounded-full border-2 text-xs font-black`, 2px lip, keycap
   press). On phones the name is hidden; after a cycle the pill widens to show it
