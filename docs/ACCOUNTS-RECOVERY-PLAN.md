@@ -11,14 +11,14 @@
 
 More is already built than it feels like at 2am.
 
-| Piece             | State                                                                            | Evidence                                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Passport identity | **Built** — random UUID + 32-hex secret + moniker + 4-word phrase + tier         | `utils/passport.ts`                                                                                             |
-| Device sync       | **Built** — history, edit tokens, supporter pass, encrypted with a 4-word phrase | `utils/sync-phrase.ts`                                                                                          |
-| Library (server)  | **Built, flag off** — codes, quota, scan counts behind `FEATURE_PLUS_LIBRARY`    | `utils/library.ts`, `utils/auth.ts`, `supabase/migrations/20261014000000_recoverable_library_and_allowance.sql` |
-| Dynamic QR        | **Live** — scan → routing engine → redirect, with per-scan analytics             | `supabase/functions/redirect-qr/index.ts`                                                                       |
-| File storage      | **Live** — Supabase bucket `qr-files`, with an R2 path for big files             | `supabase/functions/upload-to-bucket/index.ts`, `20260812030000_r2_big_files.sql`                               |
-| Email             | **New** — `qrbuddy.app` verified in Resend, send-only key minted                 | this session                                                                                                    |
+| Piece | State | Evidence |
+|---|---|---|
+| Passport identity | **Built** — random UUID + 32-hex secret + moniker + 4-word phrase + tier | `utils/passport.ts` |
+| Device sync | **Built** — history, edit tokens, supporter pass, encrypted with a 4-word phrase | `utils/sync-phrase.ts` |
+| Library (server) | **Built, flag off** — codes, quota, scan counts behind `FEATURE_PLUS_LIBRARY` | `utils/library.ts`, `utils/auth.ts`, `supabase/migrations/20261014000000_recoverable_library_and_allowance.sql` |
+| Dynamic QR | **Live** — scan → routing engine → redirect, with per-scan analytics | `supabase/functions/redirect-qr/index.ts` |
+| File storage | **Live** — Supabase bucket `qr-files`, with an R2 path for big files | `supabase/functions/upload-to-bucket/index.ts`, `20260812030000_r2_big_files.sql` |
+| Email | **New** — `qrbuddy.app` verified in Resend, send-only key minted | this session |
 
 So "accounts need to be recoverable" is not a greenfield build. It's one hole in
 something mostly assembled.
@@ -27,17 +27,16 @@ something mostly assembled.
 
 The three passports look alike and are not alike.
 
-|                                           | TalkType                              | ZipList                                          | QRBuddy                              |
-| ----------------------------------------- | ------------------------------------- | ------------------------------------------------ | ------------------------------------ |
-| Code format                               | `TT-XXXX-XXXX-XXXX`                   | `ZL-XXXX-XXXX-XXXX`                              | random UUID                          |
-| Derived from                              | HMAC(`talktype-license:seed`, secret) | HMAC(`ziplist-contributor-license:seed`, secret) | `crypto.randomUUID()`                |
-| Identity reproducible from the code alone | **Yes**                               | **Yes**                                          | **No**                               |
-| Secret                                    | derived, server-verifiable            | derived, server-verifiable                       | random, lives only in `localStorage` |
-| Hash namespace                            | `talktype-vault-id:`                  | `ziplist-vault-id:`                              | n/a                                  |
+| | TalkType | ZipList | QRBuddy |
+|---|---|---|---|
+| Code format | `TT-XXXX-XXXX-XXXX` | `ZL-XXXX-XXXX-XXXX` | random UUID |
+| Derived from | HMAC(`talktype-license:seed`, secret) | HMAC(`ziplist-contributor-license:seed`, secret) | `crypto.randomUUID()` |
+| Identity reproducible from the code alone | **Yes** | **Yes** | **No** |
+| Secret | derived, server-verifiable | derived, server-verifiable | random, lives only in `localStorage` |
+| Hash namespace | `talktype-vault-id:` | `ziplist-vault-id:` | n/a |
 
 Evidence: `talktype/src/lib/server/supporter/licenseCrypto.js`,
-`ziplist/src/lib/server/contributor/licenseCrypto.js`,
-`qrbuddy/utils/passport.ts`.
+`ziplist/src/lib/server/contributor/licenseCrypto.js`, `qrbuddy/utils/passport.ts`.
 
 Two consequences:
 
@@ -46,17 +45,16 @@ Two consequences:
    visual language and a component shape, not an identity. Cross-app SSO today
    is zero.
 2. **QRBuddy's passport is not recoverable.** TalkType can rebuild an identity
-   from the code because the code _is_ the derivation. QRBuddy stores a random
-   id and a random secret in `localStorage`; the 4-word phrase drives _sync_,
-   not _account_. Clear site data, lose the phone with no sync, or switch
-   browsers, and the library, codes and files are gone with no way back. That is
-   the exact failure Pablo is worried about, and it is real.
+   from the code because the code *is* the derivation. QRBuddy stores a random
+   id and a random secret in `localStorage`; the 4-word phrase drives *sync*, not
+   *account*. Clear site data, lose the phone with no sync, or switch browsers,
+   and the library, codes and files are gone with no way back. That is the exact
+   failure Pablo is worried about, and it is real.
 
 ## 3. What "the flag has a bill" actually meant
 
-Correction: the flag itself is free. What it turns on is a paid-tier
-conversation, because QRBuddy's entire backend is Supabase — routing, library,
-files, analytics.
+Correction: the flag itself is free. What it turns on is a paid-tier conversation,
+because QRBuddy's entire backend is Supabase — routing, library, files, analytics.
 
 Free tier ceilings that matter:
 
@@ -80,8 +78,8 @@ that never existed, because by then it is on paper.
 Today a scan costs: 1 Deno Deploy request → 1 edge function invocation → 1 DB
 read → 1 fire-and-forget analytics insert → 1 302.
 
-The analytics insert does not block the redirect (`redirect-qr/index.ts` — "fire
-and forget"), which is already correct.
+The analytics insert does not block the redirect
+(`redirect-qr/index.ts` — "fire and forget"), which is already correct.
 
 **Calls.** 400 businesses × 40 scans/day = 16,000/day ≈ **480k/month**. That is
 the free tier, exactly. One good week and it is over the line.
@@ -90,45 +88,45 @@ the free tier, exactly. One good week and it is over the line.
 `supabase/migrations/`. At ~200 bytes a row, 480k scans/month ≈ 96 MB/month, so
 the 500 MB free database fills in about five months of healthy traffic.
 
-**Files.** 400 businesses × 20 MB of menus, PDFs and photos = 8 GB against a 1
-GB free bucket. The R2 path exists but is the exception, not the default.
+**Files.** 400 businesses × 20 MB of menus, PDFs and photos = 8 GB against a
+1 GB free bucket. The R2 path exists but is the exception, not the default.
 
 **Verdict:** 400 businesses is comfortable on Pro + R2-as-default + analytics
 retention. It is a cliff on Free, and the cliff is silent.
 
-The architectural upgrade, if traffic ever really lands: the redirect answer
-only changes when someone edits the QR, so it can be answered at the edge (Deno
-KV or a Cloudflare Worker) with Supabase used for edits and dashboards. That
-removes the function invocation from the hot path entirely. Not needed for 400
+The architectural upgrade, if traffic ever really lands: the redirect answer only
+changes when someone edits the QR, so it can be answered at the edge (Deno KV or
+a Cloudflare Worker) with Supabase used for edits and dashboards. That removes
+the function invocation from the hot path entirely. Not needed for 400
 businesses. Worth knowing it exists.
 
 ## 5. The plan
 
 ### P0 — make the account survivable (no new money, no new decisions)
 
-- Reuse the email system just wired: `qrbuddy.app` is verified, the send-only
-  key is minted.
+- Reuse the email system just wired: `qrbuddy.app` is verified, the send-only key
+  is minted.
 - Add a recovery email to the passport: `recovery_email` + a verification token
-  - `recovery_sent_at` on the library user row.
+  + `recovery_sent_at` on the library user row.
 - New edge function `send-recovery`: given an email, mail a one-tap link that
   re-issues the passport (id + secret) on a new device. Same shape as TalkType's
   `/u/<code>`: the link is the door, the passkey stays the secret.
 - Rate-limit and constant-time it: the response must not reveal whether an email
   is registered.
 - Mail copy in the same voice as the TalkType/ZipList Passport mails, with the
-  passport card image attached (the renderer ports directly — it takes a code, a
-  name and a QR, and consumes the same seeded palette functions).
+  passport card image attached (the renderer ports directly — it takes a code,
+  a name and a QR, and consumes the same seeded palette functions).
 
-_Owner: me. Risk: low, additive, behind the same flag._
+*Owner: me. Risk: low, additive, behind the same flag.*
 
 ### P1 — one identity instead of two
 
-Right now the passport has an id/secret _and_ a sync phrase that do different
+Right now the passport has an id/secret *and* a sync phrase that do different
 things. That is a bug shaped like a feature. Decide:
 
 - **Option A (keep random, store recoverable):** passport stays random, the
-  server stores it wrapped by the verified email. Recovery = email. Cheapest, no
-  migration, works with what exists.
+  server stores it wrapped by the verified email. Recovery = email. Cheapest,
+  no migration, works with what exists.
 - **Option B (derive, like TalkType):** passport identity derived from a signed
   code. Recovery = code, email is just delivery. Costs a migration for existing
   passports and a re-issue path for anyone already holding a random one.
@@ -141,8 +139,7 @@ week of my time; B is a project.
 Already 80% there: `utils/sync-phrase.ts` syncs history with merge. What is
 missing is the same rigour TalkType and ZipList already have:
 
-- tombstones for deletes (so a deleted QR does not resurrect from another
-  device)
+- tombstones for deletes (so a deleted QR does not resurrect from another device)
 - per-item change timestamps
 - a stable item key that is not the local array index
 - settings alongside history (design preferences are already a separate sync —
@@ -151,7 +148,7 @@ missing is the same rigour TalkType and ZipList already have:
 Collapse the phrase and the passport into one secret so there is one thing to
 remember and one thing to lose.
 
-_Owner: me. Risk: medium — merge bugs are the class of bug that eats data._
+*Owner: me. Risk: medium — merge bugs are the class of bug that eats data.*
 
 ### P3 — the money and the ceilings (needs Pablo)
 
@@ -162,7 +159,7 @@ _Owner: me. Risk: medium — merge bugs are the class of bug that eats data._
 - **Retention job for `scan_logs`** (90 days raw, monthly rollups for the
   dashboard). Without it the database is a clock.
 
-_Owner: Pablo, one dashboard decision + one card._
+*Owner: Pablo, one dashboard decision + one card.*
 
 ## 6. Open decisions
 

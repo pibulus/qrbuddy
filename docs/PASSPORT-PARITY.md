@@ -1,31 +1,31 @@
 # Passport parity — evidence, the one spec, and the prompt that fixes it
 
-> Written 2026-11-02. Everything in §1 was measured, not remembered. This is the
-> canonical document for the Passport across TalkType, ZipList and QRBuddy.
+> Written 2026-11-02. Everything in §1 was measured, not remembered.
+> This is the canonical document for the Passport across TalkType, ZipList and
+> QRBuddy.
 
 ## 1. Evidence: they are not the same, and never were
 
 Five files are called "the passport" in TalkType and ZipList. Measured today:
 
-| File                    | TalkType | ZipList | Differing lines |
-| ----------------------- | -------- | ------- | --------------- |
-| `MembershipCard.svelte` | 1019     | 1023    | **1872**        |
-| `identityUtils.js`      | 319      | 422     | **685**         |
-| `passportSkins.js`      | 369      | 306     | **569**         |
-| `passportPalettes.js`   | 166      | 152     | **256**         |
-| `passportAvatar.js`     | 145      | 152     | **199**         |
+| File | TalkType | ZipList | Differing lines |
+|---|---|---|---|
+| `MembershipCard.svelte` | 1019 | 1023 | **1872** |
+| `identityUtils.js` | 319 | 422 | **685** |
+| `passportSkins.js` | 369 | 306 | **569** |
+| `passportPalettes.js` | 166 | 152 | **256** |
+| `passportAvatar.js` | 145 | 152 | **199** |
 
 QRBuddy has **no card component at all** — no `MembershipCard`, no holofoil, no
 skin system. Its passport is `utils/passport.ts`: a random UUID and a random
 secret in `localStorage`.
 
 The good news: for the same input hash, all three currently produce the same
-`Fizzy Penguin / fizzy-penguin-wanders-quietly` and the same
-`Mango / oily /
-soft / bottts` skin. The **algorithms agree today**. They are
-three copies with no shared source and no drift check, which is exactly why they
-will not agree next year — and why every "it's the same" claim so far has been
-true only by luck.
+`Fizzy Penguin / fizzy-penguin-wanders-quietly` and the same `Mango / oily /
+soft / bottts` skin. The **algorithms agree today**. They are three copies with
+no shared source and no drift check, which is exactly why they will not agree
+next year — and why every "it's the same" claim so far has been true only by
+luck.
 
 The real identity break is elsewhere: identity is derived from the **code**, and
 every app mints its own code from its own secret with its own namespace
@@ -40,8 +40,7 @@ the design.
 - One passport: one code, one name, one phrase, one card, one skin.
 - Stamps are entitlements: `talktype`, `ziplist`, `qrbuddy`. You buy a stamp; it
   lands on the passport already held.
-- No bundles. Stamps are added one at a time, whenever someone wants the next
-  app.
+- No bundles. Stamps are added one at a time, whenever someone wants the next app.
 - Adding a stamp never renames anybody and never re-renders a different card.
 
 ### 2.1 Code
@@ -60,7 +59,7 @@ callers are a no-op instead of a race.
 One namespace for every app, so the same passport looks the same everywhere.
 
 **Identity is issued once and stored.** The passport record keeps
-`{ code, name, phrase, avatarKey, createdAt }`. Derivation is the _fallback_ for
+`{ code, name, phrase, avatarKey, createdAt }`. Derivation is the *fallback* for
 records without a stored identity, and the migration path for legacy `TT-`/`ZL-`
 codes. Nobody is ever renamed by a code change.
 
@@ -69,12 +68,7 @@ codes. Nobody is ever renamed by a code change.
 Stamps live in the signed token and in the per-app store:
 
 ```json
-{
-  "sub": "<passport id>",
-  "stamps": ["talktype"],
-  "tier": "passport",
-  "exp": 1790000000
-}
+{ "sub": "<passport id>", "stamps": ["talktype"], "tier": "passport", "exp": 1790000000 }
 ```
 
 HS256, verified statelessly with the shared issuer secret. Each app checks its
@@ -83,8 +77,8 @@ entry; the passport identity is untouched.
 
 ### 2.4 Storage
 
-Per app, as now: each app records the passport it redeemed and its own stamp. No
-shared database, no new service, no central call on the hot path.
+Per app, as now: each app records the passport it redeemed and its own stamp.
+No shared database, no new service, no central call on the hot path.
 
 ### 2.5 Sync
 
@@ -119,8 +113,8 @@ matching. Silent drift is the failure this whole document exists to prevent.
 
 ## 4. The prompt
 
-Copy everything between the lines into whichever AI CLI is working on this. It
-is written to be un-lieable: no claim counts without the command output.
+Copy everything between the lines into whichever AI CLI is working on this.
+It is written to be un-lieable: no claim counts without the command output.
 
 ---
 
@@ -133,10 +127,10 @@ spec. Do not redesign it; implement it.
 
 ### Goal
 
-One Passport implementation, vendored into all three apps, with **zero behaviour
-change for existing holders**. A Passport is a person; a stamp is an app. There
-are no bundles: stamps are added one at a time to the passport a person already
-holds.
+One Passport implementation, vendored into all three apps, with **zero
+behaviour change for existing holders**. A Passport is a person; a stamp is an
+app. There are no bundles: stamps are added one at a time to the passport a
+person already holds.
 
 ### Hard rules
 
