@@ -29,6 +29,7 @@ function json(req: Request, body: unknown, status = 200): Response {
 
 interface PassportBits {
   name?: string;
+  code?: string;
   phrase?: string;
   link?: string;
 }
@@ -57,6 +58,13 @@ function emailHtml(key: string, bits: PassportBits): string {
       <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2">${
     name ? `${name}, kept safe.` : "The key, kept safe."
   }</h1>
+      ${
+    bits.code
+      ? `<p style="margin:0 0 12px;font-size:15px;line-height:1.55">Passport code: <strong>${
+        escapeHtml(bits.code)
+      }</strong></p>`
+      : ""
+  }
       ${
     phrase
       ? `<p style="margin:0 0 12px;font-size:15px;line-height:1.55">Passkey phrase: <strong>${phrase}</strong></p>`
@@ -98,6 +106,7 @@ serve(async (req) => {
       .passport ?? {};
     const bits: PassportBits = {
       name: clean(rawPassport.name, 60),
+      code: clean(rawPassport.code, 20),
       phrase: clean(rawPassport.phrase, 80),
       link: clean(rawPassport.link, 600),
     };

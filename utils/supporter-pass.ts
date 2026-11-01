@@ -48,6 +48,21 @@ export function setSupporterPass(pass: string): boolean {
   return true;
 }
 
+/** Signed claims, for identity fields only. Never verify trust here. */
+export function getSupporterClaims(): Record<string, unknown> | null {
+  const pass = getSupporterPass();
+  if (!pass) return null;
+  try {
+    const encodedBody = pass.split(".")[1];
+    if (!encodedBody) return null;
+    const json = atob(encodedBody.replace(/-/g, "+").replace(/_/g, "/"));
+    const claims = JSON.parse(json);
+    return claims && typeof claims === "object" ? claims : null;
+  } catch {
+    return null;
+  }
+}
+
 export function clearSupporterPass(): void {
   if (typeof localStorage === "undefined") return;
   localStorage.removeItem(STORAGE_KEY);

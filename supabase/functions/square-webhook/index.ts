@@ -13,6 +13,7 @@ import {
   verifySquareWebhookSignature,
 } from "../_shared/square.ts";
 import { issueSupporterToken } from "../_shared/license.ts";
+import { mintPassportCode, passportIdentity } from "../_shared/passport.ts";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
@@ -94,7 +95,17 @@ serve(async (req) => {
       });
     }
 
-    const license = await issueSupporterToken();
+    const passportCode = await mintPassportCode(checkout.checkout_id);
+    const identity = await passportIdentity(passportCode);
+    const license = await issueSupporterToken({
+      sub: passportCode,
+      code: passportCode,
+      name: identity.name,
+      phrase: identity.phrase,
+      avatarEmoji: "🦎",
+      stamps: ["qrbuddy"],
+      app: "qrbuddy",
+    });
 
     // Idempotent mint: `license is null` means a retry after success is a
     // clean no-op — the first-minted license stays untouched.

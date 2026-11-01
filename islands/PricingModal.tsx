@@ -459,6 +459,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
             passport: passport
               ? {
                 name: passport.name,
+                code: passport.code,
                 phrase: passport.phrase,
                 link: buildPassportSyncUrl(passport),
               }

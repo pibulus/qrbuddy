@@ -43,7 +43,9 @@ async function importHmacKey(secret: string): Promise<CryptoKey> {
 }
 
 export function getLicenseSecret(): string {
-  const secret = Deno.env.get("LICENSE_SIGNING_KEY")?.trim() ?? "";
+  // The passport token is signed by the same secret in all three apps.
+  const secret = Deno.env.get("SOFTSTACK_PASSPORT_SECRET")?.trim() ||
+    Deno.env.get("LICENSE_SIGNING_KEY")?.trim() || "";
   if (secret.length < 16) {
     throw new Error("LICENSE_SIGNING_KEY is not configured");
   }
@@ -54,16 +56,23 @@ export interface SupporterPayload {
   tier: "supporter";
   /** Which apps this passport carries. QRBuddy's own stamp is "qrbuddy". */
   stamps?: string[];
+  sub?: string;
+  code?: string;
+  name?: string;
+  phrase?: string;
+  app?: string;
   v: number;
   iat: number;
   exp: number;
 }
 
 export async function issueSupporterToken(
+  claims: Record<string, unknown> = {},
   secret = getLicenseSecret(),
 ): Promise<string> {
   const issuedAt = Math.floor(Date.now() / 1000);
-  const body: SupporterPayload = {
+  const body = {
+    ...claims,
     tier: "supporter",
     stamps: ["qrbuddy"],
     v: TOKEN_VERSION,
