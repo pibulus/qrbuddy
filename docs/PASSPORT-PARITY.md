@@ -209,3 +209,23 @@ summarise away a failure.
 - One copy of the code, enforced by a check that fails when it drifts.
 - A second stamp changes one array, nothing else.
 - Nobody's name changed during the migration.
+
+## 5. Measured status after the QRBuddy email pass (2026-11-02)
+
+| Piece                  | TalkType                           | ZipList              | QRBuddy                                      | Parity                                         |
+| ---------------------- | ---------------------------------- | -------------------- | -------------------------------------------- | ---------------------------------------------- |
+| Code format            | `TT-XXXX-XXXX-XXXX`                | `ZL-XXXX-XXXX-XXXX`  | random UUID                                  | **No**                                         |
+| Code derived from seed | yes                                | yes                  | no                                           | **No**                                         |
+| Identity from code     | `talktype-vault-id:`               | `ziplist-vault-id:`  | random name/secret                           | **No**                                         |
+| Token claims           | tier + app                         | tier + app           | `tier`, `stamps: ["qrbuddy"]` (new), exp     | **Shape aligned, secret/namespace not shared** |
+| Passport email         | code + phrase + `/u/<code>` + card | code + phrase + link | key + phrase + name + one-click restore link | **Yes (recovery content)**                     |
+| Email delivery         | Resend                             | Resend               | Resend (`email-passport`)                    | **Yes**                                        |
+| Email rate limit       | per-request limiter                | 5/min                | 5/hour per IP                                | **Equivalent intent**                          |
+| Sync                   | `softstack:sync:v2`, app prefix    | same                 | same                                         | **Yes**                                        |
+| Card component         | `MembershipCard.svelte`            | its fork             | none                                         | **No**                                         |
+| Skin/palette/avatar    | shared algorithms, forked files    | fork                 | none                                         | **No**                                         |
+
+So: recovery now behaves the same in all three (email carries what a person
+needs), and QRBuddy's token is shaped for stamps. The identity is still not
+shared — that is the `SS-` module migration in §3/§4, and it cannot be faked by
+copying email HTML.

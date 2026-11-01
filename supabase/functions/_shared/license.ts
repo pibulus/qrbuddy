@@ -52,6 +52,8 @@ export function getLicenseSecret(): string {
 
 export interface SupporterPayload {
   tier: "supporter";
+  /** Which apps this passport carries. QRBuddy's own stamp is "qrbuddy". */
+  stamps?: string[];
   v: number;
   iat: number;
   exp: number;
@@ -63,6 +65,7 @@ export async function issueSupporterToken(
   const issuedAt = Math.floor(Date.now() / 1000);
   const body: SupporterPayload = {
     tier: "supporter",
+    stamps: ["qrbuddy"],
     v: TOKEN_VERSION,
     iat: issuedAt,
     exp: issuedAt + TOKEN_TTL_SECONDS,

@@ -453,7 +453,17 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: emailValue.trim(), pass }),
+          body: JSON.stringify({
+            email: emailValue.trim(),
+            pass,
+            passport: passport
+              ? {
+                name: passport.name,
+                phrase: passport.phrase,
+                link: buildPassportSyncUrl(passport),
+              }
+              : undefined,
+          }),
         },
         locale === "es"
           ? "No se pudo enviar la clave"
