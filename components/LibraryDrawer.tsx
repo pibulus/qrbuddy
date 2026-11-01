@@ -512,6 +512,12 @@ export default function LibraryDrawer(
               {isSpanish ? "Tu Biblioteca" : "Your Library"}
             </h2>
             <a
+              href="/stats"
+              class="ml-1 shrink-0 rounded-full border-2 border-black bg-emerald-300 px-2.5 py-1 text-[11px] font-black shadow-chunky transition active:translate-y-[1px]"
+            >
+              {isSpanish ? "Datos" : "Stats"}
+            </a>
+            <a
               href="/batch"
               class="ml-1 shrink-0 rounded-full border-2 border-black bg-yellow-300 px-2.5 py-1 text-[11px] font-black shadow-chunky transition active:translate-y-[1px]"
             >

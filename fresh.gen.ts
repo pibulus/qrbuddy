@@ -51,6 +51,7 @@ import * as $note_code_ from "./routes/note/[code].tsx";
 import * as $privacy from "./routes/privacy.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
+import * as $stats from "./routes/stats.tsx";
 import * as $terms from "./routes/terms.tsx";
 import * as $vcard from "./routes/vcard.tsx";
 import * as $vs_slug_ from "./routes/vs/[slug].tsx";
@@ -75,6 +76,7 @@ import * as $QrPrintGuideIsland from "./islands/QrPrintGuideIsland.tsx";
 import * as $RotatingTitle from "./islands/RotatingTitle.tsx";
 import * as $ShareActions from "./islands/ShareActions.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
+import * as $StatsPanel from "./islands/StatsPanel.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
 import * as $VerticalStudio from "./islands/VerticalStudio.tsx";
@@ -131,6 +133,7 @@ const manifest = {
     "./routes/privacy.tsx": $privacy,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
+    "./routes/stats.tsx": $stats,
     "./routes/terms.tsx": $terms,
     "./routes/vcard.tsx": $vcard,
     "./routes/vs/[slug].tsx": $vs_slug_,
@@ -157,6 +160,7 @@ const manifest = {
     "./islands/RotatingTitle.tsx": $RotatingTitle,
     "./islands/ShareActions.tsx": $ShareActions,
     "./islands/SmartInput.tsx": $SmartInput,
+    "./islands/StatsPanel.tsx": $StatsPanel,
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/ToastManager.tsx": $ToastManager,
     "./islands/VerticalStudio.tsx": $VerticalStudio,
