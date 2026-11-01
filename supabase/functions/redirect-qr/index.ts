@@ -823,6 +823,11 @@ serve(async (req) => {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <!-- A per-code cover page is never public content: keep internal
+               menus, SOPs and locker pages out of search results. -->
+          <meta name="robots" content="noindex, nofollow">
+          <meta name="referrer" content="no-referrer">
+          <meta name="theme-color" content="#fffef7">
           <title>${safeTitle}</title>
           <style>
             :root {
@@ -1102,6 +1107,13 @@ serve(async (req) => {
                 font-size: 16px;
                 padding: 14px 20px;
               }
+            }
+            /* Keyboard users get a visible ring in the owner's accent colour.
+               :focus-visible keeps it off for taps. */
+            .btn:focus-visible,
+            .footer-pill:focus-visible {
+              outline: 3px solid var(--accent);
+              outline-offset: 3px;
             }
             @media (prefers-reduced-motion: reduce) {
               .btn, .footer-pill {

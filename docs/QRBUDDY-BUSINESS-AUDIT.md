@@ -110,6 +110,10 @@ and batch is the one that converts.
 - **`qrbuddy.app/api/<function>`** proxy, so the API lives on our own host.
 - **`/developers`** documentation page, linked from the footer and the sitemap.
 - **Cover-page branding**: brand name and accent colour now persist.
+- **Cover pages are private by default**: the rendered page now sends
+  `noindex, nofollow` and `no-referrer`, carries a `theme-color`, and gives the
+  call-to-action a 3px focus ring in the owner's accent. Verified live through
+  `qrbuddy.app/r?code=…` (CTA 52px tall, outline `rgb(255,106,194)`).
 
 ## 6. Decisions taken 2026-11-02 (and why)
 
