@@ -40,7 +40,6 @@ import * as $for_weddings from "./routes/for/weddings.tsx";
 import * as $for_wifi from "./routes/for/wifi.tsx";
 import * as $gs1 from "./routes/gs1.tsx";
 import * as $guide_printing from "./routes/guide/printing.tsx";
-import * as $healthz from "./routes/healthz.ts";
 import * as $index from "./routes/index.tsx";
 import * as $inspect from "./routes/inspect.tsx";
 import * as $lockers from "./routes/lockers.tsx";
@@ -118,7 +117,6 @@ const manifest = {
     "./routes/for/wifi.tsx": $for_wifi,
     "./routes/gs1.tsx": $gs1,
     "./routes/guide/printing.tsx": $guide_printing,
-    "./routes/healthz.ts": $healthz,
     "./routes/index.tsx": $index,
     "./routes/inspect.tsx": $inspect,
     "./routes/lockers.tsx": $lockers,

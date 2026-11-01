@@ -57,6 +57,7 @@ serve(async (req) => {
     const {
       owner_token,
       destination_url,
+      password,
       max_scans,
       expires_at,
       is_active,
@@ -245,6 +246,28 @@ serve(async (req) => {
       updates.destination_url = finalDestinationUrl;
     }
     if (max_scans !== undefined) updates.max_scans = max_scans;
+
+    // Lock or unlock the code. Empty string clears the PIN; any other value is
+    // salted-hashed here so the plaintext never persists anywhere.
+    if (password !== undefined) {
+      const clean = typeof password === "string" ? password.trim() : "";
+      if (!clean) {
+        updates.password_hash = null;
+      } else {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const saltHex = Array.from(salt).map((b) =>
+          b.toString(16).padStart(2, "0")
+        ).join("");
+        const digest = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(saltHex + clean),
+        );
+        const hashHex = Array.from(new Uint8Array(digest)).map((b) =>
+          b.toString(16).padStart(2, "0")
+        ).join("");
+        updates.password_hash = `${saltHex}:${hashHex}`;
+      }
+    }
     if (expires_at !== undefined) updates.expires_at = expires_at;
     if (is_active !== undefined) updates.is_active = is_active;
     if (routingCheck?.ok) {

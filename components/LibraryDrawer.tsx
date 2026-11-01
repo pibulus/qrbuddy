@@ -418,6 +418,59 @@ export default function LibraryDrawer(
     }
   };
 
+  /**
+   * Export the library as CSV. Their codes are their asset register, so this
+   * must always be available — holding a customer's data hostage is the exact
+   * behaviour this product exists to be the opposite of.
+   */
+  function exportLibraryCsv() {
+    const header = [
+      "short_code",
+      "title",
+      "destination_url",
+      "redirect_url",
+      "created_at",
+      "expires_at",
+      "scan_count",
+      "max_scans",
+      "is_active",
+      "routing_mode",
+    ].join(",");
+
+    const escape = (value: unknown) => {
+      const text = value === null || value === undefined ? "" : String(value);
+      return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+    };
+
+    const body = codes
+      .map((code) =>
+        [
+          code.short_code,
+          escape(code.title ?? ""),
+          escape(code.destination_url),
+          escape(code.redirect_url),
+          code.created_at,
+          code.expires_at ?? "",
+          code.scan_count,
+          code.max_scans ?? "",
+          code.is_active,
+          code.routing_mode ?? "static",
+        ].join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([`${header}\n${body}`], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "qrbuddy-library.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    haptics.light();
+  }
+
   const hasAnyItems = codes.length > 0 || filteredLocalHistory.length > 0;
 
   return (
@@ -703,10 +756,22 @@ export default function LibraryDrawer(
           {/* Quota Progress Bar */}
           {quota && (
             <div class="bg-white border-2 border-black rounded-2xl p-4 shadow-sm space-y-2">
-              <div class="flex items-center justify-between text-xs font-bold">
+              <div class="flex items-center justify-between gap-2 text-xs font-bold">
                 <span class="text-neutral-700">
                   {isSpanish ? "Tus QRs guardados" : "Code Allowance"}
                 </span>
+                {codes.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={exportLibraryCsv}
+                    title={isSpanish
+                      ? "Descargar todos tus códigos como CSV"
+                      : "Download all your codes as CSV"}
+                    class="min-h-[32px] rounded-full border-2 border-black bg-white px-2.5 py-1 text-[11px] font-black shadow-xs transition hover:bg-neutral-100 active:scale-95"
+                  >
+                    {isSpanish ? "Exportar CSV" : "Export CSV"}
+                  </button>
+                )}
                 <span class="text-neutral-900">
                   {isSpanish
                     ? `${quota.used_count} / ${quota.total_allowed} usados`

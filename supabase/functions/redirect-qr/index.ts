@@ -16,6 +16,7 @@ import {
 } from "../_shared/dynamic-qr-preview.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { isQrUnbranded } from "../_shared/splash-validation.ts";
+import { sha256Hex, verifyPassword } from "../_shared/bucket-auth.ts";
 
 function escapeHtml(str: string): string {
   return str
@@ -40,13 +41,19 @@ function hourInTimeZone(date: Date, timeZone: string): number | null {
   }
 }
 
-function redirectWithCors(path: string, request?: Request, status = 302) {
+function redirectWithCors(
+  path: string,
+  request?: Request,
+  status = 302,
+  extraHeaders: Record<string, string> = {},
+) {
   return new Response(null, {
     status,
     headers: {
       ...getCorsHeaders(request),
       "Cache-Control": "no-store, max-age=0",
       "Location": path,
+      ...extraHeaders,
     },
   });
 }
@@ -143,6 +150,53 @@ serve(async (req) => {
           .update({ is_active: false })
           .eq("short_code", shortCode);
         return redirectWithCors("/boom", req);
+      }
+    }
+
+    // ── PIN gate ──────────────────────────────────────────────────────────
+    // A code with a password must not redirect until it is unlocked. The
+    // unlock token is derived from the stored hash, so it cannot be forged
+    // without knowing the PIN, and no extra secret has to be deployed.
+    // Locked codes do not consume a scan: the scan is counted only once
+    // somebody actually gets through.
+    let unlockHeaders: Record<string, string> = {};
+    if (qr.password_hash) {
+      const presented = req.headers.get("x-qr-unlock")?.trim() ?? "";
+      const providedPin = req.headers.get("x-qr-pin")?.trim() ?? "";
+      const expectedUnlock = await sha256Hex(
+        `${qr.short_code}:${qr.password_hash}`,
+      );
+
+      const alreadyUnlocked = presented.length > 0 &&
+        presented === expectedUnlock;
+
+      if (!alreadyUnlocked) {
+        if (!providedPin) {
+          return new Response(JSON.stringify({ error: "PIN_REQUIRED" }), {
+            status: 401,
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+              "X-QR-Pin-Required": "1",
+              "Cache-Control": "no-store, max-age=0",
+            },
+          });
+        }
+
+        if (!(await verifyPassword(qr.password_hash, providedPin))) {
+          return new Response(JSON.stringify({ error: "PIN_INVALID" }), {
+            status: 401,
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+              "X-QR-Pin-Required": "1",
+              "X-QR-Pin-Invalid": "1",
+              "Cache-Control": "no-store, max-age=0",
+            },
+          });
+        }
+
+        unlockHeaders = { "X-QR-Unlock": expectedUnlock };
       }
     }
 
@@ -379,7 +433,7 @@ serve(async (req) => {
         timestamp: new Date().toISOString(),
       });
       // Redirect to home instead of malicious URL
-      return redirectWithCors("/", req);
+      return redirectWithCors("/", req, 302, unlockHeaders);
     }
 
     // --------------------------------------------------------------------------
@@ -1084,7 +1138,7 @@ serve(async (req) => {
     }
 
     // Redirect to destination
-    return redirectWithCors(destinationUrl, req);
+    return redirectWithCors(destinationUrl, req, 302, unlockHeaders);
   } catch (error) {
     // Log detailed error information for security monitoring
     console.error("[SECURITY] Redirect failed:", {

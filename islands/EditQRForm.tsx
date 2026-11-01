@@ -87,6 +87,9 @@ export default function EditQRForm() {
   // Edit form state
   const [destinationUrl, setDestinationUrl] = useState("");
   const [maxScans, setMaxScans] = useState<number | null>(null);
+  // Lock: a PIN turns the redirect into a page nobody passes without it.
+  // Only sent when the person actually typed something.
+  const [pin, setPin] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [isActive, setIsActive] = useState(true);
 
@@ -249,6 +252,7 @@ export default function EditQRForm() {
     const saved = await saveQRData({
       destination_url: nextDestination,
       max_scans: maxScans,
+      ...(pin.trim() ? { password: pin.trim() } : {}),
       expires_at: expiryDate ? new Date(expiryDate).toISOString() : null,
       is_active: isActive,
       routing_mode: routingMode,
@@ -387,6 +391,30 @@ export default function EditQRForm() {
               );
             })}
           </div>
+        </div>
+
+        {/* Lock */}
+        <div class="space-y-2">
+          <label
+            htmlFor="qr-pin"
+            class="block text-xs font-black text-black uppercase tracking-wider"
+          >
+            Lock with a PIN (optional)
+          </label>
+          <input
+            id="qr-pin"
+            type="password"
+            autocomplete="new-password"
+            value={pin}
+            onInput={(event) =>
+              setPin((event.target as HTMLInputElement).value)}
+            placeholder="Anyone scanning must enter this first"
+            class="w-full px-4 py-3 border-2 border-black/15 rounded-xl font-bold focus:outline-none focus:border-black bg-white"
+          />
+          <p class="text-[11px] text-neutral-500 leading-snug">
+            Leave blank to keep the code open. A locked code does not count a
+            scan until someone gets through.
+          </p>
         </div>
 
         {/* Expiry Date */}

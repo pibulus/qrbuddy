@@ -81,11 +81,33 @@ serve(async (req) => {
       destination_url,
       max_scans,
       expires_at,
+      password,
       password_hash,
       routing_mode,
       routing_config,
       splash_config,
     } = body;
+
+    // A code can be locked with a PIN. Hashed here, salted, so the plaintext
+    // never leaves the request — and so the client never owns the scheme.
+    let resolvedPasswordHash: string | null =
+      typeof password_hash === "string" && password_hash.trim()
+        ? password_hash.trim()
+        : null;
+    if (typeof password === "string" && password.trim()) {
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const saltHex = Array.from(salt).map((b) =>
+        b.toString(16).padStart(2, "0")
+      ).join("");
+      const digest = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(saltHex + password.trim()),
+      );
+      const hashHex = Array.from(new Uint8Array(digest)).map((b) =>
+        b.toString(16).padStart(2, "0")
+      ).join("");
+      resolvedPasswordHash = `${saltHex}:${hashHex}`;
+    }
 
     // Validate the optional knobs so garbage can't silently disable controls:
     // an unparseable expires_at never expires (every comparison against an
@@ -317,7 +339,7 @@ serve(async (req) => {
         destination_url: finalDestinationUrl,
         max_scans: max_scans || null,
         expires_at: expires_at || null,
-        password_hash: password_hash || null,
+        password_hash: resolvedPasswordHash,
         routing_mode: routingCheck.mode,
         routing_config: routingCheck.value,
         splash_config: finalSplashConfig,
