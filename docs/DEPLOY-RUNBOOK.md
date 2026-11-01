@@ -47,7 +47,7 @@ Verify — all four must be 200, and version.json must name the current commit:
 ```sh
 curl -s https://qrbuddy.app/version.json
 for p in /batch /developers /stats; do curl -s -o /dev/null -w "$p %{http_code}\n" "https://qrbuddy.app$p"; done
-curl -s -X POST https://qrbuddy.app/api/api-keys \
+curl -s -X POST https://qrbuddy.app/v1/api-keys \
   -H "x-passport-id: $(uuidgen | tr 'A-Z' 'a-z')" \
   -H "content-type: application/json" -d '{"name":"post-deploy"}' | head -c 120
 ```

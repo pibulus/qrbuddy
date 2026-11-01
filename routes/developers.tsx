@@ -79,7 +79,7 @@ export default function ApiPage() {
             or as a bearer token. Keys are free to mint and are shown once.
           </p>
           <Code>
-            {`curl https://qrbuddy.app/api \\
+            {`curl https://qrbuddy.app/v1 \\
   -H "x-api-key: qb_your_key_here"`}
           </Code>
         </section>
@@ -114,7 +114,7 @@ export default function ApiPage() {
           </p>
           <Code>
             {`while IFS=, read -r url title; do
-  curl -s https://qrbuddy.app/api/create-dynamic-qr \\
+  curl -s https://qrbuddy.app/v1/create-dynamic-qr \\
     -H "x-api-key: qb_your_key_here" \\
     -H "content-type: application/json" \\
     -d "{\\"destination_url\\":\\"$url\\",\\"title\\":\\"$title\\"}"

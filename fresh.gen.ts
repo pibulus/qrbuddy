@@ -6,16 +6,8 @@ import * as $_404 from "./routes/_404.tsx";
 import * as $_500 from "./routes/_500.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
-import * as $api_api_keys from "./routes/api/api-keys.ts";
-import * as $api_create_dynamic_qr from "./routes/api/create-dynamic-qr.ts";
 import * as $api_download_file from "./routes/api/download-file.ts";
-import * as $api_get_dynamic_qr from "./routes/api/get-dynamic-qr.ts";
-import * as $api_health from "./routes/api/health.ts";
-import * as $api_library_stats from "./routes/api/library-stats.ts";
-import * as $api_library from "./routes/api/library.ts";
 import * as $api_peek from "./routes/api/peek.ts";
-import * as $api_redirect_qr from "./routes/api/redirect-qr.ts";
-import * as $api_update_dynamic_qr from "./routes/api/update-dynamic-qr.ts";
 import * as $batch from "./routes/batch.tsx";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
@@ -60,6 +52,7 @@ import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
 import * as $stats from "./routes/stats.tsx";
 import * as $terms from "./routes/terms.tsx";
+import * as $v1_fn_ from "./routes/v1/[fn].ts";
 import * as $vcard from "./routes/vcard.tsx";
 import * as $vs_slug_ from "./routes/vs/[slug].tsx";
 import * as $weddings from "./routes/weddings.tsx";
@@ -95,16 +88,8 @@ const manifest = {
     "./routes/_500.tsx": $_500,
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
-    "./routes/api/api-keys.ts": $api_api_keys,
-    "./routes/api/create-dynamic-qr.ts": $api_create_dynamic_qr,
     "./routes/api/download-file.ts": $api_download_file,
-    "./routes/api/get-dynamic-qr.ts": $api_get_dynamic_qr,
-    "./routes/api/health.ts": $api_health,
-    "./routes/api/library-stats.ts": $api_library_stats,
-    "./routes/api/library.ts": $api_library,
     "./routes/api/peek.ts": $api_peek,
-    "./routes/api/redirect-qr.ts": $api_redirect_qr,
-    "./routes/api/update-dynamic-qr.ts": $api_update_dynamic_qr,
     "./routes/batch.tsx": $batch,
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
@@ -149,6 +134,7 @@ const manifest = {
     "./routes/r.tsx": $r,
     "./routes/stats.tsx": $stats,
     "./routes/terms.tsx": $terms,
+    "./routes/v1/[fn].ts": $v1_fn_,
     "./routes/vcard.tsx": $vcard,
     "./routes/vs/[slug].tsx": $vs_slug_,
     "./routes/weddings.tsx": $weddings,

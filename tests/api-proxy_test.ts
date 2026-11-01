@@ -1,8 +1,8 @@
 import { assertEquals } from "https://deno.land/std@0.216.0/assert/mod.ts";
-import { handler } from "../routes/api/health.ts";
+import { handler } from "../routes/v1/[fn].ts";
 
-function ctx() {
-  return { params: {} } as unknown as Parameters<
+function ctx(name = "health") {
+  return { params: { fn: name } } as unknown as Parameters<
     NonNullable<typeof handler.GET>
   >[1];
 }

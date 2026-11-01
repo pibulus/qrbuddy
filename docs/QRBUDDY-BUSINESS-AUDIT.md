@@ -107,7 +107,7 @@ and batch is the one that converts.
 - **CSV export** of the library.
 - **API keys**: hashed at rest, shown once, revocable, act as the Passport. Live
   on Supabase, verified end to end (create → use → revoke → 401).
-- **`qrbuddy.app/api/<function>`** proxy, so the API lives on our own host.
+- **`qrbuddy.app/v1/<function>`** proxy, so the API lives on our own host.
 - **`/developers`** documentation page, linked from the footer and the sitemap.
 - **Cover-page branding**: brand name and accent colour now persist.
 - **Cover pages are private by default**: the rendered page now sends

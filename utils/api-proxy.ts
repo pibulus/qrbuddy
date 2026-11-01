@@ -1,6 +1,6 @@
 // API proxy core — one function, several tiny route files.
 //
-// `qrbuddy.app/api/<function>` forwards to the matching Supabase edge function
+// `qrbuddy.app/v1/<function>` forwards to the matching Supabase edge function
 // so the API lives on our own domain: one predictable host for integrators,
 // and a subdomain can be pointed at it later without reissuing printed codes.
 //
@@ -8,8 +8,6 @@
 // segment built and worked locally, then failed on Deno Deploy before the
 // handler was ever reached (Cloudflare 520 / x-deno-error 500). Named routes
 // also make the public contract readable — the file list *is* the API.
-
-import type { Handlers } from "$fresh/server.ts";
 
 const HOP_BY_HOP = new Set([
   "connection",
@@ -146,31 +144,29 @@ async function forward(req: Request, name: string): Promise<Response> {
   });
 }
 
-/** Build a Fresh handler that proxies one named edge function. */
-export function makeApiHandler(name: string): Handlers {
-  const call = async (req: Request): Promise<Response> => {
-    try {
-      return await forward(req, name);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      console.error(`[API proxy] ${name} failed:`, detail);
-      return json(
-        { error: "API upstream unavailable. Try again shortly.", detail },
-        502,
-        req,
-        { "Retry-After": "5" },
-      );
-    }
-  };
+/** CORS preflight for any API path. */
+export function preflight(req: Request): Response {
+  return new Response(null, { status: 204, headers: corsHeaders(req) });
+}
 
-  return {
-    OPTIONS(req) {
-      return new Response(null, { status: 204, headers: corsHeaders(req) });
-    },
-    GET: call,
-    POST: call,
-    PATCH: call,
-    PUT: call,
-    DELETE: call,
-  };
+/** Proxy one named edge function. Never throws: a failure is a JSON 502. */
+export async function handleApiRequest(
+  req: Request,
+  name: string,
+): Promise<Response> {
+  if (!/^[a-z0-9][a-z0-9-]{1,60}$/.test(name)) {
+    return json({ error: "Unknown endpoint" }, 404, req);
+  }
+  try {
+    return await forward(req, name);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[API proxy] ${name} failed:`, detail);
+    return json(
+      { error: "API upstream unavailable. Try again shortly.", detail },
+      502,
+      req,
+      { "Retry-After": "5" },
+    );
+  }
 }

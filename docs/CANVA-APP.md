@@ -27,7 +27,7 @@ honest version: create the code anonymously and offer "link it to your Passport"
 in the success state, which is where attention already is.
 
 **2. The backend URL is hardcoded** to the Supabase project
-(`aqydpibnvlhcjcwosrti.supabase.co`). It should be `https://qrbuddy.app/api`,
+(`aqydpibnvlhcjcwosrti.supabase.co`). It should be `https://qrbuddy.app/v1`,
 which now exists in the app as a proxy. One host, brandable later, and it means
 a future custom domain change does not require resubmitting the Canva app.
 
