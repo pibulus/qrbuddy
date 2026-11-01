@@ -20,10 +20,23 @@ Deploy's git integration — so a busy evening spends the budget before the CLI
 even runs. Check the Deploy dashboard's recent activity before assuming the
 quota is wrong.
 
+## 1b. The stale-snapshot trap (cost an hour on 2026-11-02)
+
+Symptom: a brand-new route under `routes/api/` returned Cloudflare **520** and
+`x-deno-error 500` in production while `routes/api/peek.ts` kept working — and
+the same route was fine locally.
+
+Cause: `_fresh/` is gitignored but the CLI uploads it. A deploy whose source
+carried a **new `fresh.gen.ts` next to an old `_fresh` snapshot** ships a
+manifest naming routes that are not in the bundle, and the request dies before
+any handler runs. Rebuilding first is the fix, and it is now part of the routine
+below.
+
 ## 2. Deploy
 
 ```sh
 cd ~/Projects/active/apps/qrbuddy
+rm -rf _fresh && deno task build   # never deploy a stale snapshot
 git status                     # must be clean
 source ~/.config/api_keys
 deno deploy --prod --org pibulus --app qrbuddy --token "$DENO_DEPLOY_TOKEN_NEW"

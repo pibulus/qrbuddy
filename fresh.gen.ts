@@ -47,8 +47,6 @@ import * as $for_restaurants from "./routes/for/restaurants.tsx";
 import * as $for_vcard from "./routes/for/vcard.tsx";
 import * as $for_weddings from "./routes/for/weddings.tsx";
 import * as $for_wifi from "./routes/for/wifi.tsx";
-import * as $gateway_fn_ from "./routes/gateway/[fn].ts";
-import * as $gateway_ping from "./routes/gateway/ping.ts";
 import * as $gs1 from "./routes/gs1.tsx";
 import * as $guide_printing from "./routes/guide/printing.tsx";
 import * as $index from "./routes/index.tsx";
@@ -138,8 +136,6 @@ const manifest = {
     "./routes/for/vcard.tsx": $for_vcard,
     "./routes/for/weddings.tsx": $for_weddings,
     "./routes/for/wifi.tsx": $for_wifi,
-    "./routes/gateway/[fn].ts": $gateway_fn_,
-    "./routes/gateway/ping.ts": $gateway_ping,
     "./routes/gs1.tsx": $gs1,
     "./routes/guide/printing.tsx": $guide_printing,
     "./routes/index.tsx": $index,
