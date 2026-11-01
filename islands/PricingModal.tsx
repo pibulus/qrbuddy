@@ -1,4 +1,5 @@
 import { signal } from "@preact/signals";
+import type { ComponentType } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { formatInternationalPrice, PRICING_TIERS } from "../types/pricing.ts";
 import { addToast } from "./ToastManager.tsx";
@@ -12,7 +13,6 @@ import {
   CardQuietLink,
   CardSecondaryButton,
 } from "../components/modal/CardModal.tsx";
-import { PassportMembershipCard } from "../components/passport/MembershipCard.tsx";
 import { getApiUrl } from "../utils/api.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
 import { haptics } from "../utils/haptics.ts";
@@ -25,6 +25,7 @@ import {
   type QRBuddyPassport,
   renderPassportQrSvg,
 } from "../utils/passport.ts";
+import type { PassportMembershipCardProps } from "../components/passport/MembershipCard.tsx";
 import {
   clearPendingCheckout,
   getPendingCheckout,
@@ -100,6 +101,9 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const [view, setView] = useState<ModalView>("pitch");
   const [hasPass, setHasPass] = useState(false);
   const [passport, setPassport] = useState<QRBuddyPassport | null>(null);
+  const [PassportCard, setPassportCard] = useState<
+    ComponentType<PassportMembershipCardProps> | null
+  >(null);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
   const [pastedPass, setPastedPass] = useState("");
   const [checkoutError, setCheckoutError] = useState("");
@@ -154,6 +158,21 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       globalThis.removeEventListener("qrb-passport-synced", onPassportChanged);
     };
   }, [isOpen]);
+
+  // The card pulls DiceBear (~171 KB transfer). Load it only when the Passport
+  // modal actually opens, not on every home page.
+  useEffect(() => {
+    if (!isOpen || PassportCard) return;
+    let alive = true;
+    import("../components/passport/MembershipCard.tsx").then((module) => {
+      if (alive) setPassportCard(() => module.PassportMembershipCard);
+    }).catch((error) => {
+      console.warn("[PricingModal] Passport card failed to load:", error);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [isOpen, PassportCard]);
 
   // Check the public availability endpoint when the offer opens. This only
   // reads configuration; a payment link is created only after an explicit click.
@@ -655,9 +674,9 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
             </div>
 
             {/* One card, three apps: markup + CSS come from the shared module. */}
-            {passport && (
+            {passport && PassportCard && (
               <div class="mx-auto w-full max-w-[342px]">
-                <PassportMembershipCard passport={passport} appName="QRBuddy" />
+                <PassportCard passport={passport} appName="QRBuddy" />
               </div>
             )}
 
