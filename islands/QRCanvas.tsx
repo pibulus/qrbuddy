@@ -828,14 +828,14 @@ export default function QRCanvas(
           </div>
         )}
 
-      {/* Save pill — Tier 2 paper, two keycaps in one capsule */}
+      {/* Save pill — the one leading colour in the workspace (theme CTA fill) */}
       <div
         key={url.value ? "chip-live" : "chip-idle"}
         class={`absolute ${
           frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== ""
             ? "-bottom-5"
             : "-bottom-4"
-        } -right-3 min-h-[40px] rounded-full bg-[#fffef7] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-stretch overflow-hidden z-10 ${
+        } -right-3 min-h-[40px] rounded-full bg-[var(--qr-theme-cta-bg,#ffe066)] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-stretch overflow-hidden z-10 ${
           url.value ? "animate-bounce-in" : ""
         }`}
       >
@@ -845,7 +845,7 @@ export default function QRCanvas(
             e.stopPropagation();
             void handleDownloadClick();
           }}
-          class="min-h-[36px] pl-3.5 pr-2.5 flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[var(--qr-theme-tint,#fdf2f8)] active:translate-y-[1.5px]"
+          class="min-h-[36px] pl-3.5 pr-2.5 flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[var(--qr-theme-cta-hover,#ffd633)] active:bg-[var(--qr-theme-cta-active,#f5c400)] active:translate-y-[1.5px]"
           aria-label={isSpanish
             ? "Descargar código QR como PNG"
             : "Download QR code as PNG"}
@@ -856,7 +856,7 @@ export default function QRCanvas(
         <button
           type="button"
           onClick={handleSvgDownloadClick}
-          class="min-h-[36px] pl-2.5 pr-3.5 flex items-center justify-center text-xs font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[var(--qr-theme-tint,#fdf2f8)] active:translate-y-[1.5px]"
+          class="min-h-[36px] pl-2.5 pr-3.5 flex items-center justify-center text-xs font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[var(--qr-theme-cta-hover,#ffd633)] active:bg-[var(--qr-theme-cta-active,#f5c400)] active:translate-y-[1.5px]"
           aria-label={isSpanish
             ? "Descargar código QR como SVG vectorial"
             : "Download QR code as vector SVG"}

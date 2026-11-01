@@ -314,20 +314,29 @@ adding surfaces:
   theme accent only on focus, amber + shake on invalid. `STAGE_WELL` = recessed
   track for Static/Editable: `border-2`, creamy `#f7ecdc` ground, hairline
   inset, no outer shadow; only the active segment gets the theme tint and a
-  1.5px lift; whole switch ≤40px tall, sub-labels one or two words (`free` /
-  `repoint · 5 free`). `STAGE_TOOL_BTN` = panel triggers: `border-2`, 2px lip,
-  neutral paper for all of them; the one whose panel is open latches down
-  (`translate-y-[2px] shadow-none` + tint) via `openPanel`. `STAGE_PRESS` is the
-  keycap physics everywhere: 70ms, hover `-1px`, press `+2px` and shadow 0.
-  Cluster rhythm is `space-y-3` / `mt-2`.
-- **Home action row**: under the well, a grid of `STAGE_TOOL_BTN` tiles named
-  for what they open — `[Link ▾]` (current QR type → Content tab) · `Design` (→
-  Design tab) · `Inspect` (→ scanner) · history clock (only once there is some).
-  Glyphs are inline monochrome SVGs (`StageGlyph`), never emoji. Business users
-  and kids read the same labels; no mystery pill, no caption, no parenthetical.
-  The sheet's own header names the open tab (`SHEET_HEADINGS`: "What the QR
-  holds." / "How the QR behaves." / "How the QR looks."). Static/Editable stays
-  in-flow between input and row.
+  1.5px lift; whole switch ~36px tall (`p-0.5`, segments `min-h-[30px]`).
+  Segment copy is the mode name only: `Static` / `Editable` + a `5 free`
+  micro-badge (`bg-[#1e1714]/10`). No prose in a switch. `STAGE_TOOL_BTN` =
+  panel triggers: `border-2`, 2px lip, neutral paper for all of them; the one
+  whose panel is open latches down (`translate-y-[2px] shadow-none` + tint) via
+  `openPanel`. `STAGE_PRESS` is the keycap physics everywhere: 70ms, hover
+  `-1px`, press `+2px` and shadow 0. Cluster rhythm is one `gap-2`/`space-y-2`
+  throughout.
+- **One leading colour in the workspace**: the Save pill wears
+  `--qr-theme-cta-bg` (hover/active = `cta-hover`/`cta-active`), and nothing
+  else below the title does. Footer `Passport` is `--qr-theme-tint-strong` with
+  sepia text and an accent dot, never a solid hot-pink fill; secondary
+  navigation must not out-shout the stage.
+- **Home action row**: under the well, a `flex gap-2` of 38px `STAGE_TOOL_BTN`
+  keycaps named for what they open, weighted 80/20 — `Design` (palette glyph,
+  `flex-1`, resting `--qr-theme-tint`/50) takes the room; `[Link ▾]` (current QR
+  type → Content tab) and `Inspect` (magnifier glyph → scanner) hug their text
+  (`shrink-0 px-3`); history clock only once there is some. Never an equal
+  three-column grid. Glyphs are inline monochrome SVGs (`StageGlyph`), never
+  emoji. Business users and kids read the same labels; no mystery pill, no
+  caption, no parenthetical. The sheet's own header names the open tab
+  (`SHEET_HEADINGS`: "What the QR holds." / "How the QR behaves." / "How the QR
+  looks."). Static/Editable stays in-flow between input and row.
 - **QR card liveness** (`islands/QRCanvas.tsx`): every matrix change (data,
   palette, Static↔Editable) pulses `scale(0.985)→1` over 140ms. Tapping the
   matrix copies the PNG to the clipboard and shows a cream "Copied PNG" pill for

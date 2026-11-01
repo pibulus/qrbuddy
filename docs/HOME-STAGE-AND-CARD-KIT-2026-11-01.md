@@ -126,6 +126,29 @@ Other things that moved in this pass:
 - `deno task test:unit` gained `--allow-read`; the two `NotCapable` failures are
   gone, 113/113.
 
+## 5. Silhouette, leading colour, 80/20 (third pass)
+
+Screenshots after §4 still read pear-shaped: the control cluster was wider than
+the QR card, every workspace surface was cream so the eye slid down to the
+hot-pink `Passport` in the footer, the switch carried prose on one line
+(`Static free` floating, `Editable repoint · 5 free` jammed), and the action row
+was three equal bricks.
+
+- **One column.** `routes/index.tsx` + `/es` wrap `SmartInput` in the QR card's
+  own `max-w-[300px] sm:max-w-[360px]`. Input type drops to `text-base` on
+  phones so the column still fits a URL.
+- **One leading colour.** The Save pill wears `--qr-theme-cta-bg` (Sunset pink,
+  Ocean sky, Forest mint…); it is the payoff action and anchors the card.
+  `FooterDock`'s `Passport` goes `--qr-theme-tint-strong` + sepia text
+  - an accent dot, no 🛂.
+- **Switch = names only.** `Static` / `Editable` + a `5 free` micro-badge
+  (`live` once created). `p-0.5`, segments `min-h-[30px]`, ~36px total.
+- **80/20 row.** `flex gap-2`: `Design` is `flex-1` with a palette glyph and a
+  faint tint so it reads as the thing to play with; `Link ▾` and `Inspect`
+  (magnifier) hug their text. Keycaps are 38px / 13px type.
+- **Rhythm.** `gap-2` everywhere inside the cluster; the gap to the footer dock
+  is what's left.
+
 ## Verifying
 
 ```bash

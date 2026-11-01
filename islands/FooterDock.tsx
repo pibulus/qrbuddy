@@ -26,7 +26,7 @@ const COPY = {
     privacy: "Privacy",
     terms: "Terms",
     tip: "Tip Jar ☕",
-    supporter: "Passport 🛂",
+    supporter: "Passport",
     switchLabel: "🇲🇽 ES",
     switchAria: "Cambiar idioma a español (México / LatAm)",
     links: [
@@ -49,7 +49,7 @@ const COPY = {
     privacy: "Privacidad",
     terms: "Términos",
     tip: "Propina ☕",
-    supporter: "Pasaporte 🛂",
+    supporter: "Pasaporte",
     switchLabel: "EN",
     switchAria: "Switch language to English",
     links: [
@@ -167,8 +167,12 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
           <button
             type="button"
             onClick={openPricingModal}
-            class="inline-flex items-center justify-center px-[clamp(8px,2.4vw,16px)] min-h-[44px] rounded-full border-2 border-black bg-qr-pop text-white text-[clamp(12px,3.4vw,14px)] font-black whitespace-nowrap transition-all hover:bg-qr-popDeep active:scale-95"
+            class="inline-flex items-center justify-center gap-1.5 px-[clamp(8px,2.4vw,14px)] min-h-[44px] rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] text-[clamp(12px,3.4vw,14px)] font-black whitespace-nowrap transition-all hover:bg-[var(--qr-theme-cta-bg,#f9a8d4)] active:scale-95"
           >
+            <span
+              aria-hidden="true"
+              class="w-2 h-2 rounded-full bg-[var(--qr-theme-accent,#ec4899)] border border-[#1e1714] shrink-0"
+            />
             {t.supporter}
           </button>
         </nav>

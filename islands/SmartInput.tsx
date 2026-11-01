@@ -726,7 +726,7 @@ export default function SmartInput(
       !isUploading;
     const rightPadding = hasValidBadge ? "pr-20" : "pr-14";
     const baseClass = `
-      w-full pl-5 ${rightPadding} py-4 text-lg font-bold text-[#1e1714]
+      w-full pl-4 sm:pl-5 ${rightPadding} py-3.5 sm:py-4 text-base sm:text-lg font-bold text-[#1e1714]
       bg-[#fffef7] border-3 border-[#1e1714]
       rounded-2xl shadow-[0_3px_0_#1e1714]
       focus:outline-none focus:border-[var(--qr-theme-accent,#ec4899)]
@@ -821,7 +821,7 @@ export default function SmartInput(
   ]);
 
   return (
-    <div class="w-full space-y-3">
+    <div class="w-full space-y-2">
       <HistoryDrawer
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
@@ -1094,19 +1094,19 @@ export default function SmartInput(
             <div
               role="group"
               aria-label={isSpanish ? "Modo de enlace QR" : "QR link mode"}
-              class={`${STAGE_WELL} grid grid-cols-2 gap-1`}
+              class={`${STAGE_WELL} grid grid-cols-2 gap-0.5`}
             >
               {(() => {
                 const staticActive = !editUrl.value && !isCreatingDynamic;
                 const seg = (active: boolean) =>
-                  `min-h-[36px] px-2 py-1 rounded-lg flex items-baseline justify-center gap-1.5 leading-none transition-[transform,box-shadow,background-color] duration-[70ms] border-2 ${
+                  `min-h-[30px] px-2 rounded-[9px] flex items-center justify-center gap-1.5 leading-none transition-[transform,box-shadow,background-color] duration-[70ms] border-2 ${
                     active
                       ? "bg-[var(--qr-theme-tint,#fdf2f8)] border-[#1e1714] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
                       : "border-transparent text-[#57524b] hover:text-[#1e1714] hover:bg-[#fffef7]/70 active:translate-y-px"
                   }`;
                 const title = "text-[13px] font-black whitespace-nowrap";
-                const sub =
-                  "text-[10px] font-bold opacity-70 whitespace-nowrap truncate";
+                const badge =
+                  "text-[10px] font-black leading-none px-1.5 py-0.5 rounded-full bg-[#1e1714]/10 whitespace-nowrap";
                 return (
                   <>
                     <button
@@ -1127,9 +1127,6 @@ export default function SmartInput(
                       <span class={title}>
                         {isSpanish ? "Estático" : "Static"}
                       </span>
-                      <span class={sub}>
-                        {isSpanish ? "gratis" : "free"}
-                      </span>
                     </button>
 
                     <button
@@ -1144,14 +1141,12 @@ export default function SmartInput(
                       class={seg(!staticActive)}
                     >
                       <span class={title}>Editable</span>
-                      <span class={sub}>
+                      <span class={badge}>
                         {isCreatingDynamic
-                          ? (isSpanish ? "creando…" : "creating…")
+                          ? "…"
                           : editUrl.value
                           ? (isSpanish ? "activo" : "live")
-                          : (isSpanish
-                            ? "redirigible · 5 gratis"
-                            : "repoint · 5 free")}
+                          : (isSpanish ? "5 gratis" : "5 free")}
                       </span>
                     </button>
                   </>

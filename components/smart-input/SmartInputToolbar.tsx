@@ -36,7 +36,7 @@ export const STAGE_INPUT =
   "bg-[#fffef7] border-3 border-[#1e1714] rounded-2xl shadow-[0_3px_0_#1e1714]";
 
 export const STAGE_WELL =
-  "bg-[#f7ecdc] border-2 border-[#1e1714] rounded-xl shadow-[inset_0_2px_0_rgba(30,23,20,0.08)] p-1";
+  "bg-[#f7ecdc] border-2 border-[#1e1714] rounded-xl shadow-[inset_0_2px_0_rgba(30,23,20,0.08)] p-0.5";
 
 export const STAGE_TOOL_BTN =
   "bg-[#fffef7] border-2 border-[#1e1714] rounded-xl shadow-[0_2px_0_#1e1714]";
@@ -49,11 +49,17 @@ const LATCHED =
   "translate-y-[2px] shadow-none bg-[var(--qr-theme-tint,#fdf2f8)] hover:translate-y-[2px] hover:shadow-none";
 
 const TILE =
-  `${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[44px] flex items-center justify-center gap-1.5 font-black text-[#1e1714] text-sm whitespace-nowrap hover:bg-[var(--qr-theme-tint,#fdf2f8)]`;
+  `${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[38px] flex items-center justify-center gap-1.5 font-black text-[#1e1714] text-[13px] whitespace-nowrap hover:bg-[var(--qr-theme-tint,#fdf2f8)]`;
 
 export type StagePanel = ActiveTab | "inspect" | "history";
 
-type Glyph = QRTemplateType | "bucket" | "batch" | "history";
+type Glyph =
+  | QRTemplateType
+  | "bucket"
+  | "batch"
+  | "history"
+  | "palette"
+  | "magnifier";
 
 /** Monochrome 16px line glyphs so the row never leans on emoji. */
 function StageGlyph({ kind }: { kind: Glyph }) {
@@ -77,6 +83,9 @@ function StageGlyph({ kind }: { kind: Glyph }) {
     bucket: "M4 7h16l-1.5 13h-13zM4 7l2-4h12l2 4",
     batch: "M3 7l9-4 9 4-9 4zM3 7v10l9 4 9-4V7M12 11v10",
     history: "M12 3a9 9 0 1 1-6.36 2.64M3 3v5h5M12 7v5l3 2",
+    palette:
+      "M12 3a9 9 0 0 0 0 18c1.4 0 2-.9 2-2 0-.6-.3-1-.3-1.6 0-1 .8-1.4 1.8-1.4H17a4 4 0 0 0 4-4c0-5-4-9-9-9zM7.5 12h.01M10 8h.01M14.5 8h.01",
+    magnifier: "M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM21 21l-5.2-5.2",
   };
   return (
     <svg
@@ -158,19 +167,15 @@ export default function SmartInputToolbar({
   };
 
   return (
-    <div
-      class={`grid gap-2 w-full ${
-        hasHistory
-          ? "grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
-          : "grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]"
-      }`}
-    >
+    <div class="flex gap-2 w-full">
       {/* What the QR holds — current type, opens Content (and Behavior) */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("type"))}
         aria-expanded={openPanel === "type" || openPanel === "options"}
-        class={`${TILE} ${latch(["type", "options"])} relative min-w-0 px-3`}
+        class={`${TILE} ${
+          latch(["type", "options"])
+        } relative shrink-0 min-w-0 max-w-[40%] px-3`}
         title={isSpanish
           ? "Cambiar el tipo de QR: enlace, Wi-Fi, contacto, archivo…"
           : "Change the QR type: link, Wi-Fi, contact card, file…"}
@@ -188,16 +193,19 @@ export default function SmartInputToolbar({
         )}
       </button>
 
-      {/* How it looks — palette, logo, frame, shapes */}
+      {/* How it looks — the 80% job, so it takes the room and a hint of tint */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("design"))}
         aria-expanded={openPanel === "design"}
-        class={`${TILE} ${latch("design")} px-2`}
+        class={`${TILE} ${
+          latch("design")
+        } flex-1 min-w-0 px-3 bg-[var(--qr-theme-tint,#fdf2f8)]/50 hover:bg-[var(--qr-theme-tint,#fdf2f8)]`}
         title={isSpanish
           ? "Colores, logo, marco y forma de los módulos"
           : "Colours, logo, print frame and dot shapes"}
       >
+        <StageGlyph kind="palette" />
         {isSpanish ? "Diseño" : "Design"}
       </button>
 
@@ -206,13 +214,16 @@ export default function SmartInputToolbar({
         type="button"
         onClick={press(onShowReader)}
         aria-expanded={openPanel === "inspect"}
-        class={`${TILE} ${latch("inspect")} px-2`}
+        class={`${TILE} ${latch("inspect")} shrink-0 px-3`}
         title={isSpanish
           ? "Ver a dónde lleva un QR antes de abrirlo: imagen, captura o cámara"
           : "See where a QR goes before opening it: image, screenshot or camera"}
         aria-label={isSpanish ? "Revisar un QR" : "Inspect a QR code"}
       >
-        {isSpanish ? "Revisar" : "Inspect"}
+        <StageGlyph kind="magnifier" />
+        <span class="hidden min-[360px]:inline">
+          {isSpanish ? "Revisar" : "Inspect"}
+        </span>
       </button>
 
       {hasHistory && (
@@ -220,7 +231,9 @@ export default function SmartInputToolbar({
           type="button"
           onClick={press(onShowHistory)}
           aria-expanded={openPanel === "history"}
-          class={`${TILE} ${latch("history")} w-[44px] animate-pop-in`}
+          class={`${TILE} ${
+            latch("history")
+          } shrink-0 w-[38px] px-0 animate-pop-in`}
           title={isSpanish ? "Historial" : "History"}
           aria-label={isSpanish ? "Abrir historial" : "Open QR history"}
         >

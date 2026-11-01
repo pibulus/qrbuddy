@@ -240,21 +240,23 @@ export default function Home({ data }: PageProps<HomeProps>) {
           </div>
 
           {/* Smart Input - BELOW QR */}
-          <SmartInput
-            url={url}
-            isDestructible={isDestructible}
-            isDynamic={isDynamic}
-            editUrl={editUrl}
-            maxDownloads={maxDownloads}
-            isBucket={isBucket}
-            bucketUrl={bucketUrl}
-            logoUrl={logoUrl}
-            qrStyle={style}
-            customStyle={customStyle}
-            pngSize={pngSize}
-            frameConfig={frameConfig}
-            onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
-          />
+          <div class="mx-auto w-full max-w-[300px] sm:max-w-[360px]">
+            <SmartInput
+              url={url}
+              isDestructible={isDestructible}
+              isDynamic={isDynamic}
+              editUrl={editUrl}
+              maxDownloads={maxDownloads}
+              isBucket={isBucket}
+              bucketUrl={bucketUrl}
+              logoUrl={logoUrl}
+              qrStyle={style}
+              customStyle={customStyle}
+              pngSize={pngSize}
+              frameConfig={frameConfig}
+              onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
+            />
+          </div>
         </main>
 
         <FooterDock lang="en" />
