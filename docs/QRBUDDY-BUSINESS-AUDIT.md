@@ -97,3 +97,28 @@ The Passport and recovery work (`SOFTSTACK-PASSPORT.md`,
 `ACCOUNTS-RECOVERY-PLAN.md`) makes QRBuddy _trustworthy_. Batch + dashboard +
 export makes it _sellable to a business_. Both are needed before a real launch,
 and batch is the one that converts.
+
+## 6. Decisions taken 2026-11-02 (and why)
+
+**Tiers: yes, three — but one price per app, never a bundle.** Free (5 dynamic
+codes, static forever, badge), Pro A$49/yr, Business A$199/yr, plus a A$22
+one-time "own this one code forever" at the moment of download. The one-time
+tier exists because the research is unambiguous: 4 of 5 activated users paid $15
+once when the offer appeared _inside_ the creation flow, while a signup wall
+lost 70% of people before their first code. Annual is a renewal, not a
+subscription — nothing auto-charges, which is the whole pitch against the
+$35/month incumbents.
+
+**Dashboard: yes, and it is one page.** Paid users need one screen they can
+leave open: their codes, what each one did this week, export, and the settings
+that matter (PIN, domain, API key). Not a suite of tabs. The Library drawer
+becomes that page rather than gaining a sibling.
+
+**No signup wall, ever.** The Passport stays the front door; email is the
+recovery key, not the gate. That is the structural edge over every competitor
+that makes you register before you see a code.
+
+**Two voices, one brand.** Maker surfaces stay playful. Money surfaces — batch,
+stats, print, billing — get calmer and denser: bigger tap targets, real column
+headers, no decorative noise between a person and their numbers. Delight where
+it earns attention; quiet where someone is doing their job.
