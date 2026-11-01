@@ -68,6 +68,14 @@ export async function handler(req: Request, ctx: FreshContext) {
   resp.headers.set("X-Content-Type-Options", "nosniff");
   resp.headers.set("Content-Security-Policy", buildCsp());
 
+  // A 404 caught mid-deploy must never be cached: Cloudflare would pin the
+  // missing asset for days and break hydration on that edge. Failures are
+  // transient by definition.
+  if (resp.status >= 400) {
+    resp.headers.set("Cache-Control", "no-store, max-age=0");
+    resp.headers.set("CDN-Cache-Control", "no-store");
+  }
+
   try {
     const { pathname } = new URL(req.url);
     if (NOINDEX_PATH_RE.test(pathname)) {
