@@ -36,6 +36,11 @@ export interface QRData {
     buttonText: string;
     imageUrl?: string;
     description?: string;
+    // Branding the cover page: supported by the renderer since day one, and
+    // persisted only once the editor started sending them.
+    brandName?: string;
+    accentColor?: string;
+    unbranded?: boolean;
   } | null;
   analytics?: {
     available?: boolean;

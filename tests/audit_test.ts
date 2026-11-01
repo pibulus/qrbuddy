@@ -82,7 +82,7 @@ Deno.test("Audit: robots, sitemap and security headers stay wired", async () => 
   assert(robots.includes("Sitemap: https://qrbuddy.app/sitemap.xml"));
 
   const sitemap = await read("static/sitemap.xml");
-  assertEquals((sitemap.match(/<url>/g) ?? []).length, 32);
+  assertEquals((sitemap.match(/<url>/g) ?? []).length, 33);
   for (const alias of ["/menus", "/wifi", "/vcard", "/why"]) {
     assert(
       !sitemap.includes(`<loc>https://qrbuddy.app${alias}</loc>`),

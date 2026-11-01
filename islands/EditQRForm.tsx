@@ -119,6 +119,12 @@ export default function EditQRForm() {
   const [splashButtonText, setSplashButtonText] = useState("Continue");
   const [splashDescription, setSplashDescription] = useState("");
   const [splashImageUrl, setSplashImageUrl] = useState("");
+  // Passport holders can brand the page their code opens: a name and an accent
+  // colour. Both were already supported by the renderer and the settings
+  // component — the save payload just never carried them.
+  const [splashBrandName, setSplashBrandName] = useState("");
+  const [splashAccentColor, setSplashAccentColor] = useState("");
+  const [splashUnbranded, setSplashUnbranded] = useState(false);
   const [splashPreviewTab, setSplashPreviewTab] = useState<"edit" | "preview">(
     "edit",
   );
@@ -145,6 +151,9 @@ export default function EditQRForm() {
       setSplashButtonText(splash?.buttonText || "Continue");
       setSplashDescription(splash?.description ?? "");
       setSplashImageUrl(splash?.imageUrl ?? "");
+      setSplashBrandName(splash?.brandName ?? "");
+      setSplashAccentColor(splash?.accentColor ?? "");
+      setSplashUnbranded(Boolean(splash?.unbranded));
 
       // Start from a valid empty form, then hydrate only fields that match the
       // stored schema so old malformed records cannot break the editor.
@@ -268,6 +277,13 @@ export default function EditQRForm() {
           ...(splashImageUrl.trim()
             ? { imageUrl: normalizeUrl(splashImageUrl.trim()) }
             : {}),
+          ...(splashBrandName.trim()
+            ? { brandName: splashBrandName.trim() }
+            : {}),
+          ...(/^#[0-9a-fA-F]{6}$/.test(splashAccentColor.trim())
+            ? { accentColor: splashAccentColor.trim() }
+            : {}),
+          ...(splashUnbranded ? { unbranded: true } : {}),
         }
         : null,
     });
@@ -557,6 +573,47 @@ export default function EditQRForm() {
                         class={`${INPUT_RECIPE} resize-none`}
                       />
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div class="space-y-1">
+                        <label
+                          htmlFor="qr-splash-brand"
+                          class="block text-xs font-black text-black"
+                        >
+                          Brand Name (Optional)
+                        </label>
+                        <input
+                          id="qr-splash-brand"
+                          type="text"
+                          maxLength={60}
+                          value={splashBrandName}
+                          onInput={(e) =>
+                            setSplashBrandName(
+                              (e.target as HTMLInputElement).value,
+                            )}
+                          placeholder="Acme Foods"
+                          class={`${INPUT_RECIPE}`}
+                        />
+                      </div>
+                      <div class="space-y-1">
+                        <label
+                          htmlFor="qr-splash-accent"
+                          class="block text-xs font-black text-black"
+                        >
+                          Accent Colour
+                        </label>
+                        <input
+                          id="qr-splash-accent"
+                          type="color"
+                          value={splashAccentColor || "#ff6ac2"}
+                          onInput={(e) =>
+                            setSplashAccentColor(
+                              (e.target as HTMLInputElement).value,
+                            )}
+                          class="h-[46px] w-full cursor-pointer rounded-xl border-2 border-black/15 bg-white px-1"
+                        />
+                      </div>
+                    </div>
+
                     <div class="space-y-1">
                       <label
                         htmlFor="qr-splash-image-url"

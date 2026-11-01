@@ -6,6 +6,7 @@ import * as $_404 from "./routes/_404.tsx";
 import * as $_500 from "./routes/_500.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
+import * as $api_path_ from "./routes/api/[...path].ts";
 import * as $api_download_file from "./routes/api/download-file.ts";
 import * as $api_peek from "./routes/api/peek.ts";
 import * as $batch from "./routes/batch.tsx";
@@ -13,6 +14,7 @@ import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $compare from "./routes/compare.tsx";
 import * as $demo_slug_ from "./routes/demo/[...slug].tsx";
+import * as $developers from "./routes/developers.tsx";
 import * as $edit from "./routes/edit.tsx";
 import * as $es_archivos from "./routes/es/archivos.tsx";
 import * as $es_bodas from "./routes/es/bodas.tsx";
@@ -57,6 +59,7 @@ import * as $why from "./routes/why.tsx";
 import * as $wifi from "./routes/wifi.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
+import * as $ApiKeysPanel from "./islands/ApiKeysPanel.tsx";
 import * as $BatchStudio from "./islands/BatchStudio.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
 import * as $DesignPreferencesSync from "./islands/DesignPreferencesSync.tsx";
@@ -83,6 +86,7 @@ const manifest = {
     "./routes/_500.tsx": $_500,
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
+    "./routes/api/[...path].ts": $api_path_,
     "./routes/api/download-file.ts": $api_download_file,
     "./routes/api/peek.ts": $api_peek,
     "./routes/batch.tsx": $batch,
@@ -90,6 +94,7 @@ const manifest = {
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/compare.tsx": $compare,
     "./routes/demo/[...slug].tsx": $demo_slug_,
+    "./routes/developers.tsx": $developers,
     "./routes/edit.tsx": $edit,
     "./routes/es/archivos.tsx": $es_archivos,
     "./routes/es/bodas.tsx": $es_bodas,
@@ -136,6 +141,7 @@ const manifest = {
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
     "./islands/ActionButtons.tsx": $ActionButtons,
+    "./islands/ApiKeysPanel.tsx": $ApiKeysPanel,
     "./islands/BatchStudio.tsx": $BatchStudio,
     "./islands/BucketQR.tsx": $BucketQR,
     "./islands/DesignPreferencesSync.tsx": $DesignPreferencesSync,

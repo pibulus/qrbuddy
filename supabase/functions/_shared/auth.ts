@@ -5,6 +5,7 @@ import {
   SupabaseClient,
   User,
 } from "https://esm.sh/@supabase/supabase-js@2";
+import { isApiKey, resolveApiKey } from "./api-keys.ts";
 
 /** Check if the recoverable library & quota foundation feature flag is enabled.
  * Off by default on client and server. */
@@ -50,7 +51,36 @@ export async function getAuthenticatedUser(
     return { user: passportUser, error: null };
   }
 
-  // 2. Standard Supabase Auth Bearer JWT check
+  // 2. API key — `Authorization: Bearer qb_…` or `x-api-key: qb_…`.
+  //    A key resolves to the Passport that minted it, so the API can never do
+  //    more than the Passport itself can.
+  const rawKey = req.headers.get("x-api-key")?.trim() ??
+    req.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ??
+    "";
+  if (rawKey && isApiKey(rawKey)) {
+    try {
+      const supabase = adminClient ?? getSupabaseAdminClient();
+      const resolved = await resolveApiKey(supabase, rawKey);
+      if (!resolved) {
+        return { user: null, error: "Invalid or revoked API key" };
+      }
+      const keyUser = {
+        id: resolved.userId,
+        app_metadata: { provider: "api-key" },
+        user_metadata: {},
+        aud: "authenticated",
+        created_at: new Date().toISOString(),
+      } as unknown as User;
+      return { user: keyUser, error: null };
+    } catch (err) {
+      return {
+        user: null,
+        error: err instanceof Error ? err.message : "Failed to verify API key",
+      };
+    }
+  }
+
+  // 3. Standard Supabase Auth Bearer JWT check
   const authHeader = req.headers.get("authorization");
   if (!authHeader) {
     return { user: null, error: "Missing Authorization or Passport header" };
