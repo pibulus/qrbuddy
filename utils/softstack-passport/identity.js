@@ -273,6 +273,87 @@ const SHAPE_COLORS = [
   "f3caa7",
 ];
 
+// The word banks double as the legacy four-word passkey vocabulary. Exported so
+// one parser (not a per-app copy) decides whether a phrase is a valid passkey.
+export { ADJECTIVES, ANIMALS, PLACES, VERBS };
+export { ANIMALS as NOUNS };
+
+/**
+ * Deterministic 64-hex hash for any string (legacy four-word passkeys).
+ * SS codes never go through this path; they use SHA-256(idInput(code)).
+ */
+export function deriveHexHash(input) {
+  const normalized = String(input || "")
+    .trim()
+    .toLowerCase();
+  if (/^[0-9a-f]{64}$/.test(normalized)) {
+    return normalized;
+  }
+  let hex = "";
+  for (let chunk = 0; chunk < 8; chunk++) {
+    let h = (0x811c9dc5 ^ Math.imul(chunk + 1, 0x9e3779b1)) >>> 0;
+    for (let i = 0; i < normalized.length; i++) {
+      h ^= normalized.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    h ^= h >>> 16;
+    h = Math.imul(h, 0x85ebca6b) >>> 0;
+    h ^= h >>> 13;
+    h = Math.imul(h, 0xc2b2ae35) >>> 0;
+    h ^= h >>> 16;
+    hex += (h >>> 0).toString(16).padStart(8, "0");
+  }
+  return hex;
+}
+
+/** Legacy `TT-`/`ZL-` holders can still type their four-word passkey. */
+export function parseFourWordPasskey(input) {
+  if (typeof input !== "string") return null;
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const parts = trimmed
+    .toLowerCase()
+    .split(/[\s_-]+/)
+    .filter(Boolean);
+  if (parts.length !== 4) return null;
+
+  const adj = ADJECTIVES.find((item) => item.toLowerCase() === parts[0]);
+  const animal = ANIMALS.find((item) => item.toLowerCase() === parts[1]);
+  const verb = VERBS.find((item) => item.toLowerCase() === parts[2]);
+  const place = PLACES.find((item) => item.toLowerCase() === parts[3]);
+
+  if (!adj || !animal || !verb || !place) return null;
+
+  const phrase =
+    `${adj.toLowerCase()}-${animal.toLowerCase()}-${verb.toLowerCase()}-${place.toLowerCase()}`;
+  return {
+    adj,
+    animal,
+    verb: verb.toLowerCase(),
+    place: place.toLowerCase(),
+    name: `${adj} ${animal}`,
+    phrase,
+    initials: `${adj[0]}${animal[0]}`,
+    words: [
+      adj.toLowerCase(),
+      animal.toLowerCase(),
+      verb.toLowerCase(),
+      place.toLowerCase(),
+    ],
+  };
+}
+
+export function getSyncRoomId(input) {
+  if (typeof input !== "string") return "";
+  const trimmed = input.trim();
+  if (!trimmed) return "";
+
+  const parsed = parseFourWordPasskey(trimmed);
+  const canonical = parsed ? parsed.phrase : trimmed.toLowerCase();
+  return deriveHexHash(canonical);
+}
+
 function normalizeHash(vaultHash) {
   const hash = typeof vaultHash === "string" ? vaultHash.trim() : "";
   return {
@@ -288,12 +369,41 @@ function hashToIndex(hash, array, offset = 0) {
 }
 
 export function generateMemberIdentity(vaultHash, code) {
+  // Legacy path: a four-word passkey still names its holder. SS- codes never
+  // match this parser, so the canonical derivation below is untouched.
+  const parsedPasskey =
+    parseFourWordPasskey(code) || parseFourWordPasskey(vaultHash);
+  if (parsedPasskey) {
+    const canonicalHash = getSyncRoomId(parsedPasskey.phrase);
+    const bg = BG_COLORS[hashToIndex(canonicalHash, BG_COLORS, 16)];
+    const shape = SHAPE_COLORS[hashToIndex(canonicalHash, SHAPE_COLORS, 24)];
+    const isSS = /^SS-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}$/i.test(
+      String(code ?? "").trim(),
+    );
+    const memberId = isSS ? String(code).trim() : `SS-${
+      canonicalHash.slice(0, 4).toUpperCase()
+    }-${canonicalHash.slice(4, 8).toUpperCase()}-${
+      canonicalHash.slice(8, 12).toUpperCase()
+    }`;
+
+    return {
+      name: parsedPasskey.name,
+      phrase: parsedPasskey.phrase,
+      memberId,
+      initials: parsedPasskey.initials,
+      bg,
+      shape,
+      syncRoomId: canonicalHash,
+      isFallback: false,
+    };
+  }
+
   const { hash, isFallback } = normalizeHash(vaultHash);
   if (isFallback) {
     return {
       name: "Passport Pending",
       memberId: code || "SS-PENDING",
-      initials: "TT",
+      initials: "SS",
       bg: "fff1f2",
       shape: "f9a8d4",
       isFallback: true,

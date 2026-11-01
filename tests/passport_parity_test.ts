@@ -5,6 +5,8 @@ import {
   generateMemberIdentity,
   idInput,
   normalizeCode,
+  renderMembershipCard,
+  selectSkin,
 } from "../utils/softstack-passport/index.js";
 import {
   issueSupporterToken,
@@ -55,6 +57,39 @@ Deno.test("Passport: the shared vector mints SS code and identity", async () => 
   assertEquals(identity.name, vector.identity.name);
   assertEquals(identity.phrase, vector.identity.phrase);
   assertEquals(identity.memberId, vector.code);
+});
+
+Deno.test("Passport: the vector resolves the shared card skin and palette", async () => {
+  const hash = await sha256(idInput(vector.code));
+  const skin = selectSkin(hash);
+  assertEquals(skin.name, vector.card.skin);
+  assertEquals(skin.palette.name, vector.card.palette);
+  assertEquals(skin.choices, vector.card.choices);
+});
+
+Deno.test("Passport: the shared renderer draws the vector card", async () => {
+  const hash = await sha256(idInput(vector.code));
+  const identity = generateMemberIdentity(hash, vector.code);
+  const skin = selectSkin(hash);
+  const html = renderMembershipCard({
+    identity,
+    skin,
+    appName: "QRBuddy",
+  });
+
+  assert(html.includes('data-passport-name="Glitch Walrus"'));
+  assert(
+    html.includes('data-passport-phrase="glitch-walrus-ripples-harbourside"'),
+  );
+  assert(html.includes('data-member-id="SS-03D2-9722-1310"'));
+  assert(html.includes('data-palette="Grape Soda"'));
+  assert(html.includes('data-holo="prismatic"'));
+  assert(html.includes('data-frame="soft"'));
+  assert(html.includes('data-texture="halftone"'));
+  assert(html.includes('data-type="display"'));
+  assert(html.includes('data-avatar="adventurer"'));
+  assert(html.includes(">Glitch Walrus</p>"));
+  assert(html.includes(">glitch-walrus-ripples-harbourside</p>"));
 });
 
 Deno.test("Passport: vendored files match the canonical manifest", async () => {

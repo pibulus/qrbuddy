@@ -21,3 +21,6 @@ node_modules/
 .playwright-mcp/
 scratch/
 /docs/verification-artifacts-2026-10-13/
+
+# generated at build time from utils/softstack-passport/card.css
+static/passport-card.css

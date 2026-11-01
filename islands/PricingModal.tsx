@@ -12,6 +12,7 @@ import {
   CardQuietLink,
   CardSecondaryButton,
 } from "../components/modal/CardModal.tsx";
+import { PassportMembershipCard } from "../components/passport/MembershipCard.tsx";
 import { getApiUrl } from "../utils/api.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
 import { haptics } from "../utils/haptics.ts";
@@ -23,7 +24,6 @@ import {
   parsePassportFromUrl,
   type QRBuddyPassport,
   renderPassportQrSvg,
-  rerollPassportIdentity,
 } from "../utils/passport.ts";
 import {
   clearPendingCheckout,
@@ -78,34 +78,6 @@ type CheckoutAvailability =
   | "error";
 type ModalView = "pitch" | "redeem" | "sync";
 
-const HOLO_THEMES = [
-  {
-    name: "Opal",
-    bg:
-      "linear-gradient(135deg, #312e81 0%, #581c87 38%, #be185d 76%, #701a75 100%)",
-  },
-  {
-    name: "Sunset",
-    bg: "linear-gradient(135deg, #7c2d12 0%, #be123c 45%, #7e22ce 100%)",
-  },
-  {
-    name: "Cyber",
-    bg: "linear-gradient(135deg, #0f172a 0%, #0e7490 50%, #4338ca 100%)",
-  },
-  {
-    name: "Mint",
-    bg: "linear-gradient(135deg, #064e3b 0%, #0f766e 48%, #0369a1 100%)",
-  },
-  {
-    name: "Gold",
-    bg: "linear-gradient(135deg, #451a03 0%, #92400e 45%, #b45309 100%)",
-  },
-  {
-    name: "Cosmic",
-    bg: "linear-gradient(135deg, #1e1b4b 0%, #6d28d9 48%, #db2777 100%)",
-  },
-];
-
 const PITCH_PERKS = {
   en: [
     "100 editable links, repointed anytime.",
@@ -126,8 +98,6 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const isSpanish = locale === "es";
   const isOpen = pricingModalOpen.value;
   const [view, setView] = useState<ModalView>("pitch");
-  const [skinIndex, setSkinIndex] = useState(0);
-  const [pointerPos, setPointerPos] = useState({ x: 50, y: 50 });
   const [hasPass, setHasPass] = useState(false);
   const [passport, setPassport] = useState<QRBuddyPassport | null>(null);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
@@ -391,35 +361,6 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
     }
   };
 
-  const handleRerollMoniker = (e: Event) => {
-    e.stopPropagation();
-    haptics.light();
-    sounds.gradientShimmer(Math.floor(Math.random() * 6));
-    const updated = rerollPassportIdentity(passport);
-    setPassport(updated);
-    addToast(
-      isSpanish
-        ? `🎲 ¡Nuevo apodo: ${updated.avatarEmoji} ${updated.name}!`
-        : `🎲 Re-rolled to ${updated.avatarEmoji} ${updated.name}!`,
-      2500,
-    );
-  };
-
-  const handleRollSkin = () => {
-    const next = (skinIndex + 1) % HOLO_THEMES.length;
-    setSkinIndex(next);
-    sounds.gradientShimmer(next);
-    haptics.light();
-  };
-
-  const handleCardPointerMove = (e: PointerEvent) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
-    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-    setPointerPos({ x, y });
-  };
-
   const handleCopySyncUrl = async () => {
     if (!passport) return;
     haptics.light();
@@ -520,7 +461,6 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
 
   const expiry = hasPass ? supporterPassExpiry() : null;
   const intlPrice = formatInternationalPrice(PRICING_TIERS.pro);
-  const activeSkin = HOLO_THEMES[skinIndex] ?? HOLO_THEMES[0];
   const shortPasskey = passport
     ? passport.phrase.split(/[-_\s]+/).filter(Boolean).slice(0, 4).join("-")
     : "golden-falcon-drifts-quietly";
@@ -714,80 +654,10 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
               </ul>
             </div>
 
-            {/* Interactive Holographic Passport Preview Card (TalkType gold standard) */}
+            {/* One card, three apps: markup + CSS come from the shared module. */}
             {passport && (
-              <div>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={handleRollSkin}
-                  onKeyDown={(e) => {
-                    if (e.target !== e.currentTarget) return;
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleRollSkin();
-                    }
-                  }}
-                  onPointerMove={handleCardPointerMove}
-                  onPointerLeave={() => setPointerPos({ x: 50, y: 50 })}
-                  style={{
-                    background: activeSkin.bg,
-                    "--mx": `${pointerPos.x}%`,
-                    "--my": `${pointerPos.y}%`,
-                    "--rx": `${((50 - pointerPos.y) / 9).toFixed(2)}deg`,
-                    "--ry": `${((pointerPos.x - 50) / 9).toFixed(2)}deg`,
-                  } as Record<string, string>}
-                  class="qr-holo-card mx-auto w-full max-w-[300px] aspect-[1.68/1] p-4 flex flex-col justify-between text-left text-[#fffef7]"
-                  aria-label={isSpanish
-                    ? "Tarjeta previa de Pasaporte — toca para cambiar diseño holográfico"
-                    : "Passport preview card — tap to roll holographic skin"}
-                >
-                  <div class="relative z-10 flex items-start justify-between gap-2">
-                    <div class="min-w-0">
-                      <span class="block text-[10px] font-black uppercase tracking-[0.14em] text-white/75">
-                        {hasPass || passport.tier === "plus"
-                          ? (isSpanish ? "PASAPORTE PRO ✨" : "PASSPORT PRO ✨")
-                          : (isSpanish
-                            ? "VISTA PREVIA · PASAPORTE"
-                            : "PASSPORT PREVIEW")}
-                      </span>
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="font-black text-lg leading-tight text-white drop-shadow-sm truncate">
-                          {passport.name}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={handleRerollMoniker}
-                          title={isSpanish
-                            ? "Tirar otro apodo"
-                            : "Roll a new moniker"}
-                          aria-label={isSpanish
-                            ? "Tirar otro apodo"
-                            : "Roll a new moniker"}
-                          class="w-6 h-6 rounded-full bg-black/35 hover:bg-black/55 border border-white/30 flex items-center justify-center text-xs transition-transform active:scale-90"
-                        >
-                          🎲
-                        </button>
-                      </div>
-                    </div>
-                    <span
-                      class="w-9 h-9 rounded-full bg-white/15 border border-white/35 flex items-center justify-center text-lg shrink-0 shadow-sm"
-                      aria-hidden="true"
-                    >
-                      {passport.avatarEmoji}
-                    </span>
-                  </div>
-
-                  <div class="relative z-10 space-y-1">
-                    <div class="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.14em] text-white/70">
-                      <span>{isSpanish ? "CLAVE" : "PASSKEY"}</span>
-                      <span>{activeSkin.name}</span>
-                    </div>
-                    <div class="rounded-lg bg-black/45 border border-white/20 px-2.5 py-1.5 font-mono text-[11px] font-bold text-white/95 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {shortPasskey}
-                    </div>
-                  </div>
-                </div>
+              <div class="mx-auto w-full max-w-[342px]">
+                <PassportMembershipCard passport={passport} appName="QRBuddy" />
               </div>
             )}
 

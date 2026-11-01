@@ -43,6 +43,7 @@ export default function App({ Component, url }: PageProps) {
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#fbf1e4" />
         <link rel="stylesheet" href={asset("/styles.css")} />
+        <link rel="stylesheet" href={asset("/passport-card.css")} />
         <script
           // deno-lint-ignore react-no-danger
           dangerouslySetInnerHTML={{ __html: envScript }}

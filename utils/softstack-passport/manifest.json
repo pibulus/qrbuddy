@@ -1,7 +1,14 @@
 {
   "files": {
+    "avatar.js": "5c5670466f326f3d0f86dc369003533e345c6ecb970f1479dcd56b1dff2aa10f",
+    "card.css": "49130f3c8b31801c57f387a0e9996adcd4204e12a9745ed5ab1e2cf203a5a969",
+    "card.html.js": "38e9eab9b00ed8b60c892b4d9aff5ace20e83818e3b4f0af09742254ad2a6f2c",
     "code.js": "3e24f12c71ffa402ad38f506a413a66950f16aaa9853f7c168413e151554bf42",
-    "identity.js": "6da1d0672df2cca2c7d631ad240e8e79f084b87b8abe254e62e4136bfe19e3c7",
-    "index.js": "ccdc12a5d3dabcae92fb1b533210608c139d3f569c742dbec86e47d5a4b68386"
+    "identity.js": "42534a47a710fbcff591c2129661dff7bda2ec25e8bd65330dcf75b09bfa9481",
+    "index.js": "cf8a17e5997cddf4bf5255001bb1373a0213b88bf37f7f7c2dda8c4968896d31",
+    "palettes.js": "4cbc75a22fd40506b9c261cd8061c3475c4db5f2a4d84bd9e8a6c32700905473",
+    "README.md": "96bbcf0f46fa5f3597c5a161471fbcb5bf0b3dcd5e4e09bb3530a60b648dea58",
+    "skins.js": "ed4e02e351834fc1e9dfe849f59be28d5c696103edec00b7559c7e7960018b3f",
+    "test-vectors.json": "788f7072034696cf996ab28628af8a3a524e6df6bb6ad7224169f79b54fa6c6c"
   }
 }

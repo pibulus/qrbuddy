@@ -9,5 +9,16 @@
     "memberId": "SS-03D2-9722-1310",
     "bg": "fff1a8",
     "shape": "f0c080"
+  },
+  "card": {
+    "skin": "shuffle",
+    "palette": "Grape Soda",
+    "choices": {
+      "holo": "prismatic",
+      "frame": "soft",
+      "texture": "halftone",
+      "type": "display",
+      "avatar": "adventurer"
+    }
   }
 }
