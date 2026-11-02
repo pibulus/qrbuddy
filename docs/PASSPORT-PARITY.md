@@ -270,5 +270,8 @@ QRBuddy's card (DiceBear included) is dynamically imported only when the
 Passport modal opens, so the home bundle does not pay the ~163 KB chunk. Per-app
 deploys: TalkType `5fd4cd5`, ZipList `24f1df2`, QRBuddy `25edb53`.
 
-**One residual:** the canonical module repo has no remote yet — recoverable via
-local history, not off-machine. Add a private GitHub remote when convenient.
+**One residual:** canonical source is `github.com/pibulus/softstack-passport`
+(private) ↔ `~/Projects/active/_shared-modules/passport`. The card's QR stamp
+now sits in the bottom row beside the passkey, never over the avatar. Passport
+modals follow the TalkType template: real app mascot/icon at the top, one chunky
+gold `Email Passport` action, and no duplicate copy-link or sync-phrase panels.

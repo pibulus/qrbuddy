@@ -1,4 +1,5 @@
 {
+  "apps": ["talktype", "ziplist", "qrbuddy", "promapper"],
   "secret": "softstack-test-secret-32-chars-min!!",
   "seed": "checkout-test-001",
   "code": "SS-03D2-9722-1310",

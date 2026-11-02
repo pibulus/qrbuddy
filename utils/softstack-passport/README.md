@@ -31,7 +31,12 @@ each app. The same `card.html.js` + `card.css` are vendored into:
 talktype/src/lib/softstack-passport/
 ziplist/src/lib/softstack-passport/
 qrbuddy/utils/softstack-passport/
+promapper/utils/softstack-passport/
 ```
+
+ProMapper is the fourth stamp. Its commercial plan (Solo/Guild/Lifetime) lives
+in the token's `tier` claim; the passport's `stamps` claim names the app. A plan
+is not a bundle: it does not change the code, name, phrase or card.
 
 `manifest.json` lists every vendored file's SHA-256. `test-vectors.json` pins the
 code, identity and the resolved card skin/palette for `SS-03D2-9722-1310`.

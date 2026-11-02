@@ -5,7 +5,7 @@ export const CODE_PREFIX = "SS";
 export const CODE_NAMESPACE = "softstack-passport-code:";
 export const ID_NAMESPACE = "softstack-passport-id:";
 export const TOKEN_TIER = "supporter";
-export const APPS = ["talktype", "ziplist", "qrbuddy"];
+export const APPS = ["talktype", "ziplist", "qrbuddy", "promapper"];
 
 const CODE_RE = /^SS-([A-F0-9]{4})-([A-F0-9]{4})-([A-F0-9]{4})$/i;
 

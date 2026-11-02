@@ -11,7 +11,6 @@ import {
   CardModal,
   CardPrimaryButton,
   CardQuietLink,
-  CardSecondaryButton,
 } from "../components/modal/CardModal.tsx";
 import { getApiUrl } from "../utils/api.ts";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
@@ -118,7 +117,6 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const [checkoutAvailability, setCheckoutAvailability] = useState<
     CheckoutAvailability
   >("idle");
-  const [checkoutRetry, setCheckoutRetry] = useState(0);
   const checkoutAllowedRef = useRef(false);
   const claimCheckoutRef = useRef<string | null>(null);
 
@@ -201,7 +199,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
       cancelled = true;
       checkoutAllowedRef.current = false;
     };
-  }, [isOpen, checkoutRetry]);
+  }, [isOpen]);
 
   // Claim poller: back from Square (?checkout=) or a pending checkout in
   // storage → poll get-license until the webhook lands, then store the pass.
@@ -483,14 +481,21 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   const shortPasskey = passport
     ? passport.phrase.split(/[-_\s]+/).filter(Boolean).slice(0, 4).join("-")
     : "golden-falcon-drifts-quietly";
+  const appIcon = (
+    <img
+      src="/icon-192.png"
+      alt=""
+      class="w-14 h-14 rounded-2xl border-2 border-[#1e1714] shadow-[2px_2px_0_#1e1714]"
+    />
+  );
 
   return (
     <CardModal
       open={isOpen}
       onClose={closePricingModal}
       labelledby="pricing-modal-title"
-      badge="🛂"
-      badgeClass="from-amber-100 via-pink-200 to-purple-300"
+      badge={appIcon}
+      badgeTile={false}
     >
       {view === "redeem"
         ? (
@@ -718,28 +723,38 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
             {hasPass
               ? (
                 <div class="space-y-2">
-                  <div class="w-full min-h-[48px] flex items-center justify-center rounded-2xl border-2 border-[#1e1714] bg-emerald-100 text-emerald-950 font-black text-sm">
-                    ✓ {isSpanish ? "Pasaporte activo" : "Passport active"}
-                    {expiry
-                      ? ` · ${
-                        expiry.toLocaleDateString(isSpanish ? "es" : "en-AU", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })
-                      }`
-                      : ""}
-                  </div>
-                  <div class="flex gap-2">
-                    <CardSecondaryButton onClick={handleCopyPass}>
-                      {passCopied
-                        ? (isSpanish ? "Copiado ✓" : "Copied ✓")
-                        : (isSpanish ? "Copiar clave" : "Copy key")}
-                    </CardSecondaryButton>
-                    <CardSecondaryButton onClick={openLibrary}>
-                      {isSpanish ? "Biblioteca 📚" : "Library 📚"}
-                    </CardSecondaryButton>
-                  </div>
+                  {expiry && (
+                    <p class="text-xs font-black uppercase tracking-wider text-[#6f6158]">
+                      {isSpanish
+                        ? `Activo hasta ${
+                          expiry.toLocaleDateString("es", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        }`
+                        : `Active until ${
+                          expiry.toLocaleDateString("en-AU", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        }`}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailOpen(true);
+                      setEmailStatus("idle");
+                      haptics.light();
+                    }}
+                    class="min-h-[48px] w-full rounded-2xl border-2 border-[#1e1714] bg-[#ffbe0b] px-4 text-sm font-black text-[#1e1714] shadow-[3px_3px_0_#1e1714] transition-all hover:-translate-y-0.5 hover:bg-[#ffd04a] hover:shadow-[4px_4px_0_#1e1714] active:translate-y-0.5 active:bg-[#f2ac00] active:shadow-[1px_1px_0_#1e1714]"
+                  >
+                    {emailStatus === "sent"
+                      ? (isSpanish ? "Pasaporte enviado" : "Passport emailed")
+                      : (isSpanish ? "Enviar Pasaporte" : "Email Passport")}
+                  </button>
                   {emailStatus === "sent"
                     ? (
                       <p
@@ -784,21 +799,18 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                         </button>
                       </div>
                     )
-                    : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEmailOpen(true);
-                          setEmailStatus("idle");
-                          haptics.light();
-                        }}
-                        class="w-full min-h-[36px] text-xs font-bold underline underline-offset-2 text-[#1e1714]/70 hover:text-[#1e1714]"
-                      >
-                        {isSpanish
-                          ? "Enviar la clave a mi correo"
-                          : "Email this key to me"}
-                      </button>
-                    )}
+                    : null}
+                  <p class="flex items-center justify-center gap-x-1.5 text-xs font-semibold text-[#6f6158]">
+                    <CardQuietLink onClick={handleCopyPass}>
+                      {passCopied
+                        ? (isSpanish ? "Copiada" : "Copied")
+                        : (isSpanish ? "Copiar clave" : "Copy key")}
+                    </CardQuietLink>
+                    <CardDot />
+                    <CardQuietLink onClick={openLibrary}>
+                      {isSpanish ? "Biblioteca" : "Library"}
+                    </CardQuietLink>
+                  </p>
                   {emailStatus === "error" && (
                     <p
                       class="text-xs font-bold text-amber-800 text-center"
@@ -813,38 +825,32 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
               )
               : (
                 <div class="space-y-1.5">
-                  <CardPrimaryButton
-                    onClick={handleUpgrade}
-                    disabled={isStartingCheckout ||
-                      checkoutAvailability === "unavailable" ||
-                      checkoutAvailability === "error"}
-                  >
-                    {isStartingCheckout
-                      ? (isSpanish ? "Abriendo el pago…" : "Opening checkout…")
-                      : checkoutAvailability === "unavailable"
-                      ? (isSpanish
-                        ? "El pago estará disponible pronto"
-                        : "Checkout opens soon")
-                      : checkoutAvailability === "error"
-                      ? (isSpanish
-                        ? "No se pudo comprobar el pago"
-                        : "Checkout status unavailable")
-                      : (isSpanish
-                        ? "Conseguir el Pasaporte"
-                        : "Grab the Passport")}
-                  </CardPrimaryButton>
-
-                  {checkoutAvailability === "error" && (
-                    <button
-                      type="button"
-                      onClick={() => setCheckoutRetry((attempt) => attempt + 1)}
-                      class="text-xs underline underline-offset-2 font-bold text-[#6f6158] hover:text-[#1e1714]"
-                    >
-                      {isSpanish
-                        ? "Reintentar conexión de pago"
-                        : "Retry checkout status"}
-                    </button>
-                  )}
+                  {checkoutAvailability === "available"
+                    ? (
+                      <CardPrimaryButton
+                        onClick={handleUpgrade}
+                        disabled={isStartingCheckout}
+                      >
+                        {isStartingCheckout
+                          ? (isSpanish
+                            ? "Abriendo el pago…"
+                            : "Opening checkout…")
+                          : (isSpanish
+                            ? "Conseguir el Pasaporte"
+                            : "Grab the Passport")}
+                      </CardPrimaryButton>
+                    )
+                    : (
+                      <p class="min-h-[44px] flex items-center justify-center rounded-2xl border-2 border-dashed border-[#1e1714]/25 px-4 text-xs font-bold text-[#6f6158]">
+                        {checkoutAvailability === "checking"
+                          ? (isSpanish
+                            ? "Comprobando el pago…"
+                            : "Checking checkout…")
+                          : (isSpanish
+                            ? "El pago abre pronto"
+                            : "Checkout opens soon")}
+                      </p>
+                    )}
 
                   <p class="text-xs text-[#6f6158] font-bold">
                     {isSpanish
@@ -868,8 +874,13 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
 
             {/* Quiet footer links — TalkType's "I have a passkey" row */}
             <p class="text-xs font-semibold text-[#6f6158] flex items-center justify-center gap-x-1.5 gap-y-1 flex-wrap">
-              {!hasPass && (
-                <>
+              {hasPass
+                ? (
+                  <CardQuietLink onClick={openLibrary}>
+                    {isSpanish ? "Biblioteca" : "Library"}
+                  </CardQuietLink>
+                )
+                : (
                   <CardQuietLink
                     onClick={() => {
                       setView("redeem");
@@ -878,21 +889,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                   >
                     {isSpanish ? "Tengo clave" : "I have a passkey"}
                   </CardQuietLink>
-                  <CardDot />
-                </>
-              )}
-              <CardQuietLink
-                onClick={() => {
-                  setView("sync");
-                  sounds.click?.();
-                }}
-              >
-                {isSpanish ? "Vincular" : "Pair device"}
-              </CardQuietLink>
-              <CardDot />
-              <CardQuietLink onClick={openLibrary}>
-                {isSpanish ? "Biblioteca" : "Library"}
-              </CardQuietLink>
+                )}
             </p>
           </CardBody>
         )}
