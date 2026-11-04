@@ -276,15 +276,20 @@ export default function DesignTab(
               aria-label={es
                 ? `Franja: ${theme}. Cambiar estilo`
                 : `Banner: ${theme}. Change style`}
-              class="shrink-0 w-7 h-7 rounded-full border-2 border-[#1e1714] mr-1"
-              style={{ background: banner.bg }}
-            />
+              class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full mr-1"
+            >
+              <span
+                aria-hidden="true"
+                class="block w-7 h-7 rounded-full border-2 border-[#1e1714]"
+                style={{ background: banner.bg }}
+              />
+            </button>
             {caption && (
               <button
                 type="button"
                 onClick={() => writeCaption("")}
                 aria-label={es ? "Quitar etiqueta" : "Clear label"}
-                class="shrink-0 w-7 h-7 mr-1.5 rounded-full text-sm font-black hover:bg-[#1e1714]/10"
+                class="shrink-0 w-11 h-11 mr-1 flex items-center justify-center rounded-full text-sm font-black hover:bg-[#1e1714]/10"
               >
                 ✕
               </button>
