@@ -6,6 +6,8 @@
 const TOKEN_VERSION = 1;
 // PRICING says "a year, paid up front" — the token enforces it.
 const TOKEN_TTL_SECONDS = 365 * 24 * 60 * 60;
+// This app's stamp on a SoftStack passport. Verification only accepts it.
+const PASSPORT_STAMP = "qrbuddy";
 
 const encoder = new TextEncoder();
 
@@ -125,6 +127,16 @@ export async function verifySupporterToken(
       body?.tier !== "supporter" ||
       !Number.isFinite(body?.exp) ||
       body.exp < Math.floor(Date.now() / 1000)
+    ) {
+      return null;
+    }
+    // Every app signs with the same shared passport secret, so the signature
+    // alone would let one app's token open all four gates. A stamped token must
+    // name this app; tokens minted before stamps existed have none and stay valid.
+    if (
+      Array.isArray(body?.stamps) &&
+      body.stamps.length > 0 &&
+      !body.stamps.includes(PASSPORT_STAMP)
     ) {
       return null;
     }

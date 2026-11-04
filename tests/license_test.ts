@@ -43,3 +43,87 @@ Deno.test("garbage and empty tokens fail", async () => {
   assertEquals(await verifySupporterToken("not.a.token", SECRET), null);
   assertEquals(await verifySupporterToken(null, SECRET), null);
 });
+
+// All four apps sign with the same shared passport secret, so a TalkType token
+// has a genuinely valid QRBuddy signature. Only the stamp claim separates them.
+const STAMP_SECRET = "softstack-test-secret-32-chars-min!!";
+
+function base64url(value: string): string {
+  return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function signToken(body: Record<string, unknown>): Promise<string> {
+  const header = base64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payload = base64url(JSON.stringify(body));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(STAMP_SECRET),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = new Uint8Array(
+    await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(`${header}.${payload}`),
+    ),
+  );
+  let binary = "";
+  for (const b of sig) binary += String.fromCharCode(b);
+  return `${header}.${payload}.${base64url(binary)}`;
+}
+
+const nowSec = () => Math.floor(Date.now() / 1000);
+
+Deno.test("rejects a token stamped for another app", async () => {
+  const token = await signToken({
+    sub: "talktype-license",
+    tier: "supporter",
+    stamps: ["talktype"],
+    v: 1,
+    iat: nowSec(),
+    exp: nowSec() + 3600,
+  });
+  assertEquals(await verifySupporterToken(token, STAMP_SECRET), null);
+});
+
+Deno.test("accepts a token carrying its own stamp", async () => {
+  const token = await signToken({
+    sub: "qrbuddy-license",
+    tier: "supporter",
+    stamps: ["qrbuddy"],
+    v: 1,
+    iat: nowSec(),
+    exp: nowSec() + 3600,
+  });
+  const payload = await verifySupporterToken(token, STAMP_SECRET);
+  assertEquals(payload?.sub, "qrbuddy-license");
+  assertEquals(payload?.stamps, ["qrbuddy"]);
+});
+
+Deno.test("accepts a legacy token with no stamps claim", async () => {
+  const token = await signToken({
+    sub: "legacy-license",
+    tier: "supporter",
+    v: 1,
+    iat: nowSec(),
+    exp: nowSec() + 3600,
+  });
+  assertEquals(
+    (await verifySupporterToken(token, STAMP_SECRET))?.sub,
+    "legacy-license",
+  );
+});
+
+Deno.test("rejects an expired token even with its own stamp", async () => {
+  const token = await signToken({
+    sub: "expired-license",
+    tier: "supporter",
+    stamps: ["qrbuddy"],
+    v: 1,
+    iat: nowSec() - 3600,
+    exp: nowSec() - 10,
+  });
+  assertEquals(await verifySupporterToken(token, STAMP_SECRET), null);
+});
