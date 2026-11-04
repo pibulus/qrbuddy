@@ -335,6 +335,12 @@ export default function HistoryDrawer(
                 // localStorage stop reading "WIFI:T:WPA;S:..." too.
                 const summary = summarizeQrPayload(item.content);
                 const title = item.metadata?.title || summary.title;
+                // Generic rows saved before templates carried their own type
+                // still say "url"; trust the detected format for the icon when
+                // the stored type is the generic one.
+                const displayType = item.type === "url" && summary.type !== "url"
+                  ? summary.type
+                  : item.type;
                 const subtitle = item.type === "file"
                   ? (isSpanish ? "Buzón de archivos" : "File Locker")
                   : ((item.metadata?.subtitle as string) || summary.subtitle);
@@ -361,7 +367,7 @@ export default function HistoryDrawer(
                 >
                   <div class="flex items-start gap-3">
                     <div class="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-lg border border-black shrink-0">
-                      {getIcon(item.type)}
+                      {getIcon(displayType)}
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex justify-between items-start gap-1">
