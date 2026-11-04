@@ -338,94 +338,95 @@ export default function HistoryDrawer(
                 // Generic rows saved before templates carried their own type
                 // still say "url"; trust the detected format for the icon when
                 // the stored type is the generic one.
-                const displayType = item.type === "url" && summary.type !== "url"
-                  ? summary.type
-                  : item.type;
+                const displayType =
+                  item.type === "url" && summary.type !== "url"
+                    ? summary.type
+                    : item.type;
                 const subtitle = item.type === "file"
                   ? (isSpanish ? "Buzón de archivos" : "File Locker")
                   : ((item.metadata?.subtitle as string) || summary.subtitle);
                 return (
-                <div
-                  key={item.id}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${isSpanish ? "Abrir" : "Open"} ${title}`}
-                  class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                  onClick={() => {
-                    onSelect(item);
-                    haptics.light();
-                    shell.requestClose();
-                  }}
-                  onKeyDown={(e: KeyboardEvent) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
+                  <div
+                    key={item.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${isSpanish ? "Abrir" : "Open"} ${title}`}
+                    class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                    onClick={() => {
                       onSelect(item);
                       haptics.light();
                       shell.requestClose();
-                    }
-                  }}
-                >
-                  <div class="flex items-start gap-3">
-                    <div class="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-lg border border-black shrink-0">
-                      {getIcon(displayType)}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex justify-between items-start gap-1">
-                        <p class="font-bold text-sm truncate pr-1">
-                          {title}
-                        </p>
-                        {item.metadata?.shortCode && (
-                          <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-purple-100 text-purple-900 border border-purple-300 px-1.5 py-0.5 rounded-md">
-                            {item.metadata.ownerScope === "qr"
-                              ? (isSpanish ? "📊 Editar" : "📊 Manage")
-                              : (isSpanish ? "⚡ Dinámico" : "⚡ Dynamic")}
-                          </span>
-                        )}
-                        {item.type === "file" && (
-                          <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-teal-100 text-teal-900 border border-teal-300 px-1.5 py-0.5 rounded-md">
-                            {isSpanish ? "🪣 Buzón" : "🪣 Locker"}
-                          </span>
-                        )}
-                        {item.metadata?.ownerScope === "file" && (
-                          <a
-                            href={item.content}
-                            onClick={(e) => e.stopPropagation()}
-                            class="shrink-0 min-h-[44px] px-2 inline-flex items-center justify-center text-[10px] font-black uppercase tracking-wide bg-amber-200 text-black border border-black rounded-md hover:scale-105 transition-transform"
-                            title={isSpanish
-                              ? "Ábrelo — es tuyo: estadísticas, renombrar, agregar, cambiar estilo"
-                              : "Open it — it's yours: stats, rename, add, re-vibe"}
-                          >
-                            {isSpanish ? "👑 Editar →" : "👑 Manage →"}
-                          </a>
-                        )}
-                      </div>
-                      <p class="text-[11px] text-gray-500 mt-1 truncate">
-                        {subtitle}
-                      </p>
-                      <p class="text-[11px] text-gray-600 mt-0.5">
-                        {formatDate(item.timestamp)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Delete Button (visible on hover/group-hover & keyboard focus) */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromHistory(item.id);
                     }}
-                    class="absolute -top-2 -right-2 w-11 h-11 bg-amber-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus:opacity-100 transition-opacity hover:scale-110"
-                    aria-label={isSpanish
-                      ? "Quitar del historial"
-                      : "Remove from history"}
-                    title={isSpanish
-                      ? "Olvidar este elemento"
-                      : "Forget this memory"}
+                    onKeyDown={(e: KeyboardEvent) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSelect(item);
+                        haptics.light();
+                        shell.requestClose();
+                      }
+                    }}
                   >
-                    ✕
-                  </button>
-                </div>
+                    <div class="flex items-start gap-3">
+                      <div class="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-lg border border-black shrink-0">
+                        {getIcon(displayType)}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start gap-1">
+                          <p class="font-bold text-sm truncate pr-1">
+                            {title}
+                          </p>
+                          {item.metadata?.shortCode && (
+                            <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-purple-100 text-purple-900 border border-purple-300 px-1.5 py-0.5 rounded-md">
+                              {item.metadata.ownerScope === "qr"
+                                ? (isSpanish ? "📊 Editar" : "📊 Manage")
+                                : (isSpanish ? "⚡ Dinámico" : "⚡ Dynamic")}
+                            </span>
+                          )}
+                          {item.type === "file" && (
+                            <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-teal-100 text-teal-900 border border-teal-300 px-1.5 py-0.5 rounded-md">
+                              {isSpanish ? "🪣 Buzón" : "🪣 Locker"}
+                            </span>
+                          )}
+                          {item.metadata?.ownerScope === "file" && (
+                            <a
+                              href={item.content}
+                              onClick={(e) => e.stopPropagation()}
+                              class="shrink-0 min-h-[44px] px-2 inline-flex items-center justify-center text-[10px] font-black uppercase tracking-wide bg-amber-200 text-black border border-black rounded-md hover:scale-105 transition-transform"
+                              title={isSpanish
+                                ? "Ábrelo — es tuyo: estadísticas, renombrar, agregar, cambiar estilo"
+                                : "Open it — it's yours: stats, rename, add, re-vibe"}
+                            >
+                              {isSpanish ? "👑 Editar →" : "👑 Manage →"}
+                            </a>
+                          )}
+                        </div>
+                        <p class="text-[11px] text-gray-500 mt-1 truncate">
+                          {subtitle}
+                        </p>
+                        <p class="text-[11px] text-gray-600 mt-0.5">
+                          {formatDate(item.timestamp)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Delete Button (visible on hover/group-hover & keyboard focus) */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFromHistory(item.id);
+                      }}
+                      class="absolute -top-2 -right-2 w-11 h-11 bg-amber-500 text-white rounded-full border-2 border-black flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus:opacity-100 transition-opacity hover:scale-110"
+                      aria-label={isSpanish
+                        ? "Quitar del historial"
+                        : "Remove from history"}
+                      title={isSpanish
+                        ? "Olvidar este elemento"
+                        : "Forget this memory"}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 );
               })
             )}

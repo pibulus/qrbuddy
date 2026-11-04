@@ -71,7 +71,9 @@ Deno.test("url payload shows host and path", () => {
 });
 
 Deno.test("plain text uses the first line", () => {
-  const summary = summarizeQrPayload("Wifi password is hunter2\nAsk at the bar");
+  const summary = summarizeQrPayload(
+    "Wifi password is hunter2\nAsk at the bar",
+  );
   assertEquals(summary.type, "text");
   assertEquals(summary.title, "Wifi password is hunter2");
   assertEquals(summary.subtitle, "Multi-line text");
