@@ -11,7 +11,10 @@ import {
 } from "../_shared/rate-limit.ts";
 import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
-import { MAX_FILE_SIZE } from "../_shared/file-validation.ts";
+import {
+  BLOCKED_MIME_TYPES,
+  MAX_FILE_SIZE,
+} from "../_shared/file-validation.ts";
 import { describeVisitor, generateOwnerToken } from "../_shared/visitor.ts";
 
 const UNLIMITED_DOWNLOADS = 999999;
@@ -49,8 +52,23 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Get file and options from request
-    const formData = await req.formData();
+    // Get file and options from request. A non-multipart request (or an empty
+    // GET) throws here; that is a caller error, not a server outage.
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Expected multipart/form-data with a file" }),
+        {
+          headers: {
+            ...getCorsHeaders(req),
+            "Content-Type": "application/json",
+          },
+          status: 400,
+        },
+      );
+    }
     const files = formData.getAll("file") as File[]; // Get all files
 
     // Strict Limit: Max 3 active files per IP
@@ -161,6 +179,25 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             error: `Filename of '${file.name}' contains invalid characters.`,
+          }),
+          {
+            headers: {
+              ...getCorsHeaders(req),
+              "Content-Type": "application/json",
+            },
+            status: 400,
+          },
+        );
+      }
+
+      // Executables are executables regardless of what the extension says.
+      // The extension block below only catches an honest filename; a caller
+      // can label a payload with any MIME type.
+      if (file.type && BLOCKED_MIME_TYPES.includes(file.type)) {
+        return new Response(
+          JSON.stringify({
+            error:
+              `File type of '${file.name}' is not allowed for security reasons.`,
           }),
           {
             headers: {

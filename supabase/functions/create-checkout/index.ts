@@ -77,8 +77,10 @@ serve(async (req) => {
     );
 
     const { user } = await getAuthenticatedUser(req, supabase);
-    const verifiedAuthUserId =
-      user && user.app_metadata?.provider !== "passport" ? user.id : null;
+    // A Passport UUID is the identity the library and API keys use, so it must
+    // be carried through checkout too. Excluding it meant Passport buyers paid
+    // but never received the library entitlement.
+    const verifiedAuthUserId = user?.id ?? null;
 
     const { error: insertError } = await supabase
       .from("supporter_checkouts")

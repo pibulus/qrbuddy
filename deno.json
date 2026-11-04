@@ -29,6 +29,7 @@
     "**/_fresh/*",
     "node_modules/",
     ".playwright-mcp/",
+    ".playwright-tour/",
     "plugins/",
     "utils/softstack-passport/"
   ],
