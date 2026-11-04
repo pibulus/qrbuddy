@@ -172,6 +172,118 @@ export function clearHistory() {
   }
 }
 
+/**
+ * Turn a raw QR payload into something a person can read in the Time Machine.
+ *
+ * Templates write their encoded payloads (`WIFI:T:WPA;S:...`, `BEGIN:VCARD`,
+ * `mailto:`, `tel:`, `SMSTO:`) straight into the shared `url` signal, so the
+ * history row used to show the raw string twice — once as the title, once as
+ * the subtitle. Detect the format, pull the useful bit out, and hand back a
+ * type the drawer can pick an icon for.
+ */
+export function summarizeQrPayload(content: string): {
+  type: HistoryItem["type"];
+  title: string;
+  subtitle: string;
+} {
+  const raw = (content || "").trim();
+  const shorten = (value: string, max = 42) =>
+    value.length > max ? `${value.slice(0, max - 1)}…` : value;
+
+  // Wi-Fi: WIFI:T:WPA;S:Network;P:secret;H:true;;
+  if (/^WIFI:/i.test(raw)) {
+    const readField = (key: string) => {
+      // The first field follows "WIFI:", not a semicolon — strip the prefix
+      // so the same regex finds T:, S:, and P:.
+      const body = raw.replace(/^WIFI:/i, "");
+      const match = body.match(
+        new RegExp(`(?:^|;)${key}:((?:\\\\.|[^;])*)`, "i"),
+      );
+      if (!match) return "";
+      // Undo the backslash escaping applied by formatWiFi().
+      return match[1].replace(/\\(.)/g, "$1").trim();
+    };
+    const ssid = readField("S");
+    const security = readField("T");
+    const securityLabel = !security || security.toLowerCase() === "nopass"
+      ? "Open network"
+      : security.toUpperCase();
+    return {
+      type: "wifi",
+      title: ssid ? `Wi-Fi: ${shorten(ssid)}` : "Wi-Fi network",
+      subtitle: securityLabel,
+    };
+  }
+
+  // Contact card: multi-line vCard.
+  if (/^BEGIN:VCARD/i.test(raw)) {
+    const line = raw.match(/^FN:(.+)$/im)?.[1] ??
+      [raw.match(/^N:(.+)$/im)?.[1], raw.match(/^ORG:(.+)$/im)?.[1]]
+        .filter(Boolean)
+        .join(" ");
+    const title = line?.replace(/\\(.)/g, "$1").replace(/;+$/, "").trim();
+    const org = raw.match(/^ORG:(.+)$/im)?.[1]?.replace(/\\(.)/g, "$1")
+      .trim();
+    return {
+      type: "vcard",
+      title: title ? `Contact: ${shorten(title)}` : "Contact card",
+      subtitle: org && org !== title ? org : "Contact card",
+    };
+  }
+
+  if (/^mailto:/i.test(raw)) {
+    const address = raw.slice(7).split("?")[0];
+    const subject = new URLSearchParams(raw.split("?")[1] ?? "").get("subject");
+    return {
+      type: "email",
+      title: address ? `Email: ${shorten(address)}` : "Email",
+      subtitle: subject?.trim() || "Email draft",
+    };
+  }
+
+  if (/^tel:/i.test(raw)) {
+    const number = raw.slice(4).replace(/[^\d+]/g, "");
+    return {
+      type: "phone",
+      title: number ? `Call: ${shorten(number)}` : "Phone call",
+      subtitle: "Phone call",
+    };
+  }
+
+  if (/^SMSTO:/i.test(raw)) {
+    const [number, ...message] = raw.slice(6).split(":");
+    return {
+      type: "sms",
+      title: number ? `Text: ${shorten(number)}` : "Text message",
+      subtitle: shorten(message.join(":").trim() || "Text message", 60),
+    };
+  }
+
+  if (/^https?:\/\//i.test(raw)) {
+    let host = "";
+    let path = "";
+    try {
+      const parsed = new URL(raw);
+      host = parsed.hostname.replace(/^www\./, "");
+      path = parsed.pathname === "/" ? "" : parsed.pathname;
+    } catch { /* leave host empty for malformed URLs */ }
+    const label = `${host}${path}`;
+    return {
+      type: "url",
+      title: shorten(label || raw),
+      subtitle: shorten(raw, 60),
+    };
+  }
+
+  // Plain text: first line is the gist.
+  const firstLine = raw.split("\n")[0].trim();
+  return {
+    type: "text",
+    title: shorten(firstLine || "Text"),
+    subtitle: raw.includes("\n") ? "Multi-line text" : "Text",
+  };
+}
+
 /** Update matching history items locally and emit a change event. */
 export function updateHistoryItem(
   matcher: (item: HistoryItem) => boolean,

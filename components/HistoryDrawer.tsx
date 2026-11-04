@@ -5,6 +5,7 @@ import {
   getHistory,
   HistoryItem,
   removeFromHistory,
+  summarizeQrPayload,
 } from "../utils/history.ts";
 import {
   exportSyncBundle,
@@ -63,6 +64,18 @@ export default function HistoryDrawer(
         return "📝";
       case "wifi":
         return "📶";
+      case "vcard":
+        return "👤";
+      case "email":
+        return "✉️";
+      case "phone":
+        return "📞";
+      case "sms":
+        return "💬";
+      case "social":
+        return "🌐";
+      case "media":
+        return "🎞️";
       case "file":
         return "📂";
       case "dynamic":
@@ -316,14 +329,21 @@ export default function HistoryDrawer(
               </div>
             )
             : (
-              history.map((item) => (
+              history.map((item) => {
+                // Legacy rows saved before summarization stored raw payloads.
+                // Derive a human title/subtitle on the fly so old entries in
+                // localStorage stop reading "WIFI:T:WPA;S:..." too.
+                const summary = summarizeQrPayload(item.content);
+                const title = item.metadata?.title || summary.title;
+                const subtitle = item.type === "file"
+                  ? (isSpanish ? "Buzón de archivos" : "File Locker")
+                  : ((item.metadata?.subtitle as string) || summary.subtitle);
+                return (
                 <div
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  aria-label={`${isSpanish ? "Abrir" : "Open"} ${
-                    item.metadata?.title || item.content
-                  }`}
+                  aria-label={`${isSpanish ? "Abrir" : "Open"} ${title}`}
                   class="group relative bg-white border-2 border-black rounded-xl p-3 shadow-[4px_4px_0_rgba(0,0,0,0.1)] hover:shadow-[2px_2px_0_rgba(0,0,0,0.1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
                   onClick={() => {
                     onSelect(item);
@@ -346,7 +366,7 @@ export default function HistoryDrawer(
                     <div class="flex-1 min-w-0">
                       <div class="flex justify-between items-start gap-1">
                         <p class="font-bold text-sm truncate pr-1">
-                          {item.metadata?.title || item.content}
+                          {title}
                         </p>
                         {item.metadata?.shortCode && (
                           <span class="shrink-0 text-[10px] font-black uppercase tracking-wide bg-purple-100 text-purple-900 border border-purple-300 px-1.5 py-0.5 rounded-md">
@@ -373,12 +393,10 @@ export default function HistoryDrawer(
                           </a>
                         )}
                       </div>
-                      <p class="text-[10px] text-gray-500 font-mono mt-1 truncate">
-                        {item.type === "file"
-                          ? (isSpanish ? "Buzón de archivos" : "File Locker")
-                          : item.content}
+                      <p class="text-[11px] text-gray-500 mt-1 truncate">
+                        {subtitle}
                       </p>
-                      <p class="text-[10px] text-gray-600 mt-0.5">
+                      <p class="text-[11px] text-gray-600 mt-0.5">
                         {formatDate(item.timestamp)}
                       </p>
                     </div>
@@ -402,7 +420,8 @@ export default function HistoryDrawer(
                     ✕
                   </button>
                 </div>
-              ))
+                );
+              })
             )}
         </div>
 

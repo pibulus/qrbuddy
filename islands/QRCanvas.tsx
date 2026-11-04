@@ -6,7 +6,7 @@ import { QR_STYLES } from "../utils/qr-styles.ts";
 import { addToast } from "./ToastManager.tsx";
 import type { BannerTheme, FrameConfig, QRStyle } from "../types/qr-types.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
-import { addToHistory } from "../utils/history.ts";
+import { addToHistory, summarizeQrPayload } from "../utils/history.ts";
 import { haptics } from "../utils/haptics.ts";
 import { checkQRScannability } from "../utils/qr-decode.ts";
 import { createFramedSvg, measureCaptionWidth } from "../utils/svg-export.ts";
@@ -479,16 +479,18 @@ export default function QRCanvas(
       return;
     }
 
-    // Save to history (Time Machine)
+    // Save to history (Time Machine). Templates pour raw payloads into the
+    // shared url signal, so summarize first — otherwise the drawer shows
+    // "WIFI:T:WPA;S:..." twice and picks the wrong icon.
     if (url.value) {
       try {
+        const summary = summarizeQrPayload(url.value);
         addToHistory({
-          type: "url", // Generic type for static QRs
+          type: summary.type,
           content: url.value,
           metadata: {
-            title: url.value.length > 30
-              ? url.value.substring(0, 30) + "..."
-              : url.value,
+            title: summary.title,
+            subtitle: summary.subtitle,
           },
         });
       } catch (err) {
