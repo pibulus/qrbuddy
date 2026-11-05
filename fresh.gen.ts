@@ -52,8 +52,15 @@ import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
 import * as $stats from "./routes/stats.tsx";
 import * as $terms from "./routes/terms.tsx";
-import * as $v1_fn_ from "./routes/v1/[fn].ts";
+import * as $v1_api_keys from "./routes/v1/api-keys.ts";
+import * as $v1_create_dynamic_qr from "./routes/v1/create-dynamic-qr.ts";
+import * as $v1_get_dynamic_qr from "./routes/v1/get-dynamic-qr.ts";
+import * as $v1_health from "./routes/v1/health.ts";
+import * as $v1_library_stats from "./routes/v1/library-stats.ts";
+import * as $v1_library from "./routes/v1/library.ts";
 import * as $v1_ping from "./routes/v1/ping.ts";
+import * as $v1_redirect_qr from "./routes/v1/redirect-qr.ts";
+import * as $v1_update_dynamic_qr from "./routes/v1/update-dynamic-qr.ts";
 import * as $vcard from "./routes/vcard.tsx";
 import * as $vs_slug_ from "./routes/vs/[slug].tsx";
 import * as $weddings from "./routes/weddings.tsx";
@@ -135,8 +142,15 @@ const manifest = {
     "./routes/r.tsx": $r,
     "./routes/stats.tsx": $stats,
     "./routes/terms.tsx": $terms,
-    "./routes/v1/[fn].ts": $v1_fn_,
+    "./routes/v1/api-keys.ts": $v1_api_keys,
+    "./routes/v1/create-dynamic-qr.ts": $v1_create_dynamic_qr,
+    "./routes/v1/get-dynamic-qr.ts": $v1_get_dynamic_qr,
+    "./routes/v1/health.ts": $v1_health,
+    "./routes/v1/library-stats.ts": $v1_library_stats,
+    "./routes/v1/library.ts": $v1_library,
     "./routes/v1/ping.ts": $v1_ping,
+    "./routes/v1/redirect-qr.ts": $v1_redirect_qr,
+    "./routes/v1/update-dynamic-qr.ts": $v1_update_dynamic_qr,
     "./routes/vcard.tsx": $vcard,
     "./routes/vs/[slug].tsx": $vs_slug_,
     "./routes/weddings.tsx": $weddings,

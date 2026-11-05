@@ -1,6 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 
-// Static probe under /v1: proves whether a new *static* route works there.
+// Probe route: proves the /v1 folder is served at all.
 export const handler: Handlers = {
   GET() {
     return new Response(JSON.stringify({ ok: true, route: "/v1/ping" }), {
