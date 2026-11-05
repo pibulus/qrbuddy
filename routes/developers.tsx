@@ -1,11 +1,10 @@
 import { Head } from "$fresh/runtime.ts";
 import ApiKeysPanel from "../islands/ApiKeysPanel.tsx";
 
-// The base that is verified working today. `qrbuddy.app/v1` is built and
-// staged in the repo but its routes do not survive this deployment's router
-// yet (see docs/DEPLOY-RUNBOOK.md); pointing the docs at a promise would be
-// worse than pointing them at a working host.
-const API_BASE = "https://aqydpibnvlhcjcwosrti.supabase.co/functions/v1";
+// The base, verified live 2026-11-05: POST /v1/api-keys mints, the key
+// authorises, revoke returns 401. Each endpoint is its own static route file
+// because dynamic segments in a new folder die on this platform.
+const API_BASE = "https://qrbuddy.app/v1";
 
 const ENDPOINTS = [
   {

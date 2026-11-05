@@ -1,37 +1,38 @@
-// Service status.
-// Static route on purpose: on this deployment only *static* files in a new
-// folder survive (proved 2026-11-05: /v1/ping 200, /v1/[fn] 500). One file per
-// endpoint also makes the public contract readable — the folder is the API.
+// Self-contained probe: same proxy work, zero shared imports. If this answers
+// and the imported version does not, the fault is the module import itself.
 import { Handlers } from "$fresh/server.ts";
-import { handleApiRequest } from "../../utils/api-proxy.ts";
 
 export const handler: Handlers = {
-  OPTIONS(req) {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": req.headers.get("origin") ?? "*",
-        "Access-Control-Allow-Methods":
-          "GET, POST, PATCH, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers":
-          "authorization, x-api-key, x-passport-id, content-type, apikey",
-        Vary: "Origin",
-      },
-    });
-  },
-  GET(req) {
-    return handleApiRequest(req, "health");
-  },
-  POST(req) {
-    return handleApiRequest(req, "health");
-  },
-  PATCH(req) {
-    return handleApiRequest(req, "health");
-  },
-  PUT(req) {
-    return handleApiRequest(req, "health");
-  },
-  DELETE(req) {
-    return handleApiRequest(req, "health");
+  async GET(req) {
+    let supabaseUrl = "";
+    try {
+      supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ env: "threw", message: String(error) }),
+        { status: 500, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (!supabaseUrl) {
+      return new Response(JSON.stringify({ error: "no supabase url" }), {
+        status: 503,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    try {
+      const upstream = await fetch(`${supabaseUrl}/functions/v1/health`, {
+        signal: AbortSignal.timeout(20_000),
+      });
+      const text = await upstream.text();
+      return new Response(text, {
+        status: upstream.status,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ fetch: "threw", message: String(error) }),
+        { status: 502, headers: { "Content-Type": "application/json" } },
+      );
+    }
   },
 };
