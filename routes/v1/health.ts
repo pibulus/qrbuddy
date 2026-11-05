@@ -3,7 +3,7 @@
 import { Handlers } from "$fresh/server.ts";
 
 export const handler: Handlers = {
-  async GET(req) {
+  async GET() {
     let supabaseUrl = "";
     try {
       supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";

@@ -1,17 +1,16 @@
 import { assertEquals } from "https://deno.land/std@0.216.0/assert/mod.ts";
-import { handler } from "../routes/v1/[fn].ts";
+import { handler } from "../routes/v1/api-keys.ts";
 
-function ctx(name = "health") {
-  return { params: { fn: name } } as unknown as Parameters<
+function ctx() {
+  return { params: {} } as unknown as Parameters<
     NonNullable<typeof handler.GET>
   >[1];
 }
 
-Deno.test("api proxy reports a missing backend plainly", async () => {
-  // The test environment has no SUPABASE_URL: the proxy must say so instead of
-  // throwing a 500 or pretending it worked.
+Deno.test("api route reports a missing backend plainly", async () => {
+  // No SUPABASE_URL in the test env: the proxy must say so rather than throw.
   const response = await handler.GET!(
-    new Request("https://qrbuddy.app/api/health"),
+    new Request("https://qrbuddy.app/v1/api-keys"),
     ctx(),
   );
   assertEquals(response.status, 503);
@@ -19,9 +18,9 @@ Deno.test("api proxy reports a missing backend plainly", async () => {
   assertEquals(body.error, "API is not configured on this deployment.");
 });
 
-Deno.test("api proxy answers CORS preflight with the API headers", async () => {
+Deno.test("api route answers CORS preflight with the API headers", async () => {
   const response = await handler.OPTIONS!(
-    new Request("https://qrbuddy.app/api/health", {
+    new Request("https://qrbuddy.app/v1/api-keys", {
       method: "OPTIONS",
       headers: { origin: "https://qrbuddy.app" },
     }),
