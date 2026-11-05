@@ -24,3 +24,6 @@ scratch/
 
 # generated at build time from utils/softstack-passport/card.css
 static/passport-card.css
+
+# Playwright tour artifacts (13 MB of PNGs broke a Deno deploy, 2026-11-05)
+.playwright-tour/
