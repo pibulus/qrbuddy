@@ -407,6 +407,12 @@ verify_jwt = false
 # JWT gate is off to accept incoming auth headers consistently.
 verify_jwt = false
 
+[functions.api-keys]
+verify_jwt = false
+
+[functions.library-stats]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
