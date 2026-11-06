@@ -4,11 +4,12 @@
 -- Revoke the overly permissive "Owner can update bucket" policy
 DROP POLICY IF EXISTS "Owner can update bucket" ON file_buckets;
 
--- Create a new policy that only allows INSERT (creation)
--- Updates must now happen via Edge Functions (Service Role)
-CREATE POLICY "Anyone can create bucket"
+-- Restrict INSERT (creation) to Edge Functions (Service Role) only so the
+-- anon key cannot insert arbitrary storage_path rows into file_buckets.
+DROP POLICY IF EXISTS "Anyone can create bucket" ON file_buckets;
+CREATE POLICY "Service role can create bucket"
   ON file_buckets FOR INSERT
-  WITH CHECK (true);
+  WITH CHECK (auth.role() = 'service_role');
 
 -- Ensure SELECT is still allowed (already exists as "Anyone can read bucket status")
 -- But let's double check and maybe restrict it if we want to be stricter later.

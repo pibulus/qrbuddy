@@ -149,9 +149,6 @@ missing is the same rigour TalkType and ZipList already have:
 - settings alongside history (design preferences are already a separate sync —
   `utils/design-preferences.ts` — fold them into the same envelope)
 
-Collapse the phrase and the passport into one secret so there is one thing to
-remember and one thing to lose.
-
 _Owner: me. Risk: medium — merge bugs are the class of bug that eats data._
 
 ### P3 — the money and the ceilings (needs Pablo)

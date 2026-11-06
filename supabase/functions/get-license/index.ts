@@ -14,8 +14,10 @@ import { createCorsResponse, getCorsHeaders } from "../_shared/cors.ts";
 import { verifySupporterToken } from "../_shared/license.ts";
 import {
   hashPassportPhrase,
+  isPasskeyPhraseLockedOut,
   mintPassportCode,
   mintPassportPhrase,
+  recordPasskeyPhraseMiss,
 } from "../_shared/passport.ts";
 import {
   isCode,
@@ -37,6 +39,31 @@ serve(async (req) => {
   };
 
   try {
+    const reqUrl = new URL(req.url);
+    const queryCode = (
+      reqUrl.searchParams.get("code") ||
+      reqUrl.searchParams.get("passport") ||
+      ""
+    ).trim();
+    if (queryCode && isCode(queryCode)) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Enter the 4-word passkey to restore this Passport. The SS- code is a public identifier.",
+        }),
+        { headers: jsonHeaders, status: 400 },
+      );
+    }
+    if (reqUrl.searchParams.get("phrase")) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Send the 4-word passkey in a POST JSON body, not the URL query string.",
+        }),
+        { headers: jsonHeaders, status: 400 },
+      );
+    }
+
     let body;
     try {
       body = await req.json();
@@ -83,14 +110,20 @@ serve(async (req) => {
         );
       }
 
-      const phraseKey = await hashPassportPhrase(parsed.phrase);
-      const phraseLimit = await checkRateLimit(phraseKey || parsed.phrase, {
-        scope: "restore-passkey-lockout",
-        windowMs: 15 * 60 * 1000,
-        maxRequests: 5,
-      });
-      if (phraseLimit.isLimited) {
-        return createRateLimitResponse(phraseLimit, getCorsHeaders(req));
+      const phraseKey = (await hashPassportPhrase(parsed.phrase)) ||
+        parsed.phrase;
+      const preCheck = isPasskeyPhraseLockedOut(phraseKey);
+      if (preCheck.isLimited) {
+        return createRateLimitResponse(
+          {
+            isLimited: true,
+            remaining: 0,
+            resetTime: preCheck.resetTime,
+            limit: preCheck.limit,
+            retryAfter: preCheck.retryAfter,
+          },
+          getCorsHeaders(req),
+        );
       }
 
       const targetCode = await mintPassportCode(parsed.phrase);
@@ -128,6 +161,21 @@ serve(async (req) => {
             { headers: jsonHeaders },
           );
         }
+      }
+
+      // Only increment the per-phrase lockout counter on lookup MISS so valid
+      // restores never lock out a legitimate holder.
+      const memMiss = recordPasskeyPhraseMiss(phraseKey);
+      const phraseLimit = await checkRateLimit(phraseKey, {
+        scope: "restore-passkey-lockout",
+        windowMs: 15 * 60 * 1000,
+        maxRequests: 5,
+      });
+      if (memMiss.isLimited || phraseLimit.isLimited) {
+        return createRateLimitResponse(
+          phraseLimit.isLimited ? phraseLimit : memMiss,
+          getCorsHeaders(req),
+        );
       }
 
       return new Response(

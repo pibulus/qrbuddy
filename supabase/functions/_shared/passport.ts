@@ -6,12 +6,24 @@ import {
   codeInput,
   formatCode,
   generateMemberIdentity,
+  getSyncRoomId,
   idInput,
+  kdfInput,
   parseFourWordPasskey,
+  PASSKEY_INDEX_ITERATIONS,
+  passkeyIndexSalt,
   phraseFromHash,
   phraseInput,
   stampsFor,
 } from "../../../utils/softstack-passport/index.js";
+
+export function uuidFromPassportSecret(secret: string): string {
+  const clean = secret.trim().toLowerCase();
+  const hex = getSyncRoomId(`qrbuddy-passport-id:${clean}`);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${
+    hex.slice(17, 20)
+  }-${hex.slice(20, 32)}`;
+}
 
 export function getPassportSecret(): string {
   const secret = Deno.env.get("SOFTSTACK_PASSPORT_SECRET")?.trim() ?? "";
@@ -63,9 +75,10 @@ export async function mintPassportCode(seedOrPhrase: string): Promise<string> {
 export async function hashPassportPhrase(phrase: string): Promise<string> {
   const parsed = parseFourWordPasskey(phrase);
   if (!parsed) return "";
+  const secret = getPassportSecret();
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(parsed.phrase),
+    encoder.encode(kdfInput(parsed.phrase)),
     "PBKDF2",
     false,
     ["deriveBits"],
@@ -73,8 +86,8 @@ export async function hashPassportPhrase(phrase: string): Promise<string> {
   const bits = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
-      salt: encoder.encode(`softstack-passkey-v1:${getPassportSecret()}`),
-      iterations: 100000,
+      salt: encoder.encode(passkeyIndexSalt(secret)),
+      iterations: PASSKEY_INDEX_ITERATIONS,
       hash: "SHA-256",
     },
     keyMaterial,
@@ -84,6 +97,79 @@ export async function hashPassportPhrase(phrase: string): Promise<string> {
     new Uint8Array(bits),
     (b) => b.toString(16).padStart(2, "0"),
   ).join("");
+}
+
+const PASSKEY_LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
+const PASSKEY_LOCKOUT_MAX_MISSES = 5;
+const passkeyMissCounters = new Map<
+  string,
+  { misses: number; resetTime: number }
+>();
+
+export function isPasskeyPhraseLockedOut(
+  phraseKey: string,
+  now = Date.now(),
+): {
+  isLimited: boolean;
+  retryAfter: number;
+  resetTime: number;
+  limit: number;
+} {
+  const entry = passkeyMissCounters.get(phraseKey);
+  if (!entry || now >= entry.resetTime) {
+    if (entry) passkeyMissCounters.delete(phraseKey);
+    return {
+      isLimited: false,
+      retryAfter: 0,
+      resetTime: now + PASSKEY_LOCKOUT_WINDOW_MS,
+      limit: PASSKEY_LOCKOUT_MAX_MISSES,
+    };
+  }
+  const isLimited = entry.misses >= PASSKEY_LOCKOUT_MAX_MISSES;
+  return {
+    isLimited,
+    retryAfter: isLimited
+      ? Math.max(1, Math.ceil((entry.resetTime - now) / 1000))
+      : 0,
+    resetTime: entry.resetTime,
+    limit: PASSKEY_LOCKOUT_MAX_MISSES,
+  };
+}
+
+export function recordPasskeyPhraseMiss(
+  phraseKey: string,
+  now = Date.now(),
+): {
+  isLimited: boolean;
+  remaining: number;
+  resetTime: number;
+  limit: number;
+  retryAfter?: number;
+} {
+  const existing = passkeyMissCounters.get(phraseKey);
+  const entry = !existing || now >= existing.resetTime
+    ? { misses: 0, resetTime: now + PASSKEY_LOCKOUT_WINDOW_MS }
+    : existing;
+  entry.misses += 1;
+  passkeyMissCounters.set(phraseKey, entry);
+  const isLimited = entry.misses > PASSKEY_LOCKOUT_MAX_MISSES;
+  return {
+    isLimited,
+    remaining: Math.max(0, PASSKEY_LOCKOUT_MAX_MISSES - entry.misses),
+    resetTime: entry.resetTime,
+    limit: PASSKEY_LOCKOUT_MAX_MISSES,
+    ...(isLimited
+      ? { retryAfter: Math.max(1, Math.ceil((entry.resetTime - now) / 1000)) }
+      : {}),
+  };
+}
+
+export function resetPasskeyPhraseMisses(phraseKey?: string): void {
+  if (phraseKey) {
+    passkeyMissCounters.delete(phraseKey);
+  } else {
+    passkeyMissCounters.clear();
+  }
 }
 
 export async function passportIdentity(code: string, phrase?: string) {

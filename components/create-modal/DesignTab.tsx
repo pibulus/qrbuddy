@@ -34,7 +34,7 @@ interface DesignTabProps {
 }
 
 const KEY =
-  "min-h-[44px] rounded-xl px-1.5 text-xs font-black transition-[transform,box-shadow,border-color] duration-[70ms] active:translate-y-[2px] active:shadow-none";
+  "min-h-[44px] rounded-xl px-1.5 text-xs font-black transition-[transform,box-shadow,border-color] duration-[70ms] active:translate-y-[2px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]";
 
 /** Three sections, one grid each: palette (7), centre mark (5+2), label (1+4). */
 export default function DesignTab(
@@ -109,7 +109,7 @@ export default function DesignTab(
           <button
             type="button"
             onClick={reset}
-            class="shrink-0 min-h-[32px] px-1 text-xs font-bold underline underline-offset-2"
+            class="shrink-0 min-h-[32px] px-1 rounded-md text-xs font-bold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
             aria-label={es
               ? "Restablecer diseño original"
               : "Reset design to default"}
@@ -136,7 +136,7 @@ export default function DesignTab(
               }}
               aria-label={es ? "Colores propios" : "Custom colours"}
               title={es ? "Colores propios" : "Custom colours"}
-              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-[1.5px] border-[#1e1714]/[0.28] bg-[#fffef7] text-base font-black hover:border-[#1e1714] active:scale-95 transition-all"
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-[1.5px] border-[#1e1714]/[0.28] bg-[#fffef7] text-base font-black hover:border-[#1e1714] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
             >
               +
             </button>
@@ -189,7 +189,7 @@ export default function DesignTab(
             }}
           />
           <div
-            class={`flex items-center min-w-0 min-h-[44px] rounded-xl bg-[#fffef7] transition-colors ${
+            class={`flex items-center min-w-0 min-h-[44px] rounded-xl bg-[#fffef7] transition-colors focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4] ${
               logoUrl.value || monogram
                 ? "border-2 border-[#1e1714]"
                 : "border-[1.5px] border-[#1e1714]/[0.28] focus-within:border-2 focus-within:border-[#1e1714]"
@@ -231,7 +231,7 @@ export default function DesignTab(
                   tap();
                 }}
                 aria-label={es ? "Quitar marca central" : "Clear center mark"}
-                class="shrink-0 w-8 h-8 mr-1.5 rounded-full text-sm font-black hover:bg-[#1e1714]/10"
+                class="shrink-0 w-8 h-8 mr-1.5 rounded-full text-sm font-black hover:bg-[#1e1714]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
               >
                 ✕
               </button>
@@ -249,7 +249,7 @@ export default function DesignTab(
             {es ? "Etiqueta de la tarjeta" : "Card label"}
           </h3>
           <div
-            class={`flex items-center min-h-[44px] rounded-xl bg-[#fffef7] transition-colors ${
+            class={`flex items-center min-h-[44px] rounded-xl bg-[#fffef7] transition-colors focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4] ${
               caption
                 ? "border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714]"
                 : "border-[1.5px] border-[#1e1714]/[0.28] focus-within:border-2 focus-within:border-[#1e1714]"
@@ -276,7 +276,7 @@ export default function DesignTab(
               aria-label={es
                 ? `Franja: ${theme}. Cambiar estilo`
                 : `Banner: ${theme}. Change style`}
-              class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full mr-1"
+              class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full mr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
             >
               <span
                 aria-hidden="true"
@@ -289,7 +289,7 @@ export default function DesignTab(
                 type="button"
                 onClick={() => writeCaption("")}
                 aria-label={es ? "Quitar etiqueta" : "Clear label"}
-                class="shrink-0 w-11 h-11 mr-1 flex items-center justify-center rounded-full text-sm font-black hover:bg-[#1e1714]/10"
+                class="shrink-0 w-11 h-11 mr-1 flex items-center justify-center rounded-full text-sm font-black hover:bg-[#1e1714]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
               >
                 ✕
               </button>

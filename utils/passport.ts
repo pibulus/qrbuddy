@@ -111,22 +111,21 @@ function getRandomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function generateSecretHex(bytes = 16): string {
-  const buf = new Uint8Array(bytes);
-  crypto.getRandomValues(buf);
-  return Array.from(buf)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+export function uuidFromPassportSecret(secret: string): string {
+  const clean = secret.trim().toLowerCase();
+  const hex = getSyncRoomId(`qrbuddy-passport-id:${clean}`);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${
+    hex.slice(17, 20)
+  }-${hex.slice(20, 32)}`;
 }
 
 export function generatePassportIdentity(): QRBuddyPassport {
-  const id = crypto.randomUUID();
-  const secret = generateSecretHex(16);
+  const phrase = generateSyncPhrase();
+  const { id, secret } = deriveCredentialsFromPhrase(phrase);
   const adjective = getRandomItem(PASSPORT_ADJECTIVES);
   const creature = getRandomItem(PASSPORT_CREATURES);
   const name = `${adjective} ${creature}`;
   const avatarEmoji = getRandomItem(PASSPORT_EMOJIS);
-  const phrase = generateSyncPhrase();
 
   return {
     id,
@@ -179,10 +178,8 @@ function deriveCredentialsFromPhrase(phrase: string): {
   const normalized = normalizeSyncPhrase(phrase);
   const parsed = parseFourWordPasskey(normalized);
   const hex = getSyncRoomId(`qrbuddy-passport:${normalized}`);
-  const id = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${
-    hex.slice(17, 20)
-  }-${hex.slice(20, 32)}`;
   const secret = hex.slice(32, 64);
+  const id = uuidFromPassportSecret(secret);
   return {
     id,
     secret,
@@ -304,32 +301,15 @@ export function clearPassport(): void {
 }
 
 /**
- * Builds the cross-device sync URL. Encodes passport ID, secret, and phrase
- * in the URL fragment (#) so it NEVER touches server access or proxy logs.
+ * Builds the cross-device sync URL. Encodes only `#phrase=<4-words>` in the
+ * URL fragment (#) so the QR is compact (Version 3/4) and never carries
+ * bearer JWTs or raw hex secrets.
  */
 export function buildPassportSyncUrl(
   passport: QRBuddyPassport,
   origin?: string,
 ): string {
-  const base = origin ||
-    (typeof window !== "undefined"
-      ? globalThis.location.origin
-      : "https://qrbuddy.app");
-  const params = new URLSearchParams();
-  params.set("passport", passport.id);
-  params.set("secret", passport.secret);
-  params.set("name", passport.name);
-  params.set("emoji", passport.avatarEmoji);
-  params.set("phrase", passport.phrase);
-  const activePass = getSupporterPass();
-  if (activePass || passport.tier === "plus") {
-    params.set("tier", "plus");
-  }
-  if (activePass) {
-    params.set("pass", activePass);
-  }
-
-  return `${base}/#${params.toString()}`;
+  return buildPassportPhraseUrl(passport, origin);
 }
 
 /**

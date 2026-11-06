@@ -530,15 +530,24 @@ export default function SmartInput(
     }
   }, [editUrl.value, bucketUrl.value, isCreateModalOpen]);
 
+  const handleDisableEditable = () => {
+    if (staticSourceUrl) {
+      url.value = staticSourceUrl;
+      setStaticSourceUrl("");
+    }
+    editUrl.value = "";
+    isDynamic.value = false;
+  };
+
   const handleInput = (e: Event) => {
+    if (editUrl.value) {
+      // Protect an active editable short link from accidental keystroke wipe;
+      // the user must explicitly detach / switch to Static first.
+      return;
+    }
     const input = e.target as HTMLInputElement;
     url.value = input.value;
     isDestructible.value = false; // Regular text/URL, not destructible
-    if (editUrl.value) {
-      editUrl.value = "";
-      isDynamic.value = false;
-      setStaticSourceUrl("");
-    }
 
     if (!touched) {
       setTouched(true);
@@ -885,6 +894,9 @@ export default function SmartInput(
         }}
         onClose={() => {
           setIsCreateModalOpen(false);
+          if (!editUrl.value && !isCreatingDynamic) {
+            isDynamic.value = false;
+          }
           const contentChanged = url.value.trim() !== "" &&
             url.value !== urlAtSheetOpen.current;
           const designChanged = qrStyle.value !== styleAtSheetOpen.current ||
@@ -945,6 +957,7 @@ export default function SmartInput(
         onTextCardConfirm={handleTextCardConfirm}
         isCreatingLocker={isCreatingBucket}
         onCreateEditable={handleCreateEditable}
+        onDisableEditable={handleDisableEditable}
         isCreatingEditable={isCreatingDynamic}
         splashConfig={splashConfig}
         frameConfig={frameConfig}
@@ -979,7 +992,27 @@ export default function SmartInput(
               ref={textInputRef}
               type="text"
               value={url.value}
+              readOnly={Boolean(editUrl.value)}
               onInput={handleInput}
+              onKeyDown={(e: KeyboardEvent) => {
+                if (
+                  editUrl.value &&
+                  !e.metaKey &&
+                  !e.ctrlKey &&
+                  !e.altKey &&
+                  (e.key.length === 1 ||
+                    e.key === "Backspace" ||
+                    e.key === "Delete")
+                ) {
+                  e.preventDefault();
+                  addToast(
+                    isSpanish
+                      ? "Link editable bloqueado — toca Estático o Desvincular para editar el URL directo"
+                      : "Editable link locked — tap Static or Detach to edit the raw URL",
+                    3000,
+                  );
+                }
+              }}
               onFocus={handleFocus}
               onBlur={() => setTouched(true)}
               placeholder={isDragging
@@ -1154,12 +1187,8 @@ export default function SmartInput(
                       type="button"
                       aria-pressed={staticActive}
                       onClick={() => {
-                        if (editUrl.value) {
-                          if (staticSourceUrl) {
-                            url.value = staticSourceUrl;
-                          }
-                          editUrl.value = "";
-                          isDynamic.value = false;
+                        if (editUrl.value || isDynamic.value) {
+                          handleDisableEditable();
                           haptics.light();
                         }
                       }}
@@ -1205,6 +1234,17 @@ export default function SmartInput(
                     : "This QR can be repointed anytime"}
                 </span>
                 <div class="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDisableEditable();
+                      haptics.light();
+                      textInputRef.current?.focus();
+                    }}
+                    class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] px-2 rounded-lg font-black`}
+                  >
+                    {isSpanish ? "Desvincular" : "Detach"}
+                  </button>
                   <button
                     type="button"
                     onClick={async () => {

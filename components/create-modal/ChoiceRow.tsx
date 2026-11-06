@@ -17,6 +17,9 @@ interface ChoiceRowProps {
   accordion?: boolean;
   /** Optional status pill text shown beside the chevron/toggle when configured/active. */
   badge?: string;
+  /** Optional explicit "Turn off" action for accordion rows so collapsing only hides. */
+  onClearBadge?: () => void;
+  clearBadgeLabel?: string;
   /** Optional trailing control (e.g. an Upload button) — clicks inside it
    * don't toggle the row. */
   trailing?: ComponentChildren;
@@ -39,6 +42,8 @@ export default function ChoiceRow(
     chevron = false,
     accordion = false,
     badge,
+    onClearBadge,
+    clearBadgeLabel = "Turn off",
     trailing,
     children,
     onClick,
@@ -128,16 +133,32 @@ export default function ChoiceRow(
               </span>
             )
             : (
-              <span
-                aria-hidden="true"
-                class={`shrink-0 inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-0.5 text-[11px] font-black whitespace-nowrap transition-all ${
-                  active
-                    ? "border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[1.5px_1.5px_0_#1e1714]"
-                    : "border-[#1e1714]/20 bg-[#fbf1e4] text-[#4a3f39] group-hover:border-[#1e1714] group-hover:text-[#1e1714]"
-                }`}
-              >
-                {badge && <span>{badge}</span>}
-                <span>{active ? "▴" : "▾"}</span>
+              <span class="shrink-0 inline-flex items-center gap-1.5">
+                {badge && onClearBadge && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onClearBadge();
+                    }}
+                    class="min-h-[28px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-2 py-0.5 text-[11px] font-black text-[#1e1714] hover:bg-[#fbf1e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
+                    aria-label={`${clearBadgeLabel}: ${title}`}
+                    title={clearBadgeLabel}
+                  >
+                    {clearBadgeLabel}
+                  </button>
+                )}
+                <span
+                  aria-hidden="true"
+                  class={`inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-0.5 text-[11px] font-black whitespace-nowrap transition-all ${
+                    active
+                      ? "border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[1.5px_1.5px_0_#1e1714]"
+                      : "border-[#1e1714]/20 bg-[#fbf1e4] text-[#4a3f39] group-hover:border-[#1e1714] group-hover:text-[#1e1714]"
+                  }`}
+                >
+                  {badge && <span>{badge}</span>}
+                  <span>{active ? "▴" : "▾"}</span>
+                </span>
               </span>
             )}
         </div>

@@ -120,6 +120,7 @@ interface CreateModalProps {
   onTextCardConfirm: (text: string) => Promise<boolean>;
   isCreatingLocker: boolean;
   onCreateEditable: () => void;
+  onDisableEditable?: () => void;
   isCreatingEditable: boolean;
   splashConfig: Signal<
     {
@@ -264,6 +265,7 @@ export default function CreateModal({
   onTextCardConfirm,
   isCreatingLocker,
   onCreateEditable,
+  onDisableEditable,
   isCreatingEditable,
   splashConfig,
   frameConfig,
@@ -307,7 +309,7 @@ export default function CreateModal({
   const [_showLockerSettings, setShowLockerSettings] = useState(false);
   const [isLimitSettingsOpen, setIsLimitSettingsOpen] = useState(false);
   const [expandedBehavior, setExpandedBehavior] = useState<
-    "roulette" | "splash" | "limits" | null
+    "roulette" | "splash" | "limits" | "none" | null
   >(null);
 
   const lockerActive = isBucket.value && bucketUrl.value !== "";
@@ -364,18 +366,28 @@ export default function CreateModal({
 
   if (!shell.mounted) return null;
 
-  const activateDynamicBase = () => {
+  const activateDynamicBase = (mintIfReady = false) => {
     isDynamic.value = true;
     isBucket.value = false;
     bucketUrl.value = "";
     setIsBatchMode(false);
     setShowLockerSettings(false);
+    if (
+      mintIfReady &&
+      !editUrl.value &&
+      !isCreatingEditable &&
+      url.value.trim() !== ""
+    ) {
+      onCreateEditable();
+    }
   };
 
   const disableDynamicBase = () => {
     const hadExtras = isSequential || scanLimit !== null || expiryDate !== "" ||
       (splashConfig.value?.enabled ?? false);
     isDynamic.value = false;
+    editUrl.value = "";
+    onDisableEditable?.();
     setIsSequential(false);
     setIsLimitSettingsOpen(false);
     setScanLimit(null);
@@ -1120,20 +1132,23 @@ export default function CreateModal({
   const themeStyleVars = getQRThemeStyleVars(qrStyle.value, customStyle?.value);
 
   const renderOptionsTab = () => {
-    const isStaticActive = !isDynamic.value && !isBatchMode && !lockerActive;
-    const activePanel = expandedBehavior ??
-      (isSequential
-        ? "roulette"
-        : splashActive
-        ? "splash"
-        : isLimitSettingsOpen
-        ? "limits"
-        : null);
-    const isRouletteExpanded = isDynamic.value && isSequential &&
+    const isEditableActive = Boolean(editUrl.value) || isDynamic.value;
+    const isStaticActive = !isEditableActive && !isBatchMode && !lockerActive;
+    const activePanel = expandedBehavior === "none"
+      ? null
+      : (expandedBehavior ??
+        (isSequential
+          ? "roulette"
+          : splashActive
+          ? "splash"
+          : isLimitSettingsOpen
+          ? "limits"
+          : null));
+    const isRouletteExpanded = isEditableActive && isSequential &&
       activePanel === "roulette";
-    const isSplashExpanded = isDynamic.value && splashActive &&
+    const isSplashExpanded = isEditableActive && splashActive &&
       activePanel === "splash";
-    const isLimitsExpanded = isDynamic.value && isLimitSettingsOpen &&
+    const isLimitsExpanded = isEditableActive && isLimitSettingsOpen &&
       activePanel === "limits";
 
     return (
@@ -1179,20 +1194,20 @@ export default function CreateModal({
 
             <button
               type="button"
-              aria-pressed={isDynamic.value}
+              aria-pressed={isEditableActive}
               onClick={() => {
-                if (isDynamic.value) {
+                if (isEditableActive) {
                   disableDynamicBase();
                   setExpandedBehavior(null);
                   sounds.toggleOff?.();
                 } else {
-                  activateDynamicBase();
+                  activateDynamicBase(true);
                   sounds.toggleOn?.();
                 }
                 haptics.light();
               }}
               class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center gap-1.5 ${
-                isDynamic.value
+                isEditableActive
                   ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-2 border-[#1e1714] shadow-sm"
                   : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
               }`}
@@ -1216,11 +1231,17 @@ export default function CreateModal({
               : "Link rotation & roulette"}
             active={isRouletteExpanded}
             accordion
-            badge={isDynamic.value && isSequential
+            badge={isEditableActive && isSequential
               ? (randomSequence
                 ? (isSpanish ? "Ruleta" : "Roulette")
                 : (isSpanish ? "Activo" : "Active"))
               : undefined}
+            clearBadgeLabel={isSpanish ? "Apagar" : "Turn off"}
+            onClearBadge={() => {
+              setIsSequential(false);
+              if (activePanel === "roulette") setExpandedBehavior("none");
+              haptics.light();
+            }}
             onClick={() => {
               if (!isDynamic.value) activateDynamicBase();
               if (!isSequential) {
@@ -1229,8 +1250,7 @@ export default function CreateModal({
               } else if (activePanel !== "roulette") {
                 setExpandedBehavior("roulette");
               } else {
-                setIsSequential(false);
-                setExpandedBehavior(null);
+                setExpandedBehavior("none");
               }
               haptics.light();
             }}
@@ -1258,9 +1278,15 @@ export default function CreateModal({
               : (isSpanish ? "Portada de bienvenida" : "Intro page")}
             active={isSplashExpanded}
             accordion
-            badge={isDynamic.value && splashActive
+            badge={isEditableActive && splashActive
               ? (isSpanish ? "Activa" : "On")
               : undefined}
+            clearBadgeLabel={isSpanish ? "Apagar" : "Turn off"}
+            onClearBadge={() => {
+              splashConfig.value = null;
+              if (activePanel === "splash") setExpandedBehavior("none");
+              haptics.light();
+            }}
             onClick={() => {
               if (!isDynamic.value) activateDynamicBase();
               const isRoulette = isSequential && randomSequence;
@@ -1287,8 +1313,7 @@ export default function CreateModal({
               } else if (activePanel !== "splash") {
                 setExpandedBehavior("splash");
               } else {
-                splashConfig.value = null;
-                setExpandedBehavior(null);
+                setExpandedBehavior("none");
               }
               haptics.light();
             }}
@@ -1312,9 +1337,17 @@ export default function CreateModal({
               : "Scan & date limits"}
             active={isLimitsExpanded}
             accordion
-            badge={isDynamic.value && (scanLimit !== null || expiryDate !== "")
+            badge={isEditableActive && (scanLimit !== null || expiryDate !== "")
               ? (isSpanish ? "Activo" : "Active")
               : undefined}
+            clearBadgeLabel={isSpanish ? "Apagar" : "Turn off"}
+            onClearBadge={() => {
+              setScanLimit(null);
+              setExpiryDate("");
+              setIsLimitSettingsOpen(false);
+              if (activePanel === "limits") setExpandedBehavior("none");
+              haptics.light();
+            }}
             onClick={() => {
               if (!isDynamic.value) activateDynamicBase();
               if (!isLimitSettingsOpen) {
@@ -1323,10 +1356,7 @@ export default function CreateModal({
               } else if (activePanel !== "limits") {
                 setExpandedBehavior("limits");
               } else {
-                setScanLimit(null);
-                setExpiryDate("");
-                setIsLimitSettingsOpen(false);
-                setExpandedBehavior(null);
+                setExpandedBehavior("none");
               }
               haptics.light();
             }}

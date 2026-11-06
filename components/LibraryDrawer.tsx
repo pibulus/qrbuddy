@@ -1,7 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { useModalShell } from "./modal/useModalShell.ts";
 import {
-  buildPassportSyncUrl,
+  buildPassportPhraseUrl,
   getOrCreatePassport,
   parsePassportFromUrl,
   QRBuddyPassport,
@@ -152,7 +152,7 @@ export default function LibraryDrawer(
   const handleCopySyncUrl = async () => {
     if (!passport) return;
     haptics.light();
-    const url = buildPassportSyncUrl(passport);
+    const url = buildPassportPhraseUrl(passport);
     try {
       await navigator.clipboard.writeText(url);
       addToast(
@@ -346,7 +346,7 @@ export default function LibraryDrawer(
   const shell = useModalShell({ open: isOpen, onClose });
   if (!shell.mounted) return null;
 
-  const syncUrl = passport ? buildPassportSyncUrl(passport) : "";
+  const syncUrl = passport ? buildPassportPhraseUrl(passport) : "";
   const syncQrSvg = syncUrl ? renderPassportQrSvg(syncUrl, 4) : "";
 
   const serverShortCodes = new Set(

@@ -6,6 +6,7 @@ import {
   User,
 } from "https://esm.sh/@supabase/supabase-js@2";
 import { isApiKey, resolveApiKey } from "./api-keys.ts";
+import { uuidFromPassportSecret } from "./passport.ts";
 
 /** Check if the recoverable library & quota foundation feature flag is enabled.
  * Off by default on client and server. */
@@ -32,7 +33,8 @@ export async function getAuthenticatedUser(
   req: Request,
   adminClient?: SupabaseClient,
 ): Promise<{ user: User | null; error: string | null }> {
-  // 1. Sovereign QRBuddy Passport check
+  // 1. Sovereign QRBuddy Passport check — requires both the UUID header AND the
+  //    32-char hex Bearer secret whose deterministic commitment equals passportId.
   const passportId = req.headers.get("x-passport-id")?.trim();
   if (passportId) {
     const isUuid =
@@ -41,8 +43,19 @@ export async function getAuthenticatedUser(
     if (!isUuid) {
       return { user: null, error: "Invalid Passport ID format. Must be UUID." };
     }
+    const bearerSecret = req.headers.get("authorization")
+      ?.match(/^Bearer\s+([0-9a-f]{32})$/i)?.[1]?.trim() ?? "";
+    if (
+      !bearerSecret ||
+      uuidFromPassportSecret(bearerSecret) !== passportId.toLowerCase()
+    ) {
+      return {
+        user: null,
+        error: "Missing or invalid Passport secret for x-passport-id",
+      };
+    }
     const passportUser = {
-      id: passportId,
+      id: passportId.toLowerCase(),
       app_metadata: { provider: "passport" },
       user_metadata: {},
       aud: "authenticated",

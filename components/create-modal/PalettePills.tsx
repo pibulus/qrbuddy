@@ -5,7 +5,7 @@ import { sounds } from "../../utils/sounds.ts";
 import { STYLE_DISPLAY } from "../../islands/StyleSelector.tsx";
 
 export const PALETTE_PILL =
-  "min-h-[42px] inline-flex items-center gap-2 rounded-2xl border-2 px-3 text-xs sm:text-[13px] font-black transition-all hover:-translate-y-0.5 active:translate-y-0";
+  "min-h-[42px] inline-flex items-center gap-2 rounded-2xl border-2 px-3 text-xs sm:text-[13px] font-black transition-all hover:-translate-y-0.5 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]";
 
 export const pillState = (active: boolean) =>
   active
@@ -60,7 +60,7 @@ export default function PalettePills(
                 sounds.gradientShimmer(index);
                 haptics.light();
               }}
-              class={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full border-2 border-[#1e1714] transition-transform active:scale-95 ${
+              class={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full border-2 border-[#1e1714] transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4] ${
                 active
                   ? "ring-2 ring-[#1e1714] ring-offset-2 ring-offset-[#fbf1e4] scale-105"
                   : "hover:scale-105"

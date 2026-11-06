@@ -14,12 +14,18 @@ import {
   parsePassportFromUrl,
   rerollPassportIdentity,
   savePassport,
+  uuidFromPassportSecret,
 } from "../utils/passport.ts";
 import {
   hashPassportPhrase,
+  isPasskeyPhraseLockedOut,
   mintPassportCode,
   mintPassportPhrase,
+  recordPasskeyPhraseMiss,
+  resetPasskeyPhraseMisses,
 } from "../supabase/functions/_shared/passport.ts";
+import { getAuthenticatedUser } from "../supabase/functions/_shared/auth.ts";
+import { createRateLimitResponse } from "../supabase/functions/_shared/rate-limit.ts";
 import {
   clearSupporterPass,
   getSupporterPass,
@@ -31,13 +37,14 @@ Deno.test("passport - identity generation has required sovereign fields", () => 
   const p = generatePassportIdentity();
   assert(typeof p.id === "string" && p.id.length >= 32);
   assert(typeof p.secret === "string" && p.secret.length === 32);
+  assertEquals(p.id, uuidFromPassportSecret(p.secret));
   assert(typeof p.name === "string" && p.name.includes(" "));
   assert(typeof p.avatarEmoji === "string" && p.avatarEmoji.length > 0);
   assert(typeof p.phrase === "string" && p.phrase.split("-").length === 4);
   assertEquals(p.tier, "free");
 });
 
-Deno.test("passport - sync url places all credentials in fragment (#) to avoid server access logs", () => {
+Deno.test("passport - sync url encodes only compact #phrase= in fragment (#) to avoid leaking secrets or server logs", () => {
   const p = generatePassportIdentity();
   const syncUrl = buildPassportSyncUrl(p, "https://qrbuddy.app");
 
@@ -48,11 +55,9 @@ Deno.test("passport - sync url places all credentials in fragment (#) to avoid s
   assert(url.hash.startsWith("#"), "Must encode into URL fragment");
 
   const params = new URLSearchParams(url.hash.slice(1));
-  assertEquals(params.get("passport"), p.id);
-  assertEquals(params.get("secret"), p.secret);
-  assertEquals(params.get("name"), p.name);
-  assertEquals(params.get("emoji"), p.avatarEmoji);
   assertEquals(params.get("phrase"), p.phrase);
+  assertEquals(params.get("secret"), null);
+  assertEquals(params.get("pass"), null);
 });
 
 Deno.test("passport - localStorage save, retrieve, and clear lifecycle", () => {
@@ -125,7 +130,7 @@ Deno.test("passport - parsePassportFromUrl extracts from fragment and saves", ()
   }
 });
 
-Deno.test("passport - buildPassportSyncUrl includes pass= in # fragment and parsePassportFromUrl restores token & plus tier", async () => {
+Deno.test("passport - buildPassportSyncUrl emits compact #phrase= and parsePassportFromUrl restores deterministic identity + legacy #pass=", async () => {
   clearPassport();
   clearSupporterPass();
   const originalLocation = globalThis.location;
@@ -141,10 +146,11 @@ Deno.test("passport - buildPassportSyncUrl includes pass= in # fragment and pars
 
     assertEquals(parsedUrl.search, "");
     const hashParams = new URLSearchParams(parsedUrl.hash.slice(1));
-    assertEquals(hashParams.get("pass"), token);
-    assertEquals(hashParams.get("tier"), "plus");
+    assertEquals(hashParams.get("phrase"), sourcePassport.phrase);
+    assertEquals(hashParams.get("secret"), null);
+    assertEquals(hashParams.get("pass"), null);
 
-    // Simulate scanning / opening the sync URL on a second device with clean storage
+    // Simulate scanning / opening the compact #phrase= URL on a second device
     clearPassport();
     clearSupporterPass();
     assertEquals(getSupporterPass(), null);
@@ -163,7 +169,25 @@ Deno.test("passport - buildPassportSyncUrl includes pass= in # fragment and pars
     const synced = parsePassportFromUrl();
     assert(synced);
     assertEquals(synced.id, sourcePassport.id);
-    assertEquals(synced.tier, "plus");
+    assertEquals(synced.secret, sourcePassport.secret);
+    assertEquals(synced.phrase, sourcePassport.phrase);
+
+    // Legacy #passport=...&secret=...&pass=... fragment still restores token & plus tier
+    clearPassport();
+    clearSupporterPass();
+    // deno-lint-ignore no-explicit-any
+    (globalThis as any).location = {
+      hash:
+        `#passport=${sourcePassport.id}&secret=${sourcePassport.secret}&phrase=${sourcePassport.phrase}&pass=${
+          encodeURIComponent(token)
+        }&tier=plus`,
+      pathname: "/",
+      search: "",
+    };
+    const legacySynced = parsePassportFromUrl();
+    assert(legacySynced);
+    assertEquals(legacySynced.id, sourcePassport.id);
+    assertEquals(legacySynced.tier, "plus");
     assertEquals(getSupporterPass(), token);
     assertEquals(getStoredPassport()?.tier, "plus");
   } finally {
@@ -219,7 +243,10 @@ Deno.test("passport - phrase-root derivation, compact QR URL, and #phrase= resto
       "SS- code must be one-way and never reverse-derive the phrase",
     );
     const kdfHash = await hashPassportPhrase(phrase);
-    assertEquals(kdfHash.length, 64);
+    assertEquals(
+      kdfHash,
+      "c3faeae1f885bac6a4ea3624a832247328d641c25004f072f733229fe44e3128",
+    );
 
     const qrUrl = buildPassportPhraseUrl(phrase, "https://qrbuddy.app");
     assertEquals(
@@ -244,6 +271,7 @@ Deno.test("passport - phrase-root derivation, compact QR URL, and #phrase= resto
     assertEquals(synced.name, "Misty Ibis");
     assert(synced.id.length === 36);
     assert(synced.secret.length === 32);
+    assertEquals(synced.id, uuidFromPassportSecret(synced.secret));
   } finally {
     globalThis.location = originalLocation;
     globalThis.history = originalHistory;
@@ -254,4 +282,58 @@ Deno.test("passport - phrase-root derivation, compact QR URL, and #phrase= resto
     }
     clearPassport();
   }
+});
+
+Deno.test("passport - B3 getAuthenticatedUser rejects bare x-passport-id and requires matching Bearer secret", async () => {
+  const p = generatePassportIdentity();
+
+  const bareReq = new Request("https://qrbuddy.app/functions/v1/api-keys", {
+    headers: { "x-passport-id": p.id },
+  });
+  const bareRes = await getAuthenticatedUser(bareReq);
+  assertEquals(bareRes.user, null);
+  assert(bareRes.error?.includes("Passport secret"));
+
+  const wrongSecretReq = new Request(
+    "https://qrbuddy.app/functions/v1/api-keys",
+    {
+      headers: {
+        "x-passport-id": p.id,
+        "Authorization": "Bearer 00000000000000000000000000000000",
+      },
+    },
+  );
+  const wrongRes = await getAuthenticatedUser(wrongSecretReq);
+  assertEquals(wrongRes.user, null);
+  assert(wrongRes.error?.includes("Passport secret"));
+
+  const validReq = new Request("https://qrbuddy.app/functions/v1/api-keys", {
+    headers: getPassportAuthHeaders(p),
+  });
+  const validRes = await getAuthenticatedUser(validReq);
+  assert(validRes.user);
+  assertEquals(validRes.user.id, p.id);
+  assertEquals(validRes.error, null);
+});
+
+Deno.test("passport - 5-miss passkey lockout returns 429 on 6th miss", () => {
+  const phraseKey = "test-lockout-key";
+  resetPasskeyPhraseMisses(phraseKey);
+  const now = 1_700_000_000_000;
+
+  for (let i = 1; i <= 5; i++) {
+    const miss = recordPasskeyPhraseMiss(phraseKey, now);
+    assertEquals(
+      miss.isLimited,
+      false,
+      `miss #${i} should return 404, not 429`,
+    );
+  }
+
+  assertEquals(isPasskeyPhraseLockedOut(phraseKey, now).isLimited, true);
+  const sixthMiss = recordPasskeyPhraseMiss(phraseKey, now);
+  assertEquals(sixthMiss.isLimited, true);
+  const rateResp = createRateLimitResponse(sixthMiss, {});
+  assertEquals(rateResp.status, 429);
+  resetPasskeyPhraseMisses(phraseKey);
 });

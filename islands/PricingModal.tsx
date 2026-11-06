@@ -19,7 +19,6 @@ import { sounds } from "../utils/sounds.ts";
 import { getClientLocale } from "../utils/i18n.ts";
 import {
   buildPassportPhraseUrl,
-  buildPassportSyncUrl,
   getOrCreatePassport,
   parsePassportFromUrl,
   type QRBuddyPassport,
@@ -146,6 +145,28 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
           : "Passport synced on this device ✨",
         3500,
       );
+      if (
+        !getSupporterPass() &&
+        synced.phrase &&
+        parseFourWordPasskey(synced.phrase)
+      ) {
+        void apiRequest<{ status: string; license: string | null }>(
+          `${getApiUrl()}/get-license`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phrase: synced.phrase }),
+          },
+          "Could not check passkey",
+        ).then((data) => {
+          if (data?.license && setSupporterPass(data.license)) {
+            setHasPass(true);
+            setPassport(getOrCreatePassport());
+          }
+        }).catch(() => {
+          // Free passport sync phrase or offline; keep synced local passport.
+        });
+      }
     } else {
       setPassport(getOrCreatePassport());
       setHasPass(getSupporterPass() !== null);
@@ -445,7 +466,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
     if (!passport) return;
     haptics.light();
     sounds.copy?.();
-    const syncUrl = buildPassportSyncUrl(passport);
+    const syncUrl = buildPassportPhraseUrl(passport);
     try {
       await navigator.clipboard.writeText(syncUrl);
       addToast(
@@ -674,7 +695,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                 // deno-lint-ignore react-no-danger
                 dangerouslySetInnerHTML={{
                   __html: renderPassportQrSvg(
-                    buildPassportSyncUrl(passport),
+                    buildPassportPhraseUrl(passport),
                     4,
                   ),
                 }}

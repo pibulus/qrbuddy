@@ -11,14 +11,19 @@ const PROD_ORIGINS = [
 const DEV_ORIGINS = [
   "http://localhost:8000",
   "http://localhost:8004",
+  "http://127.0.0.1:8000",
+  "http://127.0.0.1:8004",
 ];
 
-// Only allow localhost origins outside production. With Allow-Credentials: true,
-// a credentialed localhost origin is a (small) DNS-rebinding surface, so we drop
-// it once DENO_DEPLOYMENT_ID is set (i.e. running on Deno Deploy / prod).
-const ALLOWED_ORIGINS = Deno.env.get("DENO_DEPLOYMENT_ID")
-  ? PROD_ORIGINS
-  : [...PROD_ORIGINS, ...DEV_ORIGINS];
+// Key production CORS lockdown off an explicit APP_ENV=production setting
+// rather than DENO_DEPLOYMENT_ID (which Supabase Edge Functions always set,
+// blocking local dev at http://localhost:8004 when calling remote functions).
+function getAllowedOriginsList(): string[] {
+  const appEnv = (Deno.env.get("APP_ENV") || "").trim().toLowerCase();
+  const allowDev = Deno.env.get("ALLOW_DEV_ORIGINS") === "true" ||
+    appEnv !== "production";
+  return allowDev ? [...PROD_ORIGINS, ...DEV_ORIGINS] : PROD_ORIGINS;
+}
 
 /**
  * Match the request Origin against the whitelist.
@@ -26,13 +31,14 @@ const ALLOWED_ORIGINS = Deno.env.get("DENO_DEPLOYMENT_ID")
  * or the primary production origin as a safe default.
  */
 export function getAllowedOrigin(request?: Request): string {
+  const baseOrigins = getAllowedOriginsList();
   // APP_URL joins the whitelist — it must NOT override it, or secondary
   // origins (the *.deno.net alias, www) can never pass a credentialed
   // preflight and every cross-origin call from them dies.
   const appUrl = Deno.env.get("APP_URL");
-  const allowed = appUrl && !ALLOWED_ORIGINS.includes(appUrl)
-    ? [appUrl, ...ALLOWED_ORIGINS]
-    : ALLOWED_ORIGINS;
+  const allowed = appUrl && !baseOrigins.includes(appUrl)
+    ? [appUrl, ...baseOrigins]
+    : baseOrigins;
 
   // If we have a request, echo back the origin if it's in our whitelist
   if (request) {
