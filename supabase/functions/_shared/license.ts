@@ -44,12 +44,16 @@ async function importHmacKey(secret: string): Promise<CryptoKey> {
   );
 }
 
+const MIN_SECRET_LENGTH = 32;
+
 export function getLicenseSecret(): string {
-  // The passport token is signed by the same secret in all three apps.
+  // The passport token is signed by the same secret in all four apps.
   const secret = Deno.env.get("SOFTSTACK_PASSPORT_SECRET")?.trim() ||
     Deno.env.get("LICENSE_SIGNING_KEY")?.trim() || "";
-  if (secret.length < 16) {
-    throw new Error("LICENSE_SIGNING_KEY is not configured");
+  if (secret.length < MIN_SECRET_LENGTH) {
+    throw new Error(
+      `SOFTSTACK_PASSPORT_SECRET must be set to at least ${MIN_SECRET_LENGTH} characters`,
+    );
   }
   return secret;
 }

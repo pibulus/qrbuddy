@@ -1,14 +1,16 @@
 // Offline checks for the supporter pass crypto — the money path gets a test.
 import {
+  getLicenseSecret,
   issueSupporterToken,
   verifySupporterToken,
 } from "../supabase/functions/_shared/license.ts";
 import {
   assertEquals,
   assertNotEquals,
+  assertThrows,
 } from "https://deno.land/std@0.216.0/assert/mod.ts";
 
-const SECRET = "test-secret-at-least-16-chars";
+const SECRET = "test-secret-at-least-32-characters!!";
 
 Deno.test("supporter token round-trips", async () => {
   const token = await issueSupporterToken(SECRET);
@@ -139,5 +141,28 @@ Deno.test("rejects empty or non-array stamps claims instead of treating them as 
       exp: nowSec() + 3600,
     });
     assertEquals(await verifySupporterToken(token, STAMP_SECRET), null);
+  }
+});
+
+Deno.test("getLicenseSecret fails closed when secret is missing or under 32 chars", () => {
+  const prevPassport = Deno.env.get("SOFTSTACK_PASSPORT_SECRET");
+  const prevLegacy = Deno.env.get("LICENSE_SIGNING_KEY");
+  try {
+    Deno.env.delete("SOFTSTACK_PASSPORT_SECRET");
+    Deno.env.set("LICENSE_SIGNING_KEY", "too-short-16-chr");
+    assertThrows(() => getLicenseSecret());
+    Deno.env.set("SOFTSTACK_PASSPORT_SECRET", SECRET);
+    assertEquals(getLicenseSecret(), SECRET);
+  } finally {
+    if (prevPassport !== undefined) {
+      Deno.env.set("SOFTSTACK_PASSPORT_SECRET", prevPassport);
+    } else {
+      Deno.env.delete("SOFTSTACK_PASSPORT_SECRET");
+    }
+    if (prevLegacy !== undefined) {
+      Deno.env.set("LICENSE_SIGNING_KEY", prevLegacy);
+    } else {
+      Deno.env.delete("LICENSE_SIGNING_KEY");
+    }
   }
 });
