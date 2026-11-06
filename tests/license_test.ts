@@ -127,3 +127,17 @@ Deno.test("rejects an expired token even with its own stamp", async () => {
   });
   assertEquals(await verifySupporterToken(token, STAMP_SECRET), null);
 });
+
+Deno.test("rejects empty or non-array stamps claims instead of treating them as legacy", async () => {
+  for (const badStamps of [[], "qrbuddy", {}, null]) {
+    const token = await signToken({
+      sub: "malformed-stamps",
+      tier: "supporter",
+      stamps: badStamps,
+      v: 1,
+      iat: nowSec(),
+      exp: nowSec() + 3600,
+    });
+    assertEquals(await verifySupporterToken(token, STAMP_SECRET), null);
+  }
+});
