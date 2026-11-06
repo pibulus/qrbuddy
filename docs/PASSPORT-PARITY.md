@@ -44,25 +44,34 @@ the design.
   app.
 - Adding a stamp never renames anybody and never re-renders a different card.
 
-### 2.1 Code
+### 2.1 Passkey (root) and Code (public handle)
 
-`SS-XXXX-XXXX-XXXX` = HMAC-SHA256(`softstack-passport-code:<seed>`, issuer
-secret), uppercase hex, first 12 chars, grouped by 4.
+1. **Passkey (root credential):** 4 words from the curated 4,096-word bank
+   (`PASSKEY_WORDS`, `4096^4 = 48.0 bits` of entropy), derived deterministically
+   from a checkout seed via
+   `HMAC-SHA256(SOFTSTACK_PASSPORT_SECRET, "softstack-passport-phrase:" + seed)`
+   or generated via CSPRNG (`generatePassphrase()`).
+2. **Code (public handle):** `SS-XXXX-XXXX-XXXX` =
+   `HMAC-SHA256(SOFTSTACK_PASSPORT_SECRET, "softstack-passport-code:" + phrase)`,
+   uppercase hex, first 12 chars, grouped by 4.
 
-Deterministic: the same seed mints the same code anywhere, so two concurrent
-callers are a no-op instead of a race.
+`phrase → code` is one-way (`code → phrase` is cryptographically irreversible).
+No endpoint returns a license, token, or vault data for a bare `SS-` code alone.
 
 ### 2.2 Identity
 
 `vaultHash = SHA-256('softstack-passport-id:' + canonicalCode)` →
-`generateMemberIdentity(vaultHash)` → name, phrase, avatar, skin.
+`generateMemberIdentity(vaultHash, canonicalCode, { phrase })` → name, phrase,
+avatar, skin, palette.
 
 One namespace for every app, so the same passport looks the same everywhere.
 
 **Identity is issued once and stored.** The passport record keeps
-`{ code, name, phrase, avatarKey, createdAt }`. Derivation is the _fallback_ for
-records without a stored identity, and the migration path for legacy `TT-`/`ZL-`
-codes. Nobody is ever renamed by a code change.
+`{ code, name, phrase, avatarKey, createdAt }`, indexed by a 100,000-round
+PBKDF2-SHA256 hash of the 4-word passkey. Derivation is the _fallback_ for
+records without a stored identity, and `deriveLegacyPhrase(hash)` preserves
+legacy 23.3-bit phrases for migration of older `TT-`/`ZL-` codes. Nobody is ever
+renamed by a code change.
 
 ### 2.3 Stamps
 
@@ -70,16 +79,32 @@ Stamps live in the signed token and in the per-app store:
 
 ```json
 {
-  "sub": "<passport id>",
+  "sub": "SS-FA39-DE19-4608",
   "stamps": ["talktype"],
   "tier": "passport",
   "exp": 1790000000
 }
 ```
 
-HS256, verified statelessly with the shared issuer secret. Each app checks its
-own name in `stamps`. Adding a stamp is a re-issue of the token with one more
-entry; the passport identity is untouched.
+HS256, verified statelessly with `SOFTSTACK_PASSPORT_SECRET` (`>= 32` chars; all
+four apps fail closed in production if missing or shorter than 32 chars). Each
+app checks its own name in `stamps` (`talktype`, `ziplist`, `qrbuddy`,
+`promapper`). Adding a stamp is a re-issue of the token with one more entry; the
+passport identity is untouched.
+
+**Verifier semantics across the four apps:**
+
+- Every verifier checks `claims.stamps !== undefined` (which rejects
+  `stamps: null`, non-array `stamps`, empty `stamps: []`, and tokens carrying
+  only foreign stamps).
+- **Legacy unstamped tokens:** TalkType, ZipList, and QRBuddy accept pre-stamp
+  legacy tokens where `claims.stamps === undefined`. ProMapper is stricter: all
+  HS256 JWTs must carry `stamps: ["promapper", ...]`; ProMapper's only legacy
+  path is its `promapper-pass-v1.<payload>.<sig>` token format, which verifies
+  and upgrades in place on redeem.
+- **Multi-stamp tokens:** A token carrying multiple valid stamps (e.g.,
+  `stamps: ["talktype", "promapper"]`) is accepted by each stamped app by
+  design. Single-app checkouts must always issue via `stampsFor(app)`.
 
 ### 2.4 Storage
 
@@ -210,7 +235,7 @@ summarise away a failure.
 - A second stamp changes one array, nothing else.
 - Nobody's name changed during the migration.
 
-## 5. Measured status after the QRBuddy email pass (2026-11-02)
+## 6. Measured status after the QRBuddy email pass (2026-11-02)
 
 | Piece                  | TalkType                           | ZipList              | QRBuddy                                      | Parity                                         |
 | ---------------------- | ---------------------------------- | -------------------- | -------------------------------------------- | ---------------------------------------------- |
@@ -230,7 +255,7 @@ needs), and QRBuddy's token is shaped for stamps. The identity is still not
 shared — that is the `SS-` module migration in §3/§4, and it cannot be faked by
 copying email HTML.
 
-## 6. Executed 2026-11-02 — identity parity is live
+## 7. Executed 2026-11-02 — identity parity is live
 
 No app has legacy holders, so the cut was clean rather than migrational.
 
@@ -253,25 +278,39 @@ Secret is set in Supabase and both Netlify production environments. Deployed:
 TalkType `f3a3347`, ZipList `e7fdbad`, QRBuddy `e470f78` (function deploy; site
 build followed). Vector tests pin the same code/name in all three.
 
-## 7. Card shipped (2026-11-02)
+## 8. Card shipped (2026-11-02)
 
 The card extraction is done. Canonical assets in `_shared-modules/passport/`:
 `skins.js`, `palettes.js`, `avatar.js`, `card.css`, `card.html.js` (pure
-renderer). Vendored byte-identically into all three apps; thin wrappers own only
-state and app adapters. TalkType and ZipList card forks are deleted; QRBuddy
-renders the same card through Preact.
-
-Live verification with the vector passport (`SS-03D2-9722-1310`): all three show
-`Glitch Walrus` / `glitch-walrus-ripples-harbourside` / `Grape Soda` / the same
-skin, at 343×216 on desktop. Differences are intentional: the kicker word and
-the per-app QR payload.
+renderer). Vendored byte-identically into all four apps; thin wrappers own only
+state and app adapters. TalkType and ZipList card forks are deleted; QRBuddy and
+ProMapper render the same card through Preact.
 
 QRBuddy's card (DiceBear included) is dynamically imported only when the
-Passport modal opens, so the home bundle does not pay the ~163 KB chunk. Per-app
-deploys: TalkType `5fd4cd5`, ZipList `24f1df2`, QRBuddy `25edb53`.
+Passport modal opens, so the home bundle does not pay the ~163 KB chunk.
 
-**One residual:** canonical source is `github.com/pibulus/softstack-passport`
-(private) ↔ `~/Projects/active/_shared-modules/passport`. The card's QR stamp
-now sits in the bottom row beside the passkey, never over the avatar. Passport
-modals follow the TalkType template: real app mascot/icon at the top, one chunky
-gold `Email Passport` action, and no duplicate copy-link or sync-phrase panels.
+## 9. Executed 2026-11-06 — Passphrase-root credential & 4-app parity
+
+Implemented `_shared-modules/passport/docs/PASSPHRASE-ROOT.md` across TalkType,
+ZipList, QRBuddy, and ProMapper:
+
+- **4,096-word curated passkey bank (`48.0` bits):** `PASSKEY_WORDS` unified
+  across `_shared-modules/passport`, `_shared-modules/sovereign-sync`, TalkType,
+  ZipList, QRBuddy, and ProMapper.
+- **One-way `phrase → SS- code` derivation:**
+  `phraseFromSeed("checkout-test-001", "softstack-test-secret-32-chars-min!!")`
+  → `"umbra-scanner-amplify-cosmos"` → `"SS-FA39-DE19-4608"` (`Quiet Tapir` /
+  `Sunset`).
+- **Resting card privacy:** Resting cards mask the 4 words
+  (`••••• ••••• ••••• •••••`) and display a ghost seal instead of a QR code.
+  Tapping reveals the words (10s auto-hide) or renders the pairing QR (60s
+  auto-hide).
+- **No bare-code bearer endpoints:** Every restore/redeem endpoint across all 4
+  apps rejects bare `SS-` codes (`400`/`410`), indexes Passports by a 100k-round
+  PBKDF2-SHA256 hash of the 4-word passkey, and enforces a 5-miss / 15-minute
+  per-phrase lockout (`429`) plus a 10-attempt / 15-minute per-IP rate limit.
+- **One-command cross-app audit:**
+  `node ~/Projects/active/_shared-modules/passport/scripts/audit.mjs` verifies
+  the pinned manifest SHA-256
+  (`c4169f1c7bc09dcdd25f313e9788b76c21a934c445d4455d98744348acbd09bb`), all 40
+  vendored files + 2 static CSS copies, and runs all 4 app test suites.

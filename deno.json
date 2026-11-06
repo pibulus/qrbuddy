@@ -26,6 +26,11 @@
       ]
     }
   },
+  "fmt": {
+    "exclude": [
+      "static/passport-card.css"
+    ]
+  },
   "exclude": [
     "**/_fresh/*",
     "node_modules/",

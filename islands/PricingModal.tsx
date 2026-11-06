@@ -18,12 +18,17 @@ import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import { getClientLocale } from "../utils/i18n.ts";
 import {
+  buildPassportPhraseUrl,
   buildPassportSyncUrl,
   getOrCreatePassport,
   parsePassportFromUrl,
   type QRBuddyPassport,
   renderPassportQrSvg,
 } from "../utils/passport.ts";
+import {
+  isCode,
+  parseFourWordPasskey,
+} from "../utils/softstack-passport/index.js";
 import type { PassportMembershipCardProps } from "../components/passport/MembershipCard.tsx";
 import {
   clearPendingCheckout,
@@ -355,8 +360,22 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
     }
   };
 
-  const handlePastePass = () => {
-    if (setSupporterPass(pastedPass)) {
+  const handlePastePass = async () => {
+    const trimmed = pastedPass.trim();
+    if (!trimmed) return;
+
+    if (isCode(trimmed)) {
+      sounds.error?.();
+      addToast(
+        isSpanish
+          ? "Ingresa tu clave de 4 palabras — el código SS- es público"
+          : "Enter the 4-word passkey — the SS- code is a public handle",
+        3500,
+      );
+      return;
+    }
+
+    if (setSupporterPass(trimmed)) {
       setHasPass(true);
       setPassport(getOrCreatePassport());
       setPastedPass("");
@@ -367,15 +386,59 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
         isSpanish ? "Pasaporte restaurado 🛂✨" : "Passport restored 🛂✨",
         4000,
       );
-    } else {
-      sounds.error?.();
-      addToast(
-        isSpanish
-          ? "Esa clave de Pasaporte no parece válida"
-          : "That doesn't look like a valid Passport key",
-        3500,
-      );
+      return;
     }
+
+    const parsedPhrase = parseFourWordPasskey(trimmed);
+    if (parsedPhrase) {
+      try {
+        const data = await apiRequest<
+          { status: string; license: string | null }
+        >(
+          `${getApiUrl()}/get-license`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phrase: parsedPhrase.phrase }),
+          },
+          isSpanish
+            ? "Esa clave de 4 palabras no se encontró"
+            : "That 4-word passkey did not match",
+        );
+        if (data.license && setSupporterPass(data.license)) {
+          setHasPass(true);
+          setPassport(getOrCreatePassport());
+          setPastedPass("");
+          setPassCopied(false);
+          setView("pitch");
+          sounds.success?.();
+          addToast(
+            isSpanish ? "Pasaporte restaurado 🛂✨" : "Passport restored 🛂✨",
+            4000,
+          );
+          return;
+        }
+      } catch (err) {
+        sounds.error?.();
+        addToast(
+          err instanceof Error
+            ? err.message
+            : isSpanish
+            ? "Esa clave de 4 palabras no parece válida"
+            : "That 4-word passkey didn't match",
+          3500,
+        );
+        return;
+      }
+    }
+
+    sounds.error?.();
+    addToast(
+      isSpanish
+        ? "Esa clave de Pasaporte no parece válida"
+        : "That doesn't look like a valid Passport key",
+      3500,
+    );
   };
 
   const handleCopySyncUrl = async () => {
@@ -419,7 +482,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                 name: passport.name,
                 code: passport.code,
                 phrase: passport.phrase,
-                link: buildPassportSyncUrl(passport),
+                link: buildPassportPhraseUrl(passport),
               }
               : undefined,
           }),

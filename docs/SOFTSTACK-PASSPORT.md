@@ -4,43 +4,47 @@
 > TalkType's working implementation. Supersedes §5 of
 > `ACCOUNTS-RECOVERY-PLAN.md`. Written 2026-11-02 from the code, not memory.
 
-## 1. How TalkType's passport actually works
+> **Updated 2026-11-06:** The 4-word passphrase (`PASSKEY_WORDS`, 4,096 curated
+> words = 48.0 bits) is now the root credential across all four Passport apps
+> (TalkType, ZipList, QRBuddy, ProMapper), and the `SS-XXXX-XXXX-XXXX` code is a
+> one-way public handle derived from the phrase (`PASSPHRASE-ROOT.md`).
 
-Six pieces. They are small, and every one of them already works in production.
+## 1. How the SoftStack Passport works (2026-11-06)
 
-**a. The code is derived, not stored.** `generateLicenseCode(seed)` =
-HMAC-SHA256(`talktype-license:<seed>`, secret), formatted `TT-XXXX-XXXX-XXXX`.
-Two concurrent callers holding the same checkout id mint a byte-identical code,
-so races are harmless no-ops. →
-`talktype/src/lib/server/supporter/licenseCrypto.js`
+Six pieces. Every one of them runs from the canonical module in
+`~/Projects/active/_shared-modules/passport`.
 
-**b. The identity is a pure function of the code.** `vaultHashForCode(code)` =
-SHA-256(`talktype-vault-id:<code>`), which seeds `generateMemberIdentity()` →
-member name, 4-word phrase, avatar, skin palette. No secret, no network, no
-lookup. Any device with the code can draw the whole passport offline, and it
-looks identical every time. → `licenseCrypto.js`,
-`src/lib/cartridges/identityUtils.js`
+**a. The 4-word passkey is the root; the `SS-` code is derived one-way.**
+`phraseFromSeed(seed, secret)` =
+`HMAC-SHA256(secret, "softstack-passport-phrase:" + seed)` → 4 words from the
+4,096-word bank (48 bits). Then `codeFromPhrase(phrase, secret)` =
+`HMAC-SHA256(secret, "softstack-passport-code:" + phrase)` →
+`SS-XXXX-XXXX-XXXX`. `code → phrase` is cryptographically irreversible, and no
+endpoint returns a license or vault data for a bare `SS-` code.
 
-**c. The entitlement is a signed token.** HS256 JWT, claims `{ tier, exp, v }`,
-verified statelessly by HMAC. No session table on the hot path. →
-`issueSupporterToken()` / `verifySupporterToken()`
+**b. Identity is issued once and stored (with deterministic fallback).**
+`vaultHashForCode(code)` = `SHA-256("softstack-passport-id:" + code)`, which
+seeds `generateMemberIdentity()` → member name, avatar, skin, and palette.
+Stored identities never change underneath a holder.
 
-**d. The store is per-app and boring.**
-`codeHash → { term, entitlements, email stamps }` in the app's own storage
-adapter. Only needed for the things that must survive: expiry, email-sent
-stamps, revocation. → `src/lib/server/supporter/licenseStore.js`,
-`licenseTerm.js`
+**c. The entitlement is a signed token.** HS256 JWT signed with
+`SOFTSTACK_PASSPORT_SECRET` (`>= 32` chars, fail-closed in production), claims
+`{ sub: code, code, name, phrase, tier, stamps: [app], exp, iat }`.
 
-**e. The sync is already a shared module.** `softstack:sync:v2` salt,
+**d. The store is per-app and boring.** Each app indexes issued Passports by a
+100,000-round PBKDF2-SHA256 hash of the 4-word passkey (with a 5-miss /
+15-minute per-phrase lockout and 10-attempt / 15-minute per-IP rate limit on
+restore).
+
+**e. The sync is a shared module.** `softstack:sync:v2` salt,
 `softstack:sync:room:v2` / `:key:v2` labels, PBKDF2 100k, then HKDF splits room
-id from AES-GCM key. The app passes a prefix (`sync_` in TalkType, `zl_p` in
-ZipList) so two apps on one relay never collide. →
-`talktype/src/lib/softstack-sync/syncCrypto.js`,
-`ziplist/src/lib/services/realtime/syncCrypto.js`
+id from AES-GCM key, with a per-app prefix (`sync_`, `zl_p`, `qr_`).
 
-**f. Recovery is a link plus a passkey.** `/u/<code>` sets the code on the new
-device; the 4-word phrase stays the human-readable secret. Email carries both,
-never the subject line. → `supporterEmail.js`, `routes/u/[code]/+page.svelte`
+**f. Recovery uses fragment links with the 4-word passkey.** Recovery emails
+carry the 4-word passkey and a fragment restore link (`/#unlock=<phrase>` or
+`/#phrase=<phrase>`) so the credential never travels in a URL path or query
+string. The resting card masks the 4 words (`•••••`) and omits the QR until
+tapped.
 
 ## 2. Why the same person gets three passports today
 
@@ -62,46 +66,51 @@ identity generator, the card component, and now the card renderer.
 
 ## 3. The design
 
-One code. One identity. Per-app entitlements. No shared database.
+One 4-word passkey root. One `SS-` public handle. One identity. Per-app
+entitlements. No shared database.
 
-**Code** — `SS-XXXX-XXXX-XXXX` = HMAC(`softstack-license:<seed>`, issuer
-secret). Same derivation as TalkType, one shared secret, one namespace for
-everyone.
+**Passkey (root)** — 4 words from the 4,096-word bank (`48.0` bits), derived via
+`HMAC-SHA256(SOFTSTACK_PASSPORT_SECRET, "softstack-passport-phrase:" + seed)` or
+generated via CSPRNG.
 
-**Identity** — SHA-256(`softstack-vault-id:<code>`) → name, phrase, avatar,
-skin. One person, one name, one card, in every app, forever.
+**Code (public handle)** — `SS-XXXX-XXXX-XXXX` =
+`HMAC-SHA256(SOFTSTACK_PASSPORT_SECRET, "softstack-passport-code:" + phrase)`,
+first 12 hex chars. One-way derivation from the phrase; a bare `SS-` code never
+unlocks a license.
+
+**Identity** — `SHA-256("softstack-passport-id:" + code)` → name, avatar, skin,
+palette. One person, one name, one card, in every app, forever.
 
 **The rule that makes migration safe: identity is issued once and stored, not
 recomputed.** At mint time the passport record keeps
-`{ name, phrase, avatarSeed }`. New codes derive it; legacy `TT-`/`ZL-` codes
-keep whatever they had, because it is written down. No one's name ever changes
-underneath them, and namespaces can evolve without a rename storm. Derivation
-stays as the fallback for codes with no stored record.
+`{ code, name, phrase, avatarSeed }`. New Passports derive it; legacy
+`TT-`/`ZL-` codes keep whatever they had, because it is written down. No one's
+name ever changes underneath them, and namespaces can evolve without a rename
+storm. Derivation stays as the fallback for Passports with no stored record.
 
-**Entitlements** — carried in the signed token:
+**Entitlements** — carried in the signed token (`stamps`, not `apps`):
 
 ```json
 {
-  "sub": "<code hash>",
-  "apps": ["talktype", "qrbuddy"],
+  "sub": "SS-FA39-DE19-4608",
+  "stamps": ["talktype", "qrbuddy"],
   "tier": "passport",
   "exp": 1790000000
 }
 ```
 
-Each app verifies the same signature and checks its own name in `apps`. A bundle
-is one code with three names in the array. A single-app purchase is one name. No
-central call on the hot path.
+Each app verifies the same HS256 signature (`SOFTSTACK_PASSPORT_SECRET`) and
+checks its own name in `stamps`.
 
-**Storage** — stays per-app. Each app records the entitlement it redeemed. There
-is no shared licence database to run, and nothing to keep in sync.
+**Storage** — stays per-app, indexed by a 100k-round PBKDF2-SHA256 hash of the
+4-word passkey. Each app records the entitlement it redeemed. There is no shared
+licence database to run, and nothing to keep in sync.
 
 **Sync** — untouched. The prefix already keeps apps out of each other's rooms.
 
 **Recovery** — one email, sent from whichever app the purchase happened in, with
-the shared passport card and the `/u/<code>` door. Buying the second app with
-the same email should _offer_ to attach to the existing passport, not mint a new
-one.
+the shared passport card and a `#unlock=<4-words>` / `#phrase=<4-words>`
+fragment link (never a query param or `/u/<code>` bearer link).
 
 ## 4. What moves where
 

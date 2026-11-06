@@ -12,202 +12,25 @@ import {
   importOwnerTokens,
   OwnerTokenRecord,
 } from "./token-vault.ts";
+import {
+  generatePassphrase,
+  normalizePassphrase,
+  WORDS,
+} from "./softstack-passport/index.js";
 
-const ADJECTIVES = [
-  "neon",
-  "funky",
-  "silent",
-  "sneaky",
-  "cosmic",
-  "retro",
-  "atomic",
-  "chunky",
-  "dapper",
-  "spry",
-  "loopy",
-  "vibrant",
-  "fuzzy",
-  "gloomy",
-  "slick",
-  "brave",
-  "wild",
-  "gentle",
-  "sleepy",
-  "peppy",
-  "glossy",
-  "rowdy",
-  "humble",
-  "zesty",
-  "mellow",
-  "crispy",
-  "plucky",
-  "swanky",
-  "jolly",
-  "nimble",
-  "quiet",
-  "sunny",
-  "bouncy",
-  "velvet",
-  "copper",
-  "wobbly",
-  "breezy",
-  "toasty",
-  "salty",
-  "lucky",
-];
-
-const NOUNS = [
-  "turtle",
-  "lantern",
-  "pickle",
-  "comet",
-  "walrus",
-  "muffin",
-  "cactus",
-  "otter",
-  "kettle",
-  "puffin",
-  "noodle",
-  "badger",
-  "pebble",
-  "raccoon",
-  "mango",
-  "wombat",
-  "satchel",
-  "gecko",
-  "pancake",
-  "ferret",
-  "thistle",
-  "marble",
-  "donkey",
-  "waffle",
-  "hedgehog",
-  "biscuit",
-  "lobster",
-  "acorn",
-  "penguin",
-  "teapot",
-  "magpie",
-  "pumpkin",
-  "anchor",
-  "sparrow",
-  "domino",
-  "weasel",
-  "kazoo",
-  "parsnip",
-  "yak",
-  "bagel",
-];
-
-const VERBS = [
-  "drifts",
-  "hums",
-  "naps",
-  "wanders",
-  "juggles",
-  "tumbles",
-  "skips",
-  "hoards",
-  "whistles",
-  "shuffles",
-  "ponders",
-  "orbits",
-  "gallops",
-  "dozes",
-  "giggles",
-  "sneezes",
-  "waltzes",
-  "blooms",
-  "rattles",
-  "paddles",
-  "wiggles",
-  "salutes",
-  "yodels",
-  "sulks",
-  "bounces",
-  "grumbles",
-  "twirls",
-  "snoozes",
-  "hoots",
-  "scuttles",
-  "flops",
-  "sighs",
-];
-
-const PLACES = [
-  "uptown",
-  "sideways",
-  "downstairs",
-  "offshore",
-  "backwards",
-  "nearby",
-  "overboard",
-  "homeward",
-  "onstage",
-  "outback",
-  "seaside",
-  "midair",
-  "underfoot",
-  "roadside",
-  "skyward",
-  "indoors",
-  "poolside",
-  "upstream",
-  "yonder",
-  "aloft",
-  "ashore",
-  "afield",
-  "abroad",
-  "inland",
-  "lakeside",
-  "treetop",
-  "rooftop",
-  "streetwise",
-  "campside",
-  "harbourside",
-  "trackside",
-  "hillside",
-];
+export { WORDS };
 
 const LEGACY_SYNC_WORDS = 4;
 const CURRENT_SYNC_WORDS = 12;
 
-function pick(bank: string[]): string {
-  const max = Math.floor(0xffffffff / bank.length) * bank.length;
-  const buf = new Uint32Array(1);
-  let value: number;
-  do {
-    globalThis.crypto.getRandomValues(buf);
-    value = buf[0];
-  } while (value >= max);
-  return bank[value % bank.length];
-}
-
-function compound(first: string, second: string, third: string): string {
-  return `${first}_${second}_${third}`;
-}
-
 export function generateSyncPhrase(): string {
-  // Each hyphenated part contains three independently chosen words. Four
-  // parts preserve the easy-to-share shape while raising the search space
-  // from about 21 bits to about 62 bits for offline bundle attacks.
-  return [
-    compound(pick(ADJECTIVES), pick(NOUNS), pick(VERBS)),
-    compound(pick(NOUNS), pick(VERBS), pick(PLACES)),
-    compound(pick(VERBS), pick(PLACES), pick(ADJECTIVES)),
-    compound(pick(PLACES), pick(ADJECTIVES), pick(NOUNS)),
-  ].join("-");
+  // Four independently chosen words from the 4,096-word SoftStack bank
+  // (4096^4 = 281,474,976,710,656 combinations, 48.0 bits of entropy).
+  return generatePassphrase();
 }
 
 export function normalizeSyncPhrase(value: string): string {
-  return (value ?? "")
-    .toString()
-    .toLowerCase()
-    .replace(/[^a-z]+/g, " ")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .join("-");
+  return normalizePassphrase(value ?? "");
 }
 
 export function isValidSyncPhrase(

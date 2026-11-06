@@ -26,7 +26,7 @@ import {
   saveCustomPassportAvatar,
 } from "../../utils/softstack-passport/avatar.js";
 import {
-  buildPassportSyncUrl,
+  buildPassportPhraseUrl,
   type QRBuddyPassport,
 } from "../../utils/passport.ts";
 import { addToast } from "../../islands/ToastManager.tsx";
@@ -83,6 +83,8 @@ export function PassportMembershipCard({
   const pendingRef = useRef({ x: 50, y: 50 });
   const squishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const qrTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [vaultHash, setVaultHash] = useState("");
   const [shuffleSeed, setShuffleSeed] = useState(0);
@@ -91,6 +93,8 @@ export function PassportMembershipCard({
   const [squishing, setSquishing] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [showQr, setShowQr] = useState(false);
 
   // Identity is derived from the code so the card matches the token/email even
   // when older device storage still holds a pre-parity moniker.
@@ -117,7 +121,9 @@ export function PassportMembershipCard({
 
   const identity = useMemo(() => {
     if (vaultHash) {
-      return generateMemberIdentity(vaultHash, passport.code);
+      return generateMemberIdentity(vaultHash, passport.code, {
+        phrase: passport.phrase,
+      });
     }
     return {
       name: passport.name,
@@ -153,8 +159,11 @@ export function PassportMembershipCard({
   );
 
   const syncUrl = useMemo(
-    () => (isPreview ? "" : buildPassportSyncUrl(passport)),
-    [passport, isPreview],
+    () =>
+      isPreview
+        ? ""
+        : buildPassportPhraseUrl(identity.phrase || passport.phrase || ""),
+    [identity.phrase, passport.phrase, isPreview],
   );
   const qrImageUrl = useMemo(() => qrDataUrl(syncUrl), [syncUrl]);
 
@@ -170,6 +179,8 @@ export function PassportMembershipCard({
         qrUrl: syncUrl,
         qrImageUrl,
         reducedMotion,
+        revealed,
+        showQr,
       }),
     [
       identity,
@@ -181,6 +192,8 @@ export function PassportMembershipCard({
       syncUrl,
       qrImageUrl,
       reducedMotion,
+      revealed,
+      showQr,
     ],
   );
 
@@ -213,6 +226,8 @@ export function PassportMembershipCard({
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       if (squishTimer.current !== null) clearTimeout(squishTimer.current);
       if (copyTimer.current !== null) clearTimeout(copyTimer.current);
+      if (revealTimer.current !== null) clearTimeout(revealTimer.current);
+      if (qrTimer.current !== null) clearTimeout(qrTimer.current);
     };
   }, []);
 
@@ -328,6 +343,30 @@ export function PassportMembershipCard({
     haptics.light();
   }
 
+  function toggleReveal() {
+    if (isPreview) return;
+    setRevealed((prev) => {
+      const next = !prev;
+      if (revealTimer.current !== null) clearTimeout(revealTimer.current);
+      if (next) {
+        revealTimer.current = setTimeout(() => setRevealed(false), 10000);
+      }
+      return next;
+    });
+  }
+
+  function toggleQr() {
+    if (isPreview) return;
+    setShowQr((prev) => {
+      const next = !prev;
+      if (qrTimer.current !== null) clearTimeout(qrTimer.current);
+      if (next) {
+        qrTimer.current = setTimeout(() => setShowQr(false), 60000);
+      }
+      return next;
+    });
+  }
+
   function handleClick(e: MouseEvent) {
     const target = e.target;
     if (!(target instanceof Element)) return;
@@ -342,7 +381,17 @@ export function PassportMembershipCard({
       return;
     }
     if (target.closest(".avatar-input")) return;
-    // The QR stamp is an anchor; let it navigate.
+    if (target.closest("[data-passport-qr-toggle]")) {
+      e.stopPropagation();
+      toggleQr();
+      return;
+    }
+    if (target.closest("[data-passport-reveal]")) {
+      e.stopPropagation();
+      toggleReveal();
+      return;
+    }
+    // The QR stamp is an anchor when revealed; let it navigate.
     if (target.closest(".passport-qr-stamp")) return;
     if (target.closest(".passport-id-chip")) {
       e.stopPropagation();
@@ -366,7 +415,13 @@ export function PassportMembershipCard({
     if (e.key !== "Enter" && e.key !== " ") return;
     const target = e.target;
     if (!(target instanceof Element)) return;
-    if (target.matches(".passport-id-chip")) {
+    if (target.matches("[data-passport-qr-toggle]")) {
+      e.preventDefault();
+      toggleQr();
+    } else if (target.matches("[data-passport-reveal]")) {
+      e.preventDefault();
+      toggleReveal();
+    } else if (target.matches(".passport-id-chip")) {
       e.preventDefault();
       copyPasskey();
     } else if (target.matches(".passport-card")) {

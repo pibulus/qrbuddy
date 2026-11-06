@@ -4,6 +4,7 @@ import {
   assertNotEquals,
 } from "https://deno.land/std@0.216.0/assert/mod.ts";
 import {
+  buildPassportPhraseUrl,
   buildPassportSyncUrl,
   clearPassport,
   generatePassportIdentity,
@@ -14,6 +15,11 @@ import {
   rerollPassportIdentity,
   savePassport,
 } from "../utils/passport.ts";
+import {
+  hashPassportPhrase,
+  mintPassportCode,
+  mintPassportPhrase,
+} from "../supabase/functions/_shared/passport.ts";
 import {
   clearSupporterPass,
   getSupporterPass,
@@ -186,5 +192,66 @@ Deno.test("passport - rerollPassportIdentity updates name and avatarEmoji while 
   } finally {
     clearPassport();
     clearSupporterPass();
+  }
+});
+
+Deno.test("passport - phrase-root derivation, compact QR URL, and #phrase= restore", async () => {
+  clearPassport();
+  const originalLocation = globalThis.location;
+  const originalHistory = globalThis.history;
+  const prevSecret = Deno.env.get("SOFTSTACK_PASSPORT_SECRET");
+
+  try {
+    Deno.env.set(
+      "SOFTSTACK_PASSPORT_SECRET",
+      "softstack-test-secret-32-chars-min!!",
+    );
+    const phrase = await mintPassportPhrase("checkout-test-001");
+    assertEquals(phrase, "umbra-scanner-amplify-cosmos");
+    const code = await mintPassportCode(phrase);
+    assertEquals(code, "SS-FA39-DE19-4608");
+    const codeFromSeed = await mintPassportCode("checkout-test-001");
+    assertEquals(codeFromSeed, code);
+    const phraseFromCode = await mintPassportPhrase(code);
+    assertNotEquals(
+      phraseFromCode,
+      phrase,
+      "SS- code must be one-way and never reverse-derive the phrase",
+    );
+    const kdfHash = await hashPassportPhrase(phrase);
+    assertEquals(kdfHash.length, 64);
+
+    const qrUrl = buildPassportPhraseUrl(phrase, "https://qrbuddy.app");
+    assertEquals(
+      qrUrl,
+      "https://qrbuddy.app/#phrase=umbra-scanner-amplify-cosmos",
+    );
+
+    // deno-lint-ignore no-explicit-any
+    (globalThis as any).location = {
+      hash: "#phrase=umbra-scanner-amplify-cosmos",
+      pathname: "/",
+      search: "",
+    };
+    // deno-lint-ignore no-explicit-any
+    (globalThis as any).history = {
+      replaceState: () => {},
+    };
+
+    const synced = parsePassportFromUrl();
+    assert(synced);
+    assertEquals(synced.phrase, "umbra-scanner-amplify-cosmos");
+    assertEquals(synced.name, "Misty Ibis");
+    assert(synced.id.length === 36);
+    assert(synced.secret.length === 32);
+  } finally {
+    globalThis.location = originalLocation;
+    globalThis.history = originalHistory;
+    if (prevSecret !== undefined) {
+      Deno.env.set("SOFTSTACK_PASSPORT_SECRET", prevSecret);
+    } else {
+      Deno.env.delete("SOFTSTACK_PASSPORT_SECRET");
+    }
+    clearPassport();
   }
 });

@@ -48,9 +48,14 @@ function escapeHtml(value: string): string {
 function emailHtml(key: string, bits: PassportBits): string {
   const name = bits.name ? escapeHtml(bits.name) : "";
   const phrase = bits.phrase ? escapeHtml(bits.phrase) : "";
-  const link = bits.link && /^https:\/\/qrbuddy\.app\//.test(bits.link)
-    ? escapeHtml(bits.link)
+  const defaultLink = bits.phrase
+    ? `https://qrbuddy.app/#phrase=${encodeURIComponent(bits.phrase)}`
     : "https://qrbuddy.app/";
+  const link = bits.link &&
+      /^https:\/\/qrbuddy\.app\/(?:#|$)/.test(bits.link) &&
+      !bits.link.includes("?passport=")
+    ? escapeHtml(bits.link)
+    : escapeHtml(defaultLink);
   return `<!doctype html><html><body style="margin:0;background:#fbf1e4;color:#1e1714;font-family:Inter,system-ui,sans-serif">
   <div style="max-width:520px;margin:0 auto;padding:32px 24px">
     <div style="background:#fffef7;border:2px solid #1e1714;border-radius:24px;padding:28px;box-shadow:0 3px 0 #1e1714">

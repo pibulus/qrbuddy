@@ -48,8 +48,19 @@ const MIN_SECRET_LENGTH = 32;
 
 export function getLicenseSecret(): string {
   // The passport token is signed by the same secret in all four apps.
-  const secret = Deno.env.get("SOFTSTACK_PASSPORT_SECRET")?.trim() ||
-    Deno.env.get("LICENSE_SIGNING_KEY")?.trim() || "";
+  const canonical = Deno.env.get("SOFTSTACK_PASSPORT_SECRET")?.trim() || "";
+  if (canonical.length >= MIN_SECRET_LENGTH) {
+    return canonical;
+  }
+  const isProd = Boolean(
+    Deno.env.get("DENO_DEPLOYMENT_ID") || Deno.env.get("SUPABASE_URL"),
+  );
+  if (isProd) {
+    throw new Error(
+      `SOFTSTACK_PASSPORT_SECRET must be set to at least ${MIN_SECRET_LENGTH} characters in production`,
+    );
+  }
+  const secret = Deno.env.get("LICENSE_SIGNING_KEY")?.trim() || "";
   if (secret.length < MIN_SECRET_LENGTH) {
     throw new Error(
       `SOFTSTACK_PASSPORT_SECRET must be set to at least ${MIN_SECRET_LENGTH} characters`,

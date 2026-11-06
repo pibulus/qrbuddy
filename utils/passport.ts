@@ -4,8 +4,16 @@
 // Zero passwords, zero email walls. A holographic tactile passport card that
 // syncs across phones and laptops by scanning its own QR code.
 
-import { getSupporterPass, setSupporterPass } from "./supporter-pass.ts";
-import { generateSyncPhrase } from "./sync-phrase.ts";
+import {
+  getSupporterClaims,
+  getSupporterPass,
+  setSupporterPass,
+} from "./supporter-pass.ts";
+import { generateSyncPhrase, normalizeSyncPhrase } from "./sync-phrase.ts";
+import {
+  getSyncRoomId,
+  parseFourWordPasskey,
+} from "./softstack-passport/index.js";
 import qrcode from "qrcode-generator";
 
 export function renderPassportQrSvg(text: string, cellSize = 4): string {
@@ -131,6 +139,57 @@ export function generatePassportIdentity(): QRBuddyPassport {
   };
 }
 
+function applySupporterClaims(passport: QRBuddyPassport): boolean {
+  let dirty = false;
+  const claims = getSupporterClaims();
+  if (claims) {
+    if (
+      typeof claims.code === "string" &&
+      claims.code.trim() &&
+      passport.code !== claims.code.trim()
+    ) {
+      passport.code = claims.code.trim();
+      dirty = true;
+    }
+    if (
+      typeof claims.phrase === "string" &&
+      claims.phrase.trim() &&
+      passport.phrase !== claims.phrase.trim()
+    ) {
+      passport.phrase = claims.phrase.trim();
+      dirty = true;
+    }
+    if (
+      typeof claims.name === "string" &&
+      claims.name.trim() &&
+      passport.name !== claims.name.trim()
+    ) {
+      passport.name = claims.name.trim();
+      dirty = true;
+    }
+  }
+  return dirty;
+}
+
+function deriveCredentialsFromPhrase(phrase: string): {
+  id: string;
+  secret: string;
+  name: string;
+} {
+  const normalized = normalizeSyncPhrase(phrase);
+  const parsed = parseFourWordPasskey(normalized);
+  const hex = getSyncRoomId(`qrbuddy-passport:${normalized}`);
+  const id = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${
+    hex.slice(17, 20)
+  }-${hex.slice(20, 32)}`;
+  const secret = hex.slice(32, 64);
+  return {
+    id,
+    secret,
+    name: parsed?.name || "Synced Passport",
+  };
+}
+
 export function getStoredPassport(): QRBuddyPassport | null {
   if (typeof localStorage === "undefined") return null;
   try {
@@ -152,6 +211,9 @@ export function getStoredPassport(): QRBuddyPassport | null {
       }
       if (passport.tier !== "plus" && getSupporterPass() !== null) {
         passport.tier = "plus";
+        dirty = true;
+      }
+      if (applySupporterClaims(passport)) {
         dirty = true;
       }
       if (dirty) {
@@ -182,8 +244,15 @@ export function savePassport(passport: QRBuddyPassport): void {
 export function getOrCreatePassport(): QRBuddyPassport {
   const existing = getStoredPassport();
   if (existing) {
+    let dirty = false;
     if (existing.tier !== "plus" && getSupporterPass() !== null) {
       existing.tier = "plus";
+      dirty = true;
+    }
+    if (applySupporterClaims(existing)) {
+      dirty = true;
+    }
+    if (dirty) {
       savePassport(existing);
     }
     return existing;
@@ -191,6 +260,7 @@ export function getOrCreatePassport(): QRBuddyPassport {
   const created = generatePassportIdentity();
   if (getSupporterPass() !== null) {
     created.tier = "plus";
+    applySupporterClaims(created);
   }
   savePassport(created);
   return created;
@@ -263,8 +333,31 @@ export function buildPassportSyncUrl(
 }
 
 /**
+ * Compact phrase-only URL for the Passport card QR and recovery email.
+ * Encodes only `#phrase=<4-words>` so the QR is Version 3/4 (~29 modules,
+ * ~2.5px/module) and never carries bearer JWTs or raw hex secrets.
+ */
+export function buildPassportPhraseUrl(
+  phraseOrPassport: string | QRBuddyPassport,
+  origin?: string,
+): string {
+  const base = origin ||
+    (typeof window !== "undefined"
+      ? globalThis.location.origin
+      : "https://qrbuddy.app");
+  const phrase = typeof phraseOrPassport === "string"
+    ? phraseOrPassport.trim()
+    : phraseOrPassport.phrase?.trim() || "";
+  if (!phrase) return `${base}/`;
+  const params = new URLSearchParams();
+  params.set("phrase", phrase);
+  return `${base}/#${params.toString()}`;
+}
+
+/**
  * Checks the URL hash on page load for incoming passport sync credentials.
- * If found: writes to localStorage, cleans the hash, and triggers the sync event.
+ * Supports both `#phrase=<4-words>` (passphrase-root) and legacy
+ * `#passport=<id>&secret=<secret>`.
  */
 export function parsePassportFromUrl(): QRBuddyPassport | null {
   if (typeof globalThis.location === "undefined" || !globalThis.location.hash) {
@@ -275,16 +368,33 @@ export function parsePassportFromUrl(): QRBuddyPassport | null {
     const hash = globalThis.location.hash.startsWith("#")
       ? globalThis.location.hash.slice(1)
       : globalThis.location.hash;
-    if (!hash.includes("passport=") || !hash.includes("secret=")) return null;
-
     const params = new URLSearchParams(hash);
-    const id = params.get("passport")?.trim();
-    const secret = params.get("secret")?.trim();
-    if (!id || !secret) return null;
+    const rawPhrase = (params.get("phrase") || params.get("unlock") || "")
+      .trim();
+    const hasLegacyCreds = hash.includes("passport=") &&
+      hash.includes("secret=");
 
-    const name = params.get("name")?.trim() || "Synced Passport";
+    if (!hasLegacyCreds && !rawPhrase) return null;
+
+    let id = params.get("passport")?.trim() || "";
+    let secret = params.get("secret")?.trim() || "";
+    let name = params.get("name")?.trim() || "";
     const avatarEmoji = params.get("emoji")?.trim() || "🦎";
-    const phrase = params.get("phrase")?.trim() || generateSyncPhrase();
+    let phrase = rawPhrase || "";
+
+    if (!id || !secret) {
+      const parsed = parseFourWordPasskey(rawPhrase);
+      if (!parsed) return null;
+      const derived = deriveCredentialsFromPhrase(parsed.phrase);
+      id = derived.id;
+      secret = derived.secret;
+      name = name || derived.name;
+      phrase = parsed.phrase;
+    } else {
+      name = name || "Synced Passport";
+      phrase = phrase || generateSyncPhrase();
+    }
+
     const incomingPass = params.get("pass")?.trim();
     const passRestored = incomingPass ? setSupporterPass(incomingPass) : false;
     const tier = passRestored || params.get("tier") === "plus" ||
@@ -301,6 +411,7 @@ export function parsePassportFromUrl(): QRBuddyPassport | null {
       tier,
       createdAt: new Date().toISOString(),
     };
+    applySupporterClaims(passport);
 
     savePassport(passport);
 

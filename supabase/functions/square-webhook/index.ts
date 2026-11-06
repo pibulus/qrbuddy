@@ -13,7 +13,11 @@ import {
   verifySquareWebhookSignature,
 } from "../_shared/square.ts";
 import { issueSupporterToken } from "../_shared/license.ts";
-import { mintPassportCode, passportIdentity } from "../_shared/passport.ts";
+import {
+  mintPassportCode,
+  mintPassportPhrase,
+  passportIdentity,
+} from "../_shared/passport.ts";
 
 const jsonHeaders = { "Content-Type": "application/json" };
 
@@ -95,13 +99,14 @@ serve(async (req) => {
       });
     }
 
-    const passportCode = await mintPassportCode(checkout.checkout_id);
-    const identity = await passportIdentity(passportCode);
+    const passportPhrase = await mintPassportPhrase(checkout.checkout_id);
+    const passportCode = await mintPassportCode(passportPhrase);
+    const identity = await passportIdentity(passportCode, passportPhrase);
     const license = await issueSupporterToken({
       sub: passportCode,
       code: passportCode,
       name: identity.name,
-      phrase: identity.phrase,
+      phrase: passportPhrase,
       avatarEmoji: "🦎",
       stamps: ["qrbuddy"],
       app: "qrbuddy",

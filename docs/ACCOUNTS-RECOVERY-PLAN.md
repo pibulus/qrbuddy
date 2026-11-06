@@ -121,20 +121,21 @@ businesses. Worth knowing it exists.
 
 _Owner: me. Risk: low, additive, behind the same flag._
 
-### P1 — one identity instead of two
+### P1 — one identity instead of two (SHIPPED 2026-11-06)
 
-Right now the passport has an id/secret _and_ a sync phrase that do different
-things. That is a bug shaped like a feature. Decide:
+**Decision taken (`_shared-modules/passport/docs/PASSPHRASE-ROOT.md`):**
+Collapsed the sync phrase and Passport into a single **4-word passkey root
+credential** (4,096-word curated bank = 48.0 bits of entropy) shared across
+TalkType, ZipList, QRBuddy, and ProMapper:
 
-- **Option A (keep random, store recoverable):** passport stays random, the
-  server stores it wrapped by the verified email. Recovery = email. Cheapest, no
-  migration, works with what exists.
-- **Option B (derive, like TalkType):** passport identity derived from a signed
-  code. Recovery = code, email is just delivery. Costs a migration for existing
-  passports and a re-issue path for anyone already holding a random one.
-
-Recommendation: **A now, B later if cross-app identity is ever wanted.** A is a
-week of my time; B is a project.
+- `phrase` is the root secret that unlocks the Passport and drives device sync.
+- `SS-XXXX-XXXX-XXXX` is derived one-way from the phrase via
+  `HMAC-SHA256(SOFTSTACK_PASSPORT_SECRET, "softstack-passport-code:" + phrase)`
+  and serves as the public handle.
+- Recovery emails and pairing QRs carry `#phrase=<4-words>` in the URL fragment
+  (never a bare `SS-` code or query param), and `get-license` indexes Passports
+  by a 100k-round PBKDF2-SHA256 hash of the 4-word passkey with a 5-miss /
+  15-minute per-phrase lockout.
 
 ### P2 — history and settings sync, done properly
 
