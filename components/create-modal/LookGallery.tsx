@@ -328,7 +328,7 @@ export default function LookGallery(
             ] as const).map(([slot, label, value]) => (
               <label
                 key={slot}
-                class="relative flex items-center gap-1.5 min-h-[38px] rounded-lg border-[1.5px] border-[#1e1714]/25 px-1.5 bg-[#fffef7] cursor-pointer focus-within:border-[#1e1714] focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4]"
+                class="relative flex items-center gap-1.5 min-h-[42px] rounded-lg border-[1.5px] border-[#1e1714]/25 px-1.5 bg-[#fffef7] cursor-pointer focus-within:border-[#1e1714] focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4]"
               >
                 {
                   /* The visible swatch is ours; the native picker sits on top
@@ -375,7 +375,7 @@ export default function LookGallery(
                 type="button"
                 onClick={() => write({ artImage: undefined })}
                 aria-label={es ? "Quitar arte" : "Remove artwork"}
-                class="shrink-0 w-9 h-9 rounded-lg border-2 border-[#1e1714] bg-[#fffef7] text-sm font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
+                class="shrink-0 w-10 h-10 rounded-lg border-2 border-[#1e1714] bg-[#fffef7] text-sm font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
               >
                 ✕
               </button>
