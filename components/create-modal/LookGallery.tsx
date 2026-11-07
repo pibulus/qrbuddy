@@ -328,16 +328,27 @@ export default function LookGallery(
             ] as const).map(([slot, label, value]) => (
               <label
                 key={slot}
-                class="flex items-center gap-1.5 min-h-[38px] rounded-lg border-[1.5px] border-[#1e1714]/25 px-1.5 bg-[#fffef7] focus-within:border-[#1e1714]"
+                class="relative flex items-center gap-1.5 min-h-[38px] rounded-lg border-[1.5px] border-[#1e1714]/25 px-1.5 bg-[#fffef7] cursor-pointer focus-within:border-[#1e1714] focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4]"
               >
+                {
+                  /* The visible swatch is ours; the native picker sits on top
+                    invisibly so Safari's colour well can never redraw it. */
+                }
+                <span
+                  aria-hidden="true"
+                  class="w-6 h-6 shrink-0 rounded-full border-[1.5px] border-[#1e1714]"
+                  style={{
+                    background: value.startsWith("#") ? value.slice(0, 7) : c1,
+                  }}
+                />
+                <span class="text-[10px] font-black truncate">{label}</span>
                 <input
                   type="color"
                   value={value.startsWith("#") ? value.slice(0, 7) : "#C9184A"}
                   onInput={(e) => setFoilColor(slot, e.currentTarget.value)}
                   aria-label={label}
-                  class="w-6 h-6 shrink-0 rounded-full border-[1.5px] border-[#1e1714] bg-transparent p-0 appearance-none cursor-pointer"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
-                <span class="text-[10px] font-black truncate">{label}</span>
               </label>
             ))}
           </div>
