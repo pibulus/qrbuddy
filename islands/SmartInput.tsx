@@ -213,12 +213,14 @@ export default function SmartInput(
   const styleAtSheetOpen = useRef("");
   const logoAtSheetOpen = useRef("");
   const frameAtSheetOpen = useRef("");
+  const customAtSheetOpen = useRef("");
   useEffect(() => {
     if (isCreateModalOpen) {
       urlAtSheetOpen.current = url.value;
       styleAtSheetOpen.current = qrStyle.value;
       logoAtSheetOpen.current = logoUrl.value;
       frameAtSheetOpen.current = JSON.stringify(frameConfig?.value ?? null);
+      customAtSheetOpen.current = JSON.stringify(customStyle?.value ?? null);
     }
   }, [isCreateModalOpen]);
 
@@ -902,7 +904,9 @@ export default function SmartInput(
           const designChanged = qrStyle.value !== styleAtSheetOpen.current ||
             logoUrl.value !== logoAtSheetOpen.current ||
             JSON.stringify(frameConfig?.value ?? null) !==
-              frameAtSheetOpen.current;
+              frameAtSheetOpen.current ||
+            JSON.stringify(customStyle?.value ?? null) !==
+              customAtSheetOpen.current;
           // Bridge the "kicked back to the main page" moment: if the sheet
           // changed the QR, say so and point at the save pill.
           if (contentChanged) {
