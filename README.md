@@ -16,6 +16,10 @@ walls, or $35/month hostage subscriptions.
   public gallery, ≤ 0.40 luminance), custom 2-stop linear/radial gradients,
   module, eye and centre-mark geometry, centre logo or monogram, palette-aware
   card labels, live WCAG contrast badge, and 3000px PNG + vector SVG export
+- **Looks** - Classic, Flat Foil (a code on an extruded tile), Sticker (artwork
+  behind a die-cut code) and Pocket (8-bit tile). Every look keeps the finder,
+  timing and alignment patterns intact, holds a 4-module quiet zone, and is
+  decoder-tested before it is offered. See `docs/LOOKS.md`
 - **Smart Dynamic QR Codes** - Edit destinations after printing, route by
   time-of-day (Breakfast/Lunch/Dinner menus), split by iOS/Android or A/B
   weights, rotate sequential links, or set scan caps and expiration dates

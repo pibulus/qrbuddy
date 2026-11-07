@@ -10,10 +10,21 @@
 
 import qrcode from "qrcode-generator";
 import { escapeXml, measureCaptionUnicodeFallback } from "./svg-export.ts";
+import {
+  foilSideColors,
+  mixColor,
+  POCKET_DMG,
+  renderFoil,
+  renderPocket,
+  renderSticker,
+} from "./qr-art-renderers.ts";
 import type {
   CornerSquareShape,
   DotShape,
+  FoilColors,
   Gradient,
+  RenderMode,
+  StickerShape,
 } from "../types/qr-types.ts";
 
 export interface VectorPalette {
@@ -152,6 +163,12 @@ export interface BuildQrSvgOptions {
   rounded?: boolean;
   dotShape?: DotShape;
   cornerSquareShape?: CornerSquareShape;
+  /** Presentation layer. Defaults to the flat, print-tested classic matrix. */
+  renderMode?: RenderMode;
+  artImage?: string;
+  artColors?: FoilColors;
+  stickerShape?: StickerShape;
+  pocketTone?: "brand" | "dmg";
 }
 
 function isFinderModule(row: number, col: number, count: number): boolean {
@@ -362,7 +379,11 @@ function gradientDef(
   fallback: string,
 ): string {
   if (!gradient) {
-    return `<linearGradient id="${id}"><stop stop-color="${
+    // Two stops even for a flat colour: several SVG rasterizers (librsvg via
+    // ImageMagick, older Inkscape) paint single-stop gradients black.
+    return `<linearGradient id="${id}"><stop offset="0%" stop-color="${
+      escapeXml(fallback)
+    }"/><stop offset="100%" stop-color="${
       escapeXml(fallback)
     }"/></linearGradient>`;
   }
@@ -380,6 +401,42 @@ function gradientDef(
 }
 
 /**
+ * Centre mark badge: paper ground, clipped logo, chunky ring. Shared by the
+ * classic excavation and the foil overlay so a mark looks the same everywhere.
+ */
+function markBadge(options: {
+  x: number;
+  y: number;
+  size: number;
+  ring: number;
+  shape?: "squircle" | "circle" | "knockout";
+  bg: string;
+  logoUrl: string;
+}): string {
+  const { x, y, size, ring, shape, bg, logoUrl } = options;
+  const radius = shape === "circle"
+    ? size / 2
+    : shape === "knockout"
+    ? 0
+    : size * 0.26;
+  // Chunky ring drawn INSIDE the mark so it never spills into the moat.
+  // Knockout omits the box but keeps a paper ground for legibility.
+  const inset = ring / 2;
+  const badge = shape === "knockout"
+    ? ""
+    : `<rect x="${x + inset}" y="${y + inset}" width="${size - ring}" height="${
+      size - ring
+    }" rx="${
+      Math.max(0, radius - inset)
+    }" fill="none" stroke="#1e1714" stroke-width="${ring}"/>`;
+  return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${radius}" fill="${
+    escapeXml(bg)
+  }"/><defs><clipPath id="qrb-mark-clip"><rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${radius}"/></clipPath></defs><image data-center-mark="true" x="${x}" y="${y}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet" clip-path="url(#qrb-mark-clip)" href="${
+    escapeXml(logoUrl)
+  }" xlink:href="${escapeXml(logoUrl)}"/>` + badge;
+}
+
+/**
  * Builds a complete, standalone SVG 1.1 string with 135-degree linear gradient
  * and optional Soft Neo-Toybrut framed card + caption.
  */
@@ -394,10 +451,18 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     options.logoUrl &&
       /^data:image\/(?:png|jpeg|webp|svg\+xml);base64,/i.test(options.logoUrl),
   );
-  const ecl =
-    hasMark || options.dotShape === "diamond" || options.dotShape === "dots"
-      ? "H"
-      : options.errorCorrectionLevel ?? "Q";
+  // Artwork is a same-origin raster only. An external URL would taint the
+  // export canvas, and an inline SVG could smuggle foreign content into a file
+  // that gets printed and shipped.
+  const hasArt = Boolean(
+    options.artImage && options.artImage.length <= 400_000 &&
+      /^data:image\/(?:png|jpeg|webp|gif);base64,/i.test(options.artImage),
+  );
+  const mode: RenderMode = options.renderMode ?? "classic";
+  const ecl = hasMark || mode !== "classic" || options.dotShape === "diamond" ||
+      options.dotShape === "dots"
+    ? "H"
+    : options.errorCorrectionLevel ?? "Q";
   const rounded = options.rounded ?? preset.rounded ?? true;
   const dotShape: DotShape = !rounded
     ? "square"
@@ -430,7 +495,9 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   const offsetY = pad + quietZone * cellSize;
 
   const pathChunks: string[] = [];
-  const cutout = hasMark ? centerCutout(moduleCount) : null;
+  // Flat Foil overlays its mark instead of excavating the matrix: the badge is
+  // a sticker on the object, so no modules are lost under a skewed hole.
+  const cutout = hasMark && mode !== "foil" ? centerCutout(moduleCount) : null;
   const isCleared = (r: number, c: number) =>
     Boolean(
       cutout && r >= cutout.start && r < cutout.end && c >= cutout.start &&
@@ -497,39 +564,77 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     }
   }
 
+  // Looks. Each renderer receives the same matrix the classic path draws, so a
+  // look can never invent modules the decoder will not see.
+  let artBody = "";
+  if (mode !== "classic") {
+    const box = { x: pad, y: pad, size: qrBoxSize };
+    const matrix = {
+      count: moduleCount,
+      isDark: dark,
+      isCleared: (r: number, c: number) => mode !== "foil" && isCleared(r, c),
+      alignment,
+    };
+    if (mode === "foil") {
+      const derived = foilSideColors(c1, c2, bg, "#1e1714");
+      artBody = renderFoil(matrix, box, {
+        top: options.artColors?.top || "url(#qrb-dots)",
+        left: options.artColors?.left || derived.left,
+        right: options.artColors?.right || derived.right,
+        face: "url(#qrb-bg)",
+        ink: "#1e1714",
+      });
+    } else if (mode === "sticker") {
+      artBody = renderSticker(matrix, box, {
+        bg,
+        card: options.artImage ? bg : mixColor(c1, bg, 0.9),
+        ink: "#1e1714",
+        artImage: hasArt ? options.artImage : undefined,
+        shape: options.stickerShape ?? "squircle",
+        moduleFill: c1,
+      });
+    } else if ((options.pocketTone ?? "brand") === "dmg") {
+      artBody = renderPocket(matrix, box, POCKET_DMG);
+    } else {
+      artBody = renderPocket(matrix, box, {
+        bg: mixColor(c1, bg, 0.86),
+        ink: c1,
+        bezel: mixColor(c1, bg, 0.38),
+        accent: mixColor(c1, "#1e1714", 0.55),
+      });
+    }
+  }
+
   let frameRect = "";
   let qrBgRect = "";
   let captionElement = "";
   let markElement = "";
-  if (cutout) {
+  if (hasMark && mode === "foil") {
+    // The badge floats on the extrusion; nothing is excavated.
+    const markSize = qrBoxSize * 0.2;
+    markElement = markBadge({
+      x: pad + (qrBoxSize - markSize) / 2,
+      y: pad + (qrBoxSize - markSize) / 2,
+      size: markSize,
+      ring: qrBoxSize * 0.008,
+      shape: options.centerShape,
+      bg,
+      logoUrl: options.logoUrl!,
+    });
+  } else if (cutout) {
     const holeSize = (cutout.end - cutout.start) * cellSize;
     // A tight moat makes the mark read as a centrepiece, not a watermark.
     const moat = Math.min(qrBoxSize * 0.012, holeSize * 0.1);
     const markSize = holeSize - moat * 2;
-    const x = offsetX + cutout.start * cellSize + moat;
-    const y = offsetY + cutout.start * cellSize + moat;
-    const radius = options.centerShape === "circle"
-      ? markSize / 2
-      : options.centerShape === "knockout"
-      ? 0
-      : markSize * 0.26;
-    // Chunky ring drawn INSIDE the mark so it never spills into the moat.
-    // Knockout omits the box but keeps a paper ground for legibility.
-    const ring = qrBoxSize * 0.008;
-    const inset = ring / 2;
-    const badge = options.centerShape === "knockout"
-      ? ""
-      : `<rect x="${x + inset}" y="${y + inset}" width="${
-        markSize - ring
-      }" height="${markSize - ring}" rx="${
-        Math.max(0, radius - inset)
-      }" fill="none" stroke="#1e1714" stroke-width="${ring}"/>`;
-    markElement =
-      `<rect x="${x}" y="${y}" width="${markSize}" height="${markSize}" rx="${radius}" fill="${
-        escapeXml(bg)
-      }"/><defs><clipPath id="qrb-mark-clip"><rect x="${x}" y="${y}" width="${markSize}" height="${markSize}" rx="${radius}"/></clipPath></defs><image data-center-mark="true" x="${x}" y="${y}" width="${markSize}" height="${markSize}" preserveAspectRatio="xMidYMid meet" clip-path="url(#qrb-mark-clip)" href="${
-        escapeXml(options.logoUrl!)
-      }" xlink:href="${escapeXml(options.logoUrl!)}"/>` + badge;
+    markElement = markBadge({
+      x: offsetX + cutout.start * cellSize + moat,
+      y: offsetY + cutout.start * cellSize + moat,
+      size: markSize,
+      ring: qrBoxSize * 0.008,
+      shape: options.centerShape,
+      bg,
+      logoUrl: options.logoUrl!,
+    });
   }
 
   if (hasCaption) {
@@ -567,8 +672,10 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" data-ecl="${ecl}" data-cutout="${
-      cutout ? `${cutout.start}:${cutout.end}` : "none"
-    }">`,
+      cutout
+        ? `${cutout.start}:${cutout.end}`
+        : (mode === "foil" ? "overlay" : "none")
+    }" data-look="${mode}">`,
     `  <defs>`,
     `    <linearGradient id="qrb-grad" x1="0%" y1="0%" x2="100%" y2="100%">`,
     `      <stop offset="0%" stop-color="${escapeXml(c1)}" />`,
@@ -588,10 +695,11 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     gradientDef("qrb-eyes", options.eyeGradient, options.eyeColor ?? c1),
     `  </defs>`,
     frameRect + qrBgRect.replace(/fill="[^"]*"/, 'fill="url(#qrb-bg)"') +
-    `  <path d="${finderPaths}" fill="url(#qrb-eyes)" fill-rule="evenodd" />` +
-    `  <path d="${
-      pathChunks.join("")
-    }" fill="url(#qrb-dots)" fill-rule="evenodd" />\n` +
+    (artBody ||
+      (`  <path d="${finderPaths}" fill="url(#qrb-eyes)" fill-rule="evenodd" />` +
+        `  <path d="${
+          pathChunks.join("")
+        }" fill="url(#qrb-dots)" fill-rule="evenodd" />\n`)) +
     markElement +
     captionElement +
     `</svg>`,

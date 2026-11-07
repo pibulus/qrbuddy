@@ -65,6 +65,15 @@ HTML.
   `utils/qr-vector-svg.ts`. One geometry source means the Design preview, card,
   PNG, SVG and ZIP cannot drift. `qr-code-styling` remains only in
   `islands/BucketQR.tsx`.
+- **Looks**: `renderMode` (`classic | foil | sticker | pocket`) rides on
+  `QRStyle` as a presentation layer, resolved by `resolveQRStyle` and drawn by
+  `utils/qr-art-renderers.ts`. The classic matrix is always the source of truth:
+  art never invents modules, function patterns are protected, the quiet zone is
+  ≥ 4 modules and error correction is forced to H.
+  `components/create-modal/
+  LookGallery.tsx` shows the four minis and caches a
+  `zxing-wasm` verdict per rendered SVG (`checkSvgScannability`). Read
+  `docs/LOOKS.md` before touching the geometry.
 - **Styling**: Tailwind CSS with custom theme configuration in
   `tailwind.config.ts`
 - **Build**: No separate bundler configuration is needed. Development uses the

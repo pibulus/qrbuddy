@@ -10,8 +10,17 @@ export function resolveQRStyle(
 ): QRStyle {
   const base = QR_STYLES[key as keyof typeof QR_STYLES] ?? QR_STYLES.sunset;
   if (key === "custom" && override) return override;
+  // The look rides along with every palette: picking Candy must not drop the
+  // artwork already chosen for Sunset.
+  const look: Partial<QRStyle> = {};
+  if (override?.renderMode) look.renderMode = override.renderMode;
+  if (override?.artImage) look.artImage = override.artImage;
+  if (override?.artColors) look.artColors = override.artColors;
+  if (override?.stickerShape) look.stickerShape = override.stickerShape;
+  if (override?.pocketTone) look.pocketTone = override.pocketTone;
   return {
     ...base,
+    ...look,
     centerShape: override?.centerShape,
     dots: {
       ...base.dots,
@@ -31,6 +40,40 @@ export function resolveQRStyle(
     },
   };
 }
+
+/** The Looks gallery, in shipping order. Labels only — no taste in the data. */
+export const LOOKS = [
+  {
+    id: "classic",
+    en: "Classic",
+    es: "Clásico",
+    blurbEn: "Flat matrix, print-tested",
+    blurbEs: "Matriz plana, probada en imprenta",
+  },
+  {
+    id: "foil",
+    en: "Flat Foil",
+    es: "Foil plano",
+    blurbEn: "Isometric 2.5D extrusion",
+    blurbEs: "Extrusión isométrica 2.5D",
+  },
+  {
+    id: "sticker",
+    en: "Sticker",
+    es: "Sticker",
+    blurbEn: "Artwork behind a die-cut code",
+    blurbEs: "Arte detrás de un código troquelado",
+  },
+  {
+    id: "pocket",
+    en: "Pocket",
+    es: "Pocket",
+    blurbEn: "8-bit tile sticker",
+    blurbEs: "Sticker de bloques 8-bit",
+  },
+] as const;
+
+export type LookId = (typeof LOOKS)[number]["id"];
 
 export const STAMPS = [
   {

@@ -25,6 +25,11 @@ export function styledQrSvg(options: RenderOptions): string {
     cornerSquareShape: s.cornersSquare?.shape,
     logoUrl: options.logoUrl,
     centerShape: s.centerShape,
+    renderMode: s.renderMode,
+    artImage: s.artImage,
+    artColors: s.artColors,
+    stickerShape: s.stickerShape,
+    pocketTone: s.pocketTone,
   });
 }
 

@@ -746,6 +746,11 @@ export default function QRCanvas(
                     | "square"
                     | "extra-rounded"
                     | undefined,
+                  renderMode: getCurrentStyle().renderMode,
+                  artImage: getCurrentStyle().artImage,
+                  artColors: getCurrentStyle().artColors,
+                  stickerShape: getCurrentStyle().stickerShape,
+                  pocketTone: getCurrentStyle().pocketTone,
                 }),
               )}
             alt={isSpanish ? "Vista previa del código QR" : "QR code preview"}

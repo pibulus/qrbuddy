@@ -4,6 +4,7 @@ import { haptics } from "../../utils/haptics.ts";
 import { sounds } from "../../utils/sounds.ts";
 import LogoUploader from "../LogoUploader.tsx";
 import PalettePills, { pillState } from "./PalettePills.tsx";
+import LookGallery from "./LookGallery.tsx";
 import type {
   BannerTheme,
   FrameConfig,
@@ -38,7 +39,7 @@ const KEY =
 
 /** Three sections, one grid each: palette (7), centre mark (5+2), label (1+4). */
 export default function DesignTab(
-  { qrStyle, logoUrl, frameConfig, customStyle, pngSize, onClose, lang }:
+  { url, qrStyle, logoUrl, frameConfig, customStyle, pngSize, onClose, lang }:
     DesignTabProps,
 ) {
   const locale = getClientLocale(lang);
@@ -100,6 +101,14 @@ export default function DesignTab(
 
   return (
     <div class="space-y-5 text-[#1e1714]">
+      <LookGallery
+        url={url}
+        qrStyle={qrStyle}
+        customStyle={customStyle}
+        logoUrl={logoUrl}
+        lang={locale}
+      />
+
       <section class="space-y-2.5" aria-label={es ? "Paleta" : "Palette"}>
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-sm font-black truncate">

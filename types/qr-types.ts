@@ -43,12 +43,34 @@ export interface CornerOptions {
   gradient?: Gradient;
 }
 
+/** Presentation layer — orthogonal to palette and geometry. */
+export type RenderMode = "classic" | "foil" | "sticker" | "pocket";
+
+/** Die-cut edge for the Sticker look. */
+export type StickerShape = "squircle" | "circle" | "ticket";
+
+/** Three ink slots for the extruded faces. */
+export interface FoilColors {
+  top?: string;
+  left?: string;
+  right?: string;
+}
+
 export interface QRStyle {
   centerShape?: "squircle" | "circle" | "knockout";
   dots: DotsOptions;
   background: BackgroundOptions;
   cornersSquare?: CornerOptions;
   cornersDot?: CornerOptions;
+  /** Look: classic matrix, extruded foil, artwork sticker, 8-bit pocket. */
+  renderMode?: RenderMode;
+  /** Sticker artwork, always a same-origin data: URL. */
+  artImage?: string;
+  /** Foil face inks; each falls back to a palette-derived tone. */
+  artColors?: FoilColors;
+  stickerShape?: StickerShape;
+  /** Pocket tone: the active palette or the four-green DMG set. */
+  pocketTone?: "brand" | "dmg";
 }
 
 /** Card label (banner) treatment. Auto-themed; never a font/colour picker. */

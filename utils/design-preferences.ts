@@ -157,6 +157,45 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
     }
   }
 
+  // Look layer: optional; invalid values drop the whole custom style so a
+  // damaged preference can never render an unreadable code.
+  if (s.renderMode !== undefined) {
+    if (
+      typeof s.renderMode !== "string" ||
+      !["classic", "foil", "sticker", "pocket"].includes(s.renderMode)
+    ) return false;
+  }
+  if (s.stickerShape !== undefined) {
+    if (
+      typeof s.stickerShape !== "string" ||
+      !["squircle", "circle", "ticket"].includes(s.stickerShape)
+    ) return false;
+  }
+  if (s.pocketTone !== undefined) {
+    if (
+      typeof s.pocketTone !== "string" ||
+      !["brand", "dmg"].includes(s.pocketTone)
+    ) return false;
+  }
+  if (s.artImage !== undefined && s.artImage !== "") {
+    if (
+      typeof s.artImage !== "string" ||
+      !/^data:image\/(?:png|jpeg|webp|gif|svg\+xml);base64,/i.test(
+        s.artImage,
+      ) ||
+      s.artImage.length > MAX_STORED_LOGO_LENGTH
+    ) return false;
+  }
+  if (s.artColors !== undefined) {
+    if (
+      !s.artColors || typeof s.artColors !== "object" ||
+      Array.isArray(s.artColors)
+    ) return false;
+    for (const value of Object.values(s.artColors as Record<string, unknown>)) {
+      if (value !== undefined && !isValidColor(value)) return false;
+    }
+  }
+
   return true;
 }
 
