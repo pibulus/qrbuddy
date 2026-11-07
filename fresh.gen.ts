@@ -24,8 +24,6 @@ import * as $es_guia_impresion from "./routes/es/guia/impresion.tsx";
 import * as $es_index from "./routes/es/index.tsx";
 import * as $es_menus from "./routes/es/menus.tsx";
 import * as $es_musica from "./routes/es/musica.tsx";
-import * as $es_por_que from "./routes/es/por-que.tsx";
-import * as $es_restaurantes from "./routes/es/restaurantes.tsx";
 import * as $es_vcard from "./routes/es/vcard.tsx";
 import * as $es_vs_slug_ from "./routes/es/vs/[slug].tsx";
 import * as $es_wifi from "./routes/es/wifi.tsx";
@@ -35,17 +33,11 @@ import * as $for_inspect from "./routes/for/inspect.tsx";
 import * as $for_lockers from "./routes/for/lockers.tsx";
 import * as $for_menus from "./routes/for/menus.tsx";
 import * as $for_music from "./routes/for/music.tsx";
-import * as $for_restaurants from "./routes/for/restaurants.tsx";
 import * as $for_vcard from "./routes/for/vcard.tsx";
 import * as $for_weddings from "./routes/for/weddings.tsx";
 import * as $for_wifi from "./routes/for/wifi.tsx";
-import * as $gs1 from "./routes/gs1.tsx";
 import * as $guide_printing from "./routes/guide/printing.tsx";
 import * as $index from "./routes/index.tsx";
-import * as $inspect from "./routes/inspect.tsx";
-import * as $lockers from "./routes/lockers.tsx";
-import * as $menus from "./routes/menus.tsx";
-import * as $music from "./routes/music.tsx";
 import * as $note_code_ from "./routes/note/[code].tsx";
 import * as $privacy from "./routes/privacy.tsx";
 import * as $q from "./routes/q.tsx";
@@ -61,11 +53,7 @@ import * as $v1_library from "./routes/v1/library.ts";
 import * as $v1_ping from "./routes/v1/ping.ts";
 import * as $v1_redirect_qr from "./routes/v1/redirect-qr.ts";
 import * as $v1_update_dynamic_qr from "./routes/v1/update-dynamic-qr.ts";
-import * as $vcard from "./routes/vcard.tsx";
 import * as $vs_slug_ from "./routes/vs/[slug].tsx";
-import * as $weddings from "./routes/weddings.tsx";
-import * as $why from "./routes/why.tsx";
-import * as $wifi from "./routes/wifi.tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $ApiKeysPanel from "./islands/ApiKeysPanel.tsx";
@@ -114,8 +102,6 @@ const manifest = {
     "./routes/es/index.tsx": $es_index,
     "./routes/es/menus.tsx": $es_menus,
     "./routes/es/musica.tsx": $es_musica,
-    "./routes/es/por-que.tsx": $es_por_que,
-    "./routes/es/restaurantes.tsx": $es_restaurantes,
     "./routes/es/vcard.tsx": $es_vcard,
     "./routes/es/vs/[slug].tsx": $es_vs_slug_,
     "./routes/es/wifi.tsx": $es_wifi,
@@ -125,17 +111,11 @@ const manifest = {
     "./routes/for/lockers.tsx": $for_lockers,
     "./routes/for/menus.tsx": $for_menus,
     "./routes/for/music.tsx": $for_music,
-    "./routes/for/restaurants.tsx": $for_restaurants,
     "./routes/for/vcard.tsx": $for_vcard,
     "./routes/for/weddings.tsx": $for_weddings,
     "./routes/for/wifi.tsx": $for_wifi,
-    "./routes/gs1.tsx": $gs1,
     "./routes/guide/printing.tsx": $guide_printing,
     "./routes/index.tsx": $index,
-    "./routes/inspect.tsx": $inspect,
-    "./routes/lockers.tsx": $lockers,
-    "./routes/menus.tsx": $menus,
-    "./routes/music.tsx": $music,
     "./routes/note/[code].tsx": $note_code_,
     "./routes/privacy.tsx": $privacy,
     "./routes/q.tsx": $q,
@@ -151,11 +131,7 @@ const manifest = {
     "./routes/v1/ping.ts": $v1_ping,
     "./routes/v1/redirect-qr.ts": $v1_redirect_qr,
     "./routes/v1/update-dynamic-qr.ts": $v1_update_dynamic_qr,
-    "./routes/vcard.tsx": $vcard,
     "./routes/vs/[slug].tsx": $vs_slug_,
-    "./routes/weddings.tsx": $weddings,
-    "./routes/why.tsx": $why,
-    "./routes/wifi.tsx": $wifi,
   },
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,

@@ -28,7 +28,7 @@ import {
   isCode,
   parseFourWordPasskey,
 } from "../utils/softstack-passport/index.js";
-import type { PassportMembershipCardProps } from "../components/passport/MembershipCard.tsx";
+import type { PassportMembershipCardProps } from "../components/MembershipCard.tsx";
 import {
   clearPendingCheckout,
   getPendingCheckout,
@@ -188,7 +188,7 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
   useEffect(() => {
     if (!isOpen || PassportCard) return;
     let alive = true;
-    import("../components/passport/MembershipCard.tsx").then((module) => {
+    import("../components/MembershipCard.tsx").then((module) => {
       if (alive) setPassportCard(() => module.PassportMembershipCard);
     }).catch((error) => {
       console.warn("[PricingModal] Passport card failed to load:", error);

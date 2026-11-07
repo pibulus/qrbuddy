@@ -20,12 +20,12 @@ and session notes.
 - [`QRBUDDY-HOMEWORK-AND-MONEY-PLAYBOOK.md`](./QRBUDDY-HOMEWORK-AND-MONEY-PLAYBOOK.md)
   — Launch playbook, conversion unit economics ("1 sale a day" math), 5-minute
   physical smoke checklist, and copy-paste launch posts.
-- [`ETHICAL_PAYMENT_SETUP.md`](./ETHICAL_PAYMENT_SETUP.md) — Square checkout and
+- [`ETHICAL-PAYMENT-SETUP.md`](./ETHICAL-PAYMENT-SETUP.md) — Square checkout and
   QRBuddy Passport (`~$32 USD / A$49` for 365 days, no auto-renewal) operations
   contract.
-- [`SUPABASE_DEPLOYMENT_GUIDE.md`](./SUPABASE_DEPLOYMENT_GUIDE.md) — Supabase
+- [`SUPABASE-DEPLOYMENT-GUIDE.md`](./SUPABASE-DEPLOYMENT-GUIDE.md) — Supabase
   Edge Functions deployment reference.
-- [`COMPETITIVE_FEATURES.md`](./COMPETITIVE_FEATURES.md) — Competitive matrix
+- [`COMPETITIVE-FEATURES.md`](./COMPETITIVE-FEATURES.md) — Competitive matrix
   and feature reference.
 
 ## Historical Archive (`docs/archive/`)

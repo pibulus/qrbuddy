@@ -265,7 +265,7 @@ when deploying functions.
 - Historical Oct 13 audit snapshots live in
   [`./docs/archive/`](./docs/archive/); active launch and payment docs live in
   [`./docs/QRBUDDY-HOMEWORK-AND-MONEY-PLAYBOOK.md`](./docs/QRBUDDY-HOMEWORK-AND-MONEY-PLAYBOOK.md)
-  and [`./docs/ETHICAL_PAYMENT_SETUP.md`](./docs/ETHICAL_PAYMENT_SETUP.md).
+  and [`./docs/ETHICAL-PAYMENT-SETUP.md`](./docs/ETHICAL-PAYMENT-SETUP.md).
 
 ## 🎨 Design System
 

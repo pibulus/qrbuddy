@@ -11,27 +11,27 @@ import qrcode from "qrcode-generator";
 import {
   generateMemberIdentity,
   idInput,
-} from "../../utils/softstack-passport/index.js";
+} from "../utils/softstack-passport/index.js";
 import {
   selectNamedSkin,
   selectSkin,
   shuffleSkinSeed,
-} from "../../utils/softstack-passport/skins.js";
-import { renderMembershipCard } from "../../utils/softstack-passport/card.html.js";
+} from "../utils/softstack-passport/skins.js";
+import { renderMembershipCard } from "../utils/softstack-passport/card.html.js";
 import {
   buildPassportAvatar,
   clearCustomPassportAvatar,
   compressAvatarImageFile,
   readCustomPassportAvatar,
   saveCustomPassportAvatar,
-} from "../../utils/softstack-passport/avatar.js";
+} from "../utils/softstack-passport/avatar.js";
 import {
   buildPassportPhraseUrl,
   type QRBuddyPassport,
-} from "../../utils/passport.ts";
-import { addToast } from "../../islands/ToastManager.tsx";
-import { haptics } from "../../utils/haptics.ts";
-import { sounds } from "../../utils/sounds.ts";
+} from "../utils/passport.ts";
+import { addToast } from "../islands/ToastManager.tsx";
+import { haptics } from "../utils/haptics.ts";
+import { sounds } from "../utils/sounds.ts";
 
 const AVATAR_KEY = "qrbuddy:passport_avatar";
 

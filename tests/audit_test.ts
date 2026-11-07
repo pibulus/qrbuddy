@@ -1,4 +1,5 @@
 import { assert, assertEquals } from "$std/assert/mod.ts";
+import { LEGACY_REDIRECTS } from "../routes/_middleware.ts";
 
 const read = (p: string) =>
   Deno.readTextFile(new URL(`../${p}`, import.meta.url));
@@ -88,7 +89,14 @@ Deno.test("Audit: robots, sitemap and security headers stay wired", async () => 
       !sitemap.includes(`<loc>https://qrbuddy.app${alias}</loc>`),
       `sitemap must not list the ${alias} redirect`,
     );
+    assert(
+      alias in LEGACY_REDIRECTS,
+      `LEGACY_REDIRECTS in routes/_middleware.ts must map ${alias}`,
+    );
   }
+  assertEquals(LEGACY_REDIRECTS["/for/restaurants"], "/for/menus");
+  assertEquals(LEGACY_REDIRECTS["/es/restaurantes"], "/es/menus");
+  assertEquals(LEGACY_REDIRECTS["/es/por-que"], "/es/comparar");
 
   const middleware = await read("routes/_middleware.ts");
   for (

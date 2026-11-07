@@ -56,8 +56,42 @@ function buildCsp(): string {
 const NOINDEX_PATH_RE =
   /^\/(?:r|q|edit|boom|api(?:\/|$)|f\/|bucket\/|note\/)(?:\/|$)/;
 
+export const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
+  "/gs1": "/for/gs1",
+  "/inspect": "/for/inspect",
+  "/lockers": "/for/lockers",
+  "/menus": "/for/menus",
+  "/music": "/for/music",
+  "/vcard": "/for/vcard",
+  "/weddings": "/for/weddings",
+  "/wifi": "/for/wifi",
+  "/why": "/compare",
+  "/for/restaurants": "/for/menus",
+  "/es/por-que": "/es/comparar",
+  "/es/restaurantes": "/es/menus",
+};
+
 export async function handler(req: Request, ctx: FreshContext) {
-  const resp = await ctx.next();
+  let pathname = "";
+  try {
+    pathname = new URL(req.url).pathname;
+  } catch {
+    // Ignore malformed URLs
+  }
+
+  const normalizedPath = pathname.length > 1 && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname;
+  const redirectTarget = (req.method === "GET" || req.method === "HEAD")
+    ? LEGACY_REDIRECTS[normalizedPath]
+    : undefined;
+
+  const resp = redirectTarget
+    ? new Response(null, {
+      status: 301,
+      headers: { Location: redirectTarget },
+    })
+    : await ctx.next();
 
   resp.headers.set(
     "Strict-Transport-Security",
@@ -76,13 +110,8 @@ export async function handler(req: Request, ctx: FreshContext) {
     resp.headers.set("CDN-Cache-Control", "no-store");
   }
 
-  try {
-    const { pathname } = new URL(req.url);
-    if (NOINDEX_PATH_RE.test(pathname)) {
-      resp.headers.set("X-Robots-Tag", "noindex, nofollow");
-    }
-  } catch {
-    // Ignore malformed URLs
+  if (pathname && NOINDEX_PATH_RE.test(pathname)) {
+    resp.headers.set("X-Robots-Tag", "noindex, nofollow");
   }
 
   return resp;

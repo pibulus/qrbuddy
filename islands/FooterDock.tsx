@@ -157,7 +157,7 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
             {t.privacy}
           </a>
           <a
-            href="/developers"
+            href={locale === "es" ? "/developers?lang=es" : "/developers"}
             class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
           >
             {t.developers}

@@ -20,8 +20,7 @@ node_modules/
 # Playwright MCP & local scratch artifacts
 .playwright-mcp/
 .playwright-tour/
+.claude/.playwright-mcp/
+.claude/*.png
 scratch/
 /docs/verification-artifacts-2026-10-13/
-
-# Playwright tour artifacts (13 MB of PNGs broke a Deno deploy, 2026-11-05)
-.playwright-tour/
