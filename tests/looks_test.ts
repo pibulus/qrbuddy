@@ -20,6 +20,7 @@ import {
   sampleColor,
 } from "../utils/qr-art-sample.ts";
 import { buildQrSvgString } from "../utils/qr-vector-svg.ts";
+import { printContrast, risoInks } from "../utils/qr-print.ts";
 import { resolveQRStyle } from "../utils/qr-design.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
 import { styledQrSvg } from "../utils/qr-renderer.ts";
@@ -432,4 +433,76 @@ Deno.test("Looks: sharp gives way to a mark and to a circular plate", () => {
   assert(plain !== marked);
   assert(plain !== circled);
   assert(dark(plain) > 0 && dark(marked) > 0 && dark(circled) > 0);
+});
+
+Deno.test("Print: a riso sheet prints two drums and no gradient", () => {
+  const plain = buildQrSvgString({ data: DATA, palette: "sunset", size: 600 });
+  const riso = buildQrSvgString({
+    data: DATA,
+    palette: "sunset",
+    size: 600,
+    print: "riso",
+  });
+  // The data plate goes flat: a drum cannot print a gradient.
+  assertStringIncludes(plain, 'fill="url(#qrb-dots)"');
+  assertEquals(riso.includes('fill="url(#qrb-dots)"'), false);
+  // The spot drum carries the registration offset.
+  assert(/transform="rotate\(-?[\d.]+ /.test(riso));
+  assertStringIncludes(riso, 'data-look="classic"');
+});
+
+Deno.test("Print: paper and riso lay tooth under the code, clean does not", () => {
+  const at = (print?: "clean" | "paper" | "riso") =>
+    buildQrSvgString({ data: DATA, palette: "sunset", size: 600, print });
+  assertEquals(at("clean").includes("qrb-tooth"), false);
+  assertStringIncludes(at("paper"), 'filter="url(#qrb-tooth)"');
+  assertStringIncludes(at("riso"), 'filter="url(#qrb-tooth)"');
+});
+
+Deno.test("Print: the same link always comes off the same sheet", () => {
+  const once = buildQrSvgString({
+    data: DATA,
+    palette: "sunset",
+    size: 600,
+    print: "riso",
+  });
+  const twice = buildQrSvgString({
+    data: DATA,
+    palette: "sunset",
+    size: 600,
+    print: "riso",
+  });
+  assertEquals(once, twice);
+  const other = buildQrSvgString({
+    data: "https://qrbuddy.app/other",
+    palette: "sunset",
+    size: 600,
+    print: "riso",
+  });
+  assert(once !== other, "a different payload is a different sheet");
+});
+
+Deno.test("Riso: near-identical palette inks are mixed into a second drum", () => {
+  // Classic is one ink in two shades; a press would not print the same colour
+  // twice and call the offset a design.
+  const [ink, spot] = risoInks(["#1E1B4B", "#0F172A"], "#FFFDF9");
+  assert(ink !== spot);
+  assert(printContrast(ink, "#FFFDF9") >= 4.6);
+  assert(printContrast(spot, "#FFFDF9") >= 4.6);
+});
+
+Deno.test("Riso: a palette with two real inks keeps both", () => {
+  const [ink, spot] = risoInks(["#C9184A", "#5A189A"], "#FFF8F6");
+  // The data drum is the darker ink; the accent is the one furthest from it.
+  assertEquals(ink, "#5A189A");
+  assertEquals(spot, "#C9184A");
+});
+
+Deno.test("Riso: a pale drum is walked down until it can be read", () => {
+  // A gradient-designed palette can hand over a pale lavender; a flat drum has
+  // to hit density, so it darkens rather than printing the low-contrast code.
+  const [ink, spot] = risoInks(["#C9184A", "#F0D0FF"], "#FFF8F6");
+  assert(printContrast(spot, "#FFF8F6") >= 4.6);
+  assert(printContrast(ink, "#FFF8F6") >= 4.6);
+  assert(spot !== "#F0D0FF", "a pale drum has to be walked down");
 });

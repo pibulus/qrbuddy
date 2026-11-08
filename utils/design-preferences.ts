@@ -183,6 +183,11 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
       !["soft", "sharp"].includes(s.halftoneDetail)
     ) return false;
   }
+  if (s.print !== undefined) {
+    if (
+      typeof s.print !== "string" || !["clean", "paper", "riso"].includes(s.print)
+    ) return false;
+  }
   if (s.foilDepth !== undefined) {
     if (
       typeof s.foilDepth !== "string" ||

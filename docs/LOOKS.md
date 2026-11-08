@@ -34,6 +34,10 @@ _what colour_ it is. Same shape as a screen print.
 | --------------------------------------------------------- | ------------------------------------------- |
 | ![Halftone with a centre mark](./looks/halftone-mark.png) | ![Flat Foil on the stage](./looks/foil.png) |
 
+| Riso · Sunset                                           | Riso across the palettes                                |
+| ------------------------------------------------------- | ------------------------------------------------------- |
+| ![A riso sheet in the Sunset palette](./looks/riso.png) | ![Six palettes printed riso](./looks/riso-palettes.png) |
+
 ## The laws every look obeys
 
 1. Finder, timing and alignment patterns are never decorative. They are drawn
@@ -46,6 +50,37 @@ _what colour_ it is. Same shape as a screen print.
 4. Error correction is forced to **H** whenever a look is active.
 5. A look is only offered as print-ready after a real decoder reads the exact
    render on screen. The gallery tick is that verdict, not a promise.
+
+## Print
+
+Print is orthogonal to the look: any look comes off any of the three presses. It
+lives in `utils/qr-print.ts` and is seeded from the payload, so a link always
+prints the same sheet.
+
+| State   | What it is                                                                                                                                                               |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `clean` | Vector-clean. What the studio has always shipped.                                                                                                                        |
+| `paper` | A tooth of ink-dark specks at ~3.5% coverage, drawn **under** the code. No module ever changes, so the decoder never notices.                                            |
+| `riso`  | Paper plus a second spot drum. On a module code the eye plate is registered a hair off and both inks go flat; on a halftone the picture is separated onto the two spots. |
+
+**Why misregistration and not a bite.** The first attempt at grain was a
+_coverage_ effect: paper specks punched out of the ink. Ink is the information,
+so the denser the code the more damage per speck — it only survived on chunky
+codes and the halftone needed a threshold so high the bite was invisible.
+Registration is a _colour_ effect. Nothing is removed, so density cannot fight
+it, and the tell is the same one a real press gives you.
+
+**Two drums, honestly.** A palette built for a gradient is not automatically a
+flat ink, so `risoInks()` does two things: if the palette's two inks are already
+far apart (Sunset, Candy, Grape, Vapor, Crimson) it uses them; if they are
+near-identical (Classic, Forest, Ocean, Brutal) the press mixes a second drum
+from the same hue rather than printing one colour twice and calling the offset a
+design. Every drum is then walked away from the paper until it clears a
+**4.6:1** contrast floor, because a pale lavender handed over by a gradient
+palette is a code that does not read.
+
+**Riso takes the Ink control over.** On a halftone, `riso` separates the picture
+onto the two spots, so the Ink row hides rather than sitting inert.
 
 ## Halftone
 
@@ -163,6 +198,7 @@ hash of the rendered SVG. A failing look shows an amber `!`.
 ## Files
 
 - `utils/qr-art-renderers.ts` — foil loft and the halftone sub-grid
+- `utils/qr-print.ts` — tooth, riso drums, registration, contrast floor
 - `utils/qr-art-sample.ts` — sampling, base64 grid, palette default
 - `utils/qr-codewords.ts` — placement order, codeword grouping, flip ranking
 - `utils/qr-vector-svg.ts` — mode dispatch, version floor, mark badge,

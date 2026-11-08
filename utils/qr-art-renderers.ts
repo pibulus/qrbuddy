@@ -19,7 +19,7 @@
  */
 
 import { escapeXml } from "./svg-export.ts";
-import { type GrainOptions, grainBite, grainTooth } from "./qr-grain.ts";
+import { type PrintOptions, printTooth } from "./qr-print.ts";
 import {
   type ArtSample,
   decodeSample,
@@ -217,15 +217,20 @@ export type PlateShape = "square" | "rounded" | "circle";
 export interface HalftoneOptions {
   /** Colour grid sampled from the artwork at upload time. */
   sample: ArtSample;
-  /** `color` keeps the photo's hues; `dmg` is the four-green print set. */
-  tone: "color" | "dmg" | "ink";
+  /**
+   * `color` keeps the photo's hues; `dmg` is the four-green print set; `riso`
+   * separates the picture onto two flat spots.
+   */
+  tone: "color" | "dmg" | "ink" | "riso";
+  /** The two drums, for `riso`. */
+  spots?: [string, string];
   shape: PlateShape;
   /** Palette paper for the plate. */
   bg: string;
   /** Palette ink for function patterns and the plate edge. */
   ink: string;
-  /** Print surface: tooth on the plate, and a stamp bleed on the data ink. */
-  grain?: GrainOptions;
+  /** Print surface: tooth on the plate. */
+  print?: PrintOptions;
 }
 
 const DMG_PAPER = "#9BBC0F";
@@ -305,6 +310,20 @@ function protectorRects(
     }
   }
   return rects.join("");
+}
+
+/** The drum a sampled pixel belongs to: riso separates by nearest ink. */
+function nearestSpot(
+  rgb: [number, number, number],
+  spots: [string, string],
+): string {
+  const dist = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return (rgb[0] - r) ** 2 + (rgb[1] - g) ** 2 + (rgb[2] - b) ** 2;
+  };
+  return dist(spots[0]) <= dist(spots[1]) ? spots[0] : spots[1];
 }
 
 /** Scales an RGB triple so its luminance lands on `target`, hue intact. */
@@ -434,7 +453,9 @@ export function renderHalftone(
         : null;
       let fill = options.ink;
       if (centre && dmg) fill = DMG_INK;
-      else if (centre && options.tone === "color") {
+      else if (centre && options.tone === "riso" && options.spots) {
+        fill = nearestSpot(centre, options.spots);
+      } else if (centre && options.tone === "color") {
         const tint = tintToLuminance(centre, 0.30);
         fill = `rgb(${Math.round(tint[0] / 32) * 32},${
           Math.round(tint[1] / 32) * 32
@@ -515,19 +536,10 @@ export function renderHalftone(
 
   // Tooth is clipped to the plate so a circle keeps its edge clean, and it sits
   // under every mark: the grain is the stock, not the ink.
-  const grain = options.grain;
-  const plateClip =
-    `<defs><clipPath id="qrb-plate-clip"><path d="${shape}"/></clipPath></defs>`;
-  const tooth = grain && grain.level !== "none"
-    ? `${plateClip}<g clip-path="url(#qrb-plate-clip)">${
-      grainTooth(grain, box.x, box.y, box.size, box.size)
-    }</g>`
-    : "";
-  // Ink first, then the bite, then the structural modules: a hole punched in the
-  // data field is a stamp, a hole punched in a finder is a dead code.
-  const bite = grain && grain.level === "stamp"
-    ? `${plateClip}<g clip-path="url(#qrb-plate-clip)">${
-      grainBite(grain, box.x, box.y, box.size, box.size)
+  const print = options.print;
+  const tooth = print && print.style !== "clean"
+    ? `<defs><clipPath id="qrb-plate-clip"><path d="${shape}"/></clipPath></defs><g clip-path="url(#qrb-plate-clip)">${
+      printTooth(print, box.x, box.y, box.size, box.size)
     }</g>`
     : "";
   return `<path d="${shape}" fill="${escapeXml(paper)}" stroke="${
@@ -538,7 +550,7 @@ export function renderHalftone(
     f(x0)
   } ${f(y0)}) scale(${
     f(cell / SUB)
-  })" shape-rendering="crispEdges">${ink}</g>${bite}<g fill="${
+  })" shape-rendering="crispEdges">${ink}</g><g fill="${
     escapeXml(structuralInk)
   }">${solids.join("")}</g>`;
 }

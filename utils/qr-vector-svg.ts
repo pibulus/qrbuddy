@@ -23,13 +23,15 @@ import {
 } from "./qr-art-sample.ts";
 import { chooseFlips, codewordGroups } from "./qr-codewords.ts";
 import {
-  grainBite,
-  grainFilterDefs,
-  type GrainLevel,
-  grainSeed,
-  grainTooth,
-  grainWarp,
-} from "./qr-grain.ts";
+  ensureContrast,
+  printContrast,
+  printFilterDefs,
+  printSeed,
+  type PrintStyle,
+  printTooth,
+  risoInks,
+  risoOffset,
+} from "./qr-print.ts";
 import type {
   ArtSample,
   CornerSquareShape,
@@ -193,12 +195,11 @@ export interface BuildQrSvgOptions {
   halftoneDetail?: "soft" | "sharp";
   /** Test hook: force the flip share instead of the adaptive default. */
   halftoneFlipShare?: number;
-  /** Surface: clean vector, paper tooth, or a stamped bleed on the data ink. */
-  grain?: GrainLevel;
-  /** Test hooks: grain strength, in module-relative units. */
-  grainWarpShare?: number;
-  grainBiteDensity?: number;
-  grainBiteScale?: number;
+  /**
+   * Surface: `clean` vector, `paper` stock, or `riso` two-drum misregistration.
+   * Orthogonal to the look — any look can come off any of the three.
+   */
+  print?: PrintStyle;
   foilDepth?: "thin" | "chunky";
   /** Grid floor for art looks. Thumbnails pass a coarse one on purpose. */
   artVersionFloor?: number;
@@ -529,19 +530,27 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   const qrBoxSize = options.size ?? 1000;
   const cellSize = qrBoxSize / totalModules;
 
-  // Grain is seeded from the payload, so a link always prints the same picture.
-  // A foil slab is a manufactured object; tooth and bleed belong to paper.
-  const grain = {
-    level: mode === "foil" ? "none" as GrainLevel : options.grain ?? "none",
-    seed: grainSeed(payload),
-    cell: cellSize,
+  // Print is seeded from the payload, so a link always comes off the same
+  // sheet. A foil slab is a manufactured object; stock and drums belong to paper.
+  const printStyle: PrintStyle = mode === "foil"
+    ? "clean"
+    : options.print ?? "clean";
+  const print = {
+    style: printStyle,
+    seed: printSeed(payload),
     size: qrBoxSize,
     ink: "#1e1714",
-    paper: bg,
-    warpShare: options.grainWarpShare,
-    biteDensity: options.grainBiteDensity,
-    biteScale: options.grainBiteScale,
   };
+  const riso = printStyle === "riso" ? risoOffset(print.seed, qrBoxSize) : null;
+  // Every ink the palette offers, so the press can choose the two drums rather
+  // than inheriting whichever colour happened to sit first in the gradient.
+  const risoStops = (options.dotsGradient?.colorStops ?? []).map((stop) =>
+    stop.color
+  );
+  const [risoInk, risoSpot] = risoInks(
+    risoStops.length >= 2 ? risoStops : [c1, c2],
+    bg,
+  );
 
   const captionText = (options.caption ?? "").trim().toUpperCase();
   const hasCaption = captionText.length > 0;
@@ -596,7 +605,7 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
         if (options.halftoneShape === "circle") share *= 0.45;
         // A stamped print is a scuffed print: the bite eats the same margin the
         // codeword flips spend, so the two halve each other rather than stack.
-        if (options.grain === "stamp") share *= 0.5;
+        if (printStyle === "riso") share *= 0.5;
       }
       const groups = codewordGroups(moduleCount);
       for (
@@ -614,19 +623,25 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   };
 
   // 3 Finder patterns
+  // The spot drum never lands square: on a riso sheet the eye plate sits a hair
+  // off in both axes and a fraction of a degree out of true. That single offset
+  // is the whole tell, and because it moves colour rather than removing ink it
+  // costs the decoder nothing.
   const finderChunks: string[] = [];
+  const fx = offsetX + (riso?.dx ?? 0);
+  const fy = offsetY + (riso?.dy ?? 0);
   finderChunks.push(
-    finderPatternPaths(offsetX, offsetY, cellSize, rounded, cornerSquareShape),
+    finderPatternPaths(fx, fy, cellSize, rounded, cornerSquareShape),
     finderPatternPaths(
-      offsetX + (moduleCount - 7) * cellSize,
-      offsetY,
+      fx + (moduleCount - 7) * cellSize,
+      fy,
       cellSize,
       rounded,
       cornerSquareShape,
     ),
     finderPatternPaths(
-      offsetX,
-      offsetY + (moduleCount - 7) * cellSize,
+      fx,
+      fy + (moduleCount - 7) * cellSize,
       cellSize,
       rounded,
       cornerSquareShape,
@@ -693,14 +708,27 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
         depth: options.foilDepth ?? "chunky",
       });
     } else if (mode === "halftone") {
-      const tone = options.halftoneTone ?? "color";
+      // Riso is a drum pair, not a tone: it takes the ink control over rather
+      // than sitting next to it.
+      const tone = printStyle === "riso"
+        ? "riso"
+        : options.halftoneTone ?? "color";
       artBody = renderHalftone(matrix, box, {
         sample: hasSample ? options.artSample! : defaultSample(bg, c1),
         tone: tone,
         shape: options.halftoneShape ?? "rounded",
         bg,
-        ink: "#1e1714",
-        grain,
+        // A halftone prints the palette's ink on the palette's paper. Near-black
+        // is only the right structural ink while the paper is light enough to
+        // carry it — on Matrix's near-black stock it is invisible, which is how
+        // that look failed the gate for months.
+        ink: printStyle === "riso"
+          ? risoInk
+          : printContrast("#1e1714", bg) >= 4.6
+          ? "#1e1714"
+          : ensureContrast(c1, bg),
+        print,
+        spots: [risoInk, risoSpot],
       });
     }
   }
@@ -770,26 +798,14 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   }
 
   // Tooth sits under the ink: specks only ever land on paper, never on a module.
-  const cardTooth = grainTooth(
-    grain,
+  const cardTooth = printTooth(
+    print,
     hasCaption ? pad : 0,
     hasCaption ? pad : 0,
     qrBoxSize,
     qrBoxSize,
     hasCaption ? 28 : 36,
   );
-  // Halftone punches its own bite inside the plate; the classic card needs one
-  // here, between the modules and the finders.
-  const cardBite = mode === "classic"
-    ? grainBite(
-      grain,
-      hasCaption ? pad : 0,
-      hasCaption ? pad : 0,
-      qrBoxSize,
-      qrBoxSize,
-      hasCaption ? 28 : 36,
-    )
-    : "";
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
@@ -817,19 +833,23 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       }, c1),
     gradientDef("qrb-bg", options.backgroundGradient, bg),
     gradientDef("qrb-eyes", options.eyeGradient, options.eyeColor ?? c1),
-    grainFilterDefs(grain),
+    printFilterDefs(print),
     `  </defs>`,
     frameRect + qrBgRect.replace(/fill="[^"]*"/, 'fill="url(#qrb-bg)"') +
     cardTooth +
     (artBody ||
-      (grainWarp(
-        grain,
-        `  <path d="${
-          pathChunks.join("")
-        }" fill="url(#qrb-dots)" fill-rule="evenodd" />\n`,
-      ) +
-        cardBite +
-        `  <path d="${finderPaths}" fill="url(#qrb-eyes)" fill-rule="evenodd" />`)) +
+      (`  <path d="${pathChunks.join("")}" fill="${
+        riso ? risoInk : "url(#qrb-dots)"
+      }" fill-rule="evenodd" />\n` +
+        `  <path d="${finderPaths}" fill="${
+          riso ? options.eyeColor ?? risoSpot : "url(#qrb-eyes)"
+        }" fill-rule="evenodd"${
+          riso
+            ? ` transform="rotate(${riso.rotate.toFixed(3)} ${
+              (offsetX + (moduleCount * cellSize) / 2).toFixed(2)
+            } ${(offsetY + (moduleCount * cellSize) / 2).toFixed(2)})"`
+            : ""
+        } />`)) +
     markElement +
     captionElement +
     `</svg>`,

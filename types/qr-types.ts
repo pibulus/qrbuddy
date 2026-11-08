@@ -73,6 +73,8 @@ export interface QRStyle {
   halftoneDetail?: "soft" | "sharp";
   /** Foil thickness: a real choice, not three colour slots. */
   foilDepth?: "thin" | "chunky";
+  /** Print surface, orthogonal to the look: clean vector, stock, or riso. */
+  print?: "clean" | "paper" | "riso";
 }
 
 /** Card label (banner) treatment. Auto-themed; never a font/colour picker. */

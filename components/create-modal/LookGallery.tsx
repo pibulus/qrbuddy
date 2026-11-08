@@ -107,6 +107,7 @@ export default function LookGallery(
     current.halftoneShape,
     current.halftoneDetail,
     current.foilDepth,
+    current.print,
     current.centerShape,
     hash(current.artSample?.data ?? ""),
     current.artImage?.length ?? 0,
@@ -187,6 +188,7 @@ export default function LookGallery(
   const shape: PlateShape = current.halftoneShape ?? "rounded";
   const detail = current.halftoneDetail ?? "sharp";
   const depth = current.foilDepth ?? "chunky";
+  const print = current.print ?? "clean";
   const hasArt = Boolean(current.artImage);
 
   const pickArtwork = async (file: File) => {
@@ -304,6 +306,31 @@ export default function LookGallery(
         })}
       </div>
 
+      {active !== "foil" && (
+        <div class="space-y-1.5">
+          <span class="block text-[10px] font-black uppercase tracking-wider opacity-60">
+            {es ? "Impresión" : "Print"}
+          </span>
+          <div class="grid grid-cols-3 gap-2">
+            {([
+              ["clean", es ? "Limpia" : "Clean"],
+              ["paper", es ? "Papel" : "Paper"],
+              ["riso", "Riso"],
+            ] as const).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={print === id}
+                onClick={() => write({ print: id })}
+                class={`${PILL} ${pillState(print === id)}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {active === "halftone" && (
         <div class="rounded-xl border-[1.5px] border-[#1e1714]/25 p-2 space-y-2">
           <div class="flex items-center gap-2">
@@ -343,28 +370,30 @@ export default function LookGallery(
               }}
             />
           </div>
-          <div class="space-y-1.5">
-            <span class="block text-[10px] font-black uppercase tracking-wider opacity-60">
-              {es ? "Tinta" : "Ink"}
-            </span>
-            <div class="grid grid-cols-3 gap-2">
-              {([
-                ["color", es ? "Color" : "Colour"],
-                ["dmg", "DMG"],
-                ["ink", es ? "Tinta" : "Ink"],
-              ] as const).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  aria-pressed={tone === id}
-                  onClick={() => write({ halftoneTone: id })}
-                  class={`${PILL} ${pillState(tone === id)}`}
-                >
-                  {label}
-                </button>
-              ))}
+          {print !== "riso" && (
+            <div class="space-y-1.5">
+              <span class="block text-[10px] font-black uppercase tracking-wider opacity-60">
+                {es ? "Tinta" : "Ink"}
+              </span>
+              <div class="grid grid-cols-3 gap-2">
+                {([
+                  ["color", es ? "Color" : "Colour"],
+                  ["dmg", "DMG"],
+                  ["ink", es ? "Tinta" : "Ink"],
+                ] as const).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={tone === id}
+                    onClick={() => write({ halftoneTone: id })}
+                    class={`${PILL} ${pillState(tone === id)}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           <div class="space-y-1.5">
             <span class="block text-[10px] font-black uppercase tracking-wider opacity-60">
               {es ? "Detalle" : "Detail"}

@@ -20,6 +20,7 @@ export function resolveQRStyle(
   if (override?.halftoneShape) look.halftoneShape = override.halftoneShape;
   if (override?.halftoneDetail) look.halftoneDetail = override.halftoneDetail;
   if (override?.foilDepth) look.foilDepth = override.foilDepth;
+  if (override?.print) look.print = override.print;
   return {
     ...base,
     ...look,
