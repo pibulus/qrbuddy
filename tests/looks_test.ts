@@ -21,6 +21,7 @@ import {
 } from "../utils/qr-art-sample.ts";
 import { buildQrSvgString } from "../utils/qr-vector-svg.ts";
 import { printContrast, risoInks } from "../utils/qr-print.ts";
+import { encodeMatrixPng, toDataUrl } from "../utils/png.ts";
 import { resolveQRStyle } from "../utils/qr-design.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
 import { styledQrSvg } from "../utils/qr-renderer.ts";
@@ -505,4 +506,27 @@ Deno.test("Riso: a pale drum is walked down until it can be read", () => {
   assert(printContrast(spot, "#FFF8F6") >= 4.6);
   assert(printContrast(ink, "#FFF8F6") >= 4.6);
   assert(spot !== "#F0D0FF", "a pale drum has to be walked down");
+});
+
+Deno.test("PNG: the control raster is a real greyscale PNG", async () => {
+  const count = 21;
+  const png = await encodeMatrixPng(
+    (row, col) => (row + col) % 3 === 0,
+    count,
+    {
+      scale: 4,
+      quiet: 4,
+    },
+  );
+  assertEquals([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+  const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
+  // IHDR is the first chunk: length, "IHDR", width, height, depth, colour.
+  assertEquals(view.getUint32(8), 13);
+  assertEquals(String.fromCharCode(...png.subarray(12, 16)), "IHDR");
+  const side = (count + 8) * 4;
+  assertEquals(view.getUint32(16), side);
+  assertEquals(view.getUint32(20), side);
+  assertEquals(png[24], 8); // bit depth
+  assertEquals(png[25], 0); // greyscale
+  assertStringIncludes(toDataUrl(png), "data:image/png;base64,");
 });
