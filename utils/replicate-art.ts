@@ -43,9 +43,17 @@ export interface ArtOutput {
  * schema change is a one-line fix rather than a hunt through the route.
  *
  * Verified against the model's own OpenAPI: `input` is required and the only
- * accepted keys are the ones below. `strength` does not exist on this version,
- * and `controlnet_conditioning_scale` defaults to 2.2 — high enough that the
- * model mostly prints the code and forgets the picture.
+ * accepted keys are the ones below. `strength` does not exist on this version.
+ *
+ * Two settings were measured rather than guessed (see docs/ART.md):
+ *
+ * - **Pass the control image.** Handing the model `qr_code_content` and letting
+ *   it draw its own code produces pictures that do not scan — its default
+ *   `qrcode_background` is grey, and the code it draws is not error-correction
+ *   H. Our own raster fixes both.
+ * - **Conditioning 2.6.** At 2.2 the picture is prettier and fails the 250px
+ *   probe; at 2.6 it still reads as a picture and survives. Below 2.0 nothing
+ *   decodes at all.
  */
 function body(input: ArtInput, seed: number) {
   return {
@@ -53,14 +61,15 @@ function body(input: ArtInput, seed: number) {
       prompt: input.prompt,
       qr_code_content: input.url,
       image: input.control,
-      width: 768,
-      height: 768,
+      width: 1024,
+      height: 1024,
       // Three modules of quiet zone. Below that the picture crowds the code and
       // the read rate falls off a cliff.
       border: 3,
       guidance_scale: 7.5,
-      controlnet_conditioning_scale: 1.6,
-      num_inference_steps: 40,
+      controlnet_conditioning_scale: 2.6,
+      num_inference_steps: 50,
+      qrcode_background: "white",
       num_outputs: 1,
       seed,
       negative_prompt: "ugly, disfigured, low quality, blurry, nsfw",
