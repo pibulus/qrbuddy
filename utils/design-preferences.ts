@@ -177,6 +177,12 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
       !["square", "rounded", "circle"].includes(s.halftoneShape)
     ) return false;
   }
+  if (s.halftoneDetail !== undefined) {
+    if (
+      typeof s.halftoneDetail !== "string" ||
+      !["soft", "sharp"].includes(s.halftoneDetail)
+    ) return false;
+  }
   if (s.foilDepth !== undefined) {
     if (
       typeof s.foilDepth !== "string" ||

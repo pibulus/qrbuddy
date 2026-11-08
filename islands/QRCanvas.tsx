@@ -750,6 +750,7 @@ export default function QRCanvas(
                   artSample: getCurrentStyle().artSample,
                   halftoneTone: getCurrentStyle().halftoneTone,
                   halftoneShape: getCurrentStyle().halftoneShape,
+                  halftoneDetail: getCurrentStyle().halftoneDetail,
                   foilDepth: getCurrentStyle().foilDepth,
                 }),
               )}

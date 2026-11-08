@@ -6,6 +6,13 @@ import {
   renderHalftone,
 } from "../utils/qr-art-renderers.ts";
 import {
+  chooseFlips,
+  codewordGroups,
+  functionMask,
+  remainderBits,
+  TOTAL_CODEWORDS,
+} from "../utils/qr-codewords.ts";
+import {
   decodeSample,
   defaultSample,
   encodeSample,
@@ -348,4 +355,81 @@ Deno.test("Look sample: RGBA input is stripped, not sliced", () => {
     200,
     200,
   ]);
+});
+
+Deno.test("Codewords: the map matches the standard table for every version", () => {
+  for (let version = 1; version <= 40; version++) {
+    const count = 17 + version * 4;
+    const groups = codewordGroups(count);
+    assertEquals(
+      groups.length,
+      TOTAL_CODEWORDS[version - 1],
+      `v${version} grouped into ${groups.length} codewords`,
+    );
+    const flat = groups.flat();
+    assertEquals(flat.length, 8 * groups.length);
+    assertEquals(remainderBits(version) >= 0, true);
+    assertEquals(new Set(flat.map(([r, c]) => `${r},${c}`)).size, flat.length);
+    // No function module may ever be handed to the painter.
+    const mask = functionMask(count);
+    for (const [r, c] of flat) assertEquals(mask[r][c], false);
+  }
+});
+
+Deno.test("Codewords: flips land on whole codewords inside the budget", () => {
+  const count = 49;
+  const groups = codewordGroups(count);
+  const dark = () => false;
+  // Everything wants to be dark: every group scores positive.
+  const want = () => 1;
+  const budget = 39;
+  const picked = chooseFlips(groups, dark, want, budget / groups.length);
+  assertEquals(picked.size, budget);
+  for (const index of picked) assertEquals(groups[index].length, 8);
+});
+
+Deno.test("Codewords: a codeword the picture already agrees with is skipped", () => {
+  const groups = [[[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [
+    0,
+    7,
+  ]]] as [
+    number,
+    number,
+  ][][];
+  const allDark = () => true;
+  // The code is dark and the picture wants dark: score is negative.
+  assertEquals(chooseFlips(groups, allDark, () => 1, 1).size, 0);
+});
+
+Deno.test("Looks: sharp halftone spends the budget and still renders", () => {
+  const base = {
+    data: DATA,
+    palette: "sunset" as const,
+    renderMode: "halftone" as const,
+    artSample: halfSample(32),
+    size: 600,
+  };
+  const soft = buildQrSvgString({ ...base, halftoneDetail: "soft" });
+  const sharp = buildQrSvgString({ ...base, halftoneDetail: "sharp" });
+  assert(soft !== sharp, "sharp must change the matrix");
+  assertEquals(/data-look="halftone"/.test(sharp), true);
+});
+
+Deno.test("Looks: sharp gives way to a mark and to a circular plate", () => {
+  const base = {
+    data: DATA,
+    palette: "sunset" as const,
+    renderMode: "halftone" as const,
+    artSample: halfSample(32),
+    halftoneDetail: "sharp" as const,
+    size: 600,
+  };
+  // More margin spent elsewhere must mean fewer modules inverted.
+  const plain = buildQrSvgString(base);
+  const marked = buildQrSvgString({ ...base, logoUrl: MARK });
+  const circled = buildQrSvgString({ ...base, halftoneShape: "circle" });
+  const dark = (svg: string) => (svg.match(/h1v1h-1Z/g) ?? []).length;
+  assert(plain !== marked);
+  assert(plain !== circled);
+  assert(dark(plain) > 0 && dark(marked) > 0 && dark(circled) > 0);
 });

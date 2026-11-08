@@ -18,6 +18,7 @@ export function resolveQRStyle(
   if (override?.artSample) look.artSample = override.artSample;
   if (override?.halftoneTone) look.halftoneTone = override.halftoneTone;
   if (override?.halftoneShape) look.halftoneShape = override.halftoneShape;
+  if (override?.halftoneDetail) look.halftoneDetail = override.halftoneDetail;
   if (override?.foilDepth) look.foilDepth = override.foilDepth;
   return {
     ...base,

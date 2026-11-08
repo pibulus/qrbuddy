@@ -69,6 +69,21 @@ Each module is a **4 × 4 sub-grid** of ink cells.
 (`#9BBC0F / #8BAC0F / #306230 / #0F380F`) — the Game Boy flavour without the
 trademark. `Ink` is the palette's own ink for a one-colour print.
 
+**Detail.** `Soft` tints: the code decides every module, the picture only
+decides how heavy it is. `Sharp` spends part of the Reed–Solomon budget so the
+code can actually _move_ where the picture disagrees with it.
+
+Reed–Solomon budgets in whole codewords — one wrong bit costs the same as eight
+— so `utils/qr-codewords.ts` rebuilds the ISO 18004 placement order, groups the
+data area into codewords, and inverts whole eight-module chunks. The map is
+verified against the standard codeword totals for all 40 versions.
+
+Measured on a v8-H short link (242 codewords, 250px probe), flipping whole
+codewords at random: 60 (25%) passes, 66 (27%) rolls dice, 74 fails. So the
+default is **16% — 39 codewords at v8** — leaving a third of the budget for a
+scuffed print. A centre mark scales it to 40% of that and a circular plate to
+45%, because a badge and a smaller code spend the same margin.
+
 **Plates.** `Square` (88% of the plate), `Round` (88%), `Circle` (70% — the
 inscribed square, so the ring never clips the code).
 
@@ -138,6 +153,8 @@ hash of the rendered SVG. A failing look shows an amber `!`.
   region. It still decodes; it just looks airy.
 - **A centre mark costs ~6% of the code area.** H carries it, and the decoder
   gate proves it, but a very long payload plus a big badge is still greedy.
+- **Sharp is a budget, not a guarantee.** It spends error correction the print
+  might need later. On cheap stock or behind glass, `Soft` is the safer print.
 - **Circle plates waste the most area** — under ~30mm print, prefer round or
   square.
 - Looks are **not carried in share links** (`/q?s=`) yet. Batch Studio stays on
@@ -147,10 +164,11 @@ hash of the rendered SVG. A failing look shows an amber `!`.
 
 - `utils/qr-art-renderers.ts` — foil loft and the halftone sub-grid
 - `utils/qr-art-sample.ts` — sampling, base64 grid, palette default
+- `utils/qr-codewords.ts` — placement order, codeword grouping, flip ranking
 - `utils/qr-vector-svg.ts` — mode dispatch, version floor, mark badge,
   `data-look`
 - `utils/qr-renderer.ts` — one geometry source for preview, stage and export
 - `components/create-modal/LookGallery.tsx` — gallery, look options, verdict
   cache
-- `tests/looks_test.ts` — sampling, polarity caps, persistence, byte budget
+- `tests/looks_test.ts` — sampling, polarity caps, codeword map, byte budget
 - `THIRD_PARTY_LICENSES.md` — what informed the looks and under what licence

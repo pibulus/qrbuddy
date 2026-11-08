@@ -31,6 +31,7 @@ export function styledQrSvg(options: RenderOptions): string {
     artSample: s.artSample,
     halftoneTone: s.halftoneTone,
     halftoneShape: s.halftoneShape,
+    halftoneDetail: s.halftoneDetail,
     foilDepth: s.foilDepth,
     artVersionFloor: options.artVersionFloor,
   });

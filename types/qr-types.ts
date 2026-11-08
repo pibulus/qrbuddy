@@ -69,6 +69,8 @@ export interface QRStyle {
   artSample?: ArtSample;
   halftoneTone?: "color" | "dmg" | "ink";
   halftoneShape?: PlateShape;
+  /** `sharp` spends error-correction budget to let the picture flip modules. */
+  halftoneDetail?: "soft" | "sharp";
   /** Foil thickness: a real choice, not three colour slots. */
   foilDepth?: "thin" | "chunky";
 }

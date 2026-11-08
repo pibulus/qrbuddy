@@ -15,7 +15,13 @@ import {
   renderFoil,
   renderHalftone,
 } from "./qr-art-renderers.ts";
-import { defaultSample } from "./qr-art-sample.ts";
+import {
+  decodeSample,
+  defaultSample,
+  luminance,
+  sampleColor,
+} from "./qr-art-sample.ts";
+import { chooseFlips, codewordGroups } from "./qr-codewords.ts";
 import type {
   ArtSample,
   CornerSquareShape,
@@ -146,6 +152,13 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
 /** Smallest QR version that gives the halftone enough grid to draw a picture. */
 const HALFTONE_FLOOR = 8;
 
+/**
+ * Share of the codeword stream `sharp` is allowed to invert. The measured
+ * ceiling on a v8-H code at the 250px probe is 25%; 16% leaves a third of the
+ * budget for a scuffed print, and lands on 39 codewords for a 49-module code.
+ */
+const HALFTONE_FLIP_SHARE = 0.16;
+
 export interface BuildQrSvgOptions {
   logoUrl?: string;
   centerShape?: "squircle" | "circle" | "knockout";
@@ -169,6 +182,9 @@ export interface BuildQrSvgOptions {
   artSample?: ArtSample;
   halftoneTone?: "color" | "dmg" | "ink";
   halftoneShape?: PlateShape;
+  halftoneDetail?: "soft" | "sharp";
+  /** Test hook: force the flip share instead of the adaptive default. */
+  halftoneFlipShare?: number;
   foilDepth?: "thin" | "chunky";
   /** Grid floor for art looks. Thumbnails pass a coarse one on purpose. */
   artVersionFloor?: number;
@@ -524,9 +540,47 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       cutout && r >= cutout.start && r < cutout.end && c >= cutout.start &&
         c < cutout.end,
     );
-  const dark = (r: number, c: number) =>
-    r >= 0 && c >= 0 && r < moduleCount && c < moduleCount &&
-    !isCleared(r, c) && qr.isDark(r, c);
+  // Sharp halftone spends part of the Reed–Solomon budget: whole codewords are
+  // inverted where the picture disagrees with the code hardest. The decoder
+  // repairs them, so the payload still reads — the gate proves it, the budget
+  // is a share of the stream and scales with the version, not the payload.
+  const flipped = new Set<string>();
+  if (mode === "halftone" && options.halftoneDetail === "sharp") {
+    const sample = hasSample
+      ? decodeSample(options.artSample)
+      : decodeSample(defaultSample(bg, c1));
+    if (sample) {
+      const sn = hasSample ? options.artSample!.n : 32;
+      const want = (row: number, col: number) => {
+        const local = sampleColor(
+          sample,
+          sn,
+          (col + 0.5) / moduleCount,
+          (row + 0.5) / moduleCount,
+        );
+        return (0.5 - luminance(local[0], local[1], local[2])) * 2;
+      };
+      // One risk allowance: the flip budget, a centre badge and a circular
+      // plate all spend the same margin, so each gives way to the others.
+      let share = options.halftoneFlipShare ?? HALFTONE_FLIP_SHARE;
+      if (options.halftoneFlipShare === undefined) {
+        if (hasMark) share *= 0.4;
+        if (options.halftoneShape === "circle") share *= 0.45;
+      }
+      const groups = codewordGroups(moduleCount);
+      for (
+        const index of chooseFlips(groups, qr.isDark.bind(qr), want, share)
+      ) {
+        for (const [row, col] of groups[index]) flipped.add(`${row},${col}`);
+      }
+    }
+  }
+  const dark = (r: number, c: number) => {
+    if (r < 0 || c < 0 || r >= moduleCount || c >= moduleCount) return false;
+    if (isCleared(r, c)) return false;
+    const on = qr.isDark(r, c);
+    return flipped.size ? on !== flipped.has(`${r},${c}`) : on;
+  };
 
   // 3 Finder patterns
   pathChunks.push(

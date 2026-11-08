@@ -105,6 +105,7 @@ export default function LookGallery(
     current.renderMode,
     current.halftoneTone,
     current.halftoneShape,
+    current.halftoneDetail,
     current.foilDepth,
     current.centerShape,
     hash(current.artSample?.data ?? ""),
@@ -184,6 +185,7 @@ export default function LookGallery(
 
   const tone = current.halftoneTone ?? "color";
   const shape: PlateShape = current.halftoneShape ?? "rounded";
+  const detail = current.halftoneDetail ?? "sharp";
   const depth = current.foilDepth ?? "chunky";
   const hasArt = Boolean(current.artImage);
 
@@ -357,6 +359,27 @@ export default function LookGallery(
                   aria-pressed={tone === id}
                   onClick={() => write({ halftoneTone: id })}
                   class={`${PILL} ${pillState(tone === id)}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <span class="block text-[10px] font-black uppercase tracking-wider opacity-60">
+              {es ? "Detalle" : "Detail"}
+            </span>
+            <div class="grid grid-cols-2 gap-2">
+              {([
+                ["soft", es ? "Suave" : "Soft"],
+                ["sharp", es ? "Nítido" : "Sharp"],
+              ] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={detail === id}
+                  onClick={() => write({ halftoneDetail: id })}
+                  class={`${PILL} ${pillState(detail === id)}`}
                 >
                   {label}
                 </button>
