@@ -155,7 +155,12 @@ export const handler: Handlers = {
       const status = error instanceof ArtError ? error.status : 502;
       const message = error instanceof Error ? error.message : "art failed";
       console.error("[art]", status, message);
-      return json({ ok: false, error: message }, status >= 500 ? 502 : status);
+      // A billing wall is ours to own, not the visitor's to read as a stack trace.
+      const friendly = status === 402 ? "the press is out of credit" : message;
+      return json(
+        { ok: false, error: friendly },
+        status >= 500 || status === 402 ? 502 : status,
+      );
     }
   },
 };

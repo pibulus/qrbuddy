@@ -12,7 +12,16 @@
  */
 
 const MODEL = "andreasjansson/illusion";
-const ENDPOINT = `https://api.replicate.com/v1/models/${MODEL}/predictions`;
+
+/**
+ * Pinned on purpose. The model has not moved since 2023 and a floating version
+ * would change the look of every link that ever used it; `POST /v1/predictions`
+ * with an explicit version is also the only route that answered — the
+ * `/v1/models/<owner>/<name>/predictions` shorthand 404s for this one.
+ */
+const VERSION =
+  "75d51a73fce3c00de31ed9ab4358c73e8fc0f627dc8ce975818e653317cb919b";
+const ENDPOINT = "https://api.replicate.com/v1/predictions";
 
 export interface ArtInput {
   /** The payload the code must carry. Kept short on purpose. */
@@ -32,18 +41,30 @@ export interface ArtOutput {
 /**
  * The exact field names are the model's, not ours. They live in one place so a
  * schema change is a one-line fix rather than a hunt through the route.
+ *
+ * Verified against the model's own OpenAPI: `input` is required and the only
+ * accepted keys are the ones below. `strength` does not exist on this version,
+ * and `controlnet_conditioning_scale` defaults to 2.2 — high enough that the
+ * model mostly prints the code and forgets the picture.
  */
 function body(input: ArtInput, seed: number) {
   return {
-    prompt: input.prompt,
-    qr_code: input.control,
-    qr_code_content: input.url,
-    negative_prompt: "ugly, disfigured, low quality, blurry, nsfw",
-    guidance_scale: 7.5,
-    controlnet_conditioning_scale: 1.35,
-    strength: 0.9,
-    num_inference_steps: 40,
-    seed,
+    input: {
+      prompt: input.prompt,
+      qr_code_content: input.url,
+      image: input.control,
+      width: 768,
+      height: 768,
+      // Three modules of quiet zone. Below that the picture crowds the code and
+      // the read rate falls off a cliff.
+      border: 3,
+      guidance_scale: 7.5,
+      controlnet_conditioning_scale: 1.6,
+      num_inference_steps: 40,
+      num_outputs: 1,
+      seed,
+      negative_prompt: "ugly, disfigured, low quality, blurry, nsfw",
+    },
   };
 }
 
@@ -77,7 +98,7 @@ export async function generateArt(
         "Content-Type": "application/json",
         "Prefer": "wait=60",
       },
-      body: JSON.stringify(body(input, seed)),
+      body: JSON.stringify({ version: VERSION, ...body(input, seed) }),
       signal: controller.signal,
     });
     const payload = await response.json().catch(() => ({}));
