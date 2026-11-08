@@ -1,15 +1,11 @@
 import type { Signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
-import type {
-  QRStyle,
-  RenderMode,
-  StickerShape,
-} from "../../types/qr-types.ts";
+import type { PlateShape, QRStyle, RenderMode } from "../../types/qr-types.ts";
 import { LOOKS, resolveQRStyle } from "../../utils/qr-design.ts";
 import { styledQrSvg } from "../../utils/qr-renderer.ts";
 import { toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
 import { checkSvgScannability } from "../../utils/qr-decode.ts";
-import { foilSideColors } from "../../utils/qr-art-renderers.ts";
+import { loadArtwork, sampleImage } from "../../utils/qr-art-sample.ts";
 import { MAX_STORED_LOGO_LENGTH } from "../../utils/design-preferences.ts";
 import { addToast } from "../../islands/ToastManager.tsx";
 import { haptics } from "../../utils/haptics.ts";
@@ -18,8 +14,8 @@ import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { pillState } from "./PalettePills.tsx";
 
 const PREVIEW_SIZE = 600;
-const TICK =
-  "min-h-[34px] rounded-lg border-2 px-2 text-[11px] font-black transition-[transform,border-color] duration-[70ms] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]";
+const PILL =
+  "min-h-[40px] rounded-lg border-2 px-2 text-[11px] font-black truncate transition-[transform,border-color] duration-[70ms] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]";
 
 type Verdict = boolean | null | undefined;
 
@@ -79,7 +75,7 @@ interface LookGalleryProps {
 }
 
 /**
- * The Looks row: four live minis in the current palette, each carrying its own
+ * The Looks row: three live minis in the current palette, each carrying its own
  * scan verdict. A look is never described as print-safe without a real decoder
  * passing on the same render shown here.
  */
@@ -101,10 +97,21 @@ export default function LookGallery(
 
   // One render per look, reused for the card image and the decoder probe — the
   // tick always describes the exact picture on screen. Memoised on the design
-  // signature so a verdict arriving does not re-encode four QRs.
-  const signature = `${payload}|${qrStyle.value}|${logoUrl.value}|${
-    JSON.stringify(current)
-  }`;
+  // signature so a verdict arriving does not re-encode three QRs.
+  const signature = [
+    payload,
+    qrStyle.value,
+    logoUrl.value,
+    current.renderMode,
+    current.halftoneTone,
+    current.halftoneShape,
+    current.foilDepth,
+    current.centerShape,
+    hash(current.artSample?.data ?? ""),
+    current.artImage?.length ?? 0,
+    JSON.stringify(current.dots),
+    JSON.stringify(current.background),
+  ].join("|");
   const renderCache = useRef<
     {
       key: string;
@@ -171,34 +178,13 @@ export default function LookGallery(
 
   const pick = (look: RenderMode) => {
     if (!customStyle) return;
-    const next: QRStyle = { ...current, renderMode: look };
-    customStyle.value = next;
+    customStyle.value = { ...current, renderMode: look };
     tap();
   };
 
-  // Foil defaults: the same derivation the renderer uses, so the swatches start
-  // on the colours already on screen rather than inventing a new palette.
-  const c1 = current.dots.color ??
-    current.dots.gradient?.colorStops[0]?.color ?? "#C9184A";
-  const c2 = current.dots.color ??
-    current.dots.gradient?.colorStops.at(-1)?.color ?? "#5A189A";
-  const bg = current.background.color ??
-    current.background.gradient?.colorStops[0]?.color ?? "#FBF1E4";
-  const derived = foilSideColors(c1, c2, bg, "#1e1714");
-  const foilTop = current.artColors?.top ?? current.dots.color ?? c1;
-  const foilLeft = current.artColors?.left ?? derived.left;
-  const foilRight = current.artColors?.right ?? derived.right;
-
-  const setFoilColor = (slot: "top" | "left" | "right", value: string) => {
-    if (!customStyle) return;
-    customStyle.value = {
-      ...current,
-      artColors: { ...current.artColors, [slot]: value },
-    };
-  };
-
-  const shape: StickerShape = current.stickerShape ?? "squircle";
-  const tone = current.pocketTone ?? "brand";
+  const tone = current.halftoneTone ?? "color";
+  const shape: PlateShape = current.halftoneShape ?? "rounded";
+  const depth = current.foilDepth ?? "chunky";
   const hasArt = Boolean(current.artImage);
 
   const pickArtwork = async (file: File) => {
@@ -214,11 +200,21 @@ export default function LookGallery(
         haptics.error();
         return;
       }
+      const image = await loadArtwork(art);
+      const sample = image ? sampleImage(image) : null;
+      if (!sample) {
+        addToast(
+          es ? "No se pudo leer la imagen" : "Couldn't read that image",
+        );
+        haptics.error();
+        return;
+      }
       if (customStyle) {
         customStyle.value = {
           ...current,
-          renderMode: "sticker",
+          renderMode: "halftone",
           artImage: art,
+          artSample: sample,
         };
       }
       haptics.success();
@@ -257,7 +253,7 @@ export default function LookGallery(
         </span>
       </div>
 
-      <div class="grid grid-cols-4 gap-2">
+      <div class="grid grid-cols-3 gap-2">
         {LOOKS.map((look) => {
           const isActive = active === look.id;
           const verdict = seen[look.id];
@@ -278,15 +274,15 @@ export default function LookGallery(
                   <img
                     src={previews[look.id]}
                     alt=""
-                    width="80"
-                    height="80"
+                    width="96"
+                    height="96"
                     class="w-full aspect-square rounded-lg bg-[#fbf1e4]"
                   />
                 )
                 : (
                   <span class="w-full aspect-square rounded-lg bg-[#1e1714]/10" />
                 )}
-              <span class="text-[10px] font-black leading-tight text-center truncate w-full">
+              <span class="text-[11px] font-black leading-tight text-center truncate w-full">
                 {es ? look.es : look.en}
               </span>
               <span
@@ -306,75 +302,27 @@ export default function LookGallery(
         })}
       </div>
 
-      {active === "foil" && (
-        <div class="rounded-xl border-[1.5px] border-[#1e1714]/25 p-2 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-black uppercase tracking-wider opacity-60">
-              {es ? "Caras del foil" : "Foil faces"}
-            </span>
-            <button
-              type="button"
-              onClick={() => write({ artColors: undefined })}
-              class="text-[11px] font-bold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
-            >
-              {es ? "Auto" : "Auto"}
-            </button>
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            {([
-              ["top", es ? "Arriba" : "Top", foilTop],
-              ["left", es ? "Izquierda" : "Left", foilLeft],
-              ["right", es ? "Derecha" : "Right", foilRight],
-            ] as const).map(([slot, label, value]) => (
-              <label
-                key={slot}
-                class="relative flex items-center gap-1.5 min-h-[42px] rounded-lg border-[1.5px] border-[#1e1714]/25 px-1.5 bg-[#fffef7] cursor-pointer focus-within:border-[#1e1714] focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4]"
-              >
-                {
-                  /* The visible swatch is ours; the native picker sits on top
-                    invisibly so Safari's colour well can never redraw it. */
-                }
-                <span
-                  aria-hidden="true"
-                  class="w-6 h-6 shrink-0 rounded-full border-[1.5px] border-[#1e1714]"
-                  style={{
-                    background: value.startsWith("#") ? value.slice(0, 7) : c1,
-                  }}
-                />
-                <span class="text-[10px] font-black truncate">{label}</span>
-                <input
-                  type="color"
-                  value={value.startsWith("#") ? value.slice(0, 7) : "#C9184A"}
-                  onInput={(e) => setFoilColor(slot, e.currentTarget.value)}
-                  aria-label={label}
-                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {active === "sticker" && (
+      {active === "halftone" && (
         <div class="rounded-xl border-[1.5px] border-[#1e1714]/25 p-2 space-y-2">
           <div class="flex items-center gap-2">
             <button
               type="button"
               disabled={busy}
               onClick={() => artRef.current?.click()}
-              class={`${TICK} ${pillState(hasArt)} flex-1 min-w-0 truncate`}
+              class={`${PILL} ${pillState(hasArt)} flex-1 min-w-0`}
             >
               {busy
                 ? (es ? "Procesando…" : "Processing…")
                 : hasArt
-                ? (es ? "Cambiar arte" : "Replace artwork")
-                : (es ? "Añadir arte" : "Add artwork")}
+                ? (es ? "Cambiar imagen" : "Replace image")
+                : (es ? "Añadir imagen" : "Add image")}
             </button>
             {hasArt && (
               <button
                 type="button"
-                onClick={() => write({ artImage: undefined })}
-                aria-label={es ? "Quitar arte" : "Remove artwork"}
+                onClick={() =>
+                  write({ artImage: undefined, artSample: undefined })}
+                aria-label={es ? "Quitar imagen" : "Remove image"}
                 class="shrink-0 w-10 h-10 rounded-lg border-2 border-[#1e1714] bg-[#fffef7] text-sm font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
               >
                 ✕
@@ -382,6 +330,7 @@ export default function LookGallery(
             )}
             <input
               ref={artRef}
+              data-look-art="true"
               type="file"
               accept="image/png,image/jpeg,image/webp"
               class="sr-only"
@@ -392,42 +341,74 @@ export default function LookGallery(
               }}
             />
           </div>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="space-y-1.5">
+            <span class="block text-[10px] font-black uppercase tracking-wider opacity-60">
+              {es ? "Tinta" : "Ink"}
+            </span>
+            <div class="grid grid-cols-3 gap-2">
+              {([
+                ["color", es ? "Color" : "Colour"],
+                ["dmg", "DMG"],
+                ["ink", es ? "Tinta" : "Ink"],
+              ] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={tone === id}
+                  onClick={() => write({ halftoneTone: id })}
+                  class={`${PILL} ${pillState(tone === id)}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <span class="block text-[10px] font-black uppercase tracking-wider opacity-60">
+              {es ? "Placa" : "Plate"}
+            </span>
+            <div class="grid grid-cols-3 gap-2">
+              {([
+                ["square", es ? "Recta" : "Square"],
+                ["rounded", es ? "Redonda" : "Round"],
+                ["circle", es ? "Círculo" : "Circle"],
+              ] as const).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={shape === id}
+                  onClick={() => write({ halftoneShape: id })}
+                  class={`${PILL} ${pillState(shape === id)}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {active === "foil" && (
+        <div class="rounded-xl border-[1.5px] border-[#1e1714]/25 p-2 space-y-1.5">
+          <span class="block text-[10px] font-black uppercase tracking-wider opacity-60">
+            {es ? "Grosor" : "Depth"}
+          </span>
+          <div class="grid grid-cols-2 gap-2">
             {([
-              ["squircle", es ? "Cuadrada" : "Squircle"],
-              ["circle", es ? "Círculo" : "Circle"],
-              ["ticket", es ? "Ticket" : "Ticket"],
+              ["thin", es ? "Fina" : "Thin"],
+              ["chunky", es ? "Gruesa" : "Chunky"],
             ] as const).map(([id, label]) => (
               <button
                 key={id}
                 type="button"
-                aria-pressed={shape === id}
-                onClick={() => write({ stickerShape: id })}
-                class={`${TICK} truncate ${pillState(shape === id)}`}
+                aria-pressed={depth === id}
+                onClick={() => write({ foilDepth: id })}
+                class={`${PILL} ${pillState(depth === id)}`}
               >
                 {label}
               </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {active === "pocket" && (
-        <div class="rounded-xl border-[1.5px] border-[#1e1714]/25 p-2 grid grid-cols-2 gap-2">
-          {([
-            ["brand", es ? "Paleta" : "Palette"],
-            ["dmg", "DMG"],
-          ] as const).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={tone === id}
-              onClick={() => write({ pocketTone: id })}
-              class={`${TICK} ${pillState(tone === id)}`}
-            >
-              {label}
-            </button>
-          ))}
         </div>
       )}
     </section>

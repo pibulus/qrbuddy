@@ -40,9 +40,9 @@ export default function DesignPreview(
         <img
           src={toSvgDataUrl(svg)}
           alt={es ? "Vista previa del QR en vivo" : "Live QR design preview"}
-          class="h-[120px] sm:h-[136px] max-w-full object-contain"
-          width="136"
-          height="136"
+          class="h-[168px] sm:h-[196px] max-w-full object-contain"
+          width="196"
+          height="196"
         />
         {omitted && (
           <p class="text-[11px] font-bold text-amber-800" role="status">

@@ -44,17 +44,16 @@ export interface CornerOptions {
 }
 
 /** Presentation layer — orthogonal to palette and geometry. */
-export type RenderMode = "classic" | "foil" | "sticker" | "pocket";
+export type RenderMode = "classic" | "halftone" | "foil";
 
-/** Die-cut edge for the Sticker look. */
-export type StickerShape = "squircle" | "circle" | "ticket";
-
-/** Three ink slots for the extruded faces. */
-export interface FoilColors {
-  top?: string;
-  left?: string;
-  right?: string;
+/** Colour grid sampled from artwork at upload; see utils/qr-art-sample.ts. */
+export interface ArtSample {
+  n: number;
+  data: string;
 }
+
+/** How the plate under the code is cut. Circle inscribes the code. */
+export type PlateShape = "square" | "rounded" | "circle";
 
 export interface QRStyle {
   centerShape?: "squircle" | "circle" | "knockout";
@@ -62,15 +61,16 @@ export interface QRStyle {
   background: BackgroundOptions;
   cornersSquare?: CornerOptions;
   cornersDot?: CornerOptions;
-  /** Look: classic matrix, extruded foil, artwork sticker, 8-bit pocket. */
+  /** Look: the flat matrix, the artwork-as-ink halftone, or the foil tile. */
   renderMode?: RenderMode;
   /** Sticker artwork, always a same-origin data: URL. */
   artImage?: string;
-  /** Foil face inks; each falls back to a palette-derived tone. */
-  artColors?: FoilColors;
-  stickerShape?: StickerShape;
-  /** Pocket tone: the active palette or the four-green DMG set. */
-  pocketTone?: "brand" | "dmg";
+  /** Sampled colours from the artwork. Rendering never touches the image. */
+  artSample?: ArtSample;
+  halftoneTone?: "color" | "dmg" | "ink";
+  halftoneShape?: PlateShape;
+  /** Foil thickness: a real choice, not three colour slots. */
+  foilDepth?: "thin" | "chunky";
 }
 
 /** Card label (banner) treatment. Auto-themed; never a font/colour picker. */

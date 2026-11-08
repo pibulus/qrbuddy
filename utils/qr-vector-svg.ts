@@ -12,19 +12,17 @@ import qrcode from "qrcode-generator";
 import { escapeXml, measureCaptionUnicodeFallback } from "./svg-export.ts";
 import {
   foilSideColors,
-  mixColor,
-  POCKET_DMG,
   renderFoil,
-  renderPocket,
-  renderSticker,
+  renderHalftone,
 } from "./qr-art-renderers.ts";
+import { defaultSample } from "./qr-art-sample.ts";
 import type {
+  ArtSample,
   CornerSquareShape,
   DotShape,
-  FoilColors,
   Gradient,
+  PlateShape,
   RenderMode,
-  StickerShape,
 } from "../types/qr-types.ts";
 
 export interface VectorPalette {
@@ -145,6 +143,9 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
   },
 };
 
+/** Smallest QR version that gives the halftone enough grid to draw a picture. */
+const HALFTONE_FLOOR = 8;
+
 export interface BuildQrSvgOptions {
   logoUrl?: string;
   centerShape?: "squircle" | "circle" | "knockout";
@@ -165,10 +166,12 @@ export interface BuildQrSvgOptions {
   cornerSquareShape?: CornerSquareShape;
   /** Presentation layer. Defaults to the flat, print-tested classic matrix. */
   renderMode?: RenderMode;
-  artImage?: string;
-  artColors?: FoilColors;
-  stickerShape?: StickerShape;
-  pocketTone?: "brand" | "dmg";
+  artSample?: ArtSample;
+  halftoneTone?: "color" | "dmg" | "ink";
+  halftoneShape?: PlateShape;
+  foilDepth?: "thin" | "chunky";
+  /** Grid floor for art looks. Thumbnails pass a coarse one on purpose. */
+  artVersionFloor?: number;
 }
 
 function isFinderModule(row: number, col: number, count: number): boolean {
@@ -451,13 +454,6 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     options.logoUrl &&
       /^data:image\/(?:png|jpeg|webp|svg\+xml);base64,/i.test(options.logoUrl),
   );
-  // Artwork is a same-origin raster only. An external URL would taint the
-  // export canvas, and an inline SVG could smuggle foreign content into a file
-  // that gets printed and shipped.
-  const hasArt = Boolean(
-    options.artImage && options.artImage.length <= 400_000 &&
-      /^data:image\/(?:png|jpeg|webp|gif);base64,/i.test(options.artImage),
-  );
   const mode: RenderMode = options.renderMode ?? "classic";
   const ecl = hasMark || mode !== "classic" || options.dotShape === "diamond" ||
       options.dotShape === "dots"
@@ -471,10 +467,31 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     ? "square"
     : (options.cornerSquareShape ?? preset.cornerSquareShape ??
       "extra-rounded");
+  // Artwork is a same-origin raster only, sampled at upload: the renderer never
+  // decodes an image, so an external URL can never taint an export canvas.
+  const hasSample = Boolean(
+    options.artSample && typeof options.artSample.data === "string" &&
+      options.artSample.data.length > 0 && options.artSample.n >= 2,
+  );
 
-  const qr = qrcode(0, ecl);
-  qr.addData(payload);
-  qr.make();
+  // Art looks want a finer grid than the payload needs: at 25 modules the
+  // halftone is a coarse mosaic, at 61 it is a picture. Encode once to learn
+  // the true version, then re-encode no lower than the detail floor.
+  const encode = (version: number) => {
+    const code = qrcode(Math.max(0, version), ecl);
+    code.addData(payload);
+    code.make();
+    return code;
+  };
+  let qr = encode(0);
+  const needed = (qr.getModuleCount() - 17) / 4;
+  // 49 modules is the balance point: bold enough that the code still reads on
+  // the 336px stage, fine enough for a 1000px print to hold 196 halftone cells.
+  const floor = mode === "halftone"
+    ? Math.max(0, options.artVersionFloor ?? HALFTONE_FLOOR)
+    : 0;
+  const want = Math.max(needed, floor);
+  if (want !== needed) qr = encode(want);
 
   const moduleCount = qr.getModuleCount();
   const quietZone = 2;
@@ -495,9 +512,13 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   const offsetY = pad + quietZone * cellSize;
 
   const pathChunks: string[] = [];
-  // Flat Foil overlays its mark instead of excavating the matrix: the badge is
-  // a sticker on the object, so no modules are lost under a skewed hole.
-  const cutout = hasMark && mode !== "foil" ? centerCutout(moduleCount) : null;
+  // Art looks overlay their mark instead of excavating it. A halftone runs at
+  // a version where the only centred holes land on alignment patterns, and a
+  // foil hole is skewed anyway — a badge over the texture reads better and H
+  // carries the lost area.
+  const cutout = hasMark && mode === "classic"
+    ? centerCutout(moduleCount)
+    : null;
   const isCleared = (r: number, c: number) =>
     Boolean(
       cutout && r >= cutout.start && r < cutout.end && c >= cutout.start &&
@@ -578,29 +599,21 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     if (mode === "foil") {
       const derived = foilSideColors(c1, c2, bg, "#1e1714");
       artBody = renderFoil(matrix, box, {
-        top: options.artColors?.top || "url(#qrb-dots)",
-        left: options.artColors?.left || derived.left,
-        right: options.artColors?.right || derived.right,
+        top: "url(#qrb-dots)",
+        left: derived.left,
+        right: derived.right,
         face: "url(#qrb-bg)",
         ink: "#1e1714",
+        depth: options.foilDepth ?? "chunky",
       });
-    } else if (mode === "sticker") {
-      artBody = renderSticker(matrix, box, {
+    } else if (mode === "halftone") {
+      const tone = options.halftoneTone ?? "color";
+      artBody = renderHalftone(matrix, box, {
+        sample: hasSample ? options.artSample! : defaultSample(bg, c1),
+        tone: tone,
+        shape: options.halftoneShape ?? "rounded",
         bg,
-        card: options.artImage ? bg : mixColor(c1, bg, 0.9),
         ink: "#1e1714",
-        artImage: hasArt ? options.artImage : undefined,
-        shape: options.stickerShape ?? "squircle",
-        moduleFill: c1,
-      });
-    } else if ((options.pocketTone ?? "brand") === "dmg") {
-      artBody = renderPocket(matrix, box, POCKET_DMG);
-    } else {
-      artBody = renderPocket(matrix, box, {
-        bg: mixColor(c1, bg, 0.86),
-        ink: c1,
-        bezel: mixColor(c1, bg, 0.38),
-        accent: mixColor(c1, "#1e1714", 0.55),
       });
     }
   }
@@ -609,8 +622,8 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   let qrBgRect = "";
   let captionElement = "";
   let markElement = "";
-  if (hasMark && mode === "foil") {
-    // The badge floats on the extrusion; nothing is excavated.
+  if (hasMark && mode !== "classic") {
+    // The badge rests on the art; nothing is excavated.
     const markSize = qrBoxSize * 0.2;
     markElement = markBadge({
       x: pad + (qrBoxSize - markSize) / 2,
@@ -671,10 +684,12 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" data-ecl="${ecl}" data-cutout="${
-      cutout
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" data-ecl="${ecl}" data-modules="${moduleCount}" data-cutout="${
+      mode !== "classic"
+        ? (hasMark ? "overlay" : "none")
+        : cutout
         ? `${cutout.start}:${cutout.end}`
-        : (mode === "foil" ? "overlay" : "none")
+        : "none"
     }" data-look="${mode}">`,
     `  <defs>`,
     `    <linearGradient id="qrb-grad" x1="0%" y1="0%" x2="100%" y2="100%">`,

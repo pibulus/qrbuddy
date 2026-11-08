@@ -15,9 +15,10 @@ export function resolveQRStyle(
   const look: Partial<QRStyle> = {};
   if (override?.renderMode) look.renderMode = override.renderMode;
   if (override?.artImage) look.artImage = override.artImage;
-  if (override?.artColors) look.artColors = override.artColors;
-  if (override?.stickerShape) look.stickerShape = override.stickerShape;
-  if (override?.pocketTone) look.pocketTone = override.pocketTone;
+  if (override?.artSample) look.artSample = override.artSample;
+  if (override?.halftoneTone) look.halftoneTone = override.halftoneTone;
+  if (override?.halftoneShape) look.halftoneShape = override.halftoneShape;
+  if (override?.foilDepth) look.foilDepth = override.foilDepth;
   return {
     ...base,
     ...look,
@@ -51,25 +52,18 @@ export const LOOKS = [
     blurbEs: "Matriz plana, probada en imprenta",
   },
   {
+    id: "halftone",
+    en: "Halftone",
+    es: "Semitono",
+    blurbEn: "Artwork becomes the ink",
+    blurbEs: "La imagen se vuelve tinta",
+  },
+  {
     id: "foil",
     en: "Flat Foil",
     es: "Foil plano",
-    blurbEn: "Isometric 2.5D extrusion",
-    blurbEs: "Extrusión isométrica 2.5D",
-  },
-  {
-    id: "sticker",
-    en: "Sticker",
-    es: "Sticker",
-    blurbEn: "Artwork behind a die-cut code",
-    blurbEs: "Arte detrás de un código troquelado",
-  },
-  {
-    id: "pocket",
-    en: "Pocket",
-    es: "Pocket",
-    blurbEn: "8-bit tile sticker",
-    blurbEs: "Sticker de bloques 8-bit",
+    blurbEn: "Code on an extruded tile",
+    blurbEs: "Código sobre una pieza extruida",
   },
 ] as const;
 

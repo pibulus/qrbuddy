@@ -51,9 +51,10 @@ Used as the geometric reference for two Looks:
   version **is not shipped**: it failed the decoder gate at 250px on every
   render size. The shipped foil keeps the flat, readable code and moves the
   thickness into a lofted slab. The isometric maths is gone; the intent is not.
-- **Sticker** follows the `QRImage` idea of drawing artwork behind the modules
-  while the function patterns stay legible, with QRBuddy's own protector logic,
-  die-cut paths and quiet-zone maths.
+- **Halftone** follows the `QRImage` idea that function patterns must stay
+  legible over artwork — QRBuddy's version renders the picture _as_ the ink on a
+  4×4 sub-grid with a forced centre and its own protector plate, histogram
+  stretch and quiet-zone maths, none of which come from that source.
 
 No `react-qrbtf` source is vendored, and no React dependency is installed.
 
@@ -82,6 +83,6 @@ Studied for frame and preset ideas. No code, CSS or preset JSON is copied.
 - the module matrix, finder/timing/alignment protection, quiet-zone maths and
   the decoder gate are already QRBuddy's (see `utils/qr-vector-svg.ts`,
   `utils/qr-decode.ts`)
-- the Pocket look, the DMG tone set, the die-cut shapes, the kiss-cut line, the
-  lofted slab and the Looks gallery are original to this repository
+- the halftone sub-grid, the graded tones, the DMG tone set, the plate shapes,
+  the lofted slab and the Looks gallery are original to this repository
 - no brand marks, presets or trademarks from other generators are included

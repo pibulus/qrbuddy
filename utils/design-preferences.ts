@@ -162,38 +162,48 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
   if (s.renderMode !== undefined) {
     if (
       typeof s.renderMode !== "string" ||
-      !["classic", "foil", "sticker", "pocket"].includes(s.renderMode)
+      !["classic", "halftone", "foil"].includes(s.renderMode)
     ) return false;
   }
-  if (s.stickerShape !== undefined) {
+  if (s.halftoneTone !== undefined) {
     if (
-      typeof s.stickerShape !== "string" ||
-      !["squircle", "circle", "ticket"].includes(s.stickerShape)
+      typeof s.halftoneTone !== "string" ||
+      !["color", "dmg", "ink"].includes(s.halftoneTone)
     ) return false;
   }
-  if (s.pocketTone !== undefined) {
+  if (s.halftoneShape !== undefined) {
     if (
-      typeof s.pocketTone !== "string" ||
-      !["brand", "dmg"].includes(s.pocketTone)
+      typeof s.halftoneShape !== "string" ||
+      !["square", "rounded", "circle"].includes(s.halftoneShape)
+    ) return false;
+  }
+  if (s.foilDepth !== undefined) {
+    if (
+      typeof s.foilDepth !== "string" ||
+      !["thin", "chunky"].includes(s.foilDepth)
     ) return false;
   }
   if (s.artImage !== undefined && s.artImage !== "") {
     if (
       typeof s.artImage !== "string" ||
-      !/^data:image\/(?:png|jpeg|webp|gif|svg\+xml);base64,/i.test(
-        s.artImage,
-      ) ||
+      !/^data:image\/(?:png|jpeg|webp|gif);base64,/i.test(s.artImage) ||
       s.artImage.length > MAX_STORED_LOGO_LENGTH
     ) return false;
   }
-  if (s.artColors !== undefined) {
-    if (
-      !s.artColors || typeof s.artColors !== "object" ||
-      Array.isArray(s.artColors)
-    ) return false;
-    for (const value of Object.values(s.artColors as Record<string, unknown>)) {
-      if (value !== undefined && !isValidColor(value)) return false;
+  if (s.artSample !== undefined && s.artSample !== null) {
+    if (typeof s.artSample !== "object" || Array.isArray(s.artSample)) {
+      return false;
     }
+    const sample = s.artSample as Record<string, unknown>;
+    const n = sample.n;
+    if (typeof n !== "number" || !Number.isInteger(n) || n < 2 || n > 128) {
+      return false;
+    }
+    if (typeof sample.data !== "string" || sample.data.length === 0) {
+      return false;
+    }
+    // base64 of n × n × 3 bytes is exactly n × n × 4 characters.
+    if (Math.abs(sample.data.length - n * n * 4) > 4) return false;
   }
 
   return true;

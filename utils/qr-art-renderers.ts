@@ -19,6 +19,12 @@
  */
 
 import { escapeXml } from "./svg-export.ts";
+import {
+  type ArtSample,
+  decodeSample,
+  luminance,
+  sampleColor,
+} from "./qr-art-sample.ts";
 
 export interface LookMatrix {
   count: number;
@@ -32,27 +38,6 @@ export interface LookBox {
   x: number;
   y: number;
   size: number;
-}
-
-export interface StickerOptions {
-  bg: string;
-  /** Die-cut card paper; defaults to `bg`. */
-  card?: string;
-  ink: string;
-  /** Optional data: URL painted behind the modules. */
-  artImage?: string;
-  shape: "squircle" | "circle" | "ticket";
-  /** Fill for the data modules; defaults to ink. */
-  moduleFill?: string;
-}
-
-export interface PocketOptions {
-  bg: string;
-  ink: string;
-  bezel: string;
-  accent: string;
-  /** Optional fill for data modules; defaults to ink. */
-  moduleFill?: string;
 }
 
 /** Rounds to 3 decimals and drops the float noise that bloats SVG files. */
@@ -148,6 +133,8 @@ export interface FoilOptions {
   face: string;
   /** Outline ink. */
   ink: string;
+  /** Thin reads as card stock, chunky as a block. */
+  depth?: "thin" | "chunky";
 }
 
 /**
@@ -167,8 +154,9 @@ export function renderFoil(
   const n = matrix.count;
   const s = box.size;
   const face = s * 0.84;
-  const ex = s * 0.052;
-  const ey = s * 0.058;
+  const lift = options.depth === "thin" ? 0.62 : 1.45;
+  const ex = s * 0.052 * lift;
+  const ey = s * 0.058 * lift;
   const tx = box.x + (s - face - ex) / 2;
   const ty = box.y + (s - face - ey) / 2;
   const radius = face * 0.06;
@@ -221,7 +209,24 @@ export function renderFoil(
   }"/><g fill="${escapeXml(options.top)}">${modules.join("")}</g></g>`;
 }
 
-/* ────────────────────────────── Sticker ────────────────────────────── */
+/* ───────────────────────────── Halftone ────────────────────────────── */
+
+export type PlateShape = "square" | "rounded" | "circle";
+
+export interface HalftoneOptions {
+  /** Colour grid sampled from the artwork at upload time. */
+  sample: ArtSample;
+  /** `color` keeps the photo's hues; `dmg` is the four-green print set. */
+  tone: "color" | "dmg" | "ink";
+  shape: PlateShape;
+  /** Palette paper for the plate. */
+  bg: string;
+  /** Palette ink for function patterns and the plate edge. */
+  ink: string;
+}
+
+const DMG_PAPER = "#9BBC0F";
+const DMG_INK = "#0F380F";
 
 function roundedRectPath(
   x: number,
@@ -246,41 +251,25 @@ function roundedRectPath(
   ].join("");
 }
 
-/** Die-cut outline for the sticker card. */
-export function stickerShapePath(
-  box: LookBox,
-  shape: "squircle" | "circle" | "ticket",
-): string {
-  const { x, y, size } = box;
+function platePath(box: LookBox, shape: PlateShape): string {
   if (shape === "circle") {
-    const r = size / 2;
-    const c = f(size);
-    return `M${f(x)} ${f(y + r)}a${f(r)} ${f(r)} 0 1 0 ${c} 0a${f(r)} ${
-      f(r)
-    } 0 1 0 -${c} 0Z`;
+    const r = box.size / 2;
+    return `M${f(box.x)} ${f(box.y + r)}a${f(r)} ${f(r)} 0 1 0 ${
+      f(box.size)
+    } 0a${f(r)} ${f(r)} 0 1 0 -${f(box.size)} 0Z`;
   }
-  if (shape === "ticket") {
-    const r = size * 0.11;
-    const nr = size * 0.072;
-    const mid = y + size / 2;
-    return [
-      `M${f(x + r)} ${f(y)}`,
-      `H${f(x + size - r)}`,
-      `A${f(r)} ${f(r)} 0 0 1 ${f(x + size)} ${f(y + r)}`,
-      `V${f(mid - nr)}`,
-      `A${f(nr)} ${f(nr)} 0 0 0 ${f(x + size)} ${f(mid + nr)}`,
-      `V${f(y + size - r)}`,
-      `A${f(r)} ${f(r)} 0 0 1 ${f(x + size - r)} ${f(y + size)}`,
-      `H${f(x + r)}`,
-      `A${f(r)} ${f(r)} 0 0 1 ${f(x)} ${f(y + size - r)}`,
-      `V${f(mid + nr)}`,
-      `A${f(nr)} ${f(nr)} 0 0 1 ${f(x)} ${f(mid - nr)}`,
-      `V${f(y + r)}`,
-      `A${f(r)} ${f(r)} 0 0 1 ${f(x + r)} ${f(y)}`,
-      "Z",
-    ].join("");
-  }
-  return roundedRectPath(x, y, size, size, size * 0.19);
+  return roundedRectPath(
+    box.x,
+    box.y,
+    box.size,
+    box.size,
+    shape === "rounded" ? box.size * 0.19 : 0,
+  );
+}
+
+/** Share of the plate a square code can occupy without touching the edge. */
+export function plateUsable(shape: PlateShape): number {
+  return shape === "circle" ? 0.70 : 0.88;
 }
 
 /** Slots that must stay paper-clean for a decoder: separators + timing. */
@@ -289,7 +278,7 @@ function protectorRects(
   cell: number,
   x0: number,
   y0: number,
-) {
+): string {
   const n = matrix.count;
   const rects: string[] = [];
   const push = (row: number, col: number, w: number, h: number) =>
@@ -298,14 +287,11 @@ function protectorRects(
         f(w * cell)
       }" height="${f(h * cell)}"/>`,
     );
-  // Finder blocks, including their 1-module separators.
   push(0, 0, 8, 8);
   push(0, n - 8, 8, 8);
   push(n - 8, 0, 8, 8);
-  // Timing run.
   push(6, 8, 1, n - 16);
   push(8, 6, n - 16, 1);
-  // Alignment patterns, except the three that sit on the finders.
   for (const ar of matrix.alignment) {
     for (const ac of matrix.alignment) {
       if (
@@ -318,179 +304,219 @@ function protectorRects(
   return rects.join("");
 }
 
-export function renderSticker(
+/** Scales an RGB triple so its luminance lands on `target`, hue intact. */
+function tintToLuminance(
+  rgb: [number, number, number],
+  target: number,
+): [number, number, number] {
+  const y = luminance(rgb[0], rgb[1], rgb[2]);
+  if (y < 0.004) {
+    const v = Math.round(target * 90);
+    return [v, v, v];
+  }
+  const k = Math.min(3.2, target / y);
+  // A touch of chroma after the value pin: a photo scaled to 25% grey turns
+  // muddy, and the whole point is that the hue survives.
+  const boost = 1.9;
+  const grey = y * 255;
+  return [
+    Math.max(0, Math.min(255, grey + (rgb[0] * k - grey) * boost)),
+    Math.max(0, Math.min(255, grey + (rgb[1] * k - grey) * boost)),
+    Math.max(0, Math.min(255, grey + (rgb[2] * k - grey) * boost)),
+  ];
+}
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+/**
+ * Halftone: the artwork stops being a background and becomes the ink.
+ *
+ * Every dark module is a dot whose size follows the local darkness of the
+ * picture (0.54 → 1.0 of a cell) and whose colour follows its hue. Bright
+ * areas print small dots, dark areas print solid tiles, so the photo appears as
+ * a tonal field the code is woven into — not a photo with a code stuck on it.
+ *
+ * Polarity is never touched: the matrix decides which cells carry a dot, the
+ * artwork decides how heavy and what colour. That is why the decoder gate stays
+ * green, and it is the line between this and AI QR art.
+ */
+/**
+ * Halftone: the artwork stops being a background and becomes the ink.
+ *
+ * Each module is a 4×4 sub-grid. The module's centre 2×2 is forced — ink for a
+ * dark module, paper for a light one — so the decoder always samples a clean
+ * polarity. The surrounding twelve sub-cells are ordered-dithered against the
+ * photo's local darkness, which is what makes the picture appear: a dark
+ * region fills its ring, a bright region leaves it open. The code sets the
+ * grid, the photo sets the density, and neither can break the other.
+ */
+export function renderHalftone(
   matrix: LookMatrix,
   box: LookBox,
-  options: StickerOptions,
+  options: HalftoneOptions,
 ): string {
   const n = matrix.count;
-  const borderW = box.size * 0.017;
-  const card = stickerShapePath(
-    {
-      x: box.x + borderW / 2,
-      y: box.y + borderW / 2,
-      size: box.size - borderW,
-    },
-    options.shape,
-  );
+  const rgb = decodeSample(options.sample);
+  const dmg = options.tone === "dmg";
+  const paper = dmg ? DMG_PAPER : options.bg;
+  const structuralInk = dmg ? DMG_INK : options.ink;
 
-  // The code must sit inside the die-cut shape, not outside it. A circle's
-  // inscribed square is only 70.7% of its diameter, so the usable area shrinks
-  // per shape before the quiet zone is even counted.
-  const usable = options.shape === "circle"
-    ? 0.69
-    : options.shape === "ticket"
-    ? 0.78
-    : 0.84;
-  const face = box.size * usable;
+  const shape = platePath(box, options.shape);
+  const face = box.size * plateUsable(options.shape);
   const faceX = box.x + (box.size - face) / 2;
   const faceY = box.y + (box.size - face) / 2;
-
-  // Quiet zone: at least 4 modules, wrapped inside the die-cut edge.
-  const margin = Math.max(0.082, 4.6 / (n + 8)) * face;
+  const margin = Math.max(4 / (n + 8), 0.055) * face;
   const code = face - margin * 2;
   const cell = code / n;
   const x0 = faceX + margin;
   const y0 = faceY + margin;
-  const fill = options.moduleFill ?? options.ink;
+  const SUB = 4;
 
-  const art = options.artImage
-    ? `<g clip-path="url(#qrb-art-clip)"><image x="${f(box.x)}" y="${
-      f(box.y)
-    }" width="${f(box.size)}" height="${
-      f(box.size)
-    }" preserveAspectRatio="xMidYMid slice" href="${
-      escapeXml(options.artImage)
-    }" xlink:href="${escapeXml(options.artImage)}"/><rect x="${f(box.x)}" y="${
-      f(box.y)
-    }" width="${f(box.size)}" height="${f(box.size)}" fill="${
-      escapeXml(options.bg)
-    }" opacity="0.58"/></g>`
-    : "";
+  // Histogram stretch on the sample's own tones. Most photos sit in the middle,
+  // so min/max would flatten the dither into one density; the 5th/95th
+  // percentile gives the halftone its full range without clipping a highlight.
+  const sn = options.sample.n;
+  const histogram = new Array(32).fill(0);
+  if (rgb) {
+    for (let i = 0; i < sn * sn; i++) {
+      const l = luminance(rgb[i * 3], rgb[i * 3 + 1], rgb[i * 3 + 2]);
+      histogram[Math.min(31, Math.max(0, Math.floor(l * 31)))]++;
+    }
+  }
+  const total = histogram.reduce((a, b) => a + b, 0) || 1;
+  const percentile = (share: number) => {
+    let acc = 0;
+    for (let i = 0; i < histogram.length; i++) {
+      acc += histogram[i];
+      if (acc / total >= share) return i / 31;
+    }
+    return 1;
+  };
+  const lo = rgb ? percentile(0.05) : 0;
+  const hi = rgb ? Math.max(lo + 0.1, percentile(0.95)) : 1;
+  const norm = (l: number) => clamp01((l - lo) / (hi - lo));
 
-  const modules: string[] = [];
+  // One path per ink bucket keeps the file small while the hue still moves
+  // across the picture.
+  const buckets = new Map<string, string[]>();
+  const pushCell = (fill: string, path: string) => {
+    const list = buckets.get(fill);
+    if (list) list.push(path);
+    else buckets.set(fill, [path]);
+  };
+
+  const solids: string[] = [];
+
   for (let row = 0; row < n; row++) {
     for (let col = 0; col < n; col++) {
-      if (matrix.isCleared(row, col) || !matrix.isDark(row, col)) continue;
-      const structural = isStructuralModule(row, col, n, matrix.alignment);
-      // Data modules shrink so the artwork breathes between them; function
-      // patterns stay full size so the decoder never has to guess.
-      const scale = structural ? 1.02 : 0.62;
-      const inset = (1 - scale) / 2;
-      modules.push(
-        `<rect x="${f(x0 + (col + inset) * cell)}" y="${
-          f(y0 + (row + inset) * cell)
-        }" width="${f(cell * scale)}" height="${f(cell * scale)}" rx="${
-          structural ? 0 : f(cell * 0.18)
-        }"/>`,
-      );
+      if (matrix.isCleared(row, col)) continue;
+      const dark = matrix.isDark(row, col);
+      if (isStructuralModule(row, col, n, matrix.alignment)) {
+        if (dark) {
+          solids.push(
+            `<rect x="${f(x0 + col * cell)}" y="${f(y0 + row * cell)}" width="${
+              f(cell * 1.02)
+            }" height="${f(cell * 1.02)}"/>`,
+          );
+        }
+        continue;
+      }
+
+      // Colour is a per-module decision: the eye reads hue at a coarser scale
+      // than tone, and one fill per module lets the ink merge into long runs.
+      const centre = rgb
+        ? sampleColor(rgb, sn, (col + 0.5) / n, (row + 0.5) / n)
+        : null;
+      let fill = options.ink;
+      if (centre && dmg) fill = DMG_INK;
+      else if (centre && options.tone === "color") {
+        const tint = tintToLuminance(centre, 0.30);
+        fill = `rgb(${Math.round(tint[0] / 32) * 32},${
+          Math.round(tint[1] / 32) * 32
+        },${Math.round(tint[2] / 32) * 32})`;
+      }
+
+      // Tone is a per-sub-cell decision, so the halftone resolves at 4× the
+      // module grid instead of printing one flat density per module.
+      const want: number[] = [];
+      for (let sy = 0; sy < SUB; sy++) {
+        for (let sx = 0; sx < SUB; sx++) {
+          const u = (col * SUB + sx + 0.5) / (n * SUB);
+          const v = (row * SUB + sy + 0.5) / (n * SUB);
+          const local = rgb ? sampleColor(rgb, sn, u, v) : null;
+          want.push(local ? 1 - norm(luminance(...local)) : 0.5);
+        }
+      }
+
+      // The centre 2×2 is the one a decoder samples: it always matches the
+      // module. The surrounding ring is free to follow the picture.
+      const core = new Set([5, 6, 9, 10]);
+      const ink = new Array(SUB * SUB).fill(false);
+      for (let i = 0; i < SUB * SUB; i++) {
+        ink[i] = core.has(i) ? dark : want[i] > (dark ? 0.45 : 0.7);
+      }
+      // Hold the polarity: a dark module never opens past half paper, a light
+      // one never gains more than a quarter ink, however bright or dark the
+      // picture is at that spot.
+      const target = dark ? 7 : 3;
+      let count = ink.reduce((a, on) => a + (on ? 1 : 0), 0);
+      if (dark && count < target) {
+        while (count < target) {
+          let best = -1;
+          for (let i = 0; i < SUB * SUB; i++) {
+            if (ink[i] || core.has(i)) continue;
+            if (best < 0 || want[i] > want[best]) best = i;
+          }
+          if (best < 0) break;
+          ink[best] = true;
+          count++;
+        }
+      } else if (!dark && count > target) {
+        while (count > target) {
+          let worst = -1;
+          for (let i = 0; i < SUB * SUB; i++) {
+            if (!ink[i] || core.has(i)) continue;
+            if (worst < 0 || want[i] < want[worst]) worst = i;
+          }
+          if (worst < 0) break;
+          ink[worst] = false;
+          count--;
+        }
+      }
+
+      const baseX = col * SUB;
+      const baseY = row * SUB;
+      for (let sy = 0; sy < SUB; sy++) {
+        let runStart = -1;
+        for (let sx = 0; sx <= SUB; sx++) {
+          const on = sx < SUB && ink[sy * SUB + sx];
+          if (on && runStart < 0) runStart = sx;
+          if (!on && runStart >= 0) {
+            const len = sx - runStart;
+            pushCell(
+              fill,
+              `M${baseX + runStart} ${baseY + sy}h${len}v1h-${len}Z`,
+            );
+            runStart = -1;
+          }
+        }
+      }
     }
   }
 
-  // Kiss-cut line: the faint inner trace of a sticker sheet. It sells the
-  // object without stealing contrast from the code.
-  const kiss = stickerShapePath(
-    {
-      x: box.x + box.size * 0.033,
-      y: box.y + box.size * 0.033,
-      size: box.size - box.size * 0.066,
-    },
-    options.shape,
-  );
+  const ink = [...buckets.entries()].map(([fill, cells]) =>
+    `<path d="${cells.join("")}" fill="${fill}"/>`
+  ).join("");
 
-  return `<defs><clipPath id="qrb-art-clip"><path d="${card}"/></clipPath></defs>` +
-    `<path d="${card}" fill="${
-      escapeXml(options.card ?? options.bg)
-    }" stroke="${escapeXml(options.ink)}" stroke-width="${f(borderW)}"/>` +
-    `<path d="${kiss}" fill="none" stroke="${
-      escapeXml(options.ink)
-    }" stroke-width="${f(box.size * 0.004)}" opacity="0.3"/>` +
-    art +
-    // Over artwork the protector keeps a hint of the picture so it reads as a
-    // wash, not a pasted white box; the ink is still far darker than 40% grey.
-    `<g fill="${
-      escapeXml(options.artImage ? options.bg : (options.card ?? options.bg))
-    }"${options.artImage ? ' opacity="0.86"' : ""}>${
-      protectorRects(matrix, cell, x0, y0)
-    }</g>` +
-    `<g fill="${escapeXml(fill)}">${modules.join("")}</g>`;
+  return `<path d="${shape}" fill="${escapeXml(paper)}" stroke="${
+    escapeXml(structuralInk)
+  }" stroke-width="${f(box.size * 0.012)}"/><g fill="${escapeXml(paper)}">${
+    protectorRects(matrix, cell, x0, y0)
+  }</g><g fill="${escapeXml(structuralInk)}">${
+    solids.join("")
+  }</g><g transform="translate(${f(x0)} ${f(y0)}) scale(${
+    f(cell / SUB)
+  })" shape-rendering="crispEdges">${ink}</g>`;
 }
-
-/* ─────────────────────────────── Pocket ─────────────────────────────── */
-
-/** Chunky 8-bit sticker: squared modules, a stitched pixel bezel, four tones. */
-export function renderPocket(
-  matrix: LookMatrix,
-  box: LookBox,
-  options: PocketOptions,
-): string {
-  const n = matrix.count;
-  const radius = box.size * 0.055;
-  const margin = Math.max(0.10, 5.2 / (n + 8)) * box.size;
-  const code = box.size - margin * 2;
-  const cell = code / n;
-  const x0 = box.x + margin;
-  const y0 = box.y + margin;
-  const fill = options.moduleFill ?? options.ink;
-
-  // Stitched bezel: small squares stepping round the card, no curves.
-  const step = box.size / 26;
-  const dot = step * 0.52;
-  const bezel: string[] = [];
-  const edge = (cx: number, cy: number) =>
-    bezel.push(
-      `<rect x="${f(cx - dot / 2)}" y="${f(cy - dot / 2)}" width="${
-        f(dot)
-      }" height="${f(dot)}"/>`,
-    );
-  for (let i = 0; i <= 26; i++) {
-    const t = i / 26;
-    edge(box.x + t * box.size, box.y + step * 0.62);
-    edge(box.x + t * box.size, box.y + box.size - step * 0.62);
-    edge(box.x + step * 0.62, box.y + t * box.size);
-    edge(box.x + box.size - step * 0.62, box.y + t * box.size);
-  }
-
-  const modules: string[] = [];
-  for (let row = 0; row < n; row++) {
-    for (let col = 0; col < n; col++) {
-      if (matrix.isCleared(row, col) || !matrix.isDark(row, col)) continue;
-      const structural = isStructuralModule(row, col, n, matrix.alignment);
-      const scale = structural ? 1.04 : 0.82;
-      const inset = (1 - scale) / 2;
-      modules.push(
-        `<rect x="${f(x0 + (col + inset) * cell)}" y="${
-          f(y0 + (row + inset) * cell)
-        }" width="${f(cell * scale)}" height="${f(cell * scale)}"/>`,
-      );
-    }
-  }
-
-  return `<path d="${
-    roundedRectPath(box.x, box.y, box.size, box.size, radius)
-  }" fill="${escapeXml(options.bg)}"/>` +
-    `<g fill="${escapeXml(options.bezel)}">${bezel.join("")}</g>` +
-    `<g fill="${escapeXml(options.bg)}">${
-      protectorRects(matrix, cell, x0, y0)
-    }</g>` +
-    `<g fill="${escapeXml(fill)}">${modules.join("")}</g>` +
-    `<path d="${
-      roundedRectPath(
-        box.x + box.size * 0.035,
-        box.y + box.size * 0.035,
-        box.size * 0.93,
-        box.size * 0.93,
-        radius * 0.7,
-      )
-    }" fill="none" stroke="${escapeXml(options.accent)}" stroke-width="${
-      f(box.size * 0.008)
-    }"/>`;
-}
-
-/** The four DMG-inspired tones. No trademark in the name, just the flavour. */
-export const POCKET_DMG = {
-  bg: "#9BBC0F",
-  ink: "#0F380F",
-  bezel: "#8BAC0F",
-  accent: "#306230",
-} as const;

@@ -1,15 +1,24 @@
-# Looks — Flat Foil, Sticker, Pocket
+# Looks — Classic, Halftone, Flat Foil
 
-Four presentation modes that sit **on top of** the existing palette engine. A
-look changes how the matrix is dressed, never which modules carry the data. The
-palette, centre mark, gradients and print frame keep working with every look.
+Three presentation modes that sit **on top of** the palette engine. A look
+changes how the matrix is dressed, never which modules carry the data.
 
-| Look      | What it is                                    | Palette geometry                      |
-| --------- | --------------------------------------------- | ------------------------------------- |
-| Classic   | The flat, print-tested matrix. Default.       | Rounded / dots / classy module shapes |
-| Flat Foil | A flat code printed on an extruded tile       | Square modules, three face inks       |
-| Sticker   | Artwork behind a protected code, die-cut edge | Rounded halftone modules              |
-| Pocket    | 8-bit tile sticker with a stitched bezel      | Chunky square modules                 |
+| Look      | What it is                              | The idea                                          |
+| --------- | --------------------------------------- | ------------------------------------------------- |
+| Classic   | The flat, print-tested matrix. Default. | The code is the subject                           |
+| Halftone  | The artwork becomes the ink             | The picture is the subject, the code is its grain |
+| Flat Foil | A flat code printed on an extruded tile | The code is an object                             |
+
+## The inversion
+
+The first pass at this shipped three skins: a sticker with a photo behind the
+dots, an 8-bit colourway, a foil tile. They were the same QR wearing different
+jackets, and the controls were decoys — three face colours exist because the
+renderer has three faces, not because anyone has three decisions to make.
+
+Halftone is the correction. The artwork stops being a background and becomes the
+ink. The matrix decides _where_ a mark goes; the picture decides _how heavy_ and
+_what colour_ it is. Same shape as a screen print.
 
 ## In the app
 
@@ -17,126 +26,131 @@ palette, centre mark, gradients and print frame keep working with every look.
 | ------------------------------------------------------- | ----------------------------------------------------- |
 | ![Looks gallery in the Design tab](./looks/gallery.png) | ![Looks gallery at 375px](./looks/gallery-mobile.png) |
 
-| Flat Foil                                   | Sticker                                                   | Pocket · DMG                                   |
-| ------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------- |
-| ![Flat Foil on the stage](./looks/foil.png) | ![Sticker with artwork on the stage](./looks/sticker.png) | ![Pocket in DMG tones](./looks/pocket-dmg.png) |
+| Halftone · Colour                        | Halftone · DMG                                     | Halftone · Circle                                            |
+| ---------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| ![Halftone colour](./looks/halftone.png) | ![Halftone in DMG tones](./looks/halftone-dmg.png) | ![Halftone on a circular plate](./looks/halftone-circle.png) |
 
-A circular die-cut, for sticker badges and coasters:
-
-![Circle sticker with artwork](./looks/sticker-circle.png)
+| Halftone · centre mark                                    | Flat Foil                                   |
+| --------------------------------------------------------- | ------------------------------------------- |
+| ![Halftone with a centre mark](./looks/halftone-mark.png) | ![Flat Foil on the stage](./looks/foil.png) |
 
 ## The laws every look obeys
 
 1. Finder, timing and alignment patterns are never decorative. They are drawn
-   full size at full contrast, and a paper protector erases the artwork behind
-   the separators before any module is drawn.
+   full size at full contrast, and a paper plate erases the artwork behind the
+   separators before anything is drawn on top.
 2. The quiet zone is at least **4 modules** in every look, measured inside the
-   die-cut edge.
-3. Every look is rendered by the same matrix the classic path draws. A look can
+   plate edge.
+3. Every look renders from the same matrix the classic path draws. A look can
    never invent a module the decoder will not see.
-4. Error correction is forced to **H** whenever a look is active, so the
-   artwork's reduced data modules and any centre badge are covered by parity.
+4. Error correction is forced to **H** whenever a look is active.
 5. A look is only offered as print-ready after a real decoder reads the exact
-   render on screen. The gallery's tick is that verdict, not a promise.
+   render on screen. The gallery tick is that verdict, not a promise.
+
+## Halftone
+
+Each module is a **4 × 4 sub-grid** of ink cells.
+
+- The centre **2 × 2 is forced**: ink for a dark module, paper for a light one.
+  That is the patch a decoder samples, so polarity is guaranteed no matter what
+  the picture is doing there.
+- The surrounding **12 cells follow the photograph**, sampled per sub-cell, so
+  the halftone resolves at four times the module grid.
+- A dark module keeps at least 7 of 16 cells inked and a light one at most 3, so
+  a bright sky can never open a data module into paper and a dark shadow can
+  never flood a light one.
+- The photo's tones are histogram-stretched at the 5th/95th percentile before
+  dithering. Most photos live in the middle; min/max would flatten the halftone
+  into one density.
+- Colour is per module: hue survives, value is pinned into a narrow dark band,
+  and chroma is lifted so a printed hue does not turn to mud.
+
+**Tones.** `Colour` keeps the picture's hues. `DMG` prints the four-green set
+(`#9BBC0F / #8BAC0F / #306230 / #0F380F`) — the Game Boy flavour without the
+trademark. `Ink` is the palette's own ink for a one-colour print.
+
+**Plates.** `Square` (88% of the plate), `Round` (88%), `Circle` (70% — the
+inscribed square, so the ring never clips the code).
+
+**Grid.** A halftone renders at **version 8 (49 modules) minimum**, whatever the
+payload needs. At 25 modules the picture is a mosaic; at 49 it reads on the
+336px stage and still gives a 1000px print 196 halftone cells. The payload's own
+version wins if it is higher.
+
+**Artwork** is sampled once, at upload: a 64 × 64 RGB grid, about 16 KB as
+base64, stored beside the design. Rendering never touches an image, so the
+export path stays pure and no external URL can taint a canvas.
 
 ## Flat Foil
 
-The reference geometry (an isometric projection of the whole code) looked right
-and **failed the decoder gate at 250px on every render size** — 300, 1000, 2000
-and 3000px. An affine skew is recoverable in theory, but finder sampling at
-print resolution is not, so the projection was dropped.
+A flat, perfectly readable code on a lofted slab: 18 offset plates build one
+continuous side wall with rounded edges. The first implementation ported
+`QR25D`'s isometric plane directly — it looked right and **failed the decoder at
+250px on every render size**. The top face stayed flat; the thickness moved into
+the object.
 
-The shipped foil keeps the top face flat and moves the thickness into the
-object: an 18-plate loft builds one continuous side wall under a square code.
-The result scans exactly like Classic, and still reads as a physical block.
+One decision, not three: **depth** (thin card stock or a chunky block). The face
+inks come from the active palette.
 
-- Face inks: **Top / Left / Right**, each defaulting to a palette-derived tone
-  (`left = dots → ink 34%`, `right = dots → paper 52%`). `Auto` restores them.
-- The centre mark floats on the tile instead of excavating it, so no modules are
-  lost under a skewed hole. Deeper contrast, same scan result.
+## What got cut, and why
 
-## Sticker
-
-Artwork (photo, logo, mascot, texture) is painted behind the code and dimmed
-with a paper scrim, while the data modules shrink to 62% so the art breathes
-between them. Function patterns stay at 102% (a hair of overlap so print
-resolution never shows a hairline seam inside a finder ring).
-
-- Artwork must be a same-origin raster (`data:image/png|jpeg|webp`). Remote URLs
-  are ignored: they would taint the export canvas, and an inline SVG could carry
-  foreign content into a file that gets printed and shipped.
-- The upload is downscaled to 900px and re-encoded, then capped at the same
-  stored size as a centre mark.
-- Die-cut edges: **Squircle** (usable area 84%), **Circle** (69% — the inscribed
-  square of a circle), **Ticket** (78%, notch on both mid edges). The code is
-  always placed inside the shape, never clipped by it.
-- A faint kiss-cut line traces the inside of the edge — the sticker-sheet tell.
-- With no artwork the card keeps the die-cut edge and a light tint of the active
-  palette, so the look is still legible as an object rather than an empty box.
-
-## Pocket
-
-QRBuddy's own 8-bit look. No Nintendo trademark is used anywhere in the UI or
-the export.
-
-- Squared modules at 82%, a stitched pixel bezel, a chunky outline.
-- Tones: **Palette** derives a four-tone set from the active palette; **DMG**
-  uses `#9BBC0F / #8BAC0F / #306230 / #0F380F`.
-- Structural modules are drawn at 104% so the finder rings stay solid at print
-  size.
+- **Pocket** was a look the way a paint colour is a car. It is now the `DMG`
+  tone inside Halftone, which is where the four-greens actually matter.
+- **Sticker** put a photo behind shrunken dots on a scrim. It read as a photo
+  with a QR stuck on it, which is the opposite of the point. Halftone replaces
+  it.
+- **The foil face mixer** (top/left/right) let you recolour the inside of the
+  renderer. Depth is the choice a printer makes.
 
 ## Decoder gate
 
 Method: `zxing-wasm` 2.1.2, QR-only, `tryHarder + tryInvert`, rendered to a
-**250×250 probe** — the same probe `checkQRScannability` uses on the stage, so
-the gallery tick and the stage chip agree. Payload `https://qrbuddy.app`,
-palette Sunset.
+**250 × 250 probe** — the same probe `checkQRScannability` uses on the stage.
+Payload `https://qrbuddy.app`, palette Sunset, a real photograph as the sample.
 
-| Look                       | 300px | 1000px | 2000px | 3000px |
-| -------------------------- | ----- | ------ | ------ | ------ |
-| Classic                    | pass  | pass   | pass   | pass   |
-| Flat Foil                  | pass  | pass   | pass   | pass   |
-| Sticker                    | pass  | pass   | pass   | pass   |
-| Pocket                     | pass  | pass   | pass   | pass   |
-| Pocket · DMG               | pass  | pass   | pass   | pass   |
-| Sticker · Ticket           | pass  | pass   | pass   | pass   |
-| Sticker · Circle           | pass  | pass   | pass   | pass   |
-| Sticker · Artwork          | pass  | pass   | pass   | pass   |
-| Sticker · Artwork · Circle | pass  | pass   | pass   | pass   |
-| Classic · Mark             | pass  | pass   | pass   | pass   |
-| Flat Foil · Mark           | pass  | pass   | pass   | pass   |
-| Sticker · Mark             | pass  | pass   | pass   | pass   |
-| Pocket · Mark              | pass  | pass   | pass   | pass   |
+| Look                    | 300px | 1000px | 2000px | 3000px |
+| ----------------------- | ----- | ------ | ------ | ------ |
+| Classic                 | pass  | pass   | pass   | pass   |
+| Classic · mark          | pass  | pass   | pass   | pass   |
+| Halftone · Colour       | pass  | pass   | pass   | pass   |
+| Halftone · DMG          | pass  | pass   | pass   | pass   |
+| Halftone · Ink          | pass  | pass   | pass   | pass   |
+| Halftone · Square plate | pass  | pass   | pass   | pass   |
+| Halftone · Circle plate | pass  | pass   | pass   | pass   |
+| Halftone · mark         | pass  | pass   | pass   | pass   |
+| Halftone · DMG · mark   | pass  | pass   | pass   | pass   |
+| Flat Foil · thin        | pass  | pass   | pass   | pass   |
+| Flat Foil · chunky      | pass  | pass   | pass   | pass   |
+| Flat Foil · mark        | pass  | pass   | pass   | pass   |
 
-52 of 52 cases decode at the 250px probe. The isometric foil prototype failed
+48 of 48 cases decode at the 250px probe. The isometric foil prototype failed
 all four sizes on the same probe, which is why it is not in this table.
 
 The live gallery runs the same check per look and caches the verdict against a
-hash of the rendered SVG, so typing in the URL box never re-decodes an unchanged
-picture. A failing look shows an amber `!` and is never labelled print-ready.
+hash of the rendered SVG. A failing look shows an amber `!`.
 
 ## Limits worth knowing
 
-- **Centre marks** cover more of a foil than of a classic code. H keeps it
-  scannable at the sizes above; a very long payload plus a big badge is still a
-  bad idea, and the stage chip will say so.
-- **Sticker artwork** reduces the data modules' ink. A very busy photo with high
-  local contrast lowers the margin; the scrim and the H level are the guard, not
-  a guarantee against every photo.
-- **Circle** stickers waste the most area. On small print (under ~30mm) prefer
-  squircle or ticket.
-- **Pocket DMG** is a print colour set. On screen it can read bright; on a matte
-  sticker stock it reads correct.
-- Looks are **not yet carried in share links** (`/q?s=`) — a link keeps the
-  palette, not the look. Batch Studio also stays on classic.
+- **Small screens undersell it.** A 49-module halftone is texture at thumbnail
+  size; the photo lands at print size. The Design tab previews it at 196px and
+  the download at 1000–3000px is the artifact.
+- **Photos with huge flat highlights** (blown sky) leave the code sparse in that
+  region. It still decodes; it just looks airy.
+- **A centre mark costs ~6% of the code area.** H carries it, and the decoder
+  gate proves it, but a very long payload plus a big badge is still greedy.
+- **Circle plates waste the most area** — under ~30mm print, prefer round or
+  square.
+- Looks are **not carried in share links** (`/q?s=`) yet. Batch Studio stays on
+  Classic.
 
 ## Files
 
-- `utils/qr-art-renderers.ts` — the three renderers, die-cut paths, protector
-  logic, colour mixing
-- `utils/qr-vector-svg.ts` — mode dispatch, mark badge, `data-look` stamp
+- `utils/qr-art-renderers.ts` — foil loft and the halftone sub-grid
+- `utils/qr-art-sample.ts` — sampling, base64 grid, palette default
+- `utils/qr-vector-svg.ts` — mode dispatch, version floor, mark badge,
+  `data-look`
 - `utils/qr-renderer.ts` — one geometry source for preview, stage and export
-- `components/create-modal/LookGallery.tsx` — the gallery, per-look options,
-  verdict cache
-- `tests/looks_test.ts` — geometry, protection, persistence and byte budget
+- `components/create-modal/LookGallery.tsx` — gallery, look options, verdict
+  cache
+- `tests/looks_test.ts` — sampling, polarity caps, persistence, byte budget
 - `THIRD_PARTY_LICENSES.md` — what informed the looks and under what licence
