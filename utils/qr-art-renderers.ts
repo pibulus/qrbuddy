@@ -19,6 +19,7 @@
  */
 
 import { escapeXml } from "./svg-export.ts";
+import { type GrainOptions, grainBite, grainTooth } from "./qr-grain.ts";
 import {
   type ArtSample,
   decodeSample,
@@ -223,6 +224,8 @@ export interface HalftoneOptions {
   bg: string;
   /** Palette ink for function patterns and the plate edge. */
   ink: string;
+  /** Print surface: tooth on the plate, and a stamp bleed on the data ink. */
+  grain?: GrainOptions;
 }
 
 const DMG_PAPER = "#9BBC0F";
@@ -510,13 +513,32 @@ export function renderHalftone(
     `<path d="${cells.join("")}" fill="${fill}"/>`
   ).join("");
 
+  // Tooth is clipped to the plate so a circle keeps its edge clean, and it sits
+  // under every mark: the grain is the stock, not the ink.
+  const grain = options.grain;
+  const plateClip =
+    `<defs><clipPath id="qrb-plate-clip"><path d="${shape}"/></clipPath></defs>`;
+  const tooth = grain && grain.level !== "none"
+    ? `${plateClip}<g clip-path="url(#qrb-plate-clip)">${
+      grainTooth(grain, box.x, box.y, box.size, box.size)
+    }</g>`
+    : "";
+  // Ink first, then the bite, then the structural modules: a hole punched in the
+  // data field is a stamp, a hole punched in a finder is a dead code.
+  const bite = grain && grain.level === "stamp"
+    ? `${plateClip}<g clip-path="url(#qrb-plate-clip)">${
+      grainBite(grain, box.x, box.y, box.size, box.size)
+    }</g>`
+    : "";
   return `<path d="${shape}" fill="${escapeXml(paper)}" stroke="${
     escapeXml(structuralInk)
-  }" stroke-width="${f(box.size * 0.012)}"/><g fill="${escapeXml(paper)}">${
-    protectorRects(matrix, cell, x0, y0)
-  }</g><g fill="${escapeXml(structuralInk)}">${
-    solids.join("")
-  }</g><g transform="translate(${f(x0)} ${f(y0)}) scale(${
+  }" stroke-width="${f(box.size * 0.012)}"/>${tooth}<g fill="${
+    escapeXml(paper)
+  }">${protectorRects(matrix, cell, x0, y0)}</g><g transform="translate(${
+    f(x0)
+  } ${f(y0)}) scale(${
     f(cell / SUB)
-  })" shape-rendering="crispEdges">${ink}</g>`;
+  })" shape-rendering="crispEdges">${ink}</g>${bite}<g fill="${
+    escapeXml(structuralInk)
+  }">${solids.join("")}</g>`;
 }

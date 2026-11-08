@@ -22,6 +22,14 @@ import {
   sampleColor,
 } from "./qr-art-sample.ts";
 import { chooseFlips, codewordGroups } from "./qr-codewords.ts";
+import {
+  grainBite,
+  grainFilterDefs,
+  type GrainLevel,
+  grainSeed,
+  grainTooth,
+  grainWarp,
+} from "./qr-grain.ts";
 import type {
   ArtSample,
   CornerSquareShape,
@@ -185,6 +193,12 @@ export interface BuildQrSvgOptions {
   halftoneDetail?: "soft" | "sharp";
   /** Test hook: force the flip share instead of the adaptive default. */
   halftoneFlipShare?: number;
+  /** Surface: clean vector, paper tooth, or a stamped bleed on the data ink. */
+  grain?: GrainLevel;
+  /** Test hooks: grain strength, in module-relative units. */
+  grainWarpShare?: number;
+  grainBiteDensity?: number;
+  grainBiteScale?: number;
   foilDepth?: "thin" | "chunky";
   /** Grid floor for art looks. Thumbnails pass a coarse one on purpose. */
   artVersionFloor?: number;
@@ -515,6 +529,20 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   const qrBoxSize = options.size ?? 1000;
   const cellSize = qrBoxSize / totalModules;
 
+  // Grain is seeded from the payload, so a link always prints the same picture.
+  // A foil slab is a manufactured object; tooth and bleed belong to paper.
+  const grain = {
+    level: mode === "foil" ? "none" as GrainLevel : options.grain ?? "none",
+    seed: grainSeed(payload),
+    cell: cellSize,
+    size: qrBoxSize,
+    ink: "#1e1714",
+    paper: bg,
+    warpShare: options.grainWarpShare,
+    biteDensity: options.grainBiteDensity,
+    biteScale: options.grainBiteScale,
+  };
+
   const captionText = (options.caption ?? "").trim().toUpperCase();
   const hasCaption = captionText.length > 0;
 
@@ -566,6 +594,9 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       if (options.halftoneFlipShare === undefined) {
         if (hasMark) share *= 0.4;
         if (options.halftoneShape === "circle") share *= 0.45;
+        // A stamped print is a scuffed print: the bite eats the same margin the
+        // codeword flips spend, so the two halve each other rather than stack.
+        if (options.grain === "stamp") share *= 0.5;
       }
       const groups = codewordGroups(moduleCount);
       for (
@@ -583,7 +614,8 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   };
 
   // 3 Finder patterns
-  pathChunks.push(
+  const finderChunks: string[] = [];
+  finderChunks.push(
     finderPatternPaths(offsetX, offsetY, cellSize, rounded, cornerSquareShape),
     finderPatternPaths(
       offsetX + (moduleCount - 7) * cellSize,
@@ -601,7 +633,7 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     ),
   );
 
-  const finderPaths = pathChunks.splice(0).join("");
+  const finderPaths = finderChunks.join("");
   const alignment = alignmentCenters(moduleCount);
   const structural = (r: number, c: number) =>
     r === 6 || c === 6 || r === 8 || c === 8 ||
@@ -668,6 +700,7 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
         shape: options.halftoneShape ?? "rounded",
         bg,
         ink: "#1e1714",
+        grain,
       });
     }
   }
@@ -736,6 +769,28 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       }" />\n`;
   }
 
+  // Tooth sits under the ink: specks only ever land on paper, never on a module.
+  const cardTooth = grainTooth(
+    grain,
+    hasCaption ? pad : 0,
+    hasCaption ? pad : 0,
+    qrBoxSize,
+    qrBoxSize,
+    hasCaption ? 28 : 36,
+  );
+  // Halftone punches its own bite inside the plate; the classic card needs one
+  // here, between the modules and the finders.
+  const cardBite = mode === "classic"
+    ? grainBite(
+      grain,
+      hasCaption ? pad : 0,
+      hasCaption ? pad : 0,
+      qrBoxSize,
+      qrBoxSize,
+      hasCaption ? 28 : 36,
+    )
+    : "";
+
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" data-ecl="${ecl}" data-modules="${moduleCount}" data-cutout="${
@@ -762,13 +817,19 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       }, c1),
     gradientDef("qrb-bg", options.backgroundGradient, bg),
     gradientDef("qrb-eyes", options.eyeGradient, options.eyeColor ?? c1),
+    grainFilterDefs(grain),
     `  </defs>`,
     frameRect + qrBgRect.replace(/fill="[^"]*"/, 'fill="url(#qrb-bg)"') +
+    cardTooth +
     (artBody ||
-      (`  <path d="${finderPaths}" fill="url(#qrb-eyes)" fill-rule="evenodd" />` +
+      (grainWarp(
+        grain,
         `  <path d="${
           pathChunks.join("")
-        }" fill="url(#qrb-dots)" fill-rule="evenodd" />\n`)) +
+        }" fill="url(#qrb-dots)" fill-rule="evenodd" />\n`,
+      ) +
+        cardBite +
+        `  <path d="${finderPaths}" fill="url(#qrb-eyes)" fill-rule="evenodd" />`)) +
     markElement +
     captionElement +
     `</svg>`,
