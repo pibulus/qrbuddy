@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Signal } from "@preact/signals";
 import qrcode from "qrcode-generator";
 import QRRenderer, { styledQrSvg } from "../utils/qr-renderer.ts";
@@ -88,6 +88,63 @@ export function measureQrModules(
       return 177;
     }
   }
+}
+
+export interface StagePrintGuardrail {
+  text: string;
+  hasPrintSpec: boolean;
+  hasDenseWarning: boolean;
+  hasCutoutNotice: boolean;
+}
+
+/**
+ * Normal-density QRs stay completely silent on the stage (preserving the 24px
+ * card-to-input rhythm). Only high-density matrices or omitted center marks
+ * surface a single consolidated amber guardrail pill.
+ */
+export function resolveStagePrintGuardrail({
+  moduleCount,
+  printSpec,
+  centerMarkOmitted,
+  isSpanish = false,
+}: {
+  moduleCount: number;
+  printSpec: PrintSizeEstimate;
+  centerMarkOmitted: boolean;
+  isSpanish?: boolean;
+}): StagePrintGuardrail | null {
+  if (!printSpec.denseWarning && !centerMarkOmitted) {
+    return null;
+  }
+  const minInchesText = printSpec.minInches.toFixed(1);
+  if (centerMarkOmitted && printSpec.denseWarning) {
+    return {
+      text: isSpanish
+        ? `Denso ${moduleCount}×${moduleCount} · Marca central omitida · Imprimir ≥ ${printSpec.minMm} mm (${minInchesText}″)`
+        : `Dense ${moduleCount}×${moduleCount} · Center mark omitted · Print ≥ ${printSpec.minMm} mm (${minInchesText}″)`,
+      hasPrintSpec: true,
+      hasDenseWarning: true,
+      hasCutoutNotice: true,
+    };
+  }
+  if (centerMarkOmitted) {
+    return {
+      text: isSpanish
+        ? "Código denso — marca central omitida para asegurar lectura"
+        : "Dense code — center mark omitted for scan reliability",
+      hasPrintSpec: false,
+      hasDenseWarning: false,
+      hasCutoutNotice: true,
+    };
+  }
+  return {
+    text: isSpanish
+      ? `Denso ${moduleCount}×${moduleCount} · Imprimir ≥ ${printSpec.minMm} mm (${minInchesText}″) o usar Editable`
+      : `Dense ${moduleCount}×${moduleCount} · Print ≥ ${printSpec.minMm} mm (${minInchesText}″) or use Editable`,
+    hasPrintSpec: true,
+    hasDenseWarning: true,
+    hasCutoutNotice: false,
+  };
 }
 
 interface QRCanvasProps {
@@ -798,22 +855,40 @@ export default function QRCanvas(
     getQRThemeTokens(style.value, customStyle?.value).accent,
   );
 
-  const currentStyleForSpec = getCurrentStyle();
-  const moduleCount = measureQrModules(url.value || "https://qrbuddy.app", {
-    logoUrl: logoUrl?.value,
-    dotShape: currentStyleForSpec.dots?.shape,
-  });
-  const printSpec = estimateMinPrintSize(moduleCount);
-  const minInchesText = printSpec.minInches.toFixed(1);
-
-  const centerMarkOmitted = (() => {
-    if (!logoUrl?.value) return false;
-    try {
-      return styledQrSvg(getQrOptions(1000)).includes('data-cutout="none"');
-    } catch {
-      return false;
+  const { moduleCount, printSpec, centerMarkOmitted } = useMemo(() => {
+    const resolvedStyle = resolveQRStyle(style.value, customStyle?.value);
+    const data = url.value || "https://qrbuddy.app";
+    const modules = measureQrModules(data, {
+      logoUrl: logoUrl?.value,
+      dotShape: resolvedStyle.dots?.shape,
+    });
+    const spec = estimateMinPrintSize(modules);
+    let omitted = false;
+    if (logoUrl?.value) {
+      try {
+        omitted = styledQrSvg({
+          size: 1000,
+          data,
+          style: resolvedStyle,
+          logoUrl: logoUrl.value,
+        }).includes('data-cutout="none"');
+      } catch {
+        omitted = false;
+      }
     }
-  })();
+    return {
+      moduleCount: modules,
+      printSpec: spec,
+      centerMarkOmitted: omitted,
+    };
+  }, [url.value, logoUrl?.value, style.value, customStyle?.value]);
+
+  const stageGuardrail = resolveStagePrintGuardrail({
+    moduleCount,
+    printSpec,
+    centerMarkOmitted,
+    isSpanish,
+  });
 
   return (
     <div class={`max-w-full w-full ${stylePop ? "animate-pop-in" : ""}`}>
@@ -1027,41 +1102,18 @@ export default function QRCanvas(
           </div>
         )}
       </div>
-      {printSpec.denseWarning
-        ? (
-          <p
-            role="status"
-            aria-live="polite"
-            data-print-spec
-            data-dense-warning="true"
-            class="mt-5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold text-center tabular-nums"
-          >
-            {isSpanish
-              ? `Matriz densa ${moduleCount}×${moduleCount} · Imprimir ≥ ${printSpec.minMm} mm (${minInchesText}″) o usar Editable`
-              : `${moduleCount}×${moduleCount} dense matrix · Print ≥ ${printSpec.minMm} mm (${minInchesText}″) or use Editable`}
-          </p>
-        )
-        : (
-          <p
-            data-print-spec
-            data-dense-warning="false"
-            class="mt-5 text-center text-[11px] font-bold tracking-wide text-[#1e1714]/65 tabular-nums"
-          >
-            {isSpanish
-              ? `${moduleCount}×${moduleCount} · Impresión mín. ${printSpec.minMm} mm (${minInchesText}″)`
-              : `${moduleCount}×${moduleCount} · Min print ${printSpec.minMm} mm (${minInchesText}″)`}
-          </p>
-        )}
-      {centerMarkOmitted && (
+      {stageGuardrail && (
         <p
           role="status"
           aria-live="polite"
-          data-cutout-notice
-          class="mt-2 px-3 py-1.5 rounded-xl bg-amber-50 border-[1.5px] border-amber-400 text-amber-900 text-xs font-bold text-center"
+          data-print-spec={stageGuardrail.hasPrintSpec ? "" : undefined}
+          data-dense-warning={stageGuardrail.hasDenseWarning
+            ? "true"
+            : undefined}
+          data-cutout-notice={stageGuardrail.hasCutoutNotice ? "" : undefined}
+          class="mt-5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold text-center tabular-nums"
         >
-          {isSpanish
-            ? "Código denso — marca central omitida para asegurar lectura"
-            : "Dense code — center mark omitted for scan reliability"}
+          {stageGuardrail.text}
         </p>
       )}
     </div>

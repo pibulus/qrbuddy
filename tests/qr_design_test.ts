@@ -4,6 +4,7 @@ import {
   buildQrSvgString,
   centerCutout,
   evaluateQrContrast,
+  toSvgDataUrl,
   validateCanvaSvgCompliance,
 } from "../utils/qr-vector-svg.ts";
 import {
@@ -19,7 +20,13 @@ import { getQRThemeTokens, QR_THEME_TOKENS } from "../utils/qr-styles.ts";
 import {
   estimateMinPrintSize,
   measureQrModules,
+  resolveStagePrintGuardrail,
 } from "../islands/QRCanvas.tsx";
+import {
+  decodeMonogramFromLogoUrl,
+  QUICK_LABEL_CHIPS,
+  resolvePaletteDisplayName,
+} from "../components/create-modal/DesignTab.tsx";
 
 Deno.test("Design: alignment geometry includes the version-32 exception", () => {
   assertEquals(alignmentCenters(21), []);
@@ -363,4 +370,105 @@ Deno.test("Design: estimateMinPrintSize computes physical floor and dense warnin
   const denseModules = measureQrModules(richVcard);
   assert(denseModules >= 53);
   assertEquals(estimateMinPrintSize(denseModules).denseWarning, true);
+});
+
+Deno.test("Design: stage guardrail stays silent on normal QRs and merges dense + omitted-mark into one pill", () => {
+  const normalSpec = estimateMinPrintSize(33);
+  assertEquals(
+    resolveStagePrintGuardrail({
+      moduleCount: 33,
+      printSpec: normalSpec,
+      centerMarkOmitted: false,
+    }),
+    null,
+  );
+
+  // Center mark omitted on Version 7 (45x45 central alignment block, below 53x53 dense threshold)
+  const v7Spec = estimateMinPrintSize(45);
+  assertEquals(v7Spec.denseWarning, false);
+  const cutoutOnly = resolveStagePrintGuardrail({
+    moduleCount: 45,
+    printSpec: v7Spec,
+    centerMarkOmitted: true,
+  });
+  assertEquals(cutoutOnly, {
+    text: "Dense code — center mark omitted for scan reliability",
+    hasPrintSpec: false,
+    hasDenseWarning: false,
+    hasCutoutNotice: true,
+  });
+
+  // High-density matrix without center mark
+  const v11Spec = estimateMinPrintSize(61);
+  const denseOnly = resolveStagePrintGuardrail({
+    moduleCount: 61,
+    printSpec: v11Spec,
+    centerMarkOmitted: false,
+  });
+  assertEquals(denseOnly, {
+    text: "Dense 61×61 · Print ≥ 31 mm (1.2″) or use Editable",
+    hasPrintSpec: true,
+    hasDenseWarning: true,
+    hasCutoutNotice: false,
+  });
+
+  // High-density matrix + omitted center mark merges into a single pill (EN + ES)
+  const mergedEn = resolveStagePrintGuardrail({
+    moduleCount: 61,
+    printSpec: v11Spec,
+    centerMarkOmitted: true,
+  });
+  assertEquals(mergedEn, {
+    text: "Dense 61×61 · Center mark omitted · Print ≥ 31 mm (1.2″)",
+    hasPrintSpec: true,
+    hasDenseWarning: true,
+    hasCutoutNotice: true,
+  });
+
+  const mergedEs = resolveStagePrintGuardrail({
+    moduleCount: 61,
+    printSpec: v11Spec,
+    centerMarkOmitted: true,
+    isSpanish: true,
+  });
+  assertEquals(
+    mergedEs?.text,
+    "Denso 61×61 · Marca central omitida · Imprimir ≥ 31 mm (1.2″)",
+  );
+});
+
+Deno.test("DesignTab: custom palette name, monogram SVG roundtrip, and quick-fill label chips", () => {
+  assertEquals(resolvePaletteDisplayName("custom", false), "Custom");
+  assertEquals(resolvePaletteDisplayName("custom", true), "Propio");
+  assertEquals(resolvePaletteDisplayName("blush", false), "Crimson");
+  assertEquals(resolvePaletteDisplayName("blush", true), "Carmesí");
+  assertEquals(resolvePaletteDisplayName("grape", false), "Cosmic");
+  assertEquals(resolvePaletteDisplayName("candy", true), "Dulce");
+  assertEquals(resolvePaletteDisplayName("terminal", false), "Matrix");
+  assertEquals(resolvePaletteDisplayName("sunset", true), "Atardecer");
+
+  const vipSvg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><text x="60" y="64" font-size="50" font-weight="900" fill="#1e1714">VIP</text></svg>`;
+  assertEquals(decodeMonogramFromLogoUrl(toSvgDataUrl(vipSvg)), "VIP");
+
+  const utf8Svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><text x="60" y="64" font-size="66" font-weight="900" fill="#1e1714">ÑO</text></svg>`;
+  assertEquals(decodeMonogramFromLogoUrl(toSvgDataUrl(utf8Svg)), "ÑO");
+
+  // Stamps and raster PNGs never masquerade as monograms
+  assertEquals(decodeMonogramFromLogoUrl(stampUrl(STAMPS[0].path)), "");
+  assertEquals(
+    decodeMonogramFromLogoUrl("data:image/png;base64,iVBORw0KGgo="),
+    "",
+  );
+  assertEquals(decodeMonogramFromLogoUrl(""), "");
+
+  assertEquals(
+    QUICK_LABEL_CHIPS.map((c) => c.en),
+    ["Scan Me", "Menu", "Wi-Fi", "Guest Pass"],
+  );
+  assertEquals(
+    QUICK_LABEL_CHIPS.map((c) => c.es),
+    ["Escanéame", "Menú", "Wi-Fi", "Acceso"],
+  );
 });

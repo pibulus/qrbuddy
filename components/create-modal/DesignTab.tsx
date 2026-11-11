@@ -1,7 +1,8 @@
-import type { Signal } from "@preact/signals";
-import { useState } from "preact/hooks";
+import { type Signal, useSignal } from "@preact/signals";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { sounds } from "../../utils/sounds.ts";
+import GradientCreator from "../GradientCreator.tsx";
 import LogoUploader from "../LogoUploader.tsx";
 import PalettePills, { pillState } from "./PalettePills.tsx";
 import type {
@@ -19,6 +20,10 @@ import {
 import { toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
 import { resetDesignPreferences } from "../../utils/design-preferences.ts";
 import { getQRThemeTokens } from "../../utils/qr-styles.ts";
+import {
+  estimateMinPrintSize,
+  measureQrModules,
+} from "../../islands/QRCanvas.tsx";
 import { STYLE_DISPLAY } from "../../islands/StyleSelector.tsx";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
@@ -30,29 +35,106 @@ interface DesignTabProps {
   customStyle?: Signal<QRStyle | null>;
   pngSize?: Signal<1000 | 2000 | 3000>;
   onClose: () => void;
+  onOpenCustomGradient?: () => void;
   lang?: Locale;
 }
 
 const KEY =
-  "min-h-[44px] rounded-xl px-1.5 text-xs font-black transition-[transform,box-shadow,border-color] duration-[70ms] active:translate-y-[2px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]";
+  "min-h-[40px] rounded-xl px-1.5 text-xs font-black transition-[transform,box-shadow,border-color] duration-[70ms] active:translate-y-[2px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]";
 
-/** Three sections, one grid each: palette (7), centre mark (5+2), label (1+4). */
+const LEGACY_STYLE_NAMES: Record<string, { name: string; nameEs: string }> = {
+  blush: { name: "Crimson", nameEs: "Carmesí" },
+  grape: { name: "Cosmic", nameEs: "Cósmico" },
+  candy: { name: "Candy", nameEs: "Dulce" },
+  terminal: { name: "Matrix", nameEs: "Matrix" },
+};
+
+const MONOGRAM_DATA_PREFIX = "data:image/svg+xml;base64,";
+
+export const QUICK_LABEL_CHIPS = [
+  { en: "Scan Me", es: "Escanéame" },
+  { en: "Menu", es: "Menú" },
+  { en: "Wi-Fi", es: "Wi-Fi" },
+  { en: "Guest Pass", es: "Acceso" },
+] as const;
+
+export function resolvePaletteDisplayName(
+  styleKey: string,
+  es = false,
+): string {
+  if (styleKey === "custom") {
+    return es ? "Propio" : "Custom";
+  }
+  const preset = STYLE_DISPLAY[styleKey as keyof typeof STYLE_DISPLAY] ??
+    LEGACY_STYLE_NAMES[styleKey] ??
+    STYLE_DISPLAY.sunset;
+  return es ? (preset.nameEs ?? preset.name) : preset.name;
+}
+
+export function decodeMonogramFromLogoUrl(rawLogoUrl: string): string {
+  if (!rawLogoUrl || !rawLogoUrl.startsWith(MONOGRAM_DATA_PREFIX)) return "";
+  try {
+    const binary = atob(rawLogoUrl.slice(MONOGRAM_DATA_PREFIX.length));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const svg = new TextDecoder().decode(bytes);
+    const match = svg.match(/<text[^>]*>([^<]+)<\/text>/i);
+    if (!match) return "";
+    return match[1]
+      .replace(/[^\p{L}\p{N}]/gu, "")
+      .slice(0, 3)
+      .toUpperCase();
+  } catch {
+    return "";
+  }
+}
+
+/** Three sections, one grid each: palette (7), centre mark (5+2), label (1+4), plus PNG size. */
 export default function DesignTab(
-  { qrStyle, logoUrl, frameConfig, customStyle, pngSize, onClose, lang }:
-    DesignTabProps,
+  {
+    url,
+    qrStyle,
+    logoUrl,
+    frameConfig,
+    customStyle,
+    pngSize,
+    onOpenCustomGradient,
+    lang,
+  }: DesignTabProps,
 ) {
   const locale = getClientLocale(lang);
   const es = locale === "es";
   const current = resolveQRStyle(qrStyle.value, customStyle?.value);
-  const [monogram, setMonogram] = useState("");
+  const [monogram, setMonogram] = useState(() =>
+    decodeMonogramFromLogoUrl(logoUrl.value)
+  );
+  const localGradientOpen = useSignal(false);
+
+  useEffect(() => {
+    setMonogram(decodeMonogramFromLogoUrl(logoUrl.value));
+  }, [logoUrl.value]);
+
   const tap = () => {
     haptics.light();
     sounds.click();
   };
-  const palette = STYLE_DISPLAY[qrStyle.value as keyof typeof STYLE_DISPLAY] ??
-    STYLE_DISPLAY.sunset;
-  const paletteName = es ? (palette.nameEs ?? palette.name) : palette.name;
+  const paletteName = resolvePaletteDisplayName(qrStyle.value, es);
   const accent = getQRThemeTokens(qrStyle.value, customStyle?.value).accent;
+
+  const { moduleCount, printSpec } = useMemo(() => {
+    const resolved = resolveQRStyle(qrStyle.value, customStyle?.value);
+    const modules = measureQrModules(url.value || "https://qrbuddy.app", {
+      logoUrl: logoUrl.value,
+      dotShape: resolved.dots?.shape,
+    });
+    return {
+      moduleCount: modules,
+      printSpec: estimateMinPrintSize(modules),
+    };
+  }, [url.value, logoUrl.value, qrStyle.value, customStyle?.value]);
+  const minInchesText = printSpec.minInches.toFixed(1);
 
   const caption = frameConfig?.value?.enabled
     ? frameConfig.value.caption.trim()
@@ -78,11 +160,11 @@ export default function DesignTab(
     tap();
   };
 
-  const setMark = (url: string, shape: "circle" | "squircle") => {
+  const setMark = (markUrl: string, shape: "circle" | "squircle") => {
     if (customStyle) {
       customStyle.value = { ...current, centerShape: shape };
     }
-    logoUrl.value = url;
+    logoUrl.value = markUrl;
     tap();
   };
 
@@ -98,18 +180,20 @@ export default function DesignTab(
     tap();
   };
 
+  const customActive = qrStyle.value === "custom";
+
   return (
-    <div class="space-y-5 text-[#1e1714]">
-      <section class="space-y-2.5" aria-label={es ? "Paleta" : "Palette"}>
+    <div class="space-y-4 text-[#1e1714]">
+      <section class="space-y-1.5" aria-label={es ? "Paleta" : "Palette"}>
         <div class="flex items-center justify-between gap-2">
-          <h3 class="text-sm font-black truncate">
+          <h3 class="text-xs sm:text-[13px] leading-none font-black truncate">
             {es ? "Paleta" : "Palette"}{" "}
             <span class="opacity-50">· {paletteName}</span>
           </h3>
           <button
             type="button"
             onClick={reset}
-            class="shrink-0 min-h-[32px] px-1 rounded-md text-xs font-bold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
+            class="shrink-0 -my-1.5 min-h-[32px] px-1 rounded-md text-xs font-bold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
             aria-label={es
               ? "Restablecer diseño original"
               : "Reset design to default"}
@@ -127,16 +211,22 @@ export default function DesignTab(
           trailing={
             <button
               type="button"
+              aria-pressed={customActive}
               onClick={() => {
-                onClose();
-                globalThis.dispatchEvent(
-                  new CustomEvent("open-gradient-creator"),
-                );
+                if (onOpenCustomGradient) {
+                  onOpenCustomGradient();
+                } else {
+                  localGradientOpen.value = true;
+                }
                 tap();
               }}
               aria-label={es ? "Colores propios" : "Custom colours"}
               title={es ? "Colores propios" : "Custom colours"}
-              class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-[1.5px] border-[#1e1714]/[0.28] bg-[#fffef7] text-base font-black hover:border-[#1e1714] active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
+              class={`w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#fffef7] text-base font-black active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4] ${
+                customActive
+                  ? "border-2 border-[#1e1714] ring-2 ring-[#1e1714] ring-offset-2 ring-offset-[#fbf1e4] scale-105"
+                  : "border-[1.5px] border-[#1e1714]/[0.28] hover:border-[#1e1714]"
+              }`}
             >
               +
             </button>
@@ -145,10 +235,10 @@ export default function DesignTab(
       </section>
 
       <section
-        class="space-y-2.5"
+        class="space-y-1.5"
         aria-label={es ? "Marca central" : "Center mark"}
       >
-        <h3 class="text-sm font-black">
+        <h3 class="text-xs sm:text-[13px] leading-none font-black">
           {es ? "Marca central" : "Center mark"}
         </h3>
         <div class="grid grid-cols-5 gap-2">
@@ -242,14 +332,14 @@ export default function DesignTab(
 
       {frameConfig && (
         <section
-          class="space-y-2.5"
+          class="space-y-1.5"
           aria-label={es ? "Etiqueta de la tarjeta" : "Card label"}
         >
-          <h3 class="text-sm font-black">
+          <h3 class="text-xs sm:text-[13px] leading-none font-black">
             {es ? "Etiqueta de la tarjeta" : "Card label"}
           </h3>
           <div
-            class={`flex items-center min-h-[44px] rounded-xl bg-[#fffef7] transition-colors focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4] ${
+            class={`flex items-center min-h-[40px] rounded-xl bg-[#fffef7] transition-colors focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4] ${
               caption
                 ? "border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714]"
                 : "border-[1.5px] border-[#1e1714]/[0.28] focus-within:border-2 focus-within:border-[#1e1714]"
@@ -276,11 +366,11 @@ export default function DesignTab(
               aria-label={es
                 ? `Franja: ${theme}. Cambiar estilo`
                 : `Banner: ${theme}. Change style`}
-              class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full mr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
+              class="shrink-0 w-9 h-9 flex items-center justify-center rounded-full mr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
             >
               <span
                 aria-hidden="true"
-                class="block w-7 h-7 rounded-full border-2 border-[#1e1714]"
+                class="block w-6 h-6 rounded-full border-2 border-[#1e1714]"
                 style={{ background: banner.bg }}
               />
             </button>
@@ -289,30 +379,76 @@ export default function DesignTab(
                 type="button"
                 onClick={() => writeCaption("")}
                 aria-label={es ? "Quitar etiqueta" : "Clear label"}
-                class="shrink-0 w-11 h-11 mr-1 flex items-center justify-center rounded-full text-sm font-black hover:bg-[#1e1714]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
+                class="shrink-0 w-9 h-9 mr-1 flex items-center justify-center rounded-full text-sm font-black hover:bg-[#1e1714]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
               >
                 ✕
               </button>
             )}
+          </div>
+          <div
+            class="flex flex-wrap gap-1.5"
+            role="group"
+            aria-label={es ? "Etiquetas rápidas" : "Quick labels"}
+          >
+            {QUICK_LABEL_CHIPS.map((chip) => {
+              const label = es ? chip.es : chip.en;
+              const chipActive = caption.toLowerCase() === label.toLowerCase();
+              return (
+                <button
+                  key={chip.en}
+                  type="button"
+                  aria-pressed={chipActive}
+                  onClick={() => {
+                    writeCaption(chipActive ? "" : label);
+                    tap();
+                  }}
+                  class={`min-h-[30px] inline-flex items-center gap-1.5 rounded-full px-2.5 text-[11px] font-black transition-[transform,box-shadow,border-color] duration-[70ms] active:translate-y-[1.5px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1 ${
+                    pillState(chipActive)
+                  }`}
+                >
+                  {chipActive && (
+                    <span
+                      aria-hidden="true"
+                      class="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: accent }}
+                    />
+                  )}
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
       )}
 
       {pngSize && (
         <section
-          class="space-y-2.5"
+          class="space-y-1.5"
           aria-label={es ? "Tamaño PNG" : "PNG size"}
         >
-          <h3 class="text-sm font-black">
-            {es ? "Tamaño PNG" : "PNG size"}{" "}
-            <span class="opacity-50">
-              · {pngSize.value === 1000
-                ? (es ? "Pantalla" : "Screen")
-                : pngSize.value === 2000
-                ? (es ? "Imprenta" : "Print")
-                : (es ? "Gran formato" : "Large format")}
+          <div class="flex items-baseline justify-between gap-2">
+            <h3 class="text-xs sm:text-[13px] leading-none font-black shrink-0">
+              {es ? "Tamaño PNG" : "PNG size"}{" "}
+              <span class="opacity-50">
+                · {pngSize.value === 1000
+                  ? (es ? "Pantalla" : "Screen")
+                  : pngSize.value === 2000
+                  ? (es ? "Imprenta" : "Print")
+                  : (es ? "Gran formato" : "Large format")}
+              </span>
+            </h3>
+            <span
+              data-print-spec
+              data-dense-warning={printSpec.denseWarning ? "true" : "false"}
+              class={`text-[11px] font-bold leading-none tabular-nums truncate ${
+                printSpec.denseWarning ? "text-amber-900" : "text-[#1e1714]/60"
+              }`}
+            >
+              {es
+                ? `${moduleCount}×${moduleCount} · Impresión mín. ${printSpec.minMm} mm (${minInchesText}″)`
+                : `${moduleCount}×${moduleCount} · Min print ${printSpec.minMm} mm (${minInchesText}″)`}
             </span>
-          </h3>
+          </div>
           <div class="grid grid-cols-3 gap-2" role="group">
             {([
               { size: 1000, hint: es ? "Pantalla" : "Screen" },
@@ -340,6 +476,23 @@ export default function DesignTab(
             })}
           </div>
         </section>
+      )}
+
+      {!onOpenCustomGradient && (
+        <GradientCreator
+          isOpen={localGradientOpen}
+          zIndexClass="z-[70]"
+          lang={locale}
+          onCustomGradient={(gradient) => {
+            if (customStyle) {
+              const prevShape = customStyle.value?.centerShape;
+              customStyle.value = prevShape
+                ? { ...gradient, centerShape: prevShape }
+                : gradient;
+            }
+            qrStyle.value = "custom";
+          }}
+        />
       )}
     </div>
   );

@@ -5,6 +5,28 @@ import {
 } from "../../hooks/useBatchGenerator.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
+export const BATCH_DRAFT_STORAGE_KEY = "qrbuddy_batch_draft";
+
+export function stashBatchDraft(
+  draft: string,
+  storage?: Pick<Storage, "setItem" | "removeItem">,
+): boolean {
+  try {
+    const target = storage ??
+      (typeof sessionStorage !== "undefined" ? sessionStorage : undefined);
+    if (!target) return false;
+    const trimmed = draft.trim();
+    if (!trimmed) {
+      target.removeItem(BATCH_DRAFT_STORAGE_KEY);
+      return false;
+    }
+    target.setItem(BATCH_DRAFT_STORAGE_KEY, trimmed);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 interface BatchSettingsProps {
   batchUrls: string;
   setBatchUrls: (urls: string) => void;
@@ -28,8 +50,8 @@ export default function BatchSettings({
 
   const insertSequenceExample = () => {
     const sample = isSpanish
-      ? "Mesa {1..12} | https://ejemplo.com/mesa-{1..12}"
-      : "Table {1..12} | https://example.com/table-{1..12}";
+      ? "Mesa {01..08} | https://ejemplo.com/mesa-{01..08}"
+      : "Table {01..08} | https://example.com/table-{01..08}";
     setBatchUrls(batchUrls.trim() ? `${batchUrls.trim()}\n${sample}` : sample);
   };
 
@@ -45,12 +67,6 @@ export default function BatchSettings({
           {count} {count === 1 ? "QR" : "QRs"}
         </span>
       </div>
-
-      <p class="text-xs text-gray-600 leading-relaxed">
-        {isSpanish
-          ? "Un enlace por línea, «Mesa 1 | https://...» para nombrar cada archivo, o «{1..25}» para series numeradas. Incluye paleta activa, marca central y manifest.csv listo para imprenta."
-          : 'One link per line, "Table 1 | https://..." for named files, or "{1..25}" for numbered runs. Active palette, center mark, and print-shop manifest.csv included.'}
-      </p>
 
       <div
         class="flex flex-wrap items-center gap-1.5"
@@ -84,9 +100,11 @@ export default function BatchSettings({
         ))}
       </div>
 
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-[11px] font-bold text-gray-500">
-          {isSpanish ? "Soporta rangos {01..25}" : "Supports {01..25} ranges"}
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-[11px] font-bold text-gray-600">
+          {isSpanish
+            ? "Un link por línea, «Nombre | https://…» o {01..25}"
+            : 'One link per line, "Label | https://…", or {01..25}'}
         </span>
         <button
           type="button"
@@ -94,7 +112,7 @@ export default function BatchSettings({
           disabled={isGeneratingBatch}
           class="px-2.5 py-1 text-[11px] font-black rounded-lg border-[1.5px] border-[#1e1714]/30 bg-qr-cream text-[#1e1714] hover:border-[#1e1714] transition-colors disabled:opacity-50"
         >
-          {isSpanish ? "Insertar ejemplo {1..12}" : "Insert {1..12} example"}
+          {isSpanish ? "Insertar ejemplo {01..08}" : "Insert {01..08} example"}
         </button>
       </div>
 
@@ -105,8 +123,8 @@ export default function BatchSettings({
           : "Batch QR links (one per line)"}
         onInput={(e) => setBatchUrls((e.target as HTMLTextAreaElement).value)}
         placeholder={isSpanish
-          ? `Mesa {1..12} | https://ejemplo.com/mesa-{1..12}\nhttps://ejemplo.com/menu-vip`
-          : `Table {1..12} | https://example.com/table-{1..12}\nhttps://example.com/vip-menu`}
+          ? `Mesa {01..08} | https://ejemplo.com/mesa-{01..08}\nhttps://ejemplo.com/menu-vip`
+          : `Table {01..08} | https://example.com/table-{01..08}\nhttps://example.com/vip-menu`}
         rows={5}
         class="w-full px-3.5 py-2.5 text-base sm:text-sm border-2 border-gray-300 focus:border-black rounded-xl focus:outline-none font-mono bg-white resize-none"
         disabled={isGeneratingBatch}
@@ -148,6 +166,9 @@ export default function BatchSettings({
       }
       <a
         href="/batch"
+        onClick={() => {
+          stashBatchDraft(batchUrls);
+        }}
         class="block text-center text-xs font-black text-neutral-700 underline decoration-2 decoration-black/20 underline-offset-2 hover:text-black"
       >
         {isSpanish
