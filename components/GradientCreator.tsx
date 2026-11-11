@@ -3,6 +3,7 @@ import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import type { ColorStop, QRStyle } from "../types/qr-types.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import { evaluateQrContrast } from "../utils/qr-vector-svg.ts";
 import { useModalShell } from "./modal/useModalShell.ts";
 
@@ -22,11 +23,19 @@ export const QUICK_PICK_COLORS = [
 interface GradientCreatorProps {
   onCustomGradient: (gradient: QRStyle) => void;
   isOpen: Signal<boolean>;
+  lang?: Locale;
+  zIndexClass?: string;
 }
 
 export default function GradientCreator(
-  { onCustomGradient, isOpen }: GradientCreatorProps,
+  {
+    onCustomGradient,
+    isOpen,
+    lang,
+    zIndexClass = "z-[60]",
+  }: GradientCreatorProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [gradientType, setGradientType] = useState<"linear" | "radial">(
     "linear",
   );
@@ -155,15 +164,23 @@ export default function GradientCreator(
     effectiveBgForCheck,
   );
   const guardrailMessage = contrast.inverted
-    ? "Inverted palette — light modules on dark ground fail many cameras"
+    ? (isSpanish
+      ? "Paleta invertida — módulos claros sobre fondo oscuro fallan en muchas cámaras"
+      : "Inverted palette — light modules on dark ground fail many cameras")
     : contrast.lowContrast
-    ? `Low contrast (${
-      contrast.minRatio.toFixed(1)
-    }:1) — aim for 4:1+ for reliable print scans`
+    ? (isSpanish
+      ? `Contraste bajo (${
+        contrast.minRatio.toFixed(1)
+      }:1) — apunta a 4:1+ para impresión segura`
+      : `Low contrast (${
+        contrast.minRatio.toFixed(1)
+      }:1) — aim for 4:1+ for reliable print scans`)
     : null;
 
   return (
-    <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
+    <div
+      class={`fixed inset-0 ${zIndexClass} flex items-end sm:items-center justify-center p-0 sm:p-6`}
+    >
       <div
         ref={shell.backdropRef}
         class={`absolute inset-0 bg-qr-scrim/60 backdrop-blur-sm charm-modal-backdrop animate-fade-in${
@@ -190,10 +207,12 @@ export default function GradientCreator(
               id="gradient-creator-title"
               class="text-2xl font-black text-black tracking-tight leading-tight"
             >
-              Custom gradient.
+              {isSpanish ? "Degradado propio." : "Custom gradient."}
             </h2>
             <p class="text-sm font-bold text-qr-pop">
-              Mix vivid stops that still scan first try.
+              {isSpanish
+                ? "Mezcla tonos intensos listos para escanear."
+                : "Mix vivid stops that still scan first try."}
             </p>
           </div>
           <button
@@ -296,8 +315,9 @@ export default function GradientCreator(
           {/* 6 Curated Quick-Pick Chips */}
           <div class="space-y-1.5">
             <span class="block text-xs font-bold text-neutral-600">
-              Quick-pick scannable jewel colors (applies to Stop{" "}
-              {safeActiveIndex + 1}):
+              {isSpanish
+                ? `Selección rápida · Parada ${safeActiveIndex + 1}`
+                : `Quick picks · Stop ${safeActiveIndex + 1}`}
             </span>
             <div class="flex flex-wrap items-center gap-2">
               {QUICK_PICK_COLORS.map((chip) => {
@@ -438,14 +458,14 @@ export default function GradientCreator(
             }}
             class="flex-1 min-h-[52px] px-4 py-3 bg-white text-black border-2 border-black rounded-full font-black text-base shadow-chunky hover:bg-amber-100 active:scale-[0.97] transition-all"
           >
-            Cancel
+            {isSpanish ? "Cancelar" : "Cancel"}
           </button>
           <button
             type="button"
             onClick={applyCustomGradient}
             class="flex-1 min-h-[52px] px-4 py-3 bg-qr-pop text-white border-3 border-black rounded-full font-black text-base shadow-chunky hover:scale-[1.02] hover:bg-qr-popDeep hover:shadow-chunky-hover active:scale-[0.97] transition-all"
           >
-            Apply Gradient ✨
+            {isSpanish ? "Aplicar degradado" : "Apply gradient"}
           </button>
         </div>
       </div>

@@ -3,13 +3,17 @@ import {
   assertEquals,
 } from "https://deno.land/std@0.216.0/assert/mod.ts";
 import {
+  BATCH_DRAFT_STORAGE_KEY,
   buildBatchStickerSheetHtml,
   buildDynamicBatchManifestCsv,
   buildStyledBatchQrSvg,
+  consumeBatchDraft,
+  DEFAULT_BATCH_MODE,
   expandSequenceExpressions,
   parseBatchCsv,
   persistMintedBatchRow,
 } from "../islands/BatchStudio.tsx";
+import { stashBatchDraft } from "../components/extras/BatchSettings.tsx";
 import { parseBatchRows } from "../hooks/useBatchGenerator.ts";
 import { getHistory } from "../utils/history.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
@@ -220,4 +224,39 @@ Deno.test("BatchStudio renders styled palette SVGs and paginated A4/Letter 3x4 &
   assert(sheet4x6.includes("@page { size: A4 portrait;"));
   assert(sheet4x6.includes("repeat(4, minmax(0, 1fr))"));
   assertEquals((sheet4x6.match(/class="sheet-page"/g) ?? []).length, 1);
+});
+
+Deno.test("BatchStudio defaults to offline Static SVGs mode and carries Bulk ZIP drafts once via sessionStorage", () => {
+  assertEquals(DEFAULT_BATCH_MODE, "images");
+  assertEquals(BATCH_DRAFT_STORAGE_KEY, "qrbuddy_batch_draft");
+
+  const fakeSession = new Map<string, string>();
+  const mockStorage = {
+    getItem: (k: string) => fakeSession.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      fakeSession.set(k, v);
+    },
+    removeItem: (k: string) => {
+      fakeSession.delete(k);
+    },
+  };
+
+  assertEquals(stashBatchDraft("   ", mockStorage), false);
+  assertEquals(consumeBatchDraft(mockStorage), null);
+
+  const draft = "Table {01..08} | https://venue.example/table/{01..08}";
+  assertEquals(stashBatchDraft(`  ${draft}\n`, mockStorage), true);
+  assertEquals(mockStorage.getItem(BATCH_DRAFT_STORAGE_KEY), draft);
+
+  const handedOff = consumeBatchDraft(mockStorage);
+  assertEquals(handedOff, draft);
+  // Cleared immediately upon consumption so future visits start fresh
+  assertEquals(mockStorage.getItem(BATCH_DRAFT_STORAGE_KEY), null);
+  assertEquals(consumeBatchDraft(mockStorage), null);
+
+  const { rows, skipped } = parseBatchCsv(handedOff!);
+  assertEquals(rows.length, 8);
+  assertEquals(skipped, 0);
+  assertEquals(rows[0].label, "Table 01");
+  assertEquals(rows[7].destination, "https://venue.example/table/08");
 });

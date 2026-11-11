@@ -8,7 +8,7 @@
 // Deliberately sequential when minting editable codes: one row at a time, so a
 // quota or network stop leaves every previously minted row vaulted locally.
 
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { expandSequenceExpressions } from "../hooks/useBatchGenerator.ts";
 import { apiRequest } from "../utils/api-request.ts";
 import { getApiUrl } from "../utils/api.ts";
@@ -53,6 +53,29 @@ export type BatchPaletteKey =
 
 export type StickerPaperSize = "A4" | "Letter";
 export type StickerGridSize = "3x4" | "4x6";
+export type BatchMode = "images" | "editable";
+
+export const DEFAULT_BATCH_MODE: BatchMode = "images";
+export const BATCH_DRAFT_STORAGE_KEY = "qrbuddy_batch_draft";
+
+/** Reads and clears any draft stashed from CreateModal -> Bulk ZIP (`qrbuddy_batch_draft`). */
+export function consumeBatchDraft(
+  storage?: Pick<Storage, "getItem" | "removeItem">,
+): string | null {
+  try {
+    const target = storage ??
+      (typeof sessionStorage !== "undefined" ? sessionStorage : undefined);
+    if (!target) return null;
+    const saved = target.getItem(BATCH_DRAFT_STORAGE_KEY);
+    if (saved !== null) {
+      target.removeItem(BATCH_DRAFT_STORAGE_KEY);
+    }
+    const trimmed = saved?.trim() ?? "";
+    return trimmed.length > 0 ? trimmed : null;
+  } catch {
+    return null;
+  }
+}
 
 export interface StickerSheetItem {
   data: string;
@@ -441,8 +464,9 @@ export async function persistMintedBatchRow(
 export default function BatchStudio(
   { supabaseUrl }: { supabaseUrl?: string },
 ) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [raw, setRaw] = useState("");
-  const [mode, setMode] = useState<"editable" | "images">("editable");
+  const [mode, setMode] = useState<BatchMode>(DEFAULT_BATCH_MODE);
   const [palette, setPalette] = useState<BatchPaletteKey>("noir");
   const [paperSize, setPaperSize] = useState<StickerPaperSize>("A4");
   const [sheetGrid, setSheetGrid] = useState<StickerGridSize>("3x4");
@@ -453,6 +477,13 @@ export default function BatchStudio(
   const [hasMintedDynamic, setHasMintedDynamic] = useState(false);
   const [hasExportedBackup, setHasExportedBackup] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const draft = consumeBatchDraft();
+    if (draft) {
+      setRaw(draft);
+    }
+  }, []);
 
   const parsed = raw.trim() ? parseBatchCsv(raw) : { rows: [], skipped: 0 };
   const rows = parsed.rows.slice(0, MAX_ROWS);
@@ -480,11 +511,12 @@ export default function BatchStudio(
     setResults([]);
     setDone(0);
     setError("");
+    input.value = "";
   }
 
   function insertSequenceExample() {
     const sample =
-      "url,title\nhttps://venue.example/table/{01..12},Table {01..12}";
+      "url,title\nhttps://venue.example/table/{01..08},Table {01..08}";
     setRaw(raw.trim() ? `${raw.trim()}\n${sample.split("\n")[1]}` : sample);
     setResults([]);
     setDone(0);
@@ -705,7 +737,17 @@ export default function BatchStudio(
   }
 
   return (
-    <main class="mx-auto max-w-3xl px-4 py-10 text-stone-900">
+    <main class="mx-auto max-w-3xl px-4 py-8 sm:py-10 text-stone-900">
+      <nav aria-label="Studio navigation" class="mb-5">
+        <a
+          href="/"
+          class="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-3.5 py-1.5 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow,background-color] duration-[70ms] hover:-translate-y-px hover:bg-[#fbf1e4] hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
+        >
+          <span aria-hidden="true">←</span>
+          <span>QRBuddy</span>
+        </a>
+      </nav>
+
       <header class="mb-6">
         <p class="text-xs font-black uppercase tracking-[0.2em] text-pink-600">
           Batch
@@ -719,20 +761,54 @@ export default function BatchStudio(
         </p>
       </header>
 
-      <section class="rounded-3xl border-2 border-stone-900 bg-[#fffef7] p-5 shadow-[4px_4px_0_#1e1714]">
-        <div class="flex flex-wrap items-center justify-between gap-2">
+      <section class="rounded-3xl border-2 border-[#1e1714] bg-[#fffef7] p-5 shadow-[4px_4px_0_#1e1714]">
+        {/* Batch Mode Switch — top of card, recessed keycap track, Static default */}
+        <div
+          class="grid grid-cols-2 gap-1 rounded-xl border-2 border-[#1e1714] bg-[#f7ecdc] p-1 shadow-[inset_0_2px_0_rgba(30,23,20,0.08)]"
+          role="group"
+          aria-label="Batch mode"
+        >
+          {([
+            ["images", "Static SVGs"],
+            ["editable", "Editable links"],
+          ] as const).map(([value, label]) => {
+            const active = mode === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                aria-pressed={active}
+                class={`min-h-[36px] rounded-lg border-2 px-3 py-1.5 text-xs sm:text-sm font-black transition-[transform,box-shadow,background-color] duration-[70ms] ${
+                  active
+                    ? "border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                    : "border-transparent text-[#1e1714]/80 hover:bg-[#fffef7]/60 hover:text-[#1e1714]"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <p class="mt-2 text-[11px] font-bold leading-snug text-stone-600">
+          {mode === "editable"
+            ? "Free tier: up to 5 active / 10 minted per hour · Passport lifts limits"
+            : "Encoded directly inside each vector SVG · Up to 200 rows offline, zero tracking"}
+        </p>
+
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
           <label
             for="batch-csv-input"
             class="block text-xs font-black uppercase tracking-wider text-stone-500"
           >
-            Paste CSV or {"{1..N}"} sequence, or drop a file
+            Paste CSV or {"{1..N}"} sequence, or upload a file
           </label>
           <button
             type="button"
             onClick={insertSequenceExample}
             class="rounded-lg border-[1.5px] border-[#1e1714]/30 bg-[#fbf1e4] px-2.5 py-1 text-[11px] font-black text-[#1e1714] transition hover:border-[#1e1714]"
           >
-            Insert {"{1..12}"} example
+            Insert {"{01..08}"} example
           </button>
         </div>
 
@@ -746,17 +822,27 @@ export default function BatchStudio(
           }}
           rows={6}
           spellcheck={false}
-          placeholder={`url,title\nhttps://venue.example/table/{01..12},Table {01..12}\nhttps://venue.example/vip-menu,VIP Lounge`}
+          placeholder={`url,title\nhttps://venue.example/table/{01..08},Table {01..08}\nhttps://venue.example/vip-menu,VIP Lounge`}
           class="mt-2 w-full resize-y rounded-2xl border-2 border-stone-300 bg-white p-3 font-mono text-xs focus:border-stone-900 focus:outline-none"
         />
 
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <input
+            ref={fileInputRef}
             type="file"
             accept=".csv,text/csv,text/plain"
             onChange={handleFile}
-            class="text-xs"
+            class="hidden"
+            aria-hidden="true"
+            tabIndex={-1}
           />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            class="min-h-[36px] border-2 border-[#1e1714] bg-[#fffef7] rounded-xl px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow,background-color] duration-[70ms] hover:-translate-y-px hover:bg-[#fbf1e4] hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
+          >
+            Upload CSV
+          </button>
           <span class="text-xs font-bold text-stone-600 tabular-nums">
             {rows.length} row{rows.length === 1 ? "" : "s"} ready
             {parsed.skipped ? ` · ${parsed.skipped} skipped` : ""}
@@ -867,48 +953,17 @@ export default function BatchStudio(
           </div>
         </div>
 
-        {/* Batch Mode Switch */}
-        <div
-          class="mt-4 grid grid-cols-2 gap-2"
-          role="group"
-          aria-label="Batch mode"
-        >
-          {([
-            ["editable", "Editable codes"],
-            ["images", "Image files"],
-          ] as const).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setMode(value)}
-              aria-pressed={mode === value}
-              class={`min-h-[44px] rounded-xl border-2 border-stone-900 px-3 py-2 text-xs font-black transition ${
-                mode === value
-                  ? "bg-stone-900 text-amber-100"
-                  : "bg-white hover:bg-stone-100"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <p class="mt-2 text-[11px] leading-snug text-stone-500">
-          {mode === "editable"
-            ? "Editable: every row mints a re-pointable short link with scan stats. Needs a connection."
-            : "Image files: destination encoded directly inside the vector graphic. Zero tracking, works offline forever."}
-        </p>
-
         {mode === "editable"
           ? (
             <button
               type="button"
               onClick={run}
               disabled={isGenerating || !rows.length}
-              class="mt-4 w-full min-h-[48px] rounded-2xl border-2 border-stone-900 bg-pink-400 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
+              class="mt-4 w-full min-h-[48px] rounded-2xl border-2 border-[#1e1714] bg-pink-400 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
             >
               {isGenerating
                 ? `Creating ${done} / ${rows.length}…`
-                : `Create ${rows.length || ""} code${
+                : `Create ${rows.length || ""} editable link${
                   rows.length === 1 ? "" : "s"
                 }`}
             </button>
