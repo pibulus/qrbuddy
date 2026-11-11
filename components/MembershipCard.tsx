@@ -58,7 +58,7 @@ function qrDataUrl(text: string): string {
     const qr = qrcode(0, "M");
     qr.addData(text);
     qr.make();
-    return qr.createDataURL(4, 0);
+    return qr.createDataURL(5, 2);
   } catch (error) {
     console.warn("[MembershipCard] Local QR render failed:", error);
     return "";
@@ -94,7 +94,7 @@ export function PassportMembershipCard({
   const [hovered, setHovered] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const [showQr, setShowQr] = useState(false);
+  const [showQr, setShowQr] = useState(true);
 
   // Identity is derived from the code so the card matches the token/email even
   // when older device storage still holds a pre-parity moniker.
@@ -165,7 +165,8 @@ export function PassportMembershipCard({
         : buildPassportPhraseUrl(identity.phrase || passport.phrase || ""),
     [identity.phrase, passport.phrase, isPreview],
   );
-  const qrImageUrl = useMemo(() => qrDataUrl(syncUrl), [syncUrl]);
+  const qrTargetUrl = syncUrl || "https://qrbuddy.app";
+  const qrImageUrl = useMemo(() => qrDataUrl(qrTargetUrl), [qrTargetUrl]);
 
   const markup = useMemo(
     () =>
@@ -391,8 +392,8 @@ export function PassportMembershipCard({
       toggleReveal();
       return;
     }
-    // The QR stamp is an anchor when revealed; let it navigate.
-    if (target.closest(".passport-qr-stamp")) return;
+    // The QR stamp is an anchor on active cards; let it navigate.
+    if (!isPreview && syncUrl && target.closest(".passport-qr-stamp")) return;
     if (target.closest(".passport-id-chip")) {
       e.stopPropagation();
       copyPasskey();

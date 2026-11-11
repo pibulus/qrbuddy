@@ -21,7 +21,7 @@ import {
 } from "../supabase/functions/_shared/license.ts";
 
 const EXPECTED_MANIFEST_SHA256 =
-  "441e0cfe73245a9a8b79732e4e3957e5668d9a2b7dd8c45b9b8ee77c2cd5e6da";
+  "ef1d0be5b027325fdf6eb854ec034d392fcd9aa6a6dddb5a52b7c124f614e7c2";
 
 const vector = JSON.parse(
   await Deno.readTextFile(
@@ -110,7 +110,7 @@ Deno.test("Passport: the vector resolves the shared card skin and palette", asyn
   assertEquals(skin.choices, vector.card.choices);
 });
 
-Deno.test("Passport: resting card masks words and omits QR; reveals on demand", async () => {
+Deno.test("Passport: resting card masks words while carrying QR; reveals words on demand", async () => {
   const hash = await sha256(idInput(vector.code));
   const identity = generateMemberIdentity(hash, vector.code, {
     phrase: vector.phrase,
@@ -127,8 +127,19 @@ Deno.test("Passport: resting card masks words and omits QR; reveals on demand", 
   assert(resting.includes('data-passport-name="Quiet Tapir"'));
   assert(resting.includes('data-passport-masked="true"'));
   assert(!resting.includes(vector.phrase));
-  assert(!resting.includes("data:image/png;base64,AAAA"));
+  assert(resting.includes("passport-qr-stamp"));
+  assert(resting.includes("data:image/png;base64,AAAA"));
   assert(resting.includes(">••••• ••••• ••••• •••••</p>"));
+
+  const qrHidden = renderMembershipCard({
+    identity,
+    skin,
+    appName: "QRBuddy",
+    showQr: false,
+    qrUrl: "https://qrbuddy.app/#sync=test",
+    qrImageUrl: "data:image/png;base64,AAAA",
+  });
+  assert(!qrHidden.includes("data:image/png;base64,AAAA"));
 
   const html = renderMembershipCard({
     identity,
