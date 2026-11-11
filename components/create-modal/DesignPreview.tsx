@@ -34,15 +34,15 @@ export default function DesignPreview(
     }
     return (
       <div
-        class="shrink-0 flex flex-col items-center justify-center gap-1 py-2 border-b-2 border-[#1e1714]/10 bg-[#fbf1e4]"
+        class="shrink-0 flex flex-col items-center justify-center gap-1 py-1.5 border-b-2 border-[#1e1714]/10 bg-[#fbf1e4]"
         data-design-preview
       >
         <img
           src={toSvgDataUrl(svg)}
           alt={es ? "Vista previa del QR en vivo" : "Live QR design preview"}
-          class="h-[120px] sm:h-[136px] max-w-full object-contain"
-          width="136"
-          height="136"
+          class="h-[104px] sm:h-[112px] max-w-full object-contain"
+          width="112"
+          height="112"
         />
         {omitted && (
           <p class="text-[11px] font-bold text-amber-800" role="status">

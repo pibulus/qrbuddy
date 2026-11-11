@@ -159,7 +159,7 @@ export default function StyleSelector(
             : `Saved codes${
               savedCount.value > 0 ? ` (${savedCount.value})` : ""
             }`}
-          class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 min-h-[38px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] hover:-translate-y-px hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
+          class="relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 min-h-[38px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] hover:-translate-y-px hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
         >
           <svg
             aria-hidden="true"
@@ -179,7 +179,7 @@ export default function StyleSelector(
             {isSpanish ? "Guardados" : "Saved"}
           </span>
           {savedCount.value > 0 && (
-            <span class="px-1.5 py-0.5 rounded-full bg-[#f7ecdc] border border-[#1e1714]/40 text-[10px] font-black leading-none tabular-nums">
+            <span class="px-1.5 py-0.5 rounded-full bg-[#f7ecdc] border border-[#1e1714]/40 text-[10px] font-black leading-none tabular-nums max-[379px]:absolute max-[379px]:-top-1.5 max-[379px]:-right-1.5 max-[379px]:bg-[#fffef7] max-[379px]:border-2 max-[379px]:border-[#1e1714]">
               {savedCount.value > 99 ? "99+" : savedCount.value}
             </span>
           )}

@@ -183,7 +183,7 @@ export default function DesignTab(
   const customActive = qrStyle.value === "custom";
 
   return (
-    <div class="space-y-4 text-[#1e1714]">
+    <div class="space-y-3 text-[#1e1714]">
       <section class="space-y-1.5" aria-label={es ? "Paleta" : "Palette"}>
         <div class="flex items-center justify-between gap-2">
           <h3 class="text-xs sm:text-[13px] leading-none font-black truncate">
