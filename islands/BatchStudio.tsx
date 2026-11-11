@@ -1,22 +1,25 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// BatchStudio — a spreadsheet in, a print-ready sheet of QR codes out
+// BatchStudio — a spreadsheet or sequence in, styled print-ready sheets out
 // ═══════════════════════════════════════════════════════════════════════════
-// The thing a business with 400 cartons actually needs. Paste or drop a CSV
-// with a destination column (and an optional label column), and every row
-// becomes an editable code. The result downloads as a CSV you own and prints
-// as a sheet you can hand to a label printer.
+// Paste or drop a CSV (or `{1..N}` sequence runs), pick a print-verified
+// palette and A4/Letter sticker grid, and export either editable codes or
+// standalone vector SVGs + printable sticker sheets.
 //
-// Deliberately sequential: one row at a time, so a quota or auth failure
-// stops the run with the rows already created still yours, instead of
-// failing 400 times in parallel and reporting nothing.
+// Deliberately sequential when minting editable codes: one row at a time, so a
+// quota or network stop leaves every previously minted row vaulted locally.
 
 import { useEffect, useState } from "preact/hooks";
+import { expandSequenceExpressions } from "../hooks/useBatchGenerator.ts";
 import { apiRequest } from "../utils/api-request.ts";
 import { getApiUrl } from "../utils/api.ts";
 import { isPlusLibraryEnabled } from "../utils/auth.ts";
 import { addDynamicToHistory } from "../utils/history.ts";
+import { resolveQRStyle } from "../utils/qr-design.ts";
+import { QR_STYLES } from "../utils/qr-styles.ts";
 import { buildQrSvgString, toSvgDataUrl } from "../utils/qr-vector-svg.ts";
 import { saveOwnerToken } from "../utils/token-vault.ts";
+
+export { expandSequenceExpressions };
 
 export interface BatchRow {
   index: number;
@@ -39,6 +42,60 @@ export interface CreateQrResponse {
   edit_url: string;
   owner_token: string;
 }
+
+export type BatchPaletteKey =
+  | "noir"
+  | "sunset"
+  | "pool"
+  | "matcha"
+  | "blush"
+  | "vapor";
+
+export type StickerPaperSize = "A4" | "Letter";
+export type StickerGridSize = "3x4" | "4x6";
+
+export interface StickerSheetItem {
+  data: string;
+  caption: string;
+  sublabel?: string;
+}
+
+export const BATCH_PALETTES: ReadonlyArray<{
+  key: BatchPaletteKey;
+  label: string;
+  swatch: readonly string[];
+}> = [
+  {
+    key: "noir",
+    label: "Classic Ink",
+    swatch: QR_STYLES.noir.dots.gradient.colorStops.map((s) => s.color),
+  },
+  {
+    key: "sunset",
+    label: "Sunset",
+    swatch: QR_STYLES.sunset.dots.gradient.colorStops.map((s) => s.color),
+  },
+  {
+    key: "pool",
+    label: "Pool",
+    swatch: QR_STYLES.pool.dots.gradient.colorStops.map((s) => s.color),
+  },
+  {
+    key: "matcha",
+    label: "Forest",
+    swatch: QR_STYLES.matcha.dots.gradient.colorStops.map((s) => s.color),
+  },
+  {
+    key: "blush",
+    label: "Berry",
+    swatch: QR_STYLES.blush.dots.gradient.colorStops.map((s) => s.color),
+  },
+  {
+    key: "vapor",
+    label: "Vapor",
+    swatch: QR_STYLES.vapor.dots.gradient.colorStops.map((s) => s.color),
+  },
+];
 
 const MAX_ROWS = 200;
 const URL_HEADERS = ["url", "destination", "link", "destination_url", "target"];
@@ -83,13 +140,15 @@ function isHttpUrl(value: string): boolean {
 }
 
 /**
- * Parse a pasted spreadsheet. A header row is detected by name; without one,
- * column 1 is the destination and column 2 the label.
+ * Parse a pasted spreadsheet or `{1..N}` sequence list. A header row is
+ * detected by name; without one, column 1 is the destination and column 2 the
+ * label (and `Label | https://...` pipe rows are also accepted).
  */
 export function parseBatchCsv(
   text: string,
 ): { rows: BatchRow[]; skipped: number; error?: string } {
-  const lines = text
+  const expanded = expandSequenceExpressions(text, MAX_ROWS);
+  const lines = expanded
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
@@ -116,7 +175,22 @@ export function parseBatchCsv(
   let skipped = 0;
 
   for (let i = startAt; i < lines.length; i++) {
-    const cells = splitCsvLine(lines[i]);
+    const line = lines[i];
+    if (!hasHeader && line.includes("|")) {
+      const pipeIdx = line.indexOf("|");
+      const left = line.slice(0, pipeIdx).trim();
+      const right = line.slice(pipeIdx + 1).trim();
+      if (isHttpUrl(right)) {
+        rows.push({ index: rows.length + 1, label: left, destination: right });
+        continue;
+      }
+      if (isHttpUrl(left)) {
+        rows.push({ index: rows.length + 1, label: right, destination: left });
+        continue;
+      }
+    }
+
+    const cells = splitCsvLine(line);
     const destination = cells[urlIndex] ?? "";
     if (!isHttpUrl(destination)) {
       skipped++;
@@ -135,6 +209,174 @@ export function parseBatchCsv(
     };
   }
   return { rows, skipped };
+}
+
+/** Renders a styled vector SVG using real `QR_STYLES` geometry + gradients via `resolveQRStyle`. */
+export function buildStyledBatchQrSvg(
+  data: string,
+  paletteKey: BatchPaletteKey = "noir",
+  options?: { size?: number; caption?: string },
+): string {
+  const s = resolveQRStyle(paletteKey);
+  return buildQrSvgString({
+    data,
+    size: options?.size ?? 1024,
+    errorCorrectionLevel: "M",
+    caption: options?.caption || undefined,
+    c1: s.dots.color ?? s.dots.gradient?.colorStops[0]?.color,
+    c2: s.dots.color ?? s.dots.gradient?.colorStops.at(-1)?.color,
+    bg: s.background.color ?? s.background.gradient?.colorStops[0]?.color,
+    dotsGradient: s.dots.gradient,
+    backgroundGradient: s.background.gradient,
+    eyeGradient: s.cornersSquare?.gradient ?? s.dots.gradient,
+    eyeColor: s.cornersSquare?.color ?? s.dots.color,
+    dotShape: s.dots.shape,
+    cornerSquareShape: s.cornersSquare?.shape,
+  });
+}
+
+function compactUrlSublabel(rawUrl: string): string {
+  try {
+    const u = new URL(rawUrl);
+    const host = u.hostname.replace(/^www\./, "");
+    const tail = `${u.pathname === "/" ? "" : u.pathname}${u.search}`;
+    const combined = `${host}${tail}`;
+    return combined.length > 28 ? `${combined.slice(0, 27)}…` : combined;
+  } catch {
+    return "";
+  }
+}
+
+/** Builds a standalone print-ready HTML sticker sheet (`A4` or `Letter`, `3×4` or `4×6`). */
+export function buildBatchStickerSheetHtml({
+  items,
+  palette = "noir",
+  paperSize = "A4",
+  grid = "3x4",
+}: {
+  items: StickerSheetItem[];
+  palette?: BatchPaletteKey;
+  paperSize?: StickerPaperSize;
+  grid?: StickerGridSize;
+}): string {
+  const cols = grid === "4x6" ? 4 : 3;
+  const rowsPerPage = grid === "4x6" ? 6 : 4;
+  const perPage = cols * rowsPerPage;
+  const pages: string[] = [];
+
+  for (let offset = 0; offset < items.length; offset += perPage) {
+    const slice = items.slice(offset, offset + perPage);
+    const cells = slice
+      .map((item) => {
+        const svg = buildStyledBatchQrSvg(item.data, palette, { size: 480 });
+        const sub = item.sublabel?.trim() ?? "";
+        return `<figure class="cell">
+          <img src="${toSvgDataUrl(svg)}" alt="" />
+          <figcaption>
+            <strong>${escapeHtml(item.caption)}</strong>
+            ${sub ? `<span>${escapeHtml(sub)}</span>` : ""}
+          </figcaption>
+        </figure>`;
+      })
+      .join("");
+    pages.push(`<section class="sheet-page">${cells}</section>`);
+  }
+
+  const pageSpec = paperSize === "Letter" ? "letter portrait" : "A4 portrait";
+  const gapMm = grid === "4x6" ? "3.2mm" : "4.8mm";
+  const padMm = grid === "4x6" ? "2.4mm" : "3.6mm";
+  const radiusMm = grid === "4x6" ? "3.2mm" : "4.8mm";
+  const qrMaxMm = grid === "4x6" ? "27mm" : "42mm";
+  const titlePx = grid === "4x6" ? "9.5px" : "11px";
+  const subPx = grid === "4x6" ? "8px" : "9px";
+
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+    <title>QRBuddy sticker sheet (${paperSize} · ${
+    grid.replace("x", "×")
+  })</title>
+    <style>
+      @page { size: ${pageSpec}; margin: 10mm; }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #fffef7;
+        color: #1e1714;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Arial, sans-serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .sheet-page {
+        display: grid;
+        grid-template-columns: repeat(${cols}, minmax(0, 1fr));
+        gap: ${gapMm};
+        page-break-after: always;
+        break-after: page;
+      }
+      .sheet-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+      .cell {
+        margin: 0;
+        background: #fffef7;
+        border: 1.5px dashed #3d332d;
+        border-radius: ${radiusMm};
+        padding: ${padMm};
+        text-align: center;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+      }
+      .cell img {
+        width: 100%;
+        max-width: ${qrMaxMm};
+        max-height: ${qrMaxMm};
+        height: auto;
+        display: block;
+      }
+      figcaption {
+        display: grid;
+        gap: 1.5px;
+        margin-top: 2.2mm;
+        width: 100%;
+      }
+      figcaption strong {
+        font-size: ${titlePx};
+        font-weight: 800;
+        color: #1e1714;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      figcaption span {
+        font-size: ${subPx};
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: #574c44;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      @media screen {
+        body { padding: 8mm; background: #fbf1e4; }
+        .sheet-page {
+          max-width: ${paperSize === "Letter" ? "215.9mm" : "210mm"};
+          margin: 0 auto 8mm;
+          padding: 10mm;
+          background: #fffef7;
+          border: 2px solid #1e1714;
+          border-radius: 4mm;
+        }
+      }
+      @media print {
+        body { padding: 0; background: #fffef7; }
+        .sheet-page { margin: 0; padding: 0; border: 0; max-width: none; }
+      }
+    </style></head><body>${pages.join("")}</body></html>`;
 }
 
 function downloadText(filename: string, mime: string, body: string) {
@@ -200,10 +442,10 @@ export default function BatchStudio(
   { supabaseUrl }: { supabaseUrl?: string },
 ) {
   const [raw, setRaw] = useState("");
-  // One page, two products: editable codes (server, tracked) or plain image
-  // files (local, no account, no scan data). The same CSV feeds both, so a
-  // person never has to learn a second tool to change their mind.
   const [mode, setMode] = useState<"editable" | "images">("editable");
+  const [palette, setPalette] = useState<BatchPaletteKey>("noir");
+  const [paperSize, setPaperSize] = useState<StickerPaperSize>("A4");
+  const [sheetGrid, setSheetGrid] = useState<StickerGridSize>("3x4");
   const [zipping, setZipping] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [done, setDone] = useState(0);
@@ -235,6 +477,15 @@ export default function BatchStudio(
     const file = input.files?.[0];
     if (!file) return;
     setRaw(await file.text());
+    setResults([]);
+    setDone(0);
+    setError("");
+  }
+
+  function insertSequenceExample() {
+    const sample =
+      "url,title\nhttps://venue.example/table/{01..12},Table {01..12}";
+    setRaw(raw.trim() ? `${raw.trim()}\n${sample.split("\n")[1]}` : sample);
     setResults([]);
     setDone(0);
     setError("");
@@ -294,9 +545,7 @@ export default function BatchStudio(
     setIsGenerating(false);
   }
 
-  /** Static mode: the destination itself is encoded, so the files work
-   *  forever with no server and no account — the opposite trade to an
-   *  editable code, offered side by side instead of hidden elsewhere. */
+  /** Static mode: destination encoded directly into styled vector SVGs + manifest.csv. */
   async function downloadStaticZip() {
     if (!rows.length || zipping) return;
     setZipping(true);
@@ -312,10 +561,8 @@ export default function BatchStudio(
       const manifest = ["row,label,destination,file"];
 
       for (const row of rows) {
-        const svg = buildQrSvgString({
-          data: row.destination,
+        const svg = buildStyledBatchQrSvg(row.destination, palette, {
           size: 1024,
-          errorCorrectionLevel: "M",
           caption: row.label || undefined,
         });
         const base = `qr-${String(row.index).padStart(3, "0")}`;
@@ -336,7 +583,7 @@ export default function BatchStudio(
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "qrbuddy-static-qr.zip";
+      a.download = `qrbuddy-static-${palette}.zip`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (caught) {
@@ -348,7 +595,7 @@ export default function BatchStudio(
     }
   }
 
-  /** Dynamic ZIP export: SVG vector files for every minted code + manifest.csv backup. */
+  /** Dynamic ZIP export: styled SVG vector files for every minted code + manifest.csv backup. */
   async function downloadDynamicZip() {
     if (!created.length || zipping) return;
     setZipping(true);
@@ -363,10 +610,8 @@ export default function BatchStudio(
       const zip = new JSZip();
 
       for (const row of created) {
-        const svg = buildQrSvgString({
-          data: row.redirectUrl ?? "",
+        const svg = buildStyledBatchQrSvg(row.redirectUrl ?? "", palette, {
           size: 1024,
-          errorCorrectionLevel: "M",
           caption: row.label || undefined,
         });
         const suffix = row.shortCode ? `-${row.shortCode}` : "";
@@ -379,7 +624,7 @@ export default function BatchStudio(
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "qrbuddy-editable-qr.zip";
+      a.download = `qrbuddy-editable-${palette}.zip`;
       a.click();
       URL.revokeObjectURL(url);
       setHasExportedBackup(true);
@@ -416,50 +661,47 @@ export default function BatchStudio(
     setHasExportedBackup(true);
   }
 
-  function printSheet() {
-    if (!created.length) return;
-    const cells = created
-      .map((row) => {
-        const caption = row.label || row.shortCode || "";
-        // Drawn locally: the customer's destinations never leave the browser
-        // to reach some third-party QR image service.
-        const svg = buildQrSvgString({
-          data: row.redirectUrl ?? "",
-          size: 420,
-          errorCorrectionLevel: "M",
-        });
-        return `<figure class="cell">
-          <img src="${toSvgDataUrl(svg)}" alt="" />
-          <figcaption><strong>${escapeHtml(caption)}</strong><span>${
-          escapeHtml(row.shortCode ?? "")
-        }</span></figcaption>
-        </figure>`;
-      })
-      .join("");
-
-    const sheet = `<!doctype html><html><head><meta charset="utf-8">
-      <title>QRBuddy batch sheet</title>
-      <style>
-        @page { size: A4; margin: 12mm; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; margin: 0; }
-        main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; }
-        .cell { margin: 0; border: 1.5px solid #1e1714; border-radius: 6mm; padding: 4mm; text-align: center; break-inside: avoid; }
-        .cell img { width: 100%; height: auto; display: block; }
-        figcaption { display: grid; gap: 2px; margin-top: 3mm; }
-        figcaption strong { font-size: 11px; }
-        figcaption span { font-size: 9px; font-family: ui-monospace, Menlo, monospace; opacity: 0.7; }
-      </style></head><body><main>${cells}</main></body></html>`;
+  function openStickerPrintWindow(items: StickerSheetItem[]) {
+    if (!items.length) return;
+    const sheet = buildBatchStickerSheetHtml({
+      items,
+      palette,
+      paperSize,
+      grid: sheetGrid,
+    });
 
     // deno-lint-ignore no-explicit-any
     const win = (globalThis as any).open("", "_blank") as Window | null;
     if (!win) {
-      setError("Allow pop-ups to open the print sheet.");
+      setError("Pop-up blocked — allow pop-ups to open the sticker sheet.");
       return;
     }
     win.document.write(sheet);
     win.document.close();
     win.focus();
     win.print();
+  }
+
+  function printDynamicSheet() {
+    if (!created.length) return;
+    openStickerPrintWindow(
+      created.map((row) => ({
+        data: row.redirectUrl ?? "",
+        caption: row.label || row.shortCode || `QR ${row.index}`,
+        sublabel: row.label ? (row.shortCode ?? "") : "",
+      })),
+    );
+  }
+
+  function printStaticSheet() {
+    if (!rows.length) return;
+    openStickerPrintWindow(
+      rows.map((row) => ({
+        data: row.destination,
+        caption: row.label || `QR ${row.index}`,
+        sublabel: compactUrlSublabel(row.destination),
+      })),
+    );
   }
 
   return (
@@ -472,16 +714,30 @@ export default function BatchStudio(
           A spreadsheet in. A sheet of codes out.
         </h1>
         <p class="mt-2 text-sm text-stone-600">
-          One row, one editable code. Every code prints with its label, and the
-          CSV stays yours.
+          One row, one code. Every sticker prints with its label, and the CSV
+          stays local.
         </p>
       </header>
 
       <section class="rounded-3xl border-2 border-stone-900 bg-[#fffef7] p-5 shadow-[4px_4px_0_#1e1714]">
-        <label class="block text-xs font-black uppercase tracking-wider text-stone-500">
-          Paste a CSV, or drop a file
-        </label>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <label
+            for="batch-csv-input"
+            class="block text-xs font-black uppercase tracking-wider text-stone-500"
+          >
+            Paste CSV or {"{1..N}"} sequence, or drop a file
+          </label>
+          <button
+            type="button"
+            onClick={insertSequenceExample}
+            class="rounded-lg border-[1.5px] border-[#1e1714]/30 bg-[#fbf1e4] px-2.5 py-1 text-[11px] font-black text-[#1e1714] transition hover:border-[#1e1714]"
+          >
+            Insert {"{1..12}"} example
+          </button>
+        </div>
+
         <textarea
+          id="batch-csv-input"
           value={raw}
           onInput={(event) => {
             setRaw((event.target as HTMLTextAreaElement).value);
@@ -490,11 +746,10 @@ export default function BatchStudio(
           }}
           rows={6}
           spellcheck={false}
-          placeholder="url,title
-https://acme.test/menu,Table 1
-https://acme.test/menu,Table 2"
+          placeholder={`url,title\nhttps://venue.example/table/{01..12},Table {01..12}\nhttps://venue.example/vip-menu,VIP Lounge`}
           class="mt-2 w-full resize-y rounded-2xl border-2 border-stone-300 bg-white p-3 font-mono text-xs focus:border-stone-900 focus:outline-none"
         />
+
         <div class="mt-3 flex flex-wrap items-center gap-3">
           <input
             type="file"
@@ -502,17 +757,117 @@ https://acme.test/menu,Table 2"
             onChange={handleFile}
             class="text-xs"
           />
-          <span class="text-xs text-stone-500">
+          <span class="text-xs font-bold text-stone-600 tabular-nums">
             {rows.length} row{rows.length === 1 ? "" : "s"} ready
             {parsed.skipped ? ` · ${parsed.skipped} skipped` : ""}
             {parsed.rows.length > MAX_ROWS ? ` · first ${MAX_ROWS} only` : ""}
           </span>
         </div>
+
         {(parsed.error || error) && (
-          <p class="mt-3 text-xs font-bold text-pink-700">
+          <p
+            role="alert"
+            class="mt-3 rounded-2xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-900"
+          >
             {parsed.error || error}
           </p>
         )}
+
+        {/* Palette Preset Row */}
+        <div class="mt-5">
+          <span class="block text-[11px] font-black uppercase tracking-wider text-stone-500">
+            Palette
+          </span>
+          <div
+            class="mt-2 grid grid-cols-3 gap-1.5 sm:grid-cols-6"
+            role="group"
+            aria-label="QR palette"
+          >
+            {BATCH_PALETTES.map((preset) => {
+              const active = palette === preset.key;
+              return (
+                <button
+                  key={preset.key}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setPalette(preset.key)}
+                  class={`min-h-[44px] rounded-xl border-2 px-2 py-1.5 flex items-center justify-center gap-1.5 text-xs font-black transition ${
+                    active
+                      ? "border-[#1e1714] bg-amber-200 text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
+                      : "border-stone-900/20 bg-white text-stone-800 hover:border-stone-900"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    class="h-3.5 w-3.5 shrink-0 rounded-full border-[1.5px] border-[#1e1714]"
+                    style={{
+                      background: `linear-gradient(135deg, ${
+                        preset.swatch.join(", ")
+                      })`,
+                    }}
+                  />
+                  <span class="truncate">{preset.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Printable Sticker Sheet Layout (Paper + Grid) */}
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border-[1.5px] border-stone-900/15 bg-[#fbf1e4] px-3.5 py-2.5">
+          <span class="text-[11px] font-black uppercase tracking-wider text-stone-600">
+            Sticker sheet
+          </span>
+          <div class="flex flex-wrap items-center gap-2">
+            <div
+              class="inline-flex rounded-xl border-2 border-[#1e1714] bg-white p-0.5"
+              role="group"
+              aria-label="Paper size"
+            >
+              {(["A4", "Letter"] as const).map((sizeOpt) => (
+                <button
+                  key={sizeOpt}
+                  type="button"
+                  aria-pressed={paperSize === sizeOpt}
+                  onClick={() => setPaperSize(sizeOpt)}
+                  class={`rounded-lg px-2.5 py-1 text-[11px] font-black transition ${
+                    paperSize === sizeOpt
+                      ? "bg-[#1e1714] text-[#fffef7]"
+                      : "text-[#1e1714] hover:bg-stone-100"
+                  }`}
+                >
+                  {sizeOpt}
+                </button>
+              ))}
+            </div>
+            <div
+              class="inline-flex rounded-xl border-2 border-[#1e1714] bg-white p-0.5"
+              role="group"
+              aria-label="Sticker grid"
+            >
+              {([
+                ["3x4", "3×4 (12/pg)"],
+                ["4x6", "4×6 (24/pg)"],
+              ] as const).map(([gridKey, gridLabel]) => (
+                <button
+                  key={gridKey}
+                  type="button"
+                  aria-pressed={sheetGrid === gridKey}
+                  onClick={() => setSheetGrid(gridKey)}
+                  class={`rounded-lg px-2.5 py-1 text-[11px] font-black transition ${
+                    sheetGrid === gridKey
+                      ? "bg-[#1e1714] text-[#fffef7]"
+                      : "text-[#1e1714] hover:bg-stone-100"
+                  }`}
+                >
+                  {gridLabel}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Batch Mode Switch */}
         <div
           class="mt-4 grid grid-cols-2 gap-2"
           role="group"
@@ -527,7 +882,7 @@ https://acme.test/menu,Table 2"
               type="button"
               onClick={() => setMode(value)}
               aria-pressed={mode === value}
-              class={`rounded-xl border-2 border-stone-900 px-3 py-2 text-xs font-black transition ${
+              class={`min-h-[44px] rounded-xl border-2 border-stone-900 px-3 py-2 text-xs font-black transition ${
                 mode === value
                   ? "bg-stone-900 text-amber-100"
                   : "bg-white hover:bg-stone-100"
@@ -539,8 +894,8 @@ https://acme.test/menu,Table 2"
         </div>
         <p class="mt-2 text-[11px] leading-snug text-stone-500">
           {mode === "editable"
-            ? "Editable: every row becomes a tracked code you can re-point later. Needs a connection."
-            : "Image files: the destination is inside the graphic. No account, no tracking, works forever offline."}
+            ? "Editable: every row mints a re-pointable short link with scan stats. Needs a connection."
+            : "Image files: destination encoded directly inside the vector graphic. Zero tracking, works offline forever."}
         </p>
 
         {mode === "editable"
@@ -549,7 +904,7 @@ https://acme.test/menu,Table 2"
               type="button"
               onClick={run}
               disabled={isGenerating || !rows.length}
-              class="mt-4 w-full rounded-2xl border-2 border-stone-900 bg-pink-400 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
+              class="mt-4 w-full min-h-[48px] rounded-2xl border-2 border-stone-900 bg-pink-400 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
             >
               {isGenerating
                 ? `Creating ${done} / ${rows.length}…`
@@ -559,16 +914,27 @@ https://acme.test/menu,Table 2"
             </button>
           )
           : (
-            <button
-              type="button"
-              onClick={downloadStaticZip}
-              disabled={zipping || !rows.length}
-              class="mt-4 w-full rounded-2xl border-2 border-stone-900 bg-yellow-300 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
-            >
-              {zipping
-                ? "Building the ZIP…"
-                : `Download ${rows.length || ""} SVG files`}
-            </button>
+            <div class="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={downloadStaticZip}
+                disabled={zipping || !rows.length}
+                class="min-h-[48px] rounded-2xl border-2 border-stone-900 bg-yellow-300 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
+              >
+                {zipping
+                  ? "Building the ZIP…"
+                  : `Download ${rows.length || ""} SVG files`}
+              </button>
+              <button
+                type="button"
+                onClick={printStaticSheet}
+                disabled={!rows.length}
+                class="min-h-[48px] rounded-2xl border-2 border-stone-900 bg-white px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition hover:bg-amber-50 active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
+              >
+                Print sticker sheet ({paperSize} ·{" "}
+                {sheetGrid.replace("x", "×")})
+              </button>
+            </div>
           )}
       </section>
 
@@ -585,7 +951,7 @@ https://acme.test/menu,Table 2"
               <button
                 type="button"
                 onClick={exportCsv}
-                class="rounded-xl border-2 border-stone-900 bg-white px-3 py-2 text-xs font-black"
+                class="min-h-[40px] rounded-xl border-2 border-stone-900 bg-white px-3 py-2 text-xs font-black"
               >
                 Download CSV
               </button>
@@ -593,17 +959,18 @@ https://acme.test/menu,Table 2"
                 type="button"
                 onClick={downloadDynamicZip}
                 disabled={!created.length || zipping}
-                class="rounded-xl border-2 border-stone-900 bg-white px-3 py-2 text-xs font-black disabled:opacity-40"
+                class="min-h-[40px] rounded-xl border-2 border-stone-900 bg-white px-3 py-2 text-xs font-black disabled:opacity-40"
               >
                 {zipping ? "Building ZIP…" : "Download ZIP"}
               </button>
               <button
                 type="button"
-                onClick={printSheet}
+                onClick={printDynamicSheet}
                 disabled={!created.length}
-                class="rounded-xl border-2 border-stone-900 bg-yellow-300 px-3 py-2 text-xs font-black disabled:opacity-40"
+                class="min-h-[40px] rounded-xl border-2 border-stone-900 bg-yellow-300 px-3 py-2 text-xs font-black disabled:opacity-40"
               >
-                Print sheet
+                Print sticker sheet ({paperSize} ·{" "}
+                {sheetGrid.replace("x", "×")})
               </button>
             </div>
           </div>
