@@ -145,6 +145,9 @@ export default function SmartInput(
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createModalTab, setCreateModalTab] = useState<CreateTab>("type");
+  const [createContentStep, setCreateContentStep] = useState<"pick" | "fill">(
+    "pick",
+  );
   const [createHasUpdates, setCreateHasUpdates] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   // Snapshot of the original destination URL before wrapping it in an editable
@@ -1098,6 +1101,7 @@ export default function SmartInput(
       <CreateModal
         isOpen={isCreateModalOpen}
         initialTab={createModalTab}
+        initialContentStep={createContentStep}
         onTabChange={setCreateModalTab}
         onInspect={() => {
           setIsCreateModalOpen(false);
@@ -1234,6 +1238,7 @@ export default function SmartInput(
                       setShowLibrary(false);
                       setShowReader(false);
                       setCreateModalTab("type");
+                      setCreateContentStep("fill");
                       setIsCreateModalOpen(true);
                       setCreateHasUpdates(false);
                       haptics.light();
@@ -1620,6 +1625,7 @@ export default function SmartInput(
         onOpenCreate={(tab) => {
           setShowLibrary(false);
           setCreateModalTab(tab);
+          setCreateContentStep("pick");
           setIsCreateModalOpen(true);
           setCreateHasUpdates(false);
         }}

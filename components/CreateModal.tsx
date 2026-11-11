@@ -85,6 +85,8 @@ interface CreateModalProps {
   /** Tab to land on when the sheet opens; the home row's Design button
    * jumps straight to Design, everything else starts at Content. */
   initialTab?: ActiveTab;
+  /** Whether Content opens on the 2x4 picker grid or straight on the active template form. */
+  initialContentStep?: ContentStep;
   /** Fires when the open sheet changes tab, so the stage trigger can latch. */
   onTabChange?: (tab: ActiveTab) => void;
   /** Opens the scanner (Inspect lives here, off the front page). */
@@ -240,6 +242,7 @@ export default function CreateModal({
   isOpen,
   onClose,
   initialTab = "type",
+  initialContentStep = "pick",
   onTabChange,
   onInspect,
   onShowHistory,
@@ -368,6 +371,7 @@ export default function CreateModal({
       setIsSavingDynamic(false);
     } else {
       setActiveTab(initialTab);
+      setContentStep(initialContentStep);
       setSaveError(null);
       if (isDynamic.value && editUrl.value) {
         if (savedDynamicConfig) {
