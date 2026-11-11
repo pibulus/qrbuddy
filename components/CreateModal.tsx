@@ -1710,7 +1710,7 @@ export default function CreateModal({
                 isDynamic.value &&
                   editUrl.value &&
                   onUpdateEditable &&
-                  (activeTab === "options" || hasUnsavedDynamicChanges),
+                  hasUnsavedDynamicChanges,
               );
 
               return (

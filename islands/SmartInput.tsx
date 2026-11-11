@@ -380,7 +380,7 @@ export default function SmartInput(
     if (result.ok) {
       setStaticSourceUrl(result.data.destinationUrl);
       addToast(
-        isSpanish ? "✅ QR editable actualizado" : "✅ Dynamic QR updated",
+        isSpanish ? "QR editable actualizado" : "Dynamic QR updated",
         2600,
       );
       return { ok: true };
