@@ -6,7 +6,12 @@ import {
   type CreateBucketOptions,
   useBucketCreator,
 } from "../hooks/useBucketCreator.ts";
-import { useDynamicQR } from "../hooks/useDynamicQR.ts";
+import {
+  extractShortCodeFromRedirectUrl,
+  hydrateBehaviorStateFromConfig,
+  type SavedDynamicQRConfig,
+  useDynamicQR,
+} from "../hooks/useDynamicQR.ts";
 import { useFileUpload } from "../hooks/useFileUpload.ts";
 import { QRTemplateType } from "../types/qr-templates.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
@@ -225,6 +230,7 @@ export default function SmartInput(
   // Dynamic QR options
   const [scanLimit, setScanLimit] = useState<number | null>(null); // Default to null (unlimited)
   const [expiryDate, setExpiryDate] = useState<string>("");
+  const [isDynamicActive, setIsDynamicActive] = useState(true);
 
   // Sequential QR options
   const [isSequential, setIsSequential] = useState(false);
@@ -295,7 +301,15 @@ export default function SmartInput(
     : null;
 
   // Custom hooks
-  const { isCreating: isCreatingDynamic, createDynamicQR } = useDynamicQR({
+  const {
+    isCreating: isCreatingDynamic,
+    isUpdating: isUpdatingDynamic,
+    savedDynamicConfig,
+    createDynamicQR,
+    hydrateDynamicQR,
+    updateDynamicQR,
+    resetDynamicQR,
+  } = useDynamicQR({
     url,
     editUrl,
     scanLimit,
@@ -311,6 +325,68 @@ export default function SmartInput(
       : undefined,
     splashConfig: effectiveSplashConfig,
   });
+
+  const applyHydratedBehaviorState = (config: SavedDynamicQRConfig) => {
+    const hydrated = hydrateBehaviorStateFromConfig(config);
+    if (hydrated.destinationUrl) {
+      setStaticSourceUrl(hydrated.destinationUrl);
+    }
+    setIsSequential(hydrated.isSequential);
+    setSequentialUrls(hydrated.sequentialUrls);
+    setLoopSequence(hydrated.loopSequence);
+    setRandomSequence(hydrated.randomSequence);
+    setDailySpins(hydrated.dailySpins);
+    splashConfig.value = hydrated.splashConfig;
+    setScanLimit(hydrated.scanLimit);
+    setExpiryDate(hydrated.expiryDate);
+    setIsDynamicActive(hydrated.isActive);
+  };
+
+  const handleHydrateEditable = async (): Promise<
+    SavedDynamicQRConfig | null
+  > => {
+    const hydratedConfig = savedDynamicConfig ?? (await hydrateDynamicQR());
+    if (hydratedConfig) {
+      applyHydratedBehaviorState(hydratedConfig);
+    }
+    return hydratedConfig;
+  };
+
+  const handleUpdateEditable = async (): Promise<
+    { ok: true } | { ok: false; error: string }
+  > => {
+    const editedDirectUrl = !extractShortCodeFromRedirectUrl(url.value) &&
+        looksLikeUrl(url.value)
+      ? url.value
+      : "";
+    const destinationUrl = editedDirectUrl ||
+      savedDynamicConfig?.destinationUrl ||
+      staticSourceUrl ||
+      "";
+
+    const result = await updateDynamicQR({
+      destinationUrl,
+      isSequential,
+      sequentialUrls,
+      loopSequence,
+      randomSequence,
+      dailySpins,
+      splashConfig: effectiveSplashConfig,
+      scanLimit,
+      expiryDate,
+      isActive: isDynamicActive,
+    });
+
+    if (result.ok) {
+      setStaticSourceUrl(result.data.destinationUrl);
+      addToast(
+        isSpanish ? "✅ QR editable actualizado" : "✅ Dynamic QR updated",
+        2600,
+      );
+      return { ok: true };
+    }
+    return { ok: false, error: result.error };
+  };
 
   const { isUploading, uploadProgress, uploadError, uploadFile } =
     useFileUpload({
@@ -535,6 +611,8 @@ export default function SmartInput(
       url.value = staticSourceUrl;
       setStaticSourceUrl("");
     }
+    resetDynamicQR();
+    setIsDynamicActive(true);
     editUrl.value = "";
     isDynamic.value = false;
   };
@@ -806,6 +884,11 @@ export default function SmartInput(
       getOwnerToken("qr", shortCode).then((token) => {
         if (token) {
           globalThis.location.href = `/edit?token=${token}`;
+        } else if (
+          typeof item.metadata?.editUrl === "string" &&
+          item.metadata.editUrl
+        ) {
+          globalThis.location.href = item.metadata.editUrl;
         } else {
           addToast(
             isSpanish
@@ -896,6 +979,14 @@ export default function SmartInput(
           setIsCreateModalOpen(false);
           if (!editUrl.value && !isCreatingDynamic) {
             isDynamic.value = false;
+          } else if (editUrl.value && savedDynamicConfig) {
+            if (
+              !extractShortCodeFromRedirectUrl(url.value) &&
+              extractShortCodeFromRedirectUrl(urlAtSheetOpen.current)
+            ) {
+              url.value = urlAtSheetOpen.current;
+            }
+            applyHydratedBehaviorState(savedDynamicConfig);
           }
           const contentChanged = url.value.trim() !== "" &&
             url.value !== urlAtSheetOpen.current;
@@ -959,6 +1050,12 @@ export default function SmartInput(
         onCreateEditable={handleCreateEditable}
         onDisableEditable={handleDisableEditable}
         isCreatingEditable={isCreatingDynamic}
+        isUpdatingEditable={isUpdatingDynamic}
+        savedDynamicConfig={savedDynamicConfig}
+        isDynamicActive={isDynamicActive}
+        setIsDynamicActive={setIsDynamicActive}
+        onHydrateEditable={handleHydrateEditable}
+        onUpdateEditable={handleUpdateEditable}
         splashConfig={splashConfig}
         frameConfig={frameConfig}
         customStyle={customStyle}

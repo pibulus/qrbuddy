@@ -27,7 +27,8 @@ export interface HistoryItem {
 }
 
 const HISTORY_KEY = "qrbuddy_time_machine";
-const MAX_ITEMS = 50; // Keep it clean, don't hoard
+export const MAX_HISTORY_ITEMS = 200;
+const MAX_ITEMS = MAX_HISTORY_ITEMS; // Supports up to a 200-code batch without self-eviction
 const HISTORY_TYPES: HistoryItem["type"][] = [
   "text",
   "url",
@@ -42,7 +43,9 @@ const HISTORY_TYPES: HistoryItem["type"][] = [
   "media",
 ];
 
-function getStorage(): Storage | null {
+function getStorage(storageOverride?: Storage): Storage | null {
+  if (storageOverride) return storageOverride;
+  if (!IS_BROWSER) return null;
   try {
     return globalThis.localStorage;
   } catch {
@@ -65,13 +68,16 @@ function isHistoryItem(value: unknown): value is HistoryItem {
     ));
 }
 
-function persistHistory(history: HistoryItem[]): boolean {
-  const storage = getStorage();
+function persistHistory(
+  history: HistoryItem[],
+  storageOverride?: Storage,
+): boolean {
+  const storage = getStorage(storageOverride);
   if (!storage) return false;
 
   try {
     storage.setItem(HISTORY_KEY, JSON.stringify(history));
-    globalThis.dispatchEvent(new CustomEvent("history-updated"));
+    globalThis.dispatchEvent?.(new CustomEvent("history-updated"));
     return true;
   } catch (error) {
     console.error("History: local save failed", error);
@@ -79,9 +85,8 @@ function persistHistory(history: HistoryItem[]): boolean {
   }
 }
 
-export function getHistory(): HistoryItem[] {
-  if (!IS_BROWSER) return [];
-  const storage = getStorage();
+export function getHistory(storageOverride?: Storage): HistoryItem[] {
+  const storage = getStorage(storageOverride);
   if (!storage) return [];
 
   try {
@@ -99,10 +104,12 @@ export function getHistory(): HistoryItem[] {
 
 export function addToHistory(
   item: Omit<HistoryItem, "id" | "timestamp">,
+  storageOverride?: Storage,
 ): boolean {
-  if (!IS_BROWSER) return false;
+  const storage = getStorage(storageOverride);
+  if (!storage) return false;
 
-  const history = getHistory();
+  const history = getHistory(storageOverride);
 
   // Create new item
   const newItem: HistoryItem = {
@@ -111,15 +118,55 @@ export function addToHistory(
     timestamp: Date.now(),
   };
 
-  // Add to top, remove duplicates (by content/type) if they exist to bump them up
+  // Add to top, remove duplicates (by content/type/codes) if they exist to bump them up
   const filtered = history.filter((h) =>
     !(h.type === newItem.type && h.content === newItem.content &&
-      h.metadata?.bucketCode === newItem.metadata?.bucketCode)
+      h.metadata?.bucketCode === newItem.metadata?.bucketCode &&
+      h.metadata?.shortCode === newItem.metadata?.shortCode)
   );
 
   const updated = [newItem, ...filtered].slice(0, MAX_ITEMS);
 
-  return persistHistory(updated);
+  return persistHistory(updated, storageOverride);
+}
+
+export interface DynamicHistoryInput {
+  url: string;
+  redirectUrl?: string;
+  isDynamic?: boolean;
+  shortCode: string;
+  editUrl?: string;
+  label?: string;
+  ownerScope?: "qr";
+}
+
+/** Record a minted dynamic QR (single or batch) in Time Machine history. */
+export function addDynamicToHistory(
+  input: DynamicHistoryInput,
+  storageOverride?: Storage,
+): boolean {
+  const cleanLabel = input.label?.trim() || "";
+  const cleanUrl = input.url.trim();
+  const content = input.redirectUrl?.trim() || cleanUrl;
+  if (!content || !input.shortCode) return false;
+
+  return addToHistory(
+    {
+      type: "dynamic",
+      content,
+      metadata: {
+        title: cleanLabel || cleanUrl,
+        url: cleanUrl,
+        destinationUrl: cleanUrl,
+        isDynamic: input.isDynamic ?? true,
+        shortCode: input.shortCode,
+        ...(input.editUrl ? { editUrl: input.editUrl } : {}),
+        ...(cleanLabel ? { label: cleanLabel } : {}),
+        ...(input.ownerScope ? { ownerScope: input.ownerScope } : {}),
+      },
+    },
+    storageOverride,
+  );
 }
 
 /** Merge a synced history into this device and persist it using the canonical key. */
