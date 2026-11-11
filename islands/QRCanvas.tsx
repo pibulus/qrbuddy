@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { Signal } from "@preact/signals";
+import qrcode from "qrcode-generator";
 import QRRenderer, { styledQrSvg } from "../utils/qr-renderer.ts";
 import { resolveQRStyle } from "../utils/qr-design.ts";
 import { QR_STYLES } from "../utils/qr-styles.ts";
@@ -24,6 +25,70 @@ import { getQRThemeTokens } from "../utils/qr-styles.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 export { buildQrFilename };
+
+export interface PrintSizeEstimate {
+  totalModules: number;
+  minMm: number;
+  minInches: number;
+  denseWarning: boolean;
+}
+
+/**
+ * Estimates practical minimum physical print size for reliable camera focus.
+ * Uses a 0.45 mm/module floor across `moduleCount + quietZone * 2` (clamped at 15 mm),
+ * flagging Version 9+ (`moduleCount >= 53`) as a high-density matrix.
+ */
+export function estimateMinPrintSize(
+  moduleCount: number,
+  quietZone = 4,
+): PrintSizeEstimate {
+  const safeModules = Math.max(21, Math.round(moduleCount));
+  const safeQuiet = Math.max(0, Math.round(quietZone));
+  const totalModules = safeModules + safeQuiet * 2;
+  const minMm = Math.max(15, Math.round(totalModules * 0.45));
+  const minInches = Math.round((minMm / 25.4) * 10) / 10;
+  return {
+    totalModules,
+    minMm,
+    minInches,
+    denseWarning: safeModules >= 53,
+  };
+}
+
+/** Computes the exact QR matrix dimension (`N` in `N×N`) matching `buildQrSvgString`. */
+export function measureQrModules(
+  data: string,
+  options?: {
+    logoUrl?: string;
+    dotShape?: string;
+    errorCorrectionLevel?: "L" | "M" | "Q" | "H";
+  },
+): number {
+  const payload = (data || "https://qrbuddy.app").trim();
+  const hasMark = Boolean(
+    options?.logoUrl &&
+      /^data:image\/(?:png|jpeg|webp|svg\+xml);base64,/i.test(options.logoUrl),
+  );
+  const ecl =
+    hasMark || options?.dotShape === "diamond" || options?.dotShape === "dots"
+      ? "H"
+      : options?.errorCorrectionLevel ?? "Q";
+  try {
+    const qr = qrcode(0, ecl);
+    qr.addData(payload);
+    qr.make();
+    return qr.getModuleCount();
+  } catch {
+    try {
+      const fallback = qrcode(0, "L");
+      fallback.addData(payload);
+      fallback.make();
+      return fallback.getModuleCount();
+    } catch {
+      return 177;
+    }
+  }
+}
 
 interface QRCanvasProps {
   url: Signal<string>;
@@ -357,6 +422,12 @@ export default function QRCanvas(
     const content = url.value.trim();
     if (!content) return;
     try {
+      const design = {
+        style: style.value,
+        customStyle: customStyle?.value ?? null,
+        frameConfig: frameConfig?.value ?? null,
+        logoUrl: logoUrl?.value || undefined,
+      };
       const existing = getHistory().find((item) => item.content === content);
       if (
         existing &&
@@ -366,7 +437,10 @@ export default function QRCanvas(
         addToHistory({
           type: existing.type,
           content: existing.content,
-          metadata: existing.metadata,
+          metadata: {
+            ...existing.metadata,
+            design,
+          },
         });
         return;
       }
@@ -377,6 +451,7 @@ export default function QRCanvas(
         metadata: {
           title: summary.title,
           subtitle: summary.subtitle,
+          design,
         },
       });
     } catch (err) {
@@ -723,6 +798,14 @@ export default function QRCanvas(
     getQRThemeTokens(style.value, customStyle?.value).accent,
   );
 
+  const currentStyleForSpec = getCurrentStyle();
+  const moduleCount = measureQrModules(url.value || "https://qrbuddy.app", {
+    logoUrl: logoUrl?.value,
+    dotShape: currentStyleForSpec.dots?.shape,
+  });
+  const printSpec = estimateMinPrintSize(moduleCount);
+  const minInchesText = printSpec.minInches.toFixed(1);
+
   const centerMarkOmitted = (() => {
     if (!logoUrl?.value) return false;
     try {
@@ -944,12 +1027,37 @@ export default function QRCanvas(
           </div>
         )}
       </div>
+      {printSpec.denseWarning
+        ? (
+          <p
+            role="status"
+            aria-live="polite"
+            data-print-spec
+            data-dense-warning="true"
+            class="mt-5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold text-center tabular-nums"
+          >
+            {isSpanish
+              ? `Matriz densa ${moduleCount}×${moduleCount} · Imprimir ≥ ${printSpec.minMm} mm (${minInchesText}″) o usar Editable`
+              : `${moduleCount}×${moduleCount} dense matrix · Print ≥ ${printSpec.minMm} mm (${minInchesText}″) or use Editable`}
+          </p>
+        )
+        : (
+          <p
+            data-print-spec
+            data-dense-warning="false"
+            class="mt-5 text-center text-[11px] font-bold tracking-wide text-[#1e1714]/65 tabular-nums"
+          >
+            {isSpanish
+              ? `${moduleCount}×${moduleCount} · Impresión mín. ${printSpec.minMm} mm (${minInchesText}″)`
+              : `${moduleCount}×${moduleCount} · Min print ${printSpec.minMm} mm (${minInchesText}″)`}
+          </p>
+        )}
       {centerMarkOmitted && (
         <p
           role="status"
           aria-live="polite"
           data-cutout-notice
-          class="mt-5 px-3 py-1.5 rounded-xl bg-amber-50 border-[1.5px] border-amber-400 text-amber-900 text-xs font-bold text-center"
+          class="mt-2 px-3 py-1.5 rounded-xl bg-amber-50 border-[1.5px] border-amber-400 text-amber-900 text-xs font-bold text-center"
         >
           {isSpanish
             ? "Código denso — marca central omitida para asegurar lectura"

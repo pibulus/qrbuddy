@@ -16,6 +16,10 @@ import { styledQrSvg } from "../utils/qr-renderer.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
 import { buildQrFilename, createFramedSvg } from "../utils/svg-export.ts";
 import { getQRThemeTokens, QR_THEME_TOKENS } from "../utils/qr-styles.ts";
+import {
+  estimateMinPrintSize,
+  measureQrModules,
+} from "../islands/QRCanvas.tsx";
 
 Deno.test("Design: alignment geometry includes the version-32 exception", () => {
   assertEquals(alignmentCenters(21), []);
@@ -291,4 +295,72 @@ Deno.test("Design: buildQrFilename builds human-friendly slugs across URL, Wi-Fi
     buildQrFilename("tel:+61 400 123 456", "candy"),
     "qrbuddy-tel-61400123456-candy.png",
   );
+});
+
+Deno.test("Design: estimateMinPrintSize computes physical floor and dense warning across V1, V4, and V10", () => {
+  // V1 (21x21) + 2*4 quiet zone = 29 modules -> 13.05 mm clamped to 15 mm floor
+  const v1 = estimateMinPrintSize(21);
+  assertEquals(v1, {
+    totalModules: 29,
+    minMm: 15,
+    minInches: 0.6,
+    denseWarning: false,
+  });
+
+  // V4 (33x33) + 2*4 quiet zone = 41 modules -> 18 mm (0.7 in)
+  const v4 = estimateMinPrintSize(33);
+  assertEquals(v4, {
+    totalModules: 41,
+    minMm: 18,
+    minInches: 0.7,
+    denseWarning: false,
+  });
+
+  // V8 (49x49) stays below dense threshold; V9 (53x53) triggers denseWarning
+  assertEquals(estimateMinPrintSize(49).denseWarning, false);
+  assertEquals(estimateMinPrintSize(53).denseWarning, true);
+
+  // V10 (57x57) + 2*4 quiet zone = 65 modules -> 29 mm (1.1 in), denseWarning = true
+  const v10 = estimateMinPrintSize(57);
+  assertEquals(v10, {
+    totalModules: 65,
+    minMm: 29,
+    minInches: 1.1,
+    denseWarning: true,
+  });
+
+  // V11 (61x61) + 2*4 quiet zone = 69 modules -> 31 mm (1.2 in), denseWarning = true
+  const v11 = estimateMinPrintSize(61);
+  assertEquals(v11, {
+    totalModules: 69,
+    minMm: 31,
+    minInches: 1.2,
+    denseWarning: true,
+  });
+
+  // Custom quietZone adjusts totalModules and physical size
+  const compactV10 = estimateMinPrintSize(57, 2);
+  assertEquals(compactV10.totalModules, 61);
+  assertEquals(compactV10.minMm, 27);
+  assertEquals(compactV10.denseWarning, true);
+
+  // Real payloads: short URL stays compact; rich vCard crosses into dense matrix
+  const shortModules = measureQrModules("https://qrbuddy.app");
+  assert(shortModules < 53);
+  assertEquals(estimateMinPrintSize(shortModules).denseWarning, false);
+
+  const richVcard = [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    "FN:Elena Morales-Castillo",
+    "ORG:Sol Botanicals Roastery & Cellar",
+    "TITLE:Head of Packaging & Print Operations",
+    "TEL;TYPE=CELL:+61400123456",
+    "EMAIL:elena.morales@solbotanicals.example.com",
+    "URL:https://solbotanicals.example.com/wholesale/autumn-catalogue?utm_source=card",
+    "END:VCARD",
+  ].join("\n");
+  const denseModules = measureQrModules(richVcard);
+  assert(denseModules >= 53);
+  assertEquals(estimateMinPrintSize(denseModules).denseWarning, true);
 });
