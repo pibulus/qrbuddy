@@ -53,12 +53,17 @@ export interface SyncBundle {
 
 /**
  * Pack the current device state into an encrypted sync bundle string.
+ * Full HistoryItem metadata (including design recipes, tags, batchId, editUrl,
+ * and shortCode) is preserved verbatim.
  */
-export async function exportSyncBundle(phrase: string): Promise<string> {
+export async function exportSyncBundle(
+  phrase: string,
+  storageOverride?: Storage,
+): Promise<string> {
   const bundle: SyncBundle = {
     version: 2,
     timestamp: Date.now(),
-    history: getHistory(),
+    history: getHistory(storageOverride),
     supporterPass: getSupporterPass(),
     ownerTokens: await exportOwnerTokens(),
   };
@@ -74,6 +79,7 @@ export async function exportSyncBundle(phrase: string): Promise<string> {
 export async function importSyncBundle(
   encryptedJson: string,
   phrase: string,
+  storageOverride?: Storage,
 ): Promise<{
   mergedHistoryCount: number;
   historySaved: boolean;
@@ -91,7 +97,7 @@ export async function importSyncBundle(
     throw new Error("Invalid sync bundle format");
   }
 
-  const historyMerge = mergeHistory(bundle.history);
+  const historyMerge = mergeHistory(bundle.history, storageOverride);
   const ownerTokensRestored = await importOwnerTokens(bundle.ownerTokens);
 
   // Restore supporter pass if available

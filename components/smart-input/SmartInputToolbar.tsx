@@ -52,18 +52,24 @@ const TILE_BASE =
 const TILE =
   `${TILE_BASE} bg-[#fffef7] text-[#1e1714] hover:bg-[var(--qr-theme-tint,#fdf2f8)]`;
 
-export type StagePanel = ActiveTab;
+export type StagePanel = ActiveTab | "vault";
 
-type Glyph =
+export type Glyph =
   | QRTemplateType
   | "bucket"
   | "batch"
   | "history"
   | "palette"
-  | "magnifier";
+  | "magnifier"
+  | "dynamic"
+  | "download"
+  | "upload"
+  | "key";
 
 /** Monochrome 16px line glyphs so the row never leans on emoji. */
-function StageGlyph({ kind }: { kind: Glyph }) {
+export function StageGlyph(
+  { kind, size = 16 }: { kind: Glyph; size?: number },
+) {
   const paths: Record<Glyph, string> = {
     url:
       "M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07",
@@ -87,13 +93,18 @@ function StageGlyph({ kind }: { kind: Glyph }) {
     palette:
       "M12 3a9 9 0 0 0 0 18c1.4 0 2-.9 2-2 0-.6-.3-1-.3-1.6 0-1 .8-1.4 1.8-1.4H17a4 4 0 0 0 4-4c0-5-4-9-9-9zM7.5 12h.01M10 8h.01M14.5 8h.01",
     magnifier: "M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM21 21l-5.2-5.2",
+    dynamic: "M13 2L4 14h7l-1 8 9-12h-7z",
+    download: "M12 3v12M8 11l4 4 4-4M4 19h16",
+    upload: "M12 15V3M8 7l4-4 4 4M4 19h16",
+    key:
+      "M8 15a4 4 0 1 1 3.4-6.1L21 9v3h-3v3h-3v2h-3.6A4 4 0 0 1 8 15zM7 11h.01",
   };
   return (
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
-      width="16"
-      height="16"
+      width={size}
+      height={size}
       fill="none"
       stroke="currentColor"
       stroke-width="2.4"
@@ -109,9 +120,12 @@ function StageGlyph({ kind }: { kind: Glyph }) {
 interface SmartInputToolbarProps {
   selectedTemplate: QRTemplateType;
   onOpenCreate: (tab: ActiveTab) => void;
+  onOpenVault?: () => void;
   createHasUpdates: boolean;
   /** Which panel is open right now, so its trigger can latch down. */
   openPanel?: StagePanel | null;
+  vaultOpen?: boolean;
+  savedCount?: number;
   isBucket?: boolean;
   isBatchMode?: boolean;
   lang?: Locale;
@@ -120,8 +134,11 @@ interface SmartInputToolbarProps {
 export default function SmartInputToolbar({
   selectedTemplate,
   onOpenCreate,
+  onOpenVault,
   createHasUpdates,
   openPanel = null,
+  vaultOpen = false,
+  savedCount = 0,
   isBucket = false,
   isBatchMode = false,
   lang,
@@ -150,15 +167,18 @@ export default function SmartInputToolbar({
     const list = Array.isArray(panel) ? panel : [panel];
     return openPanel && list.includes(openPanel) ? LATCHED : "";
   };
+  const isVaultLatched = Boolean(vaultOpen || openPanel === "vault");
 
   return (
-    <div class="grid grid-cols-[1fr_1.15fr] gap-2.5 w-full">
+    <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 w-full">
       {/* What the QR holds — current type, opens Content (and Behavior) */}
       <button
         type="button"
         onClick={press(() => onOpenCreate("type"))}
         aria-expanded={openPanel === "type" || openPanel === "options"}
-        class={`${TILE} ${latch(["type", "options"])} relative min-w-0 px-4`}
+        class={`${TILE} ${
+          latch(["type", "options"])
+        } relative min-w-0 px-3 sm:px-4 gap-1.5`}
         title={isSpanish
           ? "Cambiar el tipo de QR: enlace, Wi-Fi, contacto, archivo…"
           : "Change the QR type: link, Wi-Fi, contact card, file…"}
@@ -181,13 +201,39 @@ export default function SmartInputToolbar({
         type="button"
         onClick={press(() => onOpenCreate("design"))}
         aria-expanded={openPanel === "design"}
-        class={`${TILE} ${latch("design")} min-w-0 px-4`}
+        class={`${TILE} ${latch("design")} min-w-0 px-3 sm:px-4 gap-1.5`}
         title={isSpanish
           ? "Colores, logo, marco y forma de los módulos"
           : "Colours, logo, print frame and dot shapes"}
       >
         <StageGlyph kind="palette" />
-        {isSpanish ? "Diseño" : "Design"}
+        <span class="truncate">{isSpanish ? "Diseño" : "Design"}</span>
+      </button>
+
+      {/* Saved Vault — local archive, JSON backup & cross-device sync */}
+      <button
+        type="button"
+        onClick={press(() => onOpenVault?.())}
+        aria-expanded={isVaultLatched}
+        class={`${TILE} ${
+          isVaultLatched ? LATCHED : ""
+        } min-w-[46px] px-2.5 min-[360px]:px-3 gap-1.5`}
+        title={isSpanish
+          ? "Códigos guardados, respaldo JSON y sincronización"
+          : "Saved codes, JSON backup and device sync"}
+        aria-label={isSpanish
+          ? `Códigos guardados${savedCount > 0 ? ` (${savedCount})` : ""}`
+          : `Saved codes${savedCount > 0 ? ` (${savedCount})` : ""}`}
+      >
+        <StageGlyph kind="history" />
+        <span class="hidden min-[360px]:inline">
+          {isSpanish ? "Bóveda" : "Saved"}
+        </span>
+        {savedCount > 0 && (
+          <span class="px-1.5 py-0.5 rounded-full bg-[#f7ecdc] border border-[#1e1714]/40 text-[11px] font-black leading-none text-[#1e1714]">
+            {savedCount > 99 ? "99+" : savedCount}
+          </span>
+        )}
       </button>
     </div>
   );

@@ -1,7 +1,24 @@
-import { assertEquals } from "https://deno.land/std@0.216.0/assert/mod.ts";
+import {
+  assertEquals,
+  assertThrows,
+} from "https://deno.land/std@0.216.0/assert/mod.ts";
 import { getAuthHeaders, getUserAuthHeaders } from "../utils/api.ts";
 import { isPlusLibraryEnabled as isClientPlusEnabled } from "../utils/auth.ts";
 import { isPlusLibraryEnabled as isServerPlusEnabled } from "../supabase/functions/_shared/auth.ts";
+import {
+  addToHistory,
+  detectStructuredStagePayload,
+  exportVaultJson,
+  filterHistoryItems,
+  getHistory,
+  type HistoryItem,
+  importVaultJson,
+} from "../utils/history.ts";
+import {
+  exportSyncBundle,
+  generateSyncPhrase,
+  importSyncBundle,
+} from "../utils/sync-phrase.ts";
 
 // Test suite for QRBuddy Plus Package 1: Recoverable Library & Quota Foundation
 
@@ -248,4 +265,352 @@ Deno.test("auth headers - separates anonymous requests from authenticated user r
   // Without token passed
   const emptyUserHeaders = getUserAuthHeaders(null);
   assertEquals(emptyUserHeaders["Authorization"], undefined);
+});
+
+function createMemoryStorage(): Storage {
+  const map = new Map<string, string>();
+  return {
+    get length() {
+      return map.size;
+    },
+    clear() {
+      map.clear();
+    },
+    getItem(key: string) {
+      return map.get(key) ?? null;
+    },
+    key(index: number) {
+      return Array.from(map.keys())[index] ?? null;
+    },
+    removeItem(key: string) {
+      map.delete(key);
+    },
+    setItem(key: string, value: string) {
+      map.set(key, String(value));
+    },
+  };
+}
+
+Deno.test("filterHistoryItems - filters by category and searches content, metadata, shortCode, and tags", () => {
+  const items: HistoryItem[] = [
+    {
+      id: "item-dyn-1",
+      type: "dynamic",
+      content: "https://qrbuddy.app/r?code=menu42",
+      timestamp: 4000,
+      metadata: {
+        title: "Bistro Autumn Menu",
+        subtitle: "Seasonal tasting",
+        label: "Table 7",
+        shortCode: "menu42",
+        editUrl: "/edit?token=tok_menu42",
+        tags: ["hospitality", "dinner"],
+      },
+    },
+    {
+      id: "item-wifi-1",
+      type: "wifi",
+      content: "WIFI:T:WPA;S:CafeLuna;P:secret123;;",
+      timestamp: 3000,
+      metadata: {
+        title: "Wi-Fi: CafeLuna",
+        tags: ["guest", "lounge"],
+      },
+    },
+    {
+      id: "item-file-1",
+      type: "file",
+      content: "https://qrbuddy.app/bucket/drop99",
+      timestamp: 2000,
+      metadata: {
+        title: "Wedding Photo Drop",
+        bucketCode: "drop99",
+        tags: ["photos"],
+      },
+    },
+    {
+      id: "item-media-1",
+      type: "media",
+      content: "https://qrbuddy.app/f/mixtape8",
+      timestamp: 1000,
+      metadata: {
+        title: "5 tracks",
+        ownerScope: "file",
+      },
+    },
+  ];
+
+  // Category filters
+  assertEquals(filterHistoryItems(items, { filter: "all" }).length, 4);
+  assertEquals(
+    filterHistoryItems(items, { filter: "editable" }).map((i) => i.id),
+    ["item-dyn-1"],
+  );
+  assertEquals(
+    filterHistoryItems(items, { filter: "static" }).map((i) => i.id),
+    ["item-wifi-1"],
+  );
+  assertEquals(
+    filterHistoryItems(items, { filter: "files" }).map((i) => i.id),
+    ["item-file-1", "item-media-1"],
+  );
+
+  // Query across title, subtitle, label, shortCode, content, and tags
+  assertEquals(
+    filterHistoryItems(items, { query: "autumn" }).map((i) => i.id),
+    ["item-dyn-1"],
+  );
+  assertEquals(
+    filterHistoryItems(items, { query: "seasonal" }).map((i) => i.id),
+    ["item-dyn-1"],
+  );
+  assertEquals(
+    filterHistoryItems(items, { query: "table 7" }).map((i) => i.id),
+    ["item-dyn-1"],
+  );
+  assertEquals(
+    filterHistoryItems(items, { query: "MENU42" }).map((i) => i.id),
+    ["item-dyn-1"],
+  );
+  assertEquals(
+    filterHistoryItems(items, { query: "lounge" }).map((i) => i.id),
+    ["item-wifi-1"],
+  );
+  assertEquals(
+    filterHistoryItems(items, { query: "cafeluna" }).map((i) => i.id),
+    ["item-wifi-1"],
+  );
+
+  // Combined query + category filter
+  assertEquals(
+    filterHistoryItems(items, { query: "photos", filter: "files" }).map((i) =>
+      i.id
+    ),
+    ["item-file-1"],
+  );
+  assertEquals(
+    filterHistoryItems(items, { query: "photos", filter: "static" }).length,
+    0,
+  );
+});
+
+Deno.test("exportVaultJson & importVaultJson - round-trips design recipes, shortCodes, editUrls, and tags without duplicates", () => {
+  const sourceStorage = createMemoryStorage();
+
+  addToHistory(
+    {
+      type: "dynamic",
+      content: "https://qrbuddy.app/r?code=fest01",
+      metadata: {
+        title: "Main Stage Schedule",
+        shortCode: "fest01",
+        editUrl: "/edit?token=ot_fest01",
+        tags: ["festival", "stage-a"],
+        batchId: "batch-2026-11",
+        design: {
+          style: "pool",
+          frameConfig: {
+            enabled: true,
+            caption: "STAGE A",
+            theme: "ink",
+          },
+          logoUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==",
+        },
+      },
+    },
+    sourceStorage,
+  );
+
+  addToHistory(
+    {
+      type: "wifi",
+      content: "WIFI:T:WPA;S:BackstageNet;P:guitar99;;",
+      metadata: {
+        title: "Wi-Fi: BackstageNet",
+        tags: ["crew"],
+        design: {
+          style: "custom",
+          customStyle: {
+            dots: {
+              type: "gradient",
+              shape: "rounded",
+              gradient: {
+                type: "linear",
+                rotation: 2.35,
+                colorStops: [
+                  { offset: 0, color: "#0D47A1" },
+                  { offset: 1, color: "#00695C" },
+                ],
+              },
+            },
+            background: { color: "#FFFEF7" },
+          },
+          frameConfig: null,
+          logoUrl: "",
+        },
+      },
+    },
+    sourceStorage,
+  );
+
+  const rawArchive = exportVaultJson(undefined, sourceStorage);
+  const parsedArchive = JSON.parse(rawArchive);
+  assertEquals(parsedArchive.version, 1);
+  assertEquals(parsedArchive.app, "qrbuddy");
+  assertEquals(parsedArchive.items.length, 2);
+
+  // Import into a clean device storage
+  const targetStorage = createMemoryStorage();
+  const firstImport = importVaultJson(rawArchive, targetStorage);
+  assertEquals(firstImport, { imported: 2, total: 2 });
+
+  const restored = getHistory(targetStorage);
+  assertEquals(restored.length, 2);
+
+  const restoredDyn = restored.find((i) => i.metadata?.shortCode === "fest01");
+  assertEquals(restoredDyn?.metadata?.editUrl, "/edit?token=ot_fest01");
+  assertEquals(restoredDyn?.metadata?.tags, ["festival", "stage-a"]);
+  assertEquals(restoredDyn?.metadata?.batchId, "batch-2026-11");
+  assertEquals(restoredDyn?.metadata?.design?.style, "pool");
+  assertEquals(restoredDyn?.metadata?.design?.frameConfig, {
+    enabled: true,
+    caption: "STAGE A",
+    theme: "ink",
+  });
+
+  const restoredWifi = restored.find((i) => i.type === "wifi");
+  assertEquals(restoredWifi?.metadata?.design?.style, "custom");
+  assertEquals(restoredWifi?.metadata?.tags, ["crew"]);
+
+  // Re-importing the exact same archive adds 0 duplicates
+  const secondImport = importVaultJson(rawArchive, targetStorage);
+  assertEquals(secondImport, { imported: 0, total: 2 });
+  assertEquals(getHistory(targetStorage).length, 2);
+
+  // Malformed archives throw cleanly
+  assertThrows(() => importVaultJson("{bad json", targetStorage));
+  assertThrows(() =>
+    importVaultJson(JSON.stringify({ version: 99, items: [] }), targetStorage)
+  );
+});
+
+Deno.test("exportSyncBundle & importSyncBundle - preserves full metadata including design, tags, batchId, editUrl, and shortCode", async () => {
+  const deviceA = createMemoryStorage();
+  addToHistory(
+    {
+      type: "dynamic",
+      content: "https://qrbuddy.app/r?code=sync77",
+      metadata: {
+        title: "VIP Pass",
+        shortCode: "sync77",
+        editUrl: "/edit?token=ot_sync77",
+        tags: ["vip"],
+        batchId: "batch-vip",
+        design: {
+          style: "sunset",
+          frameConfig: { enabled: true, caption: "VIP", theme: "accent" },
+        },
+      },
+    },
+    deviceA,
+  );
+
+  const phrase = generateSyncPhrase();
+  const encrypted = await exportSyncBundle(phrase, deviceA);
+
+  const deviceB = createMemoryStorage();
+  const result = await importSyncBundle(encrypted, phrase, deviceB);
+  assertEquals(result.historySaved, true);
+  assertEquals(result.mergedHistoryCount, 1);
+
+  const synced = getHistory(deviceB);
+  assertEquals(synced.length, 1);
+  assertEquals(synced[0].metadata?.shortCode, "sync77");
+  assertEquals(synced[0].metadata?.editUrl, "/edit?token=ot_sync77");
+  assertEquals(synced[0].metadata?.tags, ["vip"]);
+  assertEquals(synced[0].metadata?.batchId, "batch-vip");
+  assertEquals(synced[0].metadata?.design?.style, "sunset");
+  assertEquals(synced[0].metadata?.design?.frameConfig?.caption, "VIP");
+});
+
+Deno.test("detectStructuredStagePayload - summarizes WIFI, VCARD, mailto, SMSTO, and tel payloads while ignoring URLs and text", () => {
+  // Wi-Fi WPA & Open
+  const wifiWpa = detectStructuredStagePayload(
+    "WIFI:T:WPA;S:CafeLuna;P:hunter2;;",
+    "en",
+  );
+  assertEquals(wifiWpa, {
+    template: "wifi",
+    label: "Wi-Fi · CafeLuna (WPA)",
+    detail: "WPA",
+  });
+
+  const wifiOpenEs = detectStructuredStagePayload(
+    "WIFI:T:nopass;S:PatioLibre;;",
+    "es",
+  );
+  assertEquals(wifiOpenEs, {
+    template: "wifi",
+    label: "Wi-Fi · PatioLibre (Abierta)",
+    detail: "Abierta",
+  });
+
+  // vCard
+  const vcardPayload = [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    "FN:Ada Lovelace",
+    "N:Lovelace;Ada;;;",
+    "ORG:Analytical Engine",
+    "EMAIL:ada@engine.org",
+    "END:VCARD",
+  ].join("\n");
+  const vcardEn = detectStructuredStagePayload(vcardPayload, "en");
+  assertEquals(vcardEn?.template, "vcard");
+  assertEquals(vcardEn?.label, "Contact · Ada Lovelace");
+
+  const vcardEs = detectStructuredStagePayload(vcardPayload, "es");
+  assertEquals(vcardEs?.label, "Contacto · Ada Lovelace");
+
+  // mailto:
+  const mailEn = detectStructuredStagePayload(
+    "mailto:hello@acme.co?subject=Booking%20Inquiry",
+    "en",
+  );
+  assertEquals(mailEn, {
+    template: "email",
+    label: "Email · hello@acme.co",
+    detail: "Booking Inquiry",
+  });
+  assertEquals(
+    detectStructuredStagePayload("mailto:hola@acme.co", "es")?.label,
+    "Correo · hola@acme.co",
+  );
+
+  // SMSTO:
+  const smsEn = detectStructuredStagePayload(
+    "SMSTO:+61400123456:Table ready",
+    "en",
+  );
+  assertEquals(smsEn, {
+    template: "sms",
+    label: "SMS · +61400123456",
+    detail: "Table ready",
+  });
+
+  // tel:
+  const telEn = detectStructuredStagePayload("tel:+61400123456", "en");
+  assertEquals(telEn, {
+    template: "phone",
+    label: "Call · +61400123456",
+  });
+  assertEquals(
+    detectStructuredStagePayload("tel:+61400123456", "es")?.label,
+    "Llamada · +61400123456",
+  );
+
+  // Standard URLs and plain text stay in the raw input (return null)
+  assertEquals(detectStructuredStagePayload("https://qrbuddy.app"), null);
+  assertEquals(detectStructuredStagePayload("Just a plain note"), null);
+  assertEquals(detectStructuredStagePayload(""), null);
 });

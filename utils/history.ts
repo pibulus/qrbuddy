@@ -1,4 +1,24 @@
 import { IS_BROWSER } from "$fresh/runtime.ts";
+import {
+  parseEmail,
+  parsePhone,
+  parseSMS,
+  parseVCard,
+  parseWiFi,
+} from "../types/qr-templates.ts";
+import type { QRStyle } from "../types/qr-types.ts";
+import type { Locale } from "./i18n.ts";
+
+export interface SavedQrDesign {
+  style: string;
+  customStyle?: QRStyle | null;
+  frameConfig?: {
+    enabled: boolean;
+    caption?: string;
+    theme?: "ink" | "paper" | "accent";
+  } | null;
+  logoUrl?: string;
+}
 
 export interface HistoryItem {
   id: string;
@@ -22,8 +42,38 @@ export interface HistoryItem {
     ownerToken?: string;
     shortCode?: string;
     editUrl?: string;
+    design?: SavedQrDesign;
+    tags?: string[];
+    batchId?: string;
     [key: string]: unknown;
   };
+}
+
+export type VaultFilter = "all" | "editable" | "static" | "files";
+
+export interface FilterHistoryOptions {
+  query?: string;
+  filter?: VaultFilter;
+}
+
+export interface VaultBackup {
+  version: 1;
+  app: "qrbuddy";
+  exportedAt: string;
+  items: HistoryItem[];
+}
+
+export type StructuredQrTemplate =
+  | "wifi"
+  | "vcard"
+  | "email"
+  | "sms"
+  | "phone";
+
+export interface StructuredStageSummary {
+  template: StructuredQrTemplate;
+  label: string;
+  detail?: string;
 }
 
 const HISTORY_KEY = "qrbuddy_time_machine";
@@ -138,6 +188,9 @@ export interface DynamicHistoryInput {
   editUrl?: string;
   label?: string;
   ownerScope?: "qr";
+  design?: SavedQrDesign;
+  tags?: string[];
+  batchId?: string;
 }
 
 /** Record a minted dynamic QR (single or batch) in Time Machine history. */
@@ -163,28 +216,86 @@ export function addDynamicToHistory(
         ...(input.editUrl ? { editUrl: input.editUrl } : {}),
         ...(cleanLabel ? { label: cleanLabel } : {}),
         ...(input.ownerScope ? { ownerScope: input.ownerScope } : {}),
+        ...(input.design ? { design: input.design } : {}),
+        ...(input.tags ? { tags: input.tags } : {}),
+        ...(input.batchId ? { batchId: input.batchId } : {}),
       },
     },
     storageOverride,
   );
 }
 
+function historyIdentityKey(item: HistoryItem): string {
+  const shortCode = typeof item.metadata?.shortCode === "string"
+    ? item.metadata.shortCode.trim()
+    : "";
+  if (shortCode) return `sc:${shortCode}`;
+  const bucketCode = typeof item.metadata?.bucketCode === "string"
+    ? item.metadata.bucketCode.trim()
+    : "";
+  if (bucketCode) return `bk:${bucketCode}`;
+  return `${item.type}::${item.content}`;
+}
+
+function mergeMetadata(
+  existing: HistoryItem["metadata"],
+  incoming: HistoryItem["metadata"],
+): HistoryItem["metadata"] {
+  if (!existing && !incoming) return undefined;
+  return {
+    ...(incoming ?? {}),
+    ...(existing ?? {}),
+    ...(existing?.design ?? incoming?.design
+      ? { design: existing?.design ?? incoming?.design }
+      : {}),
+    ...(existing?.tags ?? incoming?.tags
+      ? { tags: existing?.tags ?? incoming?.tags }
+      : {}),
+    ...(existing?.batchId ?? incoming?.batchId
+      ? { batchId: existing?.batchId ?? incoming?.batchId }
+      : {}),
+    ...(existing?.editUrl ?? incoming?.editUrl
+      ? { editUrl: existing?.editUrl ?? incoming?.editUrl }
+      : {}),
+    ...(existing?.shortCode ?? incoming?.shortCode
+      ? { shortCode: existing?.shortCode ?? incoming?.shortCode }
+      : {}),
+  };
+}
+
 /** Merge a synced history into this device and persist it using the canonical key. */
 export function mergeHistory(
   items: HistoryItem[],
+  storageOverride?: Storage,
 ): { mergedCount: number; saved: boolean } {
-  if (!IS_BROWSER) return { mergedCount: 0, saved: false };
+  const storage = getStorage(storageOverride);
+  if (!storage) return { mergedCount: 0, saved: false };
 
-  const current = getHistory();
-  const currentIds = new Set(current.map((item) => item.id));
-  const seenIds = new Set(currentIds);
+  const current = getHistory(storageOverride).map((item) => ({ ...item }));
+  const seenIds = new Set(current.map((item) => item.id));
+  const indexByIdentity = new Map<string, number>();
+  current.forEach((item, idx) => {
+    indexByIdentity.set(historyIdentityKey(item), idx);
+  });
+
   const additions: HistoryItem[] = [];
 
   for (const item of items.filter(isHistoryItem)) {
-    if (!seenIds.has(item.id)) {
-      seenIds.add(item.id);
-      additions.push(item);
+    const ident = historyIdentityKey(item);
+    if (seenIds.has(item.id) || indexByIdentity.has(ident)) {
+      const existingIdx = indexByIdentity.get(ident) ??
+        current.findIndex((c) => c.id === item.id);
+      if (existingIdx !== -1 && existingIdx < current.length) {
+        current[existingIdx] = {
+          ...current[existingIdx],
+          metadata: mergeMetadata(current[existingIdx].metadata, item.metadata),
+        };
+      }
+      continue;
     }
+    seenIds.add(item.id);
+    indexByIdentity.set(ident, current.length + additions.length);
+    additions.push(item);
   }
 
   const incomingIds = new Set(additions.map((item) => item.id));
@@ -192,7 +303,9 @@ export function mergeHistory(
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, MAX_ITEMS);
 
-  if (!persistHistory(updated)) return { mergedCount: 0, saved: false };
+  if (!persistHistory(updated, storageOverride)) {
+    return { mergedCount: 0, saved: false };
+  }
 
   return {
     mergedCount: updated.filter((item) => incomingIds.has(item.id)).length,
@@ -200,20 +313,257 @@ export function mergeHistory(
   };
 }
 
-export function removeFromHistory(id: string) {
-  if (!IS_BROWSER) return;
-  const history = getHistory();
-  const updated = history.filter((h) => h.id !== id);
-  persistHistory(updated);
+export function isFileHistoryItem(item: HistoryItem): boolean {
+  return (
+    item.type === "file" ||
+    item.type === "media" ||
+    Boolean(item.metadata?.bucketCode) ||
+    item.metadata?.ownerScope === "file"
+  );
 }
 
-export function clearHistory() {
-  if (!IS_BROWSER) return;
-  const storage = getStorage();
+export function isEditableHistoryItem(item: HistoryItem): boolean {
+  if (isFileHistoryItem(item)) return false;
+  return (
+    item.type === "dynamic" ||
+    Boolean(item.metadata?.shortCode) ||
+    Boolean(item.metadata?.editUrl) ||
+    Boolean(item.metadata?.ownerToken) ||
+    item.metadata?.isDynamic === true ||
+    item.metadata?.ownerScope === "qr"
+  );
+}
+
+/**
+ * Filter local vault items by free-text query and category pill.
+ * Searches across content, metadata.title, metadata.subtitle, metadata.label,
+ * metadata.shortCode, and metadata.tags.
+ */
+export function filterHistoryItems(
+  items: HistoryItem[],
+  options: FilterHistoryOptions = {},
+): HistoryItem[] {
+  const filter = options.filter ?? "all";
+  const q = (options.query ?? "").trim().toLowerCase();
+
+  return items.filter((item) => {
+    if (filter === "files" && !isFileHistoryItem(item)) return false;
+    if (filter === "editable" && !isEditableHistoryItem(item)) return false;
+    if (
+      filter === "static" &&
+      (isFileHistoryItem(item) || isEditableHistoryItem(item))
+    ) {
+      return false;
+    }
+
+    if (!q) return true;
+
+    const meta = item.metadata;
+    const tags = Array.isArray(meta?.tags)
+      ? meta.tags.filter((t): t is string => typeof t === "string")
+      : [];
+    const summary = summarizeQrPayload(item.content);
+    const haystacks = [
+      item.content,
+      typeof meta?.title === "string" ? meta.title : "",
+      typeof meta?.subtitle === "string" ? meta.subtitle : "",
+      typeof meta?.label === "string" ? meta.label : "",
+      typeof meta?.shortCode === "string" ? meta.shortCode : "",
+      typeof meta?.destinationUrl === "string" ? meta.destinationUrl : "",
+      typeof meta?.bucketCode === "string" ? meta.bucketCode : "",
+      summary.title,
+      summary.subtitle,
+      ...tags,
+    ];
+
+    return haystacks.some((h) => h.toLowerCase().includes(q));
+  });
+}
+
+/**
+ * Export saved vault items as a human-portable JSON archive.
+ */
+export function exportVaultJson(
+  items?: HistoryItem[],
+  storageOverride?: Storage,
+): string {
+  const source = items
+    ? items.filter(isHistoryItem)
+    : getHistory(storageOverride);
+  const archive: VaultBackup = {
+    version: 1,
+    app: "qrbuddy",
+    exportedAt: new Date().toISOString(),
+    items: source,
+  };
+  return JSON.stringify(archive, null, 2);
+}
+
+/**
+ * Import and deduplicate a portable JSON vault archive into local storage.
+ */
+export function importVaultJson(
+  rawJson: string,
+  storageOverride?: Storage,
+): { imported: number; total: number } {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawJson);
+  } catch {
+    throw new Error("Invalid vault JSON");
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("Invalid vault archive format");
+  }
+
+  const record = parsed as Record<string, unknown>;
+  if (
+    record.version !== 1 ||
+    (record.app !== undefined && record.app !== "qrbuddy") ||
+    !Array.isArray(record.items)
+  ) {
+    throw new Error("Unsupported vault archive version");
+  }
+
+  const validItems = record.items.filter(isHistoryItem);
+  const result = mergeHistory(validItems, storageOverride);
+  if (!result.saved) {
+    throw new Error("Vault storage unavailable");
+  }
+
+  return {
+    imported: result.mergedCount,
+    total: getHistory(storageOverride).length,
+  };
+}
+
+/**
+ * Detect structured non-URL QR schemas (Wi-Fi, vCard, Email, SMS, Phone) so
+ * the home stage can render a crisp tactile summary chip instead of raw
+ * protocol strings like `WIFI:T:WPA;S:...` or `BEGIN:VCARD`.
+ */
+export function detectStructuredStagePayload(
+  payload: string,
+  locale: Locale = "en",
+): StructuredStageSummary | null {
+  const raw = (payload || "").trim();
+  if (!raw) return null;
+
+  const isEs = locale === "es";
+  const shorten = (value: string, max = 34) =>
+    value.length > max ? `${value.slice(0, max - 1)}…` : value;
+
+  if (/^WIFI:/i.test(raw)) {
+    const wifi = parseWiFi(raw);
+    if (wifi) {
+      const sec = wifi.encryption === "nopass"
+        ? (isEs ? "Abierta" : "Open")
+        : wifi.encryption;
+      return {
+        template: "wifi",
+        label: `Wi-Fi · ${shorten(wifi.ssid)} (${sec})`,
+        detail: sec,
+      };
+    }
+    const fallback = summarizeQrPayload(raw);
+    const cleanSsid = fallback.title.replace(/^Wi-Fi:\s*/i, "").trim();
+    return {
+      template: "wifi",
+      label: cleanSsid && cleanSsid !== "Wi-Fi network"
+        ? `Wi-Fi · ${cleanSsid} (${fallback.subtitle})`
+        : (isEs ? "Wi-Fi · Red" : "Wi-Fi · Network"),
+      detail: fallback.subtitle,
+    };
+  }
+
+  if (/^BEGIN:VCARD/i.test(raw)) {
+    const vcard = parseVCard(raw);
+    const prefix = isEs ? "Contacto" : "Contact";
+    if (vcard) {
+      const fullName = [vcard.firstName, vcard.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+        vcard.organization.trim() ||
+        vcard.email.trim() ||
+        vcard.phone.trim();
+      return {
+        template: "vcard",
+        label: fullName ? `${prefix} · ${shorten(fullName)}` : prefix,
+        detail: vcard.organization && vcard.organization !== fullName
+          ? shorten(vcard.organization, 28)
+          : undefined,
+      };
+    }
+    const fallback = summarizeQrPayload(raw);
+    const cleanContact = fallback.title.replace(/^Contact:\s*/i, "").trim();
+    return {
+      template: "vcard",
+      label: cleanContact && cleanContact !== "Contact card"
+        ? `${prefix} · ${cleanContact}`
+        : prefix,
+    };
+  }
+
+  if (/^mailto:/i.test(raw)) {
+    const email = parseEmail(raw);
+    const prefix = isEs ? "Correo" : "Email";
+    if (email) {
+      return {
+        template: "email",
+        label: `${prefix} · ${shorten(email.email)}`,
+        detail: email.subject.trim()
+          ? shorten(email.subject.trim(), 28)
+          : undefined,
+      };
+    }
+    return null;
+  }
+
+  if (/^(?:smsto|sms):/i.test(raw)) {
+    const sms = parseSMS(raw);
+    if (sms) {
+      return {
+        template: "sms",
+        label: `SMS · ${shorten(sms.phone)}`,
+        detail: sms.message.trim()
+          ? shorten(sms.message.trim(), 28)
+          : undefined,
+      };
+    }
+    return null;
+  }
+
+  if (/^tel:/i.test(raw)) {
+    const phone = parsePhone(raw);
+    const prefix = isEs ? "Llamada" : "Call";
+    if (phone) {
+      return {
+        template: "phone",
+        label: `${prefix} · ${shorten(phone.phone)}`,
+      };
+    }
+    return null;
+  }
+
+  return null;
+}
+
+export function removeFromHistory(id: string, storageOverride?: Storage) {
+  const storage = getStorage(storageOverride);
+  if (!storage) return;
+  const history = getHistory(storageOverride);
+  const updated = history.filter((h) => h.id !== id);
+  persistHistory(updated, storageOverride);
+}
+
+export function clearHistory(storageOverride?: Storage) {
+  const storage = getStorage(storageOverride);
   if (!storage) return;
   try {
     storage.removeItem(HISTORY_KEY);
-    globalThis.dispatchEvent(new CustomEvent("history-updated"));
+    globalThis.dispatchEvent?.(new CustomEvent("history-updated"));
   } catch (error) {
     console.error("History: local clear failed", error);
   }

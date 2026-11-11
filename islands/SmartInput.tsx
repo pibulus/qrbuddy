@@ -22,7 +22,18 @@ import {
 } from "../utils/file-validation.ts";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
-import { addToHistory, HistoryItem } from "../utils/history.ts";
+import {
+  addToHistory,
+  detectStructuredStagePayload,
+  getHistory,
+  type HistoryItem,
+  type SavedQrDesign,
+  summarizeQrPayload,
+} from "../utils/history.ts";
+import {
+  isValidCustomStyle,
+  MAX_STORED_LOGO_LENGTH,
+} from "../utils/design-preferences.ts";
 import { decodeQRFromFile } from "../utils/qr-decode.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
@@ -31,16 +42,17 @@ import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import CreateModal, {
   type ActiveTab as CreateTab,
 } from "../components/CreateModal.tsx";
-import HistoryDrawer from "../components/HistoryDrawer.tsx";
 import LibraryDrawer from "../components/LibraryDrawer.tsx";
 import { addToast } from "./ToastManager.tsx";
 
 // Sub-components
 import QRReader from "../components/QRReader.tsx";
 import SmartInputToolbar, {
+  STAGE_INPUT,
   STAGE_PRESS,
   STAGE_TOOL_BTN,
   STAGE_WELL,
+  StageGlyph,
 } from "../components/smart-input/SmartInputToolbar.tsx";
 import FileUploadOptions, {
   shareKindOf,
@@ -49,8 +61,14 @@ import ShareReady, {
   type LastShare,
 } from "../components/smart-input/ShareReady.tsx";
 import { prepImages } from "../utils/image-prep.ts";
-import { getQRThemeStyleVars, getQRThemeTokens } from "../utils/qr-styles.ts";
-import type { QRStyle } from "../types/qr-types.ts";
+import {
+  getQRThemeStyleVars,
+  getQRThemeTokens,
+  QR_STYLES,
+} from "../utils/qr-styles.ts";
+import type { BannerTheme, FrameConfig, QRStyle } from "../types/qr-types.ts";
+
+export { detectStructuredStagePayload };
 
 interface SmartInputProps {
   url: Signal<string>;
@@ -64,7 +82,7 @@ interface SmartInputProps {
   qrStyle: Signal<string>;
   customStyle?: Signal<QRStyle | null>;
   pngSize?: Signal<1000 | 2000 | 3000>;
-  frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
+  frameConfig?: Signal<FrameConfig | null>;
   onModalStateChange?: (isOpen: boolean) => void;
   hidePrimaryInput?: boolean;
   lang?: Locale;
@@ -95,7 +113,8 @@ export default function SmartInput(
     "idle" | "valid" | "invalid"
   >("idle");
   const [touched, setTouched] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [stagedFiles, setStagedFiles] = useState<File[] | null>(null);
   const [showReader, setShowReader] = useState(false);
@@ -132,7 +151,24 @@ export default function SmartInput(
   // short link, so switching back to Static restores the direct URL cleanly.
   const [staticSourceUrl, setStaticSourceUrl] = useState("");
 
-  // Listen for open library / inspector requests & ?library=1 / ?inspect=1 query params
+  // Keep toolbar saved count & structured template synced
+  useEffect(() => {
+    const syncSavedCount = () => setSavedCount(getHistory().length);
+    syncSavedCount();
+    globalThis.addEventListener("history-updated", syncSavedCount);
+    return () =>
+      globalThis.removeEventListener("history-updated", syncSavedCount);
+  }, []);
+
+  useEffect(() => {
+    if (editUrl.value) return;
+    const detected = detectStructuredStagePayload(url.value, locale);
+    if (detected && selectedTemplate !== detected.template) {
+      setSelectedTemplate(detected.template);
+    }
+  }, [url.value, editUrl.value, locale]);
+
+  // Listen for open library/vault / inspector requests & ?library=1 / ?vault=1 / ?inspect=1 query params
   useEffect(() => {
     const g = globalThis as typeof globalThis & {
       __qrbLibraryListener?: boolean;
@@ -143,40 +179,38 @@ export default function SmartInput(
 
     const handleOpenLibrary = () => {
       setIsCreateModalOpen(false);
-      setShowHistory(false);
       setShowReader(false);
       setShowLibrary(true);
     };
     const handleOpenInspector = () => {
       setIsCreateModalOpen(false);
-      setShowHistory(false);
       setShowLibrary(false);
       setShowReader(true);
     };
     const handleEditLabel = () => {
-      setShowHistory(false);
       setShowReader(false);
       setShowLibrary(false);
       setCreateModalTab("design");
       setIsCreateModalOpen(true);
     };
-    globalThis.addEventListener("qrb-open-library", handleOpenLibrary);
-    globalThis.addEventListener("qrb-open-inspector", handleOpenInspector);
     const handleOpenBehavior = () => {
-      setShowHistory(false);
       setShowReader(false);
       setShowLibrary(false);
       setCreateModalTab("options");
       setIsCreateModalOpen(true);
     };
+    globalThis.addEventListener("qrb-open-library", handleOpenLibrary);
+    globalThis.addEventListener("qrb-open-vault", handleOpenLibrary);
+    globalThis.addEventListener("qrb-open-inspector", handleOpenInspector);
     globalThis.addEventListener("qr-edit-label", handleEditLabel);
     globalThis.addEventListener("qrb-open-behavior", handleOpenBehavior);
 
     const params = new URLSearchParams(globalThis.location?.search ?? "");
     let mutatedParams = false;
-    if (params.has("library")) {
+    if (params.has("library") || params.has("vault")) {
       handleOpenLibrary();
       params.delete("library");
+      params.delete("vault");
       mutatedParams = true;
     } else if (
       params.has("inspect") || globalThis.location?.hash === "#inspect"
@@ -200,6 +234,7 @@ export default function SmartInput(
       g.__qrbLibraryListener = false;
       g.__qrbInspectorListener = false;
       globalThis.removeEventListener("qrb-open-library", handleOpenLibrary);
+      globalThis.removeEventListener("qrb-open-vault", handleOpenLibrary);
       globalThis.removeEventListener("qrb-open-inspector", handleOpenInspector);
       globalThis.removeEventListener("qr-edit-label", handleEditLabel);
       globalThis.removeEventListener("qrb-open-behavior", handleOpenBehavior);
@@ -208,8 +243,8 @@ export default function SmartInput(
 
   // Report modal state changes
   useEffect(() => {
-    onModalStateChange?.(isCreateModalOpen);
-  }, [isCreateModalOpen, onModalStateChange]);
+    onModalStateChange?.(isCreateModalOpen || showLibrary);
+  }, [isCreateModalOpen, showLibrary, onModalStateChange]);
 
   // Snapshot the QR content and style when the create sheet opens, so closing
   // it can acknowledge "your QR is ready" — but only when the sheet actually
@@ -857,61 +892,165 @@ export default function SmartInput(
     return baseClass;
   };
 
-  const handleHistorySelect = (item: HistoryItem) => {
-    if (item.type === "media") {
-      globalThis.location.href = item.content;
-      return;
+  const restoreSavedDesign = (design?: SavedQrDesign) => {
+    if (!design || typeof design !== "object") return;
+
+    if (
+      typeof design.style === "string" &&
+      Object.prototype.hasOwnProperty.call(QR_STYLES, design.style)
+    ) {
+      qrStyle.value = design.style;
+      if (customStyle) {
+        customStyle.value =
+          design.customStyle && isValidCustomStyle(design.customStyle)
+            ? design.customStyle
+            : null;
+      }
+    } else if (
+      design.style === "custom" &&
+      design.customStyle &&
+      isValidCustomStyle(design.customStyle)
+    ) {
+      qrStyle.value = "custom";
+      if (customStyle) {
+        customStyle.value = design.customStyle;
+      }
     }
 
-    if (item.type === "file" && item.metadata?.bucketCode) {
-      const bucketCode = item.metadata.bucketCode;
-      getOwnerToken("bucket", bucketCode).then((token) => {
-        const historyUrl = `/bucket/${bucketCode}${
-          token ? `?owner_token=${token}` : ""
-        }`;
-        globalThis.location.href = historyUrl;
-      });
-      return;
+    if (frameConfig) {
+      if (design.frameConfig?.enabled) {
+        const theme: BannerTheme = design.frameConfig.theme === "ink" ||
+            design.frameConfig.theme === "paper" ||
+            design.frameConfig.theme === "accent"
+          ? design.frameConfig.theme
+          : "accent";
+        frameConfig.value = {
+          enabled: true,
+          caption: (design.frameConfig.caption ?? "").slice(0, 24),
+          theme,
+        };
+      } else {
+        frameConfig.value = null;
+      }
     }
 
-    if (item.type === "file") {
-      globalThis.location.href = item.content;
-      return;
-    }
-
-    if (item.metadata?.shortCode) {
-      const shortCode = item.metadata.shortCode;
-      getOwnerToken("qr", shortCode).then((token) => {
-        if (token) {
-          globalThis.location.href = `/edit?token=${token}`;
-        } else if (
-          typeof item.metadata?.editUrl === "string" &&
-          item.metadata.editUrl
-        ) {
-          globalThis.location.href = item.metadata.editUrl;
-        } else {
-          addToast(
-            isSpanish
-              ? "La llave de edición no está en este dispositivo. Usa tu respaldo o tu link guardado."
-              : "Edit key isn't on this device. Use your backup or the saved edit link.",
-            4000,
-          );
-        }
-      });
-      return;
-    }
-
-    if (item.type === "url" || item.type === "text" || item.type === "wifi") {
-      setSelectedTemplate(item.type);
-      url.value = item.content;
-      setTouched(true);
+    if (typeof design.logoUrl === "string") {
+      if (design.logoUrl === "") {
+        logoUrl.value = "";
+      } else if (
+        (design.logoUrl.startsWith("data:image/") ||
+          design.logoUrl.startsWith("/") ||
+          design.logoUrl.startsWith("https://")) &&
+        design.logoUrl.length <= MAX_STORED_LOGO_LENGTH
+      ) {
+        logoUrl.value = design.logoUrl;
+      }
     } else {
-      url.value = item.content;
-      setTouched(true);
+      logoUrl.value = "";
     }
-    setShowHistory(false);
+  };
+
+  const mapHistoryTypeToTemplate = (
+    type: HistoryItem["type"],
+    content: string,
+  ): QRTemplateType => {
+    if (
+      type === "wifi" ||
+      type === "vcard" ||
+      type === "email" ||
+      type === "sms" ||
+      type === "phone" ||
+      type === "social" ||
+      type === "text"
+    ) {
+      return type;
+    }
+    if (type === "url") {
+      const detected = summarizeQrPayload(content).type;
+      if (
+        detected === "wifi" ||
+        detected === "vcard" ||
+        detected === "email" ||
+        detected === "sms" ||
+        detected === "phone" ||
+        detected === "social" ||
+        detected === "text"
+      ) {
+        return detected;
+      }
+    }
+    return "url";
+  };
+
+  const handleHistorySelect = (item: HistoryItem) => {
+    const loadToStage = item.metadata?.loadToStage === true;
+
+    if (!loadToStage) {
+      if (item.type === "media") {
+        globalThis.location.href = item.content;
+        return;
+      }
+
+      if (item.type === "file" && item.metadata?.bucketCode) {
+        const bucketCode = item.metadata.bucketCode;
+        getOwnerToken("bucket", bucketCode).then((token) => {
+          const historyUrl = `/bucket/${bucketCode}${
+            token ? `?owner_token=${token}` : ""
+          }`;
+          globalThis.location.href = historyUrl;
+        });
+        return;
+      }
+
+      if (item.type === "file") {
+        globalThis.location.href = item.content;
+        return;
+      }
+
+      if (item.metadata?.shortCode) {
+        const shortCode = item.metadata.shortCode;
+        void (async () => {
+          const token = (await getOwnerToken("qr", shortCode)) ??
+            (await getOwnerToken("dynamic", shortCode));
+          if (token) {
+            globalThis.location.href = `/edit?token=${token}`;
+          } else if (
+            typeof item.metadata?.editUrl === "string" &&
+            item.metadata.editUrl
+          ) {
+            globalThis.location.href = item.metadata.editUrl;
+          } else {
+            addToast(
+              isSpanish
+                ? "Llave de edición no disponible en este dispositivo."
+                : "Edit key unavailable on this device.",
+              4000,
+            );
+          }
+        })();
+        return;
+      }
+    }
+
+    if (editUrl.value || isDynamic.value) {
+      handleDisableEditable();
+    }
+    if (isBucket.value) {
+      isBucket.value = false;
+      bucketUrl.value = "";
+    }
+    isDestructible.value = false;
+
+    restoreSavedDesign(item.metadata?.design);
+    setSelectedTemplate(mapHistoryTypeToTemplate(item.type, item.content));
+    url.value = item.content;
+    setTouched(true);
     setShowLibrary(false);
   };
+
+  const structuredSummary = !editUrl.value && !isInputFocused && !isUploading
+    ? detectStructuredStagePayload(url.value, locale)
+    : null;
 
   // Effect to save to history when a QR is successfully generated/updated
   useEffect(() => {
@@ -936,13 +1075,6 @@ export default function SmartInput(
 
   return (
     <div class="w-full space-y-2.5">
-      <HistoryDrawer
-        isOpen={showHistory}
-        onClose={() => setShowHistory(false)}
-        onSelect={handleHistorySelect}
-        lang={locale}
-      />
-
       <LibraryDrawer
         isOpen={showLibrary}
         onClose={() => setShowLibrary(false)}
@@ -973,7 +1105,7 @@ export default function SmartInput(
         }}
         onShowHistory={() => {
           setIsCreateModalOpen(false);
-          setShowHistory(true);
+          setShowLibrary(true);
         }}
         onClose={() => {
           setIsCreateModalOpen(false);
@@ -1075,7 +1207,7 @@ export default function SmartInput(
           multiple
         />
 
-        {/* URL/File Input - Hidden while staging files or when a vertical quick-builder owns the primary input */}
+        {/* URL/File Input or Structured Summary Bar - Hidden while staging files or when a vertical quick-builder owns the primary input */}
         {!stagedFiles && !hidePrimaryInput && (
           <div
             class="relative"
@@ -1085,95 +1217,172 @@ export default function SmartInput(
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <input
-              ref={textInputRef}
-              type="text"
-              value={url.value}
-              readOnly={Boolean(editUrl.value)}
-              onInput={handleInput}
-              onKeyDown={(e: KeyboardEvent) => {
-                if (
-                  editUrl.value &&
-                  !e.metaKey &&
-                  !e.ctrlKey &&
-                  !e.altKey &&
-                  (e.key.length === 1 ||
-                    e.key === "Backspace" ||
-                    e.key === "Delete")
-                ) {
-                  e.preventDefault();
-                  addToast(
-                    isSpanish
-                      ? "Link editable bloqueado — toca Estático o Desvincular para editar el URL directo"
-                      : "Editable link locked — tap Static or Detach to edit the raw URL",
-                    3000,
-                  );
-                }
-              }}
-              onFocus={handleFocus}
-              onBlur={() => setTouched(true)}
-              placeholder={isDragging
-                ? (isSpanish
-                  ? "Suelta tu archivo aquí..."
-                  : "Drop file here...")
-                : (isSpanish
-                  ? "Pega un link, escribe algo o suelta un archivo..."
-                  : "Enter URL, text, or drop a file...")}
-              aria-label={isSpanish
-                ? "Link, texto o archivo para codificar en QR"
-                : "URL, text, or file to encode in QR code"}
-              aria-invalid={validationState === "invalid"}
-              aria-describedby={validationState === "invalid"
-                ? "input-error"
-                : undefined}
-              class={getInputClass()}
-              disabled={isUploading}
-            />
-
-            {/* File upload button */}
-            {!isUploading && !isDestructible.value && (
-              <button
-                type="button"
-                onClick={handleFileInputClick}
-                class="absolute right-3 top-1/2 transform -translate-y-1/2
-                     w-11 h-11 flex items-center justify-center rounded-lg
-                     text-[#1e1714] hover:bg-[#1e1714]/[0.06] hover:scale-110 transition-all"
-                aria-label={isSpanish ? "Subir archivo" : "Upload file"}
-                title={isSpanish ? "Subir archivo" : "Upload file"}
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M21 11.5 12.5 20a5.5 5.5 0 0 1-7.8-7.8l9-9a3.5 3.5 0 0 1 5 5l-9 9a1.5 1.5 0 0 1-2.1-2.1L16 6.7" />
-                </svg>
-              </button>
-            )}
-
-            {/* Validation indicator */}
-            {touched && validationState === "valid" && !isUploading && (
-              <div class="absolute right-14 top-1/2 transform -translate-y-1/2
-                        text-xl animate-pop">
-                {isDestructible.value ? "💣" : "✓"}
-              </div>
-            )}
-
-            {/* Upload progress */}
-            {isUploading && (
-              <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
+            {structuredSummary
+              ? (
                 <div
-                  class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            )}
+                  data-structured-stage-chip={structuredSummary.template}
+                  class={`w-full min-h-[56px] sm:min-h-[60px] flex items-center justify-between gap-2 pl-3.5 sm:pl-4 pr-2.5 py-2 ${STAGE_INPUT} ${
+                    isDragging
+                      ? "border-[var(--qr-theme-accent,#ec4899)] bg-[var(--qr-theme-tint,#fdf2f8)] scale-[1.02]"
+                      : ""
+                  } transition-[border-color,box-shadow,transform,background-color] duration-150 ease-out`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTemplate(structuredSummary.template);
+                      setShowLibrary(false);
+                      setShowReader(false);
+                      setCreateModalTab("type");
+                      setIsCreateModalOpen(true);
+                      setCreateHasUpdates(false);
+                      haptics.light();
+                      sounds.click();
+                    }}
+                    aria-label={isSpanish
+                      ? `${structuredSummary.label}. Editar contenido`
+                      : `${structuredSummary.label}. Edit content`}
+                    class="group/chip flex-1 min-w-0 min-h-[40px] flex items-center justify-between gap-2.5 text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714]"
+                  >
+                    <span class="flex items-center gap-2.5 min-w-0">
+                      <span
+                        aria-hidden="true"
+                        class="w-8 h-8 rounded-xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center shrink-0 text-[#1e1714]"
+                      >
+                        <StageGlyph
+                          kind={structuredSummary.template}
+                          size={16}
+                        />
+                      </span>
+                      <span class="font-black text-sm sm:text-base text-[#1e1714] truncate">
+                        {structuredSummary.label}
+                      </span>
+                    </span>
+                    <span class="shrink-0 px-2.5 py-1 rounded-lg border-2 border-[#1e1714] bg-[#f7ecdc] group-hover/chip:bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] transition-colors">
+                      {isSpanish ? "Editar" : "Edit"}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      url.value = "";
+                      isDestructible.value = false;
+                      setSelectedTemplate("url");
+                      setValidationState("idle");
+                      setTouched(false);
+                      haptics.light();
+                      requestAnimationFrame(() =>
+                        textInputRef.current?.focus()
+                      );
+                    }}
+                    aria-label={isSpanish
+                      ? "Borrar contenido del QR"
+                      : "Clear QR content"}
+                    title={isSpanish ? "Borrar" : "Clear"}
+                    class="shrink-0 min-w-[36px] min-h-[36px] w-9 h-9 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-amber-100 active:scale-90 transition-transform flex items-center justify-center font-black text-xs text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )
+              : (
+                <>
+                  <input
+                    ref={textInputRef}
+                    type="text"
+                    value={url.value}
+                    readOnly={Boolean(editUrl.value)}
+                    onInput={handleInput}
+                    onKeyDown={(e: KeyboardEvent) => {
+                      if (
+                        editUrl.value &&
+                        !e.metaKey &&
+                        !e.ctrlKey &&
+                        !e.altKey &&
+                        (e.key.length === 1 ||
+                          e.key === "Backspace" ||
+                          e.key === "Delete")
+                      ) {
+                        e.preventDefault();
+                        addToast(
+                          isSpanish
+                            ? "Link editable bloqueado — toca Estático o Desvincular para editar el URL directo"
+                            : "Editable link locked — tap Static or Detach to edit the raw URL",
+                          3000,
+                        );
+                      }
+                    }}
+                    onFocus={() => {
+                      setIsInputFocused(true);
+                      handleFocus();
+                    }}
+                    onBlur={() => {
+                      setIsInputFocused(false);
+                      setTouched(true);
+                    }}
+                    placeholder={isDragging
+                      ? (isSpanish ? "Suelta archivo aquí…" : "Drop file here…")
+                      : (isSpanish
+                        ? "Pega un link, escribe algo o suelta un archivo..."
+                        : "Enter URL, text, or drop a file...")}
+                    aria-label={isSpanish
+                      ? "Link, texto o archivo para codificar en QR"
+                      : "URL, text, or file to encode in QR code"}
+                    aria-invalid={validationState === "invalid"}
+                    aria-describedby={validationState === "invalid"
+                      ? "input-error"
+                      : undefined}
+                    class={getInputClass()}
+                    disabled={isUploading}
+                  />
+
+                  {/* File upload button */}
+                  {!isUploading && !isDestructible.value && (
+                    <button
+                      type="button"
+                      onClick={handleFileInputClick}
+                      class="absolute right-3 top-1/2 transform -translate-y-1/2
+                           w-11 h-11 flex items-center justify-center rounded-lg
+                           text-[#1e1714] hover:bg-[#1e1714]/[0.06] hover:scale-110 transition-all"
+                      aria-label={isSpanish ? "Subir archivo" : "Upload file"}
+                      title={isSpanish ? "Subir archivo" : "Upload file"}
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        width="20"
+                        height="20"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M21 11.5 12.5 20a5.5 5.5 0 0 1-7.8-7.8l9-9a3.5 3.5 0 0 1 5 5l-9 9a1.5 1.5 0 0 1-2.1-2.1L16 6.7" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Validation indicator */}
+                  {touched && validationState === "valid" && !isUploading && (
+                    <div class="absolute right-14 top-1/2 transform -translate-y-1/2
+                              text-xl animate-pop">
+                      {isDestructible.value ? "💣" : "✓"}
+                    </div>
+                  )}
+
+                  {/* Upload progress */}
+                  {isUploading && (
+                    <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
+                      <div
+                        class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
           </div>
         )}
 
@@ -1409,12 +1618,24 @@ export default function SmartInput(
       <SmartInputToolbar
         selectedTemplate={selectedTemplate}
         onOpenCreate={(tab) => {
+          setShowLibrary(false);
           setCreateModalTab(tab);
           setIsCreateModalOpen(true);
           setCreateHasUpdates(false);
         }}
+        onOpenVault={() => {
+          setIsCreateModalOpen(false);
+          setShowReader(false);
+          setShowLibrary(true);
+        }}
         createHasUpdates={createHasUpdates}
-        openPanel={isCreateModalOpen ? createModalTab : null}
+        openPanel={isCreateModalOpen
+          ? createModalTab
+          : showLibrary
+          ? "vault"
+          : null}
+        vaultOpen={showLibrary}
+        savedCount={savedCount}
         isBucket={isBucket.value && bucketUrl.value !== ""}
         isBatchMode={isBatchMode}
         lang={locale}
