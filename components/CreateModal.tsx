@@ -2,6 +2,11 @@ import { type Signal, useSignal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
+import {
+  extractShortCodeFromRedirectUrl,
+  hydrateBehaviorStateFromConfig,
+  type SavedDynamicQRConfig,
+} from "../hooks/useDynamicQR.ts";
 import { QR_TEMPLATES, QRTemplateType } from "../types/qr-templates.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { haptics } from "../utils/haptics.ts";
@@ -122,6 +127,14 @@ interface CreateModalProps {
   onCreateEditable: () => void;
   onDisableEditable?: () => void;
   isCreatingEditable: boolean;
+  isUpdatingEditable?: boolean;
+  savedDynamicConfig?: SavedDynamicQRConfig | null;
+  isDynamicActive?: boolean;
+  setIsDynamicActive?: (active: boolean) => void;
+  onHydrateEditable?: () => Promise<SavedDynamicQRConfig | null>;
+  onUpdateEditable?: () => Promise<
+    { ok: true } | { ok: false; error: string }
+  >;
   splashConfig: Signal<
     {
       enabled: boolean;
@@ -267,6 +280,12 @@ export default function CreateModal({
   onCreateEditable,
   onDisableEditable,
   isCreatingEditable,
+  isUpdatingEditable = false,
+  savedDynamicConfig = null,
+  isDynamicActive = true,
+  setIsDynamicActive,
+  onHydrateEditable,
+  onUpdateEditable,
   splashConfig,
   frameConfig,
   customStyle,
@@ -311,6 +330,9 @@ export default function CreateModal({
   const [expandedBehavior, setExpandedBehavior] = useState<
     "roulette" | "splash" | "limits" | "none" | null
   >(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSavingDynamic, setIsSavingDynamic] = useState(false);
+  const busySavingDynamic = isUpdatingEditable || isSavingDynamic;
 
   const lockerActive = isBucket.value && bucketUrl.value !== "";
   const splashActive = splashConfig.value?.enabled ?? false;
@@ -322,13 +344,47 @@ export default function CreateModal({
   }, [scanLimit, expiryDate]);
 
   useEffect(() => {
+    setSaveError(null);
+  }, [
+    isSequential,
+    sequentialUrls,
+    loopSequence,
+    randomSequence,
+    dailySpins,
+    splashConfig.value,
+    scanLimit,
+    expiryDate,
+    isDynamicActive,
+    url.value,
+  ]);
+
+  useEffect(() => {
     if (!isOpen) {
       setTypeIntent("qr");
       setContentStep("pick");
       setCompletionKind(null);
       setShowLockerSettings(false);
+      setSaveError(null);
+      setIsSavingDynamic(false);
     } else {
       setActiveTab(initialTab);
+      setSaveError(null);
+      if (isDynamic.value && editUrl.value) {
+        if (savedDynamicConfig) {
+          const hydrated = hydrateBehaviorStateFromConfig(savedDynamicConfig);
+          setIsLimitSettingsOpen(
+            hydrated.scanLimit !== null || hydrated.expiryDate !== "",
+          );
+        }
+        void onHydrateEditable?.().then((cfg) => {
+          if (cfg) {
+            const hydrated = hydrateBehaviorStateFromConfig(cfg);
+            setIsLimitSettingsOpen(
+              hydrated.scanLimit !== null || hydrated.expiryDate !== "",
+            );
+          }
+        });
+      }
     }
   }, [isOpen]);
 
@@ -384,7 +440,7 @@ export default function CreateModal({
 
   const disableDynamicBase = () => {
     const hadExtras = isSequential || scanLimit !== null || expiryDate !== "" ||
-      (splashConfig.value?.enabled ?? false);
+      (splashConfig.value?.enabled ?? false) || !isDynamicActive;
     isDynamic.value = false;
     editUrl.value = "";
     onDisableEditable?.();
@@ -392,6 +448,8 @@ export default function CreateModal({
     setIsLimitSettingsOpen(false);
     setScanLimit(null);
     setExpiryDate("");
+    setIsDynamicActive?.(true);
+    setSaveError(null);
     splashConfig.value = null;
     if (hadExtras) {
       addToast(
@@ -1373,6 +1431,24 @@ export default function CreateModal({
             )}
           </ChoiceRow>
 
+          {Boolean(editUrl.value) && setIsDynamicActive && (
+            <ChoiceRow
+              icon="⏸️"
+              title={isSpanish ? "Pausar escaneos" : "Pause scans"}
+              description={isSpanish
+                ? "Detiene redirecciones temporalmente sin borrar el QR."
+                : "Temporarily halts redirects without deleting the QR."}
+              active={!isDynamicActive}
+              badge={!isDynamicActive
+                ? (isSpanish ? "Pausado" : "Paused")
+                : undefined}
+              onClick={() => {
+                setIsDynamicActive(!isDynamicActive);
+                haptics.light();
+              }}
+            />
+          )}
+
           {isDynamic.value && (
             <EditableLinkSettings
               editUrl={editUrl}
@@ -1594,6 +1670,14 @@ export default function CreateModal({
         ) && (
           <div class="p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
             {false && onShowHistory}
+            {saveError && (
+              <div
+                role="alert"
+                class="mb-2.5 rounded-2xl border-2 border-amber-300 bg-amber-50 px-3.5 py-2.5 text-xs font-bold text-amber-900"
+              >
+                {saveError}
+              </div>
+            )}
             {(() => {
               const validSeqCount = sequentialUrls.filter((u) =>
                 looksLikeUrl(u)
@@ -1604,11 +1688,36 @@ export default function CreateModal({
               const canMintDynamic = needsDynamicMint &&
                 (isSequential ? validSeqCount >= 2 : looksLikeUrl(url.value));
 
+              const baseline = savedDynamicConfig
+                ? hydrateBehaviorStateFromConfig(savedDynamicConfig)
+                : null;
+              const hasUnsavedDynamicChanges = !baseline ||
+                isSequential !== baseline.isSequential ||
+                JSON.stringify(sequentialUrls) !==
+                  JSON.stringify(baseline.sequentialUrls) ||
+                loopSequence !== baseline.loopSequence ||
+                Boolean(randomSequence) !== baseline.randomSequence ||
+                (dailySpins ?? null) !== baseline.dailySpins ||
+                JSON.stringify(splashConfig.value ?? null) !==
+                  JSON.stringify(baseline.splashConfig) ||
+                (scanLimit ?? null) !== baseline.scanLimit ||
+                expiryDate !== baseline.expiryDate ||
+                isDynamicActive !== baseline.isActive ||
+                (!extractShortCodeFromRedirectUrl(url.value) &&
+                  url.value.trim() !== "" &&
+                  url.value.trim() !== baseline.destinationUrl);
+              const shouldSaveMintedDynamic = Boolean(
+                isDynamic.value &&
+                  editUrl.value &&
+                  onUpdateEditable &&
+                  (activeTab === "options" || hasUnsavedDynamicChanges),
+              );
+
               return (
                 <button
                   type="button"
-                  disabled={isCreatingEditable}
-                  onClick={() => {
+                  disabled={isCreatingEditable || busySavingDynamic}
+                  onClick={async () => {
                     if (needsDynamicMint) {
                       if (canMintDynamic) {
                         onCreateEditable();
@@ -1632,6 +1741,19 @@ export default function CreateModal({
                       }
                       return;
                     }
+                    if (shouldSaveMintedDynamic && onUpdateEditable) {
+                      setSaveError(null);
+                      setIsSavingDynamic(true);
+                      try {
+                        const result = await onUpdateEditable();
+                        if (!result.ok) {
+                          setSaveError(result.error);
+                          return;
+                        }
+                      } finally {
+                        setIsSavingDynamic(false);
+                      }
+                    }
                     globalThis.dispatchEvent(
                       new CustomEvent("qrb-modal-bloom"),
                     );
@@ -1640,7 +1762,9 @@ export default function CreateModal({
                   class="qr-pitch-cta disabled:opacity-50"
                 >
                   <span>
-                    {hasCompletion
+                    {busySavingDynamic
+                      ? (isSpanish ? "Guardando..." : "Saving...")
+                      : hasCompletion
                       ? (isSpanish
                         ? "Listo · Volver al inicio"
                         : "Done · Back to home")

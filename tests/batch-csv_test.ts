@@ -1,5 +1,11 @@
 import { assertEquals } from "https://deno.land/std@0.216.0/assert/mod.ts";
-import { parseBatchCsv } from "../islands/BatchStudio.tsx";
+import {
+  buildDynamicBatchManifestCsv,
+  parseBatchCsv,
+  persistMintedBatchRow,
+} from "../islands/BatchStudio.tsx";
+import { getHistory } from "../utils/history.ts";
+import { getOwnerToken } from "../utils/token-vault.ts";
 
 Deno.test("batch CSV accepts a header row with url and title", () => {
   const { rows, skipped } = parseBatchCsv(
@@ -48,4 +54,50 @@ Deno.test("batch CSV reports a clear error when nothing is usable", () => {
 Deno.test("batch CSV handles empty input without throwing", () => {
   const result = parseBatchCsv("   ");
   assertEquals(result.rows.length, 0);
+});
+
+Deno.test("batch dynamic rows vault owner tokens and export manifest.csv", async () => {
+  localStorage.clear();
+
+  await persistMintedBatchRow(
+    { label: "Carton 1", destination: "https://acme.test/c1" },
+    {
+      short_code: "crt001",
+      redirect_url: "https://qrbuddy.app/r?code=crt001",
+      edit_url: "https://qrbuddy.app/edit?token=tok_crt001",
+      owner_token: "tok_crt001",
+    },
+    localStorage,
+  );
+
+  assertEquals(await getOwnerToken("qr", "crt001"), "tok_crt001");
+  const history = getHistory(localStorage);
+  assertEquals(history.length, 1);
+  assertEquals(history[0].metadata?.shortCode, "crt001");
+
+  const manifest = buildDynamicBatchManifestCsv([
+    {
+      index: 1,
+      label: "Carton 1",
+      destination: "https://acme.test/c1",
+      status: "created",
+      shortCode: "crt001",
+      redirectUrl: "https://qrbuddy.app/r?code=crt001",
+      editUrl: "https://qrbuddy.app/edit?token=tok_crt001",
+    },
+    {
+      index: 2,
+      label: "Broken row",
+      destination: "https://acme.test/c2",
+      status: "failed",
+      error: "Quota reached",
+    },
+  ]);
+
+  assertEquals(
+    manifest,
+    "label,destination,short_url,edit_url\nCarton 1,https://acme.test/c1,https://qrbuddy.app/r?code=crt001,https://qrbuddy.app/edit?token=tok_crt001",
+  );
+
+  localStorage.clear();
 });

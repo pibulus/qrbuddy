@@ -10,18 +10,21 @@
 // stops the run with the rows already created still yours, instead of
 // failing 400 times in parallel and reporting nothing.
 
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { apiRequest } from "../utils/api-request.ts";
 import { getApiUrl } from "../utils/api.ts";
+import { isPlusLibraryEnabled } from "../utils/auth.ts";
+import { addDynamicToHistory } from "../utils/history.ts";
 import { buildQrSvgString, toSvgDataUrl } from "../utils/qr-vector-svg.ts";
+import { saveOwnerToken } from "../utils/token-vault.ts";
 
-interface BatchRow {
+export interface BatchRow {
   index: number;
   label: string;
   destination: string;
 }
 
-interface BatchResult extends BatchRow {
+export interface BatchResult extends BatchRow {
   status: "created" | "failed";
   shortCode?: string;
   redirectUrl?: string;
@@ -29,7 +32,7 @@ interface BatchResult extends BatchRow {
   error?: string;
 }
 
-interface CreateQrResponse {
+export interface CreateQrResponse {
   success: boolean;
   short_code: string;
   redirect_url: string;
@@ -145,7 +148,52 @@ function downloadText(filename: string, mime: string, body: string) {
 }
 
 function csvCell(value: string): string {
-  return /[",\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+  return /[",\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+}
+
+/** Build the backup manifest.csv bundled inside dynamic batch ZIP exports. */
+export function buildDynamicBatchManifestCsv(rows: BatchResult[]): string {
+  const header = "label,destination,short_url,edit_url";
+  const body = rows
+    .filter((row) => row.status === "created")
+    .map((row) =>
+      [
+        csvCell(row.label),
+        csvCell(row.destination),
+        csvCell(row.redirectUrl ?? ""),
+        csvCell(row.editUrl ?? ""),
+      ].join(",")
+    );
+  return [header, ...body].join("\n");
+}
+
+/** Immediately vault owner_token and record local Time Machine history per minted row. */
+export async function persistMintedBatchRow(
+  row: Pick<BatchRow, "label" | "destination">,
+  created: Pick<
+    CreateQrResponse,
+    "short_code" | "redirect_url" | "edit_url" | "owner_token"
+  >,
+  storageOverride?: Storage,
+): Promise<{ vaulted: boolean; historySaved: boolean }> {
+  const vaulted = await saveOwnerToken(
+    "qr",
+    created.short_code,
+    created.owner_token,
+  );
+  const historySaved = addDynamicToHistory(
+    {
+      url: row.destination,
+      redirectUrl: created.redirect_url,
+      isDynamic: true,
+      shortCode: created.short_code,
+      editUrl: created.edit_url,
+      label: row.label,
+      ...(vaulted ? { ownerScope: "qr" } : {}),
+    },
+    storageOverride,
+  );
+  return { vaulted, historySaved };
 }
 
 export default function BatchStudio(
@@ -157,14 +205,30 @@ export default function BatchStudio(
   // person never has to learn a second tool to change their mind.
   const [mode, setMode] = useState<"editable" | "images">("editable");
   const [zipping, setZipping] = useState(false);
-  const [running, setRunning] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [done, setDone] = useState(0);
   const [results, setResults] = useState<BatchResult[]>([]);
+  const [hasMintedDynamic, setHasMintedDynamic] = useState(false);
+  const [hasExportedBackup, setHasExportedBackup] = useState(false);
   const [error, setError] = useState("");
 
   const parsed = raw.trim() ? parseBatchCsv(raw) : { rows: [], skipped: 0 };
   const rows = parsed.rows.slice(0, MAX_ROWS);
   const created = results.filter((result) => result.status === "created");
+  const shouldGuardUnload = isGenerating ||
+    ((hasMintedDynamic || created.length > 0) && !hasExportedBackup);
+
+  useEffect(() => {
+    if (!shouldGuardUnload) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    globalThis.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      globalThis.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [shouldGuardUnload]);
 
   async function handleFile(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -177,13 +241,14 @@ export default function BatchStudio(
   }
 
   async function run() {
-    if (!rows.length || running) return;
+    if (!rows.length || isGenerating) return;
     if (!supabaseUrl) {
       setError("This build has no backend configured.");
       return;
     }
 
-    setRunning(true);
+    setIsGenerating(true);
+    setHasExportedBackup(false);
     setError("");
     setResults([]);
     setDone(0);
@@ -193,7 +258,7 @@ export default function BatchStudio(
 
     for (const row of rows) {
       try {
-        const created = await apiRequest<CreateQrResponse>(
+        const createdItem = await apiRequest<CreateQrResponse>(
           `${apiUrl}/create-dynamic-qr`,
           {
             method: "POST",
@@ -202,15 +267,18 @@ export default function BatchStudio(
               destination_url: row.destination,
               title: row.label || null,
             }),
+            useUserAuth: isPlusLibraryEnabled(),
           },
           `Row ${row.index} failed`,
         );
+        await persistMintedBatchRow(row, createdItem);
+        setHasMintedDynamic(true);
         collected.push({
           ...row,
           status: "created",
-          shortCode: created.short_code,
-          redirectUrl: created.redirect_url,
-          editUrl: created.edit_url,
+          shortCode: createdItem.short_code,
+          redirectUrl: createdItem.redirect_url,
+          editUrl: createdItem.edit_url,
         });
       } catch (caught) {
         collected.push({
@@ -223,7 +291,7 @@ export default function BatchStudio(
       setResults([...collected]);
     }
 
-    setRunning(false);
+    setIsGenerating(false);
   }
 
   /** Static mode: the destination itself is encoded, so the files work
@@ -280,6 +348,50 @@ export default function BatchStudio(
     }
   }
 
+  /** Dynamic ZIP export: SVG vector files for every minted code + manifest.csv backup. */
+  async function downloadDynamicZip() {
+    if (!created.length || zipping) return;
+    setZipping(true);
+    setError("");
+    try {
+      const { default: JSZip } = (await import("jszip")) as unknown as {
+        default: new () => {
+          file: (name: string, data: Blob | string) => void;
+          generateAsync: (opts: { type: "blob" }) => Promise<Blob>;
+        };
+      };
+      const zip = new JSZip();
+
+      for (const row of created) {
+        const svg = buildQrSvgString({
+          data: row.redirectUrl ?? "",
+          size: 1024,
+          errorCorrectionLevel: "M",
+          caption: row.label || undefined,
+        });
+        const suffix = row.shortCode ? `-${row.shortCode}` : "";
+        const base = `qr-${String(row.index).padStart(3, "0")}${suffix}`;
+        zip.file(`${base}.svg`, new Blob([svg], { type: "image/svg+xml" }));
+      }
+
+      zip.file("manifest.csv", buildDynamicBatchManifestCsv(created));
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "qrbuddy-editable-qr.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+      setHasExportedBackup(true);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Could not build the ZIP",
+      );
+    } finally {
+      setZipping(false);
+    }
+  }
+
   function exportCsv() {
     const header =
       "row,label,destination,short_code,redirect_url,edit_url,status";
@@ -301,6 +413,7 @@ export default function BatchStudio(
       "text/csv;charset=utf-8",
       `${header}\n${body}`,
     );
+    setHasExportedBackup(true);
   }
 
   function printSheet() {
@@ -435,10 +548,10 @@ https://acme.test/menu,Table 2"
             <button
               type="button"
               onClick={run}
-              disabled={running || !rows.length}
+              disabled={isGenerating || !rows.length}
               class="mt-4 w-full rounded-2xl border-2 border-stone-900 bg-pink-400 px-4 py-3 text-sm font-black shadow-[3px_3px_0_#1e1714] transition active:translate-y-[2px] active:shadow-[1px_1px_0_#1e1714] disabled:opacity-40"
             >
-              {running
+              {isGenerating
                 ? `Creating ${done} / ${rows.length}…`
                 : `Create ${rows.length || ""} code${
                   rows.length === 1 ? "" : "s"
@@ -468,13 +581,21 @@ https://acme.test/menu,Table 2"
                 ? ` · ${results.length - created.length} failed`
                 : ""}
             </p>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={exportCsv}
                 class="rounded-xl border-2 border-stone-900 bg-white px-3 py-2 text-xs font-black"
               >
                 Download CSV
+              </button>
+              <button
+                type="button"
+                onClick={downloadDynamicZip}
+                disabled={!created.length || zipping}
+                class="rounded-xl border-2 border-stone-900 bg-white px-3 py-2 text-xs font-black disabled:opacity-40"
+              >
+                {zipping ? "Building ZIP…" : "Download ZIP"}
               </button>
               <button
                 type="button"
@@ -486,6 +607,15 @@ https://acme.test/menu,Table 2"
               </button>
             </div>
           </div>
+
+          {created.length > 0 && (
+            <p
+              role="status"
+              class="mt-3 rounded-2xl border-2 border-stone-900/15 bg-amber-50 px-3.5 py-2 text-xs font-bold text-stone-800"
+            >
+              Edit keys vaulted locally · Manifest included in ZIP &amp; CSV
+            </p>
+          )}
 
           <ul class="mt-4 divide-y divide-stone-200 text-xs">
             {results.map((row) => (
