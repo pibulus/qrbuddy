@@ -2,6 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import {
   formatWiFi,
+  parseWiFi,
   validateWiFi,
   type WiFiData,
 } from "../../types/qr-templates.ts";
@@ -12,16 +13,25 @@ interface Props {
 }
 
 export default function WiFiForm({ url }: Props) {
-  const [ssid, setSsid] = useState("");
-  const [password, setPassword] = useState("");
-  const [encryption, setEncryption] = useState<"WPA" | "WEP" | "nopass">("WPA");
-  const [hidden, setHidden] = useState(false);
+  const [initial] = useState(() => parseWiFi(url.value));
+  const [ssid, setSsid] = useState(() => initial?.ssid ?? "");
+  const [password, setPassword] = useState(() => initial?.password ?? "");
+  const [encryption, setEncryption] = useState<"WPA" | "WEP" | "nopass">(
+    () => initial?.encryption ?? "WPA",
+  );
+  const [hidden, setHidden] = useState(() => initial?.hidden ?? false);
   const [showPassword, setShowPassword] = useState(false);
-  const [_error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
   useEffect(() => {
-    const data: WiFiData = { ssid, password, encryption, hidden };
+    const data: WiFiData = {
+      ssid,
+      password: encryption === "nopass" ? "" : password,
+      encryption,
+      hidden,
+    };
     const validationError = validateWiFi(data);
 
     if (validationError) {
@@ -31,11 +41,26 @@ export default function WiFiForm({ url }: Props) {
 
     setError(null);
     const formatted = formatWiFi(data);
-    url.value = formatted;
+    if (url.value !== formatted) {
+      url.value = formatted;
+    }
   }, [ssid, password, encryption, hidden]);
+
+  const showHint = (touched || Boolean(ssid.trim() || password.trim())) &&
+    Boolean(error);
 
   return (
     <div class="space-y-4">
+      {showHint && error && (
+        <div
+          role="status"
+          aria-live="polite"
+          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+        >
+          {error}
+        </div>
+      )}
+
       {/* Network Name */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -45,6 +70,7 @@ export default function WiFiForm({ url }: Props) {
           type="text"
           value={ssid}
           onInput={(e) => {
+            setTouched(true);
             setSsid((e.target as HTMLInputElement).value);
             haptics.light();
           }}
@@ -85,35 +111,42 @@ export default function WiFiForm({ url }: Props) {
       </div>
 
       {/* Password */}
-      {encryption !== "nopass" && (
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-            Password *
-          </label>
-          <div class="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onInput={(e) => {
-                setPassword((e.target as HTMLInputElement).value);
-                haptics.light();
-              }}
-              placeholder="Network password"
-              class="w-full px-4 py-3 pr-20 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setShowPassword((current) => !current);
-                haptics.light();
-              }}
-              class="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] px-3 rounded-lg text-sm font-black text-[#3AA8A4] hover:bg-[#E0FFFF]"
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
+      {encryption !== "nopass"
+        ? (
+          <div class="space-y-2">
+            <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Password *
+            </label>
+            <div class="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onInput={(e) => {
+                  setTouched(true);
+                  setPassword((e.target as HTMLInputElement).value);
+                  haptics.light();
+                }}
+                placeholder="Network password"
+                class="w-full px-4 py-3 pr-20 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPassword((current) => !current);
+                  haptics.light();
+                }}
+                class="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] px-3 rounded-lg text-sm font-black text-[#3AA8A4] hover:bg-[#E0FFFF]"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+        : (
+          <p class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-xs font-semibold text-amber-900">
+            Open network: no password encoded
+          </p>
+        )}
 
       {/* Hidden Network */}
       <div class="space-y-2">

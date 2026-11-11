@@ -3,6 +3,7 @@ import type { Signal } from "@preact/signals";
 import {
   type EmailData,
   formatEmail,
+  parseEmail,
   validateEmail,
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
@@ -12,10 +13,12 @@ interface Props {
 }
 
 export default function EmailForm({ url }: Props) {
-  const [to, setTo] = useState("");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [_error, setError] = useState<string | null>(null);
+  const [initial] = useState(() => parseEmail(url.value));
+  const [to, setTo] = useState(() => initial?.email ?? "");
+  const [subject, setSubject] = useState(() => initial?.subject ?? "");
+  const [body, setBody] = useState(() => initial?.body ?? "");
+  const [touched, setTouched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
   useEffect(() => {
@@ -29,11 +32,27 @@ export default function EmailForm({ url }: Props) {
 
     setError(null);
     const formatted = formatEmail(data);
-    url.value = formatted;
+    if (url.value !== formatted) {
+      url.value = formatted;
+    }
   }, [to, subject, body]);
+
+  const showHint =
+    (touched || Boolean(to.trim() || subject.trim() || body.trim())) &&
+    Boolean(error);
 
   return (
     <div class="space-y-4">
+      {showHint && error && (
+        <div
+          role="status"
+          aria-live="polite"
+          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+        >
+          {error}
+        </div>
+      )}
+
       {/* Email Address */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -43,6 +62,7 @@ export default function EmailForm({ url }: Props) {
           type="email"
           value={to}
           onInput={(e) => {
+            setTouched(true);
             setTo((e.target as HTMLInputElement).value);
             haptics.light();
           }}
@@ -60,6 +80,7 @@ export default function EmailForm({ url }: Props) {
           type="text"
           value={subject}
           onInput={(e) => {
+            setTouched(true);
             setSubject((e.target as HTMLInputElement).value);
             haptics.light();
           }}
@@ -76,10 +97,11 @@ export default function EmailForm({ url }: Props) {
         <textarea
           value={body}
           onInput={(e) => {
-            setBody((e.target as HTMLInputElement).value);
+            setTouched(true);
+            setBody((e.target as HTMLTextAreaElement).value);
             haptics.light();
           }}
-          placeholder="Enter your pre-filled message here..."
+          placeholder="Optional message body..."
           rows={4}
           class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none resize-none"
         />

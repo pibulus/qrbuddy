@@ -10,10 +10,19 @@ import { assert, assertEquals, assertMatch } from "$std/assert/mod.ts";
 
 import {
   formatEmail,
+  formatPhone,
   formatSMS,
+  formatSocialUrl,
   formatVCard,
   formatWiFi,
+  parseEmail,
+  parsePhone,
+  parseSMS,
+  parseSocialUrl,
+  parseVCard,
+  parseWiFi,
   validateEmail,
+  validatePhone,
   validateSMS,
   validateVCard,
   validateWiFi,
@@ -75,14 +84,15 @@ Deno.test("formatWiFi - builds WIFI: payload with escaped special chars", () => 
   assertMatch(out, /^WIFI:T:WPA;S:My\\;Net;P:p\\,a\\:ss\\\\word;;$/);
 });
 
-Deno.test("formatWiFi - nopass omits encryption type", () => {
+Deno.test("formatWiFi - nopass emits T:nopass; and omits P: even with leftover password", () => {
   const out = formatWiFi({
     ssid: "Open",
-    password: "",
+    password: "leftover-secret-do-not-emit",
     encryption: "nopass",
     hidden: false,
   });
-  assertEquals(out, "WIFI:T:;S:Open;P:;;");
+  assertEquals(out, "WIFI:T:nopass;S:Open;;");
+  assert(!out.includes("P:"), "open network must omit P: field");
 });
 
 Deno.test("formatWiFi - hidden network adds H:true", () => {
@@ -92,7 +102,49 @@ Deno.test("formatWiFi - hidden network adds H:true", () => {
     encryption: "WPA",
     hidden: true,
   });
-  assertMatch(out, /;H:true;$/);
+  assertEquals(out, "WIFI:T:WPA;S:Ghost;P:secret;H:true;;");
+});
+
+Deno.test("parseWiFi - round-trips WPA, WEP, nopass, hidden, and escaped chars", () => {
+  const wpa = {
+    ssid: 'Cafe; "Lumen": 5GHz',
+    password: "p,a:ss\\word;",
+    encryption: "WPA" as const,
+    hidden: true,
+  };
+  assertEquals(parseWiFi(formatWiFi(wpa)), wpa);
+
+  const wep = {
+    ssid: "RetroBox",
+    password: "abc\\\\",
+    encryption: "WEP" as const,
+    hidden: false,
+  };
+  assertEquals(parseWiFi(formatWiFi(wep)), wep);
+
+  const open = {
+    ssid: "Guest_Free",
+    password: "leftover-password",
+    encryption: "nopass" as const,
+    hidden: false,
+  };
+  assertEquals(parseWiFi(formatWiFi(open)), {
+    ssid: "Guest_Free",
+    password: "",
+    encryption: "nopass",
+    hidden: false,
+  });
+
+  // Legacy empty T:; format
+  assertEquals(parseWiFi("WIFI:T:;S:LegacyOpen;P:;;"), {
+    ssid: "LegacyOpen",
+    password: "",
+    encryption: "nopass",
+    hidden: false,
+  });
+
+  assertEquals(parseWiFi("https://qrbuddy.app"), null);
+  assertEquals(parseWiFi("WIFI:T:WPA;;"), null);
 });
 
 Deno.test("validateWiFi - requires ssid, and password for secured", () => {
@@ -116,27 +168,71 @@ Deno.test("validateWiFi - requires ssid, and password for secured", () => {
 });
 
 // ===========================================================================
-// vCard / SMS / Email
+// vCard / SMS / Email / Phone / Social
 // ===========================================================================
-Deno.test("formatVCard - includes only provided optional fields", () => {
-  const out = formatVCard({
+Deno.test("formatVCard & parseVCard - round-trips NOTE, escaped newlines/commas, and optional fields", () => {
+  const minimal = formatVCard({
     firstName: "Ada",
     lastName: "Lovelace",
     organization: "",
     jobTitle: "",
-    phone: "123",
+    phone: "123456",
     email: "",
     website: "",
     address: "",
   });
-  assert(out.startsWith("BEGIN:VCARD"));
-  assert(out.endsWith("END:VCARD"));
-  assert(out.includes("FN:Ada Lovelace"));
-  assert(out.includes("TEL:123"));
-  assert(!out.includes("ORG:"), "empty org should be omitted");
+  assert(minimal.startsWith("BEGIN:VCARD"));
+  assert(minimal.endsWith("END:VCARD"));
+  assert(minimal.includes("FN:Ada Lovelace"));
+  assert(minimal.includes("TEL:123456"));
+  assert(!minimal.includes("ORG:"), "empty org should be omitted");
+  assert(!minimal.includes("NOTE:"), "empty note should be omitted");
+
+  const rich = {
+    firstName: "Mary Jane",
+    lastName: "Smith; Jr.",
+    organization: "Analytical, Inc.",
+    jobTitle: "Lead; Engineer",
+    phone: "+61 412 345 678",
+    email: "mj@example.org",
+    website: "https://example.org/card",
+    address: "123 Brunswick St, Fitzroy; VIC 3065",
+    note: "Booth #42\nBring synth cables, stickers; ask for\\n literal",
+  };
+  const vcardPayload = formatVCard(rich);
+  assert(
+    vcardPayload.includes(
+      "NOTE:Booth #42\\nBring synth cables\\, stickers\\; ask for\\\\n literal",
+    ),
+  );
+  assertEquals(parseVCard(vcardPayload), rich);
+
+  // External parameterized vCard
+  const external = [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+    "FN:Prince",
+    "TEL;TYPE=CELL:+15550001111",
+    "URL;TYPE=WORK:https://prince.example",
+    "END:VCARD",
+  ].join("\r\n");
+  assertEquals(parseVCard(external), {
+    firstName: "Prince",
+    lastName: "",
+    phone: "+15550001111",
+    email: "",
+    website: "https://prince.example",
+    organization: "",
+    jobTitle: "",
+    address: "",
+    note: "",
+  });
+
+  assertEquals(parseVCard("not a vcard"), null);
+  assertEquals(parseVCard("BEGIN:VCARD\nVERSION:3.0\nEND:VCARD"), null);
 });
 
-Deno.test("validateVCard - needs a name and a contact method", () => {
+Deno.test("validateVCard - requires first or last name plus any meaningful detail", () => {
   const base = {
     firstName: "",
     lastName: "",
@@ -146,47 +242,194 @@ Deno.test("validateVCard - needs a name and a contact method", () => {
     email: "",
     website: "",
     address: "",
+    note: "",
   };
   assertEquals(validateVCard(base), "Name is required");
   assertEquals(
-    validateVCard({ ...base, firstName: "A" }),
-    "Phone or Email is required",
+    validateVCard({ ...base, firstName: "Ada" }),
+    "Add phone, email, or website to complete card",
   );
   assertEquals(
-    validateVCard({ ...base, firstName: "A", email: "a@b.c" }),
+    validateVCard({ ...base, firstName: "Ada", website: "https://ada.dev" }),
+    null,
+  );
+  assertEquals(
+    validateVCard({ ...base, lastName: "Lovelace", organization: "Babbage" }),
+    null,
+  );
+  assertEquals(
+    validateVCard({ ...base, firstName: "Ada", jobTitle: "Mathematician" }),
+    null,
+  );
+  assertEquals(
+    validateVCard({ ...base, firstName: "Ada", address: "London" }),
+    null,
+  );
+  assertEquals(
+    validateVCard({ ...base, firstName: "Ada", note: "Met at conference" }),
+    null,
+  );
+  assertEquals(
+    validateVCard({ ...base, firstName: "Ada", email: "a@b.c" }),
     null,
   );
 });
 
-Deno.test("formatSMS / validateSMS", () => {
-  assertEquals(formatSMS({ phone: "555", message: "yo" }), "SMSTO:555:yo");
+Deno.test("formatSMS, parseSMS & validateSMS - supports phone-only and message round-trips", () => {
+  assertEquals(
+    formatSMS({ phone: "+1 (555) 123-4567", message: "" }),
+    "SMSTO:+15551234567",
+  );
+  assertEquals(
+    formatSMS({ phone: "555", message: "yo: meet at 8:30" }),
+    "SMSTO:555:yo: meet at 8:30",
+  );
+
+  assertEquals(parseSMS(formatSMS({ phone: "+61412345678", message: "" })), {
+    phone: "+61412345678",
+    message: "",
+  });
+  assertEquals(
+    parseSMS(formatSMS({ phone: "+61412345678", message: "Table at 7:30?" })),
+    {
+      phone: "+61412345678",
+      message: "Table at 7:30?",
+    },
+  );
+  assertEquals(parseSMS("sms:+15551234567?body=Hello%20world"), {
+    phone: "+15551234567",
+    message: "Hello world",
+  });
+  assertEquals(parseSMS("https://example.com"), null);
+
   assertEquals(
     validateSMS({ phone: "", message: "x" }),
     "Phone number is required",
   );
-  assertEquals(validateSMS({ phone: "1", message: "" }), "Message is required");
-  assertEquals(validateSMS({ phone: "1", message: "x" }), null);
+  assertEquals(
+    validateSMS({ phone: "12", message: "" }),
+    "Valid phone number required",
+  );
+  assertEquals(validateSMS({ phone: "5551234", message: "" }), null);
+  assertEquals(validateSMS({ phone: "+61 412 345 678", message: "x" }), null);
 });
 
-Deno.test("formatEmail - URL-encodes subject and body", () => {
-  const out = formatEmail({
+Deno.test("formatPhone, parsePhone & validatePhone - cleans separators and round-trips tel:", () => {
+  const out = formatPhone({ phone: "+61 (04) 1234-5678" });
+  assertEquals(out, "tel:+610412345678");
+  assertEquals(parsePhone(out), { phone: "+610412345678" });
+  assertEquals(formatPhone({ phone: "1-800-FLOWERS" }), "tel:1800FLOWERS");
+  assertEquals(parsePhone("tel:"), null);
+  assertEquals(parsePhone("mailto:a@b.c"), null);
+
+  assertEquals(validatePhone({ phone: "" }), "Phone number is required");
+  assertEquals(
+    validatePhone({ phone: "nope" }),
+    "Valid phone number required",
+  );
+  assertEquals(validatePhone({ phone: "+61 412 345 678" }), null);
+  assertEquals(validatePhone({ phone: "1-800-FLOWERS" }), null);
+});
+
+Deno.test("formatEmail, parseEmail & validateEmail - omits empty query string and round-trips", () => {
+  assertEquals(
+    formatEmail({ email: "a@b.c", subject: "", body: "" }),
+    "mailto:a@b.c",
+  );
+  assertEquals(
+    formatEmail({ email: "a@b.c", subject: "hi there", body: "" }),
+    "mailto:a@b.c?subject=hi%20there",
+  );
+  const full = formatEmail({
     email: "a@b.c",
     subject: "hi there",
-    body: "a&b=c",
+    body: "a&b=c+d",
   });
-  assertEquals(out, "mailto:a@b.c?subject=hi%20there&body=a%26b%3Dc");
-});
+  assertEquals(full, "mailto:a@b.c?subject=hi%20there&body=a%26b%3Dc%2Bd");
 
-Deno.test("validateEmail - needs email and subject-or-body", () => {
+  assertEquals(parseEmail("mailto:a@b.c"), {
+    email: "a@b.c",
+    subject: "",
+    body: "",
+  });
+  assertEquals(parseEmail(full), {
+    email: "a@b.c",
+    subject: "hi there",
+    body: "a&b=c+d",
+  });
+  assertEquals(parseEmail("mailto:"), null);
+  assertEquals(parseEmail("https://example.com"), null);
+
   assertEquals(
     validateEmail({ email: "", subject: "s", body: "" }),
     "Email address is required",
   );
   assertEquals(
-    validateEmail({ email: "a@b.c", subject: "", body: "" }),
-    "Subject or Body is required",
+    validateEmail({ email: "not-an-email", subject: "", body: "" }),
+    "Valid email required",
   );
+  assertEquals(validateEmail({ email: "a@b.c", subject: "", body: "" }), null);
   assertEquals(validateEmail({ email: "a@b.c", subject: "s", body: "" }), null);
+});
+
+Deno.test("formatSocialUrl & parseSocialUrl - round-trips platforms and strips pasted full URLs", () => {
+  assertEquals(
+    formatSocialUrl("instagram", "https://www.instagram.com/pibulus/"),
+    "https://instagram.com/pibulus",
+  );
+  assertEquals(
+    formatSocialUrl("tiktok", "https://tiktok.com/@pibulus?lang=en"),
+    "https://tiktok.com/@pibulus",
+  );
+  assertEquals(
+    formatSocialUrl({ platform: "twitter", username: "@pibulus" }),
+    "https://x.com/pibulus",
+  );
+  assertEquals(
+    formatSocialUrl("linkedin", "https://au.linkedin.com/in/pibulus/"),
+    "https://linkedin.com/in/pibulus",
+  );
+  assertEquals(
+    formatSocialUrl("youtube", "https://www.youtube.com/@pibulus?sub=1"),
+    "https://youtube.com/@pibulus",
+  );
+  assertEquals(
+    formatSocialUrl("github", "https://github.com/pibulus?tab=repositories"),
+    "https://github.com/pibulus",
+  );
+
+  for (
+    const platform of [
+      "instagram",
+      "twitter",
+      "tiktok",
+      "linkedin",
+      "youtube",
+      "github",
+      "facebook",
+    ] as const
+  ) {
+    const url = formatSocialUrl(platform, "pibulus");
+    assertEquals(parseSocialUrl(url), { platform, username: "pibulus" });
+  }
+
+  assertEquals(parseSocialUrl("https://twitter.com/pibulus?s=20"), {
+    platform: "twitter",
+    username: "pibulus",
+  });
+  assertEquals(parseSocialUrl("https://www.youtube.com/c/pibulus"), {
+    platform: "youtube",
+    username: "pibulus",
+  });
+  assertEquals(parseSocialUrl("https://wa.me/61412345678"), {
+    platform: "whatsapp",
+    username: "61412345678",
+  });
+  assertEquals(parseSocialUrl("https://qrbuddy.app/for/menus"), null);
+  assertEquals(
+    parseSocialUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
+    null,
+  );
 });
 
 // ===========================================================================

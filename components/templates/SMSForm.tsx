@@ -2,6 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import {
   formatSMS,
+  parseSMS,
   type SMSData,
   validateSMS,
 } from "../../types/qr-templates.ts";
@@ -12,9 +13,11 @@ interface Props {
 }
 
 export default function SMSForm({ url }: Props) {
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
-  const [_error, setError] = useState<string | null>(null);
+  const [initial] = useState(() => parseSMS(url.value));
+  const [phone, setPhone] = useState(() => initial?.phone ?? "");
+  const [message, setMessage] = useState(() => initial?.message ?? "");
+  const [touched, setTouched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
   useEffect(() => {
@@ -28,11 +31,26 @@ export default function SMSForm({ url }: Props) {
 
     setError(null);
     const formatted = formatSMS(data);
-    url.value = formatted;
+    if (url.value !== formatted) {
+      url.value = formatted;
+    }
   }, [phone, message]);
+
+  const showHint = (touched || Boolean(phone.trim() || message.trim())) &&
+    Boolean(error);
 
   return (
     <div class="space-y-4">
+      {showHint && error && (
+        <div
+          role="status"
+          aria-live="polite"
+          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+        >
+          {error}
+        </div>
+      )}
+
       {/* Phone Number */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -42,6 +60,7 @@ export default function SMSForm({ url }: Props) {
           type="tel"
           value={phone}
           onInput={(e) => {
+            setTouched(true);
             setPhone((e.target as HTMLInputElement).value);
             haptics.light();
           }}
@@ -49,22 +68,23 @@ export default function SMSForm({ url }: Props) {
           class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
         />
         <p class="text-xs text-gray-500">
-          Include country code (e.g., +1 for US)
+          Country code recommended (e.g., +1 555 123 4567)
         </p>
       </div>
 
       {/* Message */}
       <div class="space-y-2">
         <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Message *
+          Message
         </label>
         <textarea
           value={message}
           onInput={(e) => {
-            setMessage((e.target as HTMLInputElement).value);
+            setTouched(true);
+            setMessage((e.target as HTMLTextAreaElement).value);
             haptics.light();
           }}
-          placeholder="Enter your pre-filled message here..."
+          placeholder="Optional text message..."
           rows={4}
           class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none resize-none"
         />

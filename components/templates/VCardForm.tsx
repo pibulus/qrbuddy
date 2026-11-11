@@ -2,6 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import {
   formatVCard,
+  parseVCard,
   validateVCard,
   type VCardData,
 } from "../../types/qr-templates.ts";
@@ -12,16 +13,20 @@ interface Props {
 }
 
 export default function VCardForm({ url }: Props) {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [organization, setOrganization] = useState("");
-  const [title, setTitle] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [website, setWebsite] = useState("");
-  const [address, setAddress] = useState("");
-  const [note, setNote] = useState("");
-  const [_error, setError] = useState<string | null>(null);
+  const [initial] = useState(() => parseVCard(url.value));
+  const [firstName, setFirstName] = useState(() => initial?.firstName ?? "");
+  const [lastName, setLastName] = useState(() => initial?.lastName ?? "");
+  const [organization, setOrganization] = useState(
+    () => initial?.organization ?? "",
+  );
+  const [title, setTitle] = useState(() => initial?.jobTitle ?? "");
+  const [phone, setPhone] = useState(() => initial?.phone ?? "");
+  const [email, setEmail] = useState(() => initial?.email ?? "");
+  const [website, setWebsite] = useState(() => initial?.website ?? "");
+  const [address, setAddress] = useState(() => initial?.address ?? "");
+  const [note, setNote] = useState(() => initial?.note ?? "");
+  const [touched, setTouched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Update QR data whenever form changes
   useEffect(() => {
@@ -34,6 +39,7 @@ export default function VCardForm({ url }: Props) {
       email,
       website,
       address,
+      note,
     };
     const validationError = validateVCard(data);
 
@@ -44,7 +50,9 @@ export default function VCardForm({ url }: Props) {
 
     setError(null);
     const formatted = formatVCard(data);
-    url.value = formatted;
+    if (url.value !== formatted) {
+      url.value = formatted;
+    }
   }, [
     firstName,
     lastName,
@@ -57,8 +65,31 @@ export default function VCardForm({ url }: Props) {
     note,
   ]);
 
+  const hasAnyInput = Boolean(
+    firstName.trim() ||
+      lastName.trim() ||
+      organization.trim() ||
+      title.trim() ||
+      phone.trim() ||
+      email.trim() ||
+      website.trim() ||
+      address.trim() ||
+      note.trim(),
+  );
+  const showHint = (touched || hasAnyInput) && Boolean(error);
+
   return (
     <div class="space-y-4">
+      {showHint && error && (
+        <div
+          role="status"
+          aria-live="polite"
+          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+        >
+          {error}
+        </div>
+      )}
+
       {/* Name */}
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="space-y-2">
@@ -69,6 +100,7 @@ export default function VCardForm({ url }: Props) {
             type="text"
             value={firstName}
             onInput={(e) => {
+              setTouched(true);
               setFirstName((e.target as HTMLInputElement).value);
               haptics.light();
             }}
@@ -78,12 +110,13 @@ export default function VCardForm({ url }: Props) {
         </div>
         <div class="space-y-2">
           <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-            Last Name *
+            Last Name
           </label>
           <input
             type="text"
             value={lastName}
             onInput={(e) => {
+              setTouched(true);
               setLastName((e.target as HTMLInputElement).value);
               haptics.light();
             }}
@@ -103,6 +136,7 @@ export default function VCardForm({ url }: Props) {
             type="text"
             value={organization}
             onInput={(e) => {
+              setTouched(true);
               setOrganization((e.target as HTMLInputElement).value);
               haptics.light();
             }}
@@ -118,6 +152,7 @@ export default function VCardForm({ url }: Props) {
             type="text"
             value={title}
             onInput={(e) => {
+              setTouched(true);
               setTitle((e.target as HTMLInputElement).value);
               haptics.light();
             }}
@@ -136,6 +171,7 @@ export default function VCardForm({ url }: Props) {
           type="tel"
           value={phone}
           onInput={(e) => {
+            setTouched(true);
             setPhone((e.target as HTMLInputElement).value);
             haptics.light();
           }}
@@ -153,6 +189,7 @@ export default function VCardForm({ url }: Props) {
           type="email"
           value={email}
           onInput={(e) => {
+            setTouched(true);
             setEmail((e.target as HTMLInputElement).value);
             haptics.light();
           }}
@@ -170,6 +207,7 @@ export default function VCardForm({ url }: Props) {
           type="url"
           value={website}
           onInput={(e) => {
+            setTouched(true);
             setWebsite((e.target as HTMLInputElement).value);
             haptics.light();
           }}
@@ -187,6 +225,7 @@ export default function VCardForm({ url }: Props) {
           type="text"
           value={address}
           onInput={(e) => {
+            setTouched(true);
             setAddress((e.target as HTMLInputElement).value);
             haptics.light();
           }}
@@ -203,7 +242,8 @@ export default function VCardForm({ url }: Props) {
         <textarea
           value={note}
           onInput={(e) => {
-            setNote((e.target as HTMLInputElement).value);
+            setTouched(true);
+            setNote((e.target as HTMLTextAreaElement).value);
             haptics.light();
           }}
           placeholder="Additional information..."

@@ -6,8 +6,13 @@ interface Props {
   url: Signal<string>;
 }
 
+const NON_WEB_PAYLOAD_RE =
+  /^\s*(?:WIFI:|BEGIN:VCARD|SMSTO:|sms:|mailto:|tel:)/i;
+
 export default function WebsiteForm({ url }: Props) {
-  const [inputValue, setInputValue] = useState(url.value);
+  const [inputValue, setInputValue] = useState(() =>
+    NON_WEB_PAYLOAD_RE.test(url.value) ? "" : url.value
+  );
 
   const handleInput = (e: Event) => {
     const value = (e.target as HTMLInputElement).value;
