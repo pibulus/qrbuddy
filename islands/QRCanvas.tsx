@@ -451,6 +451,18 @@ export default function QRCanvas(
     return blob;
   };
 
+  const triggerBlobDownload = (blob: Blob, fileName: string) => {
+    const a = document.createElement("a");
+    const objectUrl = URL.createObjectURL(blob);
+    a.href = objectUrl;
+    a.download = fileName;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  };
+
   const downloadFramedPng = async ({
     caption,
     theme,
@@ -461,17 +473,15 @@ export default function QRCanvas(
     targetSize?: 1000 | 2000 | 3000;
   }) => {
     const blob = await composeFramedPngBlob({ caption, theme, targetSize });
-    const a = document.createElement("a");
-    const objectUrl = URL.createObjectURL(blob);
-    a.href = objectUrl;
-    a.download = buildQrFilename(
-      url.value || "https://qrbuddy.app",
-      style.value,
-      caption,
-      "png",
+    triggerBlobDownload(
+      blob,
+      buildQrFilename(
+        url.value || "https://qrbuddy.app",
+        style.value,
+        caption,
+        "png",
+      ),
     );
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   };
 
   // Save to history (Time Machine) on PNG download, SVG download, and clipboard copy.
@@ -545,17 +555,15 @@ export default function QRCanvas(
     const raw = await exportQr.getRawData("png");
     if (!raw) throw new Error("QR image could not be created");
 
-    const a = document.createElement("a");
-    const objectUrl = URL.createObjectURL(raw as Blob);
-    a.href = objectUrl;
-    a.download = buildQrFilename(
-      url.value || "https://qrbuddy.app",
-      style.value,
-      undefined,
-      "png",
+    triggerBlobDownload(
+      raw as Blob,
+      buildQrFilename(
+        url.value || "https://qrbuddy.app",
+        style.value,
+        undefined,
+        "png",
+      ),
     );
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   };
 
   const downloadSvg = async ({
@@ -599,12 +607,7 @@ export default function QRCanvas(
     const blob = new Blob([finalSvgText], {
       type: "image/svg+xml;charset=utf-8",
     });
-    const a = document.createElement("a");
-    const objectUrl = URL.createObjectURL(blob);
-    a.href = objectUrl;
-    a.download = fileName;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    triggerBlobDownload(blob, fileName);
   };
 
   const handleSvgDownloadClick = async (e: MouseEvent) => {
@@ -1031,8 +1034,8 @@ export default function QRCanvas(
             }}
             class="min-h-[36px] pl-3.5 pr-2.5 flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[#ffd04a] active:bg-[#f2ac00] active:translate-y-[1.5px]"
             aria-label={isSpanish
-              ? "Descargar código QR como PNG"
-              : "Download QR code as PNG"}
+              ? "Guardar PNG: descargar código QR"
+              : "Save PNG: download QR code"}
           >
             {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
           </button>
