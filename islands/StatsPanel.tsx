@@ -106,8 +106,8 @@ export default function StatsPanel() {
       <section class="rounded-3xl border-2 border-stone-900 bg-[#fffef7] p-6">
         <h2 class="text-lg font-black">No Passport yet</h2>
         <p class="mt-2 text-sm text-stone-600">
-          Make a code first. Your Passport is created with it, and this page
-          fills up as people scan.
+          Create an editable code first. A Passport pairs automatically, and
+          scan activity fills in here over time.
         </p>
       </section>
     );

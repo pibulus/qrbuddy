@@ -534,15 +534,27 @@ Deno.test("exportSyncBundle & importSyncBundle - preserves full metadata includi
 });
 
 Deno.test("detectStructuredStagePayload - summarizes WIFI, VCARD, mailto, SMSTO, and tel payloads while ignoring URLs and text", () => {
-  // Wi-Fi WPA & Open
+  // Wi-Fi WPA & Open (leads directly with SSID + security; typeLabel stays separate for ARIA)
   const wifiWpa = detectStructuredStagePayload(
     "WIFI:T:WPA;S:CafeLuna;P:hunter2;;",
     "en",
   );
   assertEquals(wifiWpa, {
     template: "wifi",
-    label: "Wi-Fi · CafeLuna (WPA)",
+    typeLabel: "Wi-Fi",
+    label: "CafeLuna · WPA",
     detail: "WPA",
+  });
+
+  const wifiOpenEn = detectStructuredStagePayload(
+    "WIFI:T:nopass;S:Studio_5G;;",
+    "en",
+  );
+  assertEquals(wifiOpenEn, {
+    template: "wifi",
+    typeLabel: "Wi-Fi",
+    label: "Studio_5G · Open",
+    detail: "Open",
   });
 
   const wifiOpenEs = detectStructuredStagePayload(
@@ -551,7 +563,8 @@ Deno.test("detectStructuredStagePayload - summarizes WIFI, VCARD, mailto, SMSTO,
   );
   assertEquals(wifiOpenEs, {
     template: "wifi",
-    label: "Wi-Fi · PatioLibre (Abierta)",
+    typeLabel: "Wi-Fi",
+    label: "PatioLibre · Abierta",
     detail: "Abierta",
   });
 
@@ -561,16 +574,19 @@ Deno.test("detectStructuredStagePayload - summarizes WIFI, VCARD, mailto, SMSTO,
     "VERSION:3.0",
     "FN:Ada Lovelace",
     "N:Lovelace;Ada;;;",
-    "ORG:Analytical Engine",
+    "ORG:SoftStack",
     "EMAIL:ada@engine.org",
     "END:VCARD",
   ].join("\n");
   const vcardEn = detectStructuredStagePayload(vcardPayload, "en");
   assertEquals(vcardEn?.template, "vcard");
-  assertEquals(vcardEn?.label, "Contact · Ada Lovelace");
+  assertEquals(vcardEn?.typeLabel, "Contact");
+  assertEquals(vcardEn?.label, "Ada Lovelace · SoftStack");
+  assertEquals(vcardEn?.detail, "SoftStack");
 
   const vcardEs = detectStructuredStagePayload(vcardPayload, "es");
-  assertEquals(vcardEs?.label, "Contacto · Ada Lovelace");
+  assertEquals(vcardEs?.typeLabel, "Contacto");
+  assertEquals(vcardEs?.label, "Ada Lovelace · SoftStack");
 
   // mailto:
   const mailEn = detectStructuredStagePayload(
@@ -579,13 +595,13 @@ Deno.test("detectStructuredStagePayload - summarizes WIFI, VCARD, mailto, SMSTO,
   );
   assertEquals(mailEn, {
     template: "email",
-    label: "Email · hello@acme.co",
+    typeLabel: "Email",
+    label: "hello@acme.co",
     detail: "Booking Inquiry",
   });
-  assertEquals(
-    detectStructuredStagePayload("mailto:hola@acme.co", "es")?.label,
-    "Correo · hola@acme.co",
-  );
+  const mailEs = detectStructuredStagePayload("mailto:hola@acme.co", "es");
+  assertEquals(mailEs?.typeLabel, "Correo");
+  assertEquals(mailEs?.label, "hola@acme.co");
 
   // SMSTO:
   const smsEn = detectStructuredStagePayload(
@@ -594,7 +610,8 @@ Deno.test("detectStructuredStagePayload - summarizes WIFI, VCARD, mailto, SMSTO,
   );
   assertEquals(smsEn, {
     template: "sms",
-    label: "SMS · +61400123456",
+    typeLabel: "SMS",
+    label: "+61400123456",
     detail: "Table ready",
   });
 
@@ -602,15 +619,69 @@ Deno.test("detectStructuredStagePayload - summarizes WIFI, VCARD, mailto, SMSTO,
   const telEn = detectStructuredStagePayload("tel:+61400123456", "en");
   assertEquals(telEn, {
     template: "phone",
-    label: "Call · +61400123456",
+    typeLabel: "Call",
+    label: "+61400123456",
   });
-  assertEquals(
-    detectStructuredStagePayload("tel:+61400123456", "es")?.label,
-    "Llamada · +61400123456",
-  );
+  const telEs = detectStructuredStagePayload("tel:+61400123456", "es");
+  assertEquals(telEs?.typeLabel, "Llamada");
+  assertEquals(telEs?.label, "+61400123456");
 
   // Standard URLs and plain text stay in the raw input (return null)
   assertEquals(detectStructuredStagePayload("https://qrbuddy.app"), null);
   assertEquals(detectStructuredStagePayload("Just a plain note"), null);
   assertEquals(detectStructuredStagePayload(""), null);
+});
+
+Deno.test("Stage & Saved polish invariants - top-rail symmetry, 2-col toolbar, compressed drawer, and Sovereign Voice", async () => {
+  const [homeSrc, styleSrc, toolbarSrc, smartSrc, drawerSrc, libSrc, statsSrc] =
+    await Promise.all([
+      Deno.readTextFile(
+        new URL("../components/HomeStage.tsx", import.meta.url),
+      ),
+      Deno.readTextFile(
+        new URL("../islands/StyleSelector.tsx", import.meta.url),
+      ),
+      Deno.readTextFile(
+        new URL(
+          "../components/smart-input/SmartInputToolbar.tsx",
+          import.meta.url,
+        ),
+      ),
+      Deno.readTextFile(new URL("../islands/SmartInput.tsx", import.meta.url)),
+      Deno.readTextFile(
+        new URL("../components/LibraryDrawer.tsx", import.meta.url),
+      ),
+      Deno.readTextFile(new URL("../utils/library.ts", import.meta.url)),
+      Deno.readTextFile(new URL("../islands/StatsPanel.tsx", import.meta.url)),
+    ]);
+
+  // 1. Top-left Saved capsule counterweight + clean 2-button bottom stage toolbar
+  assertEquals(homeSrc.includes('variant="saved"'), true);
+  assertEquals(homeSrc.includes("focus:z-[60]"), true);
+  assertEquals(styleSrc.includes("qrb-open-vault"), true);
+  assertEquals(
+    toolbarSrc.includes("grid-cols-[1fr_1.15fr] gap-2.5 w-full"),
+    true,
+  );
+  assertEquals(toolbarSrc.includes("onOpenVault?.()"), false);
+
+  // 2. Dead-end Editable switch hidden on structured payloads + no close-modal nag toast
+  assertEquals(
+    smartSrc.includes("!isDestructible.value && !structuredSummary &&"),
+    true,
+  );
+  assertEquals(smartSrc.includes("This QR can be repointed anytime"), false);
+  assertEquals(smartSrc.includes("QR ready — tap ↓ Save PNG"), false);
+
+  // 3. Saved drawer de-bloated: "Saved" / "Guardados", no /stats or /batch pills, no window.confirm()
+  assertEquals(drawerSrc.includes('{isSpanish ? "Guardados" : "Saved"}'), true);
+  assertEquals(drawerSrc.includes("Saved Vault"), false);
+  assertEquals(drawerSrc.includes('href="/stats"'), false);
+  assertEquals(drawerSrc.includes('href="/batch"'), false);
+  assertEquals(drawerSrc.includes("confirm("), false);
+
+  // 4. Sovereign Voice fixes in library.ts & StatsPanel.tsx
+  assertEquals(libSrc.includes("Failed to load your QR library"), false);
+  assertEquals(libSrc.includes("Could not load saved library"), true);
+  assertEquals(/\b(you|your|yours)\b/i.test(statsSrc), false);
 });

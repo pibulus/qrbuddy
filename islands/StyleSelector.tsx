@@ -1,16 +1,18 @@
 import { Signal, useSignal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
+import { getHistory } from "../utils/history.ts";
 import { sounds } from "../utils/sounds.ts";
 import GradientCreator from "../components/GradientCreator.tsx";
 import type { QRStyle } from "../types/qr-types.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface StyleSelectorProps {
-  style: Signal<string>;
+  style?: Signal<string>;
   customStyle?: Signal<QRStyle | null>;
   isHidden?: Signal<boolean>;
   lang?: Locale;
+  variant?: "theme" | "saved";
 }
 
 export const STYLE_DISPLAY = {
@@ -78,24 +80,47 @@ const ARCHETYPE_KEYS = Object.keys(
 
 /** The vibe pill opens a gallery: six looks in one tap, not a blind cycle. */
 export default function StyleSelector(
-  { style, customStyle, isHidden, lang }: StyleSelectorProps,
+  { style, customStyle, isHidden, lang, variant = "theme" }: StyleSelectorProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const isCreatorOpen = useSignal(false);
   const isOpen = useSignal(false);
+  const savedCount = useSignal(0);
+  const isVaultOpen = useSignal(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (variant !== "saved") return;
+    const syncCount = () => {
+      savedCount.value = getHistory().length;
+    };
+    const syncVisibility = (event: Event) => {
+      const open = Boolean(
+        (event as CustomEvent<{ open?: boolean }>).detail?.open,
+      );
+      isVaultOpen.value = open;
+    };
+    syncCount();
+    globalThis.addEventListener("history-updated", syncCount);
+    globalThis.addEventListener("qrb-vault-visibility", syncVisibility);
+    return () => {
+      globalThis.removeEventListener("history-updated", syncCount);
+      globalThis.removeEventListener("qrb-vault-visibility", syncVisibility);
+    };
+  }, [variant]);
+
+  useEffect(() => {
+    if (variant === "saved") return;
     const openCreator = () => {
       isCreatorOpen.value = true;
     };
     globalThis.addEventListener("open-gradient-creator", openCreator);
     return () =>
       globalThis.removeEventListener("open-gradient-creator", openCreator);
-  }, []);
+  }, [variant]);
 
   useEffect(() => {
-    if (!isOpen.value) return;
+    if (!isOpen.value || variant === "saved") return;
     const dismiss = (event: Event) => {
       if (event instanceof KeyboardEvent) {
         if (event.key === "Escape") isOpen.value = false;
@@ -111,12 +136,62 @@ export default function StyleSelector(
       document.removeEventListener("pointerdown", dismiss);
       document.removeEventListener("keydown", dismiss);
     };
-  }, [isOpen.value]);
+  }, [isOpen.value, variant]);
 
   if (isHidden?.value) return null;
 
+  if (variant === "saved") {
+    return (
+      <div ref={rootRef} class="relative">
+        <button
+          type="button"
+          onClick={() => {
+            isVaultOpen.value = true;
+            haptics.light();
+            globalThis.dispatchEvent(new CustomEvent("qrb-open-vault"));
+          }}
+          aria-expanded={isVaultOpen.value}
+          aria-haspopup="dialog"
+          aria-label={isSpanish
+            ? `Códigos guardados${
+              savedCount.value > 0 ? ` (${savedCount.value})` : ""
+            }`
+            : `Saved codes${
+              savedCount.value > 0 ? ` (${savedCount.value})` : ""
+            }`}
+          class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 min-h-[38px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] hover:-translate-y-px hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            width="15"
+            height="15"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="shrink-0"
+          >
+            <path d="M12 3a9 9 0 1 1-6.36 2.64M3 3v5h5M12 7v5l3 2" />
+          </svg>
+          <span class="hidden sm:inline whitespace-nowrap">
+            {isSpanish ? "Guardados" : "Saved"}
+          </span>
+          {savedCount.value > 0 && (
+            <span class="px-1.5 py-0.5 rounded-full bg-[#f7ecdc] border border-[#1e1714]/40 text-[10px] font-black leading-none tabular-nums">
+              {savedCount.value > 99 ? "99+" : savedCount.value}
+            </span>
+          )}
+        </button>
+      </div>
+    );
+  }
+
+  const styleValue = style?.value ?? "sunset";
+
   const handleCustomGradient = (gradient: QRStyle) => {
-    if (customStyle) {
+    if (customStyle && style) {
       customStyle.value = gradient;
       style.value = "custom";
     }
@@ -128,10 +203,10 @@ export default function StyleSelector(
     ? customStyle.value.dots.gradient.colorStops.map((s) => s.color)
     : ["#9370DB", "#FF69B4"];
 
-  const currentStyleInfo = style.value === "custom"
+  const currentStyleInfo = styleValue === "custom"
     ? { name: "Custom", nameEs: "Propio", colors: customStops }
-    : STYLE_DISPLAY[style.value as keyof typeof STYLE_DISPLAY] ??
-      LEGACY_STYLE_DISPLAY[style.value] ??
+    : STYLE_DISPLAY[styleValue as keyof typeof STYLE_DISPLAY] ??
+      LEGACY_STYLE_DISPLAY[styleValue] ??
       STYLE_DISPLAY.sunset;
 
   const currentStyleName = isSpanish
@@ -148,7 +223,7 @@ export default function StyleSelector(
   };
 
   const pick = (key: keyof typeof STYLE_DISPLAY) => {
-    style.value = key;
+    if (style) style.value = key;
     if (customStyle) customStyle.value = null;
     sounds.gradientShimmer(ARCHETYPE_KEYS.indexOf(key));
     haptics.light();
@@ -173,7 +248,7 @@ export default function StyleSelector(
         <span
           class="w-4 h-4 rounded-full border-2 border-[#1e1714] shrink-0"
           style={{
-            background: gradientFor(currentStyleInfo.colors, style.value),
+            background: gradientFor(currentStyleInfo.colors, styleValue),
           }}
         />
         <span class="hidden sm:inline whitespace-nowrap">
@@ -191,7 +266,7 @@ export default function StyleSelector(
           <div class="grid grid-cols-3 gap-1.5">
             {ARCHETYPE_KEYS.map((key) => {
               const info = STYLE_DISPLAY[key as keyof typeof STYLE_DISPLAY];
-              const active = style.value === key;
+              const active = styleValue === key;
               const name = isSpanish ? (info.nameEs ?? info.name) : info.name;
               return (
                 <button

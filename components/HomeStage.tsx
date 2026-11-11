@@ -43,7 +43,7 @@ export default function HomeStage({ lang = "en" }: HomeStageProps) {
       {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
-        class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded"
+        class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded"
       >
         {isEs ? "Saltar al contenido principal" : "Skip to main content"}
       </a>
@@ -59,6 +59,21 @@ export default function HomeStage({ lang = "en" }: HomeStageProps) {
           frameConfig={frameConfig}
           pngSize={pngSize}
         />
+
+        {/* Saved Codes - top-left counterweight opposite StyleSelector */}
+        <div
+          role="region"
+          class="absolute top-7 left-4 sm:top-12 sm:left-6 z-50 animate-fade-in"
+          aria-label={isEs ? "Códigos guardados" : "Saved codes"}
+        >
+          <ErrorBoundary>
+            <StyleSelector
+              variant="saved"
+              isHidden={isModalOpen}
+              lang={lang}
+            />
+          </ErrorBoundary>
+        </div>
 
         {/* Style Selector - aligned with the title line */}
         <div

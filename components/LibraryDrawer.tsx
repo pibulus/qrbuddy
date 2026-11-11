@@ -175,6 +175,15 @@ function glyphForItemType(type: HistoryItem["type"]): Glyph {
   }
 }
 
+function formatShortDate(value: number | string, isSpanish: boolean): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(isSpanish ? "es-MX" : "en-AU", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 export default function LibraryDrawer(
   { isOpen, onClose, onSelect, lang }: LibraryDrawerProps,
 ) {
@@ -200,6 +209,7 @@ export default function LibraryDrawer(
   const [isImportingBackup, setIsImportingBackup] = useState(false);
   const [backupInput, setBackupInput] = useState("");
   const [backupPhraseInput, setBackupPhraseInput] = useState("");
+  const [confirmClear, setConfirmClear] = useState(false);
   const jsonFileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshLocalHistory = async (
@@ -282,12 +292,21 @@ export default function LibraryDrawer(
   }, []);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setConfirmClear(false);
+      return;
+    }
     const p = getOrCreatePassport();
     setPassport(p);
     void refreshLocalHistory();
     loadLibraryData();
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!confirmClear) return;
+    const timer = setTimeout(() => setConfirmClear(false), 3500);
+    return () => clearTimeout(timer);
+  }, [confirmClear]);
 
   const loadLibraryData = async (query = "") => {
     if (!isPlusLibraryEnabled()) return;
@@ -320,7 +339,7 @@ export default function LibraryDrawer(
       URL.revokeObjectURL(url);
       haptics.success();
       addToast(
-        isSpanish ? "Archivo JSON descargado" : "Vault JSON archive downloaded",
+        isSpanish ? "Archivo JSON descargado" : "JSON archive downloaded",
         2600,
       );
     } catch {
@@ -328,7 +347,7 @@ export default function LibraryDrawer(
       addToast(
         isSpanish
           ? "No se pudo exportar el archivo JSON"
-          : "Vault JSON export failed",
+          : "JSON export failed",
         3000,
       );
     }
@@ -369,8 +388,8 @@ export default function LibraryDrawer(
       sounds.success();
       addToast(
         isSpanish
-          ? `${result.imported} códigos nuevos importados · ${result.total} en bóveda`
-          : `Imported ${result.imported} new codes · ${result.total} in vault`,
+          ? `${result.imported} códigos nuevos importados · ${result.total} guardados`
+          : `Imported ${result.imported} new codes · ${result.total} saved`,
         3200,
       );
     } catch {
@@ -496,8 +515,8 @@ export default function LibraryDrawer(
         haptics.success();
         addToast(
           isSpanish
-            ? "Código anterior agregado a la bóveda"
-            : "Pre-launch code claimed into vault",
+            ? "Código anterior agregado a guardados"
+            : "Pre-launch code claimed",
           4000,
         );
         setImportToken("");
@@ -783,7 +802,7 @@ export default function LibraryDrawer(
 
         {/* Header */}
         <div class="flex items-center justify-between gap-2 pb-3 border-b-2 border-[#1e1714]/10">
-          <div class="flex items-center gap-2 min-w-0 flex-wrap">
+          <div class="flex items-center gap-2.5 min-w-0">
             <span
               aria-hidden="true"
               class="w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-[#1e1714] shadow-[0_2px_0_#1e1714] shrink-0"
@@ -794,26 +813,14 @@ export default function LibraryDrawer(
               id="library-title"
               class="font-black text-xl tracking-tight text-[#1e1714] truncate"
             >
-              {isSpanish ? "Bóveda QR" : "Saved Vault"}
+              {isSpanish ? "Guardados" : "Saved"}
             </h2>
-            <a
-              href="/stats"
-              class="shrink-0 rounded-full border-2 border-[#1e1714] bg-emerald-300 px-2.5 py-1 text-[11px] font-black text-[#1e1714] shadow-chunky transition active:translate-y-[1px]"
-            >
-              {isSpanish ? "Datos" : "Stats"}
-            </a>
-            <a
-              href="/batch"
-              class="shrink-0 rounded-full border-2 border-[#1e1714] bg-amber-300 px-2.5 py-1 text-[11px] font-black text-[#1e1714] shadow-chunky transition active:translate-y-[1px]"
-            >
-              {isSpanish ? "Lote" : "Batch"}
-            </a>
           </div>
           <button
             type="button"
             data-history-close
             onClick={shell.requestClose}
-            aria-label={isSpanish ? "Cerrar bóveda" : "Close vault"}
+            aria-label={isSpanish ? "Cerrar guardados" : "Close saved"}
             class="group shrink-0 w-11 h-11 -mr-1 rounded-full flex items-center justify-center"
           >
             <span
@@ -987,32 +994,30 @@ export default function LibraryDrawer(
             )
             : !hasVisibleItems
             ? (
-              <div class="text-center py-8 bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl p-6 space-y-2">
-                <div class="w-11 h-11 mx-auto rounded-2xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714]">
-                  <StageGlyph kind="history" size={20} />
+              <div class="text-center py-7 bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl p-5 space-y-1.5">
+                <div class="w-10 h-10 mx-auto rounded-2xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714]">
+                  <StageGlyph kind="history" size={18} />
                 </div>
                 <p class="font-black text-sm text-[#1e1714]">
                   {allCount === 0
                     ? (isSpanish
-                      ? "Bóveda vacía por ahora"
+                      ? "Sin códigos guardados"
                       : "No saved codes yet")
-                    : (isSpanish
-                      ? "Sin coincidencias para este filtro"
-                      : "No matching codes")}
+                    : (isSpanish ? "Sin coincidencias" : "No matching codes")}
                 </p>
                 <p class="text-xs text-[#57524b] max-w-xs mx-auto leading-relaxed">
                   {allCount === 0
                     ? (isSpanish
-                      ? "Cada código exportado o enlace dinámico queda guardado localmente con su paleta y diseño."
-                      : "Exported QRs, editable links, and file drops save locally with full palette and frame recipes.")
+                      ? "Los QR exportados, links editables y envíos se guardan aquí con su diseño."
+                      : "Exported QRs, editable links, and file drops save locally with their design.")
                     : (isSpanish
-                      ? "Prueba otro término de búsqueda o cambia la categoría activa."
-                      : "Try a different search term or switch the category filter.")}
+                      ? "Prueba otra búsqueda o cambia el filtro."
+                      : "Try another search term or switch the filter.")}
                 </p>
               </div>
             )
             : (
-              <div class="space-y-2.5">
+              <div class="space-y-2">
                 {filteredServerCodes.map((c) => {
                   const matchingLocal = localByShortCode.get(c.short_code);
                   const editHref = resolveServerCodeEditUrl(c);
@@ -1025,14 +1030,47 @@ export default function LibraryDrawer(
                       (t): t is string => typeof t === "string",
                     )
                     : [];
+                  const shortDate = formatShortDate(c.created_at, isSpanish);
+                  const scanMeta = `${c.scan_count} ${
+                    isSpanish
+                      ? (c.scan_count === 1 ? "escaneo" : "escaneos")
+                      : (c.scan_count === 1 ? "scan" : "scans")
+                  }`;
+                  const metaLine = [c.destination_url, scanMeta, shortDate]
+                    .filter(Boolean)
+                    .join(" · ");
+
+                  const triggerServerLoad = () => {
+                    if (!onSelect) return;
+                    onSelect({
+                      id: matchingLocal?.id ?? c.id,
+                      type: "dynamic",
+                      content: c.redirect_url || c.destination_url,
+                      timestamp: new Date(c.created_at).getTime(),
+                      metadata: {
+                        ...(matchingLocal?.metadata ?? {}),
+                        title: c.title || matchingLocal?.metadata?.title ||
+                          c.short_code,
+                        shortCode: c.short_code,
+                        loadToStage: true,
+                      },
+                    });
+                    haptics.light();
+                    shell.requestClose();
+                  };
 
                   return (
                     <div
                       key={c.id}
-                      class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3.5 shadow-[0_2px_0_#1e1714] flex flex-col gap-2"
+                      class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl px-3 py-2.5 shadow-[0_2px_0_#1e1714] flex flex-col gap-2"
                     >
-                      <div class="flex items-start justify-between gap-2 flex-wrap">
-                        <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                      <div class="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={triggerServerLoad}
+                          disabled={!onSelect}
+                          class="flex items-center gap-2.5 min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] rounded-xl disabled:cursor-default"
+                        >
                           <span
                             aria-hidden="true"
                             class="w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714] shrink-0"
@@ -1072,61 +1110,42 @@ export default function LibraryDrawer(
                                 </span>
                               ))}
                             </div>
-                            <p class="text-xs text-[#57524b] font-mono truncate mt-0.5">
-                              {c.destination_url}
+                            <p class="text-xs text-[#57524b] truncate mt-0.5">
+                              {metaLine}
                             </p>
                           </div>
-                        </div>
+                        </button>
+
+                        {!editHref && onSelect && (
+                          <button
+                            type="button"
+                            onClick={triggerServerLoad}
+                            class={`${STAGE_PRESS} shrink-0 min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                          >
+                            {isSpanish ? "Cargar" : "Load"}
+                          </button>
+                        )}
                       </div>
-                      <div class="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-[#1e1714]/10 text-[11px] text-[#57524b]">
-                        <span>
-                          {c.scan_count} {isSpanish
-                            ? (c.scan_count === 1 ? "escaneo" : "escaneos")
-                            : (c.scan_count === 1 ? "scan" : "scans")} ·{" "}
-                          {new Date(c.created_at).toLocaleDateString(
-                            isSpanish ? "es-MX" : undefined,
-                            { month: "short", day: "numeric" },
-                          )}
-                        </span>
-                        <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+
+                      {editHref && (
+                        <div class="flex items-center justify-end gap-1.5 pt-2 border-t border-[#1e1714]/10">
                           {onSelect && (
                             <button
                               type="button"
-                              onClick={() => {
-                                onSelect({
-                                  id: matchingLocal?.id ?? c.id,
-                                  type: "dynamic",
-                                  content: c.redirect_url || c.destination_url,
-                                  timestamp: new Date(c.created_at).getTime(),
-                                  metadata: {
-                                    ...(matchingLocal?.metadata ?? {}),
-                                    title: c.title ||
-                                      matchingLocal?.metadata?.title ||
-                                      c.short_code,
-                                    shortCode: c.short_code,
-                                    loadToStage: true,
-                                  },
-                                });
-                                haptics.light();
-                                shell.requestClose();
-                              }}
-                              class={`${STAGE_PRESS} min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714]`}
+                              onClick={triggerServerLoad}
+                              class={`${STAGE_PRESS} min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
                             >
-                              {isSpanish ? "Cargar QR" : "Load QR"}
+                              {isSpanish ? "Cargar" : "Load"}
                             </button>
                           )}
-                          {editHref && (
-                            <a
-                              href={editHref}
-                              class={`${STAGE_PRESS} min-h-[38px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714]`}
-                            >
-                              {isSpanish
-                                ? "Editar y Datos ↗"
-                                : "Edit & Stats ↗"}
-                            </a>
-                          )}
+                          <a
+                            href={editHref}
+                            class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                          >
+                            {isSpanish ? "Editar y Datos ↗" : "Edit & Stats ↗"}
+                          </a>
                         </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1138,9 +1157,18 @@ export default function LibraryDrawer(
                       ? summary.type
                       : item.type;
                   const title = item.metadata?.title || summary.title;
-                  const subtitle = item.type === "file"
+                  const rawSubtitle = item.type === "file"
                     ? (isSpanish ? "Buzón de archivos" : "File Locker")
                     : ((item.metadata?.subtitle as string) || summary.subtitle);
+                  const typedSubtitle = displayType === "wifi" && rawSubtitle &&
+                      !/wi-?fi/i.test(rawSubtitle) &&
+                      rawSubtitle !== "Open network"
+                    ? `${rawSubtitle} Wi-Fi`
+                    : rawSubtitle;
+                  const shortDate = formatShortDate(item.timestamp, isSpanish);
+                  const metaLine = [typedSubtitle, shortDate]
+                    .filter(Boolean)
+                    .join(" · ");
 
                   const isDynamicItem = isEditableHistoryItem(item);
                   const isFileItem = isFileHistoryItem(item);
@@ -1150,6 +1178,7 @@ export default function LibraryDrawer(
                   const shareHref = isFileItem
                     ? resolveItemShareHref(item)
                     : null;
+                  const hasSecondaryAction = Boolean(editHref || shareHref);
                   const designBadge = describeDesignRecipe(
                     item.metadata?.design,
                     isSpanish,
@@ -1177,14 +1206,14 @@ export default function LibraryDrawer(
                   return (
                     <div
                       key={item.id}
-                      class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3.5 shadow-[0_2px_0_#1e1714] flex flex-col gap-2"
+                      class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl px-3 py-2.5 shadow-[0_2px_0_#1e1714] flex flex-col gap-2"
                     >
-                      <div class="flex items-start justify-between gap-2">
+                      <div class="flex items-center justify-between gap-2">
                         <button
                           type="button"
                           onClick={triggerLoad}
                           disabled={!onSelect}
-                          class="flex items-start gap-2.5 min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] rounded-xl disabled:cursor-default"
+                          class="flex items-center gap-2.5 min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] rounded-xl disabled:cursor-default"
                         >
                           <span
                             class="w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714] shrink-0"
@@ -1232,47 +1261,50 @@ export default function LibraryDrawer(
                               ))}
                             </div>
                             <p class="text-xs text-[#57524b] truncate mt-0.5">
-                              {subtitle}
+                              {metaLine}
                             </p>
                           </div>
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => removeFromHistory(item.id)}
-                          aria-label={isSpanish
-                            ? `Quitar ${title}`
-                            : `Remove ${title}`}
-                          title={isSpanish ? "Quitar de la bóveda" : "Remove"}
-                          class="shrink-0 w-9 h-9 -mr-0.5 -mt-0.5 rounded-full border border-[#1e1714]/20 bg-[#f7ecdc] hover:bg-amber-200 text-[#1e1714] flex items-center justify-center text-xs font-black transition-colors"
-                        >
-                          ✕
-                        </button>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                          {!hasSecondaryAction && onSelect && (
+                            <button
+                              type="button"
+                              onClick={triggerLoad}
+                              class={`${STAGE_PRESS} min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                            >
+                              {isSpanish ? "Cargar" : "Load"}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeFromHistory(item.id)}
+                            aria-label={isSpanish
+                              ? `Quitar ${title}`
+                              : `Remove ${title}`}
+                            title={isSpanish ? "Quitar" : "Remove"}
+                            class="shrink-0 w-8 h-8 rounded-full border border-[#1e1714]/20 bg-[#f7ecdc] hover:bg-amber-200 text-[#1e1714] flex items-center justify-center text-xs font-black transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
 
-                      <div class="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-[#1e1714]/10">
-                        <span class="text-[11px] font-medium text-[#57524b]">
-                          {new Date(item.timestamp).toLocaleDateString(
-                            isSpanish ? "es-MX" : undefined,
-                            {
-                              month: "short",
-                              day: "numeric",
-                            },
-                          )}
-                        </span>
-                        <div class="flex items-center gap-1.5 flex-wrap">
+                      {hasSecondaryAction && (
+                        <div class="flex items-center justify-end gap-1.5 pt-2 border-t border-[#1e1714]/10">
                           {onSelect && (
                             <button
                               type="button"
                               onClick={triggerLoad}
-                              class={`${STAGE_PRESS} min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714]`}
+                              class={`${STAGE_PRESS} min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
                             >
-                              {isSpanish ? "Cargar QR" : "Load QR"}
+                              {isSpanish ? "Cargar" : "Load"}
                             </button>
                           )}
                           {editHref && (
                             <a
                               href={editHref}
-                              class={`${STAGE_PRESS} min-h-[38px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714]`}
+                              class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
                             >
                               {isSpanish
                                 ? "Editar y Datos ↗"
@@ -1282,28 +1314,28 @@ export default function LibraryDrawer(
                           {shareHref && (
                             <a
                               href={shareHref}
-                              class={`${STAGE_PRESS} min-h-[38px] inline-flex items-center px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-teal-200 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714]`}
+                              class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-teal-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
                             >
                               {isSpanish ? "Abrir ↗" : "Open ↗"}
                             </a>
                           )}
                         </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
             )}
 
-          {/* Unified Backup & Sync Card (JSON Archive + Encrypted Sync Phrase / SoftStack Passport) */}
+          {/* Collapsible Backup & Device Sync (JSON Archive + Encrypted Sync / Passport) */}
           <details class="group bg-[#fffef7] rounded-2xl border-2 border-[#1e1714] shadow-sm">
-            <summary class="cursor-pointer list-none min-h-[46px] px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] select-none">
+            <summary class="cursor-pointer list-none min-h-[44px] px-3.5 py-2 flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] select-none">
               <span class="inline-flex items-center gap-2 min-w-0">
                 <StageGlyph kind="key" size={16} />
                 <span class="truncate">
                   {isSpanish
-                    ? "Respaldo JSON y Sincronización"
-                    : "Backup JSON & Device Sync"}
+                    ? "Respaldo y sincronización"
+                    : "Backup & Device Sync"}
                 </span>
               </span>
               <span class="shrink-0 transition-transform group-open:rotate-180 text-[10px]">
@@ -1311,155 +1343,129 @@ export default function LibraryDrawer(
               </span>
             </summary>
 
-            <div class="p-3.5 pt-2 border-t border-[#1e1714]/10 space-y-3.5">
-              {/* 1. Portable Local JSON File Archive */}
-              <div class="rounded-xl border-2 border-[#1e1714]/15 bg-[#f7ecdc]/60 p-3 space-y-2">
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-[11px] font-black uppercase tracking-wide text-[#1e1714]">
-                    {isSpanish
-                      ? "Archivo local portátil (.json)"
-                      : "Portable JSON File Archive"}
-                  </span>
-                </div>
-                <p class="text-[11px] text-[#57524b] leading-snug">
-                  {isSpanish
-                    ? "Guarda o restaura todos los códigos con sus paletas, marcos y metadatos sin cuentas en la nube."
-                    : "Save or restore codes with full palettes, frames, and metadata offline without cloud accounts."}
-                </p>
+            <div class="p-3 pt-2.5 border-t border-[#1e1714]/10 space-y-3">
+              {/* 1. JSON Archive */}
+              <div class="space-y-1.5">
+                <span class="block text-[10px] font-black uppercase tracking-wider text-[#57524b]">
+                  {isSpanish ? "Archivo JSON" : "JSON Archive"}
+                </span>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={handleDownloadVaultJson}
-                    class={`${STAGE_PRESS} min-h-[42px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-center justify-center gap-1.5`}
+                    class={`${STAGE_PRESS} min-h-[38px] px-2.5 py-1.5 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] inline-flex items-center justify-center gap-1.5`}
                   >
                     <StageGlyph kind="download" size={14} />
                     <span>
-                      {isSpanish ? "Descargar JSON" : "Download JSON"}
+                      {isSpanish ? "Exportar .json" : "Export .json"}
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => jsonFileInputRef.current?.click()}
-                    class={`${STAGE_PRESS} min-h-[42px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-center justify-center gap-1.5`}
+                    class={`${STAGE_PRESS} min-h-[38px] px-2.5 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] inline-flex items-center justify-center gap-1.5`}
                   >
                     <StageGlyph kind="upload" size={14} />
                     <span>
-                      {isSpanish ? "Importar JSON" : "Import JSON"}
+                      {isSpanish ? "Importar .json" : "Import .json"}
                     </span>
                   </button>
                 </div>
               </div>
 
-              {/* 2. SoftStack Passport & Encrypted Sync Bundle */}
+              {/* 2. Encrypted Sync / Passport */}
               {passport && (
-                <div class="space-y-3 pt-1 border-t border-[#1e1714]/10">
+                <div class="space-y-2.5 pt-2.5 border-t border-[#1e1714]/10">
                   <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                      <span class="w-10 h-10 shrink-0 rounded-full border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-xl">
-                        {passport.avatarEmoji}
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span
+                        aria-hidden="true"
+                        class="w-8 h-8 shrink-0 rounded-full border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714]"
+                      >
+                        <StageGlyph kind="key" size={14} />
                       </span>
-                      <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1.5 min-w-0">
-                          <span class="font-black text-sm text-[#1e1714] truncate">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                          <span class="font-black text-xs text-[#1e1714] truncate">
                             {passport.name}
                           </span>
                           <button
                             type="button"
                             onClick={handleRerollMoniker}
-                            title={isSpanish
-                              ? "Cambiar apodo del pasaporte"
-                              : "Roll new passport moniker"}
-                            aria-label={isSpanish
-                              ? "Cambiar apodo del pasaporte"
-                              : "Roll new passport moniker"}
-                            class="shrink-0 min-w-[36px] min-h-[36px] px-2 rounded-full border border-[#1e1714]/25 bg-[#fffef7] hover:bg-amber-100 text-[11px] font-black text-[#1e1714] active:scale-95"
+                            class="shrink-0 px-2 py-0.5 rounded-full border border-[#1e1714]/25 bg-[#fffef7] hover:bg-amber-100 text-[10px] font-black text-[#1e1714] active:scale-95"
                           >
                             {isSpanish ? "Girar" : "Reroll"}
                           </button>
                         </div>
-                        <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7ecdc] border border-[#1e1714]/20 text-[#57524b]">
+                        <span class="block text-[10px] font-bold text-[#57524b]">
                           {quota?.is_active_plus || passport.tier === "plus"
                             ? (isSpanish
                               ? "Pasaporte Plus · 100 códigos"
                               : "Plus Passport · 100 codes")
                             : (isSpanish
-                              ? "Pasaporte Libre · Cero cuentas"
-                              : "Sovereign Passport · Zero accounts")}
+                              ? "Pasaporte local · Cero cuentas"
+                              : "Local Passport · Zero accounts")}
                         </span>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleCopySyncUrl}
-                      class={`${STAGE_PRESS} px-3 min-h-[40px] text-xs font-black rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_2px_0_#1e1714]`}
-                    >
-                      {isSpanish ? "Copiar enlace" : "Copy Sync Link"}
-                    </button>
-                  </div>
 
-                  <div class="flex flex-col sm:flex-row items-center gap-3 bg-[#f7ecdc]/40 rounded-xl p-2.5 border border-[#1e1714]/10">
-                    <div
-                      role="img"
-                      aria-label={isSpanish
-                        ? "Código QR de emparejamiento de Pasaporte"
-                        : "Passport pairing QR code"}
-                      class="w-20 h-20 shrink-0 bg-[#fffef7] rounded-lg p-1 border border-[#1e1714]/15 flex items-center justify-center overflow-hidden"
-                      // deno-lint-ignore react-no-danger
-                      dangerouslySetInnerHTML={{ __html: syncQrSvg }}
-                    />
-                    <div class="min-w-0 flex-1 text-center sm:text-left space-y-1.5">
-                      <p class="font-bold text-xs text-[#1e1714]">
-                        {isSpanish
-                          ? "Escaneo directo para vincular otro dispositivo"
-                          : "Scan from another device for instant pairing"}
-                      </p>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleCopySyncUrl}
+                        class={`${STAGE_PRESS} px-2.5 min-h-[34px] text-xs font-black rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                      >
+                        {isSpanish ? "Copiar enlace" : "Copy Link"}
+                      </button>
                       <button
                         type="button"
                         aria-expanded={showPhrase}
                         onClick={() => setShowPhrase(!showPhrase)}
-                        class="min-h-[36px] px-2.5 py-1 text-xs font-black rounded-lg border border-[#1e1714]/25 bg-[#fffef7] hover:bg-amber-100 text-[#1e1714] active:scale-95 transition-transform"
+                        class="min-h-[34px] px-2.5 text-xs font-black rounded-xl border border-[#1e1714]/25 bg-[#f7ecdc] hover:bg-amber-100 text-[#1e1714] active:scale-95 transition-transform"
                       >
                         {showPhrase
-                          ? (isSpanish ? "Ocultar frase" : "Hide Phrase")
-                          : (isSpanish
-                            ? "Mostrar frase clave"
-                            : "Recovery Phrase")}
+                          ? (isSpanish ? "Ocultar" : "Hide")
+                          : (isSpanish ? "Frase" : "Phrase")}
                       </button>
                     </div>
                   </div>
 
                   {showPhrase && (
-                    <div class="bg-amber-50 border-2 border-amber-300 rounded-xl p-2.5 text-xs text-[#1e1714] space-y-1">
-                      <p class="font-bold text-[10px] uppercase tracking-wider text-amber-900">
-                        {isSpanish
-                          ? "Frase soberana de recuperación"
-                          : "Sovereign Recovery Phrase"}
-                      </p>
-                      <code class="block font-mono font-bold text-xs bg-[#fffef7] px-2 py-1 rounded border border-amber-200 select-all break-all">
+                    <div class="flex items-center gap-2.5 bg-amber-50 border-2 border-amber-300 rounded-xl p-2 text-xs text-[#1e1714]">
+                      {syncQrSvg && (
+                        <div
+                          role="img"
+                          aria-label={isSpanish
+                            ? "Código QR de emparejamiento de Pasaporte"
+                            : "Passport pairing QR code"}
+                          class="w-16 h-16 shrink-0 bg-[#fffef7] rounded-lg p-1 border border-[#1e1714]/15 flex items-center justify-center overflow-hidden"
+                          // deno-lint-ignore react-no-danger
+                          dangerouslySetInnerHTML={{ __html: syncQrSvg }}
+                        />
+                      )}
+                      <code class="flex-1 min-w-0 font-mono font-bold text-xs bg-[#fffef7] px-2 py-1.5 rounded border border-amber-200 select-all break-all">
                         {passport.phrase}
                       </code>
                     </div>
                   )}
 
-                  {/* Encrypted Sync Bundle */}
-                  <div class="pt-2 border-t border-[#1e1714]/10 space-y-2">
-                    <div class="flex items-center justify-between gap-2 flex-wrap">
-                      <span class="text-[11px] font-black uppercase tracking-wide text-[#1e1714]">
+                  {/* Encrypted Bundle Copy / Import */}
+                  <div class="space-y-1.5">
+                    <div class="flex items-center justify-between gap-2">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b]">
                         {isSpanish
-                          ? "Paquete cifrado con llaves de edición"
-                          : "Encrypted Bundle (Codes + Edit Keys)"}
+                          ? "Sincronización cifrada"
+                          : "Encrypted Sync"}
                       </span>
                       <button
                         type="button"
                         onClick={handleCopyEncryptedBackup}
                         disabled={isExportingBackup}
-                        class="min-h-[38px] px-3 py-1.5 rounded-lg border-2 border-[#1e1714] bg-purple-100 hover:bg-purple-200 text-xs font-black text-[#1e1714] active:scale-95 transition-transform disabled:opacity-50"
+                        class="min-h-[32px] px-2.5 py-1 rounded-lg border-2 border-[#1e1714] bg-purple-100 hover:bg-purple-200 text-[11px] font-black text-[#1e1714] active:scale-95 transition-transform disabled:opacity-50"
                       >
                         {isExportingBackup
                           ? (isSpanish ? "Cifrando…" : "Encrypting…")
-                          : (isSpanish
-                            ? "Copiar paquete cifrado"
-                            : "Copy Encrypted Bundle")}
+                          : (isSpanish ? "Copiar paquete" : "Copy Bundle")}
                       </button>
                     </div>
                     <form
@@ -1478,9 +1484,9 @@ export default function LibraryDrawer(
                         onInput={(e) =>
                           setBackupInput((e.target as HTMLInputElement).value)}
                         placeholder={isSpanish
-                          ? "Pegar paquete cifrado de otro dispositivo…"
-                          : "Paste encrypted bundle from another device…"}
-                        class="w-full min-h-[42px] px-2.5 py-1.5 text-base sm:text-xs font-mono rounded-lg border-2 border-[#1e1714]/15 bg-[#fffef7] text-[#1e1714] focus:border-[#1e1714] focus:outline-none"
+                          ? "Pegar paquete cifrado…"
+                          : "Paste encrypted bundle…"}
+                        class="w-full min-h-[38px] px-2.5 py-1.5 text-base sm:text-xs font-mono rounded-lg border-2 border-[#1e1714]/15 bg-[#fffef7] text-[#1e1714] focus:border-[#1e1714] focus:outline-none"
                       />
                       {backupInput.trim() !== "" && (
                         <div class="flex flex-col sm:flex-row gap-1.5">
@@ -1498,18 +1504,18 @@ export default function LibraryDrawer(
                                 (e.target as HTMLInputElement).value,
                               )}
                             placeholder={isSpanish
-                              ? "Frase clave (opcional si coincide el pasaporte)…"
-                              : "Recovery phrase (optional if same passport)…"}
-                            class="flex-1 min-w-0 min-h-[42px] px-2.5 py-1.5 text-base sm:text-xs font-mono rounded-lg border-2 border-[#1e1714]/15 bg-[#fffef7] text-[#1e1714] focus:border-[#1e1714] focus:outline-none"
+                              ? "Frase clave (opcional)…"
+                              : "Recovery phrase (optional)…"}
+                            class="flex-1 min-w-0 min-h-[38px] px-2.5 py-1.5 text-base sm:text-xs font-mono rounded-lg border-2 border-[#1e1714]/15 bg-[#fffef7] text-[#1e1714] focus:border-[#1e1714] focus:outline-none"
                           />
                           <button
                             type="submit"
                             disabled={isImportingBackup}
-                            class="min-h-[42px] px-3 py-1.5 rounded-lg border-2 border-[#1e1714] bg-amber-200 hover:bg-amber-300 font-black text-xs text-[#1e1714] active:scale-95 transition-all disabled:opacity-50"
+                            class="min-h-[38px] px-3 py-1.5 rounded-lg border-2 border-[#1e1714] bg-amber-200 hover:bg-amber-300 font-black text-xs text-[#1e1714] active:scale-95 transition-all disabled:opacity-50"
                           >
                             {isImportingBackup
                               ? (isSpanish ? "Uniendo…" : "Merging…")
-                              : (isSpanish ? "Restaurar" : "Merge Bundle")}
+                              : (isSpanish ? "Restaurar" : "Merge")}
                           </button>
                         </div>
                       )}
@@ -1601,53 +1607,48 @@ export default function LibraryDrawer(
           )}
         </div>
 
-        {/* Footer Action Strip */}
-        <div class="pt-3 border-t-2 border-[#1e1714]/10 flex items-center justify-between gap-2 flex-wrap">
-          <div class="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={handleDownloadVaultJson}
-              class="min-h-[38px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] hover:bg-amber-100 text-xs font-black text-[#1e1714] inline-flex items-center gap-1.5 transition-colors"
-              title={isSpanish
-                ? "Descargar archivo portátil qrbuddy-vault.json"
-                : "Download portable qrbuddy-vault.json archive"}
-            >
-              <StageGlyph kind="download" size={14} />
-              <span>{isSpanish ? "JSON" : "JSON"}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => jsonFileInputRef.current?.click()}
-              class="min-h-[38px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] hover:bg-amber-100 text-xs font-black text-[#1e1714] inline-flex items-center gap-1.5 transition-colors"
-              title={isSpanish
-                ? "Importar archivo qrbuddy-vault.json"
-                : "Import qrbuddy-vault.json archive"}
-            >
-              <StageGlyph kind="upload" size={14} />
-              <span>{isSpanish ? "Importar" : "Import"}</span>
-            </button>
+        {/* Footer Action Strip (only when local items exist; 2-tap inline confirm) */}
+        {localHistory.length > 0 && (
+          <div class="pt-2.5 border-t border-[#1e1714]/10 flex items-center justify-end gap-2">
+            {confirmClear
+              ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmClear(false)}
+                    class="min-h-[34px] px-2.5 py-1 text-xs font-bold text-[#57524b] hover:text-[#1e1714] rounded-xl transition-colors"
+                  >
+                    {isSpanish ? "Cancelar" : "Cancel"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearHistory();
+                      setConfirmClear(false);
+                      haptics.light();
+                    }}
+                    class="min-h-[34px] px-3 py-1 text-xs font-black text-[#1e1714] bg-amber-200 border-2 border-[#1e1714] rounded-xl shadow-[0_1.5px_0_#1e1714] active:translate-y-px active:shadow-none transition-all"
+                  >
+                    {isSpanish
+                      ? "Toca otra vez para vaciar"
+                      : "Tap again to clear"}
+                  </button>
+                </>
+              )
+              : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmClear(true);
+                    haptics.light();
+                  }}
+                  class="min-h-[34px] px-2.5 py-1 text-xs font-black text-[#c4607a] hover:bg-amber-50 rounded-xl transition-colors"
+                >
+                  {isSpanish ? "Vaciar local" : "Clear local"}
+                </button>
+              )}
           </div>
-
-          {localHistory.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                if (
-                  confirm(
-                    isSpanish
-                      ? "¿Vaciar todos los códigos guardados localmente? Esta acción no se puede deshacer."
-                      : "Clear all locally saved codes? This action cannot be undone.",
-                  )
-                ) {
-                  clearHistory();
-                }
-              }}
-              class="min-h-[38px] px-2.5 py-1 text-xs font-black text-[#c4607a] hover:bg-amber-50 rounded-xl transition-colors"
-            >
-              {isSpanish ? "Vaciar local" : "Clear local"}
-            </button>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

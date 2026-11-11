@@ -54,7 +54,7 @@ export async function fetchLibrary(search?: string): Promise<LibraryResponse> {
       method: "GET",
       useUserAuth: true,
     },
-    "Failed to load your QR library",
+    "Could not load saved library",
   );
 }
 

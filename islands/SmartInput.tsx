@@ -25,7 +25,6 @@ import { sounds } from "../utils/sounds.ts";
 import {
   addToHistory,
   detectStructuredStagePayload,
-  getHistory,
   type HistoryItem,
   type SavedQrDesign,
   summarizeQrPayload,
@@ -114,7 +113,6 @@ export default function SmartInput(
   >("idle");
   const [touched, setTouched] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [savedCount, setSavedCount] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [stagedFiles, setStagedFiles] = useState<File[] | null>(null);
   const [showReader, setShowReader] = useState(false);
@@ -154,20 +152,25 @@ export default function SmartInput(
   // short link, so switching back to Static restores the direct URL cleanly.
   const [staticSourceUrl, setStaticSourceUrl] = useState("");
 
-  // Keep toolbar saved count & structured template synced
+  // Broadcast vault drawer visibility so top-left Saved capsule stays synced
   useEffect(() => {
-    const syncSavedCount = () => setSavedCount(getHistory().length);
-    syncSavedCount();
-    globalThis.addEventListener("history-updated", syncSavedCount);
-    return () =>
-      globalThis.removeEventListener("history-updated", syncSavedCount);
-  }, []);
+    globalThis.dispatchEvent?.(
+      new CustomEvent("qrb-vault-visibility", {
+        detail: { open: showLibrary },
+      }),
+    );
+  }, [showLibrary]);
 
   useEffect(() => {
     if (editUrl.value) return;
     const detected = detectStructuredStagePayload(url.value, locale);
-    if (detected && selectedTemplate !== detected.template) {
-      setSelectedTemplate(detected.template);
+    if (detected) {
+      if (selectedTemplate !== detected.template) {
+        setSelectedTemplate(detected.template);
+      }
+      if (isDynamic.value) {
+        isDynamic.value = false;
+      }
     }
   }, [url.value, editUrl.value, locale]);
 
@@ -742,8 +745,8 @@ export default function SmartInput(
         ) {
           addToast(
             isSpanish
-              ? "📦 Archivo mayor a 50 MB — el Pasaporte QRBuddy desbloquea envíos de hasta 500 MB 🛂"
-              : "📦 File over 50 MB — QRBuddy Passport unlocks 500 MB file drops 🛂",
+              ? "Archivo mayor a 50 MB · el Pasaporte QRBuddy desbloquea envíos de hasta 500 MB"
+              : "File over 50 MB · QRBuddy Passport unlocks 500 MB file drops",
             4500,
           );
         } else {
@@ -869,7 +872,8 @@ export default function SmartInput(
     : (isSpanish ? "Subiendo..." : "Uploading...");
 
   const getInputClass = () => {
-    const hasValidBadge = touched && validationState === "valid" &&
+    const hasValidBadge = !isDestructible.value && touched &&
+      validationState === "valid" &&
       !isUploading;
     const rightPadding = hasValidBadge ? "pr-20" : "pr-14";
     const baseClass = `
@@ -1130,16 +1134,9 @@ export default function SmartInput(
             logoUrl.value !== logoAtSheetOpen.current ||
             JSON.stringify(frameConfig?.value ?? null) !==
               frameAtSheetOpen.current;
-          // Bridge the "kicked back to the main page" moment: if the sheet
-          // changed the QR, say so and point at the save pill.
           if (contentChanged) {
             haptics.success();
             sounds.success();
-            addToast(
-              isSpanish
-                ? "QR listo — toca ↓ Guardar PNG para descargarlo"
-                : "QR ready — tap ↓ Save PNG to keep it",
-            );
           } else if (designChanged) {
             haptics.light();
             sounds.click();
@@ -1245,8 +1242,8 @@ export default function SmartInput(
                       sounds.click();
                     }}
                     aria-label={isSpanish
-                      ? `${structuredSummary.label}. Editar contenido`
-                      : `${structuredSummary.label}. Edit content`}
+                      ? `${structuredSummary.typeLabel}: ${structuredSummary.label}. Editar contenido`
+                      : `${structuredSummary.typeLabel}: ${structuredSummary.label}. Edit content`}
                     class="group/chip flex-1 min-w-0 min-h-[40px] flex items-center justify-between gap-2.5 text-left rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714]"
                   >
                     <span class="flex items-center gap-2.5 min-w-0">
@@ -1370,10 +1367,11 @@ export default function SmartInput(
                   )}
 
                   {/* Validation indicator */}
-                  {touched && validationState === "valid" && !isUploading && (
+                  {!isDestructible.value && touched &&
+                    validationState === "valid" && !isUploading && (
                     <div class="absolute right-14 top-1/2 transform -translate-y-1/2
                               text-xl animate-pop">
-                      {isDestructible.value ? "💣" : "✓"}
+                      ✓
                     </div>
                   )}
 
@@ -1431,11 +1429,14 @@ export default function SmartInput(
                   setShowReader(true);
                   haptics.medium();
                 }}
-                class="w-full mt-4 min-h-[48px] rounded-xl border-3 border-purple-400 bg-purple-50 px-4 py-3 text-sm font-black text-purple-800 shadow-chunky hover:-translate-y-0.5 transition animate-slide-down"
+                class="w-full mt-4 min-h-[48px] rounded-xl border-3 border-purple-400 bg-purple-50 px-4 py-3 text-sm font-black text-purple-800 shadow-chunky hover:-translate-y-0.5 transition animate-slide-down inline-flex items-center justify-center gap-2"
               >
-                {isSpanish
-                  ? "🔍 Esta imagen es un código QR — leerlo en su lugar"
-                  : "🔍 This image is a QR code — read it instead"}
+                <StageGlyph kind="magnifier" size={16} />
+                <span>
+                  {isSpanish
+                    ? "Esta imagen es un código QR · leerlo en su lugar"
+                    : "This image is a QR code · read it instead"}
+                </span>
               </button>
             )}
             <FileUploadOptions
@@ -1469,7 +1470,7 @@ export default function SmartInput(
 
         {/* In-flow Link Mode Bar (OwnQR 80% conversion pattern): Static vs Editable */}
         {!stagedFiles && !isUploading && !isBucket.value &&
-          !isDestructible.value &&
+          !isDestructible.value && !structuredSummary &&
           !(lastShare && url.value === lastShare.url) && (
           <div class="mt-3 space-y-2 animate-slide-down">
             {
@@ -1537,25 +1538,20 @@ export default function SmartInput(
 
             {editUrl.value && (
               <div
-                class={`${STAGE_WELL} flex items-center justify-between gap-2 pl-3 pr-1 py-1 bg-[var(--qr-theme-tint,#fdf2f8)] text-xs font-bold text-[#1e1714]`}
+                class={`${STAGE_WELL} flex items-center justify-between gap-1.5 p-1 bg-[var(--qr-theme-tint,#fdf2f8)] text-xs font-bold text-[#1e1714]`}
               >
-                <span class="truncate">
-                  {isSpanish
-                    ? "Este QR se puede redirigir cuando sea"
-                    : "This QR can be repointed anytime"}
-                </span>
-                <div class="flex items-center gap-1 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleDisableEditable();
-                      haptics.light();
-                      textInputRef.current?.focus();
-                    }}
-                    class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] px-2 rounded-lg font-black`}
-                  >
-                    {isSpanish ? "Desvincular" : "Detach"}
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleDisableEditable();
+                    haptics.light();
+                    textInputRef.current?.focus();
+                  }}
+                  class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] px-2.5 rounded-lg font-black`}
+                >
+                  {isSpanish ? "Desvincular" : "Detach"}
+                </button>
+                <div class="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={async () => {
@@ -1589,25 +1585,12 @@ export default function SmartInput(
 
         {/* Editable mode needs a URL — plain text stays a static QR */}
         {isDynamic.value && !editUrl.value && !isBucket.value &&
+          !structuredSummary &&
           url.value.trim() !== "" && !looksLikeUrl(url.value) && (
           <p class="text-[#57524b] text-xs font-bold mt-2 text-center animate-slide-down">
             {isSpanish
               ? "Los QR editables necesitan un link; el texto suelto hace un QR estático."
               : "Editable QRs need a link; plain text makes a static QR."}
-          </p>
-        )}
-
-        {/* Destructible indicator */}
-        {isDestructible.value && !isUploading && !stagedFiles &&
-          maxDownloads.value !== UNLIMITED_SCANS && (
-          <p class="text-orange-700 text-sm mt-2 text-center font-semibold animate-slide-down">
-            💣 {isSpanish
-              ? `Este archivo se autodestruirá después de ${maxDownloads.value} ${
-                maxDownloads.value === 1 ? "descarga" : "descargas"
-              }`
-              : `This file will self-destruct after ${maxDownloads.value} ${
-                maxDownloads.value === 1 ? "download" : "downloads"
-              }`}
           </p>
         )}
 
@@ -1624,24 +1607,14 @@ export default function SmartInput(
         selectedTemplate={selectedTemplate}
         onOpenCreate={(tab) => {
           setShowLibrary(false);
+          setShowReader(false);
           setCreateModalTab(tab);
           setCreateContentStep("pick");
           setIsCreateModalOpen(true);
           setCreateHasUpdates(false);
         }}
-        onOpenVault={() => {
-          setIsCreateModalOpen(false);
-          setShowReader(false);
-          setShowLibrary(true);
-        }}
         createHasUpdates={createHasUpdates}
-        openPanel={isCreateModalOpen
-          ? createModalTab
-          : showLibrary
-          ? "vault"
-          : null}
-        vaultOpen={showLibrary}
-        savedCount={savedCount}
+        openPanel={isCreateModalOpen ? createModalTab : null}
         isBucket={isBucket.value && bucketUrl.value !== ""}
         isBatchMode={isBatchMode}
         lang={locale}

@@ -72,6 +72,7 @@ export type StructuredQrTemplate =
 
 export interface StructuredStageSummary {
   template: StructuredQrTemplate;
+  typeLabel: string;
   label: string;
   detail?: string;
 }
@@ -462,24 +463,31 @@ export function detectStructuredStagePayload(
         : wifi.encryption;
       return {
         template: "wifi",
-        label: `Wi-Fi · ${shorten(wifi.ssid)} (${sec})`,
+        typeLabel: "Wi-Fi",
+        label: wifi.ssid
+          ? `${shorten(wifi.ssid)} · ${sec}`
+          : (isEs ? `Red · ${sec}` : `Network · ${sec}`),
         detail: sec,
       };
     }
     const fallback = summarizeQrPayload(raw);
     const cleanSsid = fallback.title.replace(/^Wi-Fi:\s*/i, "").trim();
+    const secFallback = fallback.subtitle === "Open network"
+      ? (isEs ? "Abierta" : "Open")
+      : fallback.subtitle;
     return {
       template: "wifi",
+      typeLabel: "Wi-Fi",
       label: cleanSsid && cleanSsid !== "Wi-Fi network"
-        ? `Wi-Fi · ${cleanSsid} (${fallback.subtitle})`
-        : (isEs ? "Wi-Fi · Red" : "Wi-Fi · Network"),
-      detail: fallback.subtitle,
+        ? `${cleanSsid} · ${secFallback}`
+        : (isEs ? "Red Wi-Fi" : "Wi-Fi network"),
+      detail: secFallback,
     };
   }
 
   if (/^BEGIN:VCARD/i.test(raw)) {
     const vcard = parseVCard(raw);
-    const prefix = isEs ? "Contacto" : "Contact";
+    const typeLabel = isEs ? "Contacto" : "Contact";
     if (vcard) {
       const fullName = [vcard.firstName, vcard.lastName]
         .filter(Boolean)
@@ -488,31 +496,46 @@ export function detectStructuredStagePayload(
         vcard.organization.trim() ||
         vcard.email.trim() ||
         vcard.phone.trim();
+      const org = vcard.organization.trim();
+      const hasDistinctOrg = Boolean(org && org !== fullName);
       return {
         template: "vcard",
-        label: fullName ? `${prefix} · ${shorten(fullName)}` : prefix,
-        detail: vcard.organization && vcard.organization !== fullName
-          ? shorten(vcard.organization, 28)
-          : undefined,
+        typeLabel,
+        label: fullName
+          ? (hasDistinctOrg
+            ? `${shorten(fullName, 24)} · ${shorten(org, 20)}`
+            : shorten(fullName))
+          : typeLabel,
+        detail: hasDistinctOrg ? shorten(org, 28) : undefined,
       };
     }
     const fallback = summarizeQrPayload(raw);
     const cleanContact = fallback.title.replace(/^Contact:\s*/i, "").trim();
+    const hasDistinctOrg = Boolean(
+      fallback.subtitle &&
+        fallback.subtitle !== "Contact card" &&
+        fallback.subtitle !== cleanContact,
+    );
     return {
       template: "vcard",
+      typeLabel,
       label: cleanContact && cleanContact !== "Contact card"
-        ? `${prefix} · ${cleanContact}`
-        : prefix,
+        ? (hasDistinctOrg
+          ? `${cleanContact} · ${fallback.subtitle}`
+          : cleanContact)
+        : typeLabel,
+      detail: hasDistinctOrg ? fallback.subtitle : undefined,
     };
   }
 
   if (/^mailto:/i.test(raw)) {
     const email = parseEmail(raw);
-    const prefix = isEs ? "Correo" : "Email";
+    const typeLabel = isEs ? "Correo" : "Email";
     if (email) {
       return {
         template: "email",
-        label: `${prefix} · ${shorten(email.email)}`,
+        typeLabel,
+        label: shorten(email.email),
         detail: email.subject.trim()
           ? shorten(email.subject.trim(), 28)
           : undefined,
@@ -526,7 +549,8 @@ export function detectStructuredStagePayload(
     if (sms) {
       return {
         template: "sms",
-        label: `SMS · ${shorten(sms.phone)}`,
+        typeLabel: "SMS",
+        label: shorten(sms.phone),
         detail: sms.message.trim()
           ? shorten(sms.message.trim(), 28)
           : undefined,
@@ -537,11 +561,12 @@ export function detectStructuredStagePayload(
 
   if (/^tel:/i.test(raw)) {
     const phone = parsePhone(raw);
-    const prefix = isEs ? "Llamada" : "Call";
+    const typeLabel = isEs ? "Llamada" : "Call";
     if (phone) {
       return {
         template: "phone",
-        label: `${prefix} · ${shorten(phone.phone)}`,
+        typeLabel,
+        label: shorten(phone.phone),
       };
     }
     return null;
