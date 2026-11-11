@@ -297,6 +297,50 @@ export default function DesignTab(
           </div>
         </section>
       )}
+
+      {pngSize && (
+        <section
+          class="space-y-2.5"
+          aria-label={es ? "Tamaño PNG" : "PNG size"}
+        >
+          <h3 class="text-sm font-black">
+            {es ? "Tamaño PNG" : "PNG size"}{" "}
+            <span class="opacity-50">
+              · {pngSize.value === 1000
+                ? (es ? "Pantalla" : "Screen")
+                : pngSize.value === 2000
+                ? (es ? "Imprenta" : "Print")
+                : (es ? "Gran formato" : "Large format")}
+            </span>
+          </h3>
+          <div class="grid grid-cols-3 gap-2" role="group">
+            {([
+              { size: 1000, hint: es ? "Pantalla" : "Screen" },
+              { size: 2000, hint: es ? "Imprenta" : "Print" },
+              { size: 3000, hint: es ? "Gran formato" : "Large format" },
+            ] as const).map(({ size, hint }) => {
+              const active = pngSize.value === size;
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  aria-pressed={active}
+                  title={`${size}px · ${hint}`}
+                  onClick={() => {
+                    pngSize.value = size;
+                    tap();
+                  }}
+                  class={`${KEY} flex items-center justify-center ${
+                    pillState(active)
+                  }`}
+                >
+                  {size}px
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -122,7 +122,7 @@ export function createFramedSvg(
     const escapedCaption = escapeXml(captionText);
 
     captionElement = `  <text x="${totalWidth / 2}" y="${textY}" fill="${
-      escapeXml(banner?.ink ?? "#000000")
+      escapeXml(banner?.ink ?? "#1e1714")
     }" font-family="'Inter Black', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="${fontSize}" text-anchor="middle" dominant-baseline="central"${
       exceedsMax
         ? ` textLength="${maxTextWidth}" lengthAdjust="spacingAndGlyphs"`
@@ -155,4 +155,92 @@ export function createFramedSvg(
       : ""
   }
 ${captionElement}</svg>`;
+}
+
+function slugifySegment(value: string, maxLength = 36): string {
+  const ascii = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (ascii.length <= maxLength) return ascii;
+  return ascii.slice(0, maxLength).replace(/-+$/g, "");
+}
+
+function extractPayloadSlug(payload: string): string {
+  const raw = (payload || "").trim();
+  if (!raw) return "";
+
+  if (/^WIFI:/i.test(raw)) {
+    const body = raw.replace(/^WIFI:/i, "");
+    const match = body.match(/(?:^|;)S:((?:\\.|[^;])*)/i);
+    const ssid = match ? match[1].replace(/\\(.)/g, "$1").trim() : "";
+    const ssidSlug = slugifySegment(ssid, 30);
+    if (!ssidSlug) return "wifi";
+    return ssidSlug.startsWith("wifi") || ssidSlug.startsWith("wi-fi")
+      ? ssidSlug
+      : `wifi-${ssidSlug}`;
+  }
+
+  if (/^BEGIN:VCARD/i.test(raw)) {
+    const fnLine = raw.match(/^FN:(.+)$/im)?.[1] ??
+      [raw.match(/^N:(.+)$/im)?.[1], raw.match(/^ORG:(.+)$/im)?.[1]]
+        .filter(Boolean)
+        .join(" ");
+    const cleaned = (fnLine ?? "")
+      .replace(/\\(.)/g, "$1")
+      .replace(/;+/g, " ")
+      .trim();
+    return slugifySegment(cleaned) || "vcard";
+  }
+
+  if (/^mailto:/i.test(raw)) {
+    const address = raw.slice(7).split("?")[0].trim();
+    return slugifySegment(address) || "email";
+  }
+
+  if (/^tel:/i.test(raw)) {
+    const digits = raw.slice(4).replace(/[^\d]/g, "");
+    return digits ? `tel-${digits.slice(0, 20)}` : "phone";
+  }
+
+  if (/^(?:SMSTO:|sms:)/i.test(raw)) {
+    const rest = raw.replace(/^(?:SMSTO:|sms:)/i, "");
+    const recipient = rest.split(/[:?]/)[0].replace(/[^\d]/g, "");
+    return recipient ? `sms-${recipient.slice(0, 20)}` : "sms";
+  }
+
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const parsed = new URL(raw);
+      const host = parsed.hostname.replace(/^www\./i, "");
+      const path = parsed.pathname === "/" ? "" : parsed.pathname;
+      return slugifySegment(`${host}${path}`);
+    } catch {
+      return slugifySegment(raw.replace(/^https?:\/\//i, ""));
+    }
+  }
+
+  return slugifySegment(raw.split(/\r?\n/)[0]);
+}
+
+/**
+ * Builds a deterministic, filesystem-safe semantic filename for QR exports
+ * (e.g. `qrbuddy-guest-pass-sunset.png` or `qrbuddy-pibulus-com-sunset.svg`).
+ */
+export function buildQrFilename(
+  payload: string,
+  style: string,
+  frameText?: string,
+  ext: "png" | "svg" = "png",
+): string {
+  const safeExt = ext === "svg" ? "svg" : "png";
+  const styleSlug = slugifySegment(style || "sunset", 20) || "sunset";
+  const captionSlug = frameText ? slugifySegment(frameText, 32) : "";
+  const subjectSlug = captionSlug || extractPayloadSlug(payload);
+
+  return subjectSlug
+    ? `qrbuddy-${subjectSlug}-${styleSlug}.${safeExt}`
+    : `qrbuddy-${styleSlug}.${safeExt}`;
 }
