@@ -9,12 +9,19 @@
  */
 
 import qrcode from "qrcode-generator";
-import { escapeXml, measureCaptionUnicodeFallback } from "./svg-export.ts";
+import {
+  buildQrFilename,
+  escapeXml,
+  measureCaptionUnicodeFallback,
+} from "./svg-export.ts";
+import { parseColorToRgb } from "./qr-styles.ts";
 import type {
   CornerSquareShape,
   DotShape,
   Gradient,
 } from "../types/qr-types.ts";
+
+export { buildQrFilename };
 
 export interface VectorPalette {
   id: string;
@@ -148,11 +155,14 @@ export interface BuildQrSvgOptions {
   bg?: string;
   caption?: string;
   size?: number;
+  quietZone?: number;
   errorCorrectionLevel?: "L" | "M" | "Q" | "H";
   rounded?: boolean;
   dotShape?: DotShape;
   cornerSquareShape?: CornerSquareShape;
 }
+
+export type QrVectorOptions = BuildQrSvgOptions;
 
 function isFinderModule(row: number, col: number, count: number): boolean {
   const inTopLeft = row < 7 && col < 7;
@@ -412,7 +422,9 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   qr.make();
 
   const moduleCount = qr.getModuleCount();
-  const quietZone = 2;
+  const quietZone = options.quietZone !== undefined
+    ? Math.max(0, options.quietZone)
+    : 4;
   const totalModules = moduleCount + quietZone * 2;
   const qrBoxSize = options.size ?? 1000;
   const cellSize = qrBoxSize / totalModules;
@@ -532,6 +544,16 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       }" xlink:href="${escapeXml(options.logoUrl!)}"/>` + badge;
   }
 
+  const maxSafeBgRadius = Math.max(0, Math.floor(quietZone * cellSize));
+  const bgRadius = Math.min(
+    Math.round(36 * (qrBoxSize / 1000)),
+    maxSafeBgRadius,
+  );
+  const innerBgRadius = Math.min(
+    Math.round(28 * (qrBoxSize / 1000)),
+    maxSafeBgRadius,
+  );
+
   if (hasCaption) {
     const cardX = border / 2;
     const cardY = border / 2;
@@ -540,7 +562,7 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     frameRect =
       `  <rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="56" ry="56" fill="#FFFEF7" stroke="#1E1714" stroke-width="${border}" />\n`;
     qrBgRect =
-      `  <rect x="${pad}" y="${pad}" width="${qrBoxSize}" height="${qrBoxSize}" rx="28" ry="28" fill="${
+      `  <rect x="${pad}" y="${pad}" width="${qrBoxSize}" height="${qrBoxSize}" rx="${innerBgRadius}" ry="${innerBgRadius}" fill="${
         escapeXml(bg)
       }" />\n`;
 
@@ -559,7 +581,7 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     }</text>\n`;
   } else {
     qrBgRect =
-      `  <rect x="0" y="0" width="${totalWidth}" height="${totalHeight}" rx="36" ry="36" fill="${
+      `  <rect x="0" y="0" width="${totalWidth}" height="${totalHeight}" rx="${bgRadius}" ry="${bgRadius}" fill="${
         escapeXml(bg)
       }" />\n`;
   }
@@ -643,13 +665,102 @@ export function validateCanvaSvgCompliance(svgMarkup: string): {
   if (/<foreignObject\b/i.test(svgMarkup)) {
     errors.push("SVG contains forbidden <foreignObject> element.");
   }
-  if (/<image\b/i.test(svgMarkup)) {
-    errors.push("SVG contains external <image> element.");
+  const imageTags = svgMarkup.match(/<image\b[^>]*>/gi) ?? [];
+  for (const tag of imageTags) {
+    const hrefMatches = [
+      ...tag.matchAll(
+        /(?:^|\s)(?:xlink:)?href\s*=\s*(?:"([^"]*)"|'([^']*)')/gi,
+      ),
+    ];
+    const hrefs = hrefMatches.map((m) => (m[1] ?? m[2] ?? "").trim());
+    const allInlineDataImages = hrefs.length > 0 &&
+      hrefs.every((h) => /^data:image\//i.test(h));
+    if (!allInlineDataImages) {
+      errors.push("SVG contains external <image> element.");
+      break;
+    }
   }
 
   return {
     valid: errors.length === 0,
     byteLength,
     errors,
+  };
+}
+
+export interface QrContrastEvaluation {
+  minRatio: number;
+  bgLuminance: number;
+  maxFgLuminance: number;
+  inverted: boolean;
+  lowContrast: boolean;
+}
+
+function colorLuminance(color: string): number {
+  const s = color.trim();
+  let r: number, g: number, b: number;
+  const rgbMatch =
+    /^rgba?\(\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)\s*[, ]\s*(\d+(?:\.\d+)?)/i
+      .exec(s);
+  if (rgbMatch) {
+    r = Number(rgbMatch[1]);
+    g = Number(rgbMatch[2]);
+    b = Number(rgbMatch[3]);
+  } else if (/^white$/i.test(s)) {
+    [r, g, b] = [255, 255, 255];
+  } else if (/^black$/i.test(s)) {
+    [r, g, b] = [0, 0, 0];
+  } else {
+    [r, g, b] = parseColorToRgb(s);
+  }
+  const lin = (v: number) => {
+    const c = Math.max(0, Math.min(255, v)) / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+/**
+ * Evaluates QR foreground color stops against a background color for physical
+ * print & camera scannability:
+ * - `inverted`: true when any foreground stop has higher relative luminance
+ *   than `bgColor` (light modules on dark ground break many hardware/Android scanners).
+ * - `lowContrast`: true when minimum WCAG contrast ratio across stops is < 3.5:1.
+ */
+export function evaluateQrContrast(
+  fgColors: string[],
+  bgColor: string,
+): QrContrastEvaluation {
+  const bgLuminance = colorLuminance(bgColor);
+  if (fgColors.length === 0) {
+    return {
+      minRatio: 1,
+      bgLuminance,
+      maxFgLuminance: bgLuminance,
+      inverted: false,
+      lowContrast: true,
+    };
+  }
+
+  let minRatio = Infinity;
+  let maxFgLuminance = 0;
+  let inverted = false;
+
+  for (const fg of fgColors) {
+    const fgLum = colorLuminance(fg);
+    if (fgLum > maxFgLuminance) maxFgLuminance = fgLum;
+    if (fgLum > bgLuminance) inverted = true;
+    const lighter = Math.max(fgLum, bgLuminance);
+    const darker = Math.min(fgLum, bgLuminance);
+    const ratio = (lighter + 0.05) / (darker + 0.05);
+    if (ratio < minRatio) minRatio = ratio;
+  }
+
+  return {
+    minRatio,
+    bgLuminance,
+    maxFgLuminance,
+    inverted,
+    lowContrast: minRatio < 3.5,
   };
 }

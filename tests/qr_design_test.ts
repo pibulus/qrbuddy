@@ -3,6 +3,8 @@ import {
   alignmentCenters,
   buildQrSvgString,
   centerCutout,
+  evaluateQrContrast,
+  validateCanvaSvgCompliance,
 } from "../utils/qr-vector-svg.ts";
 import {
   bannerColors,
@@ -12,7 +14,7 @@ import {
 } from "../utils/qr-design.ts";
 import { styledQrSvg } from "../utils/qr-renderer.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
-import { createFramedSvg } from "../utils/svg-export.ts";
+import { buildQrFilename, createFramedSvg } from "../utils/svg-export.ts";
 import { getQRThemeTokens, QR_THEME_TOKENS } from "../utils/qr-styles.ts";
 
 Deno.test("Design: alignment geometry includes the version-32 exception", () => {
@@ -181,4 +183,112 @@ Deno.test("Design: global control tokens are paper and gold, pigment stays in ac
     assertEquals(tokens.tintStrong, "#FFFEF7");
     assertEquals(tokens.ctaBg, "#FFBE0B");
   }
+});
+
+Deno.test("Design: standalone SVG defaults to ISO 4-module quietZone and supports custom quietZone", () => {
+  // Version 1 (21 modules): default quietZone = 4 -> 29 total modules -> at 290px, cellSize = 10, offset = 40
+  const isoDefault = buildQrSvgString({
+    data: "A",
+    errorCorrectionLevel: "L",
+    rounded: false,
+    size: 290,
+  });
+  assert(isoDefault.includes('d="M40,40h70v70h-70Z'));
+
+  // Explicit quietZone = 2 -> 25 total modules -> at 250px, cellSize = 10, offset = 20
+  const compact = buildQrSvgString({
+    data: "A",
+    errorCorrectionLevel: "L",
+    rounded: false,
+    quietZone: 2,
+    size: 250,
+  });
+  assert(compact.includes('d="M20,20h70v70h-70Z'));
+
+  // Dense payload: background corner rx scales down so it never encroaches into finder patterns
+  const dense = buildQrSvgString({
+    data: "https://qrbuddy.app/menu/" + "item-".repeat(120),
+    rounded: false,
+    size: 1000,
+  });
+  const bgRx = Number(dense.match(/<rect x="0" y="0"[^>]*rx="(\d+)"/)?.[1]);
+  const finderOrigin = Number(dense.match(/<path d="M([\d.]+),/)?.[1]);
+  assert(Number.isFinite(bgRx) && Number.isFinite(finderOrigin));
+  assert(
+    bgRx <= finderOrigin,
+    `bgRadius (${bgRx}) must not encroach past quiet-zone origin (${finderOrigin})`,
+  );
+});
+
+Deno.test("Design: validateCanvaSvgCompliance accepts inline data:image/* and rejects external <image>", () => {
+  const stamped = buildQrSvgString({
+    data: "https://qrbuddy.app",
+    logoUrl: stampUrl(STAMPS[0].path),
+  });
+  assert(stamped.includes("<image"));
+  assertEquals(validateCanvaSvgCompliance(stamped).valid, true);
+
+  const inlinePng =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000"><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" width="100" height="100"/></svg>`;
+  assertEquals(validateCanvaSvgCompliance(inlinePng).valid, true);
+
+  const remoteHttps =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000"><image href="https://example.com/logo.png" width="100" height="100"/></svg>`;
+  const remoteVerdict = validateCanvaSvgCompliance(remoteHttps);
+  assertEquals(remoteVerdict.valid, false);
+  assert(remoteVerdict.errors.some((e) => e.includes("<image>")));
+
+  const relativeImg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000"><image xlink:href="/logo.png" width="100" height="100"/></svg>`;
+  assertEquals(validateCanvaSvgCompliance(relativeImg).valid, false);
+});
+
+Deno.test("Design: evaluateQrContrast flags inverted and low-contrast palettes while passing print-safe palettes", () => {
+  // Standard dark-on-cream passes cleanly
+  const safe = evaluateQrContrast(["#1e1714", "#7c3aed"], "#fffef7");
+  assertEquals(safe.inverted, false);
+  assertEquals(safe.lowContrast, false);
+  assert(safe.minRatio >= 5);
+
+  // Light foreground on dark background -> inverted
+  const inverted = evaluateQrContrast(["#fffef7", "#38bdf8"], "#1e1714");
+  assertEquals(inverted.inverted, true);
+
+  // Pale yellow/amber stop on cream paper -> lowContrast (< 3.5:1)
+  const pale = evaluateQrContrast(["#1e1714", "#fde047"], "#fff8f0");
+  assertEquals(pale.inverted, false);
+  assertEquals(pale.lowContrast, true);
+  assert(pale.minRatio < 3.5);
+});
+
+Deno.test("Design: buildQrFilename builds human-friendly slugs across URL, Wi-Fi, vCard, and frameText", () => {
+  assertEquals(
+    buildQrFilename("https://pibulus.com", "sunset", undefined, "svg"),
+    "qrbuddy-pibulus-com-sunset.svg",
+  );
+  assertEquals(
+    buildQrFilename("https://pibulus.com/menu", "sunset", "GUEST PASS", "png"),
+    "qrbuddy-guest-pass-sunset.png",
+  );
+  assertEquals(
+    buildQrFilename("WIFI:T:WPA;S:Studio Sol;P:secret;;", "matcha"),
+    "qrbuddy-wifi-studio-sol-matcha.png",
+  );
+  assertEquals(
+    buildQrFilename(
+      "BEGIN:VCARD\nVERSION:3.0\nFN:Pablo Alvarado\nORG:SoftStack\nEND:VCARD",
+      "noir",
+      undefined,
+      "svg",
+    ),
+    "qrbuddy-pablo-alvarado-noir.svg",
+  );
+  assertEquals(
+    buildQrFilename("mailto:hello@pibulus.com?subject=Hi", "pool"),
+    "qrbuddy-hello-pibulus-com-pool.png",
+  );
+  assertEquals(
+    buildQrFilename("tel:+61 400 123 456", "candy"),
+    "qrbuddy-tel-61400123456-candy.png",
+  );
 });

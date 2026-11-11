@@ -102,6 +102,7 @@ export default function HomeStage({ lang = "en" }: HomeStageProps) {
                   logoUrl={logoUrl}
                   maxDownloads={maxDownloads}
                   frameConfig={frameConfig}
+                  pngSize={pngSize}
                   listenForExportEvents
                   lang={lang}
                 />

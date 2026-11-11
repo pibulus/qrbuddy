@@ -3,16 +3,19 @@ import { useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import type { ColorStop, QRStyle } from "../types/qr-types.ts";
+import { evaluateQrContrast } from "../utils/qr-vector-svg.ts";
 import { useModalShell } from "./modal/useModalShell.ts";
 
+const DEFAULT_BG_COLOR = "#FFF8F0";
+
 // Six curated pastel-punk jewel chips — every chip stays ≤ 0.40 relative
-// luminance so users never accidentally pick a pale/muddy stop.
+// luminance and ≥ 4:1 against warm paper so quick picks always scan cleanly.
 export const QUICK_PICK_COLORS = [
-  { name: "Hot Pink", color: "#FF2E93" },
+  { name: "Hot Pink", color: "#DB2777" },
   { name: "Crimson Rose", color: "#E11D48" },
-  { name: "Sunset Tangerine", color: "#EA580C" },
-  { name: "Botanical Emerald", color: "#059669" },
-  { name: "Deep Cyan", color: "#0891B2" },
+  { name: "Sunset Tangerine", color: "#C2410C" },
+  { name: "Botanical Emerald", color: "#047857" },
+  { name: "Deep Cyan", color: "#0E7490" },
   { name: "Electric Violet", color: "#7C3AED" },
 ] as const;
 
@@ -29,9 +32,10 @@ export default function GradientCreator(
   );
   const [rotation, setRotation] = useState(135);
   const [activeStopIndex, setActiveStopIndex] = useState(0);
+  const [bgColor, setBgColor] = useState(DEFAULT_BG_COLOR);
   const [colorStops, setColorStops] = useState<ColorStop[]>([
-    // Default starts users on a vibrant, scannable pastel-punk combo.
-    { offset: 0, color: "#FF2E93" },
+    // Default starts on a vibrant, print-safe pastel-punk combo.
+    { offset: 0, color: "#DB2777" },
     { offset: 1, color: "#7C3AED" },
   ]);
 
@@ -50,7 +54,7 @@ export default function GradientCreator(
 
     const next = [
       ...colorStops,
-      { offset: newOffset, color: "#0891B2" },
+      { offset: newOffset, color: "#0E7490" },
     ].sort((a, b) => a.offset - b.offset);
     setColorStops(next);
     setActiveStopIndex(next.length - 1);
@@ -98,19 +102,23 @@ export default function GradientCreator(
           })),
         },
       },
-      background: {
-        type: "gradient",
-        gradient: {
-          type: "linear" as const,
-          rotation: Math.PI * 0.75,
-          colorStops: [
-            { offset: 0, color: "#FFF8F0" },
-            { offset: 1, color: "#FFF0F7" },
-          ],
+      background: bgColor.toUpperCase() === DEFAULT_BG_COLOR
+        ? {
+          type: "gradient",
+          gradient: {
+            type: "linear" as const,
+            rotation: Math.PI * 0.75,
+            colorStops: [
+              { offset: 0, color: "#FFF8F0" },
+              { offset: 1, color: "#FFF0F7" },
+            ],
+          },
+        }
+        : {
+          color: bgColor,
         },
-      },
       cornersSquare: {
-        color: colorStops[0]?.color || "#FF2E93",
+        color: colorStops[0]?.color || "#DB2777",
       },
       cornersDot: {
         color: colorStops[colorStops.length - 1]?.color || "#7C3AED",
@@ -139,6 +147,20 @@ export default function GradientCreator(
   if (!shell.mounted) return null;
 
   const safeActiveIndex = Math.min(activeStopIndex, colorStops.length - 1);
+  const effectiveBgForCheck = bgColor.toUpperCase() === DEFAULT_BG_COLOR
+    ? "#FFF0F7"
+    : bgColor;
+  const contrast = evaluateQrContrast(
+    colorStops.map((stop) => stop.color),
+    effectiveBgForCheck,
+  );
+  const guardrailMessage = contrast.inverted
+    ? "Inverted palette — light modules on dark ground fail many cameras"
+    : contrast.lowContrast
+    ? `Low contrast (${
+      contrast.minRatio.toFixed(1)
+    }:1) — aim for 4:1+ for reliable print scans`
+    : null;
 
   return (
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
@@ -168,7 +190,7 @@ export default function GradientCreator(
               id="gradient-creator-title"
               class="text-2xl font-black text-black tracking-tight leading-tight"
             >
-              Build your own.
+              Custom gradient.
             </h2>
             <p class="text-sm font-bold text-qr-pop">
               Mix vivid stops that still scan first try.
@@ -197,6 +219,18 @@ export default function GradientCreator(
           class="w-full h-20 rounded-2xl border-3 border-black ring-2 ring-inset ring-white/70 shadow-chunky"
           style={{ background: getGradientPreview() }}
         />
+
+        {/* Scannability & Inversion Guardrail */}
+        {guardrailMessage && (
+          <div
+            role="status"
+            aria-live="polite"
+            data-contrast-guardrail
+            class="bg-amber-50 border-2 border-amber-400 text-amber-900 rounded-2xl px-3.5 py-2.5 text-xs font-bold leading-snug"
+          >
+            {guardrailMessage}
+          </div>
+        )}
 
         {/* Gradient Type & Rotation */}
         <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3">
@@ -364,6 +398,33 @@ export default function GradientCreator(
                 </div>
               );
             })}
+          </div>
+
+          {/* Ground Color */}
+          <div class="flex items-center justify-between gap-2 pt-2 border-t border-black/10">
+            <span class="text-xs font-black text-black">Ground</span>
+            <div class="flex items-center gap-2">
+              {bgColor.toUpperCase() !== DEFAULT_BG_COLOR && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBgColor(DEFAULT_BG_COLOR);
+                    haptics.light();
+                  }}
+                  class="min-h-[36px] px-2.5 rounded-lg text-xs font-bold underline underline-offset-2 text-black"
+                >
+                  ↺ Paper
+                </button>
+              )}
+              <input
+                type="color"
+                value={bgColor}
+                aria-label="Ground color"
+                onInput={(e) =>
+                  setBgColor((e.target as HTMLInputElement).value)}
+                class="w-11 h-11 rounded-lg border-2 border-black cursor-pointer bg-white p-0.5 shrink-0"
+              />
+            </div>
           </div>
         </div>
 

@@ -215,7 +215,7 @@ export async function checkQRScannability(
     const results = await readBarcodes(imageData, {
       formats: ["QRCode"],
       tryHarder: true,
-      tryInvert: true,
+      tryInvert: false,
     });
     return results.some((r) => r.isValid && r.text === expected);
   } catch {
@@ -263,7 +263,7 @@ export async function checkBlobScannability(
     const results = await readBarcodes(imageData, {
       formats: ["QRCode"],
       tryHarder: true,
-      tryInvert: true,
+      tryInvert: false,
     });
     return results.some((r) => r.isValid && r.text === expected);
   } catch {
