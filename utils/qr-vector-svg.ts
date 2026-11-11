@@ -15,10 +15,35 @@ import {
   measureCaptionUnicodeFallback,
 } from "./svg-export.ts";
 import { parseColorToRgb } from "./qr-styles.ts";
+import {
+  foilSideColors,
+  renderFoil,
+  renderHalftone,
+} from "./qr-art-renderers.ts";
+import {
+  decodeSample,
+  defaultSample,
+  luminance,
+  sampleColor,
+} from "./qr-art-sample.ts";
+import { chooseFlips, codewordGroups } from "./qr-codewords.ts";
+import {
+  ensureContrast,
+  printContrast,
+  printFilterDefs,
+  printSeed,
+  type PrintStyle,
+  printTooth,
+  risoInks,
+  risoOffset,
+} from "./qr-print.ts";
 import type {
+  ArtSample,
   CornerSquareShape,
   DotShape,
   Gradient,
+  PlateShape,
+  RenderMode,
 } from "../types/qr-types.ts";
 
 export { buildQrFilename };
@@ -141,6 +166,16 @@ export const VECTOR_PALETTES: Record<string, VectorPalette> = {
   },
 };
 
+/** Smallest QR version that gives the halftone enough grid to draw a picture. */
+const HALFTONE_FLOOR = 8;
+
+/**
+ * Share of the codeword stream `sharp` is allowed to invert. The measured
+ * ceiling on a v8-H code at the 250px probe is 25%; 16% leaves a third of the
+ * budget for a scuffed print, and lands on 39 codewords for a 49-module code.
+ */
+const HALFTONE_FLIP_SHARE = 0.16;
+
 export interface BuildQrSvgOptions {
   logoUrl?: string;
   centerShape?: "squircle" | "circle" | "knockout";
@@ -160,6 +195,22 @@ export interface BuildQrSvgOptions {
   rounded?: boolean;
   dotShape?: DotShape;
   cornerSquareShape?: CornerSquareShape;
+  /** Presentation layer. Defaults to the flat, print-tested classic matrix. */
+  renderMode?: RenderMode;
+  artSample?: ArtSample;
+  halftoneTone?: "color" | "dmg" | "ink";
+  halftoneShape?: PlateShape;
+  halftoneDetail?: "soft" | "sharp";
+  /** Test hook: force the flip share instead of the adaptive default. */
+  halftoneFlipShare?: number;
+  /**
+   * Surface: `clean` vector, `paper` stock, or `riso` two-drum misregistration.
+   * Orthogonal to the look — any look can come off any of the three.
+   */
+  print?: PrintStyle;
+  foilDepth?: "thin" | "chunky";
+  /** Grid floor for art looks. Thumbnails pass a coarse one on purpose. */
+  artVersionFloor?: number;
 }
 
 export type QrVectorOptions = BuildQrSvgOptions;
@@ -372,7 +423,11 @@ function gradientDef(
   fallback: string,
 ): string {
   if (!gradient) {
-    return `<linearGradient id="${id}"><stop stop-color="${
+    // Two stops even for a flat colour: several SVG rasterizers (librsvg via
+    // ImageMagick, older Inkscape) paint single-stop gradients black.
+    return `<linearGradient id="${id}"><stop offset="0%" stop-color="${
+      escapeXml(fallback)
+    }"/><stop offset="100%" stop-color="${
       escapeXml(fallback)
     }"/></linearGradient>`;
   }
@@ -390,6 +445,42 @@ function gradientDef(
 }
 
 /**
+ * Centre mark badge: paper ground, clipped logo, chunky ring. Shared by the
+ * classic excavation and the foil overlay so a mark looks the same everywhere.
+ */
+function markBadge(options: {
+  x: number;
+  y: number;
+  size: number;
+  ring: number;
+  shape?: "squircle" | "circle" | "knockout";
+  bg: string;
+  logoUrl: string;
+}): string {
+  const { x, y, size, ring, shape, bg, logoUrl } = options;
+  const radius = shape === "circle"
+    ? size / 2
+    : shape === "knockout"
+    ? 0
+    : size * 0.26;
+  // Chunky ring drawn INSIDE the mark so it never spills into the moat.
+  // Knockout omits the box but keeps a paper ground for legibility.
+  const inset = ring / 2;
+  const badge = shape === "knockout"
+    ? ""
+    : `<rect x="${x + inset}" y="${y + inset}" width="${size - ring}" height="${
+      size - ring
+    }" rx="${
+      Math.max(0, radius - inset)
+    }" fill="none" stroke="#1e1714" stroke-width="${ring}"/>`;
+  return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${radius}" fill="${
+    escapeXml(bg)
+  }"/><defs><clipPath id="qrb-mark-clip"><rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${radius}"/></clipPath></defs><image data-center-mark="true" x="${x}" y="${y}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet" clip-path="url(#qrb-mark-clip)" href="${
+    escapeXml(logoUrl)
+  }" xlink:href="${escapeXml(logoUrl)}"/>` + badge;
+}
+
+/**
  * Builds a complete, standalone SVG 1.1 string with 135-degree linear gradient
  * and optional Soft Neo-Toybrut framed card + caption.
  */
@@ -404,10 +495,11 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     options.logoUrl &&
       /^data:image\/(?:png|jpeg|webp|svg\+xml);base64,/i.test(options.logoUrl),
   );
-  const ecl =
-    hasMark || options.dotShape === "diamond" || options.dotShape === "dots"
-      ? "H"
-      : options.errorCorrectionLevel ?? "Q";
+  const mode: RenderMode = options.renderMode ?? "classic";
+  const ecl = hasMark || mode !== "classic" || options.dotShape === "diamond" ||
+      options.dotShape === "dots"
+    ? "H"
+    : options.errorCorrectionLevel ?? "Q";
   const rounded = options.rounded ?? preset.rounded ?? true;
   const dotShape: DotShape = !rounded
     ? "square"
@@ -416,10 +508,31 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     ? "square"
     : (options.cornerSquareShape ?? preset.cornerSquareShape ??
       "extra-rounded");
+  // Artwork is a same-origin raster only, sampled at upload: the renderer never
+  // decodes an image, so an external URL can never taint an export canvas.
+  const hasSample = Boolean(
+    options.artSample && typeof options.artSample.data === "string" &&
+      options.artSample.data.length > 0 && options.artSample.n >= 2,
+  );
 
-  const qr = qrcode(0, ecl);
-  qr.addData(payload);
-  qr.make();
+  // Art looks want a finer grid than the payload needs: at 25 modules the
+  // halftone is a coarse mosaic, at 61 it is a picture. Encode once to learn
+  // the true version, then re-encode no lower than the detail floor.
+  const encode = (version: number) => {
+    const code = qrcode(Math.max(0, version), ecl);
+    code.addData(payload);
+    code.make();
+    return code;
+  };
+  let qr = encode(0);
+  const needed = (qr.getModuleCount() - 17) / 4;
+  // 49 modules is the balance point: bold enough that the code still reads on
+  // the 336px stage, fine enough for a 1000px print to hold 196 halftone cells.
+  const floor = mode === "halftone"
+    ? Math.max(0, options.artVersionFloor ?? HALFTONE_FLOOR)
+    : 0;
+  const want = Math.max(needed, floor);
+  if (want !== needed) qr = encode(want);
 
   const moduleCount = qr.getModuleCount();
   const quietZone = options.quietZone !== undefined
@@ -428,6 +541,28 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   const totalModules = moduleCount + quietZone * 2;
   const qrBoxSize = options.size ?? 1000;
   const cellSize = qrBoxSize / totalModules;
+
+  // Print is seeded from the payload, so a link always comes off the same
+  // sheet. A foil slab is a manufactured object; stock and drums belong to paper.
+  const printStyle: PrintStyle = mode === "foil"
+    ? "clean"
+    : options.print ?? "clean";
+  const print = {
+    style: printStyle,
+    seed: printSeed(payload),
+    size: qrBoxSize,
+    ink: "#1e1714",
+  };
+  const riso = printStyle === "riso" ? risoOffset(print.seed, qrBoxSize) : null;
+  // Every ink the palette offers, so the press can choose the two drums rather
+  // than inheriting whichever colour happened to sit first in the gradient.
+  const risoStops = (options.dotsGradient?.colorStops ?? []).map((stop) =>
+    stop.color
+  );
+  const [risoInk, risoSpot] = risoInks(
+    risoStops.length >= 2 ? risoStops : [c1, c2],
+    bg,
+  );
 
   const captionText = (options.caption ?? "").trim().toUpperCase();
   const hasCaption = captionText.length > 0;
@@ -442,36 +577,90 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
   const offsetY = pad + quietZone * cellSize;
 
   const pathChunks: string[] = [];
-  const cutout = hasMark ? centerCutout(moduleCount) : null;
+  // Art looks overlay their mark instead of excavating it. A halftone runs at
+  // a version where the only centred holes land on alignment patterns, and a
+  // foil hole is skewed anyway — a badge over the texture reads better and H
+  // carries the lost area.
+  const cutout = hasMark && mode === "classic"
+    ? centerCutout(moduleCount)
+    : null;
   const isCleared = (r: number, c: number) =>
     Boolean(
       cutout && r >= cutout.start && r < cutout.end && c >= cutout.start &&
         c < cutout.end,
     );
-  const dark = (r: number, c: number) =>
-    r >= 0 && c >= 0 && r < moduleCount && c < moduleCount &&
-    !isCleared(r, c) && qr.isDark(r, c);
+  // Sharp halftone spends part of the Reed–Solomon budget: whole codewords are
+  // inverted where the picture disagrees with the code hardest. The decoder
+  // repairs them, so the payload still reads — the gate proves it, the budget
+  // is a share of the stream and scales with the version, not the payload.
+  const flipped = new Set<string>();
+  if (mode === "halftone" && options.halftoneDetail === "sharp") {
+    const sample = hasSample
+      ? decodeSample(options.artSample)
+      : decodeSample(defaultSample(bg, c1));
+    if (sample) {
+      const sn = hasSample ? options.artSample!.n : 32;
+      const want = (row: number, col: number) => {
+        const local = sampleColor(
+          sample,
+          sn,
+          (col + 0.5) / moduleCount,
+          (row + 0.5) / moduleCount,
+        );
+        return (0.5 - luminance(local[0], local[1], local[2])) * 2;
+      };
+      // One risk allowance: the flip budget, a centre badge and a circular
+      // plate all spend the same margin, so each gives way to the others.
+      let share = options.halftoneFlipShare ?? HALFTONE_FLIP_SHARE;
+      if (options.halftoneFlipShare === undefined) {
+        if (hasMark) share *= 0.4;
+        if (options.halftoneShape === "circle") share *= 0.45;
+        // A stamped print is a scuffed print: the bite eats the same margin the
+        // codeword flips spend, so the two halve each other rather than stack.
+        if (printStyle === "riso") share *= 0.5;
+      }
+      const groups = codewordGroups(moduleCount);
+      for (
+        const index of chooseFlips(groups, qr.isDark.bind(qr), want, share)
+      ) {
+        for (const [row, col] of groups[index]) flipped.add(`${row},${col}`);
+      }
+    }
+  }
+  const dark = (r: number, c: number) => {
+    if (r < 0 || c < 0 || r >= moduleCount || c >= moduleCount) return false;
+    if (isCleared(r, c)) return false;
+    const on = qr.isDark(r, c);
+    return flipped.size ? on !== flipped.has(`${r},${c}`) : on;
+  };
 
   // 3 Finder patterns
-  pathChunks.push(
-    finderPatternPaths(offsetX, offsetY, cellSize, rounded, cornerSquareShape),
+  // The spot drum never lands square: on a riso sheet the eye plate sits a hair
+  // off in both axes and a fraction of a degree out of true. That single offset
+  // is the whole tell, and because it moves colour rather than removing ink it
+  // costs the decoder nothing.
+  const finderChunks: string[] = [];
+  const fx = offsetX + (riso?.dx ?? 0);
+  const fy = offsetY + (riso?.dy ?? 0);
+  finderChunks.push(
+    finderPatternPaths(fx, fy, cellSize, rounded, cornerSquareShape),
     finderPatternPaths(
-      offsetX + (moduleCount - 7) * cellSize,
-      offsetY,
+      fx + (moduleCount - 7) * cellSize,
+      fy,
       cellSize,
       rounded,
       cornerSquareShape,
     ),
     finderPatternPaths(
-      offsetX,
-      offsetY + (moduleCount - 7) * cellSize,
+      fx,
+      fy + (moduleCount - 7) * cellSize,
       cellSize,
       rounded,
       cornerSquareShape,
     ),
   );
 
-  const finderPaths = pathChunks.splice(0).join("");
+  const finderPaths = finderChunks.join("");
   const alignment = alignmentCenters(moduleCount);
   const structural = (r: number, c: number) =>
     r === 6 || c === 6 || r === 8 || c === 8 ||
@@ -509,39 +698,83 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     }
   }
 
+  // Looks. Each renderer receives the same matrix the classic path draws, so a
+  // look can never invent modules the decoder will not see.
+  let artBody = "";
+  if (mode !== "classic") {
+    const box = { x: pad, y: pad, size: qrBoxSize };
+    const matrix = {
+      count: moduleCount,
+      isDark: dark,
+      isCleared: (r: number, c: number) => mode !== "foil" && isCleared(r, c),
+      alignment,
+    };
+    if (mode === "foil") {
+      const derived = foilSideColors(c1, c2, bg, "#1e1714");
+      artBody = renderFoil(matrix, box, {
+        top: "url(#qrb-dots)",
+        left: derived.left,
+        right: derived.right,
+        face: "url(#qrb-bg)",
+        ink: "#1e1714",
+        depth: options.foilDepth ?? "chunky",
+      });
+    } else if (mode === "halftone") {
+      // Riso is a drum pair, not a tone: it takes the ink control over rather
+      // than sitting next to it.
+      const tone = printStyle === "riso"
+        ? "riso"
+        : options.halftoneTone ?? "color";
+      artBody = renderHalftone(matrix, box, {
+        sample: hasSample ? options.artSample! : defaultSample(bg, c1),
+        tone: tone,
+        shape: options.halftoneShape ?? "rounded",
+        bg,
+        // A halftone prints the palette's ink on the palette's paper. Near-black
+        // is only the right structural ink while the paper is light enough to
+        // carry it — on Matrix's near-black stock it is invisible, which is how
+        // that look failed the gate for months.
+        ink: printStyle === "riso"
+          ? risoInk
+          : printContrast("#1e1714", bg) >= 4.6
+          ? "#1e1714"
+          : ensureContrast(c1, bg),
+        print,
+        spots: [risoInk, risoSpot],
+      });
+    }
+  }
+
   let frameRect = "";
   let qrBgRect = "";
   let captionElement = "";
   let markElement = "";
-  if (cutout) {
+  if (hasMark && mode !== "classic") {
+    // The badge rests on the art; nothing is excavated.
+    const markSize = qrBoxSize * 0.2;
+    markElement = markBadge({
+      x: pad + (qrBoxSize - markSize) / 2,
+      y: pad + (qrBoxSize - markSize) / 2,
+      size: markSize,
+      ring: qrBoxSize * 0.008,
+      shape: options.centerShape,
+      bg,
+      logoUrl: options.logoUrl!,
+    });
+  } else if (cutout) {
     const holeSize = (cutout.end - cutout.start) * cellSize;
     // A tight moat makes the mark read as a centrepiece, not a watermark.
     const moat = Math.min(qrBoxSize * 0.012, holeSize * 0.1);
     const markSize = holeSize - moat * 2;
-    const x = offsetX + cutout.start * cellSize + moat;
-    const y = offsetY + cutout.start * cellSize + moat;
-    const radius = options.centerShape === "circle"
-      ? markSize / 2
-      : options.centerShape === "knockout"
-      ? 0
-      : markSize * 0.26;
-    // Chunky ring drawn INSIDE the mark so it never spills into the moat.
-    // Knockout omits the box but keeps a paper ground for legibility.
-    const ring = qrBoxSize * 0.008;
-    const inset = ring / 2;
-    const badge = options.centerShape === "knockout"
-      ? ""
-      : `<rect x="${x + inset}" y="${y + inset}" width="${
-        markSize - ring
-      }" height="${markSize - ring}" rx="${
-        Math.max(0, radius - inset)
-      }" fill="none" stroke="#1e1714" stroke-width="${ring}"/>`;
-    markElement =
-      `<rect x="${x}" y="${y}" width="${markSize}" height="${markSize}" rx="${radius}" fill="${
-        escapeXml(bg)
-      }"/><defs><clipPath id="qrb-mark-clip"><rect x="${x}" y="${y}" width="${markSize}" height="${markSize}" rx="${radius}"/></clipPath></defs><image data-center-mark="true" x="${x}" y="${y}" width="${markSize}" height="${markSize}" preserveAspectRatio="xMidYMid meet" clip-path="url(#qrb-mark-clip)" href="${
-        escapeXml(options.logoUrl!)
-      }" xlink:href="${escapeXml(options.logoUrl!)}"/>` + badge;
+    markElement = markBadge({
+      x: offsetX + cutout.start * cellSize + moat,
+      y: offsetY + cutout.start * cellSize + moat,
+      size: markSize,
+      ring: qrBoxSize * 0.008,
+      shape: options.centerShape,
+      bg,
+      logoUrl: options.logoUrl!,
+    });
   }
 
   const maxSafeBgRadius = Math.max(0, Math.floor(quietZone * cellSize));
@@ -586,11 +819,25 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       }" />\n`;
   }
 
+  // Tooth sits under the ink: specks only ever land on paper, never on a module.
+  const cardTooth = printTooth(
+    print,
+    hasCaption ? pad : 0,
+    hasCaption ? pad : 0,
+    qrBoxSize,
+    qrBoxSize,
+    hasCaption ? 28 : 36,
+  );
+
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" data-ecl="${ecl}" data-cutout="${
-      cutout ? `${cutout.start}:${cutout.end}` : "none"
-    }">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" data-ecl="${ecl}" data-modules="${moduleCount}" data-cutout="${
+      mode !== "classic"
+        ? (hasMark ? "overlay" : "none")
+        : cutout
+        ? `${cutout.start}:${cutout.end}`
+        : "none"
+    }" data-look="${mode}">`,
     `  <defs>`,
     `    <linearGradient id="qrb-grad" x1="0%" y1="0%" x2="100%" y2="100%">`,
     `      <stop offset="0%" stop-color="${escapeXml(c1)}" />`,
@@ -608,12 +855,23 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
       }, c1),
     gradientDef("qrb-bg", options.backgroundGradient, bg),
     gradientDef("qrb-eyes", options.eyeGradient, options.eyeColor ?? c1),
+    printFilterDefs(print),
     `  </defs>`,
     frameRect + qrBgRect.replace(/fill="[^"]*"/, 'fill="url(#qrb-bg)"') +
-    `  <path d="${finderPaths}" fill="url(#qrb-eyes)" fill-rule="evenodd" />` +
-    `  <path d="${
-      pathChunks.join("")
-    }" fill="url(#qrb-dots)" fill-rule="evenodd" />\n` +
+    cardTooth +
+    (artBody ||
+      (`  <path d="${pathChunks.join("")}" fill="${
+        riso ? risoInk : "url(#qrb-dots)"
+      }" fill-rule="evenodd" />\n` +
+        `  <path d="${finderPaths}" fill="${
+          riso ? options.eyeColor ?? risoSpot : "url(#qrb-eyes)"
+        }" fill-rule="evenodd"${
+          riso
+            ? ` transform="rotate(${riso.rotate.toFixed(3)} ${
+              (offsetX + (moduleCount * cellSize) / 2).toFixed(2)
+            } ${(offsetY + (moduleCount * cellSize) / 2).toFixed(2)})"`
+            : ""
+        } />`)) +
     markElement +
     captionElement +
     `</svg>`,

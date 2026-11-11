@@ -11,7 +11,7 @@ interface ChoiceRowProps {
   shimmer?: boolean;
   /** Tall variant: icon on top, room for a full sentence. */
   rich?: boolean;
-  /** Show trailing step chevron `→` (default true on standard rows without custom trailing). */
+  /** Show trailing step chevron `→` (default false on grid cards unless passed). */
   chevron?: boolean;
   /** Toggle/accordion mode: replaces redirect `→` with an expand/collapse indicator and merges `children` into one unified card when active. */
   accordion?: boolean;
@@ -29,7 +29,7 @@ interface ChoiceRowProps {
 }
 
 /** The one selectable card across CreateModal's tabs. State is carried by
- * theme-synced tint + chunky border/shadow when active; inactive rows sit quiet. */
+ * theme-synced tint + chunky border/shadow when active; inactive rows sit crisp on warm paper. */
 export default function ChoiceRow(
   {
     icon,
@@ -50,8 +50,8 @@ export default function ChoiceRow(
   }: ChoiceRowProps,
 ) {
   const shell = active
-    ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-chunky"
-    : "border-[#1e1714]/15 bg-[#fffef7] hover:border-[#1e1714]/60";
+    ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-[2px_2px_0_#1e1714]"
+    : "border-[#1e1714]/25 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)]/40 hover:shadow-[0_2px_0_#1e1714]";
   const iconStyle = iconBg ? { background: iconBg } : undefined;
   const iconShimmy = shimmer
     ? "transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
@@ -67,7 +67,7 @@ export default function ChoiceRow(
       >
         <span
           style={iconStyle}
-          class={`w-11 h-11 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-xl ${iconShimmy}`}
+          class={`w-11 h-11 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-xl shadow-[1.5px_1.5px_0_#1e1714] ${iconShimmy}`}
         >
           {icon}
         </span>
@@ -75,7 +75,7 @@ export default function ChoiceRow(
           {title}
         </span>
         {description && (
-          <span class="text-sm text-neutral-700 leading-snug">
+          <span class="text-sm text-[#4a3f39] leading-snug">
             {description}
           </span>
         )}
@@ -84,12 +84,13 @@ export default function ChoiceRow(
   }
 
   if (accordion) {
+    const configured = Boolean(badge);
     return (
       <div
         class={`w-full rounded-2xl border-2 transition-all overflow-hidden ${
-          active
-            ? "border-[#1e1714] bg-[#fffef7] shadow-chunky"
-            : "border-[#1e1714]/15 bg-[#fffef7] hover:border-[#1e1714]/60"
+          active || configured
+            ? "border-[#1e1714] bg-[#fffef7] shadow-[0_2px_0_#1e1714]"
+            : "border-[#1e1714]/25 bg-[#fffef7] hover:border-[#1e1714]"
         }`}
       >
         <div
@@ -104,15 +105,17 @@ export default function ChoiceRow(
               onClick();
             }
           }}
-          class={`group w-full min-h-[52px] px-3.5 py-2.5 text-left flex items-center gap-2.5 cursor-pointer select-none transition-colors ${
+          class={`group w-full min-h-[54px] px-3.5 py-2.5 text-left flex items-center gap-3 cursor-pointer select-none transition-colors ${
             active
               ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border-b-2 border-[#1e1714]"
-              : "hover:bg-[var(--qr-theme-tint,#fce7f3)]/50"
+              : configured
+              ? "bg-[var(--qr-theme-tint,#fce7f3)]/55 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
+              : "hover:bg-[#fbf1e4]"
           }`}
         >
           <span
             style={iconStyle}
-            class={`w-8 h-8 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-base shrink-0 ${iconShimmy}`}
+            class={`w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-base shrink-0 shadow-[1.5px_1.5px_0_#1e1714] ${iconShimmy}`}
           >
             {icon}
           </span>
@@ -121,7 +124,7 @@ export default function ChoiceRow(
               {title}
             </span>
             {description && (
-              <span class="block text-xs text-neutral-700 leading-snug mt-0.5">
+              <span class="block text-xs text-[#574c44] leading-snug mt-0.5">
                 {description}
               </span>
             )}
@@ -134,30 +137,38 @@ export default function ChoiceRow(
             )
             : (
               <span class="shrink-0 inline-flex items-center gap-1.5">
-                {badge && onClearBadge && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onClearBadge();
-                    }}
-                    class="min-h-[28px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-2 py-0.5 text-[11px] font-black text-[#1e1714] hover:bg-[#fbf1e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
-                    aria-label={`${clearBadgeLabel}: ${title}`}
-                    title={clearBadgeLabel}
-                  >
-                    {clearBadgeLabel}
-                  </button>
+                {badge && (
+                  <span class="inline-flex items-center gap-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] pl-2.5 pr-1.5 py-0.5 text-[11px] font-black text-[#1e1714] shadow-[1px_1px_0_#1e1714]">
+                    <span
+                      aria-hidden="true"
+                      class="w-1.5 h-1.5 rounded-full bg-[var(--qr-theme-accent,#ec4899)] shrink-0"
+                    />
+                    <span>{badge}</span>
+                    {onClearBadge && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onClearBadge();
+                        }}
+                        class="ml-0.5 w-4 h-4 rounded-full inline-flex items-center justify-center text-[10px] font-black text-[#4a3f39] hover:bg-[#1e1714] hover:text-[#fffef7] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714]"
+                        aria-label={`${clearBadgeLabel}: ${title}`}
+                        title={clearBadgeLabel}
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </span>
                 )}
                 <span
                   aria-hidden="true"
-                  class={`inline-flex items-center gap-1 rounded-full border-2 px-2.5 py-0.5 text-[11px] font-black whitespace-nowrap transition-all ${
+                  class={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all ${
                     active
-                      ? "border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[1.5px_1.5px_0_#1e1714]"
+                      ? "border-[#1e1714] bg-[#fffef7] text-[#1e1714]"
                       : "border-[#1e1714]/20 bg-[#fbf1e4] text-[#4a3f39] group-hover:border-[#1e1714] group-hover:text-[#1e1714]"
                   }`}
                 >
-                  {badge && <span>{badge}</span>}
-                  <span>{active ? "▴" : "▾"}</span>
+                  {active ? "▴" : "▾"}
                 </span>
               </span>
             )}
@@ -183,7 +194,7 @@ export default function ChoiceRow(
           onClick();
         }
       }}
-      class={`group w-full min-h-[64px] rounded-2xl border-2 px-3 py-2.5 text-left transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] flex items-center gap-3 cursor-pointer select-none ${shell}`}
+      class={`group w-full min-h-[68px] rounded-2xl border-2 px-3 py-2.5 text-left transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] flex items-center gap-3 cursor-pointer select-none ${shell}`}
     >
       <span
         style={iconStyle}
@@ -192,11 +203,18 @@ export default function ChoiceRow(
         {icon}
       </span>
       <span class="min-w-0 flex-1">
-        <span class="block font-black text-[#1e1714] leading-tight">
-          {title}
+        <span class="flex items-center gap-1.5 flex-wrap">
+          <span class="font-black text-sm sm:text-[15px] text-[#1e1714] leading-tight">
+            {title}
+          </span>
+          {badge && !chevron && (
+            <span class="inline-flex items-center rounded-full border border-[#1e1714] bg-[#fffef7] px-2 py-0.5 text-[10px] font-black text-[#1e1714]">
+              {badge}
+            </span>
+          )}
         </span>
         {description && (
-          <span class="block text-xs text-neutral-700 leading-snug mt-0.5">
+          <span class="block text-xs text-[#4a3f39] font-medium leading-snug mt-0.5">
             {description}
           </span>
         )}
@@ -213,7 +231,7 @@ export default function ChoiceRow(
             class={`shrink-0 inline-flex items-center gap-1 whitespace-nowrap transition-transform group-hover:translate-x-0.5 ${
               badge || active
                 ? "rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-2 py-0.5 text-[11px] font-black text-[#1e1714]"
-                : "text-sm font-black text-neutral-400 group-hover:text-[#1e1714]"
+                : "text-sm font-black text-[#6e6058] group-hover:text-[#1e1714]"
             }`}
           >
             {badge && <span>{badge}</span>}

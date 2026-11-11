@@ -6,6 +6,8 @@ export interface RenderOptions {
   data: string;
   style: QRStyle;
   logoUrl?: string;
+  /** Coarse grid for small thumbnails; exports leave this unset. */
+  artVersionFloor?: number;
 }
 
 /** One source of geometry for the design preview, stage and every export. */
@@ -25,6 +27,14 @@ export function styledQrSvg(options: RenderOptions): string {
     cornerSquareShape: s.cornersSquare?.shape,
     logoUrl: options.logoUrl,
     centerShape: s.centerShape,
+    renderMode: s.renderMode,
+    artSample: s.artSample,
+    halftoneTone: s.halftoneTone,
+    halftoneShape: s.halftoneShape,
+    halftoneDetail: s.halftoneDetail,
+    print: s.print,
+    foilDepth: s.foilDepth,
+    artVersionFloor: options.artVersionFloor,
   });
 }
 

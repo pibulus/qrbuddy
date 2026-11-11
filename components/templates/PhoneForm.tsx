@@ -18,7 +18,6 @@ export default function PhoneForm({ url }: Props) {
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Update QR data whenever form changes
   useEffect(() => {
     const data: PhoneData = { phone };
     const validationError = validatePhone(data);
@@ -38,23 +37,24 @@ export default function PhoneForm({ url }: Props) {
   const showHint = (touched || Boolean(phone.trim())) && Boolean(error);
 
   return (
-    <div class="space-y-4">
+    <div class="qr-menu-pod p-3.5 space-y-2.5 animate-slide-down">
       {showHint && error && (
         <div
           role="status"
           aria-live="polite"
-          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+          class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
           {error}
         </div>
       )}
 
-      {/* Phone Number */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Phone Number *
+      <div class="space-y-1.5">
+        <label class="qr-field-label" for="phone-number-input">
+          <span class="qr-section-pip" aria-hidden="true" />
+          <span>Phone Number *</span>
         </label>
         <input
+          id="phone-number-input"
           type="tel"
           value={phone}
           onInput={(e) => {
@@ -62,11 +62,11 @@ export default function PhoneForm({ url }: Props) {
             setPhone((e.target as HTMLInputElement).value);
             haptics.light();
           }}
-          placeholder="+1 (555) 123-4567"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
+          placeholder="+61 412 345 678"
+          class="qr-input text-base"
         />
-        <p class="text-xs text-gray-500">
-          Country code recommended (e.g., +61 412 345 678)
+        <p class="text-[11px] font-semibold text-[#6e6058]">
+          Include country code for international callers (e.g. +61, +52, +1).
         </p>
       </div>
     </div>

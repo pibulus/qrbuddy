@@ -137,6 +137,18 @@ function describeDesignRecipe(
   }
 
   const parts = [baseName];
+  const mode = design.customStyle?.renderMode;
+  if (mode === "halftone") {
+    parts.push("Halftone");
+  } else if (mode === "foil") {
+    parts.push("Flat Foil");
+  }
+  const print = design.customStyle?.print;
+  if (print === "riso") {
+    parts.push("Riso");
+  } else if (print === "paper") {
+    parts.push(isSpanish ? "Papel" : "Paper");
+  }
   if (design.frameConfig?.enabled) {
     parts.push(isSpanish ? "Marco" : "Framed");
   }
@@ -801,11 +813,11 @@ export default function LibraryDrawer(
         />
 
         {/* Header */}
-        <div class="flex items-center justify-between gap-2 pb-3 border-b-2 border-[#1e1714]/10">
+        <div class="flex items-center justify-between gap-2 pb-3 border-b-2 border-[#1e1714]/12">
           <div class="flex items-center gap-2.5 min-w-0">
             <span
               aria-hidden="true"
-              class="w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-[#1e1714] shadow-[0_2px_0_#1e1714] shrink-0"
+              class="w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] flex items-center justify-center text-[#1e1714] shadow-[0_2px_0_#1e1714] shrink-0"
             >
               <StageGlyph kind="history" size={18} />
             </span>
@@ -815,25 +827,27 @@ export default function LibraryDrawer(
             >
               {isSpanish ? "Guardados" : "Saved"}
             </h2>
+            {allCount > 0 && (
+              <span class="px-2 py-0.5 rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-[11px] font-black text-[#1e1714] leading-none">
+                {allCount}
+              </span>
+            )}
           </div>
           <button
             type="button"
             data-history-close
             onClick={shell.requestClose}
             aria-label={isSpanish ? "Cerrar guardados" : "Close saved"}
-            class="group shrink-0 w-11 h-11 -mr-1 rounded-full flex items-center justify-center"
+            class="qr-modal-close-btn shrink-0 -mr-1"
           >
-            <span
-              aria-hidden="true"
-              class="w-9 h-9 rounded-full border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center font-black text-base leading-none text-[#1e1714] shadow-chunky transition-transform group-hover:scale-110 group-hover:rotate-90 group-active:scale-90"
-            >
+            <span aria-hidden="true" class="qr-modal-close-btn__cap">
               ✕
             </span>
           </button>
         </div>
 
         {/* Body */}
-        <div class="flex-1 overflow-y-auto scrollbar-none py-3.5 space-y-3.5">
+        <div class="flex-1 overflow-y-auto scrollbar-none py-3.5 space-y-3">
           {/* Search Bar + Filter Pills */}
           <div class="space-y-2">
             <div class="relative">
@@ -852,9 +866,9 @@ export default function LibraryDrawer(
                 placeholder={isSpanish
                   ? "Buscar por nombre, link, código o etiqueta…"
                   : "Search title, link, short code or tag…"}
-                class="w-full min-h-[44px] px-4 py-2.5 pl-10 pr-9 rounded-2xl border-2 border-[#1e1714]/20 bg-[#fffef7] text-sm font-bold text-[#1e1714] placeholder:text-[#7c7267] placeholder:font-medium focus:outline-none focus:border-[#1e1714] transition-colors"
+                class="qr-input min-h-[44px] py-2 pl-10 pr-9"
               />
-              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#57524b] pointer-events-none">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#1e1714] pointer-events-none">
                 <StageGlyph kind="magnifier" size={16} />
               </span>
               {search && (
@@ -865,7 +879,7 @@ export default function LibraryDrawer(
                     loadLibraryData("");
                   }}
                   aria-label={isSpanish ? "Limpiar búsqueda" : "Clear search"}
-                  class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-[#57524b] hover:bg-[#f7ecdc]"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-[#1e1714] hover:bg-[#efe9dc]"
                 >
                   ✕
                 </button>
@@ -876,7 +890,7 @@ export default function LibraryDrawer(
             <div
               role="group"
               aria-label={isSpanish ? "Filtrar categoría" : "Filter category"}
-              class="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5"
+              class="flex items-center gap-1.5 overflow-x-auto scrollbar-none p-1 rounded-2xl bg-[#efe9dc] border-2 border-[#1e1714]"
             >
               {filterPills.map((pill) => {
                 const active = activeFilter === pill.key;
@@ -889,18 +903,18 @@ export default function LibraryDrawer(
                       setActiveFilter(pill.key);
                       haptics.light();
                     }}
-                    class={`min-h-[36px] px-3 py-1 rounded-full border-2 text-xs font-black whitespace-nowrap inline-flex items-center gap-1.5 transition-all ${
+                    class={`min-h-[34px] px-3 py-1 rounded-xl text-xs font-black whitespace-nowrap inline-flex items-center gap-1.5 transition-all ${
                       active
-                        ? "bg-amber-200 border-[#1e1714] text-[#1e1714] shadow-[0_2px_0_#1e1714]"
-                        : "bg-[#fffef7] border-[#1e1714]/20 text-[#1e1714] hover:border-[#1e1714]"
+                        ? "bg-[#ffbe0b] border-2 border-[#1e1714] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                        : "border-2 border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/70"
                     }`}
                   >
                     <span>{pill.label}</span>
                     <span
-                      class={`px-1.5 py-0.5 rounded-full text-[10px] leading-none ${
+                      class={`px-1.5 py-0.5 rounded-full text-[10px] leading-none font-black ${
                         active
-                          ? "bg-[#fffef7] border border-[#1e1714]/40"
-                          : "bg-[#f7ecdc]"
+                          ? "bg-[#fffef7] border border-[#1e1714]/50 text-[#1e1714]"
+                          : "bg-[#fbf1e4] border border-[#1e1714]/20 text-[#57524b]"
                       }`}
                     >
                       {pill.count}
@@ -913,30 +927,33 @@ export default function LibraryDrawer(
 
           {/* Quota Progress Bar (when server library quota present) */}
           {quota && (
-            <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3.5 shadow-sm space-y-2">
+            <div class="qr-menu-pod p-3.5 space-y-2">
               <div class="flex items-center justify-between gap-2 text-xs font-bold">
-                <span class="text-[#57524b]">
+                <span class="qr-section-eyebrow">
+                  <span class="qr-section-pip bg-[#ffbe0b]" />
                   {isSpanish
                     ? "Cupo de códigos dinámicos"
                     : "Editable Allowance"}
                 </span>
-                {codes.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={exportLibraryCsv}
-                    title={isSpanish
-                      ? "Descargar códigos dinámicos como CSV"
-                      : "Download dynamic codes as CSV"}
-                    class="min-h-[32px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-2.5 py-1 text-[11px] font-black text-[#1e1714] shadow-xs transition hover:bg-[#f7ecdc] active:scale-95"
-                  >
-                    {isSpanish ? "Exportar CSV" : "Export CSV"}
-                  </button>
-                )}
-                <span class="text-[#1e1714]">
-                  {isSpanish
-                    ? `${quota.used_count} / ${quota.total_allowed} activos`
-                    : `${quota.used_count} / ${quota.total_allowed} active`}
-                </span>
+                <div class="flex items-center gap-2">
+                  {codes.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={exportLibraryCsv}
+                      title={isSpanish
+                        ? "Descargar códigos dinámicos como CSV"
+                        : "Download dynamic codes as CSV"}
+                      class="min-h-[30px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-2.5 py-0.5 text-[11px] font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] transition hover:bg-[#f7ecdc] active:scale-95"
+                    >
+                      {isSpanish ? "Exportar CSV" : "Export CSV"}
+                    </button>
+                  )}
+                  <span class="font-black text-[#1e1714]">
+                    {isSpanish
+                      ? `${quota.used_count} / ${quota.total_allowed} activos`
+                      : `${quota.used_count} / ${quota.total_allowed} active`}
+                  </span>
+                </div>
               </div>
               <div
                 role="progressbar"
@@ -946,13 +963,13 @@ export default function LibraryDrawer(
                 aria-valuenow={quota.used_count}
                 aria-valuemin={0}
                 aria-valuemax={quota.total_allowed}
-                class="w-full h-2.5 bg-[#f7ecdc] rounded-full border border-[#1e1714]/20 overflow-hidden"
+                class="w-full h-2.5 bg-[#efe9dc] rounded-full border-2 border-[#1e1714] overflow-hidden"
               >
                 <div
                   class={`h-full transition-all duration-300 ${
                     quota.used_count >= quota.total_allowed
-                      ? "bg-amber-400"
-                      : "bg-emerald-400"
+                      ? "bg-[#ffbe0b]"
+                      : "bg-[#248a64]"
                   }`}
                   style={{
                     width: `${
@@ -967,7 +984,7 @@ export default function LibraryDrawer(
                 />
               </div>
               {quota.legacy_count > 0 && (
-                <p class="text-[11px] text-[#57524b] font-medium">
+                <p class="text-[11px] text-[#57524b] font-bold">
                   {isSpanish
                     ? `Incluye ${quota.legacy_count} QR${
                       quota.legacy_count === 1 ? "" : "s"
@@ -994,8 +1011,8 @@ export default function LibraryDrawer(
             )
             : !hasVisibleItems
             ? (
-              <div class="text-center py-7 bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl p-5 space-y-1.5">
-                <div class="w-10 h-10 mx-auto rounded-2xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714]">
+              <div class="qr-menu-pod text-center py-7 p-5 space-y-2">
+                <div class="w-10 h-10 mx-auto rounded-2xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714] shadow-[0_1.5px_0_#1e1714]">
                   <StageGlyph kind="history" size={18} />
                 </div>
                 <p class="font-black text-sm text-[#1e1714]">
@@ -1005,7 +1022,7 @@ export default function LibraryDrawer(
                       : "No saved codes yet")
                     : (isSpanish ? "Sin coincidencias" : "No matching codes")}
                 </p>
-                <p class="text-xs text-[#57524b] max-w-xs mx-auto leading-relaxed">
+                <p class="text-xs font-medium text-[#57524b] max-w-xs mx-auto leading-relaxed">
                   {allCount === 0
                     ? (isSpanish
                       ? "Los QR exportados, links editables y envíos se guardan aquí con su diseño."
@@ -1062,90 +1079,78 @@ export default function LibraryDrawer(
                   return (
                     <div
                       key={c.id}
-                      class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl px-3 py-2.5 shadow-[0_2px_0_#1e1714] flex flex-col gap-2"
+                      class="qr-menu-pod px-3 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                     >
-                      <div class="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={triggerServerLoad}
-                          disabled={!onSelect}
-                          class="flex items-center gap-2.5 min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] rounded-xl disabled:cursor-default"
+                      <button
+                        type="button"
+                        onClick={triggerServerLoad}
+                        disabled={!onSelect}
+                        class="flex items-center gap-2.5 min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] rounded-xl disabled:cursor-default"
+                      >
+                        <span
+                          aria-hidden="true"
+                          class="w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#ede9fe] flex items-center justify-center text-[#1e1714] shrink-0"
                         >
-                          <span
-                            aria-hidden="true"
-                            class="w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714] shrink-0"
-                          >
-                            <StageGlyph kind="dynamic" size={16} />
-                          </span>
-                          <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                              <span class="font-black text-sm text-[#1e1714] truncate">
-                                {c.title || matchingLocal?.metadata?.title ||
-                                  c.short_code}
-                              </span>
-                              <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-purple-100 text-purple-900 border border-purple-300 rounded">
-                                {isSpanish ? "Editable" : "Editable"}
-                              </span>
-                              {designBadge && (
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black bg-[#fffef7] text-[#1e1714] border border-[#1e1714]/35 rounded-md">
-                                  <span
-                                    aria-hidden="true"
-                                    class="w-2 h-2 rounded-full border border-[#1e1714]/40 shrink-0"
-                                    style={{ background: designBadge.gradient }}
-                                  />
-                                  <span>{designBadge.label}</span>
-                                </span>
-                              )}
-                              {c.is_legacy && (
-                                <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 rounded">
-                                  {isSpanish ? "Clásico" : "Legacy"}
-                                </span>
-                              )}
-                              {tags.map((tag) => (
+                          <StageGlyph kind="dynamic" size={16} />
+                        </span>
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="font-black text-sm text-[#1e1714] truncate">
+                              {c.title || matchingLocal?.metadata?.title ||
+                                c.short_code}
+                            </span>
+                            <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-[#ede9fe] text-[#1e1714] border border-[#1e1714]/45 rounded-md">
+                              {isSpanish ? "Editable" : "Editable"}
+                            </span>
+                            {designBadge && (
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black bg-[#fffef7] text-[#1e1714] border border-[#1e1714]/40 rounded-md">
                                 <span
-                                  key={tag}
-                                  class="px-1.5 py-0.5 text-[10px] font-bold bg-[#f7ecdc] text-[#57524b] rounded"
-                                >
-                                  #{tag}
-                                </span>
-                              ))}
-                            </div>
-                            <p class="text-xs text-[#57524b] truncate mt-0.5">
-                              {metaLine}
-                            </p>
+                                  aria-hidden="true"
+                                  class="w-2 h-2 rounded-full border border-[#1e1714]/50 shrink-0"
+                                  style={{ background: designBadge.gradient }}
+                                />
+                                <span>{designBadge.label}</span>
+                              </span>
+                            )}
+                            {c.is_legacy && (
+                              <span class="px-1.5 py-0.5 text-[10px] font-black bg-[#fef3c7] text-[#1e1714] border border-[#1e1714]/45 rounded-md">
+                                {isSpanish ? "Clásico" : "Legacy"}
+                              </span>
+                            )}
+                            {tags.map((tag) => (
+                              <span
+                                key={tag}
+                                class="px-1.5 py-0.5 text-[10px] font-bold bg-[#f7ecdc] text-[#57524b] border border-[#1e1714]/20 rounded-md"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
                           </div>
-                        </button>
+                          <p class="text-xs font-medium text-[#57524b] truncate mt-0.5">
+                            {metaLine}
+                          </p>
+                        </div>
+                      </button>
 
-                        {!editHref && onSelect && (
+                      <div class="flex items-center justify-end gap-1.5 shrink-0">
+                        {onSelect && (
                           <button
                             type="button"
                             onClick={triggerServerLoad}
-                            class={`${STAGE_PRESS} shrink-0 min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                            class={`${STAGE_PRESS} min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f7ecdc] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
                           >
                             {isSpanish ? "Cargar" : "Load"}
                           </button>
                         )}
-                      </div>
-
-                      {editHref && (
-                        <div class="flex items-center justify-end gap-1.5 pt-2 border-t border-[#1e1714]/10">
-                          {onSelect && (
-                            <button
-                              type="button"
-                              onClick={triggerServerLoad}
-                              class={`${STAGE_PRESS} min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
-                            >
-                              {isSpanish ? "Cargar" : "Load"}
-                            </button>
-                          )}
+                        {editHref && (
                           <a
                             href={editHref}
-                            class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                            class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
                           >
-                            {isSpanish ? "Editar y Datos ↗" : "Edit & Stats ↗"}
+                            {isSpanish ? "Editar ↗" : "Edit & Stats ↗"}
                           </a>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -1178,7 +1183,6 @@ export default function LibraryDrawer(
                   const shareHref = isFileItem
                     ? resolveItemShareHref(item)
                     : null;
-                  const hasSecondaryAction = Boolean(editHref || shareHref);
                   const designBadge = describeDesignRecipe(
                     item.metadata?.design,
                     isSpanish,
@@ -1206,121 +1210,109 @@ export default function LibraryDrawer(
                   return (
                     <div
                       key={item.id}
-                      class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl px-3 py-2.5 shadow-[0_2px_0_#1e1714] flex flex-col gap-2"
+                      class="qr-menu-pod px-3 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                     >
-                      <div class="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={triggerLoad}
-                          disabled={!onSelect}
-                          class="flex items-center gap-2.5 min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] rounded-xl disabled:cursor-default"
+                      <button
+                        type="button"
+                        onClick={triggerLoad}
+                        disabled={!onSelect}
+                        class="flex items-center gap-2.5 min-w-0 flex-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] rounded-xl disabled:cursor-default"
+                      >
+                        <span
+                          class={`w-9 h-9 rounded-xl border-2 border-[#1e1714] flex items-center justify-center text-[#1e1714] shrink-0 ${
+                            isDynamicItem
+                              ? "bg-[#ede9fe]"
+                              : isFileItem
+                              ? "bg-[#dcfce7]"
+                              : "bg-[#f7ecdc]"
+                          }`}
+                          aria-hidden="true"
                         >
-                          <span
-                            class="w-9 h-9 rounded-xl border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714] shrink-0"
-                            aria-hidden="true"
-                          >
-                            <StageGlyph
-                              kind={glyphForItemType(displayType)}
-                              size={16}
-                            />
-                          </span>
-                          <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                              <span class="font-black text-sm text-[#1e1714] truncate">
-                                {title}
+                          <StageGlyph
+                            kind={glyphForItemType(displayType)}
+                            size={16}
+                          />
+                        </span>
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="font-black text-sm text-[#1e1714] truncate">
+                              {title}
+                            </span>
+                            {isDynamicItem && (
+                              <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-[#ede9fe] text-[#1e1714] border border-[#1e1714]/45 rounded-md">
+                                {isSpanish ? "Editable" : "Editable"}
                               </span>
-                              {isDynamicItem && (
-                                <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-purple-100 text-purple-900 border border-purple-300 rounded">
-                                  {isSpanish ? "Editable" : "Editable"}
-                                </span>
-                              )}
-                              {isFileItem && (
-                                <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-teal-100 text-teal-900 border border-teal-300 rounded">
-                                  {item.type === "file"
-                                    ? (isSpanish ? "Buzón" : "Locker")
-                                    : (isSpanish ? "Archivo" : "File Drop")}
-                                </span>
-                              )}
-                              {designBadge && (
-                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black bg-[#fffef7] text-[#1e1714] border border-[#1e1714]/35 rounded-md">
-                                  <span
-                                    aria-hidden="true"
-                                    class="w-2 h-2 rounded-full border border-[#1e1714]/40 shrink-0"
-                                    style={{ background: designBadge.gradient }}
-                                  />
-                                  <span>{designBadge.label}</span>
-                                </span>
-                              )}
-                              {tags.map((tag) => (
+                            )}
+                            {isFileItem && (
+                              <span class="px-1.5 py-0.5 text-[10px] font-black uppercase bg-[#dcfce7] text-[#1e1714] border border-[#1e1714]/45 rounded-md">
+                                {item.type === "file"
+                                  ? (isSpanish ? "Buzón" : "Locker")
+                                  : (isSpanish ? "Archivo" : "File Drop")}
+                              </span>
+                            )}
+                            {designBadge && (
+                              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black bg-[#fffef7] text-[#1e1714] border border-[#1e1714]/40 rounded-md">
                                 <span
-                                  key={tag}
-                                  class="px-1.5 py-0.5 text-[10px] font-bold bg-[#f7ecdc] text-[#57524b] rounded"
-                                >
-                                  #{tag}
-                                </span>
-                              ))}
-                            </div>
-                            <p class="text-xs text-[#57524b] truncate mt-0.5">
-                              {metaLine}
-                            </p>
+                                  aria-hidden="true"
+                                  class="w-2 h-2 rounded-full border border-[#1e1714]/50 shrink-0"
+                                  style={{ background: designBadge.gradient }}
+                                />
+                                <span>{designBadge.label}</span>
+                              </span>
+                            )}
+                            {tags.map((tag) => (
+                              <span
+                                key={tag}
+                                class="px-1.5 py-0.5 text-[10px] font-bold bg-[#f7ecdc] text-[#57524b] border border-[#1e1714]/20 rounded-md"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
                           </div>
-                        </button>
+                          <p class="text-xs font-medium text-[#57524b] truncate mt-0.5">
+                            {metaLine}
+                          </p>
+                        </div>
+                      </button>
 
-                        <div class="flex items-center gap-1.5 shrink-0">
-                          {!hasSecondaryAction && onSelect && (
-                            <button
-                              type="button"
-                              onClick={triggerLoad}
-                              class={`${STAGE_PRESS} min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
-                            >
-                              {isSpanish ? "Cargar" : "Load"}
-                            </button>
-                          )}
+                      <div class="flex items-center justify-end gap-1.5 shrink-0">
+                        {onSelect && (
                           <button
                             type="button"
-                            onClick={() => removeFromHistory(item.id)}
-                            aria-label={isSpanish
-                              ? `Quitar ${title}`
-                              : `Remove ${title}`}
-                            title={isSpanish ? "Quitar" : "Remove"}
-                            class="shrink-0 w-8 h-8 rounded-full border border-[#1e1714]/20 bg-[#f7ecdc] hover:bg-amber-200 text-[#1e1714] flex items-center justify-center text-xs font-black transition-colors"
+                            onClick={triggerLoad}
+                            class={`${STAGE_PRESS} min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f7ecdc] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
                           >
-                            ✕
+                            {isSpanish ? "Cargar" : "Load"}
                           </button>
-                        </div>
+                        )}
+                        {editHref && (
+                          <a
+                            href={editHref}
+                            class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                          >
+                            {isSpanish ? "Editar ↗" : "Edit & Stats ↗"}
+                          </a>
+                        )}
+                        {shareHref && (
+                          <a
+                            href={shareHref}
+                            class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                          >
+                            {isSpanish ? "Abrir ↗" : "Open ↗"}
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeFromHistory(item.id)}
+                          aria-label={isSpanish
+                            ? `Quitar ${title}`
+                            : `Remove ${title}`}
+                          title={isSpanish ? "Quitar" : "Remove"}
+                          class="shrink-0 w-8 h-8 rounded-full border-2 border-[#1e1714]/40 hover:border-[#1e1714] bg-[#f7ecdc] hover:bg-[#ffbe0b] text-[#1e1714] flex items-center justify-center text-xs font-black transition-colors"
+                        >
+                          ✕
+                        </button>
                       </div>
-
-                      {hasSecondaryAction && (
-                        <div class="flex items-center justify-end gap-1.5 pt-2 border-t border-[#1e1714]/10">
-                          {onSelect && (
-                            <button
-                              type="button"
-                              onClick={triggerLoad}
-                              class={`${STAGE_PRESS} min-h-[34px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
-                            >
-                              {isSpanish ? "Cargar" : "Load"}
-                            </button>
-                          )}
-                          {editHref && (
-                            <a
-                              href={editHref}
-                              class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
-                            >
-                              {isSpanish
-                                ? "Editar y Datos ↗"
-                                : "Edit & Stats ↗"}
-                            </a>
-                          )}
-                          {shareHref && (
-                            <a
-                              href={shareHref}
-                              class={`${STAGE_PRESS} min-h-[34px] inline-flex items-center px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-teal-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
-                            >
-                              {isSpanish ? "Abrir ↗" : "Open ↗"}
-                            </a>
-                          )}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -1328,32 +1320,35 @@ export default function LibraryDrawer(
             )}
 
           {/* Collapsible Backup & Device Sync (JSON Archive + Encrypted Sync / Passport) */}
-          <details class="group bg-[#fffef7] rounded-2xl border-2 border-[#1e1714] shadow-sm">
+          <details class="group qr-menu-pod">
             <summary class="cursor-pointer list-none min-h-[44px] px-3.5 py-2 flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] select-none">
               <span class="inline-flex items-center gap-2 min-w-0">
-                <StageGlyph kind="key" size={16} />
+                <span class="w-7 h-7 rounded-lg border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714] shrink-0">
+                  <StageGlyph kind="key" size={14} />
+                </span>
                 <span class="truncate">
                   {isSpanish
                     ? "Respaldo y sincronización"
                     : "Backup & Device Sync"}
                 </span>
               </span>
-              <span class="shrink-0 transition-transform group-open:rotate-180 text-[10px]">
+              <span class="w-6 h-6 rounded-full border border-[#1e1714]/35 bg-[#fbf1e4] inline-flex items-center justify-center shrink-0 transition-transform group-open:rotate-180 text-[10px]">
                 ▾
               </span>
             </summary>
 
-            <div class="p-3 pt-2.5 border-t border-[#1e1714]/10 space-y-3">
+            <div class="p-3.5 pt-3 border-t-2 border-[#1e1714]/10 space-y-3.5">
               {/* 1. JSON Archive */}
               <div class="space-y-1.5">
-                <span class="block text-[10px] font-black uppercase tracking-wider text-[#57524b]">
+                <span class="qr-section-eyebrow">
+                  <span class="qr-section-pip bg-[#ffbe0b]" />
                   {isSpanish ? "Archivo JSON" : "JSON Archive"}
                 </span>
                 <div class="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={handleDownloadVaultJson}
-                    class={`${STAGE_PRESS} min-h-[38px] px-2.5 py-1.5 rounded-xl border-2 border-[#1e1714] bg-amber-200 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] inline-flex items-center justify-center gap-1.5`}
+                    class={`${STAGE_PRESS} min-h-[38px] px-2.5 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] inline-flex items-center justify-center gap-1.5`}
                   >
                     <StageGlyph kind="download" size={14} />
                     <span>
@@ -1363,7 +1358,7 @@ export default function LibraryDrawer(
                   <button
                     type="button"
                     onClick={() => jsonFileInputRef.current?.click()}
-                    class={`${STAGE_PRESS} min-h-[38px] px-2.5 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] inline-flex items-center justify-center gap-1.5`}
+                    class={`${STAGE_PRESS} min-h-[38px] px-2.5 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f7ecdc] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] inline-flex items-center justify-center gap-1.5`}
                   >
                     <StageGlyph kind="upload" size={14} />
                     <span>
@@ -1375,84 +1370,95 @@ export default function LibraryDrawer(
 
               {/* 2. Encrypted Sync / Passport */}
               {passport && (
-                <div class="space-y-2.5 pt-2.5 border-t border-[#1e1714]/10">
-                  <div class="flex items-center justify-between gap-2 flex-wrap">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span
-                        aria-hidden="true"
-                        class="w-8 h-8 shrink-0 rounded-full border-2 border-[#1e1714] bg-[#f7ecdc] flex items-center justify-center text-[#1e1714]"
-                      >
-                        <StageGlyph kind="key" size={14} />
-                      </span>
-                      <div class="min-w-0">
-                        <div class="flex items-center gap-1.5">
-                          <span class="font-black text-xs text-[#1e1714] truncate">
-                            {passport.name}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={handleRerollMoniker}
-                            class="shrink-0 px-2 py-0.5 rounded-full border border-[#1e1714]/25 bg-[#fffef7] hover:bg-amber-100 text-[10px] font-black text-[#1e1714] active:scale-95"
-                          >
-                            {isSpanish ? "Girar" : "Reroll"}
-                          </button>
-                        </div>
-                        <span class="block text-[10px] font-bold text-[#57524b]">
-                          {quota?.is_active_plus || passport.tier === "plus"
-                            ? (isSpanish
-                              ? "Pasaporte Plus · 100 códigos"
-                              : "Plus Passport · 100 codes")
-                            : (isSpanish
-                              ? "Pasaporte local · Cero cuentas"
-                              : "Local Passport · Zero accounts")}
+                <div class="space-y-3 pt-3 border-t-2 border-[#1e1714]/10">
+                  <div class="space-y-1.5">
+                    <span class="qr-section-eyebrow">
+                      <span class="qr-section-pip bg-[#ede9fe]" />
+                      {isSpanish ? "Pasaporte local" : "Passport Pairing"}
+                    </span>
+                    <div class="flex items-center justify-between gap-2 flex-wrap bg-[#fbf1e4] border-2 border-[#1e1714] rounded-xl p-2.5">
+                      <div class="flex items-center gap-2 min-w-0">
+                        <span
+                          aria-hidden="true"
+                          class="w-8 h-8 shrink-0 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] flex items-center justify-center text-[#1e1714]"
+                        >
+                          <StageGlyph kind="key" size={14} />
                         </span>
+                        <div class="min-w-0">
+                          <div class="flex items-center gap-1.5">
+                            <span class="font-black text-xs text-[#1e1714] truncate">
+                              {passport.name}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={handleRerollMoniker}
+                              class="shrink-0 px-2 py-0.5 rounded-full border border-[#1e1714]/50 bg-[#fffef7] hover:bg-[#ffbe0b] text-[10px] font-black text-[#1e1714] active:scale-95 transition-colors"
+                            >
+                              {isSpanish ? "Girar" : "Reroll"}
+                            </button>
+                          </div>
+                          <span class="block text-[10px] font-bold text-[#57524b]">
+                            {quota?.is_active_plus || passport.tier === "plus"
+                              ? (isSpanish
+                                ? "Pasaporte Plus · 100 códigos"
+                                : "Plus Passport · 100 codes")
+                              : (isSpanish
+                                ? "Pasaporte local · Cero cuentas"
+                                : "Local Passport · Zero accounts")}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div class="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={handleCopySyncUrl}
-                        class={`${STAGE_PRESS} px-2.5 min-h-[34px] text-xs font-black rounded-xl border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
-                      >
-                        {isSpanish ? "Copiar enlace" : "Copy Link"}
-                      </button>
-                      <button
-                        type="button"
-                        aria-expanded={showPhrase}
-                        onClick={() => setShowPhrase(!showPhrase)}
-                        class="min-h-[34px] px-2.5 text-xs font-black rounded-xl border border-[#1e1714]/25 bg-[#f7ecdc] hover:bg-amber-100 text-[#1e1714] active:scale-95 transition-transform"
-                      >
-                        {showPhrase
-                          ? (isSpanish ? "Ocultar" : "Hide")
-                          : (isSpanish ? "Frase" : "Phrase")}
-                      </button>
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={handleCopySyncUrl}
+                          class={`${STAGE_PRESS} px-2.5 min-h-[34px] text-xs font-black rounded-xl border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f7ecdc] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                        >
+                          {isSpanish ? "Copiar enlace" : "Copy Link"}
+                        </button>
+                        <button
+                          type="button"
+                          aria-expanded={showPhrase}
+                          onClick={() => setShowPhrase(!showPhrase)}
+                          class={`min-h-[34px] px-2.5 text-xs font-black rounded-xl border-2 border-[#1e1714] transition-all active:scale-95 ${
+                            showPhrase
+                              ? "bg-[#ffbe0b] text-[#1e1714]"
+                              : "bg-[#fffef7] hover:bg-[#f7ecdc] text-[#1e1714]"
+                          }`}
+                        >
+                          {showPhrase
+                            ? (isSpanish ? "Ocultar" : "Hide")
+                            : (isSpanish ? "Frase" : "Phrase")}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
                   {showPhrase && (
-                    <div class="flex items-center gap-2.5 bg-amber-50 border-2 border-amber-300 rounded-xl p-2 text-xs text-[#1e1714]">
+                    <div class="flex items-center gap-2.5 bg-[#fef3c7] border-2 border-[#1e1714] rounded-xl p-2.5 text-xs text-[#1e1714]">
                       {syncQrSvg && (
                         <div
                           role="img"
                           aria-label={isSpanish
                             ? "Código QR de emparejamiento de Pasaporte"
                             : "Passport pairing QR code"}
-                          class="w-16 h-16 shrink-0 bg-[#fffef7] rounded-lg p-1 border border-[#1e1714]/15 flex items-center justify-center overflow-hidden"
+                          class="w-16 h-16 shrink-0 bg-[#fffef7] rounded-lg p-1 border-2 border-[#1e1714] flex items-center justify-center overflow-hidden"
                           // deno-lint-ignore react-no-danger
                           dangerouslySetInnerHTML={{ __html: syncQrSvg }}
                         />
                       )}
-                      <code class="flex-1 min-w-0 font-mono font-bold text-xs bg-[#fffef7] px-2 py-1.5 rounded border border-amber-200 select-all break-all">
+                      <code class="flex-1 min-w-0 font-mono font-bold text-xs bg-[#fffef7] px-2.5 py-1.5 rounded-lg border-2 border-[#1e1714]/40 select-all break-all">
                         {passport.phrase}
                       </code>
                     </div>
                   )}
 
                   {/* Encrypted Bundle Copy / Import */}
-                  <div class="space-y-1.5">
+                  <div class="space-y-1.5 pt-2.5 border-t-2 border-[#1e1714]/10">
                     <div class="flex items-center justify-between gap-2">
-                      <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b]">
+                      <span class="qr-section-eyebrow">
+                        <span class="qr-section-pip bg-[#dcfce7]" />
                         {isSpanish
                           ? "Sincronización cifrada"
                           : "Encrypted Sync"}
@@ -1461,7 +1467,7 @@ export default function LibraryDrawer(
                         type="button"
                         onClick={handleCopyEncryptedBackup}
                         disabled={isExportingBackup}
-                        class="min-h-[32px] px-2.5 py-1 rounded-lg border-2 border-[#1e1714] bg-purple-100 hover:bg-purple-200 text-[11px] font-black text-[#1e1714] active:scale-95 transition-transform disabled:opacity-50"
+                        class={`${STAGE_PRESS} min-h-[32px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#ffbe0b] text-[11px] font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] disabled:opacity-50`}
                       >
                         {isExportingBackup
                           ? (isSpanish ? "Cifrando…" : "Encrypting…")
@@ -1486,7 +1492,7 @@ export default function LibraryDrawer(
                         placeholder={isSpanish
                           ? "Pegar paquete cifrado…"
                           : "Paste encrypted bundle…"}
-                        class="w-full min-h-[38px] px-2.5 py-1.5 text-base sm:text-xs font-mono rounded-lg border-2 border-[#1e1714]/15 bg-[#fffef7] text-[#1e1714] focus:border-[#1e1714] focus:outline-none"
+                        class="qr-input min-h-[38px] px-3 py-1.5 text-base sm:text-xs font-mono"
                       />
                       {backupInput.trim() !== "" && (
                         <div class="flex flex-col sm:flex-row gap-1.5">
@@ -1506,12 +1512,12 @@ export default function LibraryDrawer(
                             placeholder={isSpanish
                               ? "Frase clave (opcional)…"
                               : "Recovery phrase (optional)…"}
-                            class="flex-1 min-w-0 min-h-[38px] px-2.5 py-1.5 text-base sm:text-xs font-mono rounded-lg border-2 border-[#1e1714]/15 bg-[#fffef7] text-[#1e1714] focus:border-[#1e1714] focus:outline-none"
+                            class="qr-input flex-1 min-w-0 min-h-[38px] px-3 py-1.5 text-base sm:text-xs font-mono"
                           />
                           <button
                             type="submit"
                             disabled={isImportingBackup}
-                            class="min-h-[38px] px-3 py-1.5 rounded-lg border-2 border-[#1e1714] bg-amber-200 hover:bg-amber-300 font-black text-xs text-[#1e1714] active:scale-95 transition-all disabled:opacity-50"
+                            class="min-h-[38px] px-3.5 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] font-black text-xs text-[#1e1714] shadow-[0_1.5px_0_#1e1714] active:scale-95 transition-all disabled:opacity-50"
                           >
                             {isImportingBackup
                               ? (isSpanish ? "Uniendo…" : "Merging…")
@@ -1528,7 +1534,7 @@ export default function LibraryDrawer(
 
           {/* Claim Legacy Tools (only when server library is enabled) */}
           {isPlusLibraryEnabled() && (
-            <div class="pt-2 border-t border-[#1e1714]/10 space-y-2">
+            <div class="pt-2 border-t-2 border-[#1e1714]/10 space-y-2">
               {!showImport
                 ? (
                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -1558,10 +1564,11 @@ export default function LibraryDrawer(
                 : (
                   <form
                     onSubmit={handleClaimLegacy}
-                    class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 space-y-3"
+                    class="qr-menu-pod p-4 space-y-3"
                   >
                     <div class="flex items-center justify-between">
-                      <p class="font-bold text-xs text-[#1e1714]">
+                      <p class="qr-section-eyebrow">
+                        <span class="qr-section-pip bg-[#ffbe0b]" />
                         {isSpanish
                           ? "Reclamar código anterior"
                           : "Claim Pre-Launch Code"}
@@ -1569,12 +1576,12 @@ export default function LibraryDrawer(
                       <button
                         type="button"
                         onClick={() => setShowImport(false)}
-                        class="text-xs font-bold text-[#57524b] hover:text-[#1e1714]"
+                        class="text-xs font-black text-[#57524b] hover:text-[#1e1714]"
                       >
                         {isSpanish ? "Cancelar" : "Cancel"}
                       </button>
                     </div>
-                    <p class="text-[11px] text-[#57524b] leading-relaxed">
+                    <p class="text-[11px] font-medium text-[#57524b] leading-relaxed">
                       {isSpanish
                         ? "Pega el token de propietario de un código anterior. Exento del límite de 5 códigos."
                         : "Paste an owner token from an earlier dynamic code. Exempt from the 5-code allowance."}
@@ -1590,12 +1597,12 @@ export default function LibraryDrawer(
                         setImportToken((e.target as HTMLInputElement).value)}
                       placeholder="ot_..."
                       required
-                      class="w-full px-3 py-2 rounded-xl border-2 border-[#1e1714]/15 bg-[#fffef7] text-xs font-mono text-[#1e1714] focus:outline-none focus:border-[#1e1714]"
+                      class="qr-input font-mono text-xs"
                     />
                     <button
                       type="submit"
                       disabled={importing || !importToken.trim()}
-                      class="w-full py-2 px-3 rounded-xl border-2 border-[#1e1714] bg-amber-300 font-bold text-xs text-[#1e1714] hover:bg-amber-400 active:scale-95 disabled:opacity-50 transition-all"
+                      class="qr-pitch-cta w-full py-2.5 px-3 rounded-xl font-black text-xs disabled:opacity-50"
                     >
                       {importing
                         ? (isSpanish ? "Reclamando…" : "Claiming…")
@@ -1609,7 +1616,7 @@ export default function LibraryDrawer(
 
         {/* Footer Action Strip (only when local items exist; 2-tap inline confirm) */}
         {localHistory.length > 0 && (
-          <div class="pt-2.5 border-t border-[#1e1714]/10 flex items-center justify-end gap-2">
+          <div class="pt-2.5 border-t-2 border-[#1e1714]/12 flex items-center justify-end gap-2">
             {confirmClear
               ? (
                 <>
@@ -1627,7 +1634,7 @@ export default function LibraryDrawer(
                       setConfirmClear(false);
                       haptics.light();
                     }}
-                    class="min-h-[34px] px-3 py-1 text-xs font-black text-[#1e1714] bg-amber-200 border-2 border-[#1e1714] rounded-xl shadow-[0_1.5px_0_#1e1714] active:translate-y-px active:shadow-none transition-all"
+                    class="min-h-[34px] px-3 py-1 text-xs font-black text-[#1e1714] bg-[#ffbe0b] border-2 border-[#1e1714] rounded-xl shadow-[0_1.5px_0_#1e1714] active:translate-y-px active:shadow-none transition-all"
                   >
                     {isSpanish
                       ? "Toca otra vez para vaciar"
@@ -1642,7 +1649,7 @@ export default function LibraryDrawer(
                     setConfirmClear(true);
                     haptics.light();
                   }}
-                  class="min-h-[34px] px-2.5 py-1 text-xs font-black text-[#c4607a] hover:bg-amber-50 rounded-xl transition-colors"
+                  class="min-h-[34px] px-2.5 py-1 text-xs font-black text-[#c4607a] hover:bg-[#fffef7] rounded-xl transition-colors"
                 >
                   {isSpanish ? "Vaciar local" : "Clear local"}
                 </button>

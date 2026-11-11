@@ -10,8 +10,20 @@ export function resolveQRStyle(
 ): QRStyle {
   const base = QR_STYLES[key as keyof typeof QR_STYLES] ?? QR_STYLES.sunset;
   if (key === "custom" && override) return override;
+  // The look rides along with every palette: picking Candy must not drop the
+  // artwork already chosen for Sunset.
+  const look: Partial<QRStyle> = {};
+  if (override?.renderMode) look.renderMode = override.renderMode;
+  if (override?.artImage) look.artImage = override.artImage;
+  if (override?.artSample) look.artSample = override.artSample;
+  if (override?.halftoneTone) look.halftoneTone = override.halftoneTone;
+  if (override?.halftoneShape) look.halftoneShape = override.halftoneShape;
+  if (override?.halftoneDetail) look.halftoneDetail = override.halftoneDetail;
+  if (override?.foilDepth) look.foilDepth = override.foilDepth;
+  if (override?.print) look.print = override.print;
   return {
     ...base,
+    ...look,
     centerShape: override?.centerShape,
     dots: {
       ...base.dots,
@@ -31,6 +43,33 @@ export function resolveQRStyle(
     },
   };
 }
+
+/** The Looks gallery, in shipping order. Labels only — no taste in the data. */
+export const LOOKS = [
+  {
+    id: "classic",
+    en: "Classic",
+    es: "Clásico",
+    blurbEn: "Flat matrix, print-tested",
+    blurbEs: "Matriz plana, probada en imprenta",
+  },
+  {
+    id: "halftone",
+    en: "Halftone",
+    es: "Semitono",
+    blurbEn: "Artwork becomes the ink",
+    blurbEs: "La imagen se vuelve tinta",
+  },
+  {
+    id: "foil",
+    en: "Flat Foil",
+    es: "Foil plano",
+    blurbEn: "Code on an extruded tile",
+    blurbEs: "Código sobre una pieza extruida",
+  },
+] as const;
+
+export type LookId = (typeof LOOKS)[number]["id"];
 
 export const STAMPS = [
   {

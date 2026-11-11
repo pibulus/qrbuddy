@@ -19,7 +19,6 @@ export default function SMSForm({ url }: Props) {
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Update QR data whenever form changes
   useEffect(() => {
     const data: SMSData = { phone, message };
     const validationError = validateSMS(data);
@@ -40,23 +39,24 @@ export default function SMSForm({ url }: Props) {
     Boolean(error);
 
   return (
-    <div class="space-y-4">
+    <div class="qr-menu-pod p-3.5 space-y-3 animate-slide-down">
       {showHint && error && (
         <div
           role="status"
           aria-live="polite"
-          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+          class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
           {error}
         </div>
       )}
 
-      {/* Phone Number */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Phone Number *
+      <div class="space-y-1.5">
+        <label class="qr-field-label" for="sms-phone-input">
+          <span class="qr-section-pip" aria-hidden="true" />
+          <span>Phone Number *</span>
         </label>
         <input
+          id="sms-phone-input"
           type="tel"
           value={phone}
           onInput={(e) => {
@@ -64,33 +64,32 @@ export default function SMSForm({ url }: Props) {
             setPhone((e.target as HTMLInputElement).value);
             haptics.light();
           }}
-          placeholder="+1 (555) 123-4567"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
+          placeholder="+61 412 345 678"
+          class="qr-input text-base"
         />
-        <p class="text-xs text-gray-500">
-          Country code recommended (e.g., +1 555 123 4567)
-        </p>
       </div>
 
-      {/* Message */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Message
-        </label>
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label class="qr-field-label" for="sms-message-input">
+            <span>Pre-filled Text</span>
+          </label>
+          <span class="text-[11px] font-bold text-[#6e6058] tabular-nums">
+            {message.length} chars
+          </span>
+        </div>
         <textarea
+          id="sms-message-input"
           value={message}
           onInput={(e) => {
             setTouched(true);
             setMessage((e.target as HTMLTextAreaElement).value);
             haptics.light();
           }}
-          placeholder="Optional text message..."
-          rows={4}
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none resize-none"
+          placeholder="Optional SMS body..."
+          rows={3}
+          class="qr-input text-sm resize-none"
         />
-        <p class="text-xs text-gray-500">
-          {message.length} characters
-        </p>
       </div>
     </div>
   );

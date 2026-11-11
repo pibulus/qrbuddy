@@ -24,7 +24,16 @@ import {
   relativeLuminance,
 } from "../utils/qr-styles.ts";
 import { STYLE_DISPLAY } from "../islands/StyleSelector.tsx";
-import { QUICK_PICK_COLORS } from "../components/GradientCreator.tsx";
+import {
+  autoFixPaletteContrast,
+  clampInkToScanSafe,
+  CURATED_DUOS,
+  GROUND_SWATCHES,
+  hexToHsv,
+  hsvToHex,
+  normalizeHexInput,
+  QUICK_PICK_COLORS,
+} from "../components/GradientCreator.tsx";
 import { TEXT_CARD_THEMES } from "../utils/bucket-qr-themes.ts";
 import {
   getCardStylesFor,
@@ -513,17 +522,89 @@ Deno.test("QR_STYLES & STYLE_DISPLAY - public presets satisfy scannability floor
   }
 });
 
-Deno.test("QUICK_PICK_COLORS - all 6 curated chips satisfy luminance <= 0.40", () => {
-  assertEquals(QUICK_PICK_COLORS.length, 6);
-  for (const chip of QUICK_PICK_COLORS) {
-    const lum = relativeLuminance(chip.color);
+Deno.test("QUICK_PICK_COLORS, CURATED_DUOS & Color Studio - every chip & duo hits >= 4.5:1 across all paper grounds and clampInkToScanSafe blocks unreadable pastels", () => {
+  assertEquals(QUICK_PICK_COLORS.length, 18);
+  assertEquals(GROUND_SWATCHES.length, 6);
+  assertEquals(CURATED_DUOS.length, 6);
+
+  for (const ground of GROUND_SWATCHES) {
     assert(
-      lum <= 0.40,
-      `Quick-pick chip ${chip.name} (${chip.color}) luminance ${
-        lum.toFixed(3)
-      } > 0.40`,
+      relativeLuminance(ground.color) >= 0.84,
+      `Ground swatch ${ground.name} (${ground.color}) must be light paper stock`,
+    );
+    for (const chip of QUICK_PICK_COLORS) {
+      const cr = contrastRatio(chip.color, ground.color);
+      assert(
+        cr >= 4.5,
+        `Quick-pick chip ${chip.name} (${chip.color}) vs ${ground.name} (${ground.color}) contrast ${
+          cr.toFixed(2)
+        } < 4.5:1`,
+      );
+    }
+    for (const duo of CURATED_DUOS) {
+      assert(
+        contrastRatio(duo.c1, ground.color) >= 4.5 &&
+          contrastRatio(duo.c2, ground.color) >= 4.5,
+        `Curated duo ${duo.id} must achieve >= 4.5:1 on ${ground.name}`,
+      );
+    }
+  }
+
+  // clampInkToScanSafe rescues pale yellow, white, neon lime, and pastel pink
+  for (const badColor of ["#FFEEAA", "#FFFEF7", "#80FF80", "#FBCFE8"]) {
+    const safe = clampInkToScanSafe(badColor, "#FFF8F0");
+    assert(
+      contrastRatio(safe, "#FFF0F7") >= 4.5,
+      `clampInkToScanSafe(${badColor}) -> ${safe} must hit >= 4.5:1 against #FFF0F7`,
+    );
+    assert(
+      relativeLuminance(safe) <= 0.18,
+      `clampInkToScanSafe(${badColor}) -> ${safe} luminance must stay <= 0.18`,
     );
   }
+
+  // Hex normalizer accepts 3-char and 6-char hexes with or without #
+  assertEquals(normalizeHexInput("#205ea6"), "#205EA6");
+  assertEquals(normalizeHexInput("205ea6"), "#205EA6");
+  assertEquals(normalizeHexInput("f0a"), "#FF00AA");
+  assertEquals(normalizeHexInput("not-a-hex"), null);
+
+  // HSV <-> Hex roundtrip stays faithful
+  const hsv = hexToHsv("#205EA6");
+  assert(hsv !== null);
+  assertEquals(hsvToHex(hsv.h, hsv.s, hsv.v), "#205EA6");
+
+  // Auto-fix contrast repairs inverted dark-ground / bright-module combos to >= 4.5:1
+  const fixed = autoFixPaletteContrast(
+    [
+      { offset: 0, color: "#FBCFE8" },
+      { offset: 1, color: "#FDE68A" },
+    ],
+    "#1E1714",
+  );
+  assertEquals(fixed.bgColor, "#FFF8F0");
+  for (const stop of fixed.stops) {
+    assert(
+      contrastRatio(stop.color, fixed.bgColor) >= 4.5,
+      `Auto-fixed stop ${stop.color} on ${fixed.bgColor} must achieve >= 4.5:1`,
+    );
+  }
+
+  // Solid custom styles validate cleanly through design-preferences
+  const solidCustom: QRStyle = {
+    dots: { type: "rounded", color: "#205EA6" },
+    cornersSquare: { type: "extra-rounded", color: "#205EA6" },
+    cornersDot: { type: "dot", color: "#205EA6" },
+    background: { color: "#FFFEF7" },
+  };
+  assert(isValidCustomStyle(solidCustom));
+  const validated = validateDesignPreferences({
+    version: 1,
+    style: "custom",
+    customStyle: solidCustom,
+  });
+  assertEquals(validated?.style, "custom");
+  assertEquals(validated?.customStyle?.dots.color, "#205EA6");
 });
 
 Deno.test("FileSlideshow & TEXT_CARD_THEMES - cover all 10 styles with daylight pastel-punk and intentional dark modes", () => {

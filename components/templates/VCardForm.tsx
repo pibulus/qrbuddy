@@ -28,7 +28,6 @@ export default function VCardForm({ url }: Props) {
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Update QR data whenever form changes
   useEffect(() => {
     const data: VCardData = {
       firstName,
@@ -79,178 +78,213 @@ export default function VCardForm({ url }: Props) {
   const showHint = (touched || hasAnyInput) && Boolean(error);
 
   return (
-    <div class="space-y-4">
+    <div class="space-y-3 animate-slide-down">
       {showHint && error && (
         <div
           role="status"
           aria-live="polite"
-          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+          class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
           {error}
         </div>
       )}
 
-      {/* Name */}
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-            First Name *
+      {/* Pod 1: Identity & Role */}
+      <div class="qr-menu-pod p-3.5 space-y-3">
+        <span class="qr-section-eyebrow">
+          <span class="qr-section-pip" aria-hidden="true" />
+          <span>Identity & Role</span>
+        </span>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div class="space-y-1">
+            <label class="qr-field-label" for="vcard-first-name">
+              First Name *
+            </label>
+            <input
+              id="vcard-first-name"
+              type="text"
+              value={firstName}
+              onInput={(e) => {
+                setTouched(true);
+                setFirstName((e.target as HTMLInputElement).value);
+                haptics.light();
+              }}
+              placeholder="Ada"
+              class="qr-input text-sm"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="qr-field-label" for="vcard-last-name">
+              Last Name
+            </label>
+            <input
+              id="vcard-last-name"
+              type="text"
+              value={lastName}
+              onInput={(e) => {
+                setTouched(true);
+                setLastName((e.target as HTMLInputElement).value);
+                haptics.light();
+              }}
+              placeholder="Lovelace"
+              class="qr-input text-sm"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div class="space-y-1">
+            <label class="qr-field-label" for="vcard-org">
+              Organization
+            </label>
+            <input
+              id="vcard-org"
+              type="text"
+              value={organization}
+              onInput={(e) => {
+                setTouched(true);
+                setOrganization((e.target as HTMLInputElement).value);
+                haptics.light();
+              }}
+              placeholder="Studio Name"
+              class="qr-input text-sm"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="qr-field-label" for="vcard-title">
+              Role / Title
+            </label>
+            <input
+              id="vcard-title"
+              type="text"
+              value={title}
+              onInput={(e) => {
+                setTouched(true);
+                setTitle((e.target as HTMLInputElement).value);
+                haptics.light();
+              }}
+              placeholder="Founder"
+              class="qr-input text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Pod 2: Direct Channels */}
+      <div class="qr-menu-pod p-3.5 space-y-2.5">
+        <span class="qr-section-eyebrow">
+          <span class="qr-section-pip" aria-hidden="true" />
+          <span>Direct Channels</span>
+        </span>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div class="space-y-1">
+            <label class="qr-field-label" for="vcard-phone">
+              Phone
+            </label>
+            <input
+              id="vcard-phone"
+              type="tel"
+              value={phone}
+              onInput={(e) => {
+                setTouched(true);
+                setPhone((e.target as HTMLInputElement).value);
+                haptics.light();
+              }}
+              placeholder="+61 412 345 678"
+              class="qr-input text-sm"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="qr-field-label" for="vcard-email">
+              Email
+            </label>
+            <input
+              id="vcard-email"
+              type="email"
+              value={email}
+              onInput={(e) => {
+                setTouched(true);
+                setEmail((e.target as HTMLInputElement).value);
+                haptics.light();
+              }}
+              placeholder="ada@example.com"
+              class="qr-input text-sm"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="qr-field-label" for="vcard-website">
+            Website
           </label>
           <input
-            type="text"
-            value={firstName}
+            id="vcard-website"
+            type="url"
+            value={website}
             onInput={(e) => {
               setTouched(true);
-              setFirstName((e.target as HTMLInputElement).value);
+              setWebsite((e.target as HTMLInputElement).value);
               haptics.light();
             }}
-            placeholder="John"
-            class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
-          />
-        </div>
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-            Last Name
-          </label>
-          <input
-            type="text"
-            value={lastName}
-            onInput={(e) => {
-              setTouched(true);
-              setLastName((e.target as HTMLInputElement).value);
-              haptics.light();
-            }}
-            placeholder="Doe"
-            class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
+            placeholder="https://example.com"
+            class="qr-input text-sm"
           />
         </div>
       </div>
 
-      {/* Organization & Title */}
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-            Organization
-          </label>
-          <input
-            type="text"
-            value={organization}
-            onInput={(e) => {
-              setTouched(true);
-              setOrganization((e.target as HTMLInputElement).value);
-              haptics.light();
-            }}
-            placeholder="Acme Corp"
-            class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
-          />
+      {/* Pod 3: Optional Location & Note */}
+      <details
+        open={Boolean(address.trim() || note.trim())}
+        class="group qr-menu-pod overflow-hidden"
+      >
+        <summary class="list-none cursor-pointer min-h-[42px] px-3.5 py-2.5 flex items-center justify-between gap-2 select-none">
+          <span class="qr-section-eyebrow">
+            <span class="qr-section-pip" aria-hidden="true" />
+            <span>Address & Note (optional)</span>
+          </span>
+          <span class="text-xs font-black text-[#4a3f39] transition-transform group-open:rotate-180">
+            ▾
+          </span>
+        </summary>
+        <div class="px-3.5 pb-3.5 pt-2 border-t border-[#1e1714]/10 space-y-2.5">
+          <div class="space-y-1">
+            <label class="qr-field-label" for="vcard-address">
+              Address
+            </label>
+            <input
+              id="vcard-address"
+              type="text"
+              value={address}
+              onInput={(e) => {
+                setTouched(true);
+                setAddress((e.target as HTMLInputElement).value);
+                haptics.light();
+              }}
+              placeholder="Brunswick VIC, Australia"
+              class="qr-input text-sm"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="qr-field-label" for="vcard-note">
+              Note
+            </label>
+            <textarea
+              id="vcard-note"
+              value={note}
+              onInput={(e) => {
+                setTouched(true);
+                setNote((e.target as HTMLTextAreaElement).value);
+                haptics.light();
+              }}
+              placeholder="Context, studio hours, or handle..."
+              rows={2}
+              class="qr-input text-sm resize-none"
+            />
+          </div>
         </div>
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-            Title
-          </label>
-          <input
-            type="text"
-            value={title}
-            onInput={(e) => {
-              setTouched(true);
-              setTitle((e.target as HTMLInputElement).value);
-              haptics.light();
-            }}
-            placeholder="CEO"
-            class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Phone */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Phone
-        </label>
-        <input
-          type="tel"
-          value={phone}
-          onInput={(e) => {
-            setTouched(true);
-            setPhone((e.target as HTMLInputElement).value);
-            haptics.light();
-          }}
-          placeholder="+1 (555) 123-4567"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
-        />
-      </div>
-
-      {/* Email */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Email
-        </label>
-        <input
-          type="email"
-          value={email}
-          onInput={(e) => {
-            setTouched(true);
-            setEmail((e.target as HTMLInputElement).value);
-            haptics.light();
-          }}
-          placeholder="john@example.com"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
-        />
-      </div>
-
-      {/* Website */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Website
-        </label>
-        <input
-          type="url"
-          value={website}
-          onInput={(e) => {
-            setTouched(true);
-            setWebsite((e.target as HTMLInputElement).value);
-            haptics.light();
-          }}
-          placeholder="https://example.com"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
-        />
-      </div>
-
-      {/* Address */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Address
-        </label>
-        <input
-          type="text"
-          value={address}
-          onInput={(e) => {
-            setTouched(true);
-            setAddress((e.target as HTMLInputElement).value);
-            haptics.light();
-          }}
-          placeholder="123 Main St, City, State 12345"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
-        />
-      </div>
-
-      {/* Note */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Note
-        </label>
-        <textarea
-          value={note}
-          onInput={(e) => {
-            setTouched(true);
-            setNote((e.target as HTMLTextAreaElement).value);
-            haptics.light();
-          }}
-          placeholder="Additional information..."
-          rows={2}
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none resize-none"
-        />
-      </div>
+      </details>
     </div>
   );
 }

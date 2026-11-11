@@ -24,7 +24,6 @@ export default function WiFiForm({ url }: Props) {
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Update QR data whenever form changes
   useEffect(() => {
     const data: WiFiData = {
       ssid,
@@ -50,23 +49,25 @@ export default function WiFiForm({ url }: Props) {
     Boolean(error);
 
   return (
-    <div class="space-y-4">
+    <div class="qr-menu-pod p-3.5 space-y-3.5 animate-slide-down">
       {showHint && error && (
         <div
           role="status"
           aria-live="polite"
-          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+          class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
           {error}
         </div>
       )}
 
       {/* Network Name */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Network Name (SSID) *
+      <div class="space-y-1.5">
+        <label class="qr-field-label" for="wifi-ssid-input">
+          <span class="qr-section-pip" aria-hidden="true" />
+          <span>Network Name (SSID) *</span>
         </label>
         <input
+          id="wifi-ssid-input"
           type="text"
           value={ssid}
           onInput={(e) => {
@@ -74,51 +75,53 @@ export default function WiFiForm({ url }: Props) {
             setSsid((e.target as HTMLInputElement).value);
             haptics.light();
           }}
-          placeholder="My WiFi Network"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
+          placeholder="Brunswick Guest Wi-Fi"
+          class="qr-input text-base"
         />
       </div>
 
-      {/* Encryption Type */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Security Type
-        </label>
-        <div class="flex gap-2 flex-wrap">
-          {(["WPA", "WEP", "nopass"] as const).map((type) => (
-            <button
-              type="button"
-              key={type}
-              onClick={() => {
-                setEncryption(type);
-                haptics.light();
-              }}
-              class={`px-4 py-2 rounded-lg border-2 font-semibold text-sm transition-all
-                ${
-                encryption === type
-                  ? "bg-[#4ECDC4] text-white border-[#3AA8A4] scale-105"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-[#4ECDC4]"
-              }`}
-            >
-              {type === "nopass"
-                ? "None (Open)"
-                : type === "WPA"
-                ? "WPA/WPA2"
-                : "WEP"}
-            </button>
-          ))}
+      {/* Security Type */}
+      <div class="space-y-1.5">
+        <span class="qr-field-label">Security</span>
+        <div class="grid grid-cols-3 gap-1.5 p-1 rounded-xl border-2 border-[#1e1714] bg-[#efe9dc]">
+          {(["WPA", "WEP", "nopass"] as const).map((type) => {
+            const active = encryption === type;
+            return (
+              <button
+                type="button"
+                key={type}
+                aria-pressed={active}
+                onClick={() => {
+                  setEncryption(type);
+                  haptics.light();
+                }}
+                class={`min-h-[36px] px-2 rounded-lg text-xs font-black transition-all border-2 ${
+                  active
+                    ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                    : "border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/60"
+                }`}
+              >
+                {type === "nopass"
+                  ? "Open"
+                  : type === "WPA"
+                  ? "WPA / WPA2"
+                  : "WEP"}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Password */}
       {encryption !== "nopass"
         ? (
-          <div class="space-y-2">
-            <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Password *
+          <div class="space-y-1.5">
+            <label class="qr-field-label" for="wifi-password-input">
+              <span>Password *</span>
             </label>
             <div class="relative">
               <input
+                id="wifi-password-input"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onInput={(e) => {
@@ -127,7 +130,7 @@ export default function WiFiForm({ url }: Props) {
                   haptics.light();
                 }}
                 placeholder="Network password"
-                class="w-full px-4 py-3 pr-20 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
+                class="qr-input text-base pr-20"
               />
               <button
                 type="button"
@@ -135,7 +138,7 @@ export default function WiFiForm({ url }: Props) {
                   setShowPassword((current) => !current);
                   haptics.light();
                 }}
-                class="absolute right-2 top-1/2 -translate-y-1/2 min-h-[44px] px-3 rounded-lg text-sm font-black text-[#3AA8A4] hover:bg-[#E0FFFF]"
+                class="absolute right-2 top-1/2 -translate-y-1/2 min-h-[32px] px-2.5 rounded-lg border border-[#1e1714]/25 bg-[#fbf1e4] hover:border-[#1e1714] text-xs font-black text-[#1e1714]"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -143,28 +146,26 @@ export default function WiFiForm({ url }: Props) {
           </div>
         )
         : (
-          <p class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-xs font-semibold text-amber-900">
-            Open network: no password encoded
+          <p class="rounded-xl bg-amber-50 border border-amber-300 px-3 py-2 text-xs font-bold text-amber-950">
+            Open network: scans join immediately with no password.
           </p>
         )}
 
       {/* Hidden Network */}
-      <div class="space-y-2">
-        <label class="flex items-center gap-3 cursor-pointer group">
-          <input
-            type="checkbox"
-            checked={hidden}
-            onChange={(e) => {
-              setHidden((e.target as HTMLInputElement).checked);
-              haptics.light();
-            }}
-            class="w-5 h-5 rounded border-2 border-black cursor-pointer"
-          />
-          <span class="text-sm font-semibold text-gray-700 group-hover:text-[#4ECDC4]">
-            Hidden network
-          </span>
-        </label>
-      </div>
+      <label class="inline-flex items-center gap-2.5 cursor-pointer select-none pt-0.5">
+        <input
+          type="checkbox"
+          checked={hidden}
+          onChange={(e) => {
+            setHidden((e.target as HTMLInputElement).checked);
+            haptics.light();
+          }}
+          class="w-4 h-4 rounded border-2 border-[#1e1714] accent-[#1e1714] cursor-pointer"
+        />
+        <span class="text-xs font-black text-[#1e1714]">
+          Hidden SSID network
+        </span>
+      </label>
     </div>
   );
 }

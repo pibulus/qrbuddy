@@ -4,6 +4,7 @@ import { haptics } from "../../utils/haptics.ts";
 import { sounds } from "../../utils/sounds.ts";
 import GradientCreator from "../GradientCreator.tsx";
 import LogoUploader from "../LogoUploader.tsx";
+import LookGallery from "./LookGallery.tsx";
 import PalettePills, { pillState } from "./PalettePills.tsx";
 import type {
   BannerTheme,
@@ -40,7 +41,7 @@ interface DesignTabProps {
 }
 
 const KEY =
-  "min-h-[40px] rounded-xl px-1.5 text-xs font-black transition-[transform,box-shadow,border-color] duration-[70ms] active:translate-y-[2px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]";
+  "min-h-[40px] rounded-xl px-1.5 text-xs font-black transition-[transform,box-shadow,border-color,background-color] duration-[70ms] active:translate-y-[2px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fffef7]";
 
 const LEGACY_STYLE_NAMES: Record<string, { name: string; nameEs: string }> = {
   blush: { name: "Crimson", nameEs: "Carmesí" },
@@ -91,7 +92,7 @@ export function decodeMonogramFromLogoUrl(rawLogoUrl: string): string {
   }
 }
 
-/** Three sections, one grid each: palette (7), centre mark (5+2), label (1+4), plus PNG size. */
+/** Structured Neo-Toybrut pods: Palette, Center mark, Card label, and PNG size. */
 export default function DesignTab(
   {
     url,
@@ -181,24 +182,53 @@ export default function DesignTab(
   };
 
   const customActive = qrStyle.value === "custom";
+  const customSwatchStyle = customActive && customStyle?.value?.dots
+    ? (customStyle.value.dots.gradient?.colorStops?.length
+      ? {
+        background: `linear-gradient(135deg, ${
+          customStyle.value.dots.gradient.colorStops.map((s) => s.color).join(
+            ", ",
+          )
+        })`,
+      }
+      : customStyle.value.dots.color
+      ? { backgroundColor: customStyle.value.dots.color }
+      : undefined)
+    : undefined;
 
   return (
-    <div class="space-y-3 text-[#1e1714]">
-      <section class="space-y-1.5" aria-label={es ? "Paleta" : "Palette"}>
+    <div class="space-y-2.5 text-[#1e1714]">
+      {/* 0. QR Look, Module Geometry & Print Press Pod */}
+      <LookGallery
+        url={url}
+        qrStyle={qrStyle}
+        customStyle={customStyle}
+        logoUrl={logoUrl}
+        lang={locale}
+      />
+
+      {/* 1. Palette Pod */}
+      <section
+        class="qr-menu-pod p-3 space-y-2"
+        aria-label={es ? "Paleta" : "Palette"}
+      >
         <div class="flex items-center justify-between gap-2">
-          <h3 class="text-xs sm:text-[13px] leading-none font-black truncate">
-            {es ? "Paleta" : "Palette"}{" "}
-            <span class="opacity-50">· {paletteName}</span>
+          <h3 class="qr-section-eyebrow truncate">
+            <span class="qr-section-pip" aria-hidden="true" />
+            <span>{es ? "Paleta" : "Palette"}</span>
+            <span class="rounded-full bg-[#f7ecdc] border border-[#1e1714]/20 px-2 py-0.5 text-[11px] font-black text-[#4a3f39]">
+              {paletteName}
+            </span>
           </h3>
           <button
             type="button"
             onClick={reset}
-            class="shrink-0 -my-1.5 min-h-[32px] px-1 rounded-md text-xs font-bold underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4]"
+            class="shrink-0 min-h-[28px] px-2 rounded-lg text-[11px] font-black text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#f7ecdc] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714]"
             aria-label={es
               ? "Restablecer diseño original"
               : "Reset design to default"}
           >
-            ↺ Reset
+            ↺ {es ? "Restablecer" : "Reset"}
           </button>
         </div>
         <PalettePills
@@ -220,28 +250,46 @@ export default function DesignTab(
                 }
                 tap();
               }}
-              aria-label={es ? "Colores propios" : "Custom colours"}
-              title={es ? "Colores propios" : "Custom colours"}
-              class={`w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#fffef7] text-base font-black active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4] ${
+              aria-label={es ? "Estudio de color" : "Color studio"}
+              title={es ? "Estudio de color" : "Color studio"}
+              style={customSwatchStyle}
+              class={`w-9 h-9 sm:w-10 sm:h-10 rounded-full text-sm font-black active:scale-95 transition-all flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fffef7] ${
                 customActive
-                  ? "border-2 border-[#1e1714] ring-2 ring-[#1e1714] ring-offset-2 ring-offset-[#fbf1e4] scale-105"
-                  : "border-[1.5px] border-[#1e1714]/[0.28] hover:border-[#1e1714]"
+                  ? "border-2 border-[#1e1714] ring-2 ring-[#1e1714] ring-offset-2 ring-offset-[#fffef7] scale-105 text-[#fffef7] bg-[#ffbe0b]"
+                  : "border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
               }`}
             >
-              +
+              <span class={customActive ? "drop-shadow" : ""}>✦</span>
             </button>
           }
         />
       </section>
 
+      {/* 2. Center Mark Pod */}
       <section
-        class="space-y-1.5"
+        class="qr-menu-pod p-3 space-y-2"
         aria-label={es ? "Marca central" : "Center mark"}
       >
-        <h3 class="text-xs sm:text-[13px] leading-none font-black">
-          {es ? "Marca central" : "Center mark"}
-        </h3>
-        <div class="grid grid-cols-5 gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="qr-section-eyebrow">
+            <span class="qr-section-pip" aria-hidden="true" />
+            <span>{es ? "Marca central" : "Center mark"}</span>
+          </h3>
+          {logoUrl.value && (
+            <button
+              type="button"
+              onClick={() => {
+                logoUrl.value = "";
+                setMonogram("");
+                tap();
+              }}
+              class="min-h-[26px] px-2 rounded-full border border-[#1e1714]/25 bg-[#fbf1e4] hover:border-[#1e1714] text-[11px] font-black text-[#1e1714]"
+            >
+              ✕ {es ? "Quitar" : "Clear"}
+            </button>
+          )}
+        </div>
+        <div class="grid grid-cols-5 gap-1.5">
           {STAMPS.map((stamp) => {
             const active = logoUrl.value === stampUrl(stamp.path);
             return (
@@ -260,7 +308,7 @@ export default function DesignTab(
                   setMark(active ? "" : stampUrl(stamp.path), "circle");
                 }}
               >
-                <img src={stampUrl(stamp.path)} alt="" width="22" height="22" />
+                <img src={stampUrl(stamp.path)} alt="" width="20" height="20" />
               </button>
             );
           })}
@@ -279,13 +327,13 @@ export default function DesignTab(
             }}
           />
           <div
-            class={`flex items-center min-w-0 min-h-[44px] rounded-xl bg-[#fffef7] transition-colors focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4] ${
-              logoUrl.value || monogram
-                ? "border-2 border-[#1e1714]"
-                : "border-[1.5px] border-[#1e1714]/[0.28] focus-within:border-2 focus-within:border-[#1e1714]"
+            class={`flex items-center min-w-0 min-h-[42px] rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-1 ${
+              monogram
+                ? "border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-[0_2px_0_#1e1714]"
+                : "border-2 border-[#1e1714]/20 bg-[#fbf1e4] focus-within:border-[#1e1714] focus-within:bg-[#fffef7]"
             }`}
           >
-            <span class="pl-2.5 text-[10px] font-black opacity-50">
+            <span class="pl-2.5 text-[11px] font-black text-[#4a3f39]">
               Aa
             </span>
             <input
@@ -296,7 +344,7 @@ export default function DesignTab(
               aria-label={es
                 ? "Texto de la marca, hasta 3 caracteres"
                 : "Monogram, up to 3 characters"}
-              class="min-w-0 flex-1 bg-transparent px-1 text-sm font-black uppercase focus:outline-none"
+              class="min-w-0 flex-1 bg-transparent px-1.5 text-sm font-black uppercase placeholder:text-[#877b70] focus:outline-none"
               onInput={(e) => {
                 const value = e.currentTarget.value.replace(
                   /[^\p{L}\p{N}]/gu,
@@ -312,37 +360,30 @@ export default function DesignTab(
                 setMark(value ? toSvgDataUrl(svg) : "", "circle");
               }}
             />
-            {logoUrl.value && (
-              <button
-                type="button"
-                onClick={() => {
-                  logoUrl.value = "";
-                  setMonogram("");
-                  tap();
-                }}
-                aria-label={es ? "Quitar marca central" : "Clear center mark"}
-                class="shrink-0 w-8 h-8 mr-1.5 rounded-full text-sm font-black hover:bg-[#1e1714]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
-              >
-                ✕
-              </button>
-            )}
           </div>
         </div>
       </section>
 
+      {/* 3. Card Label Pod */}
       {frameConfig && (
         <section
-          class="space-y-1.5"
+          class="qr-menu-pod p-3 space-y-2"
           aria-label={es ? "Etiqueta de la tarjeta" : "Card label"}
         >
-          <h3 class="text-xs sm:text-[13px] leading-none font-black">
-            {es ? "Etiqueta de la tarjeta" : "Card label"}
-          </h3>
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="qr-section-eyebrow">
+              <span class="qr-section-pip" aria-hidden="true" />
+              <span>{es ? "Etiqueta de tarjeta" : "Card label"}</span>
+            </h3>
+            <span class="text-[11px] font-bold text-[#6e6058]">
+              {es ? "Opcional · máx. 24" : "Optional · 24 chars"}
+            </span>
+          </div>
           <div
-            class={`flex items-center min-h-[40px] rounded-xl bg-[#fffef7] transition-colors focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-2 focus-within:ring-offset-[#fbf1e4] ${
+            class={`flex items-center min-h-[42px] rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#1e1714] focus-within:ring-offset-1 ${
               caption
-                ? "border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714]"
-                : "border-[1.5px] border-[#1e1714]/[0.28] focus-within:border-2 focus-within:border-[#1e1714]"
+                ? "border-2 border-[#1e1714] bg-[#fffef7] shadow-[0_2px_0_#1e1714]"
+                : "border-2 border-[#1e1714]/20 bg-[#fbf1e4] focus-within:border-[#1e1714] focus-within:bg-[#fffef7]"
             }`}
           >
             <input
@@ -350,10 +391,10 @@ export default function DesignTab(
               maxLength={24}
               value={caption}
               placeholder={es
-                ? "Etiqueta opcional, ej. Escanéame"
-                : "Optional label, e.g. Scan me"}
+                ? "Ej. Escanéame, Menú, Wi-Fi…"
+                : "e.g. Scan me, Menu, Wi-Fi…"}
               aria-label={es ? "Etiqueta de la tarjeta" : "Card label"}
-              class="min-w-0 flex-1 bg-transparent px-3 text-sm font-black focus:outline-none"
+              class="min-w-0 flex-1 bg-transparent px-3 text-sm font-black placeholder:text-[#877b70] placeholder:font-semibold focus:outline-none"
               onInput={(e) => writeCaption(e.currentTarget.value)}
             />
             <button
@@ -366,11 +407,11 @@ export default function DesignTab(
               aria-label={es
                 ? `Franja: ${theme}. Cambiar estilo`
                 : `Banner: ${theme}. Change style`}
-              class="shrink-0 w-9 h-9 flex items-center justify-center rounded-full mr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
+              class="shrink-0 w-9 h-9 flex items-center justify-center rounded-full mr-1 hover:scale-105 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714]"
             >
               <span
                 aria-hidden="true"
-                class="block w-6 h-6 rounded-full border-2 border-[#1e1714]"
+                class="block w-6 h-6 rounded-full border-2 border-[#1e1714] shadow-[1px_1px_0_#1e1714]"
                 style={{ background: banner.bg }}
               />
             </button>
@@ -379,7 +420,7 @@ export default function DesignTab(
                 type="button"
                 onClick={() => writeCaption("")}
                 aria-label={es ? "Quitar etiqueta" : "Clear label"}
-                class="shrink-0 w-9 h-9 mr-1 flex items-center justify-center rounded-full text-sm font-black hover:bg-[#1e1714]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1"
+                class="shrink-0 w-8 h-8 mr-1 flex items-center justify-center rounded-full text-xs font-black hover:bg-[#1e1714]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714]"
               >
                 ✕
               </button>
@@ -402,7 +443,7 @@ export default function DesignTab(
                     writeCaption(chipActive ? "" : label);
                     tap();
                   }}
-                  class={`min-h-[30px] inline-flex items-center gap-1.5 rounded-full px-2.5 text-[11px] font-black transition-[transform,box-shadow,border-color] duration-[70ms] active:translate-y-[1.5px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-1 ${
+                  class={`min-h-[30px] inline-flex items-center gap-1.5 rounded-full px-2.5 text-[11px] font-black transition-[transform,box-shadow,border-color,background-color] duration-[70ms] active:translate-y-[1.5px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] ${
                     pillState(chipActive)
                   }`}
                 >
@@ -421,16 +462,18 @@ export default function DesignTab(
         </section>
       )}
 
+      {/* 4. PNG Size & Print Spec Pod */}
       {pngSize && (
         <section
-          class="space-y-1.5"
+          class="qr-menu-pod p-3 space-y-2"
           aria-label={es ? "Tamaño PNG" : "PNG size"}
         >
-          <div class="flex items-baseline justify-between gap-2">
-            <h3 class="text-xs sm:text-[13px] leading-none font-black shrink-0">
-              {es ? "Tamaño PNG" : "PNG size"}{" "}
-              <span class="opacity-50">
-                · {pngSize.value === 1000
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h3 class="qr-section-eyebrow shrink-0">
+              <span class="qr-section-pip" aria-hidden="true" />
+              <span>{es ? "Tamaño PNG" : "PNG size"}</span>
+              <span class="rounded-full bg-[#f7ecdc] border border-[#1e1714]/20 px-2 py-0.5 text-[11px] font-black text-[#4a3f39]">
+                {pngSize.value === 1000
                   ? (es ? "Pantalla" : "Screen")
                   : pngSize.value === 2000
                   ? (es ? "Imprenta" : "Print")
@@ -441,12 +484,12 @@ export default function DesignTab(
               data-print-spec
               data-dense-warning={printSpec.denseWarning ? "true" : "false"}
               class={`text-[11px] font-bold leading-none tabular-nums truncate ${
-                printSpec.denseWarning ? "text-amber-900" : "text-[#1e1714]/60"
+                printSpec.denseWarning ? "text-amber-900" : "text-[#574c44]"
               }`}
             >
               {es
-                ? `${moduleCount}×${moduleCount} · Impresión mín. ${printSpec.minMm} mm (${minInchesText}″)`
-                : `${moduleCount}×${moduleCount} · Min print ${printSpec.minMm} mm (${minInchesText}″)`}
+                ? `${moduleCount}×${moduleCount} · Mín. ${printSpec.minMm} mm (${minInchesText}″)`
+                : `${moduleCount}×${moduleCount} · Min ${printSpec.minMm} mm (${minInchesText}″)`}
             </span>
           </div>
           <div class="grid grid-cols-3 gap-2" role="group">
@@ -466,11 +509,14 @@ export default function DesignTab(
                     pngSize.value = size;
                     tap();
                   }}
-                  class={`${KEY} flex items-center justify-center ${
+                  class={`${KEY} flex flex-col items-center justify-center py-1 ${
                     pillState(active)
                   }`}
                 >
-                  {size}px
+                  <span>{size}px</span>
+                  <span class="text-[10px] font-bold opacity-65 leading-none mt-0.5">
+                    {hint}
+                  </span>
                 </button>
               );
             })}
@@ -481,6 +527,8 @@ export default function DesignTab(
       {!onOpenCustomGradient && (
         <GradientCreator
           isOpen={localGradientOpen}
+          initialStyle={customStyle?.value}
+          previewData={url.value}
           zIndexClass="z-[70]"
           lang={locale}
           onCustomGradient={(gradient) => {

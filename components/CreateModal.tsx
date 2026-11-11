@@ -644,8 +644,22 @@ export default function CreateModal({
         const textLength = url.value.length;
         const nearCapacity = textLength > 800;
         return (
-          <div class="space-y-4 animate-slide-down">
+          <div class="qr-menu-pod p-3.5 space-y-3 animate-slide-down">
+            <div class="flex items-center justify-between gap-2">
+              <label class="qr-field-label" for="qr-plain-note-input">
+                <span class="qr-section-pip" aria-hidden="true" />
+                <span>{isSpanish ? "Nota en el QR" : "Offline QR note"}</span>
+              </label>
+              <span
+                class={`text-[11px] font-bold tabular-nums ${
+                  nearCapacity ? "text-amber-800" : "text-[#6e6058]"
+                }`}
+              >
+                {textLength}/2900
+              </span>
+            </div>
             <textarea
+              id="qr-plain-note-input"
               value={url.value}
               onInput={(e) => {
                 url.value = (e.target as HTMLTextAreaElement).value;
@@ -658,27 +672,22 @@ export default function CreateModal({
               maxLength={2900}
               // deno-lint-ignore jsx-boolean-value
               autoFocus={true}
-              class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none transition-colors resize-none font-medium"
+              class="qr-input text-base resize-none"
             />
             {url.value.trim() !== "" && (
               <div class="flex items-center justify-between gap-2 animate-slide-down">
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 border-2 border-green-300 px-3 py-1 text-xs font-bold text-green-800">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-[#dcfce7] border border-[#1e1714]/30 px-2.5 py-0.5 text-[11px] font-black text-[#1e1714]">
                   {isSpanish
-                    ? "✓ Guardado directo en el QR — funciona sin internet"
-                    : "✓ Stored in the QR itself — works offline"}
+                    ? "✓ Guardado en el QR · sin internet"
+                    : "✓ Stored inside the QR · works offline"}
                 </span>
-                {nearCapacity && (
-                  <span class="text-xs font-bold text-orange-600 whitespace-nowrap">
-                    {textLength}/2900
-                  </span>
-                )}
               </div>
             )}
             <button
               type="button"
               onClick={handleTextCardConfirm}
               disabled={!url.value.trim() || isCreatingLocker}
-              class="w-full min-h-[48px] rounded-full border-2 border-black bg-white px-4 font-black text-black shadow-chunky hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+              class="w-full min-h-[44px] rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[var(--qr-theme-tint,#fce7f3)] px-4 text-xs sm:text-sm font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] active:translate-y-[1px] transition-all disabled:opacity-50"
               title={isSpanish
                 ? "Un link corto y una página más limpia para textos largos"
                 : "A short link and a cleaner read for long text"}
@@ -898,9 +907,9 @@ export default function CreateModal({
             </div>
           )
           : (
-            <div ref={fillStageRef} class="space-y-4 animate-slide-up">
-              {/* Top Stage Bar: Back to intent grid + active type enamel badge */}
-              <div class="flex items-center justify-between gap-2 pb-1">
+            <div ref={fillStageRef} class="space-y-3 animate-slide-up">
+              {/* Unified Stage Bar: Back button + inline sub-type switcher (eliminates stacked nav soup) */}
+              <div class="flex items-center justify-between gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => {
@@ -909,14 +918,113 @@ export default function CreateModal({
                     haptics.light();
                     sounds.toggleOff?.();
                   }}
-                  class="min-h-[40px] inline-flex items-center gap-1.5 rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-3.5 py-1.5 text-xs font-black text-[#1e1714] shadow-chunky hover:bg-[var(--qr-theme-tint,#fce7f3)] hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
+                  class="min-h-[38px] inline-flex items-center gap-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)] active:translate-y-[1px] transition-all whitespace-nowrap shrink-0"
                 >
-                  {isSpanish ? "← Todos los tipos" : "← All QR types"}
+                  {isSpanish ? "← Tipos" : "← Types"}
                 </button>
 
-                <span class="min-h-[36px] inline-flex items-center rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] px-3 py-1 text-xs font-black text-[#1e1714] shadow-chunky truncate whitespace-nowrap">
-                  <span class="truncate">{activeStageBadgeLabel}</span>
-                </span>
+                {typeIntent === "qr" && !isBatchMode &&
+                    WEB_NOTE_TYPES.includes(selectedTemplate)
+                  ? (
+                    <div class="inline-grid grid-cols-2 gap-1 p-0.5 rounded-xl border-2 border-[#1e1714] bg-[#efe9dc]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectTemplate("url");
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        aria-pressed={selectedTemplate === "url"}
+                        class={`min-h-[30px] rounded-lg px-2.5 text-xs font-black whitespace-nowrap transition-all ${
+                          selectedTemplate === "url"
+                            ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                            : "text-[#4a3f39] hover:text-[#1e1714]"
+                        }`}
+                      >
+                        {isSpanish ? "Sitio web" : "Website"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectTemplate("text");
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        aria-pressed={selectedTemplate === "text"}
+                        class={`min-h-[30px] rounded-lg px-2.5 text-xs font-black whitespace-nowrap transition-all ${
+                          selectedTemplate === "text"
+                            ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                            : "text-[#4a3f39] hover:text-[#1e1714]"
+                        }`}
+                      >
+                        {isSpanish ? "Nota" : "Plain note"}
+                      </button>
+                    </div>
+                  )
+                  : typeIntent === "qr" && !isBatchMode &&
+                      CONTACT_HUB_TYPES.includes(selectedTemplate)
+                  ? (
+                    <div class="inline-grid grid-cols-3 gap-1 p-0.5 rounded-xl border-2 border-[#1e1714] bg-[#efe9dc]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectTemplate("vcard");
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        aria-pressed={selectedTemplate === "vcard"}
+                        class={`min-h-[30px] rounded-lg px-2.5 text-xs font-black whitespace-nowrap transition-all ${
+                          selectedTemplate === "vcard"
+                            ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                            : "text-[#4a3f39] hover:text-[#1e1714]"
+                        }`}
+                      >
+                        {isSpanish ? "Tarjeta" : "vCard"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectTemplate("social");
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        aria-pressed={selectedTemplate === "social"}
+                        class={`min-h-[30px] rounded-lg px-2.5 text-xs font-black whitespace-nowrap transition-all ${
+                          selectedTemplate === "social"
+                            ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                            : "text-[#4a3f39] hover:text-[#1e1714]"
+                        }`}
+                      >
+                        {isSpanish ? "Redes" : "Socials"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectTemplate(
+                            CONTACT_TYPES.includes(selectedTemplate)
+                              ? selectedTemplate
+                              : "phone",
+                          );
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        aria-pressed={CONTACT_TYPES.includes(selectedTemplate)}
+                        class={`min-h-[30px] rounded-lg px-2.5 text-xs font-black whitespace-nowrap transition-all ${
+                          CONTACT_TYPES.includes(selectedTemplate)
+                            ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                            : "text-[#4a3f39] hover:text-[#1e1714]"
+                        }`}
+                      >
+                        {isSpanish ? "Directo" : "Call / Text"}
+                      </button>
+                    </div>
+                  )
+                  : (
+                    <span class="min-h-[34px] inline-flex items-center gap-1.5 rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] px-3 py-1 text-xs font-black text-[#1e1714] truncate whitespace-nowrap">
+                      <span class="qr-section-pip" aria-hidden="true" />
+                      <span class="truncate">{activeStageBadgeLabel}</span>
+                    </span>
+                  )}
               </div>
 
               {/* Focused Form Body */}
@@ -939,7 +1047,7 @@ export default function CreateModal({
                       <button
                         type="button"
                         onClick={handlePhotoSelect}
-                        class="min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)] active:scale-95 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+                        class="min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)] active:translate-y-[1px] transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
                       >
                         <span aria-hidden="true">🖼️</span>
                         <span>
@@ -949,7 +1057,7 @@ export default function CreateModal({
                       <button
                         type="button"
                         onClick={handleAudioSelect}
-                        class="min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)] active:scale-95 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
+                        class="min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fffef7] px-3 py-1.5 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)] active:translate-y-[1px] transition-all flex items-center justify-center gap-1.5 whitespace-nowrap"
                       >
                         <span aria-hidden="true">🎵</span>
                         <span>
@@ -990,125 +1098,27 @@ export default function CreateModal({
                 )
                 : (
                   <div class="space-y-3">
-                    {WEB_NOTE_TYPES.includes(selectedTemplate) && (
-                      <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] shadow-[2px_2px_0_#1e1714]">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onSelectTemplate("url");
-                            haptics.light();
-                            sounds.click();
-                          }}
-                          aria-pressed={selectedTemplate === "url"}
-                          class={`min-h-[38px] rounded-xl px-3 text-xs sm:text-sm font-black whitespace-nowrap transition-all ${
-                            selectedTemplate === "url"
-                              ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
-                              : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
-                          }`}
-                        >
-                          {isSpanish ? "🔗 Sitio web" : "🔗 Website"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onSelectTemplate("text");
-                            haptics.light();
-                            sounds.click();
-                          }}
-                          aria-pressed={selectedTemplate === "text"}
-                          class={`min-h-[38px] rounded-xl px-3 text-xs sm:text-sm font-black whitespace-nowrap transition-all ${
-                            selectedTemplate === "text"
-                              ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
-                              : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
-                          }`}
-                        >
-                          {isSpanish ? "📝 Nota de texto" : "📝 Plain Note"}
-                        </button>
-                      </div>
-                    )}
-
-                    {CONTACT_HUB_TYPES.includes(selectedTemplate) && (
-                      <div class="space-y-2">
-                        <div class="grid grid-cols-3 gap-1.5 p-1 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] shadow-[2px_2px_0_#1e1714]">
+                    {CONTACT_TYPES.includes(selectedTemplate) && (
+                      <div class="grid grid-cols-3 gap-1.5">
+                        {CONTACT_SEGMENTS.map((seg) => (
                           <button
+                            key={seg.key}
                             type="button"
                             onClick={() => {
-                              onSelectTemplate("vcard");
+                              onSelectTemplate(seg.key);
                               haptics.light();
                               sounds.click();
                             }}
-                            aria-pressed={selectedTemplate === "vcard"}
-                            class={`min-h-[38px] rounded-xl px-2 text-xs font-black whitespace-nowrap transition-all ${
-                              selectedTemplate === "vcard"
-                                ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
-                                : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
+                            aria-pressed={selectedTemplate === seg.key}
+                            class={`min-h-[36px] rounded-xl border-2 px-2 font-black text-xs whitespace-nowrap transition-all ${
+                              selectedTemplate === seg.key
+                                ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-[0_2px_0_#1e1714]"
+                                : "border-[#1e1714]/20 bg-[#fffef7] text-[#4a3f39] hover:border-[#1e1714]"
                             }`}
                           >
-                            {isSpanish ? "🪪 Tarjeta" : "🪪 vCard"}
+                            {seg.icon} {isSpanish ? seg.labelEs : seg.label}
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelectTemplate("social");
-                              haptics.light();
-                              sounds.click();
-                            }}
-                            aria-pressed={selectedTemplate === "social"}
-                            class={`min-h-[38px] rounded-xl px-2 text-xs font-black whitespace-nowrap transition-all ${
-                              selectedTemplate === "social"
-                                ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
-                                : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
-                            }`}
-                          >
-                            {isSpanish ? "🌐 Redes" : "🌐 Socials"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelectTemplate(
-                                CONTACT_TYPES.includes(selectedTemplate)
-                                  ? selectedTemplate
-                                  : "phone",
-                              );
-                              haptics.light();
-                              sounds.click();
-                            }}
-                            aria-pressed={CONTACT_TYPES.includes(
-                              selectedTemplate,
-                            )}
-                            class={`min-h-[38px] rounded-xl px-2 text-xs font-black whitespace-nowrap transition-all ${
-                              CONTACT_TYPES.includes(selectedTemplate)
-                                ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
-                                : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
-                            }`}
-                          >
-                            {isSpanish ? "📲 Directo" : "📲 Call / Text"}
-                          </button>
-                        </div>
-
-                        {CONTACT_TYPES.includes(selectedTemplate) && (
-                          <div class="grid grid-cols-3 gap-1.5">
-                            {CONTACT_SEGMENTS.map((seg) => (
-                              <button
-                                key={seg.key}
-                                type="button"
-                                onClick={() => {
-                                  onSelectTemplate(seg.key);
-                                  haptics.light();
-                                  sounds.click();
-                                }}
-                                aria-pressed={selectedTemplate === seg.key}
-                                class={`min-h-[36px] rounded-full border-2 px-2 font-black text-xs whitespace-nowrap transition-all ${
-                                  selectedTemplate === seg.key
-                                    ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-[1.5px_1.5px_0_#1e1714]"
-                                    : "border-[#1e1714]/15 bg-[#fffef7] text-neutral-700 hover:border-[#1e1714]/60"
-                                }`}
-                              >
-                                {seg.icon} {isSpanish ? seg.labelEs : seg.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
+                        ))}
                       </div>
                     )}
                     {renderTemplateForm()}
@@ -1144,17 +1154,27 @@ export default function CreateModal({
       activePanel === "limits";
 
     return (
-      <div class="space-y-4">
-        <section class="space-y-2">
-          <h3 class="text-sm font-black text-[#1e1714] whitespace-nowrap">
-            {isSpanish ? "Comportamiento del link" : "Link behavior"}
-          </h3>
+      <div class="space-y-3.5">
+        <section class="qr-menu-pod p-3 space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="qr-section-eyebrow whitespace-nowrap">
+              <span class="qr-section-pip" aria-hidden="true" />
+              <span>
+                {isSpanish ? "Comportamiento del link" : "Link behavior"}
+              </span>
+            </h3>
+            <span class="text-[11px] font-bold text-[#6e6058]">
+              {isEditableActive
+                ? (isSpanish ? "Destino editable" : "Repoint anytime")
+                : (isSpanish ? "Directo y eterno" : "Direct & offline-safe")}
+            </span>
+          </div>
 
-          {/* Compact 2-pill segmented toggle */}
+          {/* Unified 2-pill segmented toggle */}
           <div
             role="group"
             aria-label={isSpanish ? "Modo de enlace QR" : "QR link mode"}
-            class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] shadow-[2px_2px_0_#1e1714]"
+            class="grid grid-cols-2 gap-1.5 p-1 rounded-xl border-2 border-[#1e1714] bg-[#efe9dc]"
           >
             <button
               type="button"
@@ -1175,10 +1195,10 @@ export default function CreateModal({
                 haptics.light();
                 sounds.toggleOff?.();
               }}
-              class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center gap-1.5 ${
+              class={`min-h-[40px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center gap-1.5 border-2 ${
                 isStaticActive
-                  ? "bg-[#1e1714] text-[#fffef7] shadow-sm"
-                  : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                  : "border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/60"
               }`}
             >
               <span>⚡ {isSpanish ? "Estático" : "Static"}</span>
@@ -1198,10 +1218,10 @@ export default function CreateModal({
                 }
                 haptics.light();
               }}
-              class={`min-h-[42px] px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center gap-1.5 ${
+              class={`min-h-[40px] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center gap-1.5 border-2 ${
                 isEditableActive
-                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-2 border-[#1e1714] shadow-sm"
-                  : "text-neutral-700 hover:bg-[var(--qr-theme-tint,#fce7f3)]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                  : "border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/60"
               }`}
             >
               <span>
@@ -1211,9 +1231,12 @@ export default function CreateModal({
           </div>
         </section>
 
-        <section class="space-y-2.5 animate-slide-down">
-          <h3 class="text-sm font-black text-[#1e1714] whitespace-nowrap">
-            {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
+        <section class="space-y-2 animate-slide-down">
+          <h3 class="qr-section-eyebrow px-0.5 whitespace-nowrap">
+            <span class="qr-section-pip" aria-hidden="true" />
+            <span>
+              {isSpanish ? "Trucos para QRs editables" : "Editable extras"}
+            </span>
           </h3>
 
           <ChoiceRow
@@ -1447,24 +1470,27 @@ export default function CreateModal({
           aria-labelledby="create-modal-title"
           tabindex={-1}
           style={themeStyleVars}
-          class={`relative w-full max-w-lg h-[min(92dvh,760px)] sm:h-[min(744px,88dvh)] bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover flex flex-col overflow-hidden focus:outline-none focus-visible:outline-none ${
+          class={`relative w-full max-w-lg h-auto max-h-[92dvh] sm:max-h-[88dvh] bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover flex flex-col overflow-hidden focus:outline-none focus-visible:outline-none ${
             shell.closing
               ? "charm-modal--closing animate-modal-exit"
               : "animate-slide-up sm:animate-pop-in"
           }`}
         >
-          <div class="flex items-center justify-between gap-3 p-4 sm:px-6 sm:pt-5 pb-2">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="min-w-0">
-                <h2
-                  id="create-modal-title"
-                  class="font-black text-lg sm:text-2xl tracking-tight text-[#1e1714] leading-tight"
-                >
-                  {hasCompletion
-                    ? (isSpanish ? "Listo para compartir." : "Ready to share.")
-                    : SHEET_HEADINGS[activeTab][isSpanish ? "es" : "en"].title}
-                </h2>
-              </div>
+          <div class="flex items-start justify-between gap-3 px-4 pt-4 pb-2 sm:px-6 sm:pt-5">
+            <div class="min-w-0">
+              <h2
+                id="create-modal-title"
+                class="font-black text-xl sm:text-2xl tracking-tight text-[#1e1714] leading-tight"
+              >
+                {hasCompletion
+                  ? (isSpanish ? "Listo para compartir." : "Ready to share.")
+                  : SHEET_HEADINGS[activeTab][isSpanish ? "es" : "en"].title}
+              </h2>
+              {!hasCompletion && (
+                <p class="text-xs sm:text-[13px] font-bold text-[#5c4f47] leading-snug mt-0.5">
+                  {SHEET_HEADINGS[activeTab][isSpanish ? "es" : "en"].sub}
+                </p>
+              )}
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -1554,10 +1580,10 @@ export default function CreateModal({
                     }}
                     aria-selected={activeTab === tab.id}
                     role="tab"
-                    class={`min-h-[40px] px-1 rounded-full text-xs min-[380px]:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center min-w-0 border-2 ${
+                    class={`min-h-[38px] px-2 rounded-full text-xs min-[380px]:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center min-w-0 border-2 ${
                       activeTab === tab.id
-                        ? "bg-[#fffef7] text-[#1e1714] border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
-                        : "text-[#1e1714]/70 border-transparent hover:bg-[#fffef7]/60"
+                        ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-[#1e1714] shadow-[0_2px_0_#1e1714]"
+                        : "text-[#4a3f39] border-transparent hover:text-[#1e1714] hover:bg-[#fffef7]/65"
                     }`}
                   >
                     <span class="truncate">{tab.label}</span>
@@ -1575,6 +1601,9 @@ export default function CreateModal({
               logoUrl={logoUrl}
               frameConfig={frameConfig}
               es={isSpanish}
+              onOpenCustomGradient={() => {
+                isCustomGradientOpen.value = true;
+              }}
             />
           )}
           <div
@@ -1742,6 +1771,8 @@ export default function CreateModal({
 
       <GradientCreator
         isOpen={isCustomGradientOpen}
+        initialStyle={customStyle?.value}
+        previewData={url.value}
         zIndexClass="z-[70]"
         lang={locale}
         onCustomGradient={(gradient) => {

@@ -56,20 +56,23 @@ export default function BatchSettings({
   };
 
   return (
-    <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
-      <div class="flex items-center justify-between mb-1">
-        <h3 class="font-black text-gray-900">
-          {isSpanish
-            ? "Lote de QRs + Manifiesto CSV"
-            : "Batch ZIP + CSV Manifest"}
+    <div class="qr-menu-pod p-3.5 space-y-3 animate-slide-down">
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="qr-section-eyebrow">
+          <span class="qr-section-pip" aria-hidden="true" />
+          <span>
+            {isSpanish
+              ? "Lote de QRs + Manifiesto CSV"
+              : "Batch ZIP + CSV Manifest"}
+          </span>
         </h3>
-        <span class="text-xs font-black text-blue-900 bg-blue-100 border-2 border-black px-2.5 py-1 rounded-full shadow-sm tabular-nums">
+        <span class="text-xs font-black text-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] border-2 border-[#1e1714] px-2.5 py-0.5 rounded-full tabular-nums">
           {count} {count === 1 ? "QR" : "QRs"}
         </span>
       </div>
 
       <div
-        class="flex flex-wrap items-center gap-1.5"
+        class="grid grid-cols-3 gap-1.5 p-1 rounded-xl border-2 border-[#1e1714] bg-[#efe9dc]"
         role="group"
         aria-label={isSpanish
           ? "Formato de exportación en lote"
@@ -78,30 +81,33 @@ export default function BatchSettings({
         {[
           {
             id: "both" as const,
-            label: isSpanish ? "PNG + SVG Vector" : "PNG + Vector SVG",
+            label: isSpanish ? "PNG + SVG" : "PNG + SVG",
           },
-          { id: "png" as const, label: "PNG (1000px)" },
+          { id: "png" as const, label: "PNG 1000px" },
           { id: "svg" as const, label: isSpanish ? "Solo SVG" : "SVG Only" },
-        ].map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            aria-pressed={format === opt.id}
-            onClick={() => setFormat(opt.id)}
-            disabled={isGeneratingBatch}
-            class={`min-h-[44px] px-3 py-2 text-xs font-black rounded-xl border-2 border-[#1e1714] transition-all ${
-              format === opt.id
-                ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-chunky-xs"
-                : "bg-qr-cream text-gray-700 hover:bg-[var(--qr-theme-tint,#fdf2f8)]"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
+        ].map((opt) => {
+          const active = format === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setFormat(opt.id)}
+              disabled={isGeneratingBatch}
+              class={`min-h-[36px] px-2 py-1 text-xs font-black rounded-lg border-2 transition-all ${
+                active
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                  : "border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/60"
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-[11px] font-bold text-gray-600">
+        <span class="text-[11px] font-bold text-[#5c4f47]">
           {isSpanish
             ? "Un link por línea, «Nombre | https://…» o {01..25}"
             : 'One link per line, "Label | https://…", or {01..25}'}
@@ -110,9 +116,9 @@ export default function BatchSettings({
           type="button"
           onClick={insertSequenceExample}
           disabled={isGeneratingBatch}
-          class="px-2.5 py-1 text-[11px] font-black rounded-lg border-[1.5px] border-[#1e1714]/30 bg-qr-cream text-[#1e1714] hover:border-[#1e1714] transition-colors disabled:opacity-50"
+          class="px-2.5 py-1 text-[11px] font-black rounded-lg border-2 border-[#1e1714]/25 bg-[#fbf1e4] text-[#1e1714] hover:border-[#1e1714] transition-colors disabled:opacity-50"
         >
-          {isSpanish ? "Insertar ejemplo {01..08}" : "Insert {01..08} example"}
+          {isSpanish ? "+ Ejemplo {01..08}" : "+ {01..08} example"}
         </button>
       </div>
 
@@ -126,20 +132,20 @@ export default function BatchSettings({
           ? `Mesa {01..08} | https://ejemplo.com/mesa-{01..08}\nhttps://ejemplo.com/menu-vip`
           : `Table {01..08} | https://example.com/table-{01..08}\nhttps://example.com/vip-menu`}
         rows={5}
-        class="w-full px-3.5 py-2.5 text-base sm:text-sm border-2 border-gray-300 focus:border-black rounded-xl focus:outline-none font-mono bg-white resize-none"
+        class="qr-input text-sm font-mono resize-none"
         disabled={isGeneratingBatch}
       />
 
       {isGeneratingBatch
         ? (
           <div class="space-y-2 pt-1" role="status" aria-live="polite">
-            <div class="h-3.5 bg-gray-200 rounded-full overflow-hidden border-2 border-black">
+            <div class="h-3.5 bg-[#efe9dc] rounded-full overflow-hidden border-2 border-[#1e1714]">
               <div
-                class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300"
+                class="h-full bg-[#ffbe0b] transition-all duration-300"
                 style={{ width: `${batchProgress}%` }}
               />
             </div>
-            <p class="text-center text-xs font-black text-blue-800 animate-pulse">
+            <p class="text-center text-xs font-black text-[#1e1714] animate-pulse">
               {isSpanish
                 ? `Generando QRs en lote... ${batchProgress}%`
                 : `Generating batch QRs... ${batchProgress}%`}
@@ -151,25 +157,22 @@ export default function BatchSettings({
             type="button"
             onClick={() => onGenerateBatch(format)}
             disabled={!batchUrls.trim()}
-            class="w-full min-h-[48px] py-3 text-sm font-black text-white bg-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="qr-pitch-cta"
           >
-            {isSpanish
-              ? "Descargar ZIP (QRs + manifest.csv)"
-              : "Download Batch ZIP (QRs + manifest.csv)"}
+            <span>
+              {isSpanish
+                ? "Descargar ZIP (QRs + manifest.csv)"
+                : "Download Batch ZIP (QRs + manifest.csv)"}
+            </span>
           </button>
         )}
 
-      {
-        /* The other half of the same job, one link away: a static ZIP is final
-          the moment it is printed, an editable code is not. Both belong to the
-          same CSV, so the door out of here is a link, not a second tool. */
-      }
       <a
         href="/batch"
         onClick={() => {
           stashBatchDraft(batchUrls);
         }}
-        class="block text-center text-xs font-black text-neutral-700 underline decoration-2 decoration-black/20 underline-offset-2 hover:text-black"
+        class="block text-center text-xs font-black text-[#4a3f39] underline decoration-2 decoration-[#1e1714]/25 underline-offset-2 hover:text-[#1e1714]"
       >
         {isSpanish
           ? "Códigos editables y hoja de etiquetas → Abrir Lote"

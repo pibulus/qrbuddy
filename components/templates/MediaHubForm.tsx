@@ -35,8 +35,6 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const selected = input.files[0];
-      // Supporter pass lifts the ceiling — this flow fills a locker via
-      // uploadToBucket, which routes big files through R2.
       const validation = validateFile(
         selected,
         getSupporterPass() ? SUPPORTER_MAX_FILE_SIZE : MAX_FILE_SIZE,
@@ -64,7 +62,6 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
     setIsCreating(true);
     haptics.medium();
 
-    // Dispatch custom event for SmartInput to handle the complex bucket creation flow
     const event = new CustomEvent("smart-media-create", {
       detail: {
         file,
@@ -98,13 +95,21 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
   };
 
   return (
-    <div class="space-y-4 animate-slide-down">
+    <div class="qr-menu-pod p-3.5 space-y-3 animate-slide-down">
       {/* File Drop Zone */}
       <div
-        class={`border-3 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        class={`border-2 border-dashed rounded-2xl p-5 text-center transition-all cursor-pointer ${
           file
-            ? "border-purple-500 bg-purple-50"
-            : "border-gray-300 hover:border-purple-400 hover:bg-gray-50"
+            ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)]/50"
+            : "border-[#1e1714]/30 bg-[#fbf1e4] hover:border-[#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)]/40"
         }`}
         onClick={() => fileInputRef.current?.click()}
       >
@@ -115,83 +120,96 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
           onChange={handleFileSelect}
           class="hidden"
         />
-        <div class="text-4xl mb-2">{file ? "📄" : "📂"}</div>
-        <p class="font-bold text-gray-700">
-          {file ? file.name : "Tap to select a file"}
+        <div class="text-3xl mb-1.5">{file ? "📄" : "📂"}</div>
+        <p class="font-black text-sm text-[#1e1714] truncate">
+          {file ? file.name : "Select a single file, PDF, or track"}
         </p>
-        <p class="text-xs text-gray-500 mt-1">
+        <p class="text-xs font-semibold text-[#5c4f47] mt-0.5">
           {file
             ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
-            : "Images, video, audio, PDF • up to 50MB"}
+            : "Images, video, audio, PDF · up to 50 MB"}
         </p>
       </div>
 
       {error && (
-        <p class="text-amber-800 text-sm text-center animate-slide-down">
+        <p
+          role="alert"
+          class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3 py-2 text-xs font-bold text-amber-950 text-center"
+        >
           {error}
         </p>
       )}
 
       {/* Metadata Inputs */}
-      <div class="space-y-3">
+      <div class="space-y-2">
+        <span class="qr-field-label">
+          <span class="qr-section-pip" aria-hidden="true" />
+          <span>Card Details (optional)</span>
+        </span>
         <input
           type="text"
           value={title}
           onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
-          placeholder="Title (e.g. Project Proposal)"
-          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-qr-pop focus:outline-none transition-colors font-bold"
+          placeholder="Title (e.g. Studio Mix, Dinner Menu)"
+          class="qr-input text-sm"
         />
-        <textarea
-          value={description}
-          onInput={(e) => setDescription((e.target as HTMLInputElement).value)}
-          placeholder="Description (optional)"
-          rows={2}
-          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-qr-pop focus:outline-none transition-colors resize-none"
-        />
-        <input
-          type="text"
-          value={creator}
-          onInput={(e) => setCreator((e.target as HTMLInputElement).value)}
-          placeholder="Created by (optional)"
-          class="w-full px-4 py-3 border-3 border-gray-200 rounded-xl focus:border-qr-pop focus:outline-none transition-colors"
-        />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <input
+            type="text"
+            value={creator}
+            onInput={(e) => setCreator((e.target as HTMLInputElement).value)}
+            placeholder="Creator / host (optional)"
+            class="qr-input text-xs"
+          />
+          <input
+            type="text"
+            value={description}
+            onInput={(e) =>
+              setDescription((e.target as HTMLInputElement).value)}
+            placeholder="Short note (optional)"
+            class="qr-input text-xs"
+          />
+        </div>
       </div>
 
       {/* Password Toggle */}
-      <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border-2 border-gray-200">
-        <span class="font-bold text-gray-700 flex items-center gap-2">
-          🔒 Require 4-digit PIN
+      <div class="flex items-center justify-between gap-3 px-3 py-2 bg-[#fbf1e4] rounded-xl border-2 border-[#1e1714]/20">
+        <span class="text-xs font-black text-[#1e1714] flex items-center gap-1.5">
+          <span>🔒</span>
+          <span>Require 4-digit PIN</span>
         </span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isPasswordProtected}
-            onChange={(e) => {
-              const next = (e.target as HTMLInputElement).checked;
-              setIsPasswordProtected(next);
-              if (!next) resetPin();
-              haptics.light();
-            }}
-            class="sr-only peer"
-          />
-          <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black">
-          </div>
-        </label>
+        <button
+          type="button"
+          aria-pressed={isPasswordProtected}
+          onClick={() => {
+            const next = !isPasswordProtected;
+            setIsPasswordProtected(next);
+            if (!next) resetPin();
+            haptics.light();
+          }}
+          class={`min-w-[58px] min-h-[32px] px-3 rounded-full border-2 text-xs font-black transition-all ${
+            isPasswordProtected
+              ? "border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+              : "border-[#1e1714]/25 bg-[#fffef7] text-[#4a3f39]"
+          }`}
+        >
+          {isPasswordProtected ? "On" : "Off"}
+        </button>
       </div>
 
       {isPasswordProtected && (
-        <div class="space-y-3 animate-slide-down">
-          <div class="flex justify-center gap-3">
+        <div class="space-y-2.5 animate-slide-down">
+          <div class="flex justify-center gap-2.5">
             {pinDigits.map((digit, index) => (
               <div
                 key={`media-pin-${index}`}
-                class="w-10 h-12 bg-white border-2 border-gray-300 rounded-xl flex items-center justify-center text-2xl font-bold text-gray-800"
+                class="w-10 h-11 bg-[#fffef7] border-2 border-[#1e1714] rounded-xl flex items-center justify-center text-xl font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
               >
                 {digit ? "•" : ""}
               </div>
             ))}
           </div>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-3 gap-1.5">
             {[
               "1",
               "2",
@@ -209,11 +227,11 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
               <button
                 key={`media-pad-${key}`}
                 type="button"
-                class={`min-h-[44px] rounded-xl text-sm font-semibold border-2 bg-white transition ${
+                class={`min-h-[40px] rounded-xl text-xs font-black border-2 transition-all active:translate-y-[1px] ${
                   key === "clear" || key === "back"
-                    ? "border-gray-300 text-gray-600"
-                    : "border-purple-200 text-gray-900"
-                } hover:border-purple-400`}
+                    ? "border-[#1e1714]/25 bg-[#fbf1e4] text-[#4a3f39] hover:border-[#1e1714]"
+                    : "border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_1.5px_0_#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)]"
+                }`}
                 onClick={() => handleKeypadPress(String(key))}
               >
                 {key === "clear" ? "Clear" : key === "back" ? "⌫" : key}
@@ -229,14 +247,13 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
         onClick={handleCreate}
         disabled={!file || isCreating ||
           (isPasswordProtected && pinValue.length !== 4)}
-        class="w-full py-4 bg-black text-white text-xl font-black rounded-xl shadow-chunky hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100"
+        class="qr-pitch-cta"
       >
-        {isCreating ? "Creating..." : "Create file page 🚀"}
+        <span>{isCreating ? "Creating..." : "Create file page →"}</span>
       </button>
 
-      <p class="text-xs text-center text-gray-400">
-        One file per page. Files expire after 30 days without a download. Create
-        a new QR to share a different file.
+      <p class="text-[11px] font-medium text-center text-[#6e6058]">
+        Files stay live for 30 days after the latest download.
       </p>
     </div>
   );

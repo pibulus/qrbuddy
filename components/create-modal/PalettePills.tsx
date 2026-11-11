@@ -9,8 +9,8 @@ export const PALETTE_PILL =
 
 export const pillState = (active: boolean) =>
   active
-    ? "relative border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_2px_0_#1e1714]"
-    : "border-[1.5px] border-[#1e1714]/[0.22] bg-[#fffef7] text-[#1e1714] hover:border-[#1e1714]/60";
+    ? "relative border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] shadow-[0_2px_0_#1e1714]"
+    : "border-2 border-[#1e1714]/20 bg-[#fffef7] text-[#1e1714] hover:border-[#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)]/45";
 
 interface PalettePillsProps {
   value: string;

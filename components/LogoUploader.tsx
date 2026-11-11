@@ -172,10 +172,10 @@ export default function LogoUploader(
           type="button"
           onClick={handleFileInputClick}
           disabled={isUploading}
-          class={`w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-[#fffef7] text-[#1e1714] text-xs font-black transition-shadow ${
+          class={`w-full min-h-[42px] flex items-center justify-center gap-2 rounded-xl text-[#1e1714] text-xs font-black transition-all ${
             hasImage
-              ? "border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714]"
-              : "border-[1.5px] border-[#1e1714]/[0.28]"
+              ? "border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-[0_2px_0_#1e1714]"
+              : "border-2 border-[#1e1714]/20 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)]/45"
           }`}
         >
           <svg

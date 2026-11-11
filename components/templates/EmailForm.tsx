@@ -20,7 +20,6 @@ export default function EmailForm({ url }: Props) {
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Update QR data whenever form changes
   useEffect(() => {
     const data: EmailData = { email: to, subject, body };
     const validationError = validateEmail(data);
@@ -42,23 +41,24 @@ export default function EmailForm({ url }: Props) {
     Boolean(error);
 
   return (
-    <div class="space-y-4">
+    <div class="qr-menu-pod p-3.5 space-y-3 animate-slide-down">
       {showHint && error && (
         <div
           role="status"
           aria-live="polite"
-          class="rounded-2xl bg-amber-50 border border-amber-300 px-4 py-2.5 text-sm font-semibold text-amber-900"
+          class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
           {error}
         </div>
       )}
 
-      {/* Email Address */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Email Address *
+      <div class="space-y-1.5">
+        <label class="qr-field-label" for="email-to-input">
+          <span class="qr-section-pip" aria-hidden="true" />
+          <span>Email Address *</span>
         </label>
         <input
+          id="email-to-input"
           type="email"
           value={to}
           onInput={(e) => {
@@ -66,17 +66,17 @@ export default function EmailForm({ url }: Props) {
             setTo((e.target as HTMLInputElement).value);
             haptics.light();
           }}
-          placeholder="contact@example.com"
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
+          placeholder="hello@example.com"
+          class="qr-input text-base"
         />
       </div>
 
-      {/* Subject */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Subject
+      <div class="space-y-1.5">
+        <label class="qr-field-label" for="email-subject-input">
+          <span>Subject</span>
         </label>
         <input
+          id="email-subject-input"
           type="text"
           value={subject}
           onInput={(e) => {
@@ -85,25 +85,25 @@ export default function EmailForm({ url }: Props) {
             haptics.light();
           }}
           placeholder="Inquiry about..."
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none"
+          class="qr-input text-sm"
         />
       </div>
 
-      {/* Body */}
-      <div class="space-y-2">
-        <label class="text-sm font-bold text-gray-700 uppercase tracking-wide">
-          Message
+      <div class="space-y-1.5">
+        <label class="qr-field-label" for="email-body-input">
+          <span>Message</span>
         </label>
         <textarea
+          id="email-body-input"
           value={body}
           onInput={(e) => {
             setTouched(true);
             setBody((e.target as HTMLTextAreaElement).value);
             haptics.light();
           }}
-          placeholder="Optional message body..."
-          rows={4}
-          class="w-full px-4 py-3 border-2 border-black/15 bg-white rounded-2xl text-lg focus:border-qr-pop focus:outline-none resize-none"
+          placeholder="Optional pre-filled email body..."
+          rows={3}
+          class="qr-input text-sm resize-none"
         />
       </div>
     </div>

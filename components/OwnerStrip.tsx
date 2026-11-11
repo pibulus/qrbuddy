@@ -30,7 +30,7 @@ import {
   type StatsRange,
   type WeatherBaseline,
 } from "../utils/share-stats.ts";
-import type { QR_STYLES } from "../utils/qr-styles.ts";
+import { getQRThemeStyleVars, type QR_STYLES } from "../utils/qr-styles.ts";
 import { updateHistoryItem } from "../utils/history.ts";
 import {
   openPricingModal,
@@ -78,7 +78,7 @@ interface OwnerMeta {
 }
 
 const PILL =
-  "min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-black px-3 text-xs font-black shadow-chunky transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100";
+  "min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-[#1e1714] px-2.5 text-xs font-black shadow-[0_2px_0_#1e1714] transition-all hover:-translate-y-0.5 active:translate-y-px active:shadow-none disabled:opacity-50 disabled:hover:translate-y-0";
 
 const RANGES: { id: StatsRange; label: string }[] = [
   { id: "today", label: "Today" },
@@ -498,17 +498,19 @@ export default function OwnerStrip(
 
   return (
     <section
-      class="w-full max-w-md bg-qr-cream text-black border-4 border-black rounded-3xl shadow-chunky-hover p-4 sm:p-5 space-y-4 animate-slide-up"
+      style={getQRThemeStyleVars(theme)}
+      class="w-full max-w-md bg-[#fbf1e4] text-[#1e1714] border-4 border-[#1e1714] rounded-3xl shadow-chunky-hover p-4 sm:p-5 space-y-3.5 animate-slide-up"
       aria-label="Owner controls"
     >
       {/* Header: it's yours + the name, editable */}
       <div class="flex items-start gap-3">
-        <span class="w-10 h-10 rounded-xl border-2 border-black bg-amber-200 flex items-center justify-center text-lg shrink-0">
+        <span class="w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] flex items-center justify-center text-lg shadow-[0_2px_0_#1e1714] shrink-0">
           👑
         </span>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 flex-wrap">
-            <p class="text-xs font-black uppercase tracking-wide text-qr-pop">
+            <p class="qr-section-eyebrow">
+              <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
               It's yours
             </p>
             {(unbranded || meta.unbranded || hasSupporterPass) && (
@@ -516,7 +518,7 @@ export default function OwnerStrip(
                 type="button"
                 disabled={mutationBusy}
                 onClick={() => void activateWhiteLabel()}
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-black bg-amber-200 text-black text-[10px] font-black shadow-sm hover:bg-amber-300 transition-colors disabled:opacity-50"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-[#1e1714] bg-[#fef3c7] text-[#1e1714] text-[10px] font-black shadow-sm hover:bg-[#ffbe0b] transition-colors disabled:opacity-50"
                 title="QRBuddy Passport perk: QRBuddy footer badge is hidden on this share"
               >
                 🛂 Clean White-Label Active
@@ -550,7 +552,7 @@ export default function OwnerStrip(
                   }
                 }}
                 aria-label="Share name"
-                class="w-full min-h-[44px] px-3 py-1.5 border-2 border-black/15 bg-white rounded-2xl text-base font-black focus:border-qr-pop focus:outline-none"
+                class="qr-input min-h-[42px] mt-1 font-black text-base"
               />
             )
             : (
@@ -561,11 +563,11 @@ export default function OwnerStrip(
                   setDraft(title);
                   setEditing(true);
                 }}
-                class="min-h-[44px] text-left font-black text-lg leading-tight hover:text-qr-pop transition-colors truncate max-w-full disabled:opacity-50"
+                class="min-h-[40px] text-left font-black text-lg leading-tight text-[#1e1714] hover:opacity-80 transition-opacity truncate max-w-full disabled:opacity-50"
                 title="Rename"
               >
                 {title}{" "}
-                <span class="text-xs opacity-50" aria-hidden="true">✎</span>
+                <span class="text-xs opacity-60" aria-hidden="true">✎</span>
               </button>
             )}
         </div>
@@ -574,7 +576,7 @@ export default function OwnerStrip(
       {/* Stats card: compact 1-row banner when 0 opens, full KPI card once opens > 0 */}
       {cards.all.views === 0 && !statsError && !statsLoading
         ? (
-          <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3 space-y-2.5 shadow-[2px_2px_0_#1e1714]">
+          <div class="qr-menu-pod p-3 space-y-2.5">
             <div class="flex items-center justify-between gap-2">
               <p class="text-xs sm:text-sm font-black text-[#1e1714]">
                 🌸 {isSpanish
@@ -583,7 +585,7 @@ export default function OwnerStrip(
               </p>
               <button
                 type="button"
-                class="min-h-[34px] px-3 rounded-full border-2 border-[#1e1714] bg-amber-100 hover:bg-amber-200 text-xs font-black text-[#1e1714] shrink-0 transition-transform active:scale-95"
+                class="min-h-[34px] px-3 rounded-full border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] shrink-0 transition-all active:scale-95"
                 disabled={statsLoading}
                 onClick={() => setStatsRevision((n) => n + 1)}
               >
@@ -597,7 +599,7 @@ export default function OwnerStrip(
                   haptics.light();
                   openPricingModal();
                 }}
-                class="w-full min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-amber-100 hover:bg-amber-200 text-[#1e1714] text-xs font-black text-center leading-snug transition-all hover:-translate-y-0.5"
+                class="w-full min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fef3c7] hover:bg-[#ffbe0b] text-[#1e1714] text-xs font-black text-center leading-snug transition-all hover:-translate-y-0.5"
               >
                 {isSpanish
                   ? "🛂 Desbloquea ranking, ciudades y CSV con el Pasaporte QRBuddy →"
@@ -607,9 +609,9 @@ export default function OwnerStrip(
           </div>
         )
         : (
-          <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3 space-y-3 shadow-[2px_2px_0_#1e1714]">
+          <div class="qr-menu-pod p-3 space-y-3">
             <div
-              class="grid grid-cols-3 gap-1 rounded-full bg-amber-50 p-1 border-2 border-black"
+              class="grid grid-cols-3 gap-1 rounded-2xl bg-[#efe9dc] p-1 border-2 border-[#1e1714]"
               role="tablist"
               aria-label="Stats time range"
             >
@@ -627,10 +629,10 @@ export default function OwnerStrip(
                   tabIndex={range === r.id ? 0 : -1}
                   onClick={() => setRange(r.id)}
                   onKeyDown={handleTabKeyDown}
-                  class={`min-h-[38px] rounded-full text-xs font-black transition-all ${
+                  class={`min-h-[36px] rounded-xl text-xs font-black transition-all ${
                     range === r.id
-                      ? "bg-black text-white"
-                      : "text-neutral-600 hover:bg-amber-100"
+                      ? "bg-[#ffbe0b] text-[#1e1714] border-2 border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                      : "border-2 border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/70"
                   }`}
                 >
                   {r.label}
@@ -647,7 +649,7 @@ export default function OwnerStrip(
               {statsError || statsLoading
                 ? (
                   <p
-                    class="text-sm font-bold text-neutral-500 text-center py-2"
+                    class="text-sm font-bold text-[#57524b] text-center py-2"
                     role="status"
                   >
                     {statsLoading
@@ -659,40 +661,49 @@ export default function OwnerStrip(
                   <>
                     {/* 3-Tile Visual KPI Header */}
                     <div class="grid grid-cols-3 gap-1.5">
-                      {kpis.map((tile) => (
-                        <div
-                          key={tile.label}
-                          class="bg-qr-cream border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0"
-                        >
-                          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
-                            {tile.label}
-                          </span>
-                          <span class="mt-0.5 text-sm sm:text-base font-black text-black leading-tight truncate">
-                            {tile.value}
-                          </span>
-                          {tile.badge
-                            ? (
-                              <span class="mt-0.5 inline-block mx-auto px-1.5 py-0.2 rounded-full bg-amber-200 border border-black text-[10px] font-black text-black leading-tight truncate max-w-full">
-                                {tile.badge}
-                              </span>
-                            )
-                            : (
-                              <span class="mt-0.5 text-[10px] font-bold text-neutral-500 truncate">
-                                {range === "today"
-                                  ? "Today"
-                                  : range === "week"
-                                  ? "7 days"
-                                  : "All time"}
-                              </span>
-                            )}
-                        </div>
-                      ))}
+                      {kpis.map((tile) => {
+                        const isNumericCount = /^\d+$/.test(tile.value);
+                        return (
+                          <div
+                            key={tile.label}
+                            class="bg-[#fbf1e4] border-2 border-[#1e1714] rounded-xl px-1.5 py-2 text-center flex flex-col justify-between min-w-0"
+                          >
+                            <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
+                              {tile.label}
+                            </span>
+                            <span
+                              class={`mt-1 font-black text-[#1e1714] leading-tight ${
+                                isNumericCount
+                                  ? "text-base sm:text-lg"
+                                  : "text-[11px] sm:text-xs whitespace-nowrap"
+                              }`}
+                            >
+                              {tile.value}
+                            </span>
+                            {tile.badge
+                              ? (
+                                <span class="mt-1 inline-block mx-auto px-1.5 py-0.5 rounded-full bg-[#ffbe0b] border border-[#1e1714] text-[10px] font-black text-[#1e1714] leading-tight truncate max-w-full">
+                                  {tile.badge}
+                                </span>
+                              )
+                              : (
+                                <span class="mt-1 text-[10px] font-bold text-[#57524b] truncate">
+                                  {range === "today"
+                                    ? "Today"
+                                    : range === "week"
+                                    ? "7 days"
+                                    : "All time"}
+                                </span>
+                              )}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {/* Narrative Story Chips / Bullets */}
                     {lines.length === 0
                       ? (
-                        <p class="text-sm font-bold text-neutral-500 text-center py-1">
+                        <p class="text-sm font-bold text-[#57524b] text-center py-1">
                           {range === "today"
                             ? "No page opens yet today."
                             : "No page opens yet — stick it somewhere 🌸"}
@@ -703,10 +714,10 @@ export default function OwnerStrip(
                           {lines.map((line, i) => (
                             <li
                               key={i}
-                              class={`rounded-xl border px-2.5 py-1.5 text-xs leading-snug ${
+                              class={`rounded-xl border-2 px-2.5 py-1.5 text-xs leading-snug ${
                                 i === 0
-                                  ? "w-full bg-amber-100 border-black font-black text-black"
-                                  : "bg-qr-cream border-black/20 font-bold text-neutral-900"
+                                  ? "w-full bg-[#fef3c7] border-[#1e1714] font-black text-[#1e1714]"
+                                  : "bg-[#fbf1e4] border-[#1e1714]/25 font-bold text-[#1e1714]"
                               }`}
                             >
                               {line}
@@ -724,9 +735,9 @@ export default function OwnerStrip(
               {!statsError && !statsLoading && (
                 hasPass
                   ? (
-                    <div class="bg-qr-cream border-2 border-black rounded-2xl p-3 space-y-3">
+                    <div class="bg-[#fbf1e4] border-2 border-[#1e1714] rounded-2xl p-3 space-y-3">
                       <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-black bg-amber-200 text-[10px] font-black uppercase tracking-wide text-black shadow-sm">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] text-[10px] font-black uppercase tracking-wide text-[#1e1714] shadow-sm">
                           🛂 PASSPORT FIELD REPORT
                         </span>
                       </div>
@@ -734,7 +745,8 @@ export default function OwnerStrip(
                       {/* 1. 🏆 Full Track / Photo Leaderboard */}
                       {files.length > 1 && card.itemLeaderboard.length > 0 && (
                         <div class="space-y-1.5">
-                          <p class="text-[11px] font-black uppercase tracking-wider text-black">
+                          <p class="qr-section-eyebrow">
+                            <span class="qr-section-pip bg-[#ffbe0b]" />
                             🏆 {kind === "playlist"
                               ? "Track Leaderboard"
                               : "Photo Leaderboard"}
@@ -756,22 +768,22 @@ export default function OwnerStrip(
                               return (
                                 <li
                                   key={entry.id}
-                                  class="bg-white border-2 border-black rounded-xl p-2 space-y-1"
+                                  class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 space-y-1"
                                 >
-                                  <div class="flex items-center justify-between gap-2 text-xs font-black text-black min-w-0">
+                                  <div class="flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] min-w-0">
                                     <span class="truncate min-w-0">
-                                      <span class="text-qr-pop mr-1.5">
+                                      <span class="text-[#c4607a] mr-1.5">
                                         #{idx + 1}
                                       </span>
                                       {label}
                                     </span>
-                                    <span class="shrink-0 font-mono text-[11px] text-neutral-700">
+                                    <span class="shrink-0 font-mono text-[11px] text-[#57524b]">
                                       {entry.plays} {unit}
                                     </span>
                                   </div>
-                                  <div class="w-full h-2 rounded-full bg-black/10 overflow-hidden border border-black/30">
+                                  <div class="w-full h-2 rounded-full bg-[#efe9dc] overflow-hidden border border-[#1e1714]/40">
                                     <div
-                                      class="h-full rounded-full bg-qr-pop transition-all"
+                                      class="h-full rounded-full bg-[#ffbe0b] transition-all"
                                       style={{ width: `${widthPct}%` }}
                                     />
                                   </div>
@@ -784,30 +796,30 @@ export default function OwnerStrip(
 
                       {/* 2. ⏱️ Hang Time & Completion + 🧭 Farthest Stamp */}
                       <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                        <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                          <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
                             Avg. Hang Time
                           </span>
-                          <span class="mt-0.5 text-xs sm:text-sm font-black text-black leading-tight truncate">
+                          <span class="mt-0.5 text-xs sm:text-sm font-black text-[#1e1714] leading-tight truncate">
                             {formatDwellSeconds(card.avgDwellSeconds)}
                           </span>
                         </div>
-                        <div class="bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                          <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
                             Completion Rate
                           </span>
-                          <span class="mt-0.5 text-xs sm:text-sm font-black text-black leading-tight truncate">
+                          <span class="mt-0.5 text-xs sm:text-sm font-black text-[#1e1714] leading-tight truncate">
                             {card.completionRate !== null
                               ? `${Math.round(card.completionRate * 100)}%`
                               : "—"}
                           </span>
                         </div>
-                        <div class="col-span-2 sm:col-span-1 bg-white border-2 border-black rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                          <span class="text-[10px] font-black uppercase tracking-wider text-neutral-600 truncate">
+                        <div class="col-span-2 sm:col-span-1 bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                          <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
                             Farthest Scan
                           </span>
                           <span
-                            class="mt-0.5 text-[11px] font-black text-black leading-tight truncate"
+                            class="mt-0.5 text-[11px] font-black text-[#1e1714] leading-tight truncate"
                             title={card.farthest
                               ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
                               : undefined}
@@ -826,7 +838,7 @@ export default function OwnerStrip(
                           {card.topPlaces.map((place) => (
                             <span
                               key={place.name}
-                              class="bg-white border-2 border-black px-2.5 py-1 rounded-full text-[11px] font-black text-black"
+                              class="bg-[#fffef7] border-2 border-[#1e1714] px-2.5 py-1 rounded-full text-[11px] font-black text-[#1e1714]"
                             >
                               📍 {place.name} · {place.views}
                             </span>
@@ -840,7 +852,7 @@ export default function OwnerStrip(
                           {card.appBreakdown.map((app) => (
                             <span
                               key={app.name}
-                              class="bg-amber-100 border-2 border-black px-2.5 py-1 rounded-full text-[11px] font-black text-black"
+                              class="bg-[#fef3c7] border-2 border-[#1e1714] px-2.5 py-1 rounded-full text-[11px] font-black text-[#1e1714]"
                             >
                               📲 {app.name} · {app.views}
                             </span>
@@ -849,7 +861,7 @@ export default function OwnerStrip(
                         <button
                           type="button"
                           onClick={handleExportCsv}
-                          class="min-h-[40px] inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full border-2 border-black bg-white hover:bg-amber-200 text-xs font-black text-black shadow-chunky transition-all hover:scale-105 active:scale-95 ml-auto"
+                          class="min-h-[38px] inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] transition-all active:scale-95 ml-auto"
                         >
                           📥 Export CSV
                         </button>
@@ -863,7 +875,7 @@ export default function OwnerStrip(
                         haptics.light();
                         openPricingModal();
                       }}
-                      class="w-full min-h-[40px] px-3 py-2 rounded-2xl border-2 border-black bg-amber-100 hover:bg-amber-200 text-black text-xs font-black text-center leading-snug shadow-chunky transition-all hover:scale-[1.01] active:scale-[0.99]"
+                      class="w-full min-h-[40px] px-3 py-2 rounded-2xl border-2 border-[#1e1714] bg-[#fef3c7] hover:bg-[#ffbe0b] text-[#1e1714] text-xs font-black text-center leading-snug shadow-[0_2px_0_#1e1714] transition-all hover:-translate-y-0.5 active:translate-y-0"
                     >
                       {isSpanish
                         ? "🛂 Desbloquea ranking, ciudades y CSV con el Pasaporte QRBuddy →"
@@ -873,13 +885,13 @@ export default function OwnerStrip(
               )}
             </div>
 
-            <div class="flex items-center justify-between gap-2 pt-1 border-t border-black/10">
-              <p class="text-[11px] text-neutral-500 truncate">
+            <div class="flex items-center justify-between gap-2 pt-1 border-t border-[#1e1714]/15">
+              <p class="text-[11px] font-medium text-[#57524b] truncate">
                 Coarse UTC estimates · includes your opens
               </p>
               <button
                 type="button"
-                class="min-h-[34px] px-3 rounded-full border-2 border-black bg-white text-xs font-black hover:bg-amber-100 shrink-0"
+                class="min-h-[32px] px-3 rounded-full border-2 border-[#1e1714] bg-[#fbf1e4] text-xs font-black text-[#1e1714] hover:bg-[#ffbe0b] shrink-0 transition-colors"
                 disabled={statsLoading}
                 onClick={() => setStatsRevision((n) => n + 1)}
               >
@@ -897,7 +909,7 @@ export default function OwnerStrip(
               type="button"
               onClick={() => fileInput.current?.click()}
               disabled={mutationBusy || files.length >= 10}
-              class={`${PILL} bg-black text-white`}
+              class={`${PILL} bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714]`}
               title={files.length >= 10 ? "A share holds up to 10 items" : ""}
             >
               {busy === "append"
@@ -915,7 +927,7 @@ export default function OwnerStrip(
                     : "Single files can't grow — make a slideshow or mixtape.",
                   4000,
                 )}
-              class={`${PILL} bg-white opacity-60`}
+              class={`${PILL} bg-[#fffef7] text-[#1e1714] opacity-60`}
             >
               + Add
             </button>
@@ -925,14 +937,18 @@ export default function OwnerStrip(
           onClick={() => setShowVibe((v) => !v)}
           aria-expanded={showVibe}
           disabled={mutationBusy}
-          class={`${PILL} ${showVibe ? "bg-amber-200" : "bg-white"}`}
+          class={`${PILL} ${
+            showVibe
+              ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714]"
+              : "bg-[#fffef7] hover:bg-[var(--qr-theme-tint,#fce7f3)] text-[#1e1714]"
+          }`}
         >
           Vibe ▾
         </button>
         <button
           type="button"
           onClick={sticker}
-          class={`${PILL} bg-qr-pop text-white hover:bg-qr-popDeep`}
+          class={`${PILL} bg-[#fffef7] hover:bg-[#f7ecdc] text-[#1e1714]`}
         >
           Sticker
         </button>
@@ -951,7 +967,11 @@ export default function OwnerStrip(
       />
 
       {showVibe && (
-        <div class="animate-slide-down">
+        <div class="qr-menu-pod p-3 space-y-2 animate-slide-down">
+          <span class="qr-section-eyebrow">
+            <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
+            {isSpanish ? "Paleta de la página" : "Share palette"}
+          </span>
           <PalettePills
             value={theme}
             onChange={(k) => void retheme(k)}
@@ -961,17 +981,18 @@ export default function OwnerStrip(
       )}
 
       {files.length > 1 && (
-        <div class="flex flex-wrap items-center justify-between gap-2 bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl px-3 py-2">
-          <span class="text-xs font-black text-[#1e1714] whitespace-nowrap">
+        <div class="qr-menu-pod px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
+          <span class="qr-section-eyebrow whitespace-nowrap">
+            <span class="qr-section-pip bg-[#ffbe0b]" />
             🎲 {isSpanish ? "Ruleta (QR / Link)" : "Roulette draw"}
           </span>
-          <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-qr-cream p-0.5 gap-0.5">
+          <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-[#efe9dc] p-0.5 gap-0.5">
             <button
               type="button"
               onClick={() => applyRouletteSetting(false, null)}
               class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
                 !rouletteEnabled
-                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[#fffef7] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >
@@ -982,7 +1003,7 @@ export default function OwnerStrip(
               onClick={() => applyRouletteSetting(true, null)}
               class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
                 rouletteEnabled && rouletteSpins === null
-                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >
@@ -996,7 +1017,7 @@ export default function OwnerStrip(
               }}
               class={`min-h-[30px] inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[11px] font-black cursor-pointer whitespace-nowrap transition-all ${
                 rouletteEnabled && rouletteSpins !== null
-                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
+                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
                   : "text-[#4a3f39] hover:text-[#1e1714]"
               }`}
             >
@@ -1036,16 +1057,23 @@ export default function OwnerStrip(
 
       {/* Items with reorder ↑/↓ and remove ✕ — tucked in a compact drawer so OwnerStrip stays short */}
       {canEditPayload && files.length > 1 && (
-        <details class="group bg-[#fffef7] border-2 border-[#1e1714]/20 rounded-2xl px-3 py-2">
-          <summary class="list-none cursor-pointer min-h-[34px] flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] select-none">
-            <span>
-              Manage {files.length} {kind === "playlist" ? "tracks" : "photos"}
-              {" "}
-              (reorder / remove)
+        <details class="group qr-menu-pod px-3 py-2">
+          <summary class="list-none cursor-pointer min-h-[36px] flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] select-none">
+            <span class="inline-flex items-center gap-2">
+              <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
+              <span>
+                Manage {files.length}{" "}
+                {kind === "playlist" ? "tracks" : "photos"}
+              </span>
             </span>
-            <span class="transition-transform group-open:rotate-180">▾</span>
+            <span class="w-6 h-6 rounded-full border border-[#1e1714]/35 bg-[#fbf1e4] inline-flex items-center justify-center shrink-0 transition-transform group-open:rotate-180 text-[10px]">
+              ▾
+            </span>
           </summary>
-          <ul class="space-y-1.5 pt-2" aria-label="Share items">
+          <ul
+            class="space-y-1.5 pt-2.5 border-t border-[#1e1714]/10 mt-1"
+            aria-label="Share items"
+          >
             {files.map((f, i) => {
               const label = kind === "playlist"
                 ? prettyName(f.name)
@@ -1053,12 +1081,15 @@ export default function OwnerStrip(
               return (
                 <li
                   key={f.id}
-                  class="flex items-center gap-1.5 min-h-[40px] text-xs sm:text-sm font-bold bg-qr-cream border-2 border-black/15 rounded-xl px-2.5 py-1"
+                  class="flex items-center gap-2 min-h-[40px] text-xs sm:text-sm font-bold bg-[#fbf1e4] border-2 border-[#1e1714]/30 rounded-xl px-2.5 py-1"
                 >
-                  <span class="w-4 text-xs font-black text-neutral-600 text-right shrink-0">
+                  <span class="w-5 h-5 rounded-md bg-[#fffef7] border border-[#1e1714]/40 text-[11px] font-black text-[#1e1714] inline-flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
-                  <span class="truncate flex-1 min-w-0" title={label}>
+                  <span
+                    class="truncate flex-1 min-w-0 text-[#1e1714]"
+                    title={label}
+                  >
                     {label}
                   </span>
                   <div class="flex items-center gap-1 shrink-0">
@@ -1067,7 +1098,7 @@ export default function OwnerStrip(
                       onClick={() => void moveItem(i, -1)}
                       disabled={i === 0 || mutationBusy}
                       aria-label={`Move ${prettyName(f.name)} up`}
-                      class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                      class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] transition-colors disabled:opacity-30 disabled:pointer-events-none"
                     >
                       ↑
                     </button>
@@ -1076,7 +1107,7 @@ export default function OwnerStrip(
                       onClick={() => void moveItem(i, 1)}
                       disabled={i === files.length - 1 || mutationBusy}
                       aria-label={`Move ${prettyName(f.name)} down`}
-                      class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-amber-200 text-xs font-black transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                      class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] transition-colors disabled:opacity-30 disabled:pointer-events-none"
                     >
                       ↓
                     </button>
@@ -1085,7 +1116,7 @@ export default function OwnerStrip(
                       onClick={() => void removeItem(f)}
                       disabled={mutationBusy}
                       aria-label={`Remove ${prettyName(f.name)}`}
-                      class="w-8 h-8 rounded-full border-2 border-black/15 bg-white hover:border-black hover:bg-amber-100 text-xs font-black transition-colors disabled:opacity-50"
+                      class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#fde8ee] text-xs font-black text-[#c4607a] transition-colors disabled:opacity-50"
                     >
                       ✕
                     </button>

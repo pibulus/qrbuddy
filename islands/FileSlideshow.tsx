@@ -9,6 +9,7 @@ import { addToast } from "./ToastManager.tsx";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
+import { getQRThemeStyleVars } from "../utils/qr-styles.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 import {
@@ -159,6 +160,7 @@ export default function FileSlideshow({
   const [lastDownloadStarted, setLastDownloadStarted] = useState(false);
   const [trackSelected, setTrackSelected] = useState(false);
   const [mediaErrorKey, setMediaErrorKey] = useState<string | null>(null);
+  const [imageLoadedUrl, setImageLoadedUrl] = useState<string | null>(null);
   const [zipError, setZipError] = useState<string | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [rouletteLanded, setRouletteLanded] = useState(false);
@@ -591,6 +593,7 @@ export default function FileSlideshow({
 
   return (
     <div
+      style={getQRThemeStyleVars(theme)}
       class={`min-h-screen flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden transition-colors duration-500 ${getThemeStyles()}`}
     >
       {isExploding && (
@@ -666,7 +669,7 @@ export default function FileSlideshow({
                     type="button"
                     disabled={isSpinning}
                     onClick={() => spinRoulette(currentIndex)}
-                    class="min-h-[38px] inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] hover:bg-[var(--qr-theme-cta-bg,#f472b6)] text-[#1e1714] text-xs font-black shadow-chunky transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
+                    class="min-h-[38px] inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] hover:bg-[#ffbe0b] text-[#1e1714] text-xs font-black shadow-chunky transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
                   >
                     <span>🎲</span>
                     <span>
@@ -743,32 +746,68 @@ export default function FileSlideshow({
                           class={`flex flex-col items-center justify-center p-6 text-center space-y-3 rounded-2xl border-2 ${
                             isDarkTheme
                               ? "bg-slate-900 border-white/40 text-white"
-                              : "bg-white border-black text-black shadow-chunky"
+                              : "bg-[#fffef7] border-[#1e1714] text-[#1e1714] shadow-chunky"
                           }`}
                         >
-                          <p class="font-bold text-sm">
-                            Couldn't load photo
+                          <span class="text-3xl" aria-hidden="true">🖼️</span>
+                          <p class="font-black text-sm">
+                            {isSpanish
+                              ? "No se pudo cargar la foto"
+                              : "Couldn't load photo"}
                           </p>
                           <button
                             type="button"
                             onClick={() => {
                               setMediaErrorKey(null);
+                              setImageLoadedUrl(null);
                               haptics.light();
                             }}
-                            class="min-h-[44px] px-4 py-2 rounded-full border-2 border-black bg-amber-200 text-black font-black text-xs hover:bg-amber-300 transition-all shadow-chunky"
+                            class="min-h-[42px] px-4 py-2 rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] text-[#1e1714] font-black text-xs hover:bg-[#ffd04a] transition-all shadow-chunky"
                           >
-                            🔄 Retry photo
+                            🔄 {isSpanish ? "Reintentar" : "Retry photo"}
                           </button>
                         </div>
                       )
                       : (
-                        <img
-                          key={currentDownloadUrl} // Force re-render on change
-                          src={currentDownloadUrl}
-                          alt={displayFileName}
-                          onError={() => setMediaErrorKey(currentDownloadUrl)}
-                          class="w-full h-full object-contain animate-scale-in"
-                        />
+                        <div class="relative w-full h-full flex items-center justify-center">
+                          {imageLoadedUrl !== currentDownloadUrl && (
+                            <div
+                              role="status"
+                              class={`flex flex-col items-center justify-center gap-2 px-5 py-4 rounded-2xl border-2 animate-pulse ${
+                                isDarkTheme
+                                  ? "bg-slate-900/80 border-white/30 text-white"
+                                  : "bg-[#fffef7] border-[#1e1714]/30 text-[#1e1714]"
+                              }`}
+                            >
+                              <span class="text-2xl" aria-hidden="true">
+                                🖼️
+                              </span>
+                              <span class="text-xs font-black">
+                                {prettyName(displayFileName)}
+                              </span>
+                            </div>
+                          )}
+                          <img
+                            key={currentDownloadUrl}
+                            ref={(el) => {
+                              if (
+                                el && el.complete && el.naturalWidth > 0 &&
+                                imageLoadedUrl !== currentDownloadUrl
+                              ) {
+                                setImageLoadedUrl(currentDownloadUrl);
+                              }
+                            }}
+                            src={currentDownloadUrl}
+                            alt={imageLoadedUrl === currentDownloadUrl
+                              ? displayFileName
+                              : ""}
+                            onLoad={() => setImageLoadedUrl(currentDownloadUrl)}
+                            onError={() => setMediaErrorKey(currentDownloadUrl)}
+                            class={imageLoadedUrl === currentDownloadUrl
+                              ? "w-full h-full object-contain animate-scale-in"
+                              : "opacity-0 pointer-events-none absolute inset-0 w-full h-full object-contain"}
+                          />
+                        </div>
                       )
                   )}
                   {isAudio && (
@@ -995,7 +1034,7 @@ export default function FileSlideshow({
                           ? "bg-[#00FF41] text-black border-2 border-[#00FF41]"
                           : isDarkTheme
                           ? "bg-white text-black border-2 border-white hover:bg-slate-200"
-                          : "bg-[#fbbf24] text-[#1e1714] border-2 border-[#1e1714] hover:bg-[#f59e0b]"
+                          : "bg-[#ffbe0b] text-[#1e1714] border-2 border-[#1e1714] hover:bg-[#ffd04a]"
                         : "bg-gradient-to-r from-[#c4607a] to-[#ffbe0b] text-white border-2 border-black shadow-[0_0_20px_rgba(196,96,122,0.45)] animate-pulse-glow"
                     }`}
                   >

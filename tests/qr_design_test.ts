@@ -16,7 +16,11 @@ import {
 import { styledQrSvg } from "../utils/qr-renderer.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
 import { buildQrFilename, createFramedSvg } from "../utils/svg-export.ts";
-import { getQRThemeTokens, QR_THEME_TOKENS } from "../utils/qr-styles.ts";
+import {
+  contrastRatio,
+  getQRThemeTokens,
+  QR_THEME_TOKENS,
+} from "../utils/qr-styles.ts";
 import {
   estimateMinPrintSize,
   measureQrModules,
@@ -183,16 +187,20 @@ Deno.test("Design: malformed center masks restore safely", () => {
   );
 });
 
-Deno.test("Design: global control tokens are paper and gold, pigment stays in accents", () => {
+Deno.test("Design: theme tokens keep gold payoff CTA and high-contrast pastel surface tints", () => {
   for (
     const tokens of [
       ...Object.values(QR_THEME_TOKENS),
       getQRThemeTokens("custom", { dots: { color: "#da39c2" } }),
     ]
   ) {
-    assertEquals(tokens.tint, "#FFFEF7");
-    assertEquals(tokens.tintStrong, "#FFFEF7");
+    assertNotEquals(tokens.tint, "#FFFEF7");
+    assertNotEquals(tokens.tintStrong, "#FFFEF7");
     assertEquals(tokens.ctaBg, "#FFBE0B");
+    assert(
+      contrastRatio(tokens.tintStrong, "#1e1714") >= 4.5,
+      `tintStrong ${tokens.tintStrong} must keep >= 4.5:1 contrast with #1e1714`,
+    );
   }
 });
 

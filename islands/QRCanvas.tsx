@@ -983,7 +983,8 @@ export default function QRCanvas(
           }
           {!qrReady && (
             <img
-              src={!url.value && style.value === "sunset"
+              src={!url.value && style.value === "sunset" &&
+                  !getCurrentStyle().renderMode && !getCurrentStyle().print
                 ? "/qr-default.png"
                 : toSvgDataUrl(
                   buildQrSvgString({
@@ -995,6 +996,13 @@ export default function QRCanvas(
                       | "square"
                       | "extra-rounded"
                       | undefined,
+                    renderMode: getCurrentStyle().renderMode,
+                    artSample: getCurrentStyle().artSample,
+                    halftoneTone: getCurrentStyle().halftoneTone,
+                    halftoneShape: getCurrentStyle().halftoneShape,
+                    halftoneDetail: getCurrentStyle().halftoneDetail,
+                    print: getCurrentStyle().print,
+                    foilDepth: getCurrentStyle().foilDepth,
                   }),
                 )}
               alt={isSpanish ? "Vista previa del código QR" : "QR code preview"}

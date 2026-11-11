@@ -201,7 +201,9 @@ export default function StyleSelector(
       "gradient" in customStyle.value.dots &&
       customStyle.value.dots.gradient?.colorStops
     ? customStyle.value.dots.gradient.colorStops.map((s) => s.color)
-    : ["#9370DB", "#FF69B4"];
+    : customStyle?.value?.dots?.color
+    ? [customStyle.value.dots.color, customStyle.value.dots.color]
+    : ["#DB2777", "#7C3AED"];
 
   const currentStyleInfo = styleValue === "custom"
     ? { name: "Custom", nameEs: "Propio", colors: customStops }
@@ -298,10 +300,14 @@ export default function StyleSelector(
                 isCreatorOpen.value = true;
                 sounds.click();
               }}
-              class="col-span-3 min-h-[44px] rounded-xl border-[1.5px] border-[#1e1714]/25 bg-[#fffef7]/60 px-2 flex items-center justify-center gap-1.5 text-[11px] font-black hover:border-[#1e1714]"
+              class={`col-span-3 min-h-[42px] rounded-xl border-2 px-3 flex items-center justify-center gap-1.5 text-xs font-black transition-all ${
+                styleValue === "custom"
+                  ? "border-[#1e1714] bg-[#ffbe0b] text-[#1e1714] shadow-[0_2px_0_#1e1714]"
+                  : "border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_1.5px_0_#1e1714] hover:bg-[#ffbe0b]"
+              }`}
             >
-              <span class="text-base leading-none">+</span>
-              {isSpanish ? "Colores propios" : "Custom colours"}
+              <span class="text-sm leading-none">✦</span>
+              <span>{isSpanish ? "Estudio de color" : "Color studio"}</span>
             </button>
           </div>
         </div>
@@ -309,6 +315,7 @@ export default function StyleSelector(
 
       <GradientCreator
         isOpen={isCreatorOpen}
+        initialStyle={customStyle?.value}
         onCustomGradient={handleCustomGradient}
       />
     </div>

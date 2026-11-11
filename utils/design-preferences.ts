@@ -157,6 +157,67 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
     }
   }
 
+  // Look layer: optional; invalid values drop the whole custom style so a
+  // damaged preference can never render an unreadable code.
+  if (s.renderMode !== undefined) {
+    if (
+      typeof s.renderMode !== "string" ||
+      !["classic", "halftone", "foil"].includes(s.renderMode)
+    ) return false;
+  }
+  if (s.halftoneTone !== undefined) {
+    if (
+      typeof s.halftoneTone !== "string" ||
+      !["color", "dmg", "ink"].includes(s.halftoneTone)
+    ) return false;
+  }
+  if (s.halftoneShape !== undefined) {
+    if (
+      typeof s.halftoneShape !== "string" ||
+      !["square", "rounded", "circle"].includes(s.halftoneShape)
+    ) return false;
+  }
+  if (s.halftoneDetail !== undefined) {
+    if (
+      typeof s.halftoneDetail !== "string" ||
+      !["soft", "sharp"].includes(s.halftoneDetail)
+    ) return false;
+  }
+  if (s.print !== undefined) {
+    if (
+      typeof s.print !== "string" ||
+      !["clean", "paper", "riso"].includes(s.print)
+    ) return false;
+  }
+  if (s.foilDepth !== undefined) {
+    if (
+      typeof s.foilDepth !== "string" ||
+      !["thin", "chunky"].includes(s.foilDepth)
+    ) return false;
+  }
+  if (s.artImage !== undefined && s.artImage !== "") {
+    if (
+      typeof s.artImage !== "string" ||
+      !/^data:image\/(?:png|jpeg|webp|gif);base64,/i.test(s.artImage) ||
+      s.artImage.length > MAX_STORED_LOGO_LENGTH
+    ) return false;
+  }
+  if (s.artSample !== undefined && s.artSample !== null) {
+    if (typeof s.artSample !== "object" || Array.isArray(s.artSample)) {
+      return false;
+    }
+    const sample = s.artSample as Record<string, unknown>;
+    const n = sample.n;
+    if (typeof n !== "number" || !Number.isInteger(n) || n < 2 || n > 128) {
+      return false;
+    }
+    if (typeof sample.data !== "string" || sample.data.length === 0) {
+      return false;
+    }
+    // base64 of n × n × 3 bytes is exactly n × n × 4 characters.
+    if (Math.abs(sample.data.length - n * n * 4) > 4) return false;
+  }
+
   return true;
 }
 

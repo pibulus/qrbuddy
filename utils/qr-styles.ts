@@ -643,9 +643,7 @@ const PALETTE_THEME_TOKENS: Record<keyof typeof QR_STYLES, QRThemeTokens> = {
   },
 };
 
-const PAYOFF_COLORS = {
-  tint: "#FFFEF7",
-  tintStrong: "#FFFEF7",
+const PAYOFF_CTA_COLORS = {
   ctaBg: "#FFBE0B",
   ctaHover: "#FFD04A",
   ctaActive: "#F2AC00",
@@ -653,7 +651,7 @@ const PAYOFF_COLORS = {
 export const QR_THEME_TOKENS = Object.fromEntries(
   Object.entries(PALETTE_THEME_TOKENS).map((
     [key, tokens],
-  ) => [key, { ...tokens, ...PAYOFF_COLORS }]),
+  ) => [key, { ...tokens, ...PAYOFF_CTA_COLORS }]),
 ) as Record<keyof typeof QR_STYLES, QRThemeTokens>;
 
 function rgbToHex(r: number, g: number, b: number): string {
@@ -664,6 +662,19 @@ function rgbToHex(r: number, g: number, b: number): string {
       .map((v) => v.toString(16).padStart(2, "0"))
       .join("")
       .toUpperCase()
+  );
+}
+
+function mixWithWarmPaper(
+  rgb: readonly [number, number, number],
+  pigmentWeight: number,
+): string {
+  const paper = [255, 254, 247] as const;
+  const w = Math.max(0, Math.min(1, pigmentWeight));
+  return rgbToHex(
+    paper[0] * (1 - w) + rgb[0] * w,
+    paper[1] * (1 - w) + rgb[1] * w,
+    paper[2] * (1 - w) + rgb[2] * w,
   );
 }
 
@@ -692,7 +703,9 @@ export function getQRThemeTokens(
         return {
           accent: rgbToHex(rgb[0], rgb[1], rgb[2]),
           accentDeep: rgbToHex(rgb[0] * 0.85, rgb[1] * 0.85, rgb[2] * 0.85),
-          ...PAYOFF_COLORS,
+          tint: mixWithWarmPaper(rgb, 0.12),
+          tintStrong: mixWithWarmPaper(rgb, 0.24),
+          ...PAYOFF_CTA_COLORS,
         };
       } catch {
         // Fall through to sunset default

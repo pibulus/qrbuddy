@@ -272,6 +272,47 @@ export async function checkBlobScannability(
 }
 
 /**
+ * Decode an off-DOM SVG render — used by the Looks gallery to prove each look
+ * still scans before it is offered. Same 250px probe as
+ * `checkQRScannability`, so a gallery tick and the stage chip agree.
+ */
+export async function checkSvgScannability(
+  svg: string,
+  expected: string,
+): Promise<boolean | null> {
+  const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const probe = document.createElement("canvas");
+    const SIZE = 250;
+    probe.width = SIZE;
+    probe.height = SIZE;
+    const ctx = probe.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(image, 0, 0, SIZE, SIZE);
+    let imageData: ImageData;
+    try {
+      imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+    } catch {
+      return null;
+    }
+    const { readBarcodes } = await loadZXing();
+    const results = await readBarcodes(imageData, {
+      formats: ["QRCode"],
+      tryHarder: true,
+      tryInvert: true,
+    });
+    return results.some((r) => r.isValid && r.text === expected);
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
  * Single-shot decode for live camera frames (already sized by the caller).
  * Runs both jsQR (with inversion support) and zxing-wasm (tryHarder + tryInvert +
  * tryRotate) so stylized gradient, rounded-dot, and angled QR codes lock in
