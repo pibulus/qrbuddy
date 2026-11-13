@@ -257,7 +257,9 @@ export default function ArtStudio() {
               ↓ Save PNG
             </a>
             <span class="text-xs font-bold text-[#5c4f47]">
-              Raster proof · verified scannable
+              {verdict === "clean"
+                ? "Raster proof · verified scannable"
+                : "Raster proof · unverified"}
             </span>
           </div>
         )}

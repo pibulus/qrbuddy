@@ -233,41 +233,45 @@ export async function checkBlobScannability(
   blob: Blob,
   expected: string,
 ): Promise<boolean | null> {
-  let bitmap: ImageBitmap;
+  // `createImageBitmap` looks equivalent and is not: on a 1024px ControlNet
+  // plate it hands back a bitmap the decoder cannot read, while the same file
+  // through an <img> reads first time. Same probe, same decoder, different
+  // path — so this uses the path the Look gallery already trusts.
+  const url = URL.createObjectURL(blob);
   try {
-    bitmap = await createImageBitmap(blob);
-  } catch {
-    return null;
-  }
-  const probe = document.createElement("canvas");
-  const SIZE = 250;
-  probe.width = SIZE;
-  probe.height = SIZE;
-  const ctx = probe.getContext("2d", { willReadFrequently: true });
-  if (!ctx) {
-    bitmap.close?.();
-    return null;
-  }
-  ctx.drawImage(bitmap, 0, 0, SIZE, SIZE);
-  bitmap.close?.();
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const probe = document.createElement("canvas");
+    const SIZE = 250;
+    probe.width = SIZE;
+    probe.height = SIZE;
+    const ctx = probe.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(image, 0, 0, SIZE, SIZE);
 
-  let imageData: ImageData;
-  try {
-    imageData = ctx.getImageData(0, 0, SIZE, SIZE);
-  } catch {
-    return null;
-  }
+    let imageData: ImageData;
+    try {
+      imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+    } catch {
+      return null;
+    }
 
-  try {
-    const { readBarcodes } = await loadZXing();
-    const results = await readBarcodes(imageData, {
-      formats: ["QRCode"],
-      tryHarder: true,
-      tryInvert: false,
-    });
-    return results.some((r) => r.isValid && r.text === expected);
+    try {
+      const { readBarcodes } = await loadZXing();
+      const results = await readBarcodes(imageData, {
+        formats: ["QRCode"],
+        tryHarder: true,
+        tryInvert: true,
+      });
+      return results.some((r) => r.isValid && r.text === expected);
+    } catch {
+      return null;
+    }
   } catch {
     return null;
+  } finally {
+    URL.revokeObjectURL(url);
   }
 }
 
