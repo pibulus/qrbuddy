@@ -30,6 +30,12 @@ export interface ArtInput {
   /** Data URI of a greyscale QR raster, used as both init and control image. */
   control: string;
   seed?: number;
+  /**
+   * Retry rung. Each rung costs a little picture and buys a little read:
+   * 0 → 2.6, 1 → 3.0, 2 → 3.4. A prompt that paints mush gets two more tries
+   * that lean harder on the code rather than a shrug.
+   */
+  tune?: number;
 }
 
 export interface ArtOutput {
@@ -55,6 +61,12 @@ export interface ArtOutput {
  *   probe; at 2.6 it still reads as a picture and survives. Below 2.0 nothing
  *   decodes at all.
  */
+/** 2.6 is the measured sweet spot; each retry leans harder on the code. */
+export function conditioning(tune: number): number {
+  const rung = Math.max(0, Math.min(2, Math.round(tune)));
+  return Number((2.6 + rung * 0.4).toFixed(2));
+}
+
 function body(input: ArtInput, seed: number) {
   return {
     input: {
@@ -67,7 +79,7 @@ function body(input: ArtInput, seed: number) {
       // the read rate falls off a cliff.
       border: 3,
       guidance_scale: 7.5,
-      controlnet_conditioning_scale: 2.6,
+      controlnet_conditioning_scale: conditioning(input.tune ?? 0),
       num_inference_steps: 50,
       qrcode_background: "white",
       num_outputs: 1,

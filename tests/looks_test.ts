@@ -22,6 +22,7 @@ import {
 import { buildQrSvgString } from "../utils/qr-vector-svg.ts";
 import { printContrast, risoInks } from "../utils/qr-print.ts";
 import { encodeMatrixPng, toDataUrl } from "../utils/png.ts";
+import { conditioning } from "../utils/replicate-art.ts";
 import { resolveQRStyle } from "../utils/qr-design.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
 import { styledQrSvg } from "../utils/qr-renderer.ts";
@@ -529,4 +530,13 @@ Deno.test("PNG: the control raster is a real greyscale PNG", async () => {
   assertEquals(png[24], 8); // bit depth
   assertEquals(png[25], 0); // greyscale
   assertStringIncludes(toDataUrl(png), "data:image/png;base64,");
+});
+
+Deno.test("Art: each retry leans harder on the code", () => {
+  assertEquals(conditioning(0), 2.6);
+  assertEquals(conditioning(1), 3);
+  assertEquals(conditioning(2), 3.4);
+  // Out-of-range rungs clamp rather than inventing a fourth setting.
+  assertEquals(conditioning(-3), 2.6);
+  assertEquals(conditioning(9), 3.4);
 });

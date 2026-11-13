@@ -69,7 +69,13 @@ export default function ArtStudio() {
         const response = await fetch("/api/art", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: url.trim(), prompt: prompt.trim() }),
+          // Each retry leans harder on the code: attempt 1 is the pretty one,
+          // attempt 3 is the one that reads. Take whatever lands.
+          body: JSON.stringify({
+            url: url.trim(),
+            prompt: prompt.trim(),
+            tune: round - 1,
+          }),
           signal: controller.signal,
         });
         data = await response.json();

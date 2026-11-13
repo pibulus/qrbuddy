@@ -25,7 +25,7 @@ const MAX_PROMPT = 220;
  * cheap enough to need no storage.
  */
 const WINDOW_MS = 60 * 60 * 1000;
-const PER_IP = 8;
+const PER_IP = 15;
 const PER_DAY = 200;
 
 const hits = new Map<string, number[]>();
@@ -104,7 +104,12 @@ export const handler: Handlers = {
       return json({ ok: false, error: "art is not configured" }, 503);
     }
 
-    let input: { url?: string; prompt?: string; seed?: number };
+    let input: {
+      url?: string;
+      prompt?: string;
+      seed?: number;
+      tune?: number;
+    };
     try {
       input = await req.json();
     } catch {
@@ -139,7 +144,7 @@ export const handler: Handlers = {
     try {
       const control = await controlImage(url);
       const result = await generateArt(
-        { url, prompt, control, seed: input.seed },
+        { url, prompt, control, seed: input.seed, tune: input.tune },
         { token },
       );
       // Inline the picture: Replicate's CDN links expire, and a data URL means
