@@ -13,6 +13,11 @@ import { toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
 import { checkSvgScannability } from "../../utils/qr-decode.ts";
 import { loadArtwork, sampleImage } from "../../utils/qr-art-sample.ts";
 import { MAX_STORED_LOGO_LENGTH } from "../../utils/design-preferences.ts";
+import {
+  RISO_DUOS,
+  RISO_REGISTERS,
+  RISO_STOCKS,
+} from "../../utils/qr-print.ts";
 import { addToast } from "../../islands/ToastManager.tsx";
 import { haptics } from "../../utils/haptics.ts";
 import { sounds } from "../../utils/sounds.ts";
@@ -96,7 +101,7 @@ interface LookGalleryProps {
 /**
  * The Looks pod: three live minis in the current palette (Classic, Halftone,
  * Flat Foil), orthogonal Print presses (Clean, Paper, Riso), module shapes,
- * and a clean gateway to the ControlNet Art Press (/art).
+ * and a clean gateway to the print press.
  */
 export default function LookGallery(
   { url, qrStyle, customStyle, logoUrl, lang }: LookGalleryProps,
@@ -126,6 +131,9 @@ export default function LookGallery(
     current.halftoneDetail,
     current.foilDepth,
     current.print,
+    current.risoInk,
+    current.risoStock,
+    current.risoRegister,
     current.centerShape,
     hash(current.artSample?.data ?? ""),
     current.artImage?.length ?? 0,
@@ -248,6 +256,9 @@ export default function LookGallery(
   const detail = current.halftoneDetail ?? "sharp";
   const depth = current.foilDepth ?? "chunky";
   const print = current.print ?? "clean";
+  const risoInk = current.risoInk ?? "auto";
+  const risoStock = current.risoStock ?? "cream";
+  const risoRegister = current.risoRegister ?? "loose";
   const hasArt = Boolean(current.artImage);
   const explicitShape = customStyle?.value?.dots?.shape ?? "preset";
 
@@ -304,10 +315,6 @@ export default function LookGallery(
   const activeLookLabel = es
     ? LOOKS.find((l) => l.id === active)?.es
     : LOOKS.find((l) => l.id === active)?.en;
-
-  const artHref = payload.length <= 180
-    ? `/art?url=${encodeURIComponent(payload)}`
-    : "/art";
 
   return (
     <section
@@ -424,6 +431,108 @@ export default function LookGallery(
                 {label}
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Riso press: the two drums, the stock, and how loose the spot runs */}
+      {active !== "foil" && print === "riso" && (
+        <div class="rounded-xl border-2 border-[#1e1714]/25 bg-[#fbf1e4] p-2.5 space-y-2.5">
+          <div class="space-y-1.5">
+            <span class="block text-[10px] font-black uppercase tracking-wider text-[#574c44]">
+              {es ? "Tintas" : "Ink duo"}
+            </span>
+            <div class="grid grid-cols-3 gap-1.5">
+              {RISO_DUOS.map((duo) => (
+                <button
+                  key={duo.id}
+                  type="button"
+                  aria-pressed={risoInk === duo.id}
+                  onClick={() => write({ risoInk: duo.id })}
+                  class={`${PILL} ${pillState(risoInk === duo.id)} !px-1.5`}
+                >
+                  <span class="flex items-center justify-center gap-1">
+                    {duo.inks[0] && (
+                      <>
+                        <span
+                          aria-hidden="true"
+                          class="w-2.5 h-2.5 rounded-full border border-[#1e1714]/40"
+                          style={{ background: duo.inks[0] }}
+                        />
+                        <span
+                          aria-hidden="true"
+                          class="w-2.5 h-2.5 rounded-full border border-[#1e1714]/40"
+                          style={{ background: duo.inks[1] }}
+                        />
+                      </>
+                    )}
+                    <span class="truncate">{duo.label}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <span class="block text-[10px] font-black uppercase tracking-wider text-[#574c44]">
+              {es ? "Papel" : "Stock"}
+            </span>
+            <div class="grid grid-cols-5 gap-1.5">
+              {RISO_STOCKS.map((stock) => (
+                <button
+                  key={stock.id}
+                  type="button"
+                  aria-pressed={risoStock === stock.id}
+                  aria-label={stock.label}
+                  title={stock.label}
+                  onClick={() => write({ risoStock: stock.id })}
+                  class={`h-9 rounded-lg border-2 flex items-center justify-center transition-transform duration-[70ms] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbf1e4] ${
+                    risoStock === stock.id
+                      ? "border-[#1e1714]"
+                      : "border-[#1e1714]/25"
+                  }`}
+                  style={{ background: stock.paper }}
+                >
+                  {risoStock === stock.id && (
+                    <span
+                      aria-hidden="true"
+                      class={`text-[11px] font-black ${
+                        stock.id === "midnight"
+                          ? "text-[#fbf1e4]"
+                          : "text-[#1e1714]"
+                      }`}
+                    >
+                      ✓
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <span class="block text-[10px] font-black uppercase tracking-wider text-[#574c44]">
+              {es ? "Registro" : "Registration"}
+            </span>
+            <div class="grid grid-cols-3 gap-1.5">
+              {RISO_REGISTERS.map((mode) => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  aria-pressed={risoRegister === mode.id}
+                  onClick={() => write({ risoRegister: mode.id })}
+                  class={`${PILL} ${pillState(risoRegister === mode.id)}`}
+                >
+                  {es
+                    ? ({
+                      tight: "Firme",
+                      loose: "Suelto",
+                      drift: "Deriva",
+                    } as Record<string, string>)[mode.id]
+                    : mode.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -568,20 +677,6 @@ export default function LookGallery(
           </div>
         </div>
       )}
-
-      {/* Painted Picture QR Gateway (/art) */}
-      <div class="pt-1 border-t border-[#1e1714]/12 flex items-center justify-between gap-2">
-        <span class="text-[11px] font-bold text-[#574c44] truncate">
-          {es ? "¿QR pintado dentro de una escena?" : "Painted scene QR?"}
-        </span>
-        <a
-          href={artHref}
-          class="shrink-0 inline-flex items-center gap-1 rounded-full border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[#ffbe0b] px-2.5 py-1 text-[11px] font-black text-[#1e1714] shadow-[0_1px_0_#1e1714] transition-colors"
-        >
-          <span>🎨</span>
-          <span>{es ? "Estudio pictórico ↗" : "Art Press ↗"}</span>
-        </a>
-      </div>
     </section>
   );
 }

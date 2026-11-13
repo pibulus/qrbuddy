@@ -82,6 +82,34 @@ palette is a code that does not read.
 **Riso takes the Ink control over.** On a halftone, `riso` separates the picture
 onto the two spots, so the Ink row hides rather than sitting inert.
 
+### The press
+
+`riso` is not one look, it is a press with three dials. The palette stops
+mattering for colour the moment the press takes over — it supplies the paper and
+the two drums.
+
+- **Ink duo** — `Palette` (the palette's own two inks) or five swatch-book
+  pairs: Berry `#FF48B0 / #0078BF`, Citrus `#FF6C2F / #00838A`, Sun
+  `#FFB511 / #1e1714`, Field `#00A95C / #A92B22`, Dusk `#765BA7 / #F15060`.
+- **Stock** — Cream, Warm, Kraft `#CBA875`, Slate `#C9C4BE`, Midnight `#1B1719`.
+- **Registration** — Tight ×0.45, Loose ×1, Drift ×2.1 on the spot drum's
+  offset.
+
+Two rules keep the pairs honest:
+
+1. **A pair is authored, not ordered.** Whichever ink can carry density on the
+   chosen stock takes the data drum; the other rides the eyes. Yellow on cream
+   walked itself down to olive before this rule existed.
+2. **Only the data drum is walked to a full density (5.2:1).** The spot drum is
+   allowed 3.4:1, because a finder is large and a bright yellow eye on cream is
+   a riso idiom. Walking it to 5.2 turned Sun into mud.
+
+Midnight stock flips the paper tooth to light — a near-black speck is invisible
+on near-black paper.
+
+Gate: **56/56** across 6 duos × 5 stocks × 3 registrations × classic/halftone ×
+300/1000.
+
 ## Halftone
 
 Each module is a **4 × 4 sub-grid** of ink cells.

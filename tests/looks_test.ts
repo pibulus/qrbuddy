@@ -20,9 +20,14 @@ import {
   sampleColor,
 } from "../utils/qr-art-sample.ts";
 import { buildQrSvgString } from "../utils/qr-vector-svg.ts";
-import { printContrast, risoInks } from "../utils/qr-print.ts";
-import { encodeMatrixPng, toDataUrl } from "../utils/png.ts";
-import { conditioning } from "../utils/replicate-art.ts";
+import {
+  printContrast,
+  risoDuo,
+  risoInks,
+  risoPaper,
+  risoRegisterFactor,
+} from "../utils/qr-print.ts";
+
 import { resolveQRStyle } from "../utils/qr-design.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
 import { styledQrSvg } from "../utils/qr-renderer.ts";
@@ -509,34 +514,56 @@ Deno.test("Riso: a pale drum is walked down until it can be read", () => {
   assert(spot !== "#F0D0FF", "a pale drum has to be walked down");
 });
 
-Deno.test("PNG: the control raster is a real greyscale PNG", async () => {
-  const count = 21;
-  const png = await encodeMatrixPng(
-    (row, col) => (row + col) % 3 === 0,
-    count,
-    {
-      scale: 4,
-      quiet: 4,
-    },
-  );
-  assertEquals([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
-  const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
-  // IHDR is the first chunk: length, "IHDR", width, height, depth, colour.
-  assertEquals(view.getUint32(8), 13);
-  assertEquals(String.fromCharCode(...png.subarray(12, 16)), "IHDR");
-  const side = (count + 8) * 4;
-  assertEquals(view.getUint32(16), side);
-  assertEquals(view.getUint32(20), side);
-  assertEquals(png[24], 8); // bit depth
-  assertEquals(png[25], 0); // greyscale
-  assertStringIncludes(toDataUrl(png), "data:image/png;base64,");
+Deno.test("Riso press: stock, duo and registration resolve by id", () => {
+  assertEquals(risoPaper("kraft"), "#CBA875");
+  assertEquals(risoPaper("auto"), null);
+  assertEquals(risoPaper(undefined), null);
+  assertEquals(risoDuo("berry"), ["#FF48B0", "#0078BF"]);
+  assertEquals(risoDuo("auto"), null);
+  assertEquals(risoRegisterFactor("tight"), 0.45);
+  assertEquals(risoRegisterFactor("drift"), 2.1);
+  assertEquals(risoRegisterFactor(undefined), 1);
 });
 
-Deno.test("Art: each retry leans harder on the code", () => {
-  assertEquals(conditioning(0), 2.6);
-  assertEquals(conditioning(1), 3);
-  assertEquals(conditioning(2), 3.4);
-  // Out-of-range rungs clamp rather than inventing a fourth setting.
-  assertEquals(conditioning(-3), 2.6);
-  assertEquals(conditioning(9), 3.4);
+Deno.test("Riso press: a chosen duo still lands a readable data drum", () => {
+  // Yellow cannot carry density on cream, so the press swaps the pair rather
+  // than walking the yellow down into olive.
+  const svg = buildQrSvgString({
+    data: DATA,
+    palette: "sunset",
+    size: 900,
+    print: "riso",
+    risoInk: "sun",
+  });
+  const flat = [...svg.matchAll(/fill="(#[0-9A-Fa-f]{6})"/g)].map((m) => m[1]);
+  assert(flat.includes("#1e1714"), "the dark drum carries the data");
+});
+
+Deno.test("Riso press: midnight stock flips the paper tooth", () => {
+  const svg = buildQrSvgString({
+    data: DATA,
+    palette: "sunset",
+    size: 900,
+    print: "riso",
+    risoStock: "midnight",
+  });
+  assertStringIncludes(svg, 'fill="#1B1719"');
+  // A near-black speck is invisible on midnight, so the tooth goes light.
+  assertStringIncludes(svg, 'flood-color="#FFFEF7"');
+});
+
+Deno.test("Riso press: registration is the only thing drift changes", () => {
+  const at = (risoRegister: string) =>
+    buildQrSvgString({
+      data: DATA,
+      palette: "sunset",
+      size: 900,
+      print: "riso",
+      risoInk: "berry",
+      risoRegister,
+    });
+  const tight = at("tight");
+  const drift = at("drift");
+  assert(tight !== drift);
+  assertEquals(/data-look="classic"/.test(drift), true);
 });

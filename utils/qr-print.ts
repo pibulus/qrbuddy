@@ -265,7 +265,7 @@ export function printContrast(a: string, b: string): number {
 }
 
 /** Minimum ink-to-paper contrast a riso drum is allowed to land on. */
-const MIN_CONTRAST = 4.6;
+const MIN_CONTRAST = 5.2;
 
 /**
  * A press mixes ink until it hits density; a palette built for a gradient is
@@ -273,14 +273,101 @@ const MIN_CONTRAST = 4.6;
  * clears the floor, so `riso` can never quietly print the low-contrast code the
  * gate exists to catch.
  */
-export function ensureContrast(ink: string, paper: string): string {
-  if (printContrast(ink, paper) >= MIN_CONTRAST) return ink;
-  const dark = srgbLuminance(paper) > 0.5;
+export function ensureContrast(
+  ink: string,
+  paper: string,
+  min = MIN_CONTRAST,
+): string {
+  if (printContrast(ink, paper) >= min) return ink;
+  // Walk *away* from the stock, whichever side the ink is on. Deciding by a
+  // fixed "is the paper dark" threshold lightened a purple drum into cream on
+  // kraft — a mid-tone stock is neither.
+  const paperL = srgbLuminance(paper);
+  const goingDown = srgbLuminance(ink) <= paperL;
   let [h, s, l] = rgbToHsl(toRgb(ink));
   let out = ink;
-  for (let i = 0; i < 24 && printContrast(out, paper) < MIN_CONTRAST; i++) {
-    l = Math.max(0.02, Math.min(0.98, l + (dark ? -0.05 : 0.05)));
+  for (let i = 0; i < 24 && printContrast(out, paper) < min; i++) {
+    l = Math.max(0.02, Math.min(0.98, l + (goingDown ? -0.05 : 0.05)));
     out = hslToHex([h, Math.min(1, s * 1.04), l]);
   }
   return out;
+}
+
+/* ─────────────────────────── Riso press ─────────────────────────────── */
+
+/**
+ * A risograph is a two-drum machine, so the press — not the palette — decides
+ * the inks. These are the real swatch-book pairs people actually print.
+ */
+export const RISO_DUOS: {
+  id: string;
+  label: string;
+  inks: [string, string];
+}[] = [
+  { id: "auto", label: "Palette", inks: ["", ""] },
+  { id: "berry", label: "Berry", inks: ["#FF48B0", "#0078BF"] },
+  { id: "citrus", label: "Citrus", inks: ["#FF6C2F", "#00838A"] },
+  { id: "sun", label: "Sun", inks: ["#FFB511", "#1e1714"] },
+  { id: "field", label: "Field", inks: ["#00A95C", "#A92B22"] },
+  { id: "dusk", label: "Dusk", inks: ["#765BA7", "#F15060"] },
+];
+
+/** Stock the sheet is printed on. Midnight is a real riso trick, not a gimmick. */
+export const RISO_STOCKS: { id: string; label: string; paper: string }[] = [
+  { id: "cream", label: "Cream", paper: "#FBF1E4" },
+  { id: "warm", label: "Warm", paper: "#FFFEF7" },
+  { id: "kraft", label: "Kraft", paper: "#CBA875" },
+  { id: "slate", label: "Slate", paper: "#C9C4BE" },
+  { id: "midnight", label: "Midnight", paper: "#1B1719" },
+];
+
+/** How far the spot drum wanders. A loose drum is the whole charm. */
+export const RISO_REGISTERS: {
+  id: string;
+  label: string;
+  factor: number;
+}[] = [
+  { id: "tight", label: "Tight", factor: 0.45 },
+  { id: "loose", label: "Loose", factor: 1 },
+  { id: "drift", label: "Drift", factor: 2.1 },
+];
+
+export function risoPaper(id?: string): string | null {
+  if (!id || id === "auto") return null;
+  return RISO_STOCKS.find((stock) => stock.id === id)?.paper ?? null;
+}
+
+export function risoDuo(id?: string): [string, string] | null {
+  if (!id || id === "auto") return null;
+  const duo = RISO_DUOS.find((entry) => entry.id === id);
+  if (!duo || !duo.inks[0]) return null;
+  return duo.inks;
+}
+
+export function risoRegisterFactor(id?: string): number {
+  return RISO_REGISTERS.find((entry) => entry.id === id)?.factor ?? 1;
+}
+
+/**
+ * The two drums a press would actually run, given the palette's inks, the stock
+ * and an optional authored duo. Shared by the renderer and the contrast chip so
+ * the warning describes the sheet that prints, not the palette it came from.
+ */
+export function resolveRiso(
+  stops: string[],
+  paper: string,
+  duoId?: string,
+): [string, string] {
+  const duo = risoDuo(duoId);
+  if (duo) {
+    const ordered = printContrast(duo[0], paper) >= printContrast(duo[1], paper)
+      ? duo
+      : [duo[1], duo[0]] as [string, string];
+    // Only the data drum is walked to a readable density; the spot is a spot.
+    return [
+      ensureContrast(ordered[0], paper),
+      ensureContrast(ordered[1], paper, 3.4),
+    ];
+  }
+  return risoInks(stops.length >= 2 ? stops : [stops[0], stops[0]], paper);
 }

@@ -75,6 +75,10 @@ export interface QRStyle {
   foilDepth?: "thin" | "chunky";
   /** Print surface, orthogonal to the look: clean vector, stock, or riso. */
   print?: "clean" | "paper" | "riso";
+  /** Riso press: ink duo, paper stock, and spot-drum registration. */
+  risoInk?: string;
+  risoStock?: string;
+  risoRegister?: string;
 }
 
 /** Card label (banner) treatment. Auto-themed; never a font/colour picker. */

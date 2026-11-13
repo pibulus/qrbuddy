@@ -6,10 +6,8 @@ import * as $_404 from "./routes/_404.tsx";
 import * as $_500 from "./routes/_500.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
-import * as $api_art from "./routes/api/art.ts";
 import * as $api_download_file from "./routes/api/download-file.ts";
 import * as $api_peek from "./routes/api/peek.ts";
-import * as $art from "./routes/art.tsx";
 import * as $batch from "./routes/batch.tsx";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
@@ -59,7 +57,6 @@ import * as $vs_slug_ from "./routes/vs/[slug].tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $ApiKeysPanel from "./islands/ApiKeysPanel.tsx";
-import * as $ArtStudio from "./islands/ArtStudio.tsx";
 import * as $BatchStudio from "./islands/BatchStudio.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
 import * as $DesignPreferencesSync from "./islands/DesignPreferencesSync.tsx";
@@ -87,10 +84,8 @@ const manifest = {
     "./routes/_500.tsx": $_500,
     "./routes/_app.tsx": $_app,
     "./routes/_middleware.ts": $_middleware,
-    "./routes/api/art.ts": $api_art,
     "./routes/api/download-file.ts": $api_download_file,
     "./routes/api/peek.ts": $api_peek,
-    "./routes/art.tsx": $art,
     "./routes/batch.tsx": $batch,
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
@@ -142,7 +137,6 @@ const manifest = {
     "./islands/AboutModal.tsx": $AboutModal,
     "./islands/ActionButtons.tsx": $ActionButtons,
     "./islands/ApiKeysPanel.tsx": $ApiKeysPanel,
-    "./islands/ArtStudio.tsx": $ArtStudio,
     "./islands/BatchStudio.tsx": $BatchStudio,
     "./islands/BucketQR.tsx": $BucketQR,
     "./islands/DesignPreferencesSync.tsx": $DesignPreferencesSync,

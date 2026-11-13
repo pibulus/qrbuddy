@@ -1002,6 +1002,9 @@ export default function QRCanvas(
                     halftoneShape: getCurrentStyle().halftoneShape,
                     halftoneDetail: getCurrentStyle().halftoneDetail,
                     print: getCurrentStyle().print,
+                    risoInk: getCurrentStyle().risoInk,
+                    risoStock: getCurrentStyle().risoStock,
+                    risoRegister: getCurrentStyle().risoRegister,
                     foilDepth: getCurrentStyle().foilDepth,
                   }),
                 )}

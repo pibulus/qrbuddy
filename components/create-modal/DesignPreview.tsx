@@ -3,6 +3,7 @@ import type { FrameConfig, QRStyle } from "../../types/qr-types.ts";
 import { bannerColors, resolveQRStyle } from "../../utils/qr-design.ts";
 import { styledQrSvg } from "../../utils/qr-renderer.ts";
 import { evaluateQrContrast, toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
+import { resolveRiso, risoPaper } from "../../utils/qr-print.ts";
 import { createFramedSvg } from "../../utils/svg-export.ts";
 import { getQRThemeTokens } from "../../utils/qr-styles.ts";
 import { resolvePaletteDisplayName } from "./DesignTab.tsx";
@@ -51,11 +52,22 @@ export default function DesignPreview(
     const bgHex = resolved.background.color ??
       resolved.background.gradient?.colorStops?.[0]?.color ??
       "#FFF8F0";
-    const contrast = evaluateQrContrast(stopColors, bgHex);
-    const hasContrastIssue = contrast.inverted || contrast.lowContrast;
-    const paletteName = resolvePaletteDisplayName(qrStyle.value, es);
     const lookMode = resolved.renderMode ?? "classic";
     const printMode = resolved.print ?? "clean";
+    // Under riso the sheet is not the palette: the press picks its stock and its
+    // two drums, so the warning has to describe those or it is just noise.
+    const risoPaperHex = printMode === "riso"
+      ? risoPaper(resolved.risoStock)
+      : null;
+    const paper = risoPaperHex ?? bgHex;
+    // Only the data drum carries information; the spot is a design choice and
+    // is allowed a lower floor, so it is not what the warning is about.
+    const inks = printMode === "riso"
+      ? [resolveRiso(stopColors, paper, resolved.risoInk)[0]]
+      : stopColors;
+    const contrast = evaluateQrContrast(inks, paper);
+    const hasContrastIssue = contrast.inverted || contrast.lowContrast;
+    const paletteName = resolvePaletteDisplayName(qrStyle.value, es);
     const lookBadge = lookMode === "halftone"
       ? (es ? "Semitono" : "Halftone")
       : lookMode === "foil"

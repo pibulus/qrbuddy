@@ -189,6 +189,13 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
       !["clean", "paper", "riso"].includes(s.print)
     ) return false;
   }
+  if (s.risoInk !== undefined && typeof s.risoInk !== "string") return false;
+  if (s.risoStock !== undefined && typeof s.risoStock !== "string") {
+    return false;
+  }
+  if (s.risoRegister !== undefined && typeof s.risoRegister !== "string") {
+    return false;
+  }
   if (s.foilDepth !== undefined) {
     if (
       typeof s.foilDepth !== "string" ||

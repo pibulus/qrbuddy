@@ -34,8 +34,10 @@ import {
   printSeed,
   type PrintStyle,
   printTooth,
-  risoInks,
+  resolveRiso,
   risoOffset,
+  risoPaper,
+  risoRegisterFactor,
 } from "./qr-print.ts";
 import type {
   ArtSample,
@@ -208,6 +210,10 @@ export interface BuildQrSvgOptions {
    * Orthogonal to the look — any look can come off any of the three.
    */
   print?: PrintStyle;
+  /** Riso press: ink duo id, stock id, and how loose the spot drum runs. */
+  risoInk?: string;
+  risoStock?: string;
+  risoRegister?: string;
   foilDepth?: "thin" | "chunky";
   /** Grid floor for art looks. Thumbnails pass a coarse one on purpose. */
   artVersionFloor?: number;
@@ -490,7 +496,13 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     VECTOR_PALETTES.sunset;
   const c1 = options.c1 ?? preset.c1;
   const c2 = options.c2 ?? preset.c2;
-  const bg = options.bg ?? preset.bg;
+  const printStyleEarly: PrintStyle = options.renderMode === "foil"
+    ? "clean"
+    : options.print ?? "clean";
+  const stock = printStyleEarly === "riso"
+    ? risoPaper(options.risoStock)
+    : null;
+  const bg = stock ?? options.bg ?? preset.bg;
   const hasMark = Boolean(
     options.logoUrl &&
       /^data:image\/(?:png|jpeg|webp|svg\+xml);base64,/i.test(options.logoUrl),
@@ -551,19 +563,28 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     style: printStyle,
     seed: printSeed(payload),
     size: qrBoxSize,
-    ink: "#1e1714",
+    // On midnight stock a near-black tooth is invisible, so the speck flips.
+    ink: printContrast("#1e1714", bg) >= 3 ? "#1e1714" : "#FFFEF7",
   };
-  const riso = printStyle === "riso" ? risoOffset(print.seed, qrBoxSize) : null;
+  const register = risoRegisterFactor(options.risoRegister);
+  const risoBase = printStyle === "riso"
+    ? risoOffset(print.seed, qrBoxSize)
+    : null;
+  const riso = risoBase && {
+    dx: risoBase.dx * register,
+    dy: risoBase.dy * register,
+    rotate: risoBase.rotate * register,
+  };
   // Every ink the palette offers, so the press can choose the two drums rather
   // than inheriting whichever colour happened to sit first in the gradient.
   const risoStops = (options.dotsGradient?.colorStops ?? []).map((stop) =>
     stop.color
   );
-  const [risoInk, risoSpot] = risoInks(
+  const [risoInk, risoSpot] = resolveRiso(
     risoStops.length >= 2 ? risoStops : [c1, c2],
     bg,
+    printStyle === "riso" ? options.risoInk : undefined,
   );
-
   const captionText = (options.caption ?? "").trim().toUpperCase();
   const hasCaption = captionText.length > 0;
 
@@ -857,7 +878,11 @@ export function buildQrSvgString(options: BuildQrSvgOptions): string {
     gradientDef("qrb-eyes", options.eyeGradient, options.eyeColor ?? c1),
     printFilterDefs(print),
     `  </defs>`,
-    frameRect + qrBgRect.replace(/fill="[^"]*"/, 'fill="url(#qrb-bg)"') +
+    frameRect +
+    qrBgRect.replace(
+      /fill="[^"]*"/,
+      stock ? `fill="${escapeXml(stock)}"` : 'fill="url(#qrb-bg)"',
+    ) +
     cardTooth +
     (artBody ||
       (`  <path d="${pathChunks.join("")}" fill="${

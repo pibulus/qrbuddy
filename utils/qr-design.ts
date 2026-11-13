@@ -21,6 +21,9 @@ export function resolveQRStyle(
   if (override?.halftoneDetail) look.halftoneDetail = override.halftoneDetail;
   if (override?.foilDepth) look.foilDepth = override.foilDepth;
   if (override?.print) look.print = override.print;
+  if (override?.risoInk) look.risoInk = override.risoInk;
+  if (override?.risoStock) look.risoStock = override.risoStock;
+  if (override?.risoRegister) look.risoRegister = override.risoRegister;
   return {
     ...base,
     ...look,
