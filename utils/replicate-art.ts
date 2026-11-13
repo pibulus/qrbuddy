@@ -38,12 +38,6 @@ export interface ArtInput {
   tune?: number;
 }
 
-export interface ArtOutput {
-  image: string;
-  seed: number;
-  predictionId: string;
-}
-
 /**
  * The exact field names are the model's, not ours. They live in one place so a
  * schema change is a one-line fix rather than a hunt through the route.
@@ -95,53 +89,101 @@ export class ArtError extends Error {
   }
 }
 
+export interface Started {
+  id: string;
+  seed: number;
+}
+
+function auth(token: string) {
+  return {
+    "Authorization": `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+}
+
 /**
- * Runs one generation synchronously. Replicate's `Prefer: wait` turns the
- * create-and-poll dance into a single request that returns a finished
- * prediction, which is all this needs.
+ * Kicks off a generation and returns immediately.
+ *
+ * The first version held the request open with `Prefer: wait=60` and returned
+ * the finished picture in one go. That works on a laptop and fails on the edge:
+ * a cold prediction runs 25–30s, and Deno Deploy's gateway answers with an HTML
+ * error page before the handler can. Two short requests instead of one long one.
  */
-export async function generateArt(
+export async function startArt(
   input: ArtInput,
-  options: { token: string; fetch?: typeof fetch; timeoutMs?: number },
-): Promise<ArtOutput> {
+  options: { token: string; fetch?: typeof fetch },
+): Promise<Started> {
   const doFetch = options.fetch ?? fetch;
   const seed = input.seed ?? Math.floor(Math.random() * 1_000_000);
-  const controller = new AbortController();
-  const timer = setTimeout(
-    () => controller.abort(),
-    options.timeoutMs ?? 90_000,
-  );
-  try {
-    const response = await doFetch(ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${options.token}`,
-        "Content-Type": "application/json",
-        "Prefer": "wait=60",
-      },
-      body: JSON.stringify({ version: VERSION, ...body(input, seed) }),
-      signal: controller.signal,
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new ArtError(
-        typeof payload?.detail === "string"
-          ? payload.detail
-          : `replicate ${response.status}`,
-        response.status,
-      );
-    }
-    if (payload.status !== "succeeded") {
-      throw new ArtError(payload.error ?? `status ${payload.status}`, 502);
-    }
-    const image = Array.isArray(payload.output)
-      ? payload.output[0]
-      : payload.output;
-    if (typeof image !== "string") {
-      throw new ArtError("no image in the prediction", 502);
-    }
-    return { image, seed, predictionId: String(payload.id ?? "") };
-  } finally {
-    clearTimeout(timer);
+  const response = await doFetch(ENDPOINT, {
+    method: "POST",
+    headers: auth(options.token),
+    body: JSON.stringify({ version: VERSION, ...body(input, seed) }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new ArtError(
+      typeof payload?.detail === "string"
+        ? payload.detail
+        : `replicate ${response.status}`,
+      response.status,
+    );
   }
+  if (!payload.id) throw new ArtError("no prediction id", 502);
+  return { id: String(payload.id), seed };
+}
+
+export interface Progress {
+  status: "starting" | "processing" | "succeeded" | "failed" | "canceled";
+  image?: string;
+  error?: string;
+}
+
+/** One short read. The caller polls; nothing here waits on a GPU. */
+export async function pollArt(
+  id: string,
+  options: { token: string; fetch?: typeof fetch },
+): Promise<Progress> {
+  const doFetch = options.fetch ?? fetch;
+  const response = await doFetch(`${ENDPOINT}/${encodeURIComponent(id)}`, {
+    headers: auth(options.token),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new ArtError(
+      typeof payload?.detail === "string"
+        ? payload.detail
+        : `replicate ${response.status}`,
+      response.status,
+    );
+  }
+  const status = String(payload.status ?? "starting") as Progress["status"];
+  if (status === "failed" || status === "canceled") {
+    return { status, error: payload.error ?? "the press jammed" };
+  }
+  if (status !== "succeeded") return { status };
+  const out = Array.isArray(payload.output)
+    ? payload.output[0]
+    : payload.output;
+  if (typeof out !== "string") {
+    return { status: "failed", error: "no image in the prediction" };
+  }
+  return { status, image: await inline(out) };
+}
+
+/** Replicate output links expire; a data URL is ours to keep for the session. */
+export async function inline(url: string): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok) throw new ArtError("could not fetch the picture", 502);
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.length > 8 * 1024 * 1024) {
+    throw new ArtError("picture is too large", 502);
+  }
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  const mime = response.headers.get("content-type") ?? "image/webp";
+  return `data:${mime};base64,${btoa(binary)}`;
 }

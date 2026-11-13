@@ -13,7 +13,7 @@
 import { Handlers } from "$fresh/server.ts";
 import qrcode from "qrcode-generator";
 import { encodeMatrixPng, toDataUrl } from "../../utils/png.ts";
-import { ArtError, generateArt } from "../../utils/replicate-art.ts";
+import { ArtError, pollArt, startArt } from "../../utils/replicate-art.ts";
 
 /** A picture has to survive a coarse code, so the payload stays short. */
 const MAX_PAYLOAD = 180;
@@ -80,23 +80,6 @@ async function controlImage(payload: string): Promise<string> {
   return toDataUrl(png);
 }
 
-/** Replicate output links expire; a data URL is ours to keep for the session. */
-async function inline(url: string): Promise<string> {
-  const response = await fetch(url);
-  if (!response.ok) throw new ArtError("could not fetch the picture", 502);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.length > 8 * 1024 * 1024) {
-    throw new ArtError("picture is too large", 502);
-  }
-  let binary = "";
-  const CHUNK = 0x8000;
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-  }
-  const mime = response.headers.get("content-type") ?? "image/webp";
-  return `data:${mime};base64,${btoa(binary)}`;
-}
-
 export const handler: Handlers = {
   async POST(req, ctx) {
     const token = Deno.env.get("REPLICATE_API_TOKEN") ?? "";
@@ -143,19 +126,13 @@ export const handler: Handlers = {
 
     try {
       const control = await controlImage(url);
-      const result = await generateArt(
+      const started = await startArt(
         { url, prompt, control, seed: input.seed, tune: input.tune },
         { token },
       );
-      // Inline the picture: Replicate's CDN links expire, and a data URL means
-      // the browser can both show it and decode it without a CORS question.
-      const image = await inline(result.image);
-      return json({
-        ok: true,
-        image,
-        seed: result.seed,
-        prediction: result.predictionId,
-      });
+      // Hand back a handle, not a picture. Holding the request open for the
+      // whole generation is what the edge answers with an HTML error page.
+      return json({ ok: true, id: started.id, seed: started.seed });
     } catch (error) {
       const status = error instanceof ArtError ? error.status : 502;
       const message = error instanceof Error ? error.message : "art failed";
@@ -166,6 +143,30 @@ export const handler: Handlers = {
         { ok: false, error: friendly },
         status >= 500 || status === 402 ? 502 : status,
       );
+    }
+  },
+
+  /** One short read of a running prediction. Cheap, so it is not rate-limited. */
+  async GET(req) {
+    const token = Deno.env.get("REPLICATE_API_TOKEN") ?? "";
+    if (!token) {
+      return json({ ok: false, error: "art is not configured" }, 503);
+    }
+    const id = new URL(req.url).searchParams.get("id") ?? "";
+    if (!/^[a-z0-9]{8,64}$/i.test(id)) {
+      return json({ ok: false, error: "bad id" }, 400);
+    }
+    try {
+      const progress = await pollArt(id, { token });
+      return json({ ok: true, ...progress });
+    } catch (error) {
+      const status = error instanceof ArtError ? error.status : 502;
+      console.error(
+        "[art]",
+        status,
+        error instanceof Error ? error.message : "",
+      );
+      return json({ ok: false, error: "the press jammed" }, 502);
     }
   },
 };

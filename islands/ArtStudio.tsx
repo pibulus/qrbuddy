@@ -64,7 +64,7 @@ export default function ArtStudio() {
 
     for (let round = 1; round <= ATTEMPTS; round++) {
       setAttempt(round);
-      let data: { ok: boolean; image?: string; error?: string };
+      let started: { ok: boolean; id?: string; error?: string };
       try {
         const response = await fetch("/api/art", {
           method: "POST",
@@ -78,21 +78,64 @@ export default function ArtStudio() {
           }),
           signal: controller.signal,
         });
-        data = await response.json();
+        started = await response.json();
       } catch (caught) {
         if (controller.signal.aborted) return;
         setError(caught instanceof Error ? caught.message : "request failed");
         setVerdict("idle");
         return;
       }
-      if (!data.ok || !data.image) {
-        setError(data.error ?? "art failed");
+      if (!started.ok || !started.id) {
+        setError(started.error ?? "art failed");
         setVerdict("idle");
         return;
       }
-      setImage(data.image);
+
+      // Poll in short reads: a cold prediction runs 25–30s and a held request
+      // is what the edge answers with an HTML page instead of JSON.
+      let image = "";
+      let failure = "";
+      for (let tick = 0; tick < 60; tick++) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        if (controller.signal.aborted) return;
+        let progress: {
+          ok: boolean;
+          status?: string;
+          image?: string;
+          error?: string;
+        };
+        try {
+          const response = await fetch(`/api/art?id=${started.id}`, {
+            signal: controller.signal,
+          });
+          progress = await response.json();
+        } catch (caught) {
+          if (controller.signal.aborted) return;
+          failure = caught instanceof Error ? caught.message : "poll failed";
+          break;
+        }
+        if (!progress.ok) {
+          failure = progress.error ?? "the press jammed";
+          break;
+        }
+        if (progress.status === "succeeded" && progress.image) {
+          image = progress.image;
+          break;
+        }
+        if (progress.status === "failed" || progress.status === "canceled") {
+          failure = progress.error ?? "the press jammed";
+          break;
+        }
+      }
+      if (!image) {
+        setError(failure || "the press went quiet");
+        setVerdict("idle");
+        return;
+      }
+
+      setImage(image);
       const read = await checkBlobScannability(
-        await dataUrlToBlob(data.image),
+        await dataUrlToBlob(image),
         url.trim(),
       );
       if (read) {
