@@ -95,16 +95,13 @@ Supabase schema and function operations are documented in
 [supabase/README.md](./supabase/README.md). Use the ordered migrations as the
 schema source of truth; `supabase/setup.sql` is a historical snapshot, not a
 production bootstrap path. Supabase Edge Function deployment
-(`supabase
-functions deploy <name> --project-ref aqydpibnvlhcjcwosrti`) is
+(`supabase functions deploy <name> --project-ref aqydpibnvlhcjcwosrti`) is
 separate from the Fresh app.
 
 Production runs on CHONK (`pibulus.local`, `qrbuddy.service` on port `8004`
-behind Cloudflare Tunnel) via
-`/home/pibulus/pibulus-os/scripts/deploy_app.sh
-qrbuddy`, which builds the AOT
-`_fresh/` manifest and stamps `/version.json`. See [CLAUDE.md](./CLAUDE.md) for
-launch gates and deployment details.
+behind Cloudflare Tunnel) via stage-and-swap into `/home/pibulus/apps/qrbuddy`,
+running `deno task build` to generate `_fresh/` and stamp `/version.json`. See
+[CLAUDE.md](./CLAUDE.md) for launch gates and deployment commands.
 
 ## 🛠 Tech Stack
 
@@ -202,9 +199,22 @@ QRBuddy production runs on **CHONK** (`pibulus.local`, `qrbuddy.service` on port
 `8004` behind Cloudflare Tunnel) and Supabase (`aqydpibnvlhcjcwosrti`):
 
 ```bash
-# 1. Ship app code to CHONK after pushing main:
+# 1. Stage, build, swap, and restart qrbuddy.service on CHONK after pushing main:
 git push origin main
-ssh pibulus@pibulus.local '/home/pibulus/pibulus-os/scripts/deploy_app.sh qrbuddy'
+ssh pibulus@pibulus.local 'set -euo pipefail
+  rm -rf /tmp/qrbuddy-stage /tmp/qrbuddy-prev
+  git clone --depth 1 --branch main https://github.com/pibulus/qrbuddy.git /tmp/qrbuddy-stage
+  COMMIT=$(git -C /tmp/qrbuddy-stage rev-parse HEAD)
+  SHORT=$(git -C /tmp/qrbuddy-stage rev-parse --short HEAD)
+  (cd /tmp/qrbuddy-stage && /home/pibulus/.deno/bin/deno task build)
+  rm -rf /tmp/qrbuddy-stage/.git
+  printf "APP=qrbuddy\nDEPLOYED_COMMIT=%s\nDEPLOYED_SHORT=%s\nDEPLOYED_AT=%s\n" "$COMMIT" "$SHORT" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/qrbuddy-stage/.pibulus-meta
+  mv /home/pibulus/apps/qrbuddy /tmp/qrbuddy-prev
+  mv /tmp/qrbuddy-stage /home/pibulus/apps/qrbuddy
+  sudo -n systemctl restart qrbuddy.service
+  for _ in $(seq 1 20); do curl -fsS http://127.0.0.1:8004/version.json | grep -q "$SHORT" && break; sleep 1; done
+  curl -fsS http://127.0.0.1:8004/version.json
+  rm -rf /tmp/qrbuddy-prev'
 
 # 2. Deploy modified Edge Functions separately (when supabase/functions/* changed):
 supabase functions deploy <fn-name> --project-ref aqydpibnvlhcjcwosrti

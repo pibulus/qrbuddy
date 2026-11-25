@@ -238,17 +238,32 @@ Supabase Edge Functions.
 - **Supabase project ref**: `aqydpibnvlhcjcwosrti` (15 public Edge Functions
   with `verify_jwt = false` in `supabase/config.toml`).
 
-Push `main` to origin, then deploy on CHONK via SSH:
+Push `main` to origin, then stage, build, swap, and restart `qrbuddy.service` on
+CHONK via SSH (note: `/home/pibulus/apps/qrbuddy` is a built directory without
+`.git`, using `/etc/qrbuddy.env` rather than `deploy_app.sh`):
 
 ```bash
-ssh pibulus@pibulus.local '/home/pibulus/pibulus-os/scripts/deploy_app.sh qrbuddy'
+ssh pibulus@pibulus.local 'set -euo pipefail
+  rm -rf /tmp/qrbuddy-stage /tmp/qrbuddy-prev
+  git clone --depth 1 --branch main https://github.com/pibulus/qrbuddy.git /tmp/qrbuddy-stage
+  COMMIT=$(git -C /tmp/qrbuddy-stage rev-parse HEAD)
+  SHORT=$(git -C /tmp/qrbuddy-stage rev-parse --short HEAD)
+  (cd /tmp/qrbuddy-stage && /home/pibulus/.deno/bin/deno task build)
+  rm -rf /tmp/qrbuddy-stage/.git
+  printf "APP=qrbuddy\nDEPLOYED_COMMIT=%s\nDEPLOYED_SHORT=%s\nDEPLOYED_AT=%s\n" "$COMMIT" "$SHORT" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/qrbuddy-stage/.pibulus-meta
+  mv /home/pibulus/apps/qrbuddy /tmp/qrbuddy-prev
+  mv /tmp/qrbuddy-stage /home/pibulus/apps/qrbuddy
+  sudo -n systemctl restart qrbuddy.service
+  for _ in $(seq 1 20); do curl -fsS http://127.0.0.1:8004/version.json | grep -q "$SHORT" && break; sleep 1; done
+  curl -fsS http://127.0.0.1:8004/version.json
+  rm -rf /tmp/qrbuddy-prev'
 ```
 
-`deploy_app.sh` checks out `main`, runs `deno task build` (stamping
-`/version.json` with `commit`, `buildId`, and `sourceHash` plus generating
-Fresh's AOT manifest in `_fresh/`), and restarts `qrbuddy.service`. Keep runtime
-`APP_URL`, `SUPABASE_URL`, and `SUPABASE_ANON_KEY` in CHONK's app environment,
-and keep `SUPABASE_SERVICE_ROLE_KEY` exclusively in Supabase function secrets.
+`deno task build` stamps `/version.json` with `commit`, `buildId`, and
+`sourceHash`, and generates Fresh's AOT manifest in `_fresh/`. Keep runtime
+`APP_URL`, `SUPABASE_URL`, and `SUPABASE_ANON_KEY` in CHONK's `/etc/qrbuddy.env`
+file, and keep `SUPABASE_SERVICE_ROLE_KEY` exclusively in Supabase function
+secrets.
 
 Supabase schema and function operations are separate from the Fresh app. Use the
 migration preflight and function deployment commands in
