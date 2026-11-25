@@ -1,4 +1,5 @@
 import { Signal } from "@preact/signals";
+import ModalCloseButton from "./modal/ModalCloseButton.tsx";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { sounds } from "../utils/sounds.ts";
@@ -717,8 +718,7 @@ export default function GradientCreator(
                 : "Print-safe inks & duos, scan-locked at 4.5:1+."}
             </p>
           </div>
-          <button
-            type="button"
+          <ModalCloseButton
             onClick={() => {
               shell.requestClose();
               haptics.light();
@@ -726,20 +726,8 @@ export default function GradientCreator(
             aria-label={isSpanish
               ? "Cerrar estudio de color"
               : "Close color studio"}
-            class="qr-modal-close-btn shrink-0"
-          >
-            <svg
-              class="w-4 h-4 pointer-events-none"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3.25"
-              stroke-linecap="round"
-              aria-hidden="true"
-            >
-              <path d="M6.5 6.5l11 11m0-11l-11 11" />
-            </svg>
-          </button>
+            class="shrink-0"
+          />
         </div>
 
         {/* Scrollable Studio Body */}

@@ -15,22 +15,19 @@ export default function Error500({ error }: ErrorPageProps) {
         <title>💥 Something popped | QRBuddy</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <main class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-amber-50 via-pink-50 to-purple-50">
+      <main class="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1">
         <div class="max-w-md w-full text-center">
-          <div class="bg-white border-4 border-black rounded-2xl p-10 shadow-[6px_6px_0_rgba(0,0,0,0.15)]">
+          <div class="bg-[#fbf1e4] border-4 border-[#1e1714] rounded-3xl p-10 shadow-chunky animate-pop-in">
             <div class="text-6xl mb-4" aria-hidden="true">
               🧯
             </div>
-            <h1 class="text-3xl font-black text-gray-900 mb-3">
+            <h1 class="text-3xl font-black text-[#1e1714] mb-3">
               Something popped
             </h1>
-            <p class="text-gray-500 text-lg mb-6">
+            <p class="text-[#6e6058] text-lg mb-6">
               That's on this end, not the QR code. Try again in a moment.
             </p>
-            <a
-              href="/"
-              class="inline-block px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl border-3 border-black shadow-[4px_4px_0_rgba(0,0,0,0.2)] hover:scale-[1.02] hover:shadow-[6px_6px_0_rgba(0,0,0,0.2)] transition-all"
-            >
+            <a href="/" class="qr-pitch-cta">
               Back to QRBuddy
             </a>
           </div>

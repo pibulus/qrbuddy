@@ -315,7 +315,7 @@ export default function EditQRForm() {
         <p class="text-black font-black text-lg">
           {error || "QR code not found"}
         </p>
-        <p class="text-neutral-700 text-sm font-semibold">
+        <p class="text-[#4a3f39] text-sm font-semibold">
           Invalid or expired owner token
         </p>
       </div>
@@ -398,7 +398,7 @@ export default function EditQRForm() {
                   class={`min-w-[44px] min-h-[44px] px-4 py-2 rounded-full border-2 font-black text-sm transition-all ${
                     active
                       ? "bg-amber-200 text-black border-black shadow-chunky"
-                      : "bg-white text-neutral-700 border-black/15 hover:border-black/60"
+                      : "bg-white text-[#4a3f39] border-black/15 hover:border-black/60"
                   }`}
                 >
                   {limit === null ? "∞" : limit}
@@ -426,7 +426,7 @@ export default function EditQRForm() {
             placeholder="Anyone scanning must enter this first"
             class="w-full px-4 py-3 border-2 border-black/15 rounded-xl font-bold focus:outline-none focus:border-black bg-white"
           />
-          <p class="text-[11px] text-neutral-500 leading-snug">
+          <p class="text-[11px] text-[#6e6058] leading-snug">
             Leave blank to keep the code open. A locked code does not count a
             scan until someone gets through.
           </p>
@@ -464,13 +464,13 @@ export default function EditQRForm() {
                 setSplashEnabled((e.target as HTMLInputElement).checked);
                 haptics.light();
               }}
-              class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-pink-500"
+              class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-[#1e1714]"
             />
             <span class="text-xs font-black text-black uppercase tracking-wider group-hover:text-qr-pop">
               ✨ Intro page
             </span>
           </label>
-          <p class="text-xs font-semibold text-neutral-600">
+          <p class="text-xs font-semibold text-[#574c44]">
             Show a short landing page before redirecting
           </p>
           {splashEnabled && (
@@ -492,13 +492,13 @@ export default function EditQRForm() {
                 setIsActive((e.target as HTMLInputElement).checked);
                 haptics.light();
               }}
-              class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-pink-500"
+              class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-[#1e1714]"
             />
             <span class="text-sm font-black text-black group-hover:text-qr-pop">
               QR is active
             </span>
           </label>
-          <p class="text-xs font-semibold text-neutral-600">
+          <p class="text-xs font-semibold text-[#574c44]">
             Uncheck to pause this QR (scans will show KABOOM page)
           </p>
         </div>
@@ -516,7 +516,7 @@ export default function EditQRForm() {
 
       {/* Privacy Note */}
       <div class="bg-white border-2 border-black rounded-2xl p-4 text-center shadow-chunky">
-        <p class="text-xs sm:text-sm font-semibold text-neutral-800">
+        <p class="text-xs sm:text-sm font-semibold text-[#4a3f39]">
           🔒 <strong>Privacy First:</strong>{" "}
           Scans log coarse stats only (device type, country) for the dashboard
           above — no IPs, no user agents, deleted after 90 days.

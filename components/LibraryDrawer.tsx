@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
+import ModalCloseButton from "./modal/ModalCloseButton.tsx";
 import { useModalShell } from "./modal/useModalShell.ts";
 import {
   buildPassportPhraseUrl,
@@ -833,17 +834,12 @@ export default function LibraryDrawer(
               </span>
             )}
           </div>
-          <button
-            type="button"
+          <ModalCloseButton
             data-history-close
             onClick={shell.requestClose}
             aria-label={isSpanish ? "Cerrar guardados" : "Close saved"}
-            class="qr-modal-close-btn shrink-0 -mr-1"
-          >
-            <span aria-hidden="true" class="qr-modal-close-btn__cap">
-              ✕
-            </span>
-          </button>
+            class="shrink-0 -mr-1"
+          />
         </div>
 
         {/* Body */}

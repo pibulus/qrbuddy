@@ -316,7 +316,7 @@ export default function AnalyticsDashboard(
         <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
           Analytics
         </h2>
-        <p class="mt-2 text-sm font-bold text-neutral-700">
+        <p class="mt-2 text-sm font-bold text-[#4a3f39]">
           Stats are temporarily unavailable. Reload to retry; your QR settings
           still work.
         </p>
@@ -411,7 +411,7 @@ export default function AnalyticsDashboard(
             class={`min-h-[44px] px-3 rounded-full text-xs font-black transition-all ${
               windowDays === 7 || !hasPass
                 ? "bg-black text-white"
-                : "text-neutral-700 hover:bg-amber-100"
+                : "text-[#4a3f39] hover:bg-amber-100"
             }`}
           >
             7 Days
@@ -423,7 +423,7 @@ export default function AnalyticsDashboard(
             class={`min-h-[44px] px-3 rounded-full text-xs font-black transition-all ${
               windowDays === 30 && hasPass
                 ? "bg-black text-white"
-                : "text-neutral-700 hover:bg-amber-100"
+                : "text-[#4a3f39] hover:bg-amber-100"
             }`}
           >
             30 Days{!hasPass ? " 🛂" : ""}
@@ -449,7 +449,7 @@ export default function AnalyticsDashboard(
                 ? "30-Day Activity"
                 : "7-Day Activity"}
             </p>
-            <span class="text-[11px] font-bold text-neutral-600">
+            <span class="text-[11px] font-bold text-[#574c44]">
               Hover or tap bars for counts
             </span>
           </div>
@@ -501,7 +501,7 @@ export default function AnalyticsDashboard(
                     class="group relative flex-1 flex flex-col items-center gap-1.5 focus:outline-none min-w-0"
                   >
                     {/* Count badge (always subtly legible, high-contrast pill on hover/focus) */}
-                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black leading-none border border-transparent text-neutral-700 group-hover:bg-amber-200 group-hover:text-black group-hover:border-black group-focus-visible:bg-amber-200 group-focus-visible:text-black group-focus-visible:border-black transition-all">
+                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black leading-none border border-transparent text-[#4a3f39] group-hover:bg-amber-200 group-hover:text-black group-hover:border-black group-focus-visible:bg-amber-200 group-focus-visible:text-black group-focus-visible:border-black transition-all">
                       {bar.count}
                     </span>
 
@@ -540,13 +540,13 @@ export default function AnalyticsDashboard(
               {lastVisit.relative}
             </p>
             {lastVisit.localDateTime && (
-              <p class="text-xs font-bold text-neutral-700 mt-1">
+              <p class="text-xs font-bold text-[#4a3f39] mt-1">
                 {lastVisit.localDateTime}
               </p>
             )}
           </div>
           {typeof totalVisits === "number" && (
-            <p class="mt-3 pt-2 border-t border-black/15 text-xs font-black text-neutral-700">
+            <p class="mt-3 pt-2 border-t border-black/15 text-xs font-black text-[#4a3f39]">
               All-time total: <span class="font-mono">{totalVisits}</span>
             </p>
           )}
@@ -580,7 +580,7 @@ export default function AnalyticsDashboard(
                 🛂 PASSPORT FIELD REPORT
               </span>
               {typeof analytics.total_90d === "number" && (
-                <span class="text-xs font-black text-neutral-700">
+                <span class="text-xs font-black text-[#4a3f39]">
                   90-day scans:{" "}
                   <span class="font-mono">{analytics.total_90d}</span>
                 </span>
@@ -594,7 +594,7 @@ export default function AnalyticsDashboard(
               </p>
               {topCities.length === 0 && topCountries.length === 0
                 ? (
-                  <p class="text-xs font-bold text-neutral-600">
+                  <p class="text-xs font-bold text-[#574c44]">
                     Collecting city stamps as scans arrive…
                   </p>
                 )
@@ -624,7 +624,7 @@ export default function AnalyticsDashboard(
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div class="bg-white border-2 border-black rounded-xl p-2.5 space-y-1.5 min-w-0">
                 <div class="flex items-center justify-between gap-2">
-                  <span class="text-[11px] font-black uppercase tracking-wider text-neutral-700">
+                  <span class="text-[11px] font-black uppercase tracking-wider text-[#4a3f39]">
                     ⏰ Peak Rush Hour
                   </span>
                   <span class="text-xs font-black text-black">
@@ -658,7 +658,7 @@ export default function AnalyticsDashboard(
               </div>
 
               <div class="bg-white border-2 border-black rounded-xl p-2.5 flex flex-col justify-between min-w-0">
-                <span class="text-[11px] font-black uppercase tracking-wider text-neutral-700">
+                <span class="text-[11px] font-black uppercase tracking-wider text-[#4a3f39]">
                   🌐 Browser Split
                 </span>
                 <p class="mt-1 text-xs font-black text-black break-words">
@@ -696,7 +696,7 @@ export default function AnalyticsDashboard(
           </div>
         )}
 
-      <p class="text-xs font-semibold text-neutral-600">
+      <p class="text-xs font-semibold text-[#574c44]">
         Visits include direct link opens and your own scans. Activity and
         devices cover 7 days; the last visit uses retained logs (up to 90 days).
       </p>

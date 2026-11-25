@@ -1,4 +1,5 @@
 import { type Signal } from "@preact/signals";
+import ModalCloseButton from "./modal/ModalCloseButton.tsx";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "../islands/ToastManager.tsx";
@@ -315,7 +316,7 @@ export default function QRReader(
       } else {
         setDecodeError(
           isSpanish
-            ? "No encontramos un QR en esa imagen. ¿Pruebas con una foto más clara?"
+            ? "No se encontró un QR en esa imagen. ¿Pruebas con una foto más clara?"
             : "No QR code found in that image. Try a sharper shot?",
         );
         haptics.error();
@@ -509,7 +510,7 @@ export default function QRReader(
             : "Camera permission denied — drop an image or paste a screenshot instead.")
           : name === "NotFoundError"
           ? (isSpanish
-            ? "No encontramos una cámara — elige una imagen o pega una captura."
+            ? "No hay cámara disponible: elige una imagen o pega una captura."
             : "No camera found — drop an image or paste a screenshot instead.")
           : (isSpanish
             ? "No se pudo abrir la cámara. Elige una imagen del QR."
@@ -523,7 +524,7 @@ export default function QRReader(
     if (!result) return;
     try {
       await navigator.clipboard.writeText(result.data);
-      addToast(isSpanish ? "¡Copiado! 📋" : "Copied! 📋");
+      addToast(isSpanish ? "¡Copiado!" : "Copied!");
       haptics.copy();
     } catch {
       addToast(isSpanish ? "No se pudo copiar" : "Could not copy");
@@ -565,7 +566,7 @@ export default function QRReader(
         <div class="flex items-center justify-between gap-3 p-4 sm:px-6 sm:pt-5 pb-2">
           <div class="flex items-center gap-3 min-w-0">
             <div
-              class="w-12 h-12 rounded-2xl border-2 border-[#1e1714] bg-gradient-to-br from-emerald-200 via-amber-200 to-pink-300 shadow-[2px_2px_0_#1e1714] flex items-center justify-center text-2xl shrink-0 select-none"
+              class="w-12 h-12 rounded-2xl border-2 border-[#1e1714] bg-[#fbf1e4] shadow-[2px_2px_0_#1e1714] flex items-center justify-center text-2xl shrink-0 select-none"
               aria-hidden="true"
             >
               🛡️
@@ -594,24 +595,11 @@ export default function QRReader(
               </p>
             </div>
           </div>
-          <button
-            type="button"
+          <ModalCloseButton
             onClick={shell.requestClose}
-            class="qr-modal-close-btn shrink-0"
             aria-label={isSpanish ? "Cerrar lector QR" : "Close QR reader"}
-          >
-            <svg
-              class="w-4 h-4 pointer-events-none"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3.25"
-              stroke-linecap="round"
-              aria-hidden="true"
-            >
-              <path d="M6.5 6.5l11 11m0-11l-11 11" />
-            </svg>
-          </button>
+            class="shrink-0"
+          />
         </div>
 
         <div class="flex-1 overflow-y-auto scrollbar-none p-4 sm:px-6 sm:py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 space-y-3.5">
@@ -773,7 +761,7 @@ export default function QRReader(
                       ? "O elige una captura o foto del QR"
                       : "Or pick a screenshot / QR image")}
                 </p>
-                <p class="text-xs text-neutral-500 font-medium mt-1">
+                <p class="text-xs text-[#6e6058] font-medium mt-1">
                   <span>
                     {isSpanish
                       ? "Toca para elegir una foto"
@@ -824,13 +812,13 @@ export default function QRReader(
                         </span>
                       )}
                     <div class="min-w-0">
-                      <p class="text-[11px] uppercase tracking-wider text-pink-600 font-black">
+                      <p class="text-[11px] uppercase tracking-wider text-[#574c44] font-black">
                         {isSpanish
                           ? TYPE_META[result.type].labelEs
                           : TYPE_META[result.type].label}
                       </p>
                       {openableUrl && (
-                        <p class="text-sm font-black text-gray-900 truncate">
+                        <p class="text-sm font-black text-[#1e1714] truncate">
                           {peekData?.domain || new URL(openableUrl).hostname}
                         </p>
                       )}
@@ -876,21 +864,21 @@ export default function QRReader(
                               <span class="w-2.5 h-2.5 rounded-full bg-amber-300 border border-black" />
                               <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-black" />
                             </div>
-                            <span class="text-[11px] font-mono font-bold text-neutral-600 truncate">
+                            <span class="text-[11px] font-mono font-bold text-[#574c44] truncate">
                               {new URL(openableUrl).hostname}
                             </span>
                             <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-200 border border-black text-black">
                               {isSpanish ? "Revisando…" : "Peeking…"}
                             </span>
                           </div>
-                          <div class="w-full aspect-video px-4 bg-gradient-to-br from-amber-50 via-white to-pink-50 text-center animate-pulse flex flex-col items-center justify-center gap-1.5">
+                          <div class="w-full aspect-video px-4 bg-[#fbf1e4] text-center animate-pulse flex flex-col items-center justify-center gap-1.5">
                             <span class="text-2xl animate-spin">🔍</span>
-                            <span class="text-xs font-black text-gray-900">
+                            <span class="text-xs font-black text-[#1e1714]">
                               {isSpanish
                                 ? "Revisando el destino de forma segura..."
                                 : "Inspecting destination safely..."}
                             </span>
-                            <span class="text-[10px] text-gray-500 font-medium">
+                            <span class="text-[10px] text-[#6e6058] font-medium">
                               {isSpanish
                                 ? "Desarmando redirecciones y obteniendo vista previa sin cookies"
                                 : "Unrolling redirects & fetching visual preview without cookies"}
@@ -977,7 +965,7 @@ export default function QRReader(
                                 ? (
                                   <>
                                     {!previewLoaded && (
-                                      <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-amber-50 via-pink-50 to-amber-50 animate-pulse p-4 text-center">
+                                      <div class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#fbf1e4] animate-pulse p-4 text-center">
                                         <span class="text-2xl">🖼️</span>
                                         <span class="text-xs font-black text-black/75">
                                           {isSpanish
@@ -1042,7 +1030,7 @@ export default function QRReader(
                                       <p class="font-mono text-sm font-black text-black truncate">
                                         {peekData.domain}
                                       </p>
-                                      <p class="text-[11px] font-bold text-neutral-600 line-clamp-1">
+                                      <p class="text-[11px] font-bold text-[#574c44] line-clamp-1">
                                         {peekData.title &&
                                             peekData.title !== peekData.domain
                                           ? peekData.title
@@ -1066,11 +1054,11 @@ export default function QRReader(
                             {/* Metadata & Unrolled Redirect Chain */}
                             <div class="p-3 space-y-2">
                               <div>
-                                <h4 class="text-sm font-black text-gray-900 leading-snug">
+                                <h4 class="text-sm font-black text-[#1e1714] leading-snug">
                                   {peekData.title || peekData.domain}
                                 </h4>
                                 {peekData.description && (
-                                  <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed font-medium mt-0.5">
+                                  <p class="text-xs text-[#574c44] line-clamp-2 leading-relaxed font-medium mt-0.5">
                                     {peekData.description}
                                   </p>
                                 )}
@@ -1111,7 +1099,7 @@ export default function QRReader(
                                           class={`px-1.5 py-0.5 rounded border truncate max-w-[200px] ${
                                             idx === hopChain.length - 1
                                               ? "bg-white border-black text-black font-black"
-                                              : "bg-amber-100/80 border-amber-300 text-neutral-700"
+                                              : "bg-amber-100/80 border-amber-300 text-[#4a3f39]"
                                           }`}
                                         >
                                           {formatHopLabel(hop)}
@@ -1132,16 +1120,16 @@ export default function QRReader(
                 {/* Parsed structured data (Wifi / vCard) or raw payload */}
                 {parsedRows.length > 0
                   ? (
-                    <div class="rounded-xl border-2 border-black bg-white divide-y divide-gray-100">
+                    <div class="rounded-xl border-2 border-black bg-white divide-y divide-[#1e1714]/15">
                       {parsedRows.map((row) => (
                         <div
                           key={row.label}
                           class="flex items-baseline justify-between gap-3 px-3 py-2"
                         >
-                          <span class="text-[11px] font-black uppercase tracking-wide text-gray-500">
+                          <span class="text-[11px] font-black uppercase tracking-wide text-[#6e6058]">
                             {row.label}
                           </span>
-                          <span class="text-sm font-bold text-gray-900 break-all text-right">
+                          <span class="text-sm font-bold text-[#1e1714] break-all text-right">
                             {row.value}
                           </span>
                         </div>
@@ -1151,7 +1139,7 @@ export default function QRReader(
                   : openableUrl
                   ? (
                     <details class="group rounded-xl border-2 border-black/20 bg-white/70 text-xs transition-all">
-                      <summary class="cursor-pointer min-h-[44px] px-3 py-2 font-bold text-gray-600 hover:text-black list-none flex items-center justify-between text-[11px] select-none">
+                      <summary class="cursor-pointer min-h-[44px] px-3 py-2 font-bold text-[#574c44] hover:text-black list-none flex items-center justify-between text-[11px] select-none">
                         <span class="flex items-center gap-1.5">
                           <span>🔍</span>
                           <span>
@@ -1164,13 +1152,13 @@ export default function QRReader(
                           ▼
                         </span>
                       </summary>
-                      <div class="px-3 pb-2.5 pt-2 border-t border-gray-200 font-mono text-[11px] text-gray-800 break-all select-all max-h-24 overflow-y-auto">
+                      <div class="px-3 pb-2.5 pt-2 border-t border-[#1e1714]/20 font-mono text-[11px] text-[#4a3f39] break-all select-all max-h-24 overflow-y-auto">
                         {result.data}
                       </div>
                     </details>
                   )
                   : (
-                    <div class="rounded-xl border-2 border-black bg-white p-3 font-mono text-xs font-bold text-gray-900 break-all whitespace-pre-wrap max-h-28 overflow-y-auto">
+                    <div class="rounded-xl border-2 border-black bg-white p-3 font-mono text-xs font-bold text-[#1e1714] break-all whitespace-pre-wrap max-h-28 overflow-y-auto">
                       {result.data}
                     </div>
                   )}
@@ -1184,7 +1172,7 @@ export default function QRReader(
                       safeOpenUrl(peekData.finalUrl)) || openableUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="min-h-[50px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-[3px_3px_0px_0px_#FF69B4] hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2"
+                    class="min-h-[50px] rounded-xl border-3 border-black bg-black px-4 py-3 font-black text-white shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2"
                   >
                     <span>🛡️</span>
                     <span>{isSpanish ? "Abrir link ↗" : "Open link ↗"}</span>
@@ -1193,7 +1181,7 @@ export default function QRReader(
                 <button
                   type="button"
                   onClick={handleCopy}
-                  class={`min-h-[50px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-1.5 ${
+                  class={`min-h-[50px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-[#1e1714] shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-1.5 ${
                     openableUrl ? "" : "sm:col-span-2"
                   }`}
                 >
@@ -1207,7 +1195,7 @@ export default function QRReader(
                     setPeekData(null);
                     setDecodeError(null);
                   }}
-                  class="sm:col-span-2 min-h-[44px] rounded-xl border-2 border-gray-300 bg-white px-4 py-2 font-bold text-gray-700 hover:border-black hover:text-black transition-all"
+                  class="sm:col-span-2 min-h-[44px] rounded-xl border-2 border-[#1e1714]/20 bg-white px-4 py-2 font-bold text-[#4a3f39] hover:border-black hover:text-black transition-all"
                 >
                   {isSpanish ? "Escanear otro QR" : "Scan another QR"}
                 </button>

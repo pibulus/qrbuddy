@@ -95,7 +95,7 @@ export default function RoutingConfigForm({
                 class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                   !randomSequence && loopSequence
                     ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
-                    : "text-neutral-600 hover:text-[#1e1714]"
+                    : "text-[#574c44] hover:text-[#1e1714]"
                 }`}
               >
                 Loop 🔄
@@ -106,7 +106,7 @@ export default function RoutingConfigForm({
                 class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                   randomSequence
                     ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
-                    : "text-neutral-600 hover:text-[#1e1714]"
+                    : "text-[#574c44] hover:text-[#1e1714]"
                 }`}
               >
                 Roulette 🎲
@@ -120,7 +120,7 @@ export default function RoutingConfigForm({
                 class={`min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                   !randomSequence && !loopSequence
                     ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714]"
-                    : "text-neutral-600 hover:text-[#1e1714]"
+                    : "text-[#574c44] hover:text-[#1e1714]"
                 }`}
               >
                 Once
@@ -140,7 +140,7 @@ export default function RoutingConfigForm({
                   class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-xs font-black whitespace-nowrap transition-all ${
                     dailySpins === null
                       ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border border-[#1e1714] text-[#1e1714]"
-                      : "text-neutral-600 hover:text-[#1e1714]"
+                      : "text-[#574c44] hover:text-[#1e1714]"
                   }`}
                 >
                   ∞ Open
@@ -152,7 +152,7 @@ export default function RoutingConfigForm({
                   class={`min-h-[30px] inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-black cursor-pointer whitespace-nowrap transition-all ${
                     dailySpins !== null
                       ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] border border-[#1e1714] text-[#1e1714]"
-                      : "text-neutral-600 hover:text-[#1e1714]"
+                      : "text-[#574c44] hover:text-[#1e1714]"
                   }`}
                 >
                   <input
@@ -174,7 +174,7 @@ export default function RoutingConfigForm({
                         setDailySpins(Math.min(99, Math.max(1, n)));
                       }
                     }}
-                    class="w-8 bg-transparent text-xs font-black text-[#1e1714] placeholder:text-neutral-500 focus:outline-none text-center"
+                    class="w-8 bg-transparent text-xs font-black text-[#1e1714] placeholder:text-[#6e6058] focus:outline-none text-center"
                   />
                   <span class="text-[11px] font-black whitespace-nowrap">
                     / day
@@ -188,7 +188,7 @@ export default function RoutingConfigForm({
             <div key={index} class="flex gap-2 items-center">
               <label
                 htmlFor={`seq-url-${index}`}
-                class="text-xs font-black text-neutral-600 w-5 shrink-0 text-right"
+                class="text-xs font-black text-[#574c44] w-5 shrink-0 text-right"
               >
                 {index + 1}.
               </label>
@@ -235,7 +235,7 @@ export default function RoutingConfigForm({
 
       {routingMode === "device" && (
         <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
-          <p class="text-xs font-semibold text-neutral-700">
+          <p class="text-xs font-semibold text-[#4a3f39]">
             Route visitors based on their device. Leave blank to use fallback.
           </p>
 
@@ -294,7 +294,7 @@ export default function RoutingConfigForm({
 
       {routingMode === "time" && (
         <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
-          <p class="text-xs font-semibold text-neutral-700">
+          <p class="text-xs font-semibold text-[#4a3f39]">
             Uses the scanner's time zone when available; otherwise uses the time
             zone from the device that last saved this QR. If the end is earlier
             than the start, the active window continues overnight. Choose

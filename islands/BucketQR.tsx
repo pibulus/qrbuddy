@@ -22,12 +22,10 @@ import PasswordUnlock from "../components/bucket-qr/PasswordUnlock.tsx";
 import { addToast } from "./ToastManager.tsx";
 
 // Repeated chunky-CTA button idioms — used 3x, 3x, and 2x below.
-const BTN_PRIMARY_UPLOAD =
-  "w-full py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50";
-const BTN_PRIMARY_DOWNLOAD =
-  "w-full py-6 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-2xl font-black rounded-chunky border-4 border-black shadow-chunky-hover hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50";
+const BTN_PRIMARY_UPLOAD = "qr-pitch-cta !min-h-[64px] !text-xl";
+const BTN_PRIMARY_DOWNLOAD = "qr-pitch-cta !min-h-[64px] !text-xl";
 const BTN_SECONDARY =
-  "w-full min-h-[52px] py-3 bg-white text-gray-900 font-black rounded-xl border-3 border-black shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-50";
+  "w-full min-h-[52px] py-3 bg-white text-[#1e1714] font-black rounded-xl border-3 border-black shadow-chunky hover:-translate-y-0.5 transition disabled:opacity-50";
 
 interface BucketQRProps {
   bucketUrl: string;
@@ -382,7 +380,7 @@ export default function BucketQR({
         try {
           await navigator.clipboard.writeText(downloadedContent.content);
           haptics.success();
-          addToast("✅ Content copied to clipboard!");
+          addToast("Content copied");
         } catch {
           // Fallback: show a preview of the content if clipboard fails
           addToast(
@@ -503,7 +501,7 @@ export default function BucketQR({
     haptics.light();
     try {
       await navigator.clipboard.writeText(bucketUrl);
-      addToast("Bucket URL copied! 📋");
+      addToast("Link copied");
     } catch (err) {
       console.error("Failed to copy URL:", err);
       addToast("Could not copy the link", 3000);
@@ -517,13 +515,13 @@ export default function BucketQR({
         <span
           class={`inline-block px-6 py-3 rounded-full border-3 border-black text-lg font-black shadow-chunky ${
             isEmpty
-              ? "bg-gradient-to-r from-green-400 to-blue-400 text-white"
-              : "bg-gradient-to-r from-amber-400 to-orange-500 text-white animate-pulse"
+              ? "bg-emerald-200 text-[#1e1714]"
+              : "bg-amber-200 text-[#1e1714] animate-pulse"
           }`}
         >
           {isEmpty ? "🪣 Ready for upload" : "💥 File ready"}
         </span>
-        <p class="text-sm text-gray-600 mt-3 leading-relaxed">
+        <p class="text-sm text-[#574c44] mt-3 leading-relaxed">
           {isEmpty ? "Waiting for content." : "Current locker contents."}
         </p>
       </div>
@@ -598,13 +596,13 @@ export default function BucketQR({
 
             {isUploading && (
               <div class="bg-white border-3 border-black rounded-xl p-3 shadow-chunky">
-                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-3 bg-[#efe9dc] rounded-full overflow-hidden">
                   <div
-                    class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-200"
+                    class="h-full bg-[#ffbe0b] transition-all duration-200"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p class="text-center text-xs font-bold text-purple-700 mt-2">
+                <p class="text-center text-xs font-bold text-[#574c44] mt-2">
                   {uploadStatusText} {uploadProgress}%
                 </p>
               </div>
@@ -706,7 +704,7 @@ export default function BucketQR({
             )}
 
             {contentMetadata && contentType === "file" && (
-              <p class="text-center text-sm text-gray-600">
+              <p class="text-center text-sm text-[#574c44]">
                 📄 {contentMetadata.filename ?? "File"}
                 {bucketFileSizeLabel ? ` ${bucketFileSizeLabel}` : ""}
               </p>
@@ -715,7 +713,7 @@ export default function BucketQR({
             {(!isReusable || deleteOnDownload) && (
               <p
                 id="download-empty-warning"
-                class="text-center text-xs text-orange-700 leading-relaxed"
+                class="text-center text-xs text-amber-900 leading-relaxed"
               >
                 Starting this download empties the locker, even if the browser
                 later cancels the handoff.
@@ -727,10 +725,10 @@ export default function BucketQR({
       <section class="bg-white border-3 border-black rounded-2xl p-4 shadow-chunky space-y-3">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <h2 class="text-sm font-black uppercase tracking-wide text-gray-500">
+            <h2 class="text-sm font-black uppercase tracking-wide text-[#6e6058]">
               Share this locker
             </h2>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-[#574c44]">
               Link and QR ready.
             </p>
           </div>

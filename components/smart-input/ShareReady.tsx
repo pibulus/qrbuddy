@@ -84,7 +84,7 @@ export default function ShareReady(
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(share.url);
-      addToast(isSpanish ? "Link copiado 📋" : "Link copied 📋");
+      addToast(isSpanish ? "Link copiado" : "Link copied");
       haptics.copy();
     } catch {
       addToast(
@@ -125,7 +125,7 @@ export default function ShareReady(
           <p class="font-black text-black leading-tight">
             {isSpanish ? copy.labelEs : copy.label}
           </p>
-          <p class="text-xs text-neutral-600 truncate">
+          <p class="text-xs text-[#574c44] truncate">
             {share.title}
           </p>
         </div>

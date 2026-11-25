@@ -155,6 +155,13 @@ export default function OwnerStrip(
   const [draft, setDraft] = useState(title);
   const [busy, setBusy] = useState<string | null>(null);
   const [showVibe, setShowVibe] = useState(false);
+  // Two-tap remove: first tap arms the row, second removes. Disarms after 3s.
+  const [armedRemoveId, setArmedRemoveId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!armedRemoveId) return;
+    const t = setTimeout(() => setArmedRemoveId(null), 3000);
+    return () => clearTimeout(t);
+  }, [armedRemoveId]);
   const fileInput = useRef<HTMLInputElement>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const mutationLock = useRef(false);
@@ -383,7 +390,12 @@ export default function OwnerStrip(
 
   const removeItem = async (item: ShareItem) => {
     if (mutationLock.current) return;
-    if (!confirm(`Remove "${prettyName(item.name)}"?`)) return;
+    if (armedRemoveId !== item.id) {
+      setArmedRemoveId(item.id);
+      haptics.light();
+      return;
+    }
+    setArmedRemoveId(null);
     if (!beginMutation(item.id)) return;
     try {
       const r = await post<{ files: ShareItem[] }>(
@@ -434,7 +446,7 @@ export default function OwnerStrip(
     try {
       await post({ action: "set-unbranded" }, "Couldn't activate white-label");
       haptics.light();
-      addToast("Clean white-label active — zero QRBuddy branding ✨", 3000);
+      addToast("Clean white-label active — zero QRBuddy branding", 3000);
     } catch {
       // Local white-label state still stays active for this owner
     } finally {
@@ -445,7 +457,7 @@ export default function OwnerStrip(
   const sticker = () => {
     triggerDownload.value = true;
     haptics.medium();
-    addToast("Sticker on the way — print it, stick it 🖨️");
+    addToast("Sticker on the way: print it, stick it");
   };
 
   const handleTabKeyDown = (e: KeyboardEvent) => {
@@ -1116,9 +1128,13 @@ export default function OwnerStrip(
                       onClick={() => void removeItem(f)}
                       disabled={mutationBusy}
                       aria-label={`Remove ${prettyName(f.name)}`}
-                      class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#fde8ee] text-xs font-black text-[#c4607a] transition-colors disabled:opacity-50"
+                      class={`h-8 rounded-full border-2 text-xs font-black text-[#c4607a] transition-colors disabled:opacity-50 ${
+                        armedRemoveId === f.id
+                          ? "px-3 border-[#c4607a] bg-[#fde8ee]"
+                          : "w-8 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#fde8ee]"
+                      }`}
                     >
-                      ✕
+                      {armedRemoveId === f.id ? "Remove?" : "✕"}
                     </button>
                   </div>
                 </li>

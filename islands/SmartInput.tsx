@@ -1393,9 +1393,9 @@ export default function SmartInput(
 
                   {/* Upload progress */}
                   {isUploading && (
-                    <div class="absolute inset-x-0 bottom-0 h-1 bg-gray-200 rounded-b-xl overflow-hidden">
+                    <div class="absolute inset-x-0 bottom-0 h-1 bg-[#efe9dc] rounded-b-xl overflow-hidden">
                       <div
-                        class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
+                        class="h-full bg-[#ffbe0b] transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
@@ -1445,7 +1445,7 @@ export default function SmartInput(
                   setShowReader(true);
                   haptics.medium();
                 }}
-                class="w-full mt-4 min-h-[48px] rounded-xl border-3 border-purple-400 bg-purple-50 px-4 py-3 text-sm font-black text-purple-800 shadow-chunky hover:-translate-y-0.5 transition animate-slide-down inline-flex items-center justify-center gap-2"
+                class="w-full mt-4 min-h-[48px] rounded-xl border-3 border-[#1e1714] bg-[var(--qr-theme-tint,#fce7f3)] px-4 py-3 text-sm font-black text-[#1e1714] shadow-chunky hover:-translate-y-0.5 transition animate-slide-down inline-flex items-center justify-center gap-2"
               >
                 <StageGlyph kind="magnifier" size={16} />
                 <span>
@@ -1612,7 +1612,7 @@ export default function SmartInput(
 
         {/* Upload progress text */}
         {isUploading && (
-          <p class="text-purple-600 text-sm mt-2 text-center animate-pulse">
+          <p class="text-[#574c44] text-sm mt-2 text-center animate-pulse">
             {uploadStatusText} {uploadProgress}%
           </p>
         )}

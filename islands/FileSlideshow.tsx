@@ -621,7 +621,7 @@ export default function FileSlideshow({
               isTerminal
                 ? "bg-black border-2 border-[#00FF41] text-[#00FF41] shadow-[2px_2px_0px_rgba(0,255,65,0.4)]"
                 : isDarkTheme
-                ? "bg-slate-900 border-2 border-white/80 text-white shadow-chunky"
+                ? "bg-[#1e1714] border-2 border-white/80 text-white shadow-chunky"
                 : "bg-white border-2 border-black text-black shadow-chunky"
             }`}
           >
@@ -745,7 +745,7 @@ export default function FileSlideshow({
                         <div
                           class={`flex flex-col items-center justify-center p-6 text-center space-y-3 rounded-2xl border-2 ${
                             isDarkTheme
-                              ? "bg-slate-900 border-white/40 text-white"
+                              ? "bg-[#1e1714] border-white/40 text-white"
                               : "bg-[#fffef7] border-[#1e1714] text-[#1e1714] shadow-chunky"
                           }`}
                         >
@@ -775,7 +775,7 @@ export default function FileSlideshow({
                               role="status"
                               class={`flex flex-col items-center justify-center gap-2 px-5 py-4 rounded-2xl border-2 animate-pulse ${
                                 isDarkTheme
-                                  ? "bg-slate-900/80 border-white/30 text-white"
+                                  ? "bg-[#1e1714]/80 border-white/30 text-white"
                                   : "bg-[#fffef7] border-[#1e1714]/30 text-[#1e1714]"
                               }`}
                             >
@@ -816,7 +816,7 @@ export default function FileSlideshow({
                         isTerminal
                           ? "bg-black border-[#00FF41] text-[#00FF41]"
                           : isDarkTheme
-                          ? "bg-slate-900 border-white/40 text-white"
+                          ? "bg-[#1e1714] border-white/40 text-white"
                           : "bg-white border-black text-black"
                       }`}
                     >
@@ -950,7 +950,7 @@ export default function FileSlideshow({
                 isTerminal
                   ? "bg-black border-2 border-[#00FF41] text-[#00FF41] hover:bg-[#00FF41] hover:text-black"
                   : isDarkTheme
-                  ? "bg-slate-900 border-2 border-white text-white hover:bg-slate-800"
+                  ? "bg-[#1e1714] border-2 border-white text-white hover:bg-[#1e1714]"
                   : "bg-white border-2 border-black text-black hover:bg-amber-200"
               }`}
             >
@@ -1033,7 +1033,7 @@ export default function FileSlideshow({
                         ? isTerminal
                           ? "bg-[#00FF41] text-black border-2 border-[#00FF41]"
                           : isDarkTheme
-                          ? "bg-white text-black border-2 border-white hover:bg-slate-200"
+                          ? "bg-white text-black border-2 border-white hover:bg-[#efe9dc]"
                           : "bg-[#ffbe0b] text-[#1e1714] border-2 border-[#1e1714] hover:bg-[#ffd04a]"
                         : "bg-gradient-to-r from-[#c4607a] to-[#ffbe0b] text-white border-2 border-black shadow-[0_0_20px_rgba(196,96,122,0.45)] animate-pulse-glow"
                     }`}

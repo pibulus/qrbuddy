@@ -87,9 +87,10 @@ function pinPage(shortCode: string, invalid = false): Response {
   input:focus { outline: 3px solid #ffd166; outline-offset: 1px; }
   button { width: 100%; margin-top: 14px; padding: 15px; font-size: 15px;
     font-weight: 900; border: 2px solid #1e1714; border-radius: 14px;
-    background: #ff6ac2; color: #1e1714; cursor: pointer; box-shadow: 3px 3px 0 #1e1714; }
+    background: #ffbe0b; color: #1e1714; cursor: pointer; box-shadow: 3px 3px 0 #1e1714; }
   button:active { transform: translateY(2px); box-shadow: 1px 1px 0 #1e1714; }
-  .error { margin-top: 12px; font-size: 13px; font-weight: 800; color: #b3266b; }
+  .error { margin-top: 12px; padding: 8px 12px; border: 2px solid #f59e0b; border-radius: 12px;
+    background: #fffbeb; font-size: 13px; font-weight: 800; color: #78350f; }
 </style>
 </head>
 <body>

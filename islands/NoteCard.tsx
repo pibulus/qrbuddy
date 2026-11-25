@@ -98,7 +98,7 @@ export default function NoteCard({
     <article class="w-full max-w-xl animate-fade-in space-y-4">
       {/* Top pill bar */}
       <header class="flex items-center justify-between gap-3 px-1">
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border-2 border-black bg-white shadow-chunky text-xs font-black uppercase tracking-wide text-gray-800">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border-2 border-black bg-white shadow-chunky text-xs font-black uppercase tracking-wide text-[#4a3f39]">
           <span>{encryptedPayload ? "🔐" : "💌"}</span>
           <span>{encryptedPayload ? "Encrypted Note" : "Message"}</span>
         </div>
@@ -108,20 +108,20 @@ export default function NoteCard({
               🔓 Zero-Knowledge Decrypted
             </span>
           )}
-          <span class="text-xs font-mono text-gray-500 font-bold">
+          <span class="text-xs font-mono text-[#6e6058] font-bold">
             #{code}
           </span>
         </div>
       </header>
 
       {/* Main Message Card */}
-      <section class="border-4 border-black bg-white rounded-3xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden transition-all">
+      <section class="border-4 border-black bg-white rounded-3xl shadow-chunky overflow-hidden transition-all">
         {/* Card Header Strip */}
-        <div class="border-b-3 border-black bg-gradient-to-r from-pink-100 via-yellow-100 to-purple-100 px-4 py-3 flex items-center justify-between gap-3">
+        <div class="border-b-3 border-black bg-[#fbf1e4] px-4 py-3 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <span class="h-3.5 w-3.5 rounded-full border-2 border-black bg-[#FF6B9D]" />
-            <span class="h-3.5 w-3.5 rounded-full border-2 border-black bg-[#FFE66D]" />
-            <span class="h-3.5 w-3.5 rounded-full border-2 border-black bg-[#4ECDC4]" />
+            <span class="h-3.5 w-3.5 rounded-full border-2 border-black bg-[#ff8a7a]" />
+            <span class="h-3.5 w-3.5 rounded-full border-2 border-black bg-[#f8de7e]" />
+            <span class="h-3.5 w-3.5 rounded-full border-2 border-black bg-[#9ef0c8]" />
           </div>
           {decryptedText && (
             <button
@@ -129,8 +129,8 @@ export default function NoteCard({
               onClick={handleCopy}
               class={`min-h-[34px] px-3 py-1 rounded-xl border-2 border-black font-black text-xs transition-all flex items-center gap-1.5 shadow-sm active:translate-y-0.5 ${
                 copied
-                  ? "bg-green-300 text-green-950"
-                  : "bg-white text-gray-900 hover:bg-black hover:text-white"
+                  ? "bg-emerald-200 text-emerald-950"
+                  : "bg-white text-[#1e1714] hover:bg-black hover:text-white"
               }`}
               title="Copy message to clipboard"
             >
@@ -141,7 +141,7 @@ export default function NoteCard({
         </div>
 
         {/* Dynamic Text Body or Passkey Prompt */}
-        <div class="p-6 sm:p-8 bg-gradient-to-b from-white to-[#FFFDF9] min-h-[180px] flex items-center justify-center">
+        <div class="p-6 sm:p-8 bg-[#fffef7] min-h-[180px] flex items-center justify-center">
           {encryptedPayload && !decryptedText
             ? (
               <form
@@ -149,10 +149,10 @@ export default function NoteCard({
                 class="w-full max-w-sm space-y-3 text-center"
               >
                 <div class="text-4xl mb-1">🔒</div>
-                <p class="font-black text-gray-900 text-base">
+                <p class="font-black text-[#1e1714] text-base">
                   Zero-Knowledge Encrypted Note
                 </p>
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-[#6e6058]">
                   This note was encrypted on the sender's device. Enter the
                   passkey to unlock:
                 </p>
@@ -162,7 +162,7 @@ export default function NoteCard({
                   onInput={(e) =>
                     setManualKey((e.target as HTMLInputElement).value)}
                   placeholder="Enter passkey or paste #key"
-                  class="w-full text-center font-mono text-sm px-3 py-2.5 rounded-xl border-2 border-black focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  class="w-full text-center font-mono text-sm px-3 py-2.5 rounded-xl border-2 border-black focus:outline-none focus:ring-2 focus:ring-[#1e1714]"
                 />
                 {decryptError && (
                   <p class="text-xs font-bold text-amber-800 animate-shake">
@@ -171,26 +171,26 @@ export default function NoteCard({
                 )}
                 <button
                   type="submit"
-                  class="w-full min-h-[44px] rounded-xl border-2 border-black bg-black font-black text-white text-sm hover:bg-gray-800 transition"
+                  class="qr-pitch-cta"
                 >
-                  🔓 Decrypt Note
+                  Decrypt note
                 </button>
               </form>
             )
             : isShort
             ? (
-              <p class="text-3xl sm:text-5xl font-black leading-tight text-center break-words text-gray-900 tracking-tight py-4">
+              <p class="text-3xl sm:text-5xl font-black leading-tight text-center break-words text-[#1e1714] tracking-tight py-4">
                 {displayText}
               </p>
             )
             : isMedium
             ? (
-              <p class="text-xl sm:text-2xl font-black leading-snug break-words text-gray-900 text-left py-2">
+              <p class="text-xl sm:text-2xl font-black leading-snug break-words text-[#1e1714] text-left py-2">
                 {displayText}
               </p>
             )
             : (
-              <pre class="w-full whitespace-pre-wrap break-words font-mono text-base sm:text-lg leading-relaxed text-gray-900 text-left">
+              <pre class="w-full whitespace-pre-wrap break-words font-mono text-base sm:text-lg leading-relaxed text-[#1e1714] text-left">
               {displayText}
               </pre>
             )}
@@ -198,15 +198,14 @@ export default function NoteCard({
       </section>
 
       {/* Footer */}
-      <footer class="flex flex-col sm:flex-row gap-3 items-center justify-between text-xs text-gray-500 pt-2 px-1">
+      <footer class="flex flex-col sm:flex-row gap-3 items-center justify-between text-xs text-[#6e6058] pt-2 px-1">
         <p class="font-mono">Opened {openedLabel}</p>
         {!unbranded && (
           <a
             href="/?utm_source=text_card&utm_medium=note"
-            class="inline-flex items-center gap-1.5 font-bold text-gray-700 hover:text-pink-600 transition-colors"
+            class="inline-flex items-center gap-1.5 font-bold text-[#4a3f39] hover:text-[#1e1714] transition-colors"
           >
             <span>Make your own QR</span>
-            <span>✨</span>
           </a>
         )}
       </footer>

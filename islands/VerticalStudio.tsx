@@ -536,9 +536,7 @@ export default function VerticalStudio({
 
                 <label class="block space-y-1">
                   <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish
-                      ? "GTIN / EAN / UPC (AI 01)"
-                      : "GTIN / EAN / UPC (AI 01)"}
+                    GTIN / EAN / UPC (01)
                   </span>
                   <input
                     type="text"
@@ -577,7 +575,7 @@ export default function VerticalStudio({
               <div class="grid grid-cols-3 gap-2">
                 <label class="block space-y-1">
                   <span class="text-[11px] font-black text-[#1e1714]">
-                    {isSpanish ? "Lote (AI 10)" : "Batch / Lot (10)"}
+                    {isSpanish ? "Lote (10)" : "Batch / Lot (10)"}
                   </span>
                   <input
                     type="text"
@@ -607,7 +605,7 @@ export default function VerticalStudio({
 
                 <label class="block space-y-1">
                   <span class="text-[11px] font-black text-[#1e1714]">
-                    {isSpanish ? "Serie (AI 21)" : "Serial (21)"}
+                    {isSpanish ? "Serie (21)" : "Serial (21)"}
                   </span>
                   <input
                     type="text"

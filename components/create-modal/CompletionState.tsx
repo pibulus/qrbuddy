@@ -71,13 +71,13 @@ export default function CompletionState({
             {isTextCard ? "T" : isFilePage ? "📄" : "🪣"}
           </span>
           <div class="min-w-0">
-            <p class="text-xs uppercase tracking-wide text-pink-500 font-black">
+            <p class="text-xs uppercase tracking-wide text-[#574c44] font-black">
               {statusLabel}
             </p>
-            <h3 class="text-2xl font-black text-gray-900 leading-tight">
+            <h3 class="text-2xl font-black text-[#1e1714] leading-tight">
               {title}
             </h3>
-            <p class="text-sm text-gray-600 mt-1">
+            <p class="text-sm text-[#574c44] mt-1">
               {description}
             </p>
           </div>
@@ -93,10 +93,10 @@ export default function CompletionState({
         </div>
 
         <div class="rounded-xl border-2 border-black bg-white p-3">
-          <p class="text-[11px] font-black uppercase tracking-wide text-gray-500 mb-1">
+          <p class="text-[11px] font-black uppercase tracking-wide text-[#6e6058] mb-1">
             {isSpanish ? "Link para compartir" : "Share link"}
           </p>
-          <p class="text-sm font-bold text-gray-900 break-all">
+          <p class="text-sm font-bold text-[#1e1714] break-all">
             {bucketUrl}
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function CompletionState({
           <button
             type="button"
             onClick={onCopy}
-            class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+            class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-[#1e1714] shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
           >
             {isSpanish ? "📋 Copiar link" : "📋 Copy link"}
           </button>
@@ -129,7 +129,7 @@ export default function CompletionState({
           <button
             type="button"
             onClick={onEditDesign}
-            class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-gray-900 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
+            class="min-h-[52px] rounded-xl border-3 border-black bg-white px-4 py-3 font-black text-[#1e1714] shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 active:translate-y-0 transition-all"
           >
             {isSpanish ? "🎨 Editar diseño" : "🎨 Edit design"}
           </button>

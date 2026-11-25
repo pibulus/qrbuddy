@@ -198,7 +198,7 @@ export default function EditableLinkSettings({
                   addToast(
                     isSpanish
                       ? "¡Link de edición copiado! 📋"
-                      : "Edit link copied! 📋",
+                      : "Edit link copied",
                   );
                 } catch {
                   haptics.error();

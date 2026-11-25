@@ -149,13 +149,13 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
       {/* High-Contrast KPI Tiles */}
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div class="bg-white border-2 border-black rounded-2xl p-3 flex flex-col justify-between min-w-0">
-          <span class="text-[11px] font-black uppercase tracking-wider text-neutral-600">
+          <span class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
             Total Visits
           </span>
           <p class="mt-1 text-xl sm:text-2xl font-black font-mono text-black truncate">
             {qrData.scan_count}
           </p>
-          <span class="text-[11px] font-bold text-neutral-600 truncate">
+          <span class="text-[11px] font-bold text-[#574c44] truncate">
             {qrData.max_scans !== null
               ? `of ${qrData.max_scans} limit`
               : "All-time total"}
@@ -163,7 +163,7 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
         </div>
 
         <div class="bg-white border-2 border-black rounded-2xl p-3 flex flex-col justify-between min-w-0">
-          <span class="text-[11px] font-black uppercase tracking-wider text-neutral-600">
+          <span class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
             Remaining Scans
           </span>
           <div class="mt-1 flex items-center gap-1.5">
@@ -171,13 +171,13 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
               {scansRemaining}
             </span>
           </div>
-          <span class="mt-1 text-[11px] font-bold text-neutral-600 truncate">
+          <span class="mt-1 text-[11px] font-bold text-[#574c44] truncate">
             {scansRemaining === "∞" ? "Unlimited scans" : "Countdown active"}
           </span>
         </div>
 
         <div class="bg-white border-2 border-black rounded-2xl p-3 flex flex-col justify-between min-w-0">
-          <span class="text-[11px] font-black uppercase tracking-wider text-neutral-600">
+          <span class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
             Status
           </span>
           <div class="mt-1">
@@ -187,7 +187,7 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
               {status}
             </span>
           </div>
-          <span class="mt-1 text-[11px] font-bold text-neutral-600 truncate">
+          <span class="mt-1 text-[11px] font-bold text-[#574c44] truncate">
             {isActive
               ? "Redirecting live"
               : exhausted
@@ -199,13 +199,13 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
         </div>
 
         <div class="bg-white border-2 border-black rounded-2xl p-3 flex flex-col justify-between min-w-0">
-          <span class="text-[11px] font-black uppercase tracking-wider text-neutral-600">
+          <span class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
             Last Visit
           </span>
           <p class="mt-1 text-sm sm:text-base font-black text-black leading-tight truncate">
             {lastVisit.relative}
           </p>
-          <span class="mt-0.5 text-[11px] font-bold text-neutral-600 truncate">
+          <span class="mt-0.5 text-[11px] font-bold text-[#574c44] truncate">
             {lastVisit.localDateTime ?? "Waiting for first scan"}
           </span>
         </div>
@@ -215,7 +215,7 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
       <div class="pt-2 border-t-2 border-black/10 space-y-1.5">
         <label
           htmlFor="qr-redirect-url"
-          class="block text-xs font-black uppercase tracking-wider text-neutral-700"
+          class="block text-xs font-black uppercase tracking-wider text-[#4a3f39]"
         >
           Public Redirect URL
         </label>

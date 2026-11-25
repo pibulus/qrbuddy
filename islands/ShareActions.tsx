@@ -15,7 +15,7 @@ export default function ShareActions(
     try {
       await navigator.clipboard.writeText(shareUrl);
       haptics.copy();
-      addToast("Share link copied! 📋", 2500);
+      addToast("Share link copied", 2500);
       onShared?.();
     } catch (error) {
       console.error("Copy share link failed:", error);
@@ -56,9 +56,8 @@ export default function ShareActions(
         type="button"
         onClick={handleCopyLink}
         aria-label="Copy share link"
-        class="w-full min-h-[52px] px-4 py-3 bg-white text-black border-3 border-black rounded-xl font-bold flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
+        class="w-full min-h-[52px] px-4 py-3 bg-[#fffef7] text-[#1e1714] border-3 border-[#1e1714] rounded-xl font-black flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
       >
-        <span>📋</span>
         Copy share link
       </button>
 
@@ -67,9 +66,8 @@ export default function ShareActions(
           type="button"
           onClick={handleNativeShare}
           aria-label={canWebShare ? "Share QR link" : "Copy share link"}
-          class="w-full min-h-[52px] px-4 py-3 bg-gradient-to-r from-qr-sunset1 to-qr-sunset2 text-black border-3 border-black rounded-xl font-bold flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
+          class="qr-pitch-cta"
         >
-          <span>{canWebShare ? "📲" : "↗"}</span>
           {canWebShare ? "Share" : "Copy share link"}
         </button>
       )}

@@ -151,7 +151,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
             <h1 class="text-4xl font-black text-black tracking-tight">
               <span aria-hidden="true">{stateEmoji}</span> File Locker
             </h1>
-            <p class="text-sm text-gray-600">
+            <p class="text-sm text-[#574c44]">
               {bucket.is_reusable ? "Persistent" : "One-time"} • {stateText}
             </p>
           </header>
@@ -179,7 +179,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
 
           {/* Info */}
           <div class="text-center space-y-2">
-            <p class="text-xs text-gray-500">
+            <p class="text-xs text-[#6e6058]">
               {!bucket.is_reusable
                 ? "This locker self-destructs after one download"
                 : bucket.delete_on_download
@@ -187,7 +187,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
                 : "Files stay in this locker until the owner replaces them"}
             </p>
             {bucket.last_filled_at && (
-              <p class="text-xs text-gray-400">
+              <p class="text-xs text-[#8a7d74]">
                 Last filled: {new Date(bucket.last_filled_at).toLocaleString()}
               </p>
             )}
@@ -198,7 +198,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
             <footer class="text-center pt-8">
               <a
                 href="/"
-                class="text-sm text-gray-500 hover:text-pink-600 transition-colors"
+                class="text-sm text-[#6e6058] hover:text-[#1e1714] transition-colors"
               >
                 ← Make your own locker at QRBuddy
               </a>

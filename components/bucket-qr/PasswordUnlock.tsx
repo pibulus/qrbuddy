@@ -63,8 +63,8 @@ export default function PasswordUnlock({
                   type="button"
                   class={`min-h-[48px] rounded-2xl text-lg font-black border-3 border-black bg-white hover:-translate-y-0.5 transition ${
                     key === "clear" || key === "back"
-                      ? "text-gray-600"
-                      : "text-gray-900"
+                      ? "text-[#574c44]"
+                      : "text-[#1e1714]"
                   }`}
                   onClick={() => onKeypadPress(String(key))}
                   aria-label={key === "back" ? "Delete last digit" : undefined}
@@ -89,7 +89,7 @@ export default function PasswordUnlock({
         />
       )}
 
-      <div class="flex items-center justify-between text-[11px] text-gray-500">
+      <div class="flex items-center justify-between text-[11px] text-[#6e6058]">
         <button
           type="button"
           class="min-h-[44px] underline"

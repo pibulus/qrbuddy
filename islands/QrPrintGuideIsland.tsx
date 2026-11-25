@@ -125,7 +125,7 @@ export default function QrPrintGuideIsland(
 
         {/* Header Hero */}
         <header class="text-center space-y-2 px-2 animate-fade-in">
-          <div class="inline-block bg-[#E5F9FF] border-2 border-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-chunky">
+          <div class="inline-block bg-[#fbf1e4] border-2 border-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-chunky">
             {isSpanish
               ? "📐 Guía de Impresión QR 2026"
               : "📐 QR Print Guide & Field Manual"}
@@ -135,7 +135,7 @@ export default function QrPrintGuideIsland(
               ? "Cómo Imprimir Códigos QR y Elegir Enlaces que Sigan Funcionando"
               : "How to Print QR Codes and Keep Their Links Working"}
           </h1>
-          <p class="text-base sm:text-lg font-bold text-gray-800 max-w-xl mx-auto leading-relaxed">
+          <p class="text-base sm:text-lg font-bold text-[#4a3f39] max-w-xl mx-auto leading-relaxed">
             {isSpanish
               ? "Usa la calculadora de tamaño y revisa el destino, los límites y la caducidad antes de imprimir en vinil, papel o menús."
               : "Use the size calculator, then check the destination, limits, and expiry before printing on vinyl, paper, or menus."}
@@ -154,7 +154,7 @@ export default function QrPrintGuideIsland(
                     : "Interactive Optical QR Print Calculator"}
                 </span>
               </h2>
-              <p class="text-xs text-gray-600 font-medium">
+              <p class="text-xs text-[#574c44] font-medium">
                 {isSpanish
                   ? "Calcula el tamaño mínimo y recomendado según la distancia del usuario."
                   : "Calculate minimum and recommended dimensions based on real scanning distance."}
@@ -169,7 +169,7 @@ export default function QrPrintGuideIsland(
                 class={`px-3 py-1 text-xs font-black transition-colors ${
                   unit.value === "metric"
                     ? "bg-black text-white"
-                    : "bg-white text-black hover:bg-gray-100"
+                    : "bg-white text-black hover:bg-[#fbf1e4]"
                 }`}
               >
                 {isSpanish ? "Métrico (cm)" : "Metric (cm)"}
@@ -180,7 +180,7 @@ export default function QrPrintGuideIsland(
                 class={`px-3 py-1 text-xs font-black transition-colors ${
                   unit.value === "imperial"
                     ? "bg-black text-white"
-                    : "bg-white text-black hover:bg-gray-100"
+                    : "bg-white text-black hover:bg-[#fbf1e4]"
                 }`}
               >
                 {isSpanish ? "Pulgadas (in)" : "Inches (in)"}
@@ -190,7 +190,7 @@ export default function QrPrintGuideIsland(
 
           {/* Preset Buttons */}
           <div class="space-y-2">
-            <label class="text-xs font-black uppercase text-gray-500 tracking-wider">
+            <label class="text-xs font-black uppercase text-[#6e6058] tracking-wider">
               {isSpanish
                 ? "Elige un Escenario Común:"
                 : "Choose a Common Scenario:"}
@@ -213,10 +213,10 @@ export default function QrPrintGuideIsland(
                     <span class="text-2xl shrink-0">{p.icon}</span>
                     <div>
                       <div class="font-black text-sm text-black">{p.label}</div>
-                      <div class="text-[11px] text-gray-600 leading-snug">
+                      <div class="text-[11px] text-[#574c44] leading-snug">
                         {p.context}
                       </div>
-                      <div class="text-[10px] font-bold text-gray-500 mt-1">
+                      <div class="text-[10px] font-bold text-[#6e6058] mt-1">
                         {isSpanish
                           ? `Distancia: ${p.distanceMeters}m`
                           : `Distance: ${p.distanceMeters}m (${
@@ -257,7 +257,7 @@ export default function QrPrintGuideIsland(
               }}
               class="w-full accent-black cursor-pointer"
             />
-            <div class="flex justify-between text-[10px] font-bold text-gray-500">
+            <div class="flex justify-between text-[10px] font-bold text-[#6e6058]">
               <span>
                 {isSpanish ? "0.2m (Mano a Mano)" : "0.2m (Close-up)"}
               </span>
@@ -270,8 +270,8 @@ export default function QrPrintGuideIsland(
 
           {/* Results Display */}
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-            <div class="bg-[#E8F8F5] border-3 border-black rounded-2xl p-4 shadow-chunky text-center space-y-1">
-              <div class="text-xs font-black uppercase text-gray-600">
+            <div class="bg-emerald-50 border-3 border-black rounded-2xl p-4 shadow-chunky text-center space-y-1">
+              <div class="text-xs font-black uppercase text-[#574c44]">
                 {isSpanish ? "Tamaño Mínimo Absoluto" : "Absolute Minimum Size"}
               </div>
               <div class="text-2xl sm:text-3xl font-black text-black">
@@ -279,7 +279,7 @@ export default function QrPrintGuideIsland(
                   ? `${minWidthCm} cm`
                   : `${minWidthInches}″`}
               </div>
-              <div class="text-[11px] text-gray-600 font-medium">
+              <div class="text-[11px] text-[#574c44] font-medium">
                 {isSpanish
                   ? "Regla práctica 10:1 (distancia ÷ 10)"
                   : "Practical 10:1 guide (distance ÷ 10)"}
@@ -298,15 +298,15 @@ export default function QrPrintGuideIsland(
                   ? `${safeWidthCm} cm`
                   : `${safeWidthInches}″`}
               </div>
-              <div class="text-[11px] text-gray-700 font-medium">
+              <div class="text-[11px] text-[#4a3f39] font-medium">
                 {isSpanish
                   ? "Ideal para URLs largas y poca luz"
                   : "Fastest scan under dim lighting"}
               </div>
             </div>
 
-            <div class="bg-[#F0EBFF] border-3 border-black rounded-2xl p-4 shadow-chunky text-center space-y-1">
-              <div class="text-xs font-black uppercase text-purple-900">
+            <div class="bg-amber-50 border-3 border-black rounded-2xl p-4 shadow-chunky text-center space-y-1">
+              <div class="text-xs font-black uppercase text-[#1e1714]">
                 {isSpanish ? "Zona Silenciosa (Margen)" : "Quiet Zone Margin"}
               </div>
               <div class="text-2xl sm:text-3xl font-black text-black">
@@ -314,7 +314,7 @@ export default function QrPrintGuideIsland(
                   ? `≥ ${quietZoneMm} mm`
                   : `≥ ${(parseFloat(quietZoneMm) / 25.4).toFixed(2)}″`}
               </div>
-              <div class="text-[11px] text-gray-600 font-medium">
+              <div class="text-[11px] text-[#574c44] font-medium">
                 {isSpanish
                   ? "Margen blanco indispensable"
                   : "4-module clean border required"}
@@ -407,7 +407,7 @@ export default function QrPrintGuideIsland(
             </h2>
           </div>
 
-          <div class="prose max-w-none text-sm sm:text-base text-gray-800 leading-relaxed space-y-4">
+          <div class="prose max-w-none text-sm sm:text-base text-[#4a3f39] leading-relaxed space-y-4">
             <p>
               {isSpanish
                 ? "Un QR estático contiene el destino directamente, así que no depende de una redirección de QRBuddy. Aun así, el sitio de destino puede cambiar o dejar de estar disponible. Un QR editable sí depende del servicio de redirección que lo mantiene."
@@ -424,7 +424,7 @@ export default function QrPrintGuideIsland(
                       : "Check the Redirect Service"}
                   </span>
                 </div>
-                <ul class="text-xs text-gray-700 space-y-1.5 list-disc list-inside">
+                <ul class="text-xs text-[#4a3f39] space-y-1.5 list-disc list-inside">
                   <li>
                     {isSpanish
                       ? "El QR contiene una URL del proveedor que redirige al destino."
@@ -455,7 +455,7 @@ export default function QrPrintGuideIsland(
                     {isSpanish ? "Opciones de QRBuddy" : "QRBuddy Options"}
                   </span>
                 </div>
-                <ul class="text-xs text-gray-700 space-y-1.5 list-disc list-inside">
+                <ul class="text-xs text-[#4a3f39] space-y-1.5 list-disc list-inside">
                   <li>
                     {isSpanish
                       ? "Los QR estáticos se generan en el navegador y codifican el destino; generarlos no requiere un Pasaporte QRBuddy."
@@ -494,7 +494,7 @@ export default function QrPrintGuideIsland(
           </h2>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
+            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-amber-50/60 space-y-1.5">
               <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
                 <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                   1
@@ -505,14 +505,14 @@ export default function QrPrintGuideIsland(
                     : "High Contrast (Dark on Light)"}
                 </span>
               </div>
-              <p class="text-xs text-gray-700 leading-relaxed">
+              <p class="text-xs text-[#4a3f39] leading-relaxed">
                 {isSpanish
                   ? "Las cámaras de smartphone buscan patrones oscuros sobre fondo claro. Evita códigos amarillos sobre papel blanco o códigos negros sobre fondos oscuros."
                   : "Phone camera sensors look for dark modules on light backgrounds. Avoid pale pastel dots on white paper, or black dots on dark wood."}
               </p>
             </div>
 
-            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
+            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-amber-50/60 space-y-1.5">
               <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
                 <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                   2
@@ -523,14 +523,14 @@ export default function QrPrintGuideIsland(
                     : "Respect the Quiet Zone (Margin)"}
                 </span>
               </div>
-              <p class="text-xs text-gray-700 leading-relaxed">
+              <p class="text-xs text-[#4a3f39] leading-relaxed">
                 {isSpanish
                   ? "Deja un margen vacío de al menos 4 módulos alrededor del código. Si el diseño gráfico corta el margen al ras, los lectores no detectarán las esquinas."
                   : "Always keep a clean empty margin around the QR code equal to at least 4 module dots. Cropping too tight prevents corner alignment detection."}
               </p>
             </div>
 
-            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
+            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-amber-50/60 space-y-1.5">
               <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
                 <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                   3
@@ -541,14 +541,14 @@ export default function QrPrintGuideIsland(
                     : "Export SVG for Print"}
                 </span>
               </div>
-              <p class="text-xs text-gray-700 leading-relaxed">
+              <p class="text-xs text-[#4a3f39] leading-relaxed">
                 {isSpanish
                   ? "El PNG es una imagen rasterizada y puede verse borroso si se amplía mucho. El SVG se escala sin perder nitidez; QRBuddy exporta ambos formatos."
                   : "PNG is a raster image and can look blurry when enlarged a lot. SVG scales cleanly; QRBuddy exports both formats."}
               </p>
             </div>
 
-            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-yellow-50/60 space-y-1.5">
+            <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-amber-50/60 space-y-1.5">
               <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
                 <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                   4
@@ -559,7 +559,7 @@ export default function QrPrintGuideIsland(
                     : "QRBuddy's Error Correction"}
                 </span>
               </div>
-              <p class="text-xs text-gray-700 leading-relaxed">
+              <p class="text-xs text-[#4a3f39] leading-relaxed">
                 {isSpanish
                   ? "QRBuddy usa nivel Q por defecto y H con un logotipo. La corrección ayuda, pero no garantiza que un QR con poco contraste o muy cubierto se pueda leer; prueba la impresión."
                   : "QRBuddy uses level Q by default and H with a logo. Error correction helps, but cannot guarantee that a low-contrast or heavily covered QR will scan; test the print."}
@@ -567,7 +567,7 @@ export default function QrPrintGuideIsland(
             </div>
           </div>
 
-          <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-[#E5F9FF] space-y-1.5">
+          <div class="border-2 border-[#1e1714] rounded-2xl p-4 bg-[#fbf1e4] space-y-1.5">
             <div class="font-black text-sm text-[#1e1714] flex items-center gap-2">
               <span class="bg-[#1e1714] text-[#fffef7] w-5 h-5 rounded-full flex items-center justify-center text-xs">
                 5
@@ -578,7 +578,7 @@ export default function QrPrintGuideIsland(
                   : "The Physical Live-Test Rule"}
               </span>
             </div>
-            <p class="text-xs text-gray-700 leading-relaxed">
+            <p class="text-xs text-[#4a3f39] leading-relaxed">
               {isSpanish
                 ? "Antes de encargar 10,000 folletos, imprime una hoja de prueba en papel normal y escanéala con un iPhone y un Android bajo poca luz a la distancia real prevista."
                 : "Before ordering 10,000 offset copies, print a single proof sheet on standard office paper. Test it with both an iPhone and an Android under dim evening lighting from the actual expected distance."}
@@ -601,7 +601,7 @@ export default function QrPrintGuideIsland(
           <div class="pt-2">
             <a
               href={isSpanish ? "/es" : "/"}
-              class="inline-block bg-[#1e1714] text-[#fffef7] font-black text-base px-8 py-3.5 rounded-full border-2 border-[#1e1714] shadow-chunky hover:bg-[#ff9a8b] hover:text-[#1e1714] hover:shadow-chunky-hover hover:-translate-y-0.5 transition-all"
+              class="qr-pitch-cta !w-auto px-8"
             >
               {isSpanish ? "Abrir el Estudio QR →" : "Open the QR Studio →"}
             </a>

@@ -1,4 +1,5 @@
 import { Signal } from "@preact/signals";
+import ModalCloseButton from "../modal/ModalCloseButton.tsx";
 import { useEffect, useMemo } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
@@ -162,26 +163,13 @@ export default function FileUploadOptions(
             </p>
           </div>
         </div>
-        <button
-          type="button"
+        <ModalCloseButton
           onClick={onCancel}
           disabled={busy}
-          class="qr-modal-close-btn shrink-0 disabled:opacity-50"
           aria-label={isSpanish ? "Cancelar" : "Cancel"}
           title={isSpanish ? "Cancelar" : "Cancel"}
-        >
-          <svg
-            class="w-4 h-4 pointer-events-none"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3.25"
-            stroke-linecap="round"
-            aria-hidden="true"
-          >
-            <path d="M6.5 6.5l11 11m0-11l-11 11" />
-          </svg>
-        </button>
+          class="shrink-0 disabled:opacity-50"
+        />
       </div>
 
       {/* Polaroid thumbnail preview strip for slideshows (with inline ← / → reorder pills, no duplicate 5-row vertical list!) */}
@@ -242,7 +230,7 @@ export default function FileUploadOptions(
               key={`${f.name}-${f.size}-${i}`}
               class="flex items-center gap-2 text-sm font-bold text-[#1e1714] min-h-[42px] bg-[#fffef7] px-2.5 py-1 rounded-xl border-2 border-[#1e1714]/15"
             >
-              <span class="w-5 text-xs font-black text-neutral-500 text-right shrink-0">
+              <span class="w-5 text-xs font-black text-[#6e6058] text-right shrink-0">
                 {i + 1}
               </span>
               <span class="truncate flex-1 min-w-0">
@@ -332,7 +320,7 @@ export default function FileUploadOptions(
                 class={`min-w-[40px] min-h-[38px] px-3 rounded-full border-2 font-black text-xs transition-all ${
                   active
                     ? "border-[#1e1714] bg-amber-200 text-[#1e1714] shadow-[2px_2px_0_#1e1714]"
-                    : "border-[#1e1714]/15 bg-[#fffef7] text-neutral-700 hover:border-[#1e1714]/60"
+                    : "border-[#1e1714]/15 bg-[#fffef7] text-[#4a3f39] hover:border-[#1e1714]/60"
                 }`}
               >
                 {limit === null ? "∞" : limit}

@@ -19,6 +19,7 @@
  * Lifecycle contract is the shell's: the parent owns `open` and flips it
  * false inside `onClose`.
  */
+import ModalCloseButton from "./ModalCloseButton.tsx";
 import type { ComponentChildren } from "preact";
 import { useModalShell } from "./useModalShell.ts";
 
@@ -45,7 +46,7 @@ export function CardModal({
   onClose,
   labelledby,
   badge,
-  badgeClass = "from-qr-sunset1 via-pink-400 to-purple-500",
+  badgeClass = "from-[#ff9a8b] via-[#ff6a95] to-[#b86bff]",
   badgeTile = true,
   maxWidthClass = "max-w-[440px]",
   padClass = "p-6 sm:p-7",
@@ -75,24 +76,11 @@ export function CardModal({
         aria-labelledby={labelledby}
         tabindex={-1}
       >
-        <button
-          type="button"
+        <ModalCloseButton
           onClick={shell.requestClose}
-          class="qr-modal-close-btn absolute z-10 top-3.5 right-3.5"
           aria-label="Close"
-        >
-          <svg
-            class="w-4 h-4 pointer-events-none"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3.25"
-            stroke-linecap="round"
-            aria-hidden="true"
-          >
-            <path d="M6.5 6.5l11 11m0-11l-11 11" />
-          </svg>
-        </button>
+          class="absolute z-10 top-3.5 right-3.5"
+        />
 
         <div
           class={`max-h-[calc(92dvh-2rem)] overflow-y-auto scrollbar-none bg-[#fbf1e4] border-3 border-[#1e1714] rounded-3xl shadow-chunky-hover ${padClass}`}

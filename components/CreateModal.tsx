@@ -1,4 +1,5 @@
 import { type Signal, useSignal } from "@preact/signals";
+import ModalCloseButton from "./modal/ModalCloseButton.tsx";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import type { CreateBucketOptions } from "../hooks/useBucketCreator.ts";
@@ -1556,24 +1557,11 @@ export default function CreateModal({
                   </svg>
                 </button>
               )}
-              <button
-                type="button"
+              <ModalCloseButton
                 onClick={shell.requestClose}
-                class="qr-modal-close-btn shrink-0"
                 aria-label={isSpanish ? "Cerrar" : "Close"}
-              >
-                <svg
-                  class="w-4 h-4 pointer-events-none"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3.25"
-                  stroke-linecap="round"
-                  aria-hidden="true"
-                >
-                  <path d="M6.5 6.5l11 11m0-11l-11 11" />
-                </svg>
-              </button>
+                class="shrink-0"
+              />
             </div>
           </div>
 
@@ -1633,7 +1621,7 @@ export default function CreateModal({
                 {activeTab === "options" && (typeIntent === "qr"
                   ? renderOptionsTab()
                   : (
-                    <p class="text-sm font-bold text-neutral-600">
+                    <p class="text-sm font-bold text-[#574c44]">
                       {isSpanish
                         ? "Las opciones de archivos están en Contenido. Usa Diseño para darle estilo al QR."
                         : "File options live in Content. Use Design to style the QR."}

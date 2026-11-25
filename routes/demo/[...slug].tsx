@@ -487,8 +487,8 @@ export const DEMO_CONFIGS: Record<DemoKey, DemoConfig> = {
     frontItems: [
       {
         icon: "✅",
-        titleEn: "GTIN-14 (AI 01): 09312345678907",
-        titleEs: "GTIN-14 (AI 01): 09312345678907",
+        titleEn: "GTIN-14 (01): 09312345678907",
+        titleEs: "GTIN-14 (01): 09312345678907",
         detailEn:
           "Optical POS scanner & phone camera compatible (GS1 Sunrise 2027)",
         detailEs:
@@ -498,8 +498,8 @@ export const DEMO_CONFIGS: Record<DemoKey, DemoConfig> = {
       },
       {
         icon: "🧪",
-        titleEn: "Batch / Lot (AI 10): BATCH-04 · Expiry (AI 17): 2027-12-31",
-        titleEs: "Lote (AI 10): BATCH-04 · Caducidad (AI 17): 2027-12-31",
+        titleEn: "Batch / Lot (10): BATCH-04 · Expiry (17): 2027-12-31",
+        titleEs: "Lote (10): BATCH-04 · Caducidad (17): 2027-12-31",
         detailEn:
           "Cold-pressed jojoba, Tasmanian lavender, vitamin E · Small-batch harvest",
         detailEs: "Jojoba prensada en frío, lavanda orgánica, vitamina E",

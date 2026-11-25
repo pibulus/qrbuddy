@@ -205,16 +205,12 @@ export default function FilePage({ data }: PageProps<FileData>) {
           }
           .animate-scale-in { animation: scale-in 0.4s ease-out; }
 
-          /* animate-pulse-glow: deliberate override, not drift. Tailwind's
-             global pulse-glow glows PINK (rgba(255,105,180,...)) but both
-             consumers of this class (BucketQR.tsx's CTA and the
-             self-destruct download button below) are red/orange gradients —
-             a pink glow clashes with both. Red keeps the "explosive" file
-             theme intact. If tailwind.config.ts's pulse-glow color is ever
-             corrected to red/orange, delete this block. */
+          /* animate-pulse-glow: deliberate override. Tailwind's global
+             pulse-glow glows pink; the gold CTAs that use this class want a
+             warm amber halo instead. */
           @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.6); }
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.32); }
+            50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6); }
           }
           .animate-pulse-glow { animation: pulse-glow 2s infinite; }
         `}

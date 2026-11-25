@@ -31,15 +31,6 @@ export default function BucketContentDisplay({
 }: BucketContentDisplayProps) {
   return (
     <>
-      {/* Content Display (if text and full) */}
-      {contentType === "text" && contentMetadata && (
-        <div class="bg-gradient-to-r from-pink-50 to-purple-50 border-3 border-pink-300 rounded-xl p-6 shadow-chunky">
-          <p class="text-2xl font-bold text-center break-words">
-            {contentMetadata.content}
-          </p>
-        </div>
-      )}
-
       {/* Metadata Display (Title, Desc, Creator) */}
       {contentMetadata &&
         (contentMetadata.title || contentMetadata.description ||
@@ -48,19 +39,19 @@ export default function BucketContentDisplay({
           <div class="text-center space-y-2 animate-slide-down">
             {typeof contentMetadata.title === "string" &&
               contentMetadata.title && (
-              <h1 class="text-3xl font-black text-gray-900 leading-tight">
+              <h1 class="text-3xl font-black text-[#1e1714] leading-tight">
                 {contentMetadata.title}
               </h1>
             )}
             {typeof contentMetadata.creator === "string" &&
               contentMetadata.creator && (
-              <p class="text-sm font-bold text-gray-500 uppercase tracking-wide">
+              <p class="text-sm font-bold text-[#6e6058] uppercase tracking-wide">
                 By {contentMetadata.creator}
               </p>
             )}
             {typeof contentMetadata.description === "string" &&
               contentMetadata.description && (
-              <p class="text-lg text-gray-700 max-w-md mx-auto leading-relaxed">
+              <p class="text-lg text-[#4a3f39] max-w-md mx-auto leading-relaxed">
                 {contentMetadata.description}
               </p>
             )}
@@ -78,12 +69,12 @@ export default function BucketContentDisplay({
           >
             <div
               class={`absolute top-0 left-0 w-full h-2 ${
-                TEXT_CARD_THEMES[style]?.bar ?? "bg-gray-200"
+                TEXT_CARD_THEMES[style]?.bar ?? "bg-[#efe9dc]"
               }`}
             />
             <div
               class={`font-mono text-lg md:text-xl whitespace-pre-wrap break-words leading-relaxed ${
-                TEXT_CARD_THEMES[style]?.text ?? "text-gray-800"
+                TEXT_CARD_THEMES[style]?.text ?? "text-[#4a3f39]"
               }`}
             >
               {(!isPasswordProtected ||
@@ -106,12 +97,12 @@ export default function BucketContentDisplay({
           <div class="space-y-4">
             {/* If metadata is redacted (null), show generic locked state */}
             {!contentMetadata && !previewUrl && (
-              <div class="bg-gray-100 border-4 border-black rounded-xl p-8 text-center shadow-chunky">
+              <div class="bg-[#fbf1e4] border-4 border-black rounded-xl p-8 text-center shadow-chunky">
                 <span class="text-5xl block mb-4">🔒</span>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">
+                <h3 class="text-xl font-bold text-[#4a3f39] mb-2">
                   Secure File
                 </h3>
-                <p class="text-gray-600">
+                <p class="text-[#574c44]">
                   Enter password to view details and download
                 </p>
               </div>
@@ -141,7 +132,7 @@ export default function BucketContentDisplay({
                   </div>
                 )}
                 {contentMetadata?.filename && (
-                  <p class="text-xs text-gray-500 text-center mt-2 truncate">
+                  <p class="text-xs text-[#6e6058] text-center mt-2 truncate">
                     {contentMetadata.filename}
                   </p>
                 )}
@@ -152,18 +143,18 @@ export default function BucketContentDisplay({
             {contentMetadata && !previewUrl && (
               <div class="bg-white border-4 border-black rounded-xl p-6 shadow-chunky text-center">
                 <span class="text-5xl block mb-3">{bucketFileGlyph}</span>
-                <p class="text-xs font-black uppercase tracking-wide text-gray-400 mb-1">
+                <p class="text-xs font-black uppercase tracking-wide text-[#8a7d74] mb-1">
                   {bucketFileKind}
                 </p>
                 <p class="font-bold text-lg truncate">
                   {contentMetadata.filename}
                 </p>
                 {bucketFileSizeLabel && (
-                  <p class="text-sm text-gray-500 mt-1">
+                  <p class="text-sm text-[#6e6058] mt-1">
                     {bucketFileSizeLabel}
                   </p>
                 )}
-                <p class="text-xs text-gray-400 mt-1">
+                <p class="text-xs text-[#8a7d74] mt-1">
                   {contentMetadata.mimetype}
                 </p>
               </div>

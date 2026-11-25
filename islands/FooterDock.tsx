@@ -115,7 +115,7 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
                   <a
                     key={link.href}
                     href={link.href}
-                    class="px-3 min-h-[40px] flex items-center rounded-xl text-xs sm:text-sm font-bold text-gray-800 hover:bg-white hover:text-black transition-colors"
+                    class="px-3 min-h-[40px] flex items-center rounded-xl text-xs sm:text-sm font-bold text-[#4a3f39] hover:bg-white hover:text-black transition-colors"
                   >
                     {link.label}
                   </a>
@@ -133,7 +133,7 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
           </button>
         </nav>
 
-        <div class="order-2 sm:order-first flex flex-wrap items-center justify-center gap-x-2 text-xs font-bold text-gray-600">
+        <div class="order-2 sm:order-first flex flex-wrap items-center justify-center gap-x-2 text-xs font-bold text-[#574c44]">
           <span>© {year} QRBuddy ·</span>
           <a
             href={MAKER_URL}
