@@ -157,13 +157,21 @@ export function useQRData(lang?: Locale) {
       if (result.data?.destination_url) {
         updateHistoryItem(
           (item) => item.metadata?.shortCode === result.data.short_code,
-          (item) => ({
-            ...item,
-            metadata: {
-              ...item.metadata,
-              title: result.data.destination_url,
-            },
-          }),
+          (item) => {
+            const existingLabel = typeof item.metadata?.label === "string"
+              ? item.metadata.label.trim()
+              : "";
+            return {
+              ...item,
+              metadata: {
+                ...item.metadata,
+                title: existingLabel || result.data.destination_url,
+                ...(existingLabel ? { label: existingLabel } : {}),
+                url: result.data.destination_url,
+                destinationUrl: result.data.destination_url,
+              },
+            };
+          },
         );
       }
 

@@ -243,9 +243,16 @@ function mergeMetadata(
   incoming: HistoryItem["metadata"],
 ): HistoryItem["metadata"] {
   if (!existing && !incoming) return undefined;
+  const resolvedLabel =
+    typeof existing?.label === "string" && existing.label.trim()
+      ? existing.label.trim()
+      : (typeof incoming?.label === "string" && incoming.label.trim()
+        ? incoming.label.trim()
+        : "");
   return {
     ...(incoming ?? {}),
     ...(existing ?? {}),
+    ...(resolvedLabel ? { label: resolvedLabel, title: resolvedLabel } : {}),
     ...(existing?.design ?? incoming?.design
       ? { design: existing?.design ?? incoming?.design }
       : {}),
@@ -706,13 +713,48 @@ export function summarizeQrPayload(content: string): {
   };
 }
 
+/** Find a saved local history entry matching a short code. */
+export function getSavedItemByShortCode(
+  shortCode: string,
+  storageOverride?: Storage,
+): HistoryItem | undefined {
+  const clean = shortCode.trim();
+  if (!clean) return undefined;
+  return getHistory(storageOverride).find(
+    (item) =>
+      item.metadata?.shortCode === clean ||
+      item.content.includes(`code=${clean}`),
+  );
+}
+
+/** Parse comma/whitespace/hash-separated tag lists into clean normalized tags. */
+export function parseTagsInput(rawTags: string[] | string): string[] {
+  const parts = Array.isArray(rawTags) ? rawTags : rawTags.split(/[\s,]+/);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const part of parts) {
+    const clean = part
+      .trim()
+      .replace(/^#+/, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, "")
+      .slice(0, 24);
+    if (!clean || seen.has(clean)) continue;
+    seen.add(clean);
+    out.push(clean);
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+
 /** Update matching history items locally and emit a change event. */
 export function updateHistoryItem(
   matcher: (item: HistoryItem) => boolean,
   updater: (item: HistoryItem) => HistoryItem,
+  storageOverride?: Storage,
 ): boolean {
-  if (!IS_BROWSER) return false;
-  const history = getHistory();
+  if (!storageOverride && !IS_BROWSER) return false;
+  const history = getHistory(storageOverride);
   let changed = false;
   const updated = history.map((item) => {
     if (matcher(item)) {
@@ -722,7 +764,64 @@ export function updateHistoryItem(
     return item;
   });
   if (changed) {
-    return persistHistory(updated);
+    return persistHistory(updated, storageOverride);
   }
   return false;
+}
+
+/** Rename a saved QR entry (by history id or shortCode) while preserving destinationUrl. */
+export function renameHistoryItem(
+  idOrShortCode: string,
+  nextLabel: string,
+  storageOverride?: Storage,
+): boolean {
+  const key = idOrShortCode.trim();
+  if (!key) return false;
+  const cleanLabel = nextLabel.trim().slice(0, 80);
+  return updateHistoryItem(
+    (item) =>
+      item.id === key ||
+      item.metadata?.shortCode === key ||
+      item.content.includes(`code=${key}`),
+    (item) => {
+      const fallbackTitle = typeof item.metadata?.destinationUrl === "string" &&
+          item.metadata.destinationUrl.trim()
+        ? item.metadata.destinationUrl.trim()
+        : summarizeQrPayload(item.content).title;
+      return {
+        ...item,
+        metadata: {
+          ...item.metadata,
+          label: cleanLabel || undefined,
+          title: cleanLabel || fallbackTitle,
+        },
+      };
+    },
+    storageOverride,
+  );
+}
+
+/** Replace tags on a saved QR entry (by history id or shortCode). */
+export function setHistoryItemTags(
+  idOrShortCode: string,
+  rawTags: string[] | string,
+  storageOverride?: Storage,
+): boolean {
+  const key = idOrShortCode.trim();
+  if (!key) return false;
+  const nextTags = parseTagsInput(rawTags);
+  return updateHistoryItem(
+    (item) =>
+      item.id === key ||
+      item.metadata?.shortCode === key ||
+      item.content.includes(`code=${key}`),
+    (item) => ({
+      ...item,
+      metadata: {
+        ...item.metadata,
+        tags: nextTags.length > 0 ? nextTags : undefined,
+      },
+    }),
+    storageOverride,
+  );
 }

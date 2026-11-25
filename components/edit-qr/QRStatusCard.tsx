@@ -1,12 +1,12 @@
 import { useSignal } from "@preact/signals";
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../../utils/haptics.ts";
 import { addToast } from "../../islands/ToastManager.tsx";
 import { QRData } from "../../hooks/useQRData.ts";
 import type { QR_STYLES } from "../../utils/qr-styles.ts";
 import QRCanvas from "../../islands/QRCanvas.tsx";
 import { formatRelativeVisit } from "./FieldReportCard.tsx";
-import { getHistory } from "../../utils/history.ts";
+import { getHistory, getSavedItemByShortCode } from "../../utils/history.ts";
 import { loadDesignPreferences } from "../../utils/design-preferences.ts";
 import type { QRStyle } from "../../types/qr-types.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
@@ -101,6 +101,26 @@ export default function QRStatusCard({ qrData, lang }: QRStatusCardProps) {
 
   // Re-download the sticker in the design it was made with: the vault entry
   // for this code first, then the last design used on this device.
+  const [savedLabel, setSavedLabel] = useState("");
+  useEffect(() => {
+    const syncLabel = () => {
+      const savedEntry = getSavedItemByShortCode(qrData.short_code);
+      const label = typeof savedEntry?.metadata?.label === "string" &&
+          savedEntry.metadata.label.trim()
+        ? savedEntry.metadata.label.trim()
+        : (typeof savedEntry?.metadata?.title === "string" &&
+            savedEntry.metadata.title.trim() &&
+            savedEntry.metadata.title.trim() !==
+              qrData.destination_url.trim()
+          ? savedEntry.metadata.title.trim()
+          : "");
+      setSavedLabel(label);
+    };
+    syncLabel();
+    globalThis.addEventListener?.("history-updated", syncLabel);
+    return () => globalThis.removeEventListener?.("history-updated", syncLabel);
+  }, [qrData.short_code, qrData.destination_url]);
+
   useEffect(() => {
     const saved = getHistory().find((item) =>
       item.metadata?.shortCode === qrData.short_code ||
@@ -159,10 +179,17 @@ export default function QRStatusCard({ qrData, lang }: QRStatusCardProps) {
         : "QR Status and Sticker"}
     >
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
-          {isSpanish ? "Estado del QR" : "QR Status"}
-        </h2>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-black bg-white font-mono text-xs font-black text-black">
+        <div class="min-w-0">
+          <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
+            {savedLabel || (isSpanish ? "Estado del QR" : "QR Status")}
+          </h2>
+          {savedLabel && (
+            <p class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
+              {isSpanish ? "Estado del QR" : "QR Status"}
+            </p>
+          )}
+        </div>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-black bg-white font-mono text-xs font-black text-black shrink-0">
           <span>{isSpanish ? "Código:" : "Code:"}</span>
           <span>{qrData.short_code}</span>
         </span>
@@ -311,6 +338,7 @@ export default function QRStatusCard({ qrData, lang }: QRStatusCardProps) {
             triggerDownload={triggerDownload}
             frameConfig={frameConfig}
             listenForExportEvents
+            hideExportPill
           />
         </div>
       </div>

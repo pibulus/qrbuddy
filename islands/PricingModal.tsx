@@ -84,16 +84,16 @@ type ModalView = "pitch" | "redeem" | "sync";
 
 const PITCH_PERKS = {
   en: [
-    "100 editable links, repointed anytime.",
-    "500 MB drops, ten times the free size.",
-    "90-day Field Report with cities and CSV.",
-    "White-label pages and four-word sync.",
+    "100 editable QRs — name, tag & repoint inline.",
+    "90-day Field Reports, top cities & CSV export.",
+    "500 MB file, slideshow & mixtape drops.",
+    "White-label pages, API & 4-word team sync.",
   ],
   es: [
-    "100 links editables, siempre redirigibles.",
-    "Archivos de 500 MB, diez veces más.",
-    "Reporte de Campo: 90 días, ciudades y CSV.",
-    "Páginas sin marca y sync de 4 palabras.",
+    "100 QRs editables — nombra, etiqueta y redirige.",
+    "Reporte de 90 días, ciudades top y CSV.",
+    "Envíos de archivos y galerías de hasta 500 MB.",
+    "Páginas sin marca, API y sync de 4 palabras.",
   ],
 };
 
@@ -975,6 +975,20 @@ export function PricingModal({ lang }: { lang?: "en" | "es" } = {}) {
                   </CardQuietLink>
                 )}
             </p>
+
+            {!hasPass && (
+              <p class="text-[11px] font-bold text-[#6f6158] text-center">
+                {isSpanish
+                  ? "¿Manejas 100+ códigos para locales o clientes? "
+                  : "Managing 100+ codes across venues or clients? "}
+                <a
+                  href="mailto:pablo@qrbuddy.app"
+                  class="underline underline-offset-2 text-[#1e1714]"
+                >
+                  pablo@qrbuddy.app
+                </a>
+              </p>
+            )}
           </CardBody>
         )}
     </CardModal>

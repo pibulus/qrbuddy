@@ -2,7 +2,12 @@ import { useEffect, useState } from "preact/hooks";
 import { useSignal } from "@preact/signals";
 import { haptics } from "../utils/haptics.ts";
 import { useQRData } from "../hooks/useQRData.ts";
-import { updateHistoryItem } from "../utils/history.ts";
+import {
+  addDynamicToHistory,
+  getSavedItemByShortCode,
+  renameHistoryItem,
+  updateHistoryItem,
+} from "../utils/history.ts";
 import { normalizeUrl } from "../utils/url.ts";
 import { addToast } from "./ToastManager.tsx";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
@@ -65,6 +70,8 @@ function hourField(
 export function syncDynamicQRHistory(
   shortCode: string,
   destinationUrl: string,
+  customLabel?: string,
+  storageOverride?: Storage,
 ): boolean {
   const cleanDest = destinationUrl.trim();
   if (!shortCode || !cleanDest) return false;
@@ -72,14 +79,24 @@ export function syncDynamicQRHistory(
     (item) =>
       item.metadata?.shortCode === shortCode ||
       item.content.includes(`code=${shortCode}`),
-    (item) => ({
-      ...item,
-      metadata: {
-        ...item.metadata,
-        title: cleanDest,
-        destinationUrl: cleanDest,
-      },
-    }),
+    (item) => {
+      const preservedLabel = customLabel !== undefined
+        ? customLabel.trim().slice(0, 80)
+        : (typeof item.metadata?.label === "string"
+          ? item.metadata.label.trim()
+          : "");
+      return {
+        ...item,
+        metadata: {
+          ...item.metadata,
+          title: preservedLabel || cleanDest,
+          ...(preservedLabel ? { label: preservedLabel } : {}),
+          url: cleanDest,
+          destinationUrl: cleanDest,
+        },
+      };
+    },
+    storageOverride,
   );
 }
 
@@ -91,6 +108,7 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
   const { loading, error, qrData, isSaving, saveQRData } = useQRData(lang);
 
   // Edit form state
+  const [qrLabel, setQrLabel] = useState("");
   const [destinationUrl, setDestinationUrl] = useState("");
   const [maxScans, setMaxScans] = useState<number | null>(null);
   // Lock: a PIN turns the redirect into a page nobody passes without it.
@@ -127,6 +145,16 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
   // Initialize form when data loads
   useEffect(() => {
     if (qrData) {
+      const saved = getSavedItemByShortCode(qrData.short_code);
+      const initialLabel = typeof saved?.metadata?.label === "string" &&
+          saved.metadata.label.trim()
+        ? saved.metadata.label.trim()
+        : (typeof saved?.metadata?.title === "string" &&
+            saved.metadata.title.trim() &&
+            saved.metadata.title.trim() !== qrData.destination_url.trim()
+          ? saved.metadata.title.trim()
+          : "");
+      setQrLabel(initialLabel);
       setDestinationUrl(qrData.destination_url);
       setMaxScans(qrData.max_scans);
       setExpiryDate(
@@ -295,7 +323,19 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
     });
 
     if (saved && qrData?.short_code && nextDestination) {
-      syncDynamicQRHistory(qrData.short_code, nextDestination);
+      const cleanLabel = qrLabel.trim();
+      const updated = renameHistoryItem(qrData.short_code, cleanLabel);
+      if (!updated && cleanLabel) {
+        const origin = globalThis.location?.origin || "https://qrbuddy.app";
+        addDynamicToHistory({
+          url: nextDestination,
+          redirectUrl: `${origin}/r?code=${qrData.short_code}`,
+          shortCode: qrData.short_code,
+          label: cleanLabel,
+          ownerScope: "qr",
+        });
+      }
+      syncDynamicQRHistory(qrData.short_code, nextDestination, cleanLabel);
     }
   };
 
@@ -352,6 +392,29 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
         <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
           {isSpanish ? "Ajustes del QR" : "Edit QR Settings"}
         </h2>
+
+        {/* QR Name / Label */}
+        <div class="space-y-2">
+          <label
+            htmlFor="qr-label"
+            class="block text-xs font-black text-black uppercase tracking-wider"
+          >
+            {isSpanish
+              ? "Nombre del QR (opcional)"
+              : "QR Name / Label (optional)"}
+          </label>
+          <input
+            id="qr-label"
+            type="text"
+            maxLength={64}
+            value={qrLabel}
+            onInput={(e) => setQrLabel((e.target as HTMLInputElement).value)}
+            placeholder={isSpanish
+              ? "ej. Menú Comida, Mesa 04"
+              : "e.g. Brunswick Lunch Menu, Table 04"}
+            class={INPUT_RECIPE}
+          />
+        </div>
 
         {/* Routing Mode Selector */}
         <RoutingModeSelector
@@ -441,8 +504,8 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
             onInput={(event) =>
               setPin((event.target as HTMLInputElement).value)}
             placeholder={isSpanish
-              ? "Quien escanee deberá ingresarlo primero"
-              : "Anyone scanning must enter this first"}
+              ? "PIN al escanear (opcional)"
+              : "PIN required on scan (optional)"}
             class="w-full px-4 py-3 border-2 border-black/15 rounded-xl font-bold focus:outline-none focus:border-black bg-white"
           />
           <p class="text-[11px] text-[#6e6058] leading-snug">
@@ -489,7 +552,7 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
               class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-[#1e1714]"
             />
             <span class="text-xs font-black text-black uppercase tracking-wider group-hover:text-qr-pop">
-              {isSpanish ? "✨ Página de intro" : "✨ Intro page"}
+              {isSpanish ? "Página de intro" : "Intro page"}
             </span>
           </label>
           <p class="text-xs font-semibold text-[#574c44]">

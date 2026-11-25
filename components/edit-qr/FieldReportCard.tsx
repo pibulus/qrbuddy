@@ -306,7 +306,7 @@ function formatBrowserSplit(
 export default function AnalyticsDashboard(
   {
     analytics,
-    totalVisits,
+    totalVisits: _totalVisits,
     shortCode = "qr",
     lang,
   }: AnalyticsDashboardProps,
@@ -485,51 +485,92 @@ export default function AnalyticsDashboard(
           }.`}
       </p>
 
-      {/* Activity Chart & Last Visit */}
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Activity Bar Chart */}
-        <div class="sm:col-span-2 bg-qr-cream rounded-2xl p-3.5 border-2 border-black flex flex-col justify-between min-w-0">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-            <p class="text-xs text-black font-black uppercase tracking-wider">
-              {windowDays === 30 && hasPass
-                ? (isSpanish ? "Actividad de 30 días" : "30-Day Activity")
-                : (isSpanish ? "Actividad de 7 días" : "7-Day Activity")}
-            </p>
-            <span class="text-[11px] font-bold text-[#574c44]">
-              {isSpanish
-                ? "Pasa el cursor o toca las barras para ver conteos"
-                : "Hover or tap bars for counts"}
-            </span>
-          </div>
+      {/* Activity Chart */}
+      <div class="bg-qr-cream rounded-2xl p-3.5 border-2 border-black flex flex-col justify-between min-w-0">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <p class="text-xs text-black font-black uppercase tracking-wider">
+            {windowDays === 30 && hasPass
+              ? (isSpanish ? "Actividad de 30 días" : "30-Day Activity")
+              : (isSpanish ? "Actividad de 7 días" : "7-Day Activity")}
+          </p>
+          <span class="text-[11px] font-bold text-[#574c44]">
+            {isSpanish
+              ? "Pasa el cursor o toca las barras para ver conteos"
+              : "Hover or tap bars for counts"}
+          </span>
+        </div>
 
-          {windowDays === 30 && hasPass
-            ? (
-              <div
-                class="flex items-end justify-between gap-[2px] pt-4 pb-1 h-20"
-                role="group"
-                aria-label={isSpanish
-                  ? `Últimos 30 días: ${monthTotal} visitas registradas`
-                  : `Last 30 days: ${monthTotal} recorded visits`}
-              >
-                {activeBars.map((bar) => (
+        {windowDays === 30 && hasPass
+          ? (
+            <div
+              class="flex items-end justify-between gap-[2px] pt-4 pb-1 h-20"
+              role="group"
+              aria-label={isSpanish
+                ? `Últimos 30 días: ${monthTotal} visitas registradas`
+                : `Last 30 days: ${monthTotal} recorded visits`}
+            >
+              {activeBars.map((bar) => (
+                <div
+                  key={bar.index}
+                  tabIndex={0}
+                  role="img"
+                  title={`${bar.dateShort}: ${bar.count}`}
+                  aria-label={isSpanish
+                    ? `${bar.dayShort} ${bar.dateShort}: ${bar.count} ${
+                      bar.count === 1
+                        ? "visita registrada"
+                        : "visitas registradas"
+                    }`
+                    : `${bar.dayShort} ${bar.dateShort}: ${bar.count} recorded ${
+                      bar.count === 1 ? "visit" : "visits"
+                    }`}
+                  class="group flex-1 h-14 flex items-end justify-center focus:outline-none"
+                >
                   <div
-                    key={bar.index}
-                    tabIndex={0}
-                    role="img"
-                    title={`${bar.dateShort}: ${bar.count}`}
-                    aria-label={isSpanish
-                      ? `${bar.dayShort} ${bar.dateShort}: ${bar.count} ${
-                        bar.count === 1
-                          ? "visita registrada"
-                          : "visitas registradas"
-                      }`
-                      : `${bar.dayShort} ${bar.dateShort}: ${bar.count} recorded ${
-                        bar.count === 1 ? "visit" : "visits"
-                      }`}
-                    class="group flex-1 h-14 flex items-end justify-center focus:outline-none"
-                  >
+                    class={`w-full rounded-t-sm border border-black/70 transition-all ${
+                      bar.count > 0
+                        ? "bg-qr-pop group-hover:bg-amber-300 group-focus-visible:bg-amber-300"
+                        : "bg-black/10"
+                    }`}
+                    style={{ height: `${bar.heightPx}px` }}
+                  />
+                </div>
+              ))}
+            </div>
+          )
+          : (
+            <div
+              class="flex items-end justify-between gap-1.5 pt-6 pb-1"
+              role="group"
+              aria-label={isSpanish
+                ? `Últimos 7 días: ${weekTotal} visitas registradas`
+                : `Last 7 days: ${weekTotal} recorded visits`}
+            >
+              {bars7.map((bar) => (
+                <div
+                  key={bar.index}
+                  tabIndex={0}
+                  role="img"
+                  aria-label={isSpanish
+                    ? `${bar.dayShort} ${bar.dateShort}: ${bar.count} ${
+                      bar.count === 1
+                        ? "visita registrada"
+                        : "visitas registradas"
+                    }`
+                    : `${bar.dayShort} ${bar.dateShort}: ${bar.count} recorded ${
+                      bar.count === 1 ? "visit" : "visits"
+                    }`}
+                  class="group relative flex-1 flex flex-col items-center gap-1.5 focus:outline-none min-w-0"
+                >
+                  {/* Count badge (always subtly legible, high-contrast pill on hover/focus) */}
+                  <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black leading-none border border-transparent text-[#4a3f39] group-hover:bg-amber-200 group-hover:text-black group-hover:border-black group-focus-visible:bg-amber-200 group-focus-visible:text-black group-focus-visible:border-black transition-all">
+                    {bar.count}
+                  </span>
+
+                  {/* Bar track */}
+                  <div class="w-full h-14 flex items-end justify-center">
                     <div
-                      class={`w-full rounded-t-sm border border-black/70 transition-all ${
+                      class={`w-full max-w-[28px] rounded-t-lg border-2 border-black transition-all ${
                         bar.count > 0
                           ? "bg-qr-pop group-hover:bg-amber-300 group-focus-visible:bg-amber-300"
                           : "bg-black/10"
@@ -537,85 +578,18 @@ export default function AnalyticsDashboard(
                       style={{ height: `${bar.heightPx}px` }}
                     />
                   </div>
-                ))}
-              </div>
-            )
-            : (
-              <div
-                class="flex items-end justify-between gap-1.5 pt-6 pb-1"
-                role="group"
-                aria-label={isSpanish
-                  ? `Últimos 7 días: ${weekTotal} visitas registradas`
-                  : `Last 7 days: ${weekTotal} recorded visits`}
-              >
-                {bars7.map((bar) => (
-                  <div
-                    key={bar.index}
-                    tabIndex={0}
-                    role="img"
-                    aria-label={isSpanish
-                      ? `${bar.dayShort} ${bar.dateShort}: ${bar.count} ${
-                        bar.count === 1
-                          ? "visita registrada"
-                          : "visitas registradas"
-                      }`
-                      : `${bar.dayShort} ${bar.dateShort}: ${bar.count} recorded ${
-                        bar.count === 1 ? "visit" : "visits"
-                      }`}
-                    class="group relative flex-1 flex flex-col items-center gap-1.5 focus:outline-none min-w-0"
+
+                  {/* Day-of-week label */}
+                  <span
+                    class="text-[11px] font-black text-black leading-none"
+                    title={`${bar.dayShort}, ${bar.dateShort}`}
                   >
-                    {/* Count badge (always subtly legible, high-contrast pill on hover/focus) */}
-                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-black leading-none border border-transparent text-[#4a3f39] group-hover:bg-amber-200 group-hover:text-black group-hover:border-black group-focus-visible:bg-amber-200 group-focus-visible:text-black group-focus-visible:border-black transition-all">
-                      {bar.count}
-                    </span>
-
-                    {/* Bar track */}
-                    <div class="w-full h-14 flex items-end justify-center">
-                      <div
-                        class={`w-full max-w-[28px] rounded-t-lg border-2 border-black transition-all ${
-                          bar.count > 0
-                            ? "bg-qr-pop group-hover:bg-amber-300 group-focus-visible:bg-amber-300"
-                            : "bg-black/10"
-                        }`}
-                        style={{ height: `${bar.heightPx}px` }}
-                      />
-                    </div>
-
-                    {/* Day-of-week label */}
-                    <span
-                      class="text-[11px] font-black text-black leading-none"
-                      title={`${bar.dayShort}, ${bar.dateShort}`}
-                    >
-                      {bar.dayInitial}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-        </div>
-
-        {/* Last Visit KPI Tile */}
-        <div class="bg-qr-cream rounded-2xl p-3.5 border-2 border-black flex flex-col justify-between min-w-0">
-          <div>
-            <p class="text-xs text-black font-black uppercase tracking-wider">
-              {isSpanish ? "Última visita" : "Last Visit"}
-            </p>
-            <p class="text-lg sm:text-xl font-black text-black mt-1.5 leading-tight">
-              {lastVisit.relative}
-            </p>
-            {lastVisit.localDateTime && (
-              <p class="text-xs font-bold text-[#4a3f39] mt-1">
-                {lastVisit.localDateTime}
-              </p>
-            )}
-          </div>
-          {typeof totalVisits === "number" && (
-            <p class="mt-3 pt-2 border-t border-black/15 text-xs font-black text-[#4a3f39]">
-              {isSpanish ? "Total histórico:" : "All-time total:"}{" "}
-              <span class="font-mono">{totalVisits}</span>
-            </p>
+                    {bar.dayInitial}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
-        </div>
       </div>
 
       {/* Device Breakdown Pills */}

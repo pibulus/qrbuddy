@@ -31,7 +31,17 @@ export default function EditPage({ data }: PageProps<{ lang: Locale }>) {
 
       <div class="min-h-[100dvh] w-full overflow-x-hidden flex flex-col items-center justify-between px-4 sm:px-6 pt-8 pb-6 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1">
         <main class="w-full max-w-xl space-y-6">
-          <PageTopBar lang={lang} />
+          <PageTopBar
+            lang={lang}
+            rightSlot={
+              <a
+                href={es ? "/es?library=1" : "/?library=1"}
+                class="inline-flex min-h-[38px] items-center gap-1 rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] px-3.5 py-1.5 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow,background-color] duration-[70ms] hover:-translate-y-px hover:shadow-[0_3px_0_#1e1714] active:translate-y-[2px] active:shadow-none"
+              >
+                <span>{es ? "Guardados ↗" : "Saved ↗"}</span>
+              </a>
+            }
+          />
 
           {/* Header */}
           <header class="text-center space-y-2">

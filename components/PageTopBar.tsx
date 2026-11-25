@@ -1,14 +1,19 @@
+import type { ComponentChildren } from "preact";
 import type { Locale } from "../utils/i18n.ts";
 
 /** The one tucked "back to the studio" pill every utility page opens with. */
 export default function PageTopBar(
-  { lang = "en", class: className = "" }: { lang?: Locale; class?: string },
+  {
+    lang = "en",
+    class: className = "",
+    rightSlot,
+  }: { lang?: Locale; class?: string; rightSlot?: ComponentChildren },
 ) {
   const es = lang === "es";
   return (
     <nav
       aria-label={es ? "Navegación del estudio" : "Studio navigation"}
-      class={className}
+      class={`flex items-center justify-between gap-2 ${className}`}
     >
       <a
         href={es ? "/es" : "/"}
@@ -17,6 +22,7 @@ export default function PageTopBar(
         <span aria-hidden="true">←</span>
         <span>QRBuddy</span>
       </a>
+      {rightSlot}
     </nav>
   );
 }

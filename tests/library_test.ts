@@ -6,14 +6,19 @@ import { getAuthHeaders, getUserAuthHeaders } from "../utils/api.ts";
 import { isPlusLibraryEnabled as isClientPlusEnabled } from "../utils/auth.ts";
 import { isPlusLibraryEnabled as isServerPlusEnabled } from "../supabase/functions/_shared/auth.ts";
 import {
+  addDynamicToHistory,
   addToHistory,
   detectStructuredStagePayload,
   exportVaultJson,
   filterHistoryItems,
   getHistory,
+  getSavedItemByShortCode,
   type HistoryItem,
   importVaultJson,
+  renameHistoryItem,
+  setHistoryItemTags,
 } from "../utils/history.ts";
+import { syncDynamicQRHistory } from "../islands/EditQRForm.tsx";
 import {
   exportSyncBundle,
   generateSyncPhrase,
@@ -682,4 +687,83 @@ Deno.test("Stage & Saved polish invariants - top-rail symmetry, 2-col toolbar, c
   // 4. Sovereign Voice fix in library.ts
   assertEquals(libSrc.includes("Failed to load your QR library"), false);
   assertEquals(libSrc.includes("Could not load saved library"), true);
+});
+
+Deno.test("Command Shelf - QR naming, tag parsing, merge preservation, and non-destructive destination updates", () => {
+  const store = new Map<string, string>();
+  const mockStorage: Storage = {
+    get length() {
+      return store.size;
+    },
+    clear: () => store.clear(),
+    getItem: (key) => store.get(key) ?? null,
+    key: (index) => Array.from(store.keys())[index] ?? null,
+    removeItem: (key) => {
+      store.delete(key);
+    },
+    setItem: (key, value) => {
+      store.set(key, value);
+    },
+  };
+
+  assertEquals(
+    addDynamicToHistory(
+      {
+        url: "https://example.com/old-menu",
+        redirectUrl: "https://qrbuddy.app/r?code=cafe01",
+        shortCode: "cafe01",
+        label: "Brunswick Lunch Menu",
+        ownerScope: "qr",
+      },
+      mockStorage,
+    ),
+    true,
+  );
+
+  // Saved item retains custom label
+  const initial = getSavedItemByShortCode("cafe01", mockStorage);
+  assertEquals(initial?.metadata?.label, "Brunswick Lunch Menu");
+  assertEquals(initial?.metadata?.title, "Brunswick Lunch Menu");
+
+  // Updating destination URL on /edit without changing label preserves label!
+  assertEquals(
+    syncDynamicQRHistory(
+      "cafe01",
+      "https://example.com/spring-menu",
+      undefined,
+      mockStorage,
+    ),
+    true,
+  );
+  const afterUrlUpdate = getSavedItemByShortCode("cafe01", mockStorage);
+  assertEquals(
+    afterUrlUpdate?.metadata?.destinationUrl,
+    "https://example.com/spring-menu",
+  );
+  assertEquals(afterUrlUpdate?.metadata?.label, "Brunswick Lunch Menu");
+  assertEquals(afterUrlUpdate?.metadata?.title, "Brunswick Lunch Menu");
+
+  // Renaming and tagging normalize cleanly
+  assertEquals(
+    renameHistoryItem("cafe01", "Table 04 Menu", mockStorage),
+    true,
+  );
+  assertEquals(
+    setHistoryItemTags(
+      "cafe01",
+      "#Brunswick, menus, #MENUS table-4",
+      mockStorage,
+    ),
+    true,
+  );
+  const renamed = getSavedItemByShortCode("cafe01", mockStorage);
+  assertEquals(renamed?.metadata?.label, "Table 04 Menu");
+  assertEquals(renamed?.metadata?.title, "Table 04 Menu");
+  assertEquals(renamed?.metadata?.tags, ["brunswick", "menus", "table-4"]);
+
+  // Clearing label falls back cleanly to destinationUrl
+  assertEquals(renameHistoryItem("cafe01", "   ", mockStorage), true);
+  const cleared = getSavedItemByShortCode("cafe01", mockStorage);
+  assertEquals(cleared?.metadata?.label, undefined);
+  assertEquals(cleared?.metadata?.title, "https://example.com/spring-menu");
 });
