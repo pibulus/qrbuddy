@@ -317,7 +317,6 @@ export default function DesignTab(
           <LogoUploader
             logoUrl={logoUrl}
             lang={locale}
-            compact
             compactLabel={/^data:image\/(png|jpeg|webp)/.test(logoUrl.value)
               ? (es ? "Cambiar logo" : "Replace logo")
               : (es ? "Subir logo" : "Upload logo")}

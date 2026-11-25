@@ -633,7 +633,7 @@ Deno.test("detectStructuredStagePayload - summarizes WIFI, VCARD, mailto, SMSTO,
 });
 
 Deno.test("Stage & Saved polish invariants - top-rail symmetry, 2-col toolbar, compressed drawer, and Sovereign Voice", async () => {
-  const [homeSrc, styleSrc, toolbarSrc, smartSrc, drawerSrc, libSrc, statsSrc] =
+  const [homeSrc, styleSrc, toolbarSrc, smartSrc, drawerSrc, libSrc] =
     await Promise.all([
       Deno.readTextFile(
         new URL("../components/HomeStage.tsx", import.meta.url),
@@ -652,7 +652,6 @@ Deno.test("Stage & Saved polish invariants - top-rail symmetry, 2-col toolbar, c
         new URL("../components/LibraryDrawer.tsx", import.meta.url),
       ),
       Deno.readTextFile(new URL("../utils/library.ts", import.meta.url)),
-      Deno.readTextFile(new URL("../islands/StatsPanel.tsx", import.meta.url)),
     ]);
 
   // 1. Top-left Saved capsule counterweight + clean 2-button bottom stage toolbar
@@ -680,8 +679,7 @@ Deno.test("Stage & Saved polish invariants - top-rail symmetry, 2-col toolbar, c
   assertEquals(drawerSrc.includes('href="/batch"'), false);
   assertEquals(drawerSrc.includes("confirm("), false);
 
-  // 4. Sovereign Voice fixes in library.ts & StatsPanel.tsx
+  // 4. Sovereign Voice fix in library.ts
   assertEquals(libSrc.includes("Failed to load your QR library"), false);
   assertEquals(libSrc.includes("Could not load saved library"), true);
-  assertEquals(/\b(you|your|yours)\b/i.test(statsSrc), false);
 });

@@ -260,6 +260,34 @@ interface GradientCreatorProps {
   zIndexClass?: string;
 }
 
+/**
+ * The Look, Print press and Module Shape ride on QRStyle. Editing colors must
+ * carry every one of them through, Riso ink duo / stock / register included.
+ */
+export function preserveStyleLook(
+  initialStyle?: QRStyle | null,
+): Partial<QRStyle> {
+  const look: Partial<QRStyle> = {};
+  if (!initialStyle) return look;
+  if (initialStyle.centerShape) look.centerShape = initialStyle.centerShape;
+  if (initialStyle.renderMode) look.renderMode = initialStyle.renderMode;
+  if (initialStyle.artImage) look.artImage = initialStyle.artImage;
+  if (initialStyle.artSample) look.artSample = initialStyle.artSample;
+  if (initialStyle.halftoneTone) look.halftoneTone = initialStyle.halftoneTone;
+  if (initialStyle.halftoneShape) {
+    look.halftoneShape = initialStyle.halftoneShape;
+  }
+  if (initialStyle.halftoneDetail) {
+    look.halftoneDetail = initialStyle.halftoneDetail;
+  }
+  if (initialStyle.foilDepth) look.foilDepth = initialStyle.foilDepth;
+  if (initialStyle.print) look.print = initialStyle.print;
+  if (initialStyle.risoInk) look.risoInk = initialStyle.risoInk;
+  if (initialStyle.risoStock) look.risoStock = initialStyle.risoStock;
+  if (initialStyle.risoRegister) look.risoRegister = initialStyle.risoRegister;
+  return look;
+}
+
 export default function GradientCreator(
   {
     onCustomGradient,
@@ -492,30 +520,7 @@ export default function GradientCreator(
 
     // Preserve active Look, Print Press, and Module Shape from initialStyle
     // so editing colors never strips Halftone, Flat Foil, Riso, or Gem settings.
-    const preservedLook: Partial<QRStyle> = {};
-    if (initialStyle?.centerShape) {
-      preservedLook.centerShape = initialStyle.centerShape;
-    }
-    if (initialStyle?.renderMode) {
-      preservedLook.renderMode = initialStyle.renderMode;
-    }
-    if (initialStyle?.artImage) preservedLook.artImage = initialStyle.artImage;
-    if (initialStyle?.artSample) {
-      preservedLook.artSample = initialStyle.artSample;
-    }
-    if (initialStyle?.halftoneTone) {
-      preservedLook.halftoneTone = initialStyle.halftoneTone;
-    }
-    if (initialStyle?.halftoneShape) {
-      preservedLook.halftoneShape = initialStyle.halftoneShape;
-    }
-    if (initialStyle?.halftoneDetail) {
-      preservedLook.halftoneDetail = initialStyle.halftoneDetail;
-    }
-    if (initialStyle?.foilDepth) {
-      preservedLook.foilDepth = initialStyle.foilDepth;
-    }
-    if (initialStyle?.print) preservedLook.print = initialStyle.print;
+    const preservedLook = preserveStyleLook(initialStyle);
 
     const preservedDotShape = initialStyle?.dots?.shape;
     const preservedCornerSquareShape = initialStyle?.cornersSquare?.shape;

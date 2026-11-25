@@ -49,7 +49,6 @@
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
     "tailwindcss": "npm:tailwindcss@3.4.1",
     "tailwindcss/": "npm:/tailwindcss@3.4.1/",
-    "qr-code-styling": "https://esm.sh/qr-code-styling@1.9.2?target=es2022",
     "jszip": "https://esm.sh/jszip@3.10.1?target=es2022",
     "jsqr": "https://esm.sh/jsqr@1.4.0?target=es2022",
     "qrcode-generator": "https://esm.sh/qrcode-generator@1.5.0?target=es2022",
@@ -71,4 +70,3 @@
     "build": "deno task build"
   }
 }
-

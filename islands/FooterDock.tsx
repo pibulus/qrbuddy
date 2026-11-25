@@ -7,7 +7,6 @@
  */
 import { useEffect, useRef } from "preact/hooks";
 import { openAboutModal } from "./AboutModal.tsx";
-// import { KofiButton } from "../components/KofiModal.tsx"; — Tip Jar parked, see below.
 import { openPricingModal } from "./PricingModal.tsx";
 import { MAKER_URL } from "../utils/constants.ts";
 import { getClientLocale, type Locale } from "../utils/i18n.ts";
@@ -124,12 +123,6 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
               </div>
             </div>
           </details>
-
-          {
-            /* Tip Jar parked for now. To bring it back: un-comment the
-              KofiButton import, drop in <KofiButton size="sm" label={t.tip} />
-              here, and re-mount <KofiModal> in the home routes. */
-          }
 
           <button
             type="button"

@@ -6,12 +6,10 @@ import { getSupabaseUrl } from "../utils/api.ts";
  *
  * QRBuddy was serving NONE of these — not even HSTS. Added 2026-07-31.
  * CSP added 2026-08-12, Playwright-verified against the running app
- * (every style preset, custom gradient, wasm scan-check, Ko-fi embed).
+ * (every style preset, custom gradient, wasm scan-check).
  *
- * X-Frame-Options is DENY here, unlike ProMapper's SAMEORIGIN. QRBuddy embeds
- * Ko-fi in an iframe (islands/KofiModal.tsx), but that direction is governed by
- * Ko-fi's headers, not ours — this header only controls who may frame QRBuddy,
- * and nothing needs to.
+ * X-Frame-Options is DENY here, unlike ProMapper's SAMEORIGIN. This header only
+ * controls who may frame QRBuddy, and nothing needs to.
  *
  * CSP notes (each entry earns its place):
  * - script-src 'unsafe-inline': Fresh's hydration state + _app's env script +
@@ -22,10 +20,10 @@ import { getSupabaseUrl } from "../utils/api.ts";
  * - connect-src: Supabase origin comes from the live env var so prod/dev
  *   agree; umami's cloud script beacons to gateway.umami.is (Playwright
  *   caught this — docs say api-gateway.umami.dev, the wire says otherwise).
- * - img-src data: blob:: logo uploads + qr-code-styling's export path.
+ * - img-src data: blob:: logo uploads + vector QR data-URL previews.
  * - Cloudflare injects its Web Analytics beacon (cookieless) on the zone; the
  *   script and its beacon endpoint are allowlisted so the console stays clean.
- * - frame-src ko-fi.com: the support widget iframe.
+ * - frame-src 'none': nothing is embedded.
  * - connect-src R2: supporter big files PUT/GET straight to Cloudflare R2 via
  *   presigned URLs (utils/r2-upload.ts). The account ID isn't a secret — it's
  *   in every presigned URL we hand out.
@@ -45,7 +43,7 @@ function buildCsp(): string {
     "img-src 'self' data: blob: https:",
     `media-src 'self' blob: ${R2_ORIGIN}`,
     `connect-src 'self' data: blob: ${supabase} ${R2_ORIGIN} https://cloud.umami.is https://gateway.umami.is https://fleetcount.pibulus.deno.net https://cloudflareinsights.com`,
-    "frame-src https://ko-fi.com",
+    "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -65,6 +63,7 @@ export const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   "/vcard": "/for/vcard",
   "/weddings": "/for/weddings",
   "/wifi": "/for/wifi",
+  "/stats": "/?library=1",
   "/why": "/compare",
   "/for/restaurants": "/for/menus",
   "/es/por-que": "/es/comparar",

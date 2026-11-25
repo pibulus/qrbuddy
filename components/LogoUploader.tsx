@@ -7,7 +7,6 @@ import { getClientLocale, type Locale } from "../utils/i18n.ts";
 interface LogoUploaderProps {
   logoUrl: Signal<string>;
   lang?: Locale;
-  compact?: boolean;
   /** Fires after a mark is set, so callers can clear their own monogram text. */
   onPicked?: () => void;
   /** Compact row label override (e.g. Replace logo when a raster is loaded). */
@@ -15,7 +14,7 @@ interface LogoUploaderProps {
 }
 
 export default function LogoUploader(
-  { logoUrl, lang, compact = false, onPicked, compactLabel }: LogoUploaderProps,
+  { logoUrl, lang, onPicked, compactLabel }: LogoUploaderProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const [isUploading, setIsUploading] = useState(false);
@@ -146,128 +145,9 @@ export default function LogoUploader(
     fileInputRef.current?.click();
   };
 
-  const handleRemoveLogo = () => {
-    uploadGenRef.current++;
-    logoUrl.value = "";
-    haptics.light();
-    addToast(isSpanish ? "Logo quitado" : "Logo removed", 2000);
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  if (compact) {
-    const hasImage = /^data:image\/(png|jpeg|webp)/.test(logoUrl.value);
-    return (
-      <div class="min-w-0">
-        <input
-          ref={fileInputRef}
-          type="file"
-          class="hidden"
-          accept="image/*"
-          onChange={handleFileInputChange}
-        />
-        <button
-          type="button"
-          onClick={handleFileInputClick}
-          disabled={isUploading}
-          class={`w-full min-h-[42px] flex items-center justify-center gap-2 rounded-xl text-[#1e1714] text-xs font-black transition-all ${
-            hasImage
-              ? "border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-[0_2px_0_#1e1714]"
-              : "border-2 border-[#1e1714]/20 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)]/45"
-          }`}
-        >
-          <svg
-            aria-hidden="true"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M3 3h18v18H3zM3 16l6-6 5 5 3-3 4 4M16 7h.01" />
-          </svg>
-          {isUploading
-            ? "…"
-            : compactLabel ?? (isSpanish ? "Subir logo" : "Upload logo")}
-        </button>
-        {error && <p class="text-xs text-amber-800" role="alert">{error}</p>}
-      </div>
-    );
-  }
-
+  const hasImage = /^data:image\/(png|jpeg|webp)/.test(logoUrl.value);
   return (
-    <div class="space-y-2">
-      {/* One row: the card says what it is, the trailing control does it */}
-      <div
-        class={`w-full min-h-[60px] rounded-2xl border-2 px-3 py-2.5 flex items-center gap-3 transition-all ${
-          logoUrl.value
-            ? "border-[#1e1714] bg-[#fffef7] shadow-chunky"
-            : "border-[#1e1714]/15 bg-[#fffef7]"
-        }`}
-      >
-        {logoUrl.value
-          ? (
-            <img
-              src={logoUrl.value}
-              alt={isSpanish ? "Vista previa del logo" : "Logo preview"}
-              class="w-10 h-10 object-contain rounded-xl border-2 border-black bg-white shrink-0"
-            />
-          )
-          : (
-            <span class="w-10 h-10 rounded-xl border-2 border-black bg-white flex items-center justify-center text-lg shrink-0">
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M3 3h18v18H3zM3 16l6-6 5 5 3-3 4 4M16 7h.01" />
-              </svg>
-            </span>
-          )}
-        <span class="min-w-0 flex-1">
-          <span class="block font-black text-black leading-tight">
-            {isSpanish ? "Logo central" : "Center logo"}
-          </span>
-          <span class="block text-xs text-neutral-700 leading-snug mt-0.5">
-            {logoUrl.value
-              ? (isSpanish
-                ? "Va justo al centro del QR."
-                : "Sits in the middle of the QR.")
-              : (isSpanish
-                ? "PNG, JPG o SVG · cuadrado queda mejor · máx. 2 MB"
-                : "PNG, JPG or SVG · square works best · max 2MB")}
-          </span>
-        </span>
-        {logoUrl.value
-          ? (
-            <button
-              type="button"
-              onClick={handleRemoveLogo}
-              class="shrink-0 min-h-[40px] px-3 rounded-full border-2 border-black bg-white text-xs font-black text-black hover:scale-105 active:scale-95 transition-transform"
-            >
-              {isSpanish ? "Quitar" : "Remove"}
-            </button>
-          )
-          : (
-            <button
-              type="button"
-              onClick={handleFileInputClick}
-              disabled={isUploading}
-              class="shrink-0 min-h-[40px] px-4 rounded-full border-2 border-black bg-black text-xs font-black text-white hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
-            >
-              {isUploading ? "…" : (isSpanish ? "Subir" : "Upload")}
-            </button>
-          )}
-      </div>
-
-      {/* Hidden file input */}
+    <div class="min-w-0">
       <input
         ref={fileInputRef}
         type="file"
@@ -275,12 +155,32 @@ export default function LogoUploader(
         accept="image/*"
         onChange={handleFileInputChange}
       />
-
-      {error && (
-        <p class="text-sm text-amber-800 text-center" role="alert">
-          {error}
-        </p>
-      )}
+      <button
+        type="button"
+        onClick={handleFileInputClick}
+        disabled={isUploading}
+        class={`w-full min-h-[42px] flex items-center justify-center gap-2 rounded-xl text-[#1e1714] text-xs font-black transition-all ${
+          hasImage
+            ? "border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] shadow-[0_2px_0_#1e1714]"
+            : "border-2 border-[#1e1714]/20 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[var(--qr-theme-tint,#fce7f3)]/45"
+        }`}
+      >
+        <svg
+          aria-hidden="true"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M3 3h18v18H3zM3 16l6-6 5 5 3-3 4 4M16 7h.01" />
+        </svg>
+        {isUploading
+          ? "…"
+          : compactLabel ?? (isSpanish ? "Subir logo" : "Upload logo")}
+      </button>
+      {error && <p class="text-xs text-amber-800" role="alert">{error}</p>}
     </div>
   );
 }

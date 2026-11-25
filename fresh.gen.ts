@@ -42,7 +42,6 @@ import * as $note_code_ from "./routes/note/[code].tsx";
 import * as $privacy from "./routes/privacy.tsx";
 import * as $q from "./routes/q.tsx";
 import * as $r from "./routes/r.tsx";
-import * as $stats from "./routes/stats.tsx";
 import * as $terms from "./routes/terms.tsx";
 import * as $v1_api_keys from "./routes/v1/api-keys.ts";
 import * as $v1_create_dynamic_qr from "./routes/v1/create-dynamic-qr.ts";
@@ -50,12 +49,10 @@ import * as $v1_get_dynamic_qr from "./routes/v1/get-dynamic-qr.ts";
 import * as $v1_health from "./routes/v1/health.ts";
 import * as $v1_library_stats from "./routes/v1/library-stats.ts";
 import * as $v1_library from "./routes/v1/library.ts";
-import * as $v1_ping from "./routes/v1/ping.ts";
 import * as $v1_redirect_qr from "./routes/v1/redirect-qr.ts";
 import * as $v1_update_dynamic_qr from "./routes/v1/update-dynamic-qr.ts";
 import * as $vs_slug_ from "./routes/vs/[slug].tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
-import * as $ActionButtons from "./islands/ActionButtons.tsx";
 import * as $ApiKeysPanel from "./islands/ApiKeysPanel.tsx";
 import * as $BatchStudio from "./islands/BatchStudio.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
@@ -72,7 +69,6 @@ import * as $QrPrintGuideIsland from "./islands/QrPrintGuideIsland.tsx";
 import * as $RotatingTitle from "./islands/RotatingTitle.tsx";
 import * as $ShareActions from "./islands/ShareActions.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
-import * as $StatsPanel from "./islands/StatsPanel.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
 import * as $ToastManager from "./islands/ToastManager.tsx";
 import * as $VerticalStudio from "./islands/VerticalStudio.tsx";
@@ -120,7 +116,6 @@ const manifest = {
     "./routes/privacy.tsx": $privacy,
     "./routes/q.tsx": $q,
     "./routes/r.tsx": $r,
-    "./routes/stats.tsx": $stats,
     "./routes/terms.tsx": $terms,
     "./routes/v1/api-keys.ts": $v1_api_keys,
     "./routes/v1/create-dynamic-qr.ts": $v1_create_dynamic_qr,
@@ -128,14 +123,12 @@ const manifest = {
     "./routes/v1/health.ts": $v1_health,
     "./routes/v1/library-stats.ts": $v1_library_stats,
     "./routes/v1/library.ts": $v1_library,
-    "./routes/v1/ping.ts": $v1_ping,
     "./routes/v1/redirect-qr.ts": $v1_redirect_qr,
     "./routes/v1/update-dynamic-qr.ts": $v1_update_dynamic_qr,
     "./routes/vs/[slug].tsx": $vs_slug_,
   },
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
-    "./islands/ActionButtons.tsx": $ActionButtons,
     "./islands/ApiKeysPanel.tsx": $ApiKeysPanel,
     "./islands/BatchStudio.tsx": $BatchStudio,
     "./islands/BucketQR.tsx": $BucketQR,
@@ -152,7 +145,6 @@ const manifest = {
     "./islands/RotatingTitle.tsx": $RotatingTitle,
     "./islands/ShareActions.tsx": $ShareActions,
     "./islands/SmartInput.tsx": $SmartInput,
-    "./islands/StatsPanel.tsx": $StatsPanel,
     "./islands/StyleSelector.tsx": $StyleSelector,
     "./islands/ToastManager.tsx": $ToastManager,
     "./islands/VerticalStudio.tsx": $VerticalStudio,

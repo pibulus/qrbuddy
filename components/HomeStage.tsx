@@ -17,11 +17,18 @@ import type { Locale } from "../utils/i18n.ts";
 
 export interface HomeStageProps {
   lang?: Locale;
+  /** Seeds the stage, e.g. legacy `/q?d=` share links. */
+  initialUrl?: string;
+  initialStyle?: keyof typeof QR_STYLES | "custom";
 }
 
-export default function HomeStage({ lang = "en" }: HomeStageProps) {
-  const url = useSignal("");
-  const style = useSignal<keyof typeof QR_STYLES | "custom">("sunset");
+export default function HomeStage(
+  { lang = "en", initialUrl = "", initialStyle }: HomeStageProps,
+) {
+  const url = useSignal(initialUrl);
+  const style = useSignal<keyof typeof QR_STYLES | "custom">(
+    initialStyle ?? "sunset",
+  );
   const customStyle = useSignal<QRStyle | null>(null);
   const triggerDownload = useSignal(false);
   const isDestructible = useSignal(false);
@@ -58,6 +65,7 @@ export default function HomeStage({ lang = "en" }: HomeStageProps) {
           logoUrl={logoUrl}
           frameConfig={frameConfig}
           pngSize={pngSize}
+          restoreStyle={!initialStyle}
         />
 
         {/* Saved Codes - top-left counterweight opposite StyleSelector */}

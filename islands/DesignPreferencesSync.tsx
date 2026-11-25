@@ -12,6 +12,8 @@ interface DesignPreferencesSyncProps {
   logoUrl: Signal<string>;
   frameConfig?: Signal<{ enabled: boolean; caption: string } | null>;
   pngSize?: Signal<1000 | 2000 | 3000>;
+  /** False when the page was seeded with an explicit style (share links). */
+  restoreStyle?: boolean;
 }
 
 export default function DesignPreferencesSync({
@@ -20,6 +22,7 @@ export default function DesignPreferencesSync({
   logoUrl,
   frameConfig,
   pngSize,
+  restoreStyle = true,
 }: DesignPreferencesSyncProps) {
   const hasHydrated = useRef(false);
 
@@ -27,8 +30,8 @@ export default function DesignPreferencesSync({
   useEffect(() => {
     const saved = loadDesignPreferences();
     if (saved) {
-      if (saved.style) style.value = saved.style;
-      if (customStyle && saved.customStyle !== undefined) {
+      if (restoreStyle && saved.style) style.value = saved.style;
+      if (restoreStyle && customStyle && saved.customStyle !== undefined) {
         customStyle.value = saved.customStyle;
       }
       if (saved.logoUrl !== undefined) logoUrl.value = saved.logoUrl;

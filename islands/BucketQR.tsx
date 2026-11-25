@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "preact/hooks";
-import QRCodeStyling from "qr-code-styling";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { useBucketStatus } from "../hooks/useBucketStatus.ts";
 import { useLockerUnlock } from "../hooks/useLockerUnlock.ts";
@@ -12,7 +11,8 @@ import {
   validateFile,
 } from "../utils/file-validation.ts";
 import { haptics } from "../utils/haptics.ts";
-import { QR_STYLES } from "../utils/qr-styles.ts";
+import { resolveQRStyle } from "../utils/qr-design.ts";
+import { buildQrSvgString, toSvgDataUrl } from "../utils/qr-vector-svg.ts";
 import { uploadViaR2 } from "../utils/r2-upload.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
@@ -54,8 +54,6 @@ export default function BucketQR({
   deleteOnDownload,
   apiUrl,
 }: BucketQRProps) {
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const qrCodeRef = useRef<QRCodeStyling | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -143,120 +141,24 @@ export default function BucketQR({
     !deleteOnDownload && !isEmpty &&
     (isMediaFile || (isPasswordProtected && !contentMetadata));
 
-  // Get QR style based on empty/full state
-  const getQRStyle = () => {
-    if (isEmpty) {
-      // Empty: Use user's chosen style (soft, inviting)
-      return QR_STYLES[style as keyof typeof QR_STYLES] || QR_STYLES.sunset;
-    } else {
-      // Full: Orange to red gradient (urgent, action needed)
-      return {
-        dots: {
-          type: "gradient",
-          gradient: {
-            type: "linear" as const,
-            rotation: 0.785,
-            colorStops: [
-              { offset: 0, color: "#FF6B35" },
-              { offset: 0.5, color: "#FF4500" },
-              { offset: 1, color: "#DC143C" },
-            ],
-          },
-        },
-        background: { color: "#FFF5F0" },
-        cornersSquare: {
-          gradient: {
-            type: "linear" as const,
-            rotation: 0.785,
-            colorStops: [
-              { offset: 0, color: "#FF6B35" },
-              { offset: 1, color: "#DC143C" },
-            ],
-          },
-        },
-        cornersDot: {
-          gradient: {
-            type: "linear" as const,
-            rotation: 0.785,
-            colorStops: [
-              { offset: 0, color: "#FF6B35" },
-              { offset: 1, color: "#DC143C" },
-            ],
-          },
-        },
-      };
-    }
-  };
-
-  // Initialize QR code
-  useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const currentStyle = getQRStyle();
-
-    const qrCode = new QRCodeStyling({
-      width: 500,
-      height: 500,
+  // Share-locker QR: zero-DOM vector geometry, same source as every other surface.
+  const lockerQrSvg = useMemo(() => {
+    const s = resolveQRStyle(style);
+    return toSvgDataUrl(buildQrSvgString({
       data: bucketUrl,
-      margin: 20,
-      qrOptions: {
-        typeNumber: 0,
-        mode: "Byte",
-        errorCorrectionLevel: "Q",
-      },
-      dotsOptions: {
-        type: "shape" in currentStyle.dots && currentStyle.dots.shape
-          ? currentStyle.dots.shape
-          : "rounded",
-        color: "color" in currentStyle.dots
-          ? currentStyle.dots.color
-          : undefined,
-        gradient: "gradient" in currentStyle.dots
-          ? currentStyle.dots.gradient
-          : undefined,
-      },
-      backgroundOptions: {
-        color: "color" in currentStyle.background
-          ? currentStyle.background.color
-          : undefined,
-        gradient: "gradient" in currentStyle.background
-          ? currentStyle.background.gradient
-          : undefined,
-      },
-      cornersSquareOptions: {
-        type:
-          currentStyle.cornersSquare && "shape" in currentStyle.cornersSquare &&
-            currentStyle.cornersSquare.shape
-            ? currentStyle.cornersSquare.shape
-            : "extra-rounded",
-        color:
-          currentStyle.cornersSquare && "color" in currentStyle.cornersSquare
-            ? currentStyle.cornersSquare.color
-            : undefined,
-        gradient:
-          currentStyle.cornersSquare && "gradient" in currentStyle.cornersSquare
-            ? currentStyle.cornersSquare.gradient
-            : undefined,
-      },
-      cornersDotOptions: {
-        type: currentStyle.cornersDot && "shape" in currentStyle.cornersDot &&
-            currentStyle.cornersDot.shape
-          ? currentStyle.cornersDot.shape
-          : "dot",
-        color: currentStyle.cornersDot && "color" in currentStyle.cornersDot
-          ? currentStyle.cornersDot.color
-          : undefined,
-        gradient:
-          currentStyle.cornersDot && "gradient" in currentStyle.cornersDot
-            ? currentStyle.cornersDot.gradient
-            : undefined,
-      },
-    });
-
-    canvasRef.current.innerHTML = "";
-    qrCode.append(canvasRef.current);
-    qrCodeRef.current = qrCode;
-  }, [isEmpty, bucketUrl, style]);
+      size: 500,
+      errorCorrectionLevel: "Q",
+      c1: s.dots.color ?? s.dots.gradient?.colorStops[0]?.color,
+      c2: s.dots.color ?? s.dots.gradient?.colorStops.at(-1)?.color,
+      bg: s.background.color ?? s.background.gradient?.colorStops[0]?.color,
+      dotsGradient: s.dots.gradient,
+      backgroundGradient: s.background.gradient,
+      eyeGradient: s.cornersSquare?.gradient ?? s.dots.gradient,
+      eyeColor: s.cornersSquare?.color ?? s.dots.color,
+      dotShape: s.dots.shape,
+      cornerSquareShape: s.cornersSquare?.shape,
+    }));
+  }, [bucketUrl, style]);
 
   // Hide owner_token from URL if present
   useEffect(() => {
@@ -841,8 +743,7 @@ export default function BucketQR({
           </button>
         </div>
         <div
-          ref={canvasRef}
-          class="bg-white rounded-2xl border-4 border-black shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-all duration-300 mx-auto w-full max-w-[220px] [&>canvas]:max-w-full [&>canvas]:h-auto"
+          class="bg-[#fffef7] rounded-2xl border-4 border-[#1e1714] shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-all duration-300 mx-auto w-full max-w-[220px] overflow-hidden"
           role="button"
           tabIndex={0}
           aria-label="Copy bucket URL to clipboard"
@@ -854,7 +755,13 @@ export default function BucketQR({
             }
           }}
           title="Click to copy URL"
-        />
+        >
+          <img
+            src={lockerQrSvg}
+            alt="Locker QR code"
+            class="block w-full h-auto"
+          />
+        </div>
       </section>
 
       {/* Error Message */}

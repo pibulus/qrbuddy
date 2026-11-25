@@ -225,8 +225,9 @@ export default function StyleSelector(
   };
 
   const pick = (key: keyof typeof STYLE_DISPLAY) => {
+    // The Look (Halftone, Foil, Riso, shapes) rides on customStyle and
+    // resolveQRStyle re-applies it over the new palette, so keep it.
     if (style) style.value = key;
-    if (customStyle) customStyle.value = null;
     sounds.gradientShimmer(ARCHETYPE_KEYS.indexOf(key));
     haptics.light();
     isOpen.value = false;

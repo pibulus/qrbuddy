@@ -31,6 +31,8 @@ import {
 import { resolveQRStyle } from "../utils/qr-design.ts";
 import { validateDesignPreferences } from "../utils/design-preferences.ts";
 import { styledQrSvg } from "../utils/qr-renderer.ts";
+import { preserveStyleLook } from "../components/GradientCreator.tsx";
+import type { QRStyle } from "../types/qr-types.ts";
 
 const DATA = "https://qrbuddy.app";
 const MARK = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==";
@@ -566,4 +568,38 @@ Deno.test("Riso press: registration is the only thing drift changes", () => {
   const drift = at("drift");
   assert(tight !== drift);
   assertEquals(/data-look="classic"/.test(drift), true);
+});
+
+Deno.test("Color Studio draft carries Riso ink, stock and register through", () => {
+  const initial = {
+    ...resolveQRStyle("sunset"),
+    print: "riso",
+    risoInk: "berry",
+    risoStock: "kraft",
+    risoRegister: "drift",
+    renderMode: "halftone",
+    halftoneTone: "ink",
+  } as QRStyle;
+  const look = preserveStyleLook(initial);
+  assertEquals(look.print, "riso");
+  assertEquals(look.risoInk, "berry");
+  assertEquals(look.risoStock, "kraft");
+  assertEquals(look.risoRegister, "drift");
+  assertEquals(look.renderMode, "halftone");
+  assertEquals(preserveStyleLook(null), {});
+});
+
+Deno.test("Palette switch keeps the Look, Halftone and Riso riding on customStyle", () => {
+  const override = {
+    ...resolveQRStyle("sunset"),
+    print: "riso",
+    risoInk: "berry",
+    risoRegister: "tight",
+    renderMode: "halftone",
+  } as QRStyle;
+  const candy = resolveQRStyle("candy", override);
+  assertEquals(candy.print, "riso");
+  assertEquals(candy.risoInk, "berry");
+  assertEquals(candy.risoRegister, "tight");
+  assertEquals(candy.renderMode, "halftone");
 });
