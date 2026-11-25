@@ -8,6 +8,7 @@ import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 export interface QRData {
   short_code: string;
+  title?: string | null;
   destination_url: string;
   created_at: string;
   expires_at: string | null;
@@ -158,9 +159,15 @@ export function useQRData(lang?: Locale) {
         updateHistoryItem(
           (item) => item.metadata?.shortCode === result.data.short_code,
           (item) => {
-            const existingLabel = typeof item.metadata?.label === "string"
-              ? item.metadata.label.trim()
+            const serverTitle = typeof result.data.title === "string" &&
+                result.data.title.trim() &&
+                result.data.title.trim() !== result.data.destination_url.trim()
+              ? result.data.title.trim()
               : "";
+            const existingLabel = serverTitle ||
+              (typeof item.metadata?.label === "string"
+                ? item.metadata.label.trim()
+                : "");
             return {
               ...item,
               metadata: {

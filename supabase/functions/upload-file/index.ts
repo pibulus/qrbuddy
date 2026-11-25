@@ -20,7 +20,10 @@ import { describeVisitor, generateOwnerToken } from "../_shared/visitor.ts";
 const UNLIMITED_DOWNLOADS = 999999;
 const MAX_DOWNLOADS_LIMIT = UNLIMITED_DOWNLOADS;
 const DEFAULT_MAX_DOWNLOADS = UNLIMITED_DOWNLOADS;
-const SHARE_RETENTION_DAYS = 30;
+const FREE_RETENTION_DAYS = 30;
+const PASSPORT_RETENTION_DAYS = 365;
+const FREE_MULTI_ITEM_SIZE = 5 * 1024 * 1024;
+const PASSPORT_MULTI_ITEM_SIZE = 25 * 1024 * 1024;
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -148,15 +151,19 @@ serve(async (req) => {
 
     // Validate each file
     for (const file of files) {
-      // Check file size (5MB limit per file for multi-file, or 50MB for
-      // single — the free Supabase plan's storage ceiling, see
-      // _shared/file-validation.ts; a pass can't lift what storage rejects)
-      const sizeLimit = isMultiFile ? 5 * 1024 * 1024 : MAX_FILE_SIZE;
+      // Multi-file free drops stay capped at 5 MB/item; Passport raises that
+      // to 25 MB/item (still safely inside Supabase's 50 MB object limit).
+      const multiLimit = hasPass
+        ? PASSPORT_MULTI_ITEM_SIZE
+        : FREE_MULTI_ITEM_SIZE;
+      const sizeLimit = isMultiFile ? multiLimit : MAX_FILE_SIZE;
       if (file.size > sizeLimit) {
         return new Response(
           JSON.stringify({
             error: isMultiFile
-              ? `File ${file.name} too large (max 5MB each for multi-file shares)`
+              ? `File ${file.name} too large (max ${
+                hasPass ? "25MB" : "5MB"
+              } each for multi-file shares)`
               : "File too large (max 50MB)",
           }),
           {
@@ -342,8 +349,11 @@ serve(async (req) => {
     // Where it was made, to ~10 km — so "farthest scan" has a home.
     const origin = describeVisitor(req);
     const createdAt = new Date();
+    const retentionDays = hasPass
+      ? PASSPORT_RETENTION_DAYS
+      : FREE_RETENTION_DAYS;
     const expiresAt = new Date(
-      createdAt.getTime() + SHARE_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+      createdAt.getTime() + retentionDays * 24 * 60 * 60 * 1000,
     ).toISOString();
 
     const baseInsert = {

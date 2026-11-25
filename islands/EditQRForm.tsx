@@ -146,10 +146,17 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
   useEffect(() => {
     if (qrData) {
       const saved = getSavedItemByShortCode(qrData.short_code);
-      const initialLabel = typeof saved?.metadata?.label === "string" &&
+      const serverLabel = typeof qrData.title === "string" &&
+          qrData.title.trim() &&
+          qrData.title.trim() !== qrData.destination_url.trim()
+        ? qrData.title.trim()
+        : "";
+      const initialLabel = (typeof saved?.metadata?.label === "string" &&
           saved.metadata.label.trim()
         ? saved.metadata.label.trim()
-        : (typeof saved?.metadata?.title === "string" &&
+        : "") ||
+        serverLabel ||
+        (typeof saved?.metadata?.title === "string" &&
             saved.metadata.title.trim() &&
             saved.metadata.title.trim() !== qrData.destination_url.trim()
           ? saved.metadata.title.trim()
@@ -292,6 +299,7 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
 
     const nextDestination = resolvedDest || destinationUrl;
     const saved = await saveQRData({
+      title: qrLabel.trim() || null,
       destination_url: nextDestination,
       max_scans: maxScans,
       ...(pin.trim() ? { password: pin.trim() } : {}),

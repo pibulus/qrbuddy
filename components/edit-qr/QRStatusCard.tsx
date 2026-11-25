@@ -105,10 +105,17 @@ export default function QRStatusCard({ qrData, lang }: QRStatusCardProps) {
   useEffect(() => {
     const syncLabel = () => {
       const savedEntry = getSavedItemByShortCode(qrData.short_code);
-      const label = typeof savedEntry?.metadata?.label === "string" &&
+      const serverLabel = typeof qrData.title === "string" &&
+          qrData.title.trim() &&
+          qrData.title.trim() !== qrData.destination_url.trim()
+        ? qrData.title.trim()
+        : "";
+      const label = (typeof savedEntry?.metadata?.label === "string" &&
           savedEntry.metadata.label.trim()
         ? savedEntry.metadata.label.trim()
-        : (typeof savedEntry?.metadata?.title === "string" &&
+        : "") ||
+        serverLabel ||
+        (typeof savedEntry?.metadata?.title === "string" &&
             savedEntry.metadata.title.trim() &&
             savedEntry.metadata.title.trim() !==
               qrData.destination_url.trim()
@@ -119,7 +126,7 @@ export default function QRStatusCard({ qrData, lang }: QRStatusCardProps) {
     syncLabel();
     globalThis.addEventListener?.("history-updated", syncLabel);
     return () => globalThis.removeEventListener?.("history-updated", syncLabel);
-  }, [qrData.short_code, qrData.destination_url]);
+  }, [qrData.short_code, qrData.destination_url, qrData.title]);
 
   useEffect(() => {
     const saved = getHistory().find((item) =>

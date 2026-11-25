@@ -108,6 +108,7 @@ export default function FileUploadOptions(
   const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   const isLimited = maxDownloads.value !== UNLIMITED_SCANS;
   const busy = isUploading || isPrepping;
+  const hasPass = Boolean(getSupporterPass());
 
   const moveFile = (index: number, direction: -1 | 1) => {
     const reordered = reorderItems(files, index, direction);
@@ -158,7 +159,13 @@ export default function FileUploadOptions(
               {isPrepping
                 ? (isSpanish ? "Preparando fotos…" : "Prepping photos…")
                 : `${formatSize(totalSize)} · ${
-                  isSpanish ? "dura 30 días" : "30-day link"
+                  hasPass
+                    ? (isSpanish
+                      ? "dura 1 año · Pasaporte"
+                      : "1-year Passport link")
+                    : (isSpanish
+                      ? "dura 30 días · 1 año con Pasaporte"
+                      : "30-day link · 1 yr with Passport")
                 }`}
             </p>
           </div>

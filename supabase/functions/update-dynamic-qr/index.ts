@@ -13,6 +13,16 @@ import { validateSplashConfig } from "../_shared/splash-validation.ts";
 import { validateRoutingConfig } from "../_shared/routing-config.ts";
 import { requestHasValidPass } from "../_shared/license.ts";
 
+function sanitizeTitle(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const cleaned = Array.from(raw)
+    .filter((ch) => ch.charCodeAt(0) >= 32 && ch !== "<" && ch !== ">")
+    .join("")
+    .trim()
+    .slice(0, 80);
+  return cleaned || null;
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -21,13 +31,12 @@ serve(async (req) => {
 
   try {
     const hasPass = await requestHasValidPass(req);
-    // Rate limiting: 30 updates per hour per IP
-    // Owner token required, but rate limit prevents token brute-force
+    // Rate limiting: 60 updates/hr free; 300/hr for Passport operators managing 20-100+ codes.
     const clientIP = getClientIP(req);
     const rateLimitResult = await checkRateLimit(clientIP, {
       scope: "update-dynamic-qr",
       windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 30,
+      maxRequests: hasPass ? 300 : 60,
     });
 
     if (rateLimitResult.isLimited) {
@@ -56,6 +65,7 @@ serve(async (req) => {
     }
     const {
       owner_token,
+      title,
       destination_url,
       password,
       max_scans,
@@ -152,6 +162,7 @@ serve(async (req) => {
           "tel:",
           "sms:",
           "facetime:",
+          "geo:",
         ].includes(parsed.protocol);
       } catch {
         return false;
@@ -242,6 +253,9 @@ serve(async (req) => {
     // Build update object (only update provided fields)
     const updates: Record<string, string | number | boolean | null | object> =
       {};
+    if (title !== undefined) {
+      updates.title = sanitizeTitle(title);
+    }
     if (finalDestinationUrl !== undefined) {
       updates.destination_url = finalDestinationUrl;
     }
@@ -316,6 +330,7 @@ serve(async (req) => {
         success: true,
         data: {
           short_code: data.short_code,
+          title: data.title ?? null,
           destination_url: data.destination_url,
           scan_count: data.scan_count,
           max_scans: data.max_scans,

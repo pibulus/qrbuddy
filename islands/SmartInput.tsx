@@ -12,7 +12,11 @@ import {
   type SavedDynamicQRConfig,
   useDynamicQR,
 } from "../hooks/useDynamicQR.ts";
-import { useFileUpload } from "../hooks/useFileUpload.ts";
+import {
+  FREE_SLIDESHOW_FILE_SIZE,
+  PASSPORT_SLIDESHOW_FILE_SIZE,
+  useFileUpload,
+} from "../hooks/useFileUpload.ts";
 import { QRTemplateType } from "../types/qr-templates.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
 import {
@@ -432,6 +436,7 @@ export default function SmartInput(
       "";
 
     const result = await updateDynamicQR({
+      title: editableLabel.trim() || undefined,
       destinationUrl,
       isSequential,
       sequentialUrls,
@@ -737,6 +742,10 @@ export default function SmartInput(
     }
     const files = Array.from(fileList);
     if (!files.length) return;
+    const hasPass = Boolean(getSupporterPass());
+    const multiCap = hasPass
+      ? PASSPORT_SLIDESHOW_FILE_SIZE
+      : FREE_SLIDESHOW_FILE_SIZE;
     const batchError = files.length > 10
       ? (isSpanish
         ? "Elige hasta 10 fotos o pistas de audio por envío."
@@ -746,24 +755,23 @@ export default function SmartInput(
         ? "Los envíos múltiples aceptan fotos y audio. Comparte otros archivos uno por uno."
         : "Multi-file shares support photos and audio. Share other files one at a time.")
       : files.length > 1 &&
-          files.some((f) =>
-            f.type.startsWith("audio/") && f.size > 5 * 1024 * 1024
-          )
-      ? (isSpanish
-        ? "Las pistas de audio deben pesar 5 MB o menos en un mixtape."
-        : "Audio tracks must be 5 MB or smaller in a multi-file share.")
+          files.some((f) => f.type.startsWith("audio/") && f.size > multiCap)
+      ? (hasPass
+        ? (isSpanish
+          ? "Las pistas de audio deben pesar 25 MB o menos en un mixtape."
+          : "Audio tracks must be 25 MB or smaller in a mixtape.")
+        : (isSpanish
+          ? "Gratis máximo 5 MB/pista · El Pasaporte sube a 25 MB/pista"
+          : "5 MB/track free · QRBuddy Passport lifts mixtapes to 25 MB/track"))
       : null;
     if (batchError) {
-      addToast(batchError, 4000);
+      addToast(batchError, 4500);
       haptics.error();
       return;
     }
-    // QRBuddy Passport lifts the single-file ceiling (R2-backed) — multi-file
-    // slideshows stay on the Supabase path and its cap.
-    const hasPass = Boolean(getSupporterPass());
-    const maxSize = hasPass && files.length === 1
-      ? SUPPORTER_MAX_FILE_SIZE
-      : MAX_FILE_SIZE;
+    const maxSize = files.length === 1
+      ? (hasPass ? SUPPORTER_MAX_FILE_SIZE : MAX_FILE_SIZE)
+      : multiCap;
     for (const file of files) {
       const validation = validateFile(file, maxSize);
       if (!validation.valid) {

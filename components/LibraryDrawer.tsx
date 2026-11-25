@@ -815,6 +815,7 @@ export default function LibraryDrawer(
     idOrShortCode: string;
     shortCode?: string;
     redirectUrl?: string;
+    currentLabel?: string;
     currentDestUrl?: string;
     ownerToken?: string | null;
     isDynamic: boolean;
@@ -824,25 +825,30 @@ export default function LibraryDrawer(
     try {
       const cleanLabel = draftLabel.trim();
       const cleanDest = draftDestUrl.trim();
+      const labelChanged = cleanLabel !== (opts.currentLabel ?? "").trim();
+      const destChanged = Boolean(cleanDest) &&
+        cleanDest !== (opts.currentDestUrl ?? "").trim();
       let updatedRemoteDest = "";
 
       if (
         opts.isDynamic &&
         opts.ownerToken &&
-        cleanDest &&
-        cleanDest !== (opts.currentDestUrl ?? "").trim()
+        (destChanged || labelChanged)
       ) {
-        if (!looksLikeUrl(cleanDest)) {
-          addToast(
-            isSpanish
-              ? "El destino necesita un link válido (https://…)"
-              : "Destination needs a valid URL (https://…)",
-            3000,
-          );
-          haptics.error();
-          return;
+        let normalizedDest: string | undefined;
+        if (destChanged) {
+          if (!looksLikeUrl(cleanDest)) {
+            addToast(
+              isSpanish
+                ? "El destino necesita un link válido (https://…)"
+                : "Destination needs a valid URL (https://…)",
+              3000,
+            );
+            haptics.error();
+            return;
+          }
+          normalizedDest = normalizeUrl(cleanDest);
         }
-        const normalized = normalizeUrl(cleanDest);
         await apiRequest(
           `${getSupabaseUrl()}/functions/v1/update-dynamic-qr`,
           {
@@ -850,19 +856,24 @@ export default function LibraryDrawer(
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               owner_token: opts.ownerToken,
-              destination_url: normalized,
+              ...(normalizedDest ? { destination_url: normalizedDest } : {}),
+              ...(labelChanged ? { title: cleanLabel || null } : {}),
             }),
           },
-          isSpanish
-            ? "No se pudo actualizar el destino"
-            : "Could not update destination",
+          isSpanish ? "No se pudo actualizar el código" : "Could not update QR",
         );
-        updatedRemoteDest = normalized;
+        if (normalizedDest) updatedRemoteDest = normalizedDest;
         if (opts.shortCode) {
           setCodes((prev) =>
             prev.map((c) =>
               c.short_code === opts.shortCode
-                ? { ...c, destination_url: normalized }
+                ? {
+                  ...c,
+                  ...(normalizedDest
+                    ? { destination_url: normalizedDest }
+                    : {}),
+                  ...(labelChanged ? { title: cleanLabel || null } : {}),
+                }
                 : c
             )
           );
@@ -978,6 +989,7 @@ export default function LibraryDrawer(
     idOrShortCode: string;
     shortCode?: string;
     redirectUrl?: string;
+    currentLabel?: string;
     currentDestUrl?: string;
     ownerToken?: string | null;
     isDynamic: boolean;
@@ -1546,6 +1558,7 @@ export default function LibraryDrawer(
                         idOrShortCode: matchingLocal?.id ?? c.short_code,
                         shortCode: c.short_code,
                         redirectUrl: c.redirect_url,
+                        currentLabel: resolvedLabel,
                         currentDestUrl: c.destination_url,
                         ownerToken: rowToken,
                         isDynamic: true,
@@ -1782,6 +1795,7 @@ export default function LibraryDrawer(
                         idOrShortCode: item.id,
                         shortCode: shortCode || undefined,
                         redirectUrl: isDynamicItem ? item.content : undefined,
+                        currentLabel: seedLabel,
                         currentDestUrl: destUrl,
                         ownerToken: rowToken,
                         isDynamic: isDynamicItem,

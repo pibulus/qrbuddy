@@ -36,6 +36,16 @@ function generateOwnerToken(): string {
   return crypto.randomUUID().replace(/-/g, "");
 }
 
+function sanitizeTitle(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const cleaned = Array.from(raw)
+    .filter((ch) => ch.charCodeAt(0) >= 32 && ch !== "<" && ch !== ">")
+    .join("")
+    .trim()
+    .slice(0, 80);
+  return cleaned || null;
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -79,6 +89,7 @@ serve(async (req) => {
     }
     const {
       destination_url,
+      title,
       max_scans,
       expires_at,
       password,
@@ -87,6 +98,7 @@ serve(async (req) => {
       routing_config,
       splash_config,
     } = body;
+    const cleanTitle = sanitizeTitle(title);
 
     // A code can be locked with a PIN. Hashed here, salted, so the plaintext
     // never leaves the request — and so the client never owns the scheme.
@@ -199,6 +211,7 @@ serve(async (req) => {
           "tel:",
           "sms:",
           "facetime:",
+          "geo:",
         ].includes(parsed.protocol);
       } catch {
         return false;
@@ -290,7 +303,7 @@ serve(async (req) => {
           p_short_code: shortCode,
           p_destination_url: finalDestinationUrl,
           p_owner_token: ownerToken,
-          p_title: body.title || null,
+          p_title: cleanTitle,
           p_max_scans: max_scans || null,
           p_expires_at: expires_at || null,
           p_routing_mode: routingCheck.mode,
@@ -337,6 +350,7 @@ serve(async (req) => {
       const baseInsert = {
         short_code: shortCode,
         destination_url: finalDestinationUrl,
+        ...(cleanTitle ? { title: cleanTitle } : {}),
         max_scans: max_scans || null,
         expires_at: expires_at || null,
         password_hash: resolvedPasswordHash,
@@ -380,6 +394,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         short_code: shortCode,
+        title: cleanTitle,
         redirect_url: `${baseUrl}/r?code=${shortCode}`,
         edit_url: `${baseUrl}/edit?token=${ownerToken}`,
         owner_token: ownerToken,

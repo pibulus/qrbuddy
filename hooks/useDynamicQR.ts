@@ -43,6 +43,7 @@ export interface SavedDynamicQRConfig {
 
 export interface ServerDynamicQRRecord {
   short_code: string;
+  title?: string | null;
   destination_url: string;
   expires_at: string | null;
   max_scans: number | null;
@@ -54,6 +55,7 @@ export interface ServerDynamicQRRecord {
 
 export interface DynamicQRUpdateInput {
   ownerToken: string;
+  title?: string | null;
   destinationUrl: string;
   redirectUrl?: string;
   isSequential: boolean;
@@ -323,9 +325,15 @@ export function buildDynamicQRUpdatePayload(
   }
 
   const isActive = input.isActive !== false;
+  const normalizedTitle = input.title !== undefined
+    ? (typeof input.title === "string"
+      ? (input.title.trim().slice(0, 80) || null)
+      : null)
+    : undefined;
 
   const payload: Record<string, unknown> = {
     owner_token: cleanToken,
+    ...(normalizedTitle !== undefined ? { title: normalizedTitle } : {}),
     destination_url: resolvedDest,
     max_scans: maxScans,
     expires_at: expiresAt,
@@ -431,7 +439,7 @@ export function useDynamicQR(
 
       const body: Record<string, unknown> = {
         destination_url: normalizedDest,
-        title: cleanLabel || normalizedDest,
+        ...(cleanLabel ? { title: cleanLabel } : {}),
       };
       if (scanLimit) body.max_scans = scanLimit;
       if (resolvedExpiresAt) body.expires_at = resolvedExpiresAt;

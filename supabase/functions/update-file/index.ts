@@ -27,7 +27,9 @@ import { BLOCKED_EXTENSIONS } from "../_shared/file-validation.ts";
 
 const UNLIMITED = 999999;
 const MAX_ITEMS = 10;
-const MAX_ITEM_BYTES = 5 * 1024 * 1024;
+const FREE_ITEM_BYTES = 5 * 1024 * 1024;
+const PASSPORT_ITEM_BYTES = 25 * 1024 * 1024;
+const PASSPORT_RETENTION_DAYS = 365;
 const THEMES = new Set([
   "sunset",
   "pool",
@@ -243,14 +245,30 @@ serve(async (req) => {
     }
 
     const hasPass = await requestHasValidPass(req);
+    const maxItemBytes = hasPass ? PASSPORT_ITEM_BYTES : FREE_ITEM_BYTES;
+    const passportExpiryIso = hasPass
+      ? new Date(
+        Date.now() + PASSPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+      ).toISOString()
+      : null;
     const applyUnbranded = async () => {
       const nextStats = {
         ...(share.stats && typeof share.stats === "object" ? share.stats : {}),
         unbranded: true,
       };
+      const existingExpiryMs = typeof share.expires_at === "string"
+        ? Date.parse(share.expires_at)
+        : 0;
+      const shouldExtendExpiry = Boolean(passportExpiryIso) &&
+        (!Number.isFinite(existingExpiryMs) ||
+          Date.parse(passportExpiryIso!) > existingExpiryMs);
       const { error: unbrandErr } = await supabase
         .from("destructible_files")
-        .update({ unbranded: true, stats: nextStats })
+        .update({
+          unbranded: true,
+          stats: nextStats,
+          ...(shouldExtendExpiry ? { expires_at: passportExpiryIso } : {}),
+        })
         .eq("id", fileId);
       if (
         unbrandErr &&
@@ -259,7 +277,10 @@ serve(async (req) => {
       ) {
         const { error: fallbackErr } = await supabase
           .from("destructible_files")
-          .update({ stats: nextStats })
+          .update({
+            stats: nextStats,
+            ...(shouldExtendExpiry ? { expires_at: passportExpiryIso } : {}),
+          })
           .eq("id", fileId);
         if (fallbackErr) throw fallbackErr;
       } else if (unbrandErr) {
@@ -267,6 +288,7 @@ serve(async (req) => {
       }
       share.unbranded = true;
       share.stats = nextStats;
+      if (shouldExtendExpiry) share.expires_at = passportExpiryIso;
     };
 
     if (hasPass && !share.unbranded && !share.stats?.unbranded) {
@@ -397,9 +419,9 @@ serve(async (req) => {
             error: "This share isn't a slideshow or mixtape.",
           });
         }
-        if (file.size > MAX_ITEM_BYTES) {
+        if (file.size > maxItemBytes) {
           return json(req, 400, {
-            error: `${file.name} is over 5MB.`,
+            error: `${file.name} is over ${hasPass ? "25MB" : "5MB"}.`,
           });
         }
         const ext = file.name.toLowerCase().split(".").pop() ?? "";

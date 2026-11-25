@@ -45,28 +45,24 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // 1. Expire reusable buckets after 30 days without access.
+    // 1. Expire reusable buckets after inactivity:
+    //    - Free buckets: 30 days without access
+    //    - Passport buckets (unbranded = true): 365 days without access
+    const FREE_RETENTION_DAYS = 30;
+    const PASSPORT_RETENTION_DAYS = 365;
+    const cutoffMs30d = Date.now() - FREE_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+    const cutoffMs365d = Date.now() -
+      PASSPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+    const cutoffTime = new Date(cutoffMs30d).toISOString();
+    const passportCutoffTime = new Date(cutoffMs365d).toISOString();
 
-    const retentionDays = 30;
-    const cutoffTime = new Date(
-      Date.now() - retentionDays * 24 * 60 * 60 * 1000,
-    ).toISOString();
-
-    // Logic:
-    // If last_accessed_at is set, use that.
-    // If last_accessed_at is null, use last_filled_at (creation of content).
-    // If both are older than 30 days, expire it.
-
-    // We can't easily do complex OR logic in one Supabase query without raw SQL or RPC.
-    // But we can fetch candidates and filter, or use "or" filter.
-    // Let's use a simplified approach:
-    // Fetch buckets where (last_accessed_at < cutoff) OR (last_accessed_at IS NULL AND last_filled_at < cutoff)
-    // Supabase .or() syntax: .or(`last_accessed_at.lt.${cutoffTime},and(last_accessed_at.is.null,last_filled_at.lt.${cutoffTime})`)
-
-    // Get expired buckets that are NOT empty (have files to delete)
-    const { data: expiredBuckets, error: fetchError } = await supabase
+    // Get candidate reusable buckets whose last access (or fill) passed 30 days,
+    // then apply the 365-day window to Passport lockers so printed lockers do not rot.
+    const { data: candidateBuckets, error: fetchError } = await supabase
       .from("file_buckets")
-      .select("id, bucket_code, content_metadata, content_type")
+      .select(
+        "id, bucket_code, content_metadata, content_type, unbranded, last_accessed_at, last_filled_at",
+      )
       .or(
         `last_accessed_at.lt.${cutoffTime},and(last_accessed_at.is.null,last_filled_at.lt.${cutoffTime})`,
       )
@@ -75,11 +71,19 @@ serve(async (req) => {
 
     if (fetchError) throw fetchError;
 
+    const expiredBuckets = (candidateBuckets ?? []).filter((bucket) => {
+      const limitMs = bucket.unbranded ? cutoffMs365d : cutoffMs30d;
+      const activityAt = bucket.last_accessed_at ?? bucket.last_filled_at;
+      if (!activityAt) return false;
+      const activityMs = Date.parse(activityAt);
+      return Number.isFinite(activityMs) && activityMs < limitMs;
+    });
+
     let deletedFiles = 0;
     let deletedBuckets = 0;
 
     // Delete files from storage
-    if (expiredBuckets && expiredBuckets.length > 0) {
+    if (expiredBuckets.length > 0) {
       const filesToDelete: string[] = [];
 
       for (const bucket of expiredBuckets) {
@@ -142,21 +146,31 @@ serve(async (req) => {
       }
     }
 
-    // 2. Delete abandoned/empty buckets (older than 30 days)
-    // This includes:
-    // - One-time buckets that were never used
-    // - Persistent buckets that have been empty for 30 days
-    const abandonedCutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      .toISOString();
+    // 2. Delete abandoned/empty buckets (30 days for free, 365 days for Passport).
+    // Keeps Passport holders' printed locker QRs alive even during quiet months.
+    const abandonedCutoff = cutoffTime;
 
-    const { error: deleteError, count } = await supabase
-      .from("file_buckets")
-      .delete({ count: "exact" })
-      .lt("updated_at", abandonedCutoff) // updated_at is touched on creation and modification
-      .eq("is_empty", true); // Only delete if empty
+    const [
+      { error: deleteFreeError, count: freeDeletedCount },
+      { error: deletePassError, count: passDeletedCount },
+    ] = await Promise.all([
+      supabase
+        .from("file_buckets")
+        .delete({ count: "exact" })
+        .lt("updated_at", abandonedCutoff)
+        .eq("is_empty", true)
+        .eq("unbranded", false),
+      supabase
+        .from("file_buckets")
+        .delete({ count: "exact" })
+        .lt("updated_at", passportCutoffTime)
+        .eq("is_empty", true)
+        .eq("unbranded", true),
+    ]);
 
-    if (deleteError) throw deleteError;
-    deletedBuckets = count || 0;
+    if (deleteFreeError) throw deleteFreeError;
+    if (deletePassError) throw deletePassError;
+    deletedBuckets = (freeDeletedCount || 0) + (passDeletedCount || 0);
 
     // 3. Reap expired file shares after a one-hour grace period. Includes
     // consumed shares so a previous storage deletion failure can retry here.

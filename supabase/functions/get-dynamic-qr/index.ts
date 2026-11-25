@@ -9,6 +9,7 @@ import {
   createRateLimitResponse,
   getClientIP,
 } from "../_shared/rate-limit.ts";
+import { requestHasValidPass } from "../_shared/license.ts";
 
 serve(async (req) => {
   // Handle CORS
@@ -17,12 +18,13 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting: 30 requests per hour per IP
+    const hasPass = await requestHasValidPass(req);
+    // Rate limiting: 60 requests/hr free; 300/hr with Passport
     const clientIP = getClientIP(req);
     const rateLimitResult = await checkRateLimit(clientIP, {
       scope: "get-dynamic-qr",
       windowMs: 60 * 60 * 1000,
-      maxRequests: 30,
+      maxRequests: hasPass ? 300 : 60,
     });
 
     if (rateLimitResult.isLimited) {
@@ -86,6 +88,7 @@ serve(async (req) => {
         success: true,
         data: {
           short_code: data.short_code,
+          title: data.title ?? null,
           destination_url: data.destination_url,
           created_at: data.created_at,
           expires_at: data.expires_at,

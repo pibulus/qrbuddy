@@ -18,6 +18,7 @@ import { generateOwnerToken } from "../_shared/visitor.ts";
 
 const UNLIMITED_DOWNLOADS = 999999;
 const PENDING_UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
+const PASSPORT_RETENTION_DAYS = 365;
 
 type FinalizationResult = {
   kind?: string;
@@ -27,6 +28,7 @@ type FinalizationResult = {
   file_name?: string;
   size?: number;
   max_downloads?: number;
+  expires_at?: string;
 };
 
 function jsonResponse(req: Request, body: unknown, status = 200): Response {
@@ -87,6 +89,7 @@ function respondWithFinalization(
       fileName: result.file_name ?? "download",
       size: result.size ?? 0,
       maxDownloads,
+      ...(result.expires_at ? { expiresAt: result.expires_at } : {}),
       unbranded: true,
       message,
     });
@@ -228,9 +231,21 @@ serve(async (req) => {
 
     const finalResult = finalized as FinalizationResult;
     if (finalResult.kind === "destructible" && finalResult.file_id) {
+      const passportExpiresAt = hasPass
+        ? new Date(
+          Date.now() + PASSPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+        ).toISOString()
+        : undefined;
+      if (passportExpiresAt) {
+        finalResult.expires_at = passportExpiresAt;
+      }
       const { error: unbrandError } = await supabase
         .from("destructible_files")
-        .update({ unbranded: hasPass, stats: { unbranded: hasPass } })
+        .update({
+          unbranded: hasPass,
+          stats: { unbranded: hasPass },
+          ...(passportExpiresAt ? { expires_at: passportExpiresAt } : {}),
+        })
         .eq("id", finalResult.file_id);
       if (
         unbrandError &&
@@ -239,7 +254,10 @@ serve(async (req) => {
       ) {
         await supabase
           .from("destructible_files")
-          .update({ stats: { unbranded: hasPass } })
+          .update({
+            stats: { unbranded: hasPass },
+            ...(passportExpiresAt ? { expires_at: passportExpiresAt } : {}),
+          })
           .eq("id", finalResult.file_id);
       }
     }

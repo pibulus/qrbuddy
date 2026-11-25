@@ -20,8 +20,10 @@ import {
   UPLOAD_RESET_DELAY_MS,
 } from "../utils/constants.ts";
 
-const MAX_SLIDESHOW_FILES = 10;
-const MAX_SLIDESHOW_FILE_SIZE = 5 * 1024 * 1024;
+export const MAX_SLIDESHOW_FILES = 10;
+export const FREE_SLIDESHOW_FILE_SIZE = 5 * 1024 * 1024;
+export const PASSPORT_SLIDESHOW_FILE_SIZE = 25 * 1024 * 1024;
+const CHUNKED_MULTI_BYTES_THRESHOLD = 12 * 1024 * 1024;
 
 interface UseFileUploadProps {
   url: Signal<string>;
@@ -67,11 +69,15 @@ export function useFileUpload(
         : (Array.isArray(input) ? input : [input]);
       const isMulti = files.length > 1;
 
-      // Supporter pass lifts the single-file ceiling (R2-backed, see below).
+      // Supporter pass raises both the single-file R2 ceiling and multi-file item cap (25MB/item).
       const pass = getSupporterPass();
-      const maxSize = pass && !isMulti
+      const hasPass = Boolean(pass);
+      const maxSize = hasPass && !isMulti
         ? SUPPORTER_MAX_FILE_SIZE
         : MAX_FILE_SIZE;
+      const multiItemMax = hasPass
+        ? PASSPORT_SLIDESHOW_FILE_SIZE
+        : FREE_SLIDESHOW_FILE_SIZE;
 
       // Validate files
       if (files.length > MAX_SLIDESHOW_FILES) {
@@ -88,14 +94,16 @@ export function useFileUpload(
             );
           }
 
-          if (file.size > MAX_SLIDESHOW_FILE_SIZE) {
+          if (file.size > multiItemMax) {
             throw new Error(
-              `File ${file.name} too large (max 5MB each for multi-file shares)`,
+              hasPass
+                ? `File ${file.name} too large (max 25MB each for multi-file shares)`
+                : `File ${file.name} too large (max 5MB each free · 25MB/track with Passport)`,
             );
           }
         }
 
-        const validation = validateFile(file, maxSize);
+        const validation = validateFile(file, isMulti ? multiItemMax : maxSize);
         if (!validation.valid) {
           throw new Error(validation.error);
         }
@@ -111,8 +119,9 @@ export function useFileUpload(
         ownerToken?: string;
       };
 
+      const totalBytes = files.reduce((sum, f) => sum + f.size, 0);
       let data: UploadResponse;
-      if (pass && !isMulti && files[0].size > MAX_FILE_SIZE) {
+      if (hasPass && !isMulti && files[0].size > MAX_FILE_SIZE) {
         // Big file + pass: presigned browser→R2 upload, finalize-upload
         // answers with the same shape as upload-file.
         data = await uploadViaR2<UploadResponse>(
@@ -124,6 +133,47 @@ export function useFileUpload(
           files[0],
           setUploadProgress,
         );
+      } else if (isMulti && totalBytes > CHUNKED_MULTI_BYTES_THRESHOLD) {
+        // Upload first file to establish share ID & owner token, then append remaining tracks/photos
+        // sequentially so multi-track Passport mixtapes never trip multipart body caps.
+        const apiUrl = getApiUrl();
+        const firstForm = new FormData();
+        firstForm.append("file", files[0]);
+        firstForm.append("maxDownloads", maxDownloads.value.toString());
+        if (options.title?.trim()) {
+          firstForm.append("title", options.title.trim());
+        }
+        if (qrStyle?.value) {
+          firstForm.append("theme", qrStyle.value);
+        }
+
+        const sliceShare = 100 / files.length;
+        data = await apiRequestFormDataWithProgress<UploadResponse>(
+          `${apiUrl}/upload-file`,
+          firstForm,
+          (pct) => setUploadProgress(Math.round((pct / 100) * sliceShare)),
+          "Upload failed",
+        );
+
+        if (data.fileId && data.ownerToken) {
+          for (let i = 1; i < files.length; i++) {
+            const appendForm = new FormData();
+            appendForm.append("fileId", data.fileId);
+            appendForm.append("ownerToken", data.ownerToken);
+            appendForm.append("action", "append");
+            appendForm.append("file", files[i]);
+            const basePct = Math.round(i * sliceShare);
+            await apiRequestFormDataWithProgress<{ success: boolean }>(
+              `${apiUrl}/update-file`,
+              appendForm,
+              (pct) =>
+                setUploadProgress(
+                  Math.min(99, basePct + Math.round((pct / 100) * sliceShare)),
+                ),
+              `Failed uploading ${files[i].name}`,
+            );
+          }
+        }
       } else {
         const formData = new FormData();
         files.forEach((file) => {
