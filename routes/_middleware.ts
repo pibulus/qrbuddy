@@ -34,9 +34,9 @@ const SCRIPT_ORIGINS =
 const R2_ORIGIN =
   "https://c5a72aa2df2ddaa73fe129888a3d3402.r2.cloudflarestorage.com";
 
-function buildCsp(): string {
+export function buildCsp(pathname = ""): string {
   const supabase = getSupabaseUrl() ?? "https://*.supabase.co";
-  return [
+  const directives = [
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${SCRIPT_ORIGINS}`,
     "style-src 'self' 'unsafe-inline'",
@@ -46,9 +46,15 @@ function buildCsp(): string {
     "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-  ].join("; ");
+  ];
+  // CSP3 §6.4.1 enforces `form-action` on post-POST 3xx redirect targets too.
+  // POST /r?code=... serves the PIN gate and intentionally 302-redirects to
+  // arbitrary destination URLs after verification, so only /r omits form-action.
+  if (pathname !== "/r") {
+    directives.push("form-action 'self'");
+  }
+  directives.push("frame-ancestors 'none'");
+  return directives.join("; ");
 }
 
 const NOINDEX_PATH_RE = /^\/(?:r|q|edit|boom|api|f|bucket|note|v1)(?:\/|$)/;
@@ -99,7 +105,7 @@ export async function handler(req: Request, ctx: FreshContext) {
   resp.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   resp.headers.set("X-Frame-Options", "DENY");
   resp.headers.set("X-Content-Type-Options", "nosniff");
-  resp.headers.set("Content-Security-Policy", buildCsp());
+  resp.headers.set("Content-Security-Policy", buildCsp(normalizedPath));
 
   // A 404 caught mid-deploy must never be cached: Cloudflare would pin the
   // missing asset for days and break hydration on that edge. Failures are

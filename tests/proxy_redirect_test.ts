@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "$std/assert/mod.ts";
 import { buildRedirectUpstreamHeaders } from "../utils/proxy-context.ts";
+import { handler as middlewareHandler } from "../routes/_middleware.ts";
 import { handler as redirectHandler } from "../routes/r.tsx";
 import { resolveScannerContext } from "../supabase/functions/_shared/proxy-trust.ts";
 
@@ -184,3 +185,43 @@ Deno.test("routes/r.tsx: strips cf-*, passes 302 through, and fails closed 503 o
       globalThis.fetch = originalFetch;
     }
   }));
+
+Deno.test("routes/_middleware.ts: keeps form-action 'self' sitewide while omitting it on /r for PIN 302 redirects", async () => {
+  const passThrough = {
+    next: () => Promise.resolve(new Response("ok", { status: 200 })),
+  } as never;
+
+  for (const url of ["https://qrbuddy.app/", "https://qrbuddy.app/edit"]) {
+    const res = await middlewareHandler(new Request(url), passThrough);
+    const csp = res.headers.get("Content-Security-Policy") ?? "";
+    assert(csp.includes("default-src 'self'"), `${url} missing default-src`);
+    assert(csp.includes("script-src "), `${url} missing script-src`);
+    assert(csp.includes("form-action 'self'"), `${url} missing form-action`);
+    assert(
+      csp.includes("frame-ancestors 'none'"),
+      `${url} missing frame-ancestors`,
+    );
+  }
+
+  for (
+    const url of [
+      "https://qrbuddy.app/r?code=abc123",
+      "https://qrbuddy.app/r/?code=abc123",
+    ]
+  ) {
+    const res = await middlewareHandler(new Request(url), passThrough);
+    const csp = res.headers.get("Content-Security-Policy") ?? "";
+    assert(csp.includes("default-src 'self'"), `${url} missing default-src`);
+    assert(csp.includes("script-src "), `${url} missing script-src`);
+    assert(
+      !csp.includes("form-action"),
+      `${url} must omit form-action so PIN POST -> 302 succeeds in Chromium`,
+    );
+    assert(
+      csp.includes("frame-ancestors 'none'"),
+      `${url} missing frame-ancestors`,
+    );
+    assertEquals(res.headers.get("X-Frame-Options"), "DENY");
+    assertEquals(res.headers.get("X-Robots-Tag"), "noindex, nofollow");
+  }
+});
