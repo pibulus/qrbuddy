@@ -42,6 +42,7 @@ export default function HomeStage(
     null,
   );
   const pngSize = useSignal<1000 | 2000 | 3000>(1000);
+  const isStagingUpload = useSignal(false);
   const isEs = lang === "es";
 
   return (
@@ -82,22 +83,6 @@ export default function HomeStage(
           </ErrorBoundary>
         </div>
 
-        {/* Style Selector - aligned with the title line */}
-        <div
-          role="region"
-          class="absolute top-7 right-4 sm:top-12 sm:right-6 z-50 animate-fade-in"
-          aria-label={isEs ? "Selector de estilos" : "Style selector"}
-        >
-          <ErrorBoundary>
-            <StyleSelector
-              style={style}
-              customStyle={customStyle}
-              isHidden={isModalOpen}
-              lang={lang}
-            />
-          </ErrorBoundary>
-        </div>
-
         <main
           id="main-content"
           class="w-full max-w-md space-y-6 sm:space-y-8 sm:my-auto"
@@ -107,10 +92,20 @@ export default function HomeStage(
             <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
               QRBuddy
             </h1>
-            <p class="text-base sm:text-lg text-[#574c44] font-bold leading-snug">
+            <p class="text-base sm:text-lg text-[#574c44] font-bold leading-snug text-balance">
               {isEs
-                ? "Códigos QR listos para imprenta. Gratis siempre, sin registro."
-                : "Print-ready QR codes. Free forever, zero sign-up."}
+                ? (
+                  <>
+                    Códigos QR listos para imprenta. Gratis siempre,{" "}
+                    <span class="whitespace-nowrap">sin registro.</span>
+                  </>
+                )
+                : (
+                  <>
+                    Print-ready QR codes. Free forever,{" "}
+                    <span class="whitespace-nowrap">zero sign-up.</span>
+                  </>
+                )}
             </p>
           </header>
 
@@ -130,6 +125,7 @@ export default function HomeStage(
                   frameConfig={frameConfig}
                   pngSize={pngSize}
                   listenForExportEvents
+                  isStagingUpload={isStagingUpload}
                   lang={lang}
                 />
               </ErrorBoundary>
@@ -151,6 +147,7 @@ export default function HomeStage(
               customStyle={customStyle}
               pngSize={pngSize}
               frameConfig={frameConfig}
+              isStagingUpload={isStagingUpload}
               onModalStateChange={(isOpen) => (isModalOpen.value = isOpen)}
               lang={lang}
             />

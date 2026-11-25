@@ -398,7 +398,10 @@ export function useDynamicQR(
     return null;
   };
 
-  const createDynamicQR = async (destinationUrl: string) => {
+  const createDynamicQR = async (
+    destinationUrl: string,
+    customLabel?: string,
+  ) => {
     if (creating.current) return;
     creating.current = true;
     try {
@@ -407,6 +410,7 @@ export function useDynamicQR(
 
       const apiUrl = getApiUrl();
       const normalizedDest = normalizeUrl(destinationUrl);
+      const cleanLabel = (customLabel || "").trim();
 
       const normalizedRoutingConfig = routingConfig
         ? {
@@ -427,7 +431,7 @@ export function useDynamicQR(
 
       const body: Record<string, unknown> = {
         destination_url: normalizedDest,
-        title: normalizedDest,
+        title: cleanLabel || normalizedDest,
       };
       if (scanLimit) body.max_scans = scanLimit;
       if (resolvedExpiresAt) body.expires_at = resolvedExpiresAt;
@@ -485,7 +489,8 @@ export function useDynamicQR(
         type: "dynamic",
         content: data.redirect_url,
         metadata: {
-          title: normalizedDest,
+          title: cleanLabel || normalizedDest,
+          ...(cleanLabel ? { label: cleanLabel } : {}),
           destinationUrl: normalizedDest,
           shortCode: data.short_code,
           editUrl: data.edit_url,
@@ -631,15 +636,21 @@ export function useDynamicQR(
           (item) =>
             item.metadata?.shortCode === activeShortCode ||
             item.content.includes(`code=${activeShortCode}`),
-          (item) => ({
-            ...item,
-            metadata: {
-              ...item.metadata,
-              title: nextSaved.destinationUrl,
-              url: nextSaved.destinationUrl,
-              destinationUrl: nextSaved.destinationUrl,
-            },
-          }),
+          (item) => {
+            const existingLabel = typeof item.metadata?.label === "string"
+              ? item.metadata.label.trim()
+              : "";
+            return {
+              ...item,
+              metadata: {
+                ...item.metadata,
+                title: existingLabel || nextSaved.destinationUrl,
+                ...(existingLabel ? { label: existingLabel } : {}),
+                url: nextSaved.destinationUrl,
+                destinationUrl: nextSaved.destinationUrl,
+              },
+            };
+          },
         );
       }
 

@@ -128,6 +128,7 @@ interface SmartInputToolbarProps {
   savedCount?: number;
   isBucket?: boolean;
   isBatchMode?: boolean;
+  styleSwatch?: string;
   lang?: Locale;
 }
 
@@ -138,6 +139,7 @@ export default function SmartInputToolbar({
   openPanel = null,
   isBucket = false,
   isBatchMode = false,
+  styleSwatch,
   lang,
 }: SmartInputToolbarProps) {
   const isSpanish = getClientLocale(lang) === "es";
@@ -200,6 +202,13 @@ export default function SmartInputToolbar({
           ? "Colores, logo, marco y forma de los módulos"
           : "Colours, logo, print frame and dot shapes"}
       >
+        {styleSwatch && (
+          <span
+            aria-hidden="true"
+            class="w-3.5 h-3.5 rounded-full border-[1.5px] border-[#1e1714] shrink-0"
+            style={{ background: styleSwatch }}
+          />
+        )}
         <StageGlyph kind="palette" />
         <span class="truncate">{isSpanish ? "Diseño" : "Design"}</span>
       </button>

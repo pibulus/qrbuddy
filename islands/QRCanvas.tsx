@@ -162,6 +162,10 @@ interface QRCanvasProps {
   pngSize?: Signal<1000 | 2000 | 3000> | 1000 | 2000 | 3000;
   /** Listen for global "qr-export" events (only the primary canvas should). */
   listenForExportEvents?: boolean;
+  /** Hide floating bottom-right Save PNG | SVG pill when card provides its own export bar. */
+  hideExportPill?: boolean;
+  /** True while slideshow/mixtape files are staged and awaiting upload confirmation. */
+  isStagingUpload?: Signal<boolean>;
   lang?: Locale;
 }
 
@@ -178,6 +182,8 @@ export default function QRCanvas(
     frameConfig,
     pngSize,
     listenForExportEvents = false,
+    hideExportPill = false,
+    isStagingUpload,
     lang,
   }: QRCanvasProps,
 ) {
@@ -886,6 +892,7 @@ export default function QRCanvas(
     };
   }, [url.value, logoUrl?.value, style.value, customStyle?.value]);
 
+  const isStagedOverlay = Boolean(isStagingUpload?.value);
   const stageGuardrail = resolveStagePrintGuardrail({
     moduleCount,
     printSpec,
@@ -900,6 +907,7 @@ export default function QRCanvas(
           <button
             type="button"
             data-edit-label
+            disabled={isStagedOverlay}
             onClick={(e: MouseEvent) => {
               e.stopPropagation();
               globalThis.dispatchEvent(new CustomEvent("qr-edit-label"));
@@ -910,7 +918,9 @@ export default function QRCanvas(
               color: banner.ink,
               borderBottomColor: "#1e1714",
             }}
-            class="block w-full border-4 border-b-2 border-[#1e1714] rounded-t-chunky px-4 py-3 text-center transition-colors"
+            class={`block w-full border-4 border-b-2 border-[#1e1714] rounded-t-chunky px-4 py-3 text-center transition-all ${
+              isStagedOverlay ? "opacity-45 pointer-events-none" : ""
+            }`}
             title={isSpanish ? "Editar la etiqueta" : "Edit the label"}
             aria-label={isSpanish
               ? `Editar etiqueta: ${captionText}`
@@ -972,6 +982,7 @@ export default function QRCanvas(
               ? "ring-8 ring-[var(--qr-theme-accent,#ec4899)] ring-opacity-60 animate-pulse"
               : ""
           }
+          ${isStagedOverlay ? "opacity-45 pointer-events-none select-none" : ""}
         `}
           title={isSpanish ? "Tocar para copiar el PNG" : "Tap to copy the PNG"}
         >
@@ -1025,46 +1036,63 @@ export default function QRCanvas(
             </div>
           )}
         </div>
+        {isStagedOverlay && (
+          <div
+            data-staging-overlay
+            class="absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-none"
+          >
+            <span class="px-4 py-2 rounded-full bg-[#fffef7] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] text-xs sm:text-sm font-black text-[#1e1714] text-center">
+              {isSpanish
+                ? "Confirma la subida abajo ↓"
+                : "Confirm upload below ↓"}
+            </span>
+          </div>
+        )}
         <div
           class="absolute -z-10 -inset-6 opacity-25 blur-2xl rounded-full pointer-events-none transition-all duration-500"
           style={{ background: getGlowGradient() }}
         />
 
         {/* Save pill — the payoff, in one saturated gold that pops on every palette */}
-        <div
-          key={url.value ? "chip-live" : "chip-idle"}
-          class={`absolute -bottom-3 -right-3 min-h-[40px] rounded-full bg-[#ffbe0b] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-stretch overflow-hidden z-10 ${
-            url.value ? "animate-bounce-in" : ""
-          }`}
-        >
-          <button
-            type="button"
-            onClick={(e: MouseEvent) => {
-              e.stopPropagation();
-              void handleDownloadClick();
-            }}
-            class="min-h-[36px] pl-3.5 pr-2.5 flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[#ffd04a] active:bg-[#f2ac00] active:translate-y-[1.5px]"
-            aria-label={isSpanish
-              ? "Guardar PNG: descargar código QR"
-              : "Save PNG: download QR code"}
+        {!hideExportPill && !isStagedOverlay && (
+          <div
+            key={url.value ? "chip-live" : "chip-idle"}
+            class={`absolute -bottom-3 -right-3 min-h-[40px] rounded-full bg-[#ffbe0b] border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] inline-flex items-stretch overflow-hidden z-10 ${
+              url.value ? "animate-bounce-in" : ""
+            }`}
           >
-            {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
-          </button>
-          <span class="w-[2px] self-stretch bg-[#1e1714]" aria-hidden="true" />
-          <button
-            type="button"
-            onClick={handleSvgDownloadClick}
-            class="min-h-[36px] pl-2.5 pr-3.5 flex items-center justify-center text-xs font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[#ffd04a] active:bg-[#f2ac00] active:translate-y-[1.5px]"
-            aria-label={isSpanish
-              ? "Descargar código QR como SVG vectorial"
-              : "Download QR code as vector SVG"}
-            title={isSpanish
-              ? "Descargar SVG vectorial para imprenta"
-              : "Download print-ready vector SVG"}
-          >
-            SVG
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={(e: MouseEvent) => {
+                e.stopPropagation();
+                void handleDownloadClick();
+              }}
+              class="min-h-[36px] pl-3.5 pr-2.5 flex items-center justify-center gap-1 text-xs sm:text-sm font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[#ffd04a] active:bg-[#f2ac00] active:translate-y-[1.5px]"
+              aria-label={isSpanish
+                ? "Guardar PNG: descargar código QR"
+                : "Save PNG: download QR code"}
+            >
+              {isSpanish ? "↓ Guardar PNG" : "↓ Save PNG"}
+            </button>
+            <span
+              class="w-[2px] self-stretch bg-[#1e1714]"
+              aria-hidden="true"
+            />
+            <button
+              type="button"
+              onClick={handleSvgDownloadClick}
+              class="min-h-[36px] pl-2.5 pr-3.5 flex items-center justify-center text-xs font-black text-[#1e1714] transition-[background-color,transform] duration-[70ms] hover:bg-[#ffd04a] active:bg-[#f2ac00] active:translate-y-[1.5px]"
+              aria-label={isSpanish
+                ? "Descargar código QR como SVG vectorial"
+                : "Download QR code as vector SVG"}
+              title={isSpanish
+                ? "Descargar SVG vectorial para imprenta"
+                : "Download print-ready vector SVG"}
+            >
+              SVG
+            </button>
+          </div>
+        )}
 
         {/* Destructible badge */}
         {isDestructible?.value && (

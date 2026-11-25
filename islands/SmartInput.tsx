@@ -28,6 +28,7 @@ import {
   type HistoryItem,
   type SavedQrDesign,
   summarizeQrPayload,
+  updateHistoryItem,
 } from "../utils/history.ts";
 import {
   isValidCustomStyle,
@@ -82,6 +83,7 @@ interface SmartInputProps {
   customStyle?: Signal<QRStyle | null>;
   pngSize?: Signal<1000 | 2000 | 3000>;
   frameConfig?: Signal<FrameConfig | null>;
+  isStagingUpload?: Signal<boolean>;
   onModalStateChange?: (isOpen: boolean) => void;
   hidePrimaryInput?: boolean;
   lang?: Locale;
@@ -101,6 +103,7 @@ export default function SmartInput(
     customStyle,
     pngSize,
     frameConfig,
+    isStagingUpload,
     onModalStateChange,
     hidePrimaryInput = false,
     lang,
@@ -118,7 +121,18 @@ export default function SmartInput(
   const [showReader, setShowReader] = useState(false);
   const [stagedDecoded, setStagedDecoded] = useState<string | null>(null);
   const [shareTitle, setShareTitle] = useState("");
+  const [editableLabel, setEditableLabel] = useState("");
   const [isPrepping, setIsPrepping] = useState(false);
+
+  // Keep shared stage signal synced so the preview card dims & locks export while staging media.
+  useEffect(() => {
+    if (isStagingUpload) {
+      isStagingUpload.value = Boolean(stagedFiles);
+    }
+    return () => {
+      if (isStagingUpload) isStagingUpload.value = false;
+    };
+  }, [stagedFiles, isStagingUpload]);
   const selectionGeneration = useRef(0);
   const stagedUploadLock = useRef(false);
   // The last share that went live — drives the "it's alive" strip until the
@@ -619,7 +633,7 @@ export default function SmartInput(
   // on an explicit button press (CreateModal → Options → "Create editable
   // link"). It used to auto-fire on a 1200ms debounce after toggling Editable,
   // which spent a short code before the user ever consented.
-  const handleCreateEditable = () => {
+  const handleCreateEditable = (labelOverride?: string) => {
     let targetUrl = url.value;
     if ((!targetUrl || !looksLikeUrl(targetUrl)) && isSequential) {
       const firstValidSeq = sequentialUrls.find((u) => looksLikeUrl(u));
@@ -628,14 +642,17 @@ export default function SmartInput(
       }
     }
 
+    const cleanLabel = (labelOverride ?? editableLabel).trim();
+
     if (
       targetUrl && !isCreatingDynamic && !editUrl.value && !isBucket.value &&
       !isCreatingBucket && looksLikeUrl(targetUrl)
     ) {
       setStaticSourceUrl(targetUrl);
       isDynamic.value = true;
-      void createDynamicQR(targetUrl);
+      void createDynamicQR(targetUrl, cleanLabel || undefined);
     } else if (targetUrl && !looksLikeUrl(targetUrl)) {
+      isDynamic.value = true;
       addToast(
         isSpanish
           ? "Un QR editable necesita un link real — prueba con https://…"
@@ -643,12 +660,10 @@ export default function SmartInput(
         3000,
       );
     } else if (!targetUrl) {
-      addToast(
-        isSpanish
-          ? "Agrega un link de destino primero"
-          : "Add a destination link first",
-        3000,
-      );
+      // Arm Editable mode cleanly and focus the URL field instead of scolding.
+      isDynamic.value = true;
+      haptics.light();
+      requestAnimationFrame(() => textInputRef.current?.focus());
     }
   };
 
@@ -665,6 +680,7 @@ export default function SmartInput(
       setStaticSourceUrl("");
     }
     resetDynamicQR();
+    setEditableLabel("");
     setIsDynamicActive(true);
     editUrl.value = "";
     isDynamic.value = false;
@@ -1129,9 +1145,7 @@ export default function SmartInput(
         }}
         onClose={() => {
           setIsCreateModalOpen(false);
-          if (!editUrl.value && !isCreatingDynamic) {
-            isDynamic.value = false;
-          } else if (editUrl.value && savedDynamicConfig) {
+          if (editUrl.value && savedDynamicConfig) {
             if (
               !extractShortCodeFromRedirectUrl(url.value) &&
               extractShortCodeFromRedirectUrl(urlAtSheetOpen.current)
@@ -1196,7 +1210,7 @@ export default function SmartInput(
         onLockerDisable={handleLockerDisable}
         onTextCardConfirm={handleTextCardConfirm}
         isCreatingLocker={isCreatingBucket}
-        onCreateEditable={handleCreateEditable}
+        onCreateEditable={() => handleCreateEditable(editableLabel)}
         onDisableEditable={handleDisableEditable}
         isCreatingEditable={isCreatingDynamic}
         isUpdatingEditable={isUpdatingDynamic}
@@ -1314,6 +1328,17 @@ export default function SmartInput(
                     onInput={handleInput}
                     onKeyDown={(e: KeyboardEvent) => {
                       if (
+                        e.key === "Enter" &&
+                        isDynamic.value &&
+                        !editUrl.value &&
+                        !isCreatingDynamic &&
+                        looksLikeUrl(url.value)
+                      ) {
+                        e.preventDefault();
+                        handleCreateEditable(editableLabel);
+                        return;
+                      }
+                      if (
                         editUrl.value &&
                         !e.metaKey &&
                         !e.ctrlKey &&
@@ -1341,9 +1366,13 @@ export default function SmartInput(
                     }}
                     placeholder={isDragging
                       ? (isSpanish ? "Suelta archivo aquí…" : "Drop file here…")
-                      : (isSpanish
-                        ? "Pega un link, escribe algo o suelta un archivo..."
-                        : "Enter URL, text, or drop a file...")}
+                      : (isDynamic.value && !editUrl.value
+                        ? (isSpanish
+                          ? "Pega el link de destino (https://...)..."
+                          : "Paste destination URL (https://...)...")
+                        : (isSpanish
+                          ? "Pega un link, escribe algo o suelta un archivo..."
+                          : "Enter URL, text, or drop a file..."))}
                     aria-label={isSpanish
                       ? "Link, texto o archivo para codificar en QR"
                       : "URL, text, or file to encode in QR code"}
@@ -1499,7 +1528,8 @@ export default function SmartInput(
               class={`${STAGE_WELL} grid grid-cols-2 gap-0.5`}
             >
               {(() => {
-                const staticActive = !editUrl.value && !isCreatingDynamic;
+                const staticActive = !isDynamic.value && !editUrl.value &&
+                  !isCreatingDynamic;
                 const seg = (active: boolean) =>
                   `min-h-[30px] px-2 rounded-[9px] flex items-center justify-center gap-1.5 leading-none transition-[transform,box-shadow,background-color] duration-[70ms] border-2 ${
                     active
@@ -1533,7 +1563,15 @@ export default function SmartInput(
                       aria-pressed={!staticActive}
                       onClick={() => {
                         if (!editUrl.value && !isCreatingDynamic) {
-                          handleCreateEditable();
+                          if (looksLikeUrl(url.value)) {
+                            handleCreateEditable(editableLabel);
+                          } else {
+                            isDynamic.value = true;
+                            haptics.light();
+                            requestAnimationFrame(() =>
+                              textInputRef.current?.focus()
+                            );
+                          }
                         }
                       }}
                       class={seg(!staticActive)}
@@ -1552,66 +1590,144 @@ export default function SmartInput(
               })()}
             </div>
 
-            {editUrl.value && (
+            {isDynamic.value && !editUrl.value && (
               <div
-                class={`${STAGE_WELL} flex items-center justify-between gap-1.5 p-1 bg-[var(--qr-theme-tint,#fdf2f8)] text-xs font-bold text-[#1e1714]`}
+                data-editable-armed
+                class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-2.5 space-y-2 shadow-[0_2px_0_#1e1714] animate-slide-down"
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleDisableEditable();
-                    haptics.light();
-                    textInputRef.current?.focus();
-                  }}
-                  class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] px-2.5 rounded-lg font-black`}
-                >
-                  {isSpanish ? "Desvincular" : "Detach"}
-                </button>
-                <div class="flex items-center gap-1.5 shrink-0">
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editableLabel}
+                    maxLength={64}
+                    onInput={(e) =>
+                      setEditableLabel((e.target as HTMLInputElement).value)}
+                    onKeyDown={(e: KeyboardEvent) => {
+                      if (
+                        e.key === "Enter" &&
+                        looksLikeUrl(url.value) &&
+                        !isCreatingDynamic
+                      ) {
+                        e.preventDefault();
+                        handleCreateEditable(editableLabel);
+                      }
+                    }}
+                    placeholder={isSpanish
+                      ? "Nombre del QR (opc., ej. Menú, Mesa 4)"
+                      : "QR name (optional, e.g. Lunch Menu, Table 4)"}
+                    aria-label={isSpanish ? "Nombre del QR" : "QR name"}
+                    class="flex-1 min-w-0 min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714]/25 focus:border-[#1e1714] focus:outline-none bg-[#fbf1e4] text-xs font-bold text-[#1e1714] placeholder:text-[#7c7267]"
+                  />
                   <button
                     type="button"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(editUrl.value);
-                        haptics.success();
-                        addToast(
-                          isSpanish
-                            ? "Link de edición copiado"
-                            : "Edit link copied",
-                        );
-                      } catch {
-                        haptics.error();
-                      }
+                    disabled={!looksLikeUrl(url.value) || isCreatingDynamic}
+                    onClick={() => handleCreateEditable(editableLabel)}
+                    class={`${STAGE_PRESS} shrink-0 min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] disabled:opacity-45 disabled:pointer-events-none whitespace-nowrap`}
+                  >
+                    {isCreatingDynamic
+                      ? "…"
+                      : (isSpanish ? "Crear →" : "Create →")}
+                  </button>
+                </div>
+                {!looksLikeUrl(url.value) && (
+                  <p class="text-[11px] font-bold text-[#57524b] px-0.5">
+                    {url.value.trim()
+                      ? (isSpanish
+                        ? "Los QR editables necesitan un link (https://…)."
+                        : "Editable QRs need a destination link (https://…).")
+                      : (isSpanish
+                        ? "Pega arriba tu link para crear el QR editable."
+                        : "Paste your destination link above to mint an editable QR.")}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {editUrl.value && (
+              <div
+                class={`${STAGE_WELL} space-y-1.5 p-1.5 bg-[var(--qr-theme-tint,#fdf2f8)] text-xs font-bold text-[#1e1714]`}
+              >
+                <input
+                  type="text"
+                  value={editableLabel}
+                  maxLength={64}
+                  onInput={(e) => {
+                    const next = (e.target as HTMLInputElement).value;
+                    setEditableLabel(next);
+                    const code = extractShortCodeFromRedirectUrl(url.value);
+                    if (code) {
+                      const clean = next.trim();
+                      updateHistoryItem(
+                        (item) =>
+                          item.metadata?.shortCode === code ||
+                          item.content.includes(`code=${code}`),
+                        (item) => ({
+                          ...item,
+                          metadata: {
+                            ...item.metadata,
+                            label: clean || undefined,
+                            title: clean ||
+                              (typeof item.metadata?.destinationUrl === "string"
+                                ? item.metadata.destinationUrl
+                                : item.content),
+                          },
+                        }),
+                      );
+                    }
+                  }}
+                  placeholder={isSpanish
+                    ? "Nombra este QR (ej. Menú Comida, Mesa 4)"
+                    : "Name this QR (e.g. Lunch Menu, Table 4)"}
+                  aria-label={isSpanish ? "Nombre del QR" : "QR name"}
+                  class="w-full min-h-[34px] px-2.5 py-1 rounded-lg border border-[#1e1714]/35 focus:border-[#1e1714] focus:outline-none bg-[#fffef7] text-xs font-bold text-[#1e1714] placeholder:text-[#7c7267]"
+                />
+                <div class="flex items-center justify-between gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDisableEditable();
+                      haptics.light();
+                      textInputRef.current?.focus();
                     }}
                     class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] px-2.5 rounded-lg font-black`}
                   >
-                    {isSpanish ? "Copiar llave" : "Copy key"}
+                    {isSpanish ? "Desvincular" : "Detach"}
                   </button>
-                  <a
-                    href={isSpanish
-                      ? `${editUrl.value}${
-                        editUrl.value.includes("?") ? "&" : "?"
-                      }lang=es`
-                      : editUrl.value}
-                    class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] inline-flex items-center px-2.5 rounded-lg bg-[#1e1714] text-[#fffef7] hover:bg-[#3b2e25] font-black`}
-                  >
-                    {isSpanish ? "Panel ↗" : "Manage ↗"}
-                  </a>
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(editUrl.value);
+                          haptics.success();
+                          addToast(
+                            isSpanish
+                              ? "Link de edición copiado"
+                              : "Edit link copied",
+                          );
+                        } catch {
+                          haptics.error();
+                        }
+                      }}
+                      class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] px-2.5 rounded-lg font-black`}
+                    >
+                      {isSpanish ? "Copiar llave" : "Copy key"}
+                    </button>
+                    <a
+                      href={isSpanish
+                        ? `${editUrl.value}${
+                          editUrl.value.includes("?") ? "&" : "?"
+                        }lang=es`
+                        : editUrl.value}
+                      class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] inline-flex items-center px-2.5 rounded-lg bg-[#1e1714] text-[#fffef7] hover:bg-[#3b2e25] font-black`}
+                    >
+                      {isSpanish ? "Panel ↗" : "Manage ↗"}
+                    </a>
+                  </div>
                 </div>
               </div>
             )}
           </div>
-        )}
-
-        {/* Editable mode needs a URL — plain text stays a static QR */}
-        {isDynamic.value && !editUrl.value && !isBucket.value &&
-          !structuredSummary &&
-          url.value.trim() !== "" && !looksLikeUrl(url.value) && (
-          <p class="text-[#57524b] text-xs font-bold mt-2 text-center animate-slide-down">
-            {isSpanish
-              ? "Los QR editables necesitan un link; el texto suelto hace un QR estático."
-              : "Editable QRs need a link; plain text makes a static QR."}
-          </p>
         )}
 
         {/* Upload progress text */}
@@ -1622,23 +1738,39 @@ export default function SmartInput(
         )}
       </div>
 
-      {/* Toolbar - Below input so users enter data first, then customize */}
-      <SmartInputToolbar
-        selectedTemplate={selectedTemplate}
-        onOpenCreate={(tab) => {
-          setShowLibrary(false);
-          setShowReader(false);
-          setCreateModalTab(tab);
-          setCreateContentStep("pick");
-          setIsCreateModalOpen(true);
-          setCreateHasUpdates(false);
-        }}
-        createHasUpdates={createHasUpdates}
-        openPanel={isCreateModalOpen ? createModalTab : null}
-        isBucket={isBucket.value && bucketUrl.value !== ""}
-        isBatchMode={isBatchMode}
-        lang={locale}
-      />
+      {/* Toolbar - Below input so users enter data first, then customize (hidden while staging upload) */}
+      {!stagedFiles && (
+        <SmartInputToolbar
+          selectedTemplate={selectedTemplate}
+          onOpenCreate={(tab) => {
+            setShowLibrary(false);
+            setShowReader(false);
+            setCreateModalTab(tab);
+            setCreateContentStep("pick");
+            setIsCreateModalOpen(true);
+            setCreateHasUpdates(false);
+          }}
+          createHasUpdates={createHasUpdates}
+          openPanel={isCreateModalOpen ? createModalTab : null}
+          isBucket={isBucket.value && bucketUrl.value !== ""}
+          isBatchMode={isBatchMode}
+          styleSwatch={(() => {
+            const st = qrStyle.value === "custom" && customStyle?.value
+              ? customStyle.value
+              : QR_STYLES[qrStyle.value as keyof typeof QR_STYLES] ??
+                QR_STYLES.sunset;
+            const dots = st.dots;
+            const stops = "gradient" in dots ? dots.gradient?.colorStops : null;
+            if (stops && stops.length >= 2) {
+              return `linear-gradient(135deg, ${
+                stops.map((s: { color: string }) => s.color).join(", ")
+              })`;
+            }
+            return ("color" in dots && dots.color) || activeThemeTokens.accent;
+          })()}
+          lang={locale}
+        />
+      )}
     </div>
   );
 }
