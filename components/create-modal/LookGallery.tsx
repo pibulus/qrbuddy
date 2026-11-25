@@ -623,12 +623,12 @@ export default function LookGallery(
               </div>
             </div>
           )}
-          <div class="grid grid-cols-[2fr_3fr] gap-2">
+          <div class="grid grid-cols-[1.5fr_3fr] gap-2">
             <div class="space-y-1">
               <span class="block text-[10px] font-black uppercase tracking-wider text-[#574c44]">
                 {es ? "Detalle" : "Detail"}
               </span>
-              <div class="grid grid-cols-2 gap-1.5">
+              <div class="grid grid-cols-2 gap-1">
                 {([
                   ["soft", es ? "Suave" : "Soft"],
                   ["sharp", es ? "Nítido" : "Sharp"],
@@ -638,7 +638,7 @@ export default function LookGallery(
                     type="button"
                     aria-pressed={detail === id}
                     onClick={() => write({ halftoneDetail: id })}
-                    class={`${PILL} ${pillState(detail === id)}`}
+                    class={`${PILL} !px-1 ${pillState(detail === id)}`}
                   >
                     {label}
                   </button>
@@ -660,7 +660,7 @@ export default function LookGallery(
                     type="button"
                     aria-pressed={shape === id}
                     onClick={() => write({ halftoneShape: id })}
-                    class={`${PILL} !px-1 !text-[10.5px] sm:!text-[11px] ${
+                    class={`${PILL} !px-0.5 !text-[10px] sm:!text-[11px] ${
                       pillState(shape === id)
                     }`}
                   >

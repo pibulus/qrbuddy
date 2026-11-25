@@ -1191,11 +1191,11 @@ export default function LibraryDrawer(
               )}
             </div>
 
-            {/* Category Filter Pills (4-col grid so zero mobile edge clip) */}
+            {/* Category Filter Pills (proportional cols so zero mobile ellipsis) */}
             <div
               role="group"
               aria-label={isSpanish ? "Filtrar categoría" : "Filter category"}
-              class="grid grid-cols-4 gap-1 p-1 rounded-2xl bg-[#efe9dc] border-2 border-[#1e1714]"
+              class="grid grid-cols-[0.82fr_1.34fr_0.96fr_0.88fr] sm:grid-cols-4 gap-1 p-1 rounded-2xl bg-[#efe9dc] border-2 border-[#1e1714]"
             >
               {filterPills.map((pill) => {
                 const active = activeFilter === pill.key;
@@ -1208,7 +1208,7 @@ export default function LibraryDrawer(
                       setActiveFilter(pill.key);
                       haptics.light();
                     }}
-                    class={`min-h-[34px] px-1 sm:px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-black whitespace-nowrap inline-flex items-center justify-center gap-1 min-w-0 transition-all ${
+                    class={`min-h-[34px] px-1 sm:px-2.5 py-1 rounded-xl text-[10.5px] sm:text-xs font-black whitespace-nowrap inline-flex items-center justify-center gap-0.5 sm:gap-1 min-w-0 transition-all ${
                       active
                         ? "bg-[#ffbe0b] border-2 border-[#1e1714] text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
                         : "border-2 border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/70"
@@ -1216,7 +1216,7 @@ export default function LibraryDrawer(
                   >
                     <span class="truncate">{pill.label}</span>
                     <span
-                      class={`px-1 sm:px-1.5 py-0.5 rounded-full text-[10px] leading-none font-black shrink-0 ${
+                      class={`px-1 sm:px-1.5 py-0.5 rounded-full text-[9.5px] sm:text-[10px] leading-none font-black shrink-0 ${
                         active
                           ? "bg-[#fffef7] border border-[#1e1714]/50 text-[#1e1714]"
                           : "bg-[#fbf1e4] border border-[#1e1714]/20 text-[#57524b]"
