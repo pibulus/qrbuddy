@@ -1,6 +1,7 @@
 import type { Signal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 import type { QRStyle } from "../types/qr-types.ts";
+import { resolveQRStyle } from "../utils/qr-design.ts";
 import {
   loadDesignPreferences,
   saveDesignPreferences,
@@ -32,7 +33,21 @@ export default function DesignPreferencesSync({
     if (saved) {
       if (restoreStyle && saved.style) style.value = saved.style;
       if (restoreStyle && customStyle && saved.customStyle !== undefined) {
-        customStyle.value = saved.customStyle;
+        const legacyMode = saved.customStyle?.renderMode;
+        if (legacyMode === "halftone" || legacyMode === "foil") {
+          const base = resolveQRStyle(
+            saved.style ?? "sunset",
+            saved.customStyle,
+          );
+          const {
+            artImage: _img,
+            artSample: _smp,
+            ...rest
+          } = base;
+          customStyle.value = { ...rest, renderMode: "classic" };
+        } else {
+          customStyle.value = saved.customStyle;
+        }
       }
       if (saved.logoUrl !== undefined) logoUrl.value = saved.logoUrl;
       if (frameConfig && saved.frameConfig !== undefined) {

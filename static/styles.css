@@ -100,8 +100,8 @@ body {
   --charm-modal-open-ms: 240ms;
   --charm-modal-close-ms: 180ms;
   --charm-modal-ease: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --qr-theme-accent: #ec4899;
-  --qr-theme-accent-deep: #db2777;
+  --qr-theme-accent: #be185d;
+  --qr-theme-accent-deep: #9d174d;
   --qr-theme-tint: #fce7f3;
   --qr-theme-tint-strong: #fbcfe8;
   --qr-theme-cta-bg: #ffbe0b;

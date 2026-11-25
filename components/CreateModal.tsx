@@ -19,7 +19,7 @@ import ChoiceRow from "./create-modal/ChoiceRow.tsx";
 import CompletionState, {
   type CompletionKind,
 } from "./create-modal/CompletionState.tsx";
-import DesignTab from "./create-modal/DesignTab.tsx";
+import DesignTab, { resetQrDesignState } from "./create-modal/DesignTab.tsx";
 import DesignPreview from "./create-modal/DesignPreview.tsx";
 import GradientCreator from "./GradientCreator.tsx";
 import BatchSettings from "./extras/BatchSettings.tsx";
@@ -73,11 +73,11 @@ const SHEET_HEADINGS: Record<
   design: {
     en: {
       title: "How the QR looks.",
-      sub: "Palette, logo, print frame, dot shapes.",
+      sub: "Palette, finish, dot shapes, logo & print kit.",
     },
     es: {
       title: "Cómo se ve el QR.",
-      sub: "Paleta, logo, marco, forma de los puntos.",
+      sub: "Paleta, acabado, puntos, logo e imprenta.",
     },
   },
 };
@@ -1691,6 +1691,14 @@ export default function CreateModal({
               logoUrl={logoUrl}
               frameConfig={frameConfig}
               es={isSpanish}
+              onReset={() =>
+                resetQrDesignState({
+                  qrStyle,
+                  customStyle,
+                  logoUrl,
+                  frameConfig,
+                  pngSize,
+                })}
               onOpenCustomGradient={() => {
                 isCustomGradientOpen.value = true;
               }}
