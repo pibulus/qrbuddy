@@ -5,11 +5,13 @@ import {
   getAuthHeaders,
   getSupabaseUrl,
 } from "../../utils/api.ts";
-import type { Locale } from "../../utils/i18n.ts";
+import { type Locale, resolveRequestLocale } from "../../utils/i18n.ts";
 
-function metadataUnavailable(retryAfter = "5") {
+function metadataUnavailable(retryAfter = "5", lang: Locale = "en") {
   return new Response(
-    "QRBuddy couldn't load this share right now. Please try again shortly.",
+    lang === "es"
+      ? "QRBuddy no pudo cargar este enlace por ahora. Intentar de nuevo en un momento."
+      : "QRBuddy couldn't load this share right now. Please try again shortly.",
     {
       status: 503,
       headers: {
@@ -46,6 +48,7 @@ interface FileData {
 export const handler: Handlers = {
   async GET(req, ctx) {
     const { code } = ctx.params;
+    const requestLang = resolveRequestLocale(req);
 
     if (!code) {
       return new Response(null, {
@@ -65,7 +68,7 @@ export const handler: Handlers = {
 
     if (!supabaseUrl) {
       console.error("Supabase not configured");
-      return metadataUnavailable();
+      return metadataUnavailable("5", requestLang);
     }
 
     // Fetch file metadata without downloading yet
@@ -93,6 +96,7 @@ export const handler: Handlers = {
         if (response.status === 429 || response.status >= 500) {
           return metadataUnavailable(
             response.headers.get("Retry-After") ?? "5",
+            requestLang,
           );
         }
         // Invalid or unavailable share metadata
@@ -104,9 +108,12 @@ export const handler: Handlers = {
 
       const fileData: FileData = await response.json();
       fileData.unbranded = Boolean(fileData.unbranded);
-      if (new URL(req.url).searchParams.get("lang") === "es") {
-        fileData.lang = "es";
-      }
+      // ?lang= wins, then the share's own language, then /es path and
+      // Accept-Language.
+      fileData.lang = resolveRequestLocale(
+        req,
+        new URL(req.url).searchParams.has("lang") ? undefined : fileData.lang,
+      );
 
       // If already expired/exploded, redirect to boom
       if (fileData.isExpired || fileData.remainingDownloads <= 0) {
@@ -121,7 +128,7 @@ export const handler: Handlers = {
       return page;
     } catch (error) {
       console.error("File metadata error:", error);
-      return metadataUnavailable();
+      return metadataUnavailable("5", requestLang);
     }
   },
 };
@@ -151,6 +158,8 @@ export default function FilePage({ data }: PageProps<FileData>) {
     : "";
 
   const pageTitle = `${titleEmoji}${data.fileName} | QRBuddy`;
+  const isSpanish = data.lang === "es";
+  const left = data.remainingDownloads;
 
   return (
     <>
@@ -159,25 +168,41 @@ export default function FilePage({ data }: PageProps<FileData>) {
         <meta name="robots" content="noindex, nofollow" />
         <meta
           name="description"
-          content={isAllAudio
-            ? `Listen to ${data.fileName} on QRBuddy.`
-            : isAllImages
-            ? `View ${data.fileName} on QRBuddy.`
-            : `Download ${data.fileName} from QRBuddy.`}
+          content={isSpanish
+            ? (isAllAudio
+              ? `Escuchar ${data.fileName} en QRBuddy.`
+              : isAllImages
+              ? `Ver ${data.fileName} en QRBuddy.`
+              : `Descargar ${data.fileName} desde QRBuddy.`)
+            : (isAllAudio
+              ? `Listen to ${data.fileName} on QRBuddy.`
+              : isAllImages
+              ? `View ${data.fileName} on QRBuddy.`
+              : `Download ${data.fileName} from QRBuddy.`)}
         />
         <meta property="og:type" content="website" />
         <meta property="og:title" content={pageTitle} />
         <meta
           property="og:description"
-          content={data.remainingDownloads >= 999999
-            ? (isAllAudio
-              ? "A shared QRBuddy mixtape playlist is ready to play."
-              : isAllImages
-              ? "A shared QRBuddy photo slideshow is ready to view."
-              : "A shared QRBuddy file is ready to download.")
-            : `A limited QRBuddy share is ready. ${data.remainingDownloads} use${
-              data.remainingDownloads === 1 ? "" : "s"
-            } left.`}
+          content={isSpanish
+            ? (left >= 999999
+              ? (isAllAudio
+                ? "Una playlist mixtape de QRBuddy está lista para reproducir."
+                : isAllImages
+                ? "Una presentación de fotos de QRBuddy está lista para ver."
+                : "Un archivo de QRBuddy está listo para descargar.")
+              : `Un enlace limitado de QRBuddy está listo. ${left} ${
+                left === 1 ? "uso restante" : "usos restantes"
+              }.`)
+            : (left >= 999999
+              ? (isAllAudio
+                ? "A shared QRBuddy mixtape playlist is ready to play."
+                : isAllImages
+                ? "A shared QRBuddy photo slideshow is ready to view."
+                : "A shared QRBuddy file is ready to download.")
+              : `A limited QRBuddy share is ready. ${left} use${
+                left === 1 ? "" : "s"
+              } left.`)}
         />
         <meta property="og:image" content="https://qrbuddy.app/og-card.png" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -189,7 +214,7 @@ export default function FilePage({ data }: PageProps<FileData>) {
           link that may be one-shot. */
       }
       <ErrorBoundary>
-        <FileSlideshow {...data} />
+        <FileSlideshow {...data} lang={data.lang} />
       </ErrorBoundary>
       <PricingModal lang={data.lang} />
       <ToastManager />

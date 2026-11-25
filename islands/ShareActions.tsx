@@ -1,25 +1,31 @@
 import { haptics } from "../utils/haptics.ts";
 import { addToast } from "./ToastManager.tsx";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface ShareActionsProps {
   shareUrl: string;
   sharedTarget?: string;
   shareText?: string;
   onShared?: () => void;
+  lang?: Locale;
 }
 
 export default function ShareActions(
-  { shareUrl, sharedTarget, shareText, onShared }: ShareActionsProps,
+  { shareUrl, sharedTarget, shareText, onShared, lang }: ShareActionsProps,
 ) {
+  const isSpanish = getClientLocale(lang) === "es";
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       haptics.copy();
-      addToast("Share link copied", 2500);
+      addToast(isSpanish ? "Enlace copiado" : "Share link copied", 2500);
       onShared?.();
     } catch (error) {
       console.error("Copy share link failed:", error);
-      addToast("Couldn't copy link", 3000);
+      addToast(
+        isSpanish ? "No se pudo copiar el enlace" : "Couldn't copy link",
+        3000,
+      );
       haptics.error();
     }
   };
@@ -32,11 +38,15 @@ export default function ShareActions(
 
     try {
       await navigator.share({
-        title: "QRBuddy Share",
+        title: isSpanish ? "Compartido con QRBuddy" : "QRBuddy Share",
         text: shareText ??
           (sharedTarget
-            ? `Scan this QR for ${sharedTarget}`
-            : "Check out this QRBuddy code"),
+            ? (isSpanish
+              ? `Escanea este QR para ${sharedTarget}`
+              : `Scan this QR for ${sharedTarget}`)
+            : (isSpanish
+              ? "Mira este código QRBuddy"
+              : "Check out this QRBuddy code")),
         url: shareUrl,
       });
       haptics.medium();
@@ -55,20 +65,24 @@ export default function ShareActions(
       <button
         type="button"
         onClick={handleCopyLink}
-        aria-label="Copy share link"
+        aria-label={isSpanish ? "Copiar enlace" : "Copy share link"}
         class="w-full min-h-[52px] px-4 py-3 bg-[#fffef7] text-[#1e1714] border-3 border-[#1e1714] rounded-xl font-black flex items-center justify-center gap-2 shadow-chunky hover:shadow-chunky-hover hover:-translate-y-0.5 transition"
       >
-        Copy share link
+        {isSpanish ? "Copiar enlace" : "Copy share link"}
       </button>
 
       {canWebShare && (
         <button
           type="button"
           onClick={handleNativeShare}
-          aria-label={canWebShare ? "Share QR link" : "Copy share link"}
+          aria-label={canWebShare
+            ? (isSpanish ? "Compartir enlace del QR" : "Share QR link")
+            : (isSpanish ? "Copiar enlace" : "Copy share link")}
           class="qr-pitch-cta"
         >
-          {canWebShare ? "Share" : "Copy share link"}
+          {canWebShare
+            ? (isSpanish ? "Compartir" : "Share")
+            : (isSpanish ? "Copiar enlace" : "Copy share link")}
         </button>
       )}
     </div>

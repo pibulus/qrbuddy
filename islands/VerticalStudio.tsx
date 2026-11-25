@@ -493,8 +493,8 @@ export default function VerticalStudio({
           </div>
 
           {/* Specialized Job-to-be-Done Quick-Builders */}
-          {toolPreset === "wifi" && <WiFiForm url={url} />}
-          {toolPreset === "vcard" && <VCardForm url={url} />}
+          {toolPreset === "wifi" && <WiFiForm url={url} lang={locale} />}
+          {toolPreset === "vcard" && <VCardForm url={url} lang={locale} />}
 
           {toolPreset === "gs1" && (
             <div class="bg-[#fbf1e4] border-3 border-[#1e1714] rounded-2xl p-4 sm:p-5 shadow-chunky space-y-3">

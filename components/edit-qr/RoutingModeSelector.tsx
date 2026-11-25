@@ -1,27 +1,46 @@
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface RoutingModeSelectorProps {
   routingMode: string;
   setRoutingMode: (mode: string) => void;
+  lang?: Locale;
 }
 
 export default function RoutingModeSelector(
-  { routingMode, setRoutingMode }: RoutingModeSelectorProps,
+  { routingMode, setRoutingMode, lang }: RoutingModeSelectorProps,
 ) {
+  const es = getClientLocale(lang) === "es";
   return (
     <div class="space-y-2" role="group" aria-labelledby="routing-mode-label">
       <span
         id="routing-mode-label"
         class="block text-xs font-black text-black uppercase tracking-wider"
       >
-        Routing Mode
+        {es ? "Modo de ruta" : "Routing Mode"}
       </span>
       <div class="grid grid-cols-2 gap-2.5">
         {[
-          { id: "simple", label: "Simple Redirect", icon: "🔗" },
-          { id: "sequential", label: "Rotation / Roulette", icon: "🎲" },
-          { id: "device", label: "Device Target", icon: "📱" },
-          { id: "time", label: "Time Schedule", icon: "⏰" },
+          {
+            id: "simple",
+            label: es ? "Redirección simple" : "Simple Redirect",
+            icon: "🔗",
+          },
+          {
+            id: "sequential",
+            label: es ? "Rotación / Ruleta" : "Rotation / Roulette",
+            icon: "🎲",
+          },
+          {
+            id: "device",
+            label: es ? "Por dispositivo" : "Device Target",
+            icon: "📱",
+          },
+          {
+            id: "time",
+            label: es ? "Por horario" : "Time Schedule",
+            icon: "⏰",
+          },
         ].map((mode) => {
           const active = routingMode === mode.id;
           return (

@@ -7,12 +7,29 @@ import {
   type WiFiData,
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+
+const ES_ERRORS: Record<string, string> = {
+  "Network name (SSID) is required":
+    "El nombre de la red (SSID) es obligatorio",
+  "Password is required for secured networks":
+    "La contraseña es obligatoria en redes protegidas",
+  "Name is required": "El nombre es obligatorio",
+  "Add phone, email, or website to complete card":
+    "Agrega teléfono, correo o sitio web para completar la tarjeta",
+  "Phone number is required": "El número de teléfono es obligatorio",
+  "Valid phone number required": "Se requiere un número de teléfono válido",
+  "Email address is required": "El correo es obligatorio",
+  "Valid email required": "Se requiere un correo válido",
+};
 
 interface Props {
   url: Signal<string>;
+  lang?: Locale;
 }
 
-export default function WiFiForm({ url }: Props) {
+export default function WiFiForm({ url, lang }: Props) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [initial] = useState(() => parseWiFi(url.value));
   const [ssid, setSsid] = useState(() => initial?.ssid ?? "");
   const [password, setPassword] = useState(() => initial?.password ?? "");
@@ -56,7 +73,7 @@ export default function WiFiForm({ url }: Props) {
           aria-live="polite"
           class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
-          {error}
+          {isSpanish ? (ES_ERRORS[error] ?? error) : error}
         </div>
       )}
 
@@ -64,7 +81,9 @@ export default function WiFiForm({ url }: Props) {
       <div class="space-y-1.5">
         <label class="qr-field-label" for="wifi-ssid-input">
           <span class="qr-section-pip" aria-hidden="true" />
-          <span>Network Name (SSID) *</span>
+          <span>
+            {isSpanish ? "Nombre de red (SSID) *" : "Network Name (SSID) *"}
+          </span>
         </label>
         <input
           id="wifi-ssid-input"
@@ -75,14 +94,16 @@ export default function WiFiForm({ url }: Props) {
             setSsid((e.target as HTMLInputElement).value);
             haptics.light();
           }}
-          placeholder="Brunswick Guest Wi-Fi"
+          placeholder={isSpanish ? "Wi-Fi Invitados" : "Brunswick Guest Wi-Fi"}
           class="qr-input text-base"
         />
       </div>
 
       {/* Security Type */}
       <div class="space-y-1.5">
-        <span class="qr-field-label">Security</span>
+        <span class="qr-field-label">
+          {isSpanish ? "Seguridad" : "Security"}
+        </span>
         <div class="grid grid-cols-3 gap-1.5 p-1 rounded-xl border-2 border-[#1e1714] bg-[#efe9dc]">
           {(["WPA", "WEP", "nopass"] as const).map((type) => {
             const active = encryption === type;
@@ -102,7 +123,7 @@ export default function WiFiForm({ url }: Props) {
                 }`}
               >
                 {type === "nopass"
-                  ? "Open"
+                  ? (isSpanish ? "Abierta" : "Open")
                   : type === "WPA"
                   ? "WPA / WPA2"
                   : "WEP"}
@@ -117,7 +138,7 @@ export default function WiFiForm({ url }: Props) {
         ? (
           <div class="space-y-1.5">
             <label class="qr-field-label" for="wifi-password-input">
-              <span>Password *</span>
+              <span>{isSpanish ? "Contraseña *" : "Password *"}</span>
             </label>
             <div class="relative">
               <input
@@ -129,7 +150,9 @@ export default function WiFiForm({ url }: Props) {
                   setPassword((e.target as HTMLInputElement).value);
                   haptics.light();
                 }}
-                placeholder="Network password"
+                placeholder={isSpanish
+                  ? "Contraseña de la red"
+                  : "Network password"}
                 class="qr-input text-base pr-20"
               />
               <button
@@ -140,14 +163,18 @@ export default function WiFiForm({ url }: Props) {
                 }}
                 class="absolute right-2 top-1/2 -translate-y-1/2 min-h-[32px] px-2.5 rounded-lg border border-[#1e1714]/25 bg-[#fbf1e4] hover:border-[#1e1714] text-xs font-black text-[#1e1714]"
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword
+                  ? (isSpanish ? "Ocultar" : "Hide")
+                  : (isSpanish ? "Mostrar" : "Show")}
               </button>
             </div>
           </div>
         )
         : (
           <p class="rounded-xl bg-amber-50 border border-amber-300 px-3 py-2 text-xs font-bold text-amber-950">
-            Open network: scans join immediately with no password.
+            {isSpanish
+              ? "Red abierta: al escanear se conecta de inmediato, sin contraseña."
+              : "Open network: scans join immediately with no password."}
           </p>
         )}
 
@@ -163,7 +190,7 @@ export default function WiFiForm({ url }: Props) {
           class="w-4 h-4 rounded border-2 border-[#1e1714] accent-[#1e1714] cursor-pointer"
         />
         <span class="text-xs font-black text-[#1e1714]">
-          Hidden SSID network
+          {isSpanish ? "Red con SSID oculto" : "Hidden SSID network"}
         </span>
       </label>
     </div>

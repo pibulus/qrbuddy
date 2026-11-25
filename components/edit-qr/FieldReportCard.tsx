@@ -32,6 +32,12 @@ export interface DayActivityBar {
 
 const DAY_INITIALS = ["S", "M", "T", "W", "T", "F", "S"];
 const DAY_SHORTS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_INITIALS_ES = ["D", "L", "M", "M", "J", "V", "S"];
+const DAY_SHORTS_ES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+function dateLocaleTag(locale: Locale): string | undefined {
+  return locale === "es" ? "es-MX" : undefined;
+}
 
 function formatHour12(hour24: number): string {
   const normalized = ((Math.floor(hour24) % 24) + 24) % 24;
@@ -147,14 +153,17 @@ export function buildAnalyticsCsv(
 export function formatRelativeVisit(
   isoString: string | null | undefined,
   nowMs = Date.now(),
+  locale: Locale = "en",
 ): FormattedVisitTime {
+  const es = locale === "es";
+  const none = es ? "Sin registros" : "None recorded";
   if (!isoString) {
-    return { relative: "None recorded", localDateTime: null };
+    return { relative: none, localDateTime: null };
   }
   const date = new Date(isoString);
   const timeMs = date.getTime();
   if (!Number.isFinite(timeMs)) {
-    return { relative: "None recorded", localDateTime: null };
+    return { relative: none, localDateTime: null };
   }
 
   const diffMs = Math.max(0, nowMs - timeMs);
@@ -164,23 +173,31 @@ export function formatRelativeVisit(
 
   let relative: string;
   if (diffMinutes < 1) {
-    relative = "Just now";
+    relative = es ? "Justo ahora" : "Just now";
   } else if (diffMinutes < 60) {
-    relative = `${diffMinutes} ${diffMinutes === 1 ? "min" : "mins"} ago`;
+    relative = es
+      ? `hace ${diffMinutes} min`
+      : `${diffMinutes} ${diffMinutes === 1 ? "min" : "mins"} ago`;
   } else if (diffHours < 24) {
-    relative = `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+    relative = es
+      ? `hace ${diffHours} ${diffHours === 1 ? "hora" : "horas"}`
+      : `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
   } else if (diffDays < 30) {
-    relative = `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
+    relative = es
+      ? `hace ${diffDays} ${diffDays === 1 ? "día" : "días"}`
+      : `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
   } else {
     const months = Math.max(1, Math.floor(diffDays / 30));
-    relative = `${months} ${months === 1 ? "month" : "months"} ago`;
+    relative = es
+      ? `hace ${months} ${months === 1 ? "mes" : "meses"}`
+      : `${months} ${months === 1 ? "month" : "months"} ago`;
   }
 
-  const localDate = date.toLocaleDateString(undefined, {
+  const localDate = date.toLocaleDateString(dateLocaleTag(locale), {
     month: "short",
     day: "numeric",
   });
-  const localTime = date.toLocaleTimeString([], {
+  const localTime = date.toLocaleTimeString(dateLocaleTag(locale) ?? [], {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -195,6 +212,7 @@ function buildActivityBars(
   series: number[] | undefined,
   days: number,
   nowMs: number,
+  locale: Locale = "en",
 ): DayActivityBar[] {
   const normalized = Array.from(
     { length: days },
@@ -206,7 +224,7 @@ function buildActivityBars(
     const daysAgo = (days - 1) - index;
     const dayDate = new Date(nowMs - daysAgo * 86_400_000);
     const dow = dayDate.getDay();
-    const dateShort = dayDate.toLocaleDateString(undefined, {
+    const dateShort = dayDate.toLocaleDateString(dateLocaleTag(locale), {
       month: "short",
       day: "numeric",
     });
@@ -217,8 +235,8 @@ function buildActivityBars(
     return {
       index,
       count,
-      dayInitial: DAY_INITIALS[dow],
-      dayShort: DAY_SHORTS[dow],
+      dayInitial: (locale === "es" ? DAY_INITIALS_ES : DAY_INITIALS)[dow],
+      dayShort: (locale === "es" ? DAY_SHORTS_ES : DAY_SHORTS)[dow],
       dateShort,
       heightPx,
     };
@@ -228,14 +246,16 @@ function buildActivityBars(
 export function buildSevenDayActivity(
   sparkline: number[] | undefined,
   nowMs = Date.now(),
+  locale: Locale = "en",
 ): DayActivityBar[] {
-  return buildActivityBars(sparkline, 7, nowMs);
+  return buildActivityBars(sparkline, 7, nowMs, locale);
 }
 
 function buildThirtyDayActivity(
   sparkline30d: number[] | undefined,
   fallback7d: number[] | undefined,
   nowMs = Date.now(),
+  locale: Locale = "en",
 ): DayActivityBar[] {
   const source = Array.isArray(sparkline30d) && sparkline30d.length === 30
     ? sparkline30d
@@ -246,7 +266,7 @@ function buildThirtyDayActivity(
         (_, i) => Number(fallback7d?.[i] ?? 0) || 0,
       ),
     ];
-  return buildActivityBars(source, 30, nowMs);
+  return buildActivityBars(source, 30, nowMs, locale);
 }
 
 function checkHasPassport(): boolean {
@@ -254,14 +274,17 @@ function checkHasPassport(): boolean {
   return getSupporterPass() !== null || getOrCreatePassport().tier !== "free";
 }
 
-function formatBrowserSplit(browsers?: Record<string, number>): string {
+function formatBrowserSplit(
+  browsers?: Record<string, number>,
+  es = false,
+): string {
   if (!browsers) return "Safari · Chrome · Firefox";
   const labelMap: Record<string, string> = {
     safari: "Safari",
     chrome: "Chrome",
     firefox: "Firefox",
     edge: "Edge",
-    other: "Other",
+    other: es ? "Otros" : "Other",
   };
   const active = Object.entries(browsers)
     .map(([key, count]) => ({
@@ -311,23 +334,30 @@ export default function AnalyticsDashboard(
       <section
         class="bg-white border-4 border-black rounded-3xl p-4 sm:p-6 shadow-chunky"
         role="status"
-        aria-label="Analytics status"
+        aria-label={isSpanish ? "Estado de analíticas" : "Analytics status"}
       >
         <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
-          Analytics
+          {isSpanish ? "Analíticas" : "Analytics"}
         </h2>
         <p class="mt-2 text-sm font-bold text-[#4a3f39]">
-          Stats are temporarily unavailable. Reload to retry; your QR settings
-          still work.
+          {isSpanish
+            ? "Las estadísticas no están disponibles por ahora. Recarga para reintentar; los ajustes del QR siguen funcionando."
+            : "Stats are temporarily unavailable. Reload to retry; your QR settings still work."}
         </p>
       </section>
     );
   }
 
-  const bars7 = buildSevenDayActivity(analytics.sparkline);
+  const bars7 = buildSevenDayActivity(
+    analytics.sparkline,
+    Date.now(),
+    isSpanish ? "es" : "en",
+  );
   const bars30 = buildThirtyDayActivity(
     analytics.sparkline_30d,
     analytics.sparkline,
+    Date.now(),
+    isSpanish ? "es" : "en",
   );
   const activeBars = windowDays === 30 && hasPass ? bars30 : bars7;
   const weekTotal = bars7.reduce((sum, b) => sum + b.count, 0);
@@ -335,12 +365,18 @@ export default function AnalyticsDashboard(
     ? analytics.total_30d
     : bars30.reduce((sum, b) => sum + b.count, 0);
   const activeTotal = windowDays === 30 && hasPass ? monthTotal : weekTotal;
-  const lastVisit = formatRelativeVisit(analytics.last_scan);
+  const lastVisit = formatRelativeVisit(
+    analytics.last_scan,
+    Date.now(),
+    isSpanish ? "es" : "en",
+  );
+  const visitWord = (count: number) =>
+    isSpanish
+      ? (count === 1 ? "visita" : "visitas")
+      : (count === 1 ? "visit" : "visits");
   const summaryText = bars7
     .map((b) =>
-      `${b.dayShort} (${b.dateShort}): ${b.count} ${
-        b.count === 1 ? "visit" : "visits"
-      }`
+      `${b.dayShort} (${b.dateShort}): ${b.count} ${visitWord(b.count)}`
     )
     .join(", ");
 
@@ -352,7 +388,7 @@ export default function AnalyticsDashboard(
   const maxHourCount = Math.max(1, ...hours24);
   const topCities = analytics.top_cities ?? [];
   const topCountries = analytics.top_countries ?? [];
-  const browserSummary = formatBrowserSplit(analytics.browsers);
+  const browserSummary = formatBrowserSplit(analytics.browsers, isSpanish);
 
   const handleSelect30Days = () => {
     haptics.light();
@@ -381,17 +417,19 @@ export default function AnalyticsDashboard(
     <section
       class="bg-white border-4 border-black rounded-3xl p-4 sm:p-6 space-y-4 shadow-chunky"
       aria-label={windowDays === 30 && hasPass
-        ? "30-Day Analytics"
-        : "7-Day Analytics"}
+        ? (isSpanish ? "Analíticas de 30 días" : "30-Day Analytics")
+        : (isSpanish ? "Analíticas de 7 días" : "7-Day Analytics")}
     >
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
-            Analytics
+            {isSpanish ? "Analíticas" : "Analytics"}
           </h2>
           <span class="text-xs font-black bg-amber-200 text-black border-2 border-black px-3 py-1 rounded-full">
-            Last {windowDays === 30 && hasPass ? "30" : "7"} Days ·{" "}
-            {activeTotal} {activeTotal === 1 ? "visit" : "visits"}
+            {isSpanish ? "Últimos" : "Last"}{" "}
+            {windowDays === 30 && hasPass ? "30" : "7"}{" "}
+            {isSpanish ? "días" : "Days"} · {activeTotal}{" "}
+            {visitWord(activeTotal)}
           </span>
         </div>
 
@@ -399,7 +437,7 @@ export default function AnalyticsDashboard(
         <div
           class="inline-flex items-center rounded-full bg-amber-50 p-1 border-2 border-black"
           role="group"
-          aria-label="Analytics range"
+          aria-label={isSpanish ? "Rango de analíticas" : "Analytics range"}
         >
           <button
             type="button"
@@ -414,7 +452,7 @@ export default function AnalyticsDashboard(
                 : "text-[#4a3f39] hover:bg-amber-100"
             }`}
           >
-            7 Days
+            {isSpanish ? "7 días" : "7 Days"}
           </button>
           <button
             type="button"
@@ -426,17 +464,25 @@ export default function AnalyticsDashboard(
                 : "text-[#4a3f39] hover:bg-amber-100"
             }`}
           >
-            30 Days{!hasPass ? " 🛂" : ""}
+            {isSpanish ? "30 días" : "30 Days"}
+            {!hasPass ? " 🛂" : ""}
           </button>
         </div>
       </div>
 
       {/* Screen-reader full breakdown */}
       <p class="sr-only">
-        Last {windowDays === 30 && hasPass ? "30" : "7"} days total:{" "}
-        {activeTotal} recorded visits. Daily breakdown:{" "}
-        {summaryText}. Last recorded visit: {lastVisit.relative}
-        {lastVisit.localDateTime ? ` (${lastVisit.localDateTime})` : ""}.
+        {isSpanish
+          ? `Total de los últimos ${
+            windowDays === 30 && hasPass ? "30" : "7"
+          } días: ${activeTotal} visitas registradas. Desglose diario: ${summaryText}. Última visita registrada: ${lastVisit.relative}${
+            lastVisit.localDateTime ? ` (${lastVisit.localDateTime})` : ""
+          }.`
+          : `Last ${
+            windowDays === 30 && hasPass ? "30" : "7"
+          } days total: ${activeTotal} recorded visits. Daily breakdown: ${summaryText}. Last recorded visit: ${lastVisit.relative}${
+            lastVisit.localDateTime ? ` (${lastVisit.localDateTime})` : ""
+          }.`}
       </p>
 
       {/* Activity Chart & Last Visit */}
@@ -446,11 +492,13 @@ export default function AnalyticsDashboard(
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
             <p class="text-xs text-black font-black uppercase tracking-wider">
               {windowDays === 30 && hasPass
-                ? "30-Day Activity"
-                : "7-Day Activity"}
+                ? (isSpanish ? "Actividad de 30 días" : "30-Day Activity")
+                : (isSpanish ? "Actividad de 7 días" : "7-Day Activity")}
             </p>
             <span class="text-[11px] font-bold text-[#574c44]">
-              Hover or tap bars for counts
+              {isSpanish
+                ? "Pasa el cursor o toca las barras para ver conteos"
+                : "Hover or tap bars for counts"}
             </span>
           </div>
 
@@ -459,7 +507,9 @@ export default function AnalyticsDashboard(
               <div
                 class="flex items-end justify-between gap-[2px] pt-4 pb-1 h-20"
                 role="group"
-                aria-label={`Last 30 days: ${monthTotal} recorded visits`}
+                aria-label={isSpanish
+                  ? `Últimos 30 días: ${monthTotal} visitas registradas`
+                  : `Last 30 days: ${monthTotal} recorded visits`}
               >
                 {activeBars.map((bar) => (
                   <div
@@ -467,9 +517,15 @@ export default function AnalyticsDashboard(
                     tabIndex={0}
                     role="img"
                     title={`${bar.dateShort}: ${bar.count}`}
-                    aria-label={`${bar.dayShort} ${bar.dateShort}: ${bar.count} recorded ${
-                      bar.count === 1 ? "visit" : "visits"
-                    }`}
+                    aria-label={isSpanish
+                      ? `${bar.dayShort} ${bar.dateShort}: ${bar.count} ${
+                        bar.count === 1
+                          ? "visita registrada"
+                          : "visitas registradas"
+                      }`
+                      : `${bar.dayShort} ${bar.dateShort}: ${bar.count} recorded ${
+                        bar.count === 1 ? "visit" : "visits"
+                      }`}
                     class="group flex-1 h-14 flex items-end justify-center focus:outline-none"
                   >
                     <div
@@ -488,16 +544,24 @@ export default function AnalyticsDashboard(
               <div
                 class="flex items-end justify-between gap-1.5 pt-6 pb-1"
                 role="group"
-                aria-label={`Last 7 days: ${weekTotal} recorded visits`}
+                aria-label={isSpanish
+                  ? `Últimos 7 días: ${weekTotal} visitas registradas`
+                  : `Last 7 days: ${weekTotal} recorded visits`}
               >
                 {bars7.map((bar) => (
                   <div
                     key={bar.index}
                     tabIndex={0}
                     role="img"
-                    aria-label={`${bar.dayShort} ${bar.dateShort}: ${bar.count} recorded ${
-                      bar.count === 1 ? "visit" : "visits"
-                    }`}
+                    aria-label={isSpanish
+                      ? `${bar.dayShort} ${bar.dateShort}: ${bar.count} ${
+                        bar.count === 1
+                          ? "visita registrada"
+                          : "visitas registradas"
+                      }`
+                      : `${bar.dayShort} ${bar.dateShort}: ${bar.count} recorded ${
+                        bar.count === 1 ? "visit" : "visits"
+                      }`}
                     class="group relative flex-1 flex flex-col items-center gap-1.5 focus:outline-none min-w-0"
                   >
                     {/* Count badge (always subtly legible, high-contrast pill on hover/focus) */}
@@ -534,7 +598,7 @@ export default function AnalyticsDashboard(
         <div class="bg-qr-cream rounded-2xl p-3.5 border-2 border-black flex flex-col justify-between min-w-0">
           <div>
             <p class="text-xs text-black font-black uppercase tracking-wider">
-              Last Visit
+              {isSpanish ? "Última visita" : "Last Visit"}
             </p>
             <p class="text-lg sm:text-xl font-black text-black mt-1.5 leading-tight">
               {lastVisit.relative}
@@ -547,7 +611,8 @@ export default function AnalyticsDashboard(
           </div>
           {typeof totalVisits === "number" && (
             <p class="mt-3 pt-2 border-t border-black/15 text-xs font-black text-[#4a3f39]">
-              All-time total: <span class="font-mono">{totalVisits}</span>
+              {isSpanish ? "Total histórico:" : "All-time total:"}{" "}
+              <span class="font-mono">{totalVisits}</span>
             </p>
           )}
         </div>
@@ -562,11 +627,12 @@ export default function AnalyticsDashboard(
           🤖 Android: {analytics.devices?.android ?? 0}
         </span>
         <span class="bg-qr-cream border-2 border-black px-3 py-1.5 rounded-full">
-          💻 Desktop: {analytics.devices?.desktop ?? 0}
+          💻 {isSpanish ? "Escritorio" : "Desktop"}:{" "}
+          {analytics.devices?.desktop ?? 0}
         </span>
         {(analytics.devices?.other ?? 0) > 0 && (
           <span class="bg-qr-cream border-2 border-black px-3 py-1.5 rounded-full">
-            🌐 Other: {analytics.devices?.other ?? 0}
+            🌐 {isSpanish ? "Otros" : "Other"}: {analytics.devices?.other ?? 0}
           </span>
         )}
       </div>
@@ -577,11 +643,13 @@ export default function AnalyticsDashboard(
           <div class="bg-qr-cream border-2 border-black rounded-2xl p-3.5 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border-2 border-black bg-amber-200 text-[11px] font-black uppercase tracking-wide text-black shadow-sm">
-                🛂 PASSPORT FIELD REPORT
+                🛂 {isSpanish
+                  ? "REPORTE DE CAMPO DEL PASAPORTE"
+                  : "PASSPORT FIELD REPORT"}
               </span>
               {typeof analytics.total_90d === "number" && (
                 <span class="text-xs font-black text-[#4a3f39]">
-                  90-day scans:{" "}
+                  {isSpanish ? "Escaneos a 90 días:" : "90-day scans:"}{" "}
                   <span class="font-mono">{analytics.total_90d}</span>
                 </span>
               )}
@@ -590,12 +658,16 @@ export default function AnalyticsDashboard(
             {/* 🌍 Top Cities & Countries */}
             <div class="space-y-1.5">
               <p class="text-xs font-black uppercase tracking-wider text-black">
-                🌍 Top Cities & Countries
+                {isSpanish
+                  ? "🌍 Ciudades y países top"
+                  : "🌍 Top Cities & Countries"}
               </p>
               {topCities.length === 0 && topCountries.length === 0
                 ? (
                   <p class="text-xs font-bold text-[#574c44]">
-                    Collecting city stamps as scans arrive…
+                    {isSpanish
+                      ? "Reuniendo sellos de ciudades conforme llegan los escaneos…"
+                      : "Collecting city stamps as scans arrive…"}
                   </p>
                 )
                 : (
@@ -625,7 +697,7 @@ export default function AnalyticsDashboard(
               <div class="bg-white border-2 border-black rounded-xl p-2.5 space-y-1.5 min-w-0">
                 <div class="flex items-center justify-between gap-2">
                   <span class="text-[11px] font-black uppercase tracking-wider text-[#4a3f39]">
-                    ⏰ Peak Rush Hour
+                    {isSpanish ? "⏰ Hora pico" : "⏰ Peak Rush Hour"}
                   </span>
                   <span class="text-xs font-black text-black">
                     {peakWindow ?? "—"}
@@ -633,7 +705,9 @@ export default function AnalyticsDashboard(
                 </div>
                 <div
                   class="flex items-end gap-[2px] h-6"
-                  aria-label="24-hour scan distribution"
+                  aria-label={isSpanish
+                    ? "Distribución de escaneos en 24 horas"
+                    : "24-hour scan distribution"}
                 >
                   {hours24.map((count, h) => (
                     <span
@@ -659,7 +733,7 @@ export default function AnalyticsDashboard(
 
               <div class="bg-white border-2 border-black rounded-xl p-2.5 flex flex-col justify-between min-w-0">
                 <span class="text-[11px] font-black uppercase tracking-wider text-[#4a3f39]">
-                  🌐 Browser Split
+                  {isSpanish ? "🌐 Navegadores" : "🌐 Browser Split"}
                 </span>
                 <p class="mt-1 text-xs font-black text-black break-words">
                   {browserSummary}
@@ -674,7 +748,7 @@ export default function AnalyticsDashboard(
                 onClick={handleExportCsv}
                 class="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full border-2 border-black bg-white hover:bg-amber-200 text-xs font-black text-black shadow-chunky transition-all hover:scale-105 active:scale-95"
               >
-                📥 Export CSV
+                {isSpanish ? "📥 Exportar CSV" : "📥 Export CSV"}
               </button>
             </div>
           </div>
@@ -697,8 +771,9 @@ export default function AnalyticsDashboard(
         )}
 
       <p class="text-xs font-semibold text-[#574c44]">
-        Visits include direct link opens and your own scans. Activity and
-        devices cover 7 days; the last visit uses retained logs (up to 90 days).
+        {isSpanish
+          ? "Las visitas incluyen aperturas directas del link y escaneos propios. La actividad y los dispositivos cubren 7 días; la última visita usa los registros conservados (hasta 90 días)."
+          : "Visits include direct link opens and your own scans. Activity and devices cover 7 days; the last visit uses retained logs (up to 90 days)."}
       </p>
     </section>
   );

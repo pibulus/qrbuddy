@@ -80,11 +80,33 @@ interface OwnerMeta {
 const PILL =
   "min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-2xl border-2 border-[#1e1714] px-2.5 text-xs font-black shadow-[0_2px_0_#1e1714] transition-all hover:-translate-y-0.5 active:translate-y-px active:shadow-none disabled:opacity-50 disabled:hover:translate-y-0";
 
-const RANGES: { id: StatsRange; label: string }[] = [
-  { id: "today", label: "Today" },
-  { id: "week", label: "7 days" },
-  { id: "all", label: "All time" },
+const RANGES: { id: StatsRange; label: string; es: string }[] = [
+  { id: "today", label: "Today", es: "Hoy" },
+  { id: "week", label: "7 days", es: "7 días" },
+  { id: "all", label: "All time", es: "Todo el tiempo" },
 ];
+
+const KPI_LABELS_ES: Record<string, string> = {
+  "Page Opens": "Visitas",
+  "Visitors": "Visitantes",
+  "Device Split": "Dispositivos",
+  "Downloads": "Descargas",
+  "Top Track": "Canción top",
+  "Top Photo": "Foto top",
+};
+
+// Stat tiles are built English-first in utils/share-stats.ts; map the known
+// label/value/badge shapes for /es.
+function kpiEs(text: string): string {
+  return KPI_LABELS_ES[text] ??
+    text
+      .replace(/^~(\d+) today$/, "~$1 hoy")
+      .replace(/^(\d+) today$/, "$1 hoy")
+      .replace(/^(\d+) repeat$/, "$1 repetidas")
+      .replace(/^(\d+) shared$/, "$1 compartidas")
+      .replace(/^(\d+) DL$/, "$1 desc.")
+      .replace(/% phones$/, "% celulares");
+}
 
 function Spark({ values }: { values: number[] }) {
   const max = Math.max(1, ...values);
@@ -132,6 +154,7 @@ export default function OwnerStrip(
   }: OwnerStripProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
+  const t = (en: string, es: string) => (isSpanish ? es : en);
   const isModalOpen = pricingModalOpen.value;
   const [token, setToken] = useState<string | null>(null);
   const [meta, setMeta] = useState<OwnerMeta | null>(null);
@@ -200,7 +223,7 @@ export default function OwnerStrip(
   const triggerDownload = useSignal(false);
   const frame = useSignal<{ enabled: boolean; caption: string } | null>({
     enabled: true,
-    caption: "SCAN ME",
+    caption: isSpanish ? "ESCANÉAME" : "SCAN ME",
   });
   useEffect(() => {
     qrStyle.value = theme as keyof typeof QR_STYLES;
@@ -209,10 +232,10 @@ export default function OwnerStrip(
   // Vault → token → owner metadata. No token, no request, no strip.
   useEffect(() => {
     let cancelled = false;
-    getOwnerToken("file", fileId).then(async (t) => {
-      if (cancelled || !t) return;
+    getOwnerToken("file", fileId).then(async (ownerTok) => {
+      if (cancelled || !ownerTok) return;
       const passPresent = checkHasPassport();
-      setToken(t);
+      setToken(ownerTok);
       setHasSupporterPass(passPresent);
       if (passPresent) {
         onUnbranded?.();
@@ -222,9 +245,12 @@ export default function OwnerStrip(
       let serverUnbranded = unbranded;
       try {
         const data = await apiRequest<OwnerMeta>(
-          `${getApiUrl()}/get-file-metadata?id=${fileId}&owner=${t}`,
+          `${getApiUrl()}/get-file-metadata?id=${fileId}&owner=${ownerTok}`,
           { method: "GET" },
-          "Couldn't load your stats",
+          t(
+            "Couldn't load your stats",
+            "No se pudieron cargar las estadísticas",
+          ),
         );
         if (!data.isOwner) throw new Error("Owner stats unavailable");
         serverUnbranded = Boolean(
@@ -254,11 +280,14 @@ export default function OwnerStrip(
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 fileId,
-                ownerToken: t,
+                ownerToken: ownerTok,
                 action: "set-unbranded",
               }),
             },
-            "Couldn't activate white-label",
+            t(
+              "Couldn't activate white-label",
+              "No se pudo activar la marca blanca",
+            ),
           );
           if (!cancelled) {
             onUnbranded?.();
@@ -313,7 +342,7 @@ export default function OwnerStrip(
     try {
       const r = await post<{ fileName: string }>(
         { action: "rename", title: clean },
-        "Couldn't rename it",
+        t("Couldn't rename it", "No se pudo renombrar"),
       );
       onTitle(r.fileName);
       updateHistoryItem(
@@ -331,7 +360,12 @@ export default function OwnerStrip(
       );
       haptics.success();
     } catch (e) {
-      addToast(e instanceof Error ? e.message : "Couldn't rename it", 3000);
+      addToast(
+        e instanceof Error
+          ? e.message
+          : t("Couldn't rename it", "No se pudo renombrar"),
+        3000,
+      );
       setDraft(title);
     } finally {
       endMutation();
@@ -341,11 +375,16 @@ export default function OwnerStrip(
   const retheme = async (key: string) => {
     if (key === theme || !beginMutation("theme")) return;
     try {
-      await post({ action: "retheme", theme: key }, "Couldn't change the vibe");
+      await post(
+        { action: "retheme", theme: key },
+        t("Couldn't change the vibe", "No se pudo cambiar el estilo"),
+      );
       onTheme(key);
     } catch (e) {
       addToast(
-        e instanceof Error ? e.message : "Couldn't change the vibe",
+        e instanceof Error
+          ? e.message
+          : t("Couldn't change the vibe", "No se pudo cambiar el estilo"),
         3000,
       );
     } finally {
@@ -372,7 +411,7 @@ export default function OwnerStrip(
           itemId: files[index].id,
           direction: direction === -1 ? "up" : "down",
         },
-        "Couldn't reorder items",
+        t("Couldn't reorder items", "No se pudo reordenar"),
       );
       if (Array.isArray(r.files)) {
         onFiles(r.files);
@@ -380,7 +419,9 @@ export default function OwnerStrip(
     } catch (e) {
       onFiles(previousFiles);
       addToast(
-        e instanceof Error ? e.message : "Couldn't reorder items",
+        e instanceof Error
+          ? e.message
+          : t("Couldn't reorder items", "No se pudo reordenar"),
         3000,
       );
     } finally {
@@ -400,12 +441,17 @@ export default function OwnerStrip(
     try {
       const r = await post<{ files: ShareItem[] }>(
         { action: "remove", itemId: item.id },
-        "Couldn't remove it",
+        t("Couldn't remove it", "No se pudo quitar"),
       );
       onFiles(r.files);
       haptics.medium();
     } catch (e) {
-      addToast(e instanceof Error ? e.message : "Couldn't remove it", 3000);
+      addToast(
+        e instanceof Error
+          ? e.message
+          : t("Couldn't remove it", "No se pudo quitar"),
+        3000,
+      );
     } finally {
       endMutation();
     }
@@ -422,17 +468,34 @@ export default function OwnerStrip(
       ready.forEach((f) => form.append("file", f));
       const r = await apiRequestFormData<
         { files: ShareItem[]; fileName?: string }
-      >(`${getApiUrl()}/update-file`, form, "Couldn't add those");
+      >(
+        `${getApiUrl()}/update-file`,
+        form,
+        t("Couldn't add those", "No se pudieron agregar"),
+      );
       onFiles(r.files);
       if (r.fileName) onTitle(r.fileName);
       haptics.success();
       addToast(
-        `Added ${ready.length} ${kind === "playlist" ? "track" : "photo"}${
-          ready.length === 1 ? "" : "s"
-        } ✨`,
+        isSpanish
+          ? `${ready.length} ${
+            kind === "playlist"
+              ? (ready.length === 1
+                ? "canción agregada"
+                : "canciones agregadas")
+              : (ready.length === 1 ? "foto agregada" : "fotos agregadas")
+          }`
+          : `Added ${ready.length} ${kind === "playlist" ? "track" : "photo"}${
+            ready.length === 1 ? "" : "s"
+          } ✨`,
       );
     } catch (e) {
-      addToast(e instanceof Error ? e.message : "Couldn't add those", 4000);
+      addToast(
+        e instanceof Error
+          ? e.message
+          : t("Couldn't add those", "No se pudieron agregar"),
+        4000,
+      );
     } finally {
       endMutation();
       if (fileInput.current) fileInput.current.value = "";
@@ -444,9 +507,21 @@ export default function OwnerStrip(
     setMeta((prev) => (prev ? { ...prev, unbranded: true } : prev));
     if (!beginMutation("unbranded")) return;
     try {
-      await post({ action: "set-unbranded" }, "Couldn't activate white-label");
+      await post(
+        { action: "set-unbranded" },
+        t(
+          "Couldn't activate white-label",
+          "No se pudo activar la marca blanca",
+        ),
+      );
       haptics.light();
-      addToast("Clean white-label active — zero QRBuddy branding", 3000);
+      addToast(
+        t(
+          "Clean white-label active — zero QRBuddy branding",
+          "Marca blanca activa: cero marca de QRBuddy",
+        ),
+        3000,
+      );
     } catch {
       // Local white-label state still stays active for this owner
     } finally {
@@ -457,7 +532,12 @@ export default function OwnerStrip(
   const sticker = () => {
     triggerDownload.value = true;
     haptics.medium();
-    addToast("Sticker on the way: print it, stick it");
+    addToast(
+      t(
+        "Sticker on the way: print it, stick it",
+        "Sticker en camino: imprimir, pegar",
+      ),
+    );
   };
 
   const handleTabKeyDown = (e: KeyboardEvent) => {
@@ -480,9 +560,11 @@ export default function OwnerStrip(
   const kpis = cardKpis(card, kind);
   const itemName = (id: string) => {
     const f = files.find((x) => x.id === id);
-    if (!f) return "One of them";
+    if (!f) return t("One of them", "Una de ellas");
     const idx = files.indexOf(f);
-    return kind === "playlist" ? prettyName(f.name) : `Photo ${idx + 1}`;
+    return kind === "playlist"
+      ? prettyName(f.name)
+      : `${t("Photo", "Foto")} ${idx + 1}`;
   };
   const lines = cardLines(card, itemName, kind, meta.createdAt);
   const canEditPayload = !isLimited && kind !== "file";
@@ -512,7 +594,7 @@ export default function OwnerStrip(
     <section
       style={getQRThemeStyleVars(theme)}
       class="w-full max-w-md bg-[#fbf1e4] text-[#1e1714] border-4 border-[#1e1714] rounded-3xl shadow-chunky-hover p-4 sm:p-5 space-y-3.5 animate-slide-up"
-      aria-label="Owner controls"
+      aria-label={t("Owner controls", "Controles del propietario")}
     >
       {/* Header: it's yours + the name, editable */}
       <div class="flex items-start gap-3">
@@ -523,7 +605,7 @@ export default function OwnerStrip(
           <div class="flex items-center gap-2 flex-wrap">
             <p class="qr-section-eyebrow">
               <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
-              It's yours
+              {t("It's yours", "Es tuyo")}
             </p>
             {(unbranded || meta.unbranded || hasSupporterPass) && (
               <button
@@ -531,9 +613,12 @@ export default function OwnerStrip(
                 disabled={mutationBusy}
                 onClick={() => void activateWhiteLabel()}
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-[#1e1714] bg-[#fef3c7] text-[#1e1714] text-[10px] font-black shadow-sm hover:bg-[#ffbe0b] transition-colors disabled:opacity-50"
-                title="QRBuddy Passport perk: QRBuddy footer badge is hidden on this share"
+                title={t(
+                  "QRBuddy Passport perk: QRBuddy footer badge is hidden on this share",
+                  "Beneficio del Pasaporte QRBuddy: la insignia de QRBuddy está oculta en este enlace",
+                )}
               >
-                🛂 Clean White-Label Active
+                🛂 {t("Clean White-Label Active", "Marca blanca activa")}
               </button>
             )}
           </div>
@@ -563,7 +648,7 @@ export default function OwnerStrip(
                     setEditing(false);
                   }
                 }}
-                aria-label="Share name"
+                aria-label={t("Share name", "Nombre del enlace")}
                 class="qr-input min-h-[42px] mt-1 font-black text-base"
               />
             )
@@ -576,7 +661,7 @@ export default function OwnerStrip(
                   setEditing(true);
                 }}
                 class="min-h-[40px] text-left font-black text-lg leading-tight text-[#1e1714] hover:opacity-80 transition-opacity truncate max-w-full disabled:opacity-50"
-                title="Rename"
+                title={t("Rename", "Renombrar")}
               >
                 {title}{" "}
                 <span class="text-xs opacity-60" aria-hidden="true">✎</span>
@@ -625,7 +710,10 @@ export default function OwnerStrip(
             <div
               class="grid grid-cols-3 gap-1 rounded-2xl bg-[#efe9dc] p-1 border-2 border-[#1e1714]"
               role="tablist"
-              aria-label="Stats time range"
+              aria-label={t(
+                "Stats time range",
+                "Rango de tiempo de las estadísticas",
+              )}
             >
               {RANGES.map((r, idx) => (
                 <button
@@ -647,7 +735,7 @@ export default function OwnerStrip(
                       : "border-2 border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/70"
                   }`}
                 >
-                  {r.label}
+                  {isSpanish ? r.es : r.label}
                 </button>
               ))}
             </div>
@@ -665,8 +753,11 @@ export default function OwnerStrip(
                     role="status"
                   >
                     {statsLoading
-                      ? "Loading stats…"
-                      : "Stats are unavailable right now."}
+                      ? t("Loading stats…", "Cargando estadísticas…")
+                      : t(
+                        "Stats are unavailable right now.",
+                        "Estadísticas no disponibles por ahora.",
+                      )}
                   </p>
                 )
                 : (
@@ -681,7 +772,7 @@ export default function OwnerStrip(
                             class="bg-[#fbf1e4] border-2 border-[#1e1714] rounded-xl px-1.5 py-2 text-center flex flex-col justify-between min-w-0"
                           >
                             <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
-                              {tile.label}
+                              {isSpanish ? kpiEs(tile.label) : tile.label}
                             </span>
                             <span
                               class={`mt-1 font-black text-[#1e1714] leading-tight ${
@@ -690,21 +781,21 @@ export default function OwnerStrip(
                                   : "text-[11px] sm:text-xs whitespace-nowrap"
                               }`}
                             >
-                              {tile.value}
+                              {isSpanish ? kpiEs(tile.value) : tile.value}
                             </span>
                             {tile.badge
                               ? (
                                 <span class="mt-1 inline-block mx-auto px-1.5 py-0.5 rounded-full bg-[#ffbe0b] border border-[#1e1714] text-[10px] font-black text-[#1e1714] leading-tight truncate max-w-full">
-                                  {tile.badge}
+                                  {isSpanish ? kpiEs(tile.badge) : tile.badge}
                                 </span>
                               )
                               : (
                                 <span class="mt-1 text-[10px] font-bold text-[#57524b] truncate">
                                   {range === "today"
-                                    ? "Today"
+                                    ? t("Today", "Hoy")
                                     : range === "week"
-                                    ? "7 days"
-                                    : "All time"}
+                                    ? t("7 days", "7 días")
+                                    : t("All time", "Todo el tiempo")}
                                 </span>
                               )}
                           </div>
@@ -717,8 +808,14 @@ export default function OwnerStrip(
                       ? (
                         <p class="text-sm font-bold text-[#57524b] text-center py-1">
                           {range === "today"
-                            ? "No page opens yet today."
-                            : "No page opens yet — stick it somewhere 🌸"}
+                            ? t(
+                              "No page opens yet today.",
+                              "Aún sin visitas hoy.",
+                            )
+                            : t(
+                              "No page opens yet — stick it somewhere 🌸",
+                              "Aún sin visitas — ¡pega el QR en algún lugar! 🌸",
+                            )}
                         </p>
                       )
                       : (
@@ -750,7 +847,10 @@ export default function OwnerStrip(
                     <div class="bg-[#fbf1e4] border-2 border-[#1e1714] rounded-2xl p-3 space-y-3">
                       <div class="flex flex-wrap items-center justify-between gap-2">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] text-[10px] font-black uppercase tracking-wide text-[#1e1714] shadow-sm">
-                          🛂 PASSPORT FIELD REPORT
+                          🛂 {t(
+                            "PASSPORT FIELD REPORT",
+                            "INFORME DE CAMPO DEL PASAPORTE",
+                          )}
                         </span>
                       </div>
 
@@ -760,8 +860,8 @@ export default function OwnerStrip(
                           <p class="qr-section-eyebrow">
                             <span class="qr-section-pip bg-[#ffbe0b]" />
                             🏆 {kind === "playlist"
-                              ? "Track Leaderboard"
-                              : "Photo Leaderboard"}
+                              ? t("Track Leaderboard", "Ranking de canciones")
+                              : t("Photo Leaderboard", "Ranking de fotos")}
                           </p>
                           <ol class="space-y-1.5">
                             {card.itemLeaderboard.map((entry, idx) => {
@@ -769,10 +869,12 @@ export default function OwnerStrip(
                                 entry.id,
                               );
                               const unit = kind === "playlist"
-                                ? entry.plays === 1 ? "play" : "plays"
+                                ? entry.plays === 1
+                                  ? t("play", "reproducción")
+                                  : t("plays", "reproducciones")
                                 : entry.plays === 1
-                                ? "view"
-                                : "views";
+                                ? t("view", "vista")
+                                : t("views", "vistas");
                               const widthPct = Math.max(
                                 8,
                                 Math.round(entry.share * 100),
@@ -810,7 +912,7 @@ export default function OwnerStrip(
                       <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                         <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
                           <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
-                            Avg. Hang Time
+                            {t("Avg. Hang Time", "Tiempo promedio")}
                           </span>
                           <span class="mt-0.5 text-xs sm:text-sm font-black text-[#1e1714] leading-tight truncate">
                             {formatDwellSeconds(card.avgDwellSeconds)}
@@ -818,7 +920,7 @@ export default function OwnerStrip(
                         </div>
                         <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
                           <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
-                            Completion Rate
+                            {t("Completion Rate", "Tasa de finalización")}
                           </span>
                           <span class="mt-0.5 text-xs sm:text-sm font-black text-[#1e1714] leading-tight truncate">
                             {card.completionRate !== null
@@ -828,7 +930,7 @@ export default function OwnerStrip(
                         </div>
                         <div class="col-span-2 sm:col-span-1 bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
                           <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
-                            Farthest Scan
+                            {t("Farthest Scan", "Escaneo más lejano")}
                           </span>
                           <span
                             class="mt-0.5 text-[11px] font-black text-[#1e1714] leading-tight truncate"
@@ -875,7 +977,7 @@ export default function OwnerStrip(
                           onClick={handleExportCsv}
                           class="min-h-[38px] inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] transition-all active:scale-95 ml-auto"
                         >
-                          📥 Export CSV
+                          📥 {t("Export CSV", "Exportar CSV")}
                         </button>
                       </div>
                     </div>
@@ -899,7 +1001,10 @@ export default function OwnerStrip(
 
             <div class="flex items-center justify-between gap-2 pt-1 border-t border-[#1e1714]/15">
               <p class="text-[11px] font-medium text-[#57524b] truncate">
-                Coarse UTC estimates · includes your opens
+                {t(
+                  "Coarse UTC estimates · includes your opens",
+                  "Estimaciones UTC aproximadas · incluye visitas propias",
+                )}
               </p>
               <button
                 type="button"
@@ -907,7 +1012,9 @@ export default function OwnerStrip(
                 disabled={statsLoading}
                 onClick={() => setStatsRevision((n) => n + 1)}
               >
-                {statsError ? "Retry" : "Refresh"}
+                {statsError
+                  ? t("Retry", "Reintentar")
+                  : t("Refresh", "Actualizar")}
               </button>
             </div>
           </div>
@@ -922,10 +1029,17 @@ export default function OwnerStrip(
               onClick={() => fileInput.current?.click()}
               disabled={mutationBusy || files.length >= 10}
               class={`${PILL} bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714]`}
-              title={files.length >= 10 ? "A share holds up to 10 items" : ""}
+              title={files.length >= 10
+                ? t(
+                  "A share holds up to 10 items",
+                  "Un enlace admite hasta 10 elementos",
+                )
+                : ""}
             >
               {busy === "append"
-                ? "Adding…"
+                ? t("Adding…", "Agregando…")
+                : isSpanish
+                ? `+ Agregar ${kind === "playlist" ? "canciones" : "fotos"}`
                 : `+ Add ${kind === "playlist" ? "tracks" : "photos"}`}
             </button>
           )
@@ -935,13 +1049,19 @@ export default function OwnerStrip(
               onClick={() =>
                 addToast(
                   isLimited
-                    ? "This one self-destructs, so what's inside is frozen."
-                    : "Single files can't grow — make a slideshow or mixtape.",
+                    ? t(
+                      "This one self-destructs, so what's inside is frozen.",
+                      "Este se autodestruye, así que su contenido queda congelado.",
+                    )
+                    : t(
+                      "Single files can't grow — make a slideshow or mixtape.",
+                      "Un archivo suelto no puede crecer: hacer una presentación o mixtape.",
+                    ),
                   4000,
                 )}
               class={`${PILL} bg-[#fffef7] text-[#1e1714] opacity-60`}
             >
-              + Add
+              {t("+ Add", "+ Agregar")}
             </button>
           )}
         <button
@@ -955,14 +1075,14 @@ export default function OwnerStrip(
               : "bg-[#fffef7] hover:bg-[var(--qr-theme-tint,#fce7f3)] text-[#1e1714]"
           }`}
         >
-          Vibe ▾
+          {t("Vibe ▾", "Estilo ▾")}
         </button>
         <button
           type="button"
           onClick={sticker}
           class={`${PILL} bg-[#fffef7] hover:bg-[#f7ecdc] text-[#1e1714]`}
         >
-          Sticker
+          {t("Sticker", "Sticker")}
         </button>
       </div>
       <input
@@ -1074,8 +1194,13 @@ export default function OwnerStrip(
             <span class="inline-flex items-center gap-2">
               <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
               <span>
-                Manage {files.length}{" "}
-                {kind === "playlist" ? "tracks" : "photos"}
+                {isSpanish
+                  ? `Administrar ${files.length} ${
+                    kind === "playlist" ? "canciones" : "fotos"
+                  }`
+                  : `Manage ${files.length} ${
+                    kind === "playlist" ? "tracks" : "photos"
+                  }`}
               </span>
             </span>
             <span class="w-6 h-6 rounded-full border border-[#1e1714]/35 bg-[#fbf1e4] inline-flex items-center justify-center shrink-0 transition-transform group-open:rotate-180 text-[10px]">
@@ -1084,12 +1209,12 @@ export default function OwnerStrip(
           </summary>
           <ul
             class="space-y-1.5 pt-2.5 border-t border-[#1e1714]/10 mt-1"
-            aria-label="Share items"
+            aria-label={t("Share items", "Elementos del enlace")}
           >
             {files.map((f, i) => {
               const label = kind === "playlist"
                 ? prettyName(f.name)
-                : `Photo ${i + 1} · ${prettyName(f.name)}`;
+                : `${t("Photo", "Foto")} ${i + 1} · ${prettyName(f.name)}`;
               return (
                 <li
                   key={f.id}
@@ -1109,7 +1234,9 @@ export default function OwnerStrip(
                       type="button"
                       onClick={() => void moveItem(i, -1)}
                       disabled={i === 0 || mutationBusy}
-                      aria-label={`Move ${prettyName(f.name)} up`}
+                      aria-label={isSpanish
+                        ? `Subir ${prettyName(f.name)}`
+                        : `Move ${prettyName(f.name)} up`}
                       class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] transition-colors disabled:opacity-30 disabled:pointer-events-none"
                     >
                       ↑
@@ -1118,7 +1245,9 @@ export default function OwnerStrip(
                       type="button"
                       onClick={() => void moveItem(i, 1)}
                       disabled={i === files.length - 1 || mutationBusy}
-                      aria-label={`Move ${prettyName(f.name)} down`}
+                      aria-label={isSpanish
+                        ? `Bajar ${prettyName(f.name)}`
+                        : `Move ${prettyName(f.name)} down`}
                       class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] transition-colors disabled:opacity-30 disabled:pointer-events-none"
                     >
                       ↓
@@ -1127,14 +1256,16 @@ export default function OwnerStrip(
                       type="button"
                       onClick={() => void removeItem(f)}
                       disabled={mutationBusy}
-                      aria-label={`Remove ${prettyName(f.name)}`}
+                      aria-label={isSpanish
+                        ? `Quitar ${prettyName(f.name)}`
+                        : `Remove ${prettyName(f.name)}`}
                       class={`h-8 rounded-full border-2 text-xs font-black text-[#c4607a] transition-colors disabled:opacity-50 ${
                         armedRemoveId === f.id
                           ? "px-3 border-[#c4607a] bg-[#fde8ee]"
                           : "w-8 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#fde8ee]"
                       }`}
                     >
-                      {armedRemoveId === f.id ? "Remove?" : "✕"}
+                      {armedRemoveId === f.id ? t("Remove?", "¿Quitar?") : "✕"}
                     </button>
                   </div>
                 </li>

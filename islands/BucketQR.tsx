@@ -17,6 +17,7 @@ import { uploadViaR2 } from "../utils/r2-upload.ts";
 import { getSupporterPass } from "../utils/supporter-pass.ts";
 import { getOwnerToken, removeOwnerToken } from "../utils/token-vault.ts";
 import type { BucketContentMetadata } from "../types/bucket-types.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 import BucketContentDisplay from "../components/bucket-qr/BucketContentDisplay.tsx";
 import PasswordUnlock from "../components/bucket-qr/PasswordUnlock.tsx";
 import { addToast } from "./ToastManager.tsx";
@@ -38,6 +39,28 @@ interface BucketQRProps {
   isReusable: boolean;
   deleteOnDownload: boolean;
   apiUrl: string;
+  lang?: Locale;
+}
+
+// Known English validation messages -> Spanish. Server-sent errors pass
+// through untouched; only client-side throws are mapped here.
+function localizeValidationError(message: string, isSpanish: boolean): string {
+  if (!isSpanish) return message;
+  const tooLarge = message.match(/^File too large \(max (\d+)MB\)$/);
+  if (tooLarge) return `Archivo demasiado grande (máx. ${tooLarge[1]} MB)`;
+  if (message === "Filename contains invalid characters.") {
+    return "El nombre del archivo tiene caracteres no válidos.";
+  }
+  const blockedExt = message.match(/^File type '(\.[^']+)' is not allowed/);
+  if (blockedExt) {
+    return `El tipo de archivo '${
+      blockedExt[1]
+    }' no está permitido por seguridad. Los archivos ejecutables están bloqueados.`;
+  }
+  if (message === "This file type is not allowed for security reasons.") {
+    return "Este tipo de archivo no está permitido por seguridad.";
+  }
+  return message;
 }
 
 export default function BucketQR({
@@ -51,7 +74,9 @@ export default function BucketQR({
   isReusable,
   deleteOnDownload,
   apiUrl,
+  lang,
 }: BucketQRProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -100,17 +125,30 @@ export default function BucketQR({
   } = useLockerUnlock();
 
   const uploadStatusText = uploadProgress >= 99
-    ? "Processing..."
-    : "Uploading...";
-  const bucketFileKind = contentMetadata?.mimetype?.startsWith("image/")
-    ? "Image"
+    ? (isSpanish ? "Procesando..." : "Processing...")
+    : (isSpanish ? "Subiendo..." : "Uploading...");
+  const bucketFileKindKey = contentMetadata?.mimetype?.startsWith("image/")
+    ? "image"
     : contentMetadata?.mimetype?.startsWith("audio/")
-    ? "Audio"
+    ? "audio"
     : contentMetadata?.mimetype?.startsWith("video/")
-    ? "Video"
+    ? "video"
     : contentMetadata?.mimetype?.includes("pdf")
-    ? "PDF"
-    : "File";
+    ? "pdf"
+    : "file";
+  const FILE_KIND_LABELS = {
+    image: { en: "Image", es: "Imagen" },
+    audio: { en: "Audio", es: "Audio" },
+    video: { en: "Video", es: "Video" },
+    pdf: { en: "PDF", es: "PDF" },
+    file: { en: "File", es: "Archivo" },
+  } as const;
+  const bucketFileKind = FILE_KIND_LABELS[bucketFileKindKey][
+    isSpanish ? "es" : "en"
+  ];
+  const previewLabel = isSpanish
+    ? `👁️ Vista previa: ${bucketFileKind.toLowerCase()}`
+    : `👁️ Preview ${bucketFileKind}`;
   const bucketFileGlyph = contentMetadata?.mimetype?.startsWith("image/")
     ? "🖼️"
     : contentMetadata?.mimetype?.startsWith("audio/")
@@ -188,7 +226,11 @@ export default function BucketQR({
 
       if (isPasswordProtected && !ownerToken && !hasUnlockInput) {
         setShowPasswordInput(true);
-        throw new Error("Enter the locker PIN before uploading.");
+        throw new Error(
+          isSpanish
+            ? "Ingresa el PIN del casillero antes de subir."
+            : "Enter the locker PIN before uploading.",
+        );
       }
 
       const authHeaders = getAuthHeaders();
@@ -207,10 +249,14 @@ export default function BucketQR({
             file.size <= SUPPORTER_MAX_FILE_SIZE
           ) {
             throw new Error(
-              "File over 50 MB — QRBuddy Passport unlocks 500 MB file drops.",
+              isSpanish
+                ? "Archivo de más de 50 MB: QRBuddy Passport habilita archivos de hasta 500 MB."
+                : "File over 50 MB — QRBuddy Passport unlocks 500 MB file drops.",
             );
           }
-          throw new Error(validation.error);
+          throw new Error(
+            localizeValidationError(validation.error ?? "", isSpanish),
+          );
         }
 
         if (pass && file.size > MAX_FILE_SIZE) {
@@ -238,7 +284,7 @@ export default function BucketQR({
             uploadUrl.toString(),
             formData,
             setUploadProgress,
-            "Upload failed",
+            isSpanish ? "Error al subir" : "Upload failed",
           );
         }
       } else if (text || link) {
@@ -260,12 +306,18 @@ export default function BucketQR({
           }),
         });
       } else {
-        throw new Error("No content selected for upload.");
+        throw new Error(
+          isSpanish
+            ? "No se seleccionó contenido para subir."
+            : "No content selected for upload.",
+        );
       }
 
       if (response && !response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData?.error || "Upload failed");
+        throw new Error(
+          errorData?.error || (isSpanish ? "Error al subir" : "Upload failed"),
+        );
       }
 
       // Success! Update state
@@ -315,13 +367,21 @@ export default function BucketQR({
       if (isPasswordProtected) {
         if (useManualPassword) {
           if (!manualPassword.trim()) {
-            setError("Enter the password to unlock this bucket.");
+            setError(
+              isSpanish
+                ? "Ingresa la contraseña para abrir este casillero."
+                : "Enter the password to unlock this bucket.",
+            );
             setIsDownloading(false);
             haptics.error();
             return;
           }
         } else if (pinValue.length !== 4) {
-          setError("Enter the 4-digit PIN.");
+          setError(
+            isSpanish
+              ? "Ingresa el PIN de 4 dígitos."
+              : "Enter the 4-digit PIN.",
+          );
           setIsDownloading(false);
           haptics.error();
           return;
@@ -350,7 +410,10 @@ export default function BucketQR({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Download failed");
+        throw new Error(
+          errorData.error ||
+            (isSpanish ? "Error al descargar" : "Download failed"),
+        );
       }
 
       if (contentType === "file") {
@@ -380,11 +443,12 @@ export default function BucketQR({
         try {
           await navigator.clipboard.writeText(downloadedContent.content);
           haptics.success();
-          addToast("Content copied");
+          addToast(isSpanish ? "Contenido copiado" : "Content copied");
         } catch {
           // Fallback: show a preview of the content if clipboard fails
           addToast(
-            "Content: " + downloadedContent.content.substring(0, 50) +
+            (isSpanish ? "Contenido: " : "Content: ") +
+              downloadedContent.content.substring(0, 50) +
               (downloadedContent.content.length > 50 ? "..." : ""),
             4000,
           );
@@ -427,8 +491,12 @@ export default function BucketQR({
     if (isPasswordProtected && !hasUnlockInput) {
       setError(
         useManualPassword
-          ? "Enter the password to unlock this locker."
-          : "Enter the 4-digit PIN.",
+          ? (isSpanish
+            ? "Ingresa la contraseña para abrir este casillero."
+            : "Enter the password to unlock this locker.")
+          : (isSpanish
+            ? "Ingresa el PIN de 4 dígitos."
+            : "Enter the 4-digit PIN."),
       );
       haptics.error();
       return;
@@ -454,7 +522,10 @@ export default function BucketQR({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Preview failed");
+        throw new Error(
+          errorData.error ||
+            (isSpanish ? "Error en la vista previa" : "Preview failed"),
+        );
       }
 
       let mime = response.headers.get("Content-Type") ?? "";
@@ -466,7 +537,9 @@ export default function BucketQR({
         // Real file bytes off R2 — no timeout, same reasoning as above.
         const fileResponse = await fetch(presignedPreview.download_url);
         if (!fileResponse.ok) {
-          throw new Error("Preview failed");
+          throw new Error(
+            isSpanish ? "Error en la vista previa" : "Preview failed",
+          );
         }
         mime = fileResponse.headers.get("Content-Type") ?? "";
         blob = await fileResponse.blob();
@@ -501,10 +574,13 @@ export default function BucketQR({
     haptics.light();
     try {
       await navigator.clipboard.writeText(bucketUrl);
-      addToast("Link copied");
+      addToast(isSpanish ? "Enlace copiado" : "Link copied");
     } catch (err) {
       console.error("Failed to copy URL:", err);
-      addToast("Could not copy the link", 3000);
+      addToast(
+        isSpanish ? "No se pudo copiar el enlace" : "Could not copy the link",
+        3000,
+      );
     }
   };
 
@@ -519,10 +595,16 @@ export default function BucketQR({
               : "bg-amber-200 text-[#1e1714] animate-pulse"
           }`}
         >
-          {isEmpty ? "🪣 Ready for upload" : "💥 File ready"}
+          {isEmpty
+            ? (isSpanish ? "🪣 Listo para subir" : "🪣 Ready for upload")
+            : (isSpanish ? "💥 Archivo listo" : "💥 File ready")}
         </span>
         <p class="text-sm text-[#574c44] mt-3 leading-relaxed">
-          {isEmpty ? "Waiting for content." : "Current locker contents."}
+          {isEmpty
+            ? (isSpanish ? "Esperando contenido." : "Waiting for content.")
+            : (isSpanish
+              ? "Contenido actual del casillero."
+              : "Current locker contents.")}
         </p>
       </div>
 
@@ -538,6 +620,7 @@ export default function BucketQR({
           bucketFileGlyph={bucketFileGlyph}
           bucketFileKind={bucketFileKind}
           bucketFileSizeLabel={bucketFileSizeLabel}
+          lang={lang}
         />
       )}
 
@@ -551,7 +634,9 @@ export default function BucketQR({
                 onClick={() => setShowPasswordInput(true)}
                 class={BTN_PRIMARY_UPLOAD}
               >
-                🔒 Unlock to Upload
+                {isSpanish
+                  ? "🔒 Desbloquear para subir"
+                  : "🔒 Unlock to Upload"}
               </button>
             )}
 
@@ -565,6 +650,7 @@ export default function BucketQR({
                   onManualPasswordChange={setManualPassword}
                   onToggleMode={toggleManualPassword}
                   onCancel={resetUnlock}
+                  lang={lang}
                 />
                 <button
                   type="button"
@@ -572,7 +658,9 @@ export default function BucketQR({
                   disabled={isUploading || !hasUnlockInput}
                   class={BTN_PRIMARY_UPLOAD}
                 >
-                  {isUploading ? "Uploading..." : "📤 Upload File"}
+                  {isUploading
+                    ? (isSpanish ? "Subiendo..." : "Uploading...")
+                    : (isSpanish ? "📤 Subir archivo" : "📤 Upload File")}
                 </button>
               </div>
             )}
@@ -584,7 +672,9 @@ export default function BucketQR({
                 disabled={isUploading}
                 class={BTN_PRIMARY_UPLOAD}
               >
-                {isUploading ? "Uploading..." : "📤 Upload File"}
+                {isUploading
+                  ? (isSpanish ? "Subiendo..." : "Uploading...")
+                  : (isSpanish ? "📤 Subir archivo" : "📤 Upload File")}
               </button>
             )}
             <input
@@ -617,7 +707,9 @@ export default function BucketQR({
                 onClick={() => setShowPasswordInput(true)}
                 class={BTN_PRIMARY_DOWNLOAD}
               >
-                🔒 Unlock to View & Download
+                {isSpanish
+                  ? "🔒 Desbloquear para ver y descargar"
+                  : "🔒 Unlock to View & Download"}
               </button>
             )}
 
@@ -631,6 +723,7 @@ export default function BucketQR({
                   onManualPasswordChange={setManualPassword}
                   onToggleMode={toggleManualPassword}
                   onCancel={resetUnlock}
+                  lang={lang}
                 />
 
                 <button
@@ -646,10 +739,12 @@ export default function BucketQR({
                   class={BTN_PRIMARY_DOWNLOAD}
                 >
                   {isDownloading
-                    ? "Downloading..."
+                    ? (isSpanish ? "Descargando..." : "Downloading...")
                     : (!isReusable || deleteOnDownload)
-                    ? "💥 Download & Empty"
-                    : "⬇️ Download File"}
+                    ? (isSpanish
+                      ? "💥 Descargar y vaciar"
+                      : "💥 Download & Empty")
+                    : (isSpanish ? "⬇️ Descargar archivo" : "⬇️ Download File")}
                 </button>
 
                 {canPreview && !previewUrl && (
@@ -663,8 +758,10 @@ export default function BucketQR({
                     class={BTN_SECONDARY}
                   >
                     {isPreviewLoading
-                      ? "Loading preview..."
-                      : `👁️ Preview ${bucketFileKind}`}
+                      ? (isSpanish
+                        ? "Cargando vista previa..."
+                        : "Loading preview...")
+                      : previewLabel}
                   </button>
                 )}
               </div>
@@ -682,10 +779,12 @@ export default function BucketQR({
                   class={`${BTN_PRIMARY_DOWNLOAD} animate-pulse-glow`}
                 >
                   {isDownloading
-                    ? "Downloading..."
+                    ? (isSpanish ? "Descargando..." : "Downloading...")
                     : (!isReusable || deleteOnDownload)
-                    ? "💥 Download & Empty"
-                    : "⬇️ Download File"}
+                    ? (isSpanish
+                      ? "💥 Descargar y vaciar"
+                      : "💥 Download & Empty")
+                    : (isSpanish ? "⬇️ Descargar archivo" : "⬇️ Download File")}
                 </button>
 
                 {canPreview && !previewUrl && (
@@ -696,8 +795,10 @@ export default function BucketQR({
                     class={BTN_SECONDARY}
                   >
                     {isPreviewLoading
-                      ? "Loading preview..."
-                      : `👁️ Preview ${bucketFileKind}`}
+                      ? (isSpanish
+                        ? "Cargando vista previa..."
+                        : "Loading preview...")
+                      : previewLabel}
                   </button>
                 )}
               </>
@@ -705,7 +806,8 @@ export default function BucketQR({
 
             {contentMetadata && contentType === "file" && (
               <p class="text-center text-sm text-[#574c44]">
-                📄 {contentMetadata.filename ?? "File"}
+                📄{" "}
+                {contentMetadata.filename ?? (isSpanish ? "Archivo" : "File")}
                 {bucketFileSizeLabel ? ` ${bucketFileSizeLabel}` : ""}
               </p>
             )}
@@ -715,8 +817,9 @@ export default function BucketQR({
                 id="download-empty-warning"
                 class="text-center text-xs text-amber-900 leading-relaxed"
               >
-                Starting this download empties the locker, even if the browser
-                later cancels the handoff.
+                {isSpanish
+                  ? "Al iniciar esta descarga el casillero se vacía, aunque el navegador cancele la entrega después."
+                  : "Starting this download empties the locker, even if the browser later cancels the handoff."}
               </p>
             )}
           </div>
@@ -726,10 +829,10 @@ export default function BucketQR({
         <div class="flex items-start justify-between gap-3">
           <div>
             <h2 class="text-sm font-black uppercase tracking-wide text-[#6e6058]">
-              Share this locker
+              {isSpanish ? "Compartir este casillero" : "Share this locker"}
             </h2>
             <p class="text-sm text-[#574c44]">
-              Link and QR ready.
+              {isSpanish ? "Enlace y QR listos." : "Link and QR ready."}
             </p>
           </div>
           <button
@@ -737,14 +840,16 @@ export default function BucketQR({
             onClick={handleCopyUrl}
             class="min-h-[44px] px-3 py-2 rounded-xl border-2 border-black bg-black text-white text-sm font-black shadow-chunky hover:-translate-y-0.5 transition"
           >
-            Copy
+            {isSpanish ? "Copiar" : "Copy"}
           </button>
         </div>
         <div
           class="bg-[#fffef7] rounded-2xl border-4 border-[#1e1714] shadow-chunky-hover cursor-pointer hover:scale-[1.02] transition-all duration-300 mx-auto w-full max-w-[220px] overflow-hidden"
           role="button"
           tabIndex={0}
-          aria-label="Copy bucket URL to clipboard"
+          aria-label={isSpanish
+            ? "Copiar enlace del casillero al portapapeles"
+            : "Copy bucket URL to clipboard"}
           onClick={handleCopyUrl}
           onKeyDown={(e: KeyboardEvent) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -752,11 +857,11 @@ export default function BucketQR({
               handleCopyUrl();
             }
           }}
-          title="Click to copy URL"
+          title={isSpanish ? "Clic para copiar el enlace" : "Click to copy URL"}
         >
           <img
             src={lockerQrSvg}
-            alt="Locker QR code"
+            alt={isSpanish ? "Código QR del casillero" : "Locker QR code"}
             class="block w-full h-auto"
           />
         </div>

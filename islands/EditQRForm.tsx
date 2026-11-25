@@ -5,6 +5,7 @@ import { useQRData } from "../hooks/useQRData.ts";
 import { updateHistoryItem } from "../utils/history.ts";
 import { normalizeUrl } from "../utils/url.ts";
 import { addToast } from "./ToastManager.tsx";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 // Sub-components
 import AnalyticsDashboard from "../components/edit-qr/FieldReportCard.tsx";
@@ -85,8 +86,9 @@ export function syncDynamicQRHistory(
 const INPUT_RECIPE =
   "w-full min-h-[44px] px-3.5 py-2.5 border-2 border-black/15 bg-white rounded-2xl text-sm text-black focus:border-qr-pop focus:outline-none transition-colors";
 
-export default function EditQRForm() {
-  const { loading, error, qrData, isSaving, saveQRData } = useQRData();
+export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
+  const isSpanish = getClientLocale(lang) === "es";
+  const { loading, error, qrData, isSaving, saveQRData } = useQRData(lang);
 
   // Edit form state
   const [destinationUrl, setDestinationUrl] = useState("");
@@ -202,7 +204,12 @@ export default function EditQRForm() {
       sequentialUrls.filter((url) => normalizeUrl(url).trim() !== "").length <
         2
     ) {
-      addToast("Add at least two URLs to the sequence before saving", 3500);
+      addToast(
+        isSpanish
+          ? "Agrega al menos dos URLs a la secuencia antes de guardar"
+          : "Add at least two URLs to the sequence before saving",
+        3500,
+      );
       return;
     }
 
@@ -300,7 +307,9 @@ export default function EditQRForm() {
       >
         <div class="animate-pulse">
           <div class="text-4xl mb-3">⏳</div>
-          <p class="font-black text-black">Loading QR data...</p>
+          <p class="font-black text-black">
+            {isSpanish ? "Cargando datos del QR..." : "Loading QR data..."}
+          </p>
         </div>
       </div>
     );
@@ -313,10 +322,13 @@ export default function EditQRForm() {
         role="alert"
       >
         <p class="text-black font-black text-lg">
-          {error || "QR code not found"}
+          {error ||
+            (isSpanish ? "Código QR no encontrado" : "QR code not found")}
         </p>
         <p class="text-[#4a3f39] text-sm font-semibold">
-          Invalid or expired owner token
+          {isSpanish
+            ? "Token de propietario inválido o vencido"
+            : "Invalid or expired owner token"}
         </p>
       </div>
     );
@@ -325,29 +337,32 @@ export default function EditQRForm() {
   return (
     <div class="space-y-6">
       {/* QR Status Card + Sticker Re-download */}
-      <QRStatusCard qrData={qrData} />
+      <QRStatusCard qrData={qrData} lang={lang} />
 
       {/* Analytics Dashboard */}
       <AnalyticsDashboard
         analytics={qrData.analytics}
         totalVisits={qrData.scan_count}
         shortCode={qrData.short_code}
+        lang={lang}
       />
 
       {/* Edit Form */}
       <div class="bg-qr-cream border-4 border-black rounded-3xl p-4 sm:p-6 space-y-5 shadow-chunky">
         <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
-          Edit QR Settings
+          {isSpanish ? "Ajustes del QR" : "Edit QR Settings"}
         </h2>
 
         {/* Routing Mode Selector */}
         <RoutingModeSelector
           routingMode={routingMode}
           setRoutingMode={setRoutingMode}
+          lang={lang}
         />
 
         {/* Dynamic Routing Config UI */}
         <RoutingConfigForm
+          lang={lang}
           routingMode={routingMode}
           destinationUrl={destinationUrl}
           setDestinationUrl={setDestinationUrl}
@@ -381,7 +396,7 @@ export default function EditQRForm() {
             id="scan-limit-label"
             class="block text-xs font-black text-black uppercase tracking-wider"
           >
-            Scan Limit
+            {isSpanish ? "Límite de escaneos" : "Scan Limit"}
           </span>
           <div class="flex gap-2 flex-wrap">
             {[1, 5, 10, 100, null].map((limit) => {
@@ -414,7 +429,9 @@ export default function EditQRForm() {
             htmlFor="qr-pin"
             class="block text-xs font-black text-black uppercase tracking-wider"
           >
-            Lock with a PIN (optional)
+            {isSpanish
+              ? "Bloquear con PIN (opcional)"
+              : "Lock with a PIN (optional)"}
           </label>
           <input
             id="qr-pin"
@@ -423,12 +440,15 @@ export default function EditQRForm() {
             value={pin}
             onInput={(event) =>
               setPin((event.target as HTMLInputElement).value)}
-            placeholder="Anyone scanning must enter this first"
+            placeholder={isSpanish
+              ? "Quien escanee deberá ingresarlo primero"
+              : "Anyone scanning must enter this first"}
             class="w-full px-4 py-3 border-2 border-black/15 rounded-xl font-bold focus:outline-none focus:border-black bg-white"
           />
           <p class="text-[11px] text-[#6e6058] leading-snug">
-            Leave blank to keep the code open. A locked code does not count a
-            scan until someone gets through.
+            {isSpanish
+              ? "Déjalo vacío para mantener el código abierto. Un código bloqueado no cuenta un escaneo hasta que alguien logre pasar."
+              : "Leave blank to keep the code open. A locked code does not count a scan until someone gets through."}
           </p>
         </div>
 
@@ -438,7 +458,9 @@ export default function EditQRForm() {
             htmlFor="qr-expiry-date"
             class="block text-xs font-black text-black uppercase tracking-wider"
           >
-            Expiry Date (Optional)
+            {isSpanish
+              ? "Fecha de vencimiento (opcional)"
+              : "Expiry Date (Optional)"}
           </label>
           <input
             id="qr-expiry-date"
@@ -467,14 +489,20 @@ export default function EditQRForm() {
               class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-[#1e1714]"
             />
             <span class="text-xs font-black text-black uppercase tracking-wider group-hover:text-qr-pop">
-              ✨ Intro page
+              {isSpanish ? "✨ Página de intro" : "✨ Intro page"}
             </span>
           </label>
           <p class="text-xs font-semibold text-[#574c44]">
-            Show a short landing page before redirecting
+            {isSpanish
+              ? "Muestra una página breve antes de redirigir"
+              : "Show a short landing page before redirecting"}
           </p>
           {splashEnabled && (
-            <SplashSettings splashConfig={splashConfig} embedded />
+            <SplashSettings
+              splashConfig={splashConfig}
+              embedded
+              lang={lang}
+            />
           )}
         </div>
 
@@ -495,11 +523,13 @@ export default function EditQRForm() {
               class="w-5 h-5 rounded border-2 border-black cursor-pointer accent-[#1e1714]"
             />
             <span class="text-sm font-black text-black group-hover:text-qr-pop">
-              QR is active
+              {isSpanish ? "QR activo" : "QR is active"}
             </span>
           </label>
           <p class="text-xs font-semibold text-[#574c44]">
-            Uncheck to pause this QR (scans will show KABOOM page)
+            {isSpanish
+              ? "Desmarca para pausar este QR (los escaneos mostrarán la página KABOOM)"
+              : "Uncheck to pause this QR (scans will show KABOOM page)"}
           </p>
         </div>
 
@@ -510,16 +540,22 @@ export default function EditQRForm() {
           disabled={isSaving}
           class="w-full min-h-[52px] px-6 py-3.5 bg-qr-pop hover:bg-qr-popDeep text-white font-black text-lg rounded-full border-3 border-black shadow-chunky hover:shadow-chunky-hover hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          {isSaving ? "Saving..." : "💾 Save Changes"}
+          {isSaving
+            ? (isSpanish ? "Guardando..." : "Saving...")
+            : (isSpanish ? "Guardar cambios" : "Save changes")}
         </button>
       </div>
 
       {/* Privacy Note */}
       <div class="bg-white border-2 border-black rounded-2xl p-4 text-center shadow-chunky">
         <p class="text-xs sm:text-sm font-semibold text-[#4a3f39]">
-          🔒 <strong>Privacy First:</strong>{" "}
-          Scans log coarse stats only (device type, country) for the dashboard
-          above — no IPs, no user agents, deleted after 90 days.
+          🔒{" "}
+          <strong>
+            {isSpanish ? "Privacidad primero:" : "Privacy First:"}
+          </strong>{" "}
+          {isSpanish
+            ? "Los escaneos registran solo estadísticas generales (tipo de dispositivo, país) para el panel de arriba: sin IPs, sin user agents, se borran a los 90 días."
+            : "Scans log coarse stats only (device type, country) for the dashboard above — no IPs, no user agents, deleted after 90 days."}
         </p>
       </div>
     </div>

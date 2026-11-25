@@ -6,18 +6,21 @@ import {
   getAuthHeaders,
 } from "../../utils/api.ts";
 import NoteCard from "../../islands/NoteCard.tsx";
+import { type Locale, resolveRequestLocale } from "../../utils/i18n.ts";
 
 interface NotePageData {
   code: string;
   content: string;
   openedLabel: string;
   unbranded: boolean;
+  lang: Locale;
 }
 
 export const handler: Handlers<NotePageData> = {
-  async GET(_req, ctx) {
+  async GET(req, ctx) {
     const { code } = ctx.params;
     const apiUrl = getApiUrl();
+    const lang = resolveRequestLocale(req);
 
     try {
       const response = await fetchWithTimeout(
@@ -59,12 +62,16 @@ export const handler: Handlers<NotePageData> = {
       return ctx.render({
         code,
         content: bucketResponse.content,
-        openedLabel: new Date().toLocaleDateString("en-AU", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
+        openedLabel: new Date().toLocaleDateString(
+          lang === "es" ? "es-MX" : "en-AU",
+          {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          },
+        ),
         unbranded: bucketResponse.unbranded === true,
+        lang,
       });
     } catch (error) {
       console.error("Note page failed:", error);
@@ -77,6 +84,7 @@ export const handler: Handlers<NotePageData> = {
 };
 
 export default function NotePage({ data }: PageProps<NotePageData>) {
+  const isSpanish = data.lang === "es";
   const preview = data.content.length > 120
     ? `${data.content.slice(0, 117)}...`
     : data.content;
@@ -84,12 +92,15 @@ export default function NotePage({ data }: PageProps<NotePageData>) {
   return (
     <>
       <Head>
-        <title>Message | QRBuddy</title>
+        <title>{isSpanish ? "Mensaje" : "Message"} | QRBuddy</title>
         <meta name="robots" content="noindex, nofollow" />
         <link rel="canonical" href="https://qrbuddy.app/note" />
         <meta
           name="description"
-          content={preview || "A QRBuddy text card."}
+          content={preview ||
+            (isSpanish
+              ? "Una tarjeta de texto de QRBuddy."
+              : "A QRBuddy text card.")}
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
@@ -100,6 +111,7 @@ export default function NotePage({ data }: PageProps<NotePageData>) {
           content={data.content}
           openedLabel={data.openedLabel}
           unbranded={data.unbranded}
+          lang={data.lang}
         />
       </main>
     </>

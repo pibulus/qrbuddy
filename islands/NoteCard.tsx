@@ -1,12 +1,14 @@
 import { useEffect, useState } from "preact/hooks";
 import { haptics } from "../utils/haptics.ts";
 import { decryptText, EncryptedPayload } from "../utils/crypto.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 interface NoteCardProps {
   code: string;
   content: string;
   openedLabel: string;
   unbranded?: boolean;
+  lang?: Locale;
 }
 
 function tryParseEncrypted(raw: string): EncryptedPayload | null {
@@ -29,7 +31,9 @@ export default function NoteCard({
   content: initialContent,
   openedLabel,
   unbranded = false,
+  lang,
 }: NoteCardProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [copied, setCopied] = useState(false);
   const [encryptedPayload] = useState<EncryptedPayload | null>(() =>
     tryParseEncrypted(initialContent)
@@ -57,7 +61,11 @@ export default function NoteCard({
           setIsAutoDecrypted(true);
         })
         .catch(() => {
-          setDecryptError("That key does not match this note");
+          setDecryptError(
+            isSpanish
+              ? "Esa clave no corresponde a esta nota"
+              : "That key does not match this note",
+          );
         });
     }
   }, [encryptedPayload, initialContent]);
@@ -72,7 +80,11 @@ export default function NoteCard({
       setDecryptedText(text);
       haptics.success();
     } catch {
-      setDecryptError("Incorrect passkey. Could not decrypt.");
+      setDecryptError(
+        isSpanish
+          ? "Clave incorrecta. No se pudo descifrar."
+          : "Incorrect passkey. Could not decrypt.",
+      );
       haptics.error();
     }
   };
@@ -100,12 +112,18 @@ export default function NoteCard({
       <header class="flex items-center justify-between gap-3 px-1">
         <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border-2 border-black bg-white shadow-chunky text-xs font-black uppercase tracking-wide text-[#4a3f39]">
           <span>{encryptedPayload ? "🔐" : "💌"}</span>
-          <span>{encryptedPayload ? "Encrypted Note" : "Message"}</span>
+          <span>
+            {encryptedPayload
+              ? (isSpanish ? "Nota cifrada" : "Encrypted Note")
+              : (isSpanish ? "Mensaje" : "Message")}
+          </span>
         </div>
         <div class="flex items-center gap-2">
           {isAutoDecrypted && (
             <span class="text-[10px] font-black uppercase tracking-wide bg-emerald-100 text-emerald-950 border border-emerald-300 px-2 py-0.5 rounded-full">
-              🔓 Zero-Knowledge Decrypted
+              🔓 {isSpanish
+                ? "Descifrada (conocimiento cero)"
+                : "Zero-Knowledge Decrypted"}
             </span>
           )}
           <span class="text-xs font-mono text-[#6e6058] font-bold">
@@ -132,10 +150,16 @@ export default function NoteCard({
                   ? "bg-emerald-200 text-emerald-950"
                   : "bg-white text-[#1e1714] hover:bg-black hover:text-white"
               }`}
-              title="Copy message to clipboard"
+              title={isSpanish
+                ? "Copiar mensaje al portapapeles"
+                : "Copy message to clipboard"}
             >
               <span>{copied ? "✓" : "📋"}</span>
-              <span>{copied ? "Copied!" : "Copy"}</span>
+              <span>
+                {copied
+                  ? (isSpanish ? "¡Copiado!" : "Copied!")
+                  : (isSpanish ? "Copiar" : "Copy")}
+              </span>
             </button>
           )}
         </div>
@@ -150,18 +174,23 @@ export default function NoteCard({
               >
                 <div class="text-4xl mb-1">🔒</div>
                 <p class="font-black text-[#1e1714] text-base">
-                  Zero-Knowledge Encrypted Note
+                  {isSpanish
+                    ? "Nota cifrada de conocimiento cero"
+                    : "Zero-Knowledge Encrypted Note"}
                 </p>
                 <p class="text-xs text-[#6e6058]">
-                  This note was encrypted on the sender's device. Enter the
-                  passkey to unlock:
+                  {isSpanish
+                    ? "Esta nota se cifró en el dispositivo del remitente. Ingresa la clave para abrirla:"
+                    : "This note was encrypted on the sender's device. Enter the passkey to unlock:"}
                 </p>
                 <input
                   type="text"
                   value={manualKey}
                   onInput={(e) =>
                     setManualKey((e.target as HTMLInputElement).value)}
-                  placeholder="Enter passkey or paste #key"
+                  placeholder={isSpanish
+                    ? "Ingresa la clave o pega el #key"
+                    : "Enter passkey or paste #key"}
                   class="w-full text-center font-mono text-sm px-3 py-2.5 rounded-xl border-2 border-black focus:outline-none focus:ring-2 focus:ring-[#1e1714]"
                 />
                 {decryptError && (
@@ -173,7 +202,7 @@ export default function NoteCard({
                   type="submit"
                   class="qr-pitch-cta"
                 >
-                  Decrypt note
+                  {isSpanish ? "Descifrar nota" : "Decrypt note"}
                 </button>
               </form>
             )
@@ -199,13 +228,15 @@ export default function NoteCard({
 
       {/* Footer */}
       <footer class="flex flex-col sm:flex-row gap-3 items-center justify-between text-xs text-[#6e6058] pt-2 px-1">
-        <p class="font-mono">Opened {openedLabel}</p>
+        <p class="font-mono">
+          {isSpanish ? "Abierta" : "Opened"} {openedLabel}
+        </p>
         {!unbranded && (
           <a
             href="/?utm_source=text_card&utm_medium=note"
             class="inline-flex items-center gap-1.5 font-bold text-[#4a3f39] hover:text-[#1e1714] transition-colors"
           >
-            <span>Make your own QR</span>
+            <span>{isSpanish ? "Crea tu propio QR" : "Make your own QR"}</span>
           </a>
         )}
       </footer>

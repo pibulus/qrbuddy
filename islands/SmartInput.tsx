@@ -1588,7 +1588,11 @@ export default function SmartInput(
                     {isSpanish ? "Copiar llave" : "Copy key"}
                   </button>
                   <a
-                    href={editUrl.value}
+                    href={isSpanish
+                      ? `${editUrl.value}${
+                        editUrl.value.includes("?") ? "&" : "?"
+                      }lang=es`
+                      : editUrl.value}
                     class={`${STAGE_TOOL_BTN} ${STAGE_PRESS} min-h-[32px] inline-flex items-center px-2.5 rounded-lg bg-[#1e1714] text-[#fffef7] hover:bg-[#3b2e25] font-black`}
                   >
                     {isSpanish ? "Panel ↗" : "Manage ↗"}

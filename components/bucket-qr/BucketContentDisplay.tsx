@@ -1,5 +1,6 @@
 import { TEXT_CARD_THEMES } from "../../utils/bucket-qr-themes.ts";
 import type { BucketContentMetadata } from "../../types/bucket-types.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface BucketContentDisplayProps {
   contentType: string | null;
@@ -12,6 +13,7 @@ interface BucketContentDisplayProps {
   bucketFileGlyph: string;
   bucketFileKind: string;
   bucketFileSizeLabel: string | null;
+  lang?: Locale;
 }
 
 /** What's currently sitting in a non-empty locker: text card, title/desc
@@ -28,7 +30,9 @@ export default function BucketContentDisplay({
   bucketFileGlyph,
   bucketFileKind,
   bucketFileSizeLabel,
+  lang,
 }: BucketContentDisplayProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   return (
     <>
       {/* Metadata Display (Title, Desc, Creator) */}
@@ -46,7 +50,7 @@ export default function BucketContentDisplay({
             {typeof contentMetadata.creator === "string" &&
               contentMetadata.creator && (
               <p class="text-sm font-bold text-[#6e6058] uppercase tracking-wide">
-                By {contentMetadata.creator}
+                {isSpanish ? "Por" : "By"} {contentMetadata.creator}
               </p>
             )}
             {typeof contentMetadata.description === "string" &&
@@ -85,7 +89,7 @@ export default function BucketContentDisplay({
                 : (
                   <div class="text-center py-8 opacity-50">
                     <span class="text-4xl block mb-2">🔒</span>
-                    Hidden Message
+                    {isSpanish ? "Mensaje oculto" : "Hidden Message"}
                   </div>
                 )}
             </div>
@@ -100,10 +104,12 @@ export default function BucketContentDisplay({
               <div class="bg-[#fbf1e4] border-4 border-black rounded-xl p-8 text-center shadow-chunky">
                 <span class="text-5xl block mb-4">🔒</span>
                 <h3 class="text-xl font-bold text-[#4a3f39] mb-2">
-                  Secure File
+                  {isSpanish ? "Archivo protegido" : "Secure File"}
                 </h3>
                 <p class="text-[#574c44]">
-                  Enter password to view details and download
+                  {isSpanish
+                    ? "Ingresa la contraseña para ver los detalles y descargar"
+                    : "Enter password to view details and download"}
                 </p>
               </div>
             )}
@@ -114,7 +120,8 @@ export default function BucketContentDisplay({
                 {previewMime.startsWith("image/") && (
                   <img
                     src={previewUrl}
-                    alt={contentMetadata?.filename ?? "Shared image"}
+                    alt={contentMetadata?.filename ??
+                      (isSpanish ? "Imagen compartida" : "Shared image")}
                     class="w-full max-h-[70vh] object-contain rounded-lg"
                   />
                 )}

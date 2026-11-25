@@ -1,3 +1,5 @@
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+
 interface PasswordUnlockProps {
   pinDigits: string[];
   onKeypadPress: (key: string) => void;
@@ -6,6 +8,7 @@ interface PasswordUnlockProps {
   onManualPasswordChange: (value: string) => void;
   onToggleMode: () => void;
   onCancel: () => void;
+  lang?: Locale;
 }
 
 /** PIN keypad or manual-password field for unlocking a locked locker, plus
@@ -19,14 +22,21 @@ export default function PasswordUnlock({
   onManualPasswordChange,
   onToggleMode,
   onCancel,
+  lang,
 }: PasswordUnlockProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   return (
     <div class="space-y-4">
       {!useManualPassword && (
         <div class="space-y-3">
           <p class="sr-only" role="status" aria-live="polite">
-            {pinDigits.filter(Boolean).length} of {pinDigits.length}{" "}
-            digits entered
+            {isSpanish
+              ? `${
+                pinDigits.filter(Boolean).length
+              } de ${pinDigits.length} dígitos ingresados`
+              : `${
+                pinDigits.filter(Boolean).length
+              } of ${pinDigits.length} digits entered`}
           </p>
           <div class="flex justify-center gap-4" aria-hidden="true">
             {pinDigits.map((digit, index) => (
@@ -41,7 +51,7 @@ export default function PasswordUnlock({
           <div
             class="grid grid-cols-3 gap-3"
             role="group"
-            aria-label="PIN keypad"
+            aria-label={isSpanish ? "Teclado de PIN" : "PIN keypad"}
           >
             {[
               "1",
@@ -67,9 +77,15 @@ export default function PasswordUnlock({
                       : "text-[#1e1714]"
                   }`}
                   onClick={() => onKeypadPress(String(key))}
-                  aria-label={key === "back" ? "Delete last digit" : undefined}
+                  aria-label={key === "back"
+                    ? (isSpanish ? "Borrar último dígito" : "Delete last digit")
+                    : undefined}
                 >
-                  {key === "clear" ? "Clear" : key === "back" ? "⌫" : key}
+                  {key === "clear"
+                    ? (isSpanish ? "Borrar" : "Clear")
+                    : key === "back"
+                    ? "⌫"
+                    : key}
                 </button>
               ),
             )}
@@ -83,8 +99,10 @@ export default function PasswordUnlock({
           value={manualPassword}
           onInput={(e) =>
             onManualPasswordChange((e.target as HTMLInputElement).value)}
-          placeholder="Enter password"
-          aria-label="Locker password"
+          placeholder={isSpanish ? "Ingresa la contraseña" : "Enter password"}
+          aria-label={isSpanish
+            ? "Contraseña del casillero"
+            : "Locker password"}
           class="w-full px-4 py-3 border-3 border-black rounded-xl text-lg"
         />
       )}
@@ -95,14 +113,16 @@ export default function PasswordUnlock({
           class="min-h-[44px] underline"
           onClick={onToggleMode}
         >
-          {useManualPassword ? "Use keypad" : "Use keyboard"}
+          {useManualPassword
+            ? (isSpanish ? "Usar teclado numérico" : "Use keypad")
+            : (isSpanish ? "Usar teclado" : "Use keyboard")}
         </button>
         <button
           type="button"
           class="min-h-[44px] underline"
           onClick={onCancel}
         >
-          Cancel
+          {isSpanish ? "Cancelar" : "Cancel"}
         </button>
       </div>
     </div>

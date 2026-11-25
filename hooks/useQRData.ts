@@ -4,6 +4,7 @@ import { haptics } from "../utils/haptics.ts";
 import { addToast } from "../islands/ToastManager.tsx";
 import { ApiError, apiRequest } from "../utils/api-request.ts";
 import { updateHistoryItem } from "../utils/history.ts";
+import { getClientLocale, type Locale } from "../utils/i18n.ts";
 
 export interface QRData {
   short_code: string;
@@ -57,7 +58,8 @@ export interface QRData {
   };
 }
 
-export function useQRData() {
+export function useQRData(lang?: Locale) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [qrData, setQrData] = useState<QRData | null>(null);
@@ -70,7 +72,11 @@ export function useQRData() {
     const token = params.get("token");
 
     if (!token) {
-      setError("No owner token provided");
+      setError(
+        isSpanish
+          ? "No se proporcionó el token de propietario"
+          : "No owner token provided",
+      );
       setLoading(false);
       return;
     }
@@ -86,7 +92,9 @@ export function useQRData() {
 
       if (!supabaseUrl) {
         throw new Error(
-          "Supabase is not configured. Please set SUPABASE_URL environment variable.",
+          isSpanish
+            ? "Supabase no está configurado. Define la variable de entorno SUPABASE_URL."
+            : "Supabase is not configured. Please set SUPABASE_URL environment variable.",
         );
       }
 
@@ -94,7 +102,7 @@ export function useQRData() {
       const result = await apiRequest<{ data: QRData }>(
         `${supabaseUrl}/functions/v1/get-dynamic-qr?token=${token}`,
         {},
-        "Failed to load QR data",
+        isSpanish ? "No se pudo cargar el QR" : "Failed to load QR data",
       );
 
       setQrData(result.data);
@@ -120,7 +128,9 @@ export function useQRData() {
 
       if (!supabaseUrl) {
         throw new Error(
-          "Supabase is not configured. Please set SUPABASE_URL environment variable.",
+          isSpanish
+            ? "Supabase no está configurado. Define la variable de entorno SUPABASE_URL."
+            : "Supabase is not configured. Please set SUPABASE_URL environment variable.",
         );
       }
 
@@ -137,7 +147,7 @@ export function useQRData() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         },
-        "Failed to update QR",
+        isSpanish ? "No se pudo actualizar el QR" : "Failed to update QR",
       );
 
       setQrData((current) =>
@@ -159,7 +169,10 @@ export function useQRData() {
 
       // Success feedback
       haptics.success();
-      addToast("✅ QR updated successfully!", 3000);
+      addToast(
+        isSpanish ? "QR actualizado" : "QR updated",
+        3000,
+      );
 
       setIsSaving(false);
       return true;
@@ -171,7 +184,7 @@ export function useQRData() {
       });
 
       addToast(
-        `❌ Failed to update: ${
+        `${isSpanish ? "No se pudo actualizar" : "Failed to update"}: ${
           err instanceof Error ? err.message : String(err)
         }`,
         3500,

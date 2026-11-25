@@ -628,19 +628,19 @@ export default function CreateModal({
   const renderTemplateForm = () => {
     switch (selectedTemplate) {
       case "url":
-        return <WebsiteForm url={url} />;
+        return <WebsiteForm url={url} lang={locale} />;
       case "social":
-        return <SocialHubForm url={url} />;
+        return <SocialHubForm url={url} lang={locale} />;
       case "wifi":
-        return <WiFiForm url={url} />;
+        return <WiFiForm url={url} lang={locale} />;
       case "vcard":
-        return <VCardForm url={url} />;
+        return <VCardForm url={url} lang={locale} />;
       case "sms":
-        return <SMSForm url={url} />;
+        return <SMSForm url={url} lang={locale} />;
       case "email":
-        return <EmailForm url={url} />;
+        return <EmailForm url={url} lang={locale} />;
       case "phone":
-        return <PhoneForm url={url} />;
+        return <PhoneForm url={url} lang={locale} />;
       case "text": {
         const textLength = url.value.length;
         const nearCapacity = textLength > 800;
@@ -1083,6 +1083,7 @@ export default function CreateModal({
                     </div>
                     <MediaHubForm
                       url={url}
+                      lang={locale}
                       onCreated={() => {
                         setTypeIntent("share-file");
                         setCompletionKind("share-file");

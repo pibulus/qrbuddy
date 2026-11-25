@@ -202,7 +202,9 @@ export default function FileSlideshow({
   const legacyMulti = /^(.*) \+ (\d+) more$/.exec(fileName);
   const shareTitle = hasMultipleFiles && legacyMulti
     ? `${files!.length} ${
-      isAllAudio ? "tracks" : isAllImages ? "photos" : "files"
+      isSpanish
+        ? (isAllAudio ? "canciones" : isAllImages ? "fotos" : "archivos")
+        : (isAllAudio ? "tracks" : isAllImages ? "photos" : "files")
     }`
     : fileName;
 
@@ -246,15 +248,37 @@ export default function FileSlideshow({
   const isAudio = displayMimeType?.startsWith("audio/");
   const isVideo = displayMimeType?.startsWith("video/");
   const showPreview = isUnlimited && (isImage || isAudio || isVideo);
-  const fileKindLabel = isImage
-    ? "Image"
-    : isVideo
-    ? "Video"
-    : isAudio
-    ? "Audio"
-    : displayMimeType?.includes("pdf")
-    ? "PDF"
-    : "File";
+  const isPdf = Boolean(displayMimeType?.includes("pdf"));
+  const fileKindLabel = isSpanish
+    ? (isImage
+      ? "Imagen"
+      : isVideo
+      ? "Video"
+      : isAudio
+      ? "Audio"
+      : isPdf
+      ? "PDF"
+      : "Archivo")
+    : (isImage
+      ? "Image"
+      : isVideo
+      ? "Video"
+      : isAudio
+      ? "Audio"
+      : isPdf
+      ? "PDF"
+      : "File");
+  const fileReadyLabel = isSpanish
+    ? (isImage
+      ? "Imagen lista"
+      : isVideo
+      ? "Video listo"
+      : isAudio
+      ? "Audio listo"
+      : isPdf
+      ? "PDF listo"
+      : "Archivo listo")
+    : `${fileKindLabel} ready`;
   const fileGlyph = isImage
     ? "🖼️"
     : isVideo
@@ -407,7 +431,12 @@ export default function FileSlideshow({
     // Start the selected track in this tap's user gesture, including a replay.
     if (idx === currentIndex && audioRef.current) {
       void audioRef.current.play().catch(() => {
-        addToast("Couldn't start this track. Try its Play control.", 4000);
+        addToast(
+          isSpanish
+            ? "No se pudo iniciar la pista. Probar con su control de reproducir."
+            : "Couldn't start this track. Try its Play control.",
+          4000,
+        );
       });
     }
     setIsPlaying(false);
@@ -572,7 +601,9 @@ export default function FileSlideshow({
       setZipError(null);
     } catch (error) {
       console.error("Failed to zip files:", error);
-      const msg = "The ZIP did not come together. Try the files one by one.";
+      const msg = isSpanish
+        ? "El ZIP no se armó. Descargar los archivos uno por uno."
+        : "The ZIP did not come together. Try the files one by one.";
       setZipError(msg);
       addToast(msg, 4000);
     } finally {
@@ -600,10 +631,12 @@ export default function FileSlideshow({
         <div class="fixed inset-0 z-[100] bg-qr-scrim/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-fade-in">
           <div class="text-7xl sm:text-9xl animate-bounce mb-4">💥</div>
           <h2 class="text-3xl sm:text-5xl font-black text-amber-700 tracking-tight animate-pulse mb-3">
-            SELF-DESTRUCT INITIATED
+            {isSpanish ? "AUTODESTRUCCIÓN INICIADA" : "SELF-DESTRUCT INITIATED"}
           </h2>
           <p class="text-base sm:text-lg font-mono text-yellow-300 font-bold max-w-md">
-            Your download is starting. This link has used its final pass.
+            {isSpanish
+              ? "La descarga está comenzando. Este enlace usó su último pase."
+              : "Your download is starting. This link has used its final pass."}
           </p>
           <div class="mt-8 flex gap-3 text-3xl animate-pulse">
             <span>💣</span>
@@ -626,15 +659,25 @@ export default function FileSlideshow({
             }`}
           >
             <span>
-              {isAllAudio
-                ? "Mixtape Playlist 🎵"
-                : isAllImages
-                ? "Image Slideshow 🖼️"
-                : hasMultipleFiles
-                ? "Multi-File Pack 📦"
-                : isUnlimited
-                ? "Shared file"
-                : "Limited share"}
+              {isSpanish
+                ? (isAllAudio
+                  ? "Playlist Mixtape 🎵"
+                  : isAllImages
+                  ? "Presentación de imágenes 🖼️"
+                  : hasMultipleFiles
+                  ? "Paquete de archivos 📦"
+                  : isUnlimited
+                  ? "Archivo compartido"
+                  : "Enlace limitado")
+                : (isAllAudio
+                  ? "Mixtape Playlist 🎵"
+                  : isAllImages
+                  ? "Image Slideshow 🖼️"
+                  : hasMultipleFiles
+                  ? "Multi-File Pack 📦"
+                  : isUnlimited
+                  ? "Shared file"
+                  : "Limited share")}
             </span>
             {hasMultipleFiles && (
               <>
@@ -715,7 +758,9 @@ export default function FileSlideshow({
                     ? "bg-black text-[#00FF41] border-2 border-[#00FF41] hover:bg-[#00FF41] hover:text-black"
                     : "bg-white text-black border-2 border-black hover:bg-amber-200"
                 }`}
-                aria-label="Previous track or image"
+                aria-label={isSpanish
+                  ? "Pista o imagen anterior"
+                  : "Previous track or image"}
               >
                 ←
               </button>
@@ -727,7 +772,9 @@ export default function FileSlideshow({
                     ? "bg-black text-[#00FF41] border-2 border-[#00FF41] hover:bg-[#00FF41] hover:text-black"
                     : "bg-white text-black border-2 border-black hover:bg-amber-200"
                 }`}
-                aria-label="Next track or image"
+                aria-label={isSpanish
+                  ? "Pista o imagen siguiente"
+                  : "Next track or image"}
               >
                 →
               </button>
@@ -827,7 +874,9 @@ export default function FileSlideshow({
                         </p>
                         {hasMultipleFiles && (
                           <p class="text-xs font-bold opacity-75">
-                            Track {currentIndex + 1} of {files!.length}
+                            {isSpanish
+                              ? `Pista ${currentIndex + 1} de ${files!.length}`
+                              : `Track ${currentIndex + 1} of ${files!.length}`}
                           </p>
                         )}
                       </div>
@@ -851,11 +900,17 @@ export default function FileSlideshow({
                           src={currentDownloadUrl}
                           type={displayMimeType}
                         />
-                        Your browser does not support the audio element.
+                        {isSpanish
+                          ? "Este navegador no admite el elemento de audio."
+                          : "Your browser does not support the audio element."}
                       </audio>
                       {mediaErrorKey === currentDownloadUrl && (
                         <div class="p-2.5 rounded-xl border-2 border-amber-500 bg-amber-100 text-xs font-bold text-amber-900 flex items-center justify-between gap-2 animate-slide-down">
-                          <span>Audio failed to load.</span>
+                          <span>
+                            {isSpanish
+                              ? "No se pudo cargar el audio."
+                              : "Audio failed to load."}
+                          </span>
                           <button
                             type="button"
                             onClick={() => {
@@ -865,7 +920,7 @@ export default function FileSlideshow({
                             }}
                             class="min-h-[36px] px-3 py-1 rounded-lg border-2 border-black bg-white text-black font-black text-xs hover:bg-amber-100"
                           >
-                            Retry
+                            {isSpanish ? "Reintentar" : "Retry"}
                           </button>
                         </div>
                       )}
@@ -916,7 +971,9 @@ export default function FileSlideshow({
                       class="w-full h-full object-contain bg-black rounded-xl"
                     >
                       <source src={currentDownloadUrl} type={displayMimeType} />
-                      Your browser does not support the video element.
+                      {isSpanish
+                        ? "Este navegador no admite el elemento de video."
+                        : "Your browser does not support the video element."}
                     </video>
                   )}
                 </>
@@ -927,12 +984,20 @@ export default function FileSlideshow({
                     {isUnlimited ? fileGlyph : "💣"}
                   </div>
                   <h2 class="text-2xl font-black mb-2">
-                    {isUnlimited ? `${fileKindLabel} ready` : "Preview locked"}
+                    {isUnlimited
+                      ? fileReadyLabel
+                      : (isSpanish
+                        ? "Vista previa bloqueada"
+                        : "Preview locked")}
                   </h2>
                   <p class="opacity-80 font-medium leading-relaxed">
                     {isUnlimited
-                      ? "Download or preview this shared file."
-                      : "This share is limited, so preview stays closed until download starts."}
+                      ? (isSpanish
+                        ? "Descargar o previsualizar este archivo compartido."
+                        : "Download or preview this shared file.")
+                      : (isSpanish
+                        ? "Este enlace es limitado, así que la vista previa queda cerrada hasta que inicie la descarga."
+                        : "This share is limited, so preview stays closed until download starts.")}
                   </p>
                 </div>
               )}
@@ -945,7 +1010,9 @@ export default function FileSlideshow({
             <button
               type="button"
               onClick={() => setIsPlaying((p) => !p)}
-              aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
+              aria-label={isPlaying
+                ? (isSpanish ? "Pausar presentación" : "Pause slideshow")
+                : (isSpanish ? "Reproducir presentación" : "Play slideshow")}
               class={`min-h-[44px] min-w-[44px] rounded-full text-base font-black flex items-center justify-center transition-all shadow-chunky ${
                 isTerminal
                   ? "bg-black border-2 border-[#00FF41] text-[#00FF41] hover:bg-[#00FF41] hover:text-black"
@@ -962,7 +1029,7 @@ export default function FileSlideshow({
                   type="button"
                   key={file.id}
                   onClick={() => goTo(idx)}
-                  aria-label={`Photo ${idx + 1}`}
+                  aria-label={`${isSpanish ? "Foto" : "Photo"} ${idx + 1}`}
                   aria-current={currentIndex === idx ? "step" : undefined}
                   class="min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
@@ -1003,7 +1070,9 @@ export default function FileSlideshow({
               <span class="shrink-0">
                 {fileSizeLabel}
                 {formattedExpiry
-                  ? ` · Exp ${formattedExpiry.slice(0, 10)}`
+                  ? ` · ${isSpanish ? "Vence" : "Exp"} ${
+                    formattedExpiry.slice(0, 10)
+                  }`
                   : ""}
               </span>
             </div>
@@ -1015,7 +1084,9 @@ export default function FileSlideshow({
                   role="status"
                   class="min-h-[48px] flex items-center justify-center w-full px-4 py-3 rounded-2xl bg-amber-100 border-2 border-black text-amber-900 font-black text-center text-sm"
                 >
-                  One-time link used. Your download may take a moment.
+                  {isSpanish
+                    ? "Enlace de un solo uso utilizado. La descarga puede tardar un momento."
+                    : "One-time link used. Your download may take a moment."}
                 </p>
               )
               : (
@@ -1038,11 +1109,17 @@ export default function FileSlideshow({
                         : "bg-gradient-to-r from-[#c4607a] to-[#ffbe0b] text-white border-2 border-black shadow-[0_0_20px_rgba(196,96,122,0.45)] animate-pulse-glow"
                     }`}
                   >
-                    {hasMultipleFiles && !isUnlimited
-                      ? "Download All & Destroy (.zip) 💥"
-                      : isUnlimited
-                      ? `Download ${fileKindLabel} ↓`
-                      : "Download & Destroy 💥"}
+                    {isSpanish
+                      ? (hasMultipleFiles && !isUnlimited
+                        ? "Descargar todo y destruir (.zip) 💥"
+                        : isUnlimited
+                        ? `Descargar ${fileKindLabel.toLowerCase()} ↓`
+                        : "Descargar y destruir 💥")
+                      : (hasMultipleFiles && !isUnlimited
+                        ? "Download All & Destroy (.zip) 💥"
+                        : isUnlimited
+                        ? `Download ${fileKindLabel} ↓`
+                        : "Download & Destroy 💥")}
                   </a>
 
                   {hasMultipleFiles && isUnlimited && (
@@ -1058,7 +1135,11 @@ export default function FileSlideshow({
                           : "bg-white border-black text-black shadow-chunky hover:bg-amber-100"
                       }`}
                     >
-                      {isZipping ? "Zipping..." : "Download All (.zip)"}
+                      {isZipping
+                        ? (isSpanish ? "Comprimiendo..." : "Zipping...")
+                        : (isSpanish
+                          ? "Descargar todo (.zip)"
+                          : "Download All (.zip)")}
                     </button>
                   )}
                 </div>
@@ -1081,15 +1162,22 @@ export default function FileSlideshow({
                     : "text-amber-950 bg-amber-100 border-black"
                 }`}
               >
-                {hasMultipleFiles
-                  ? "Limited share: downloads as one zip and consumes 1 use."
-                  : "Starting this download consumes 1 use."}
+                {isSpanish
+                  ? (hasMultipleFiles
+                    ? "Enlace limitado: se descarga en un solo zip y consume 1 uso."
+                    : "Iniciar esta descarga consume 1 uso.")
+                  : (hasMultipleFiles
+                    ? "Limited share: downloads as one zip and consumes 1 use."
+                    : "Starting this download consumes 1 use.")}
               </p>
             )}
 
             <ShareActions
               shareUrl={globalThis.location?.href ?? ""}
-              shareText={`Check out ${shareTitle} on QRBuddy.`}
+              lang={lang}
+              shareText={isSpanish
+                ? `Mira ${shareTitle} en QRBuddy.`
+                : `Check out ${shareTitle} on QRBuddy.`}
               onShared={() => beacon({ kind: "engagement", shares: 1 })}
             />
 
@@ -1101,10 +1189,18 @@ export default function FileSlideshow({
             >
               <span>
                 {isUnlimited
-                  ? "∞ Unlimited Downloads"
-                  : `${remainingDownloads}/${maxDownloads} uses left`}
+                  ? (isSpanish
+                    ? "∞ Descargas ilimitadas"
+                    : "∞ Unlimited Downloads")
+                  : (isSpanish
+                    ? `${remainingDownloads}/${maxDownloads} usos restantes`
+                    : `${remainingDownloads}/${maxDownloads} uses left`)}
               </span>
-              {!unbranded && <span>Powered by QRBuddy</span>}
+              {!unbranded && (
+                <span>
+                  {isSpanish ? "Impulsado por QRBuddy" : "Powered by QRBuddy"}
+                </span>
+              )}
             </div>
           </div>
 

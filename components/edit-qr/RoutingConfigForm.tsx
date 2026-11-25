@@ -1,4 +1,7 @@
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+
 interface RoutingConfigFormProps {
+  lang?: Locale;
   routingMode: string;
   destinationUrl: string;
   setDestinationUrl: (url: string) => void;
@@ -30,6 +33,7 @@ const INPUT_RECIPE =
   "w-full min-h-[44px] px-3.5 py-2.5 text-sm border-2 border-black/15 bg-white rounded-2xl text-black focus:border-qr-pop focus:outline-none transition-colors";
 
 export default function RoutingConfigForm({
+  lang,
   routingMode,
   destinationUrl,
   setDestinationUrl,
@@ -56,6 +60,7 @@ export default function RoutingConfigForm({
   timeInactiveUrl,
   setTimeInactiveUrl,
 }: RoutingConfigFormProps) {
+  const es = getClientLocale(lang) === "es";
   return (
     <>
       {/* Dynamic Routing Config UI */}
@@ -65,7 +70,7 @@ export default function RoutingConfigForm({
             htmlFor="destination-url"
             class="block text-xs font-black text-black uppercase tracking-wider"
           >
-            Destination URL
+            {es ? "URL de destino" : "Destination URL"}
           </label>
           <input
             id="destination-url"
@@ -83,7 +88,7 @@ export default function RoutingConfigForm({
         <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-4 space-y-3 animate-slide-down">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-xs font-black text-[#1e1714] uppercase tracking-wider whitespace-nowrap">
-              Rotation mode
+              {es ? "Modo de rotación" : "Rotation mode"}
             </span>
             <div class="inline-flex rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5">
               <button
@@ -98,7 +103,7 @@ export default function RoutingConfigForm({
                     : "text-[#574c44] hover:text-[#1e1714]"
                 }`}
               >
-                Loop 🔄
+                {es ? "Ciclo 🔄" : "Loop 🔄"}
               </button>
               <button
                 type="button"
@@ -109,7 +114,7 @@ export default function RoutingConfigForm({
                     : "text-[#574c44] hover:text-[#1e1714]"
                 }`}
               >
-                Roulette 🎲
+                {es ? "Ruleta 🎲" : "Roulette 🎲"}
               </button>
               <button
                 type="button"
@@ -123,7 +128,7 @@ export default function RoutingConfigForm({
                     : "text-[#574c44] hover:text-[#1e1714]"
                 }`}
               >
-                Once
+                {es ? "Una vez" : "Once"}
               </button>
             </div>
           </div>
@@ -131,7 +136,7 @@ export default function RoutingConfigForm({
           {randomSequence && setDailySpins && (
             <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
               <span class="text-xs font-black text-[#4a3f39] uppercase tracking-wider whitespace-nowrap">
-                Daily spins
+                {es ? "Giros por día" : "Daily spins"}
               </span>
               <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] p-0.5 gap-0.5">
                 <button
@@ -143,7 +148,7 @@ export default function RoutingConfigForm({
                       : "text-[#574c44] hover:text-[#1e1714]"
                   }`}
                 >
-                  ∞ Open
+                  {es ? "∞ Libre" : "∞ Open"}
                 </button>
                 <label
                   onClick={() => {
@@ -160,7 +165,9 @@ export default function RoutingConfigForm({
                     min={1}
                     max={99}
                     inputMode="numeric"
-                    aria-label="Daily spins per phone"
+                    aria-label={es
+                      ? "Giros por día por celular"
+                      : "Daily spins per phone"}
                     value={dailySpins === null ? "" : String(dailySpins)}
                     placeholder="1"
                     onInput={(e) => {
@@ -177,7 +184,7 @@ export default function RoutingConfigForm({
                     class="w-8 bg-transparent text-xs font-black text-[#1e1714] placeholder:text-[#6e6058] focus:outline-none text-center"
                   />
                   <span class="text-[11px] font-black whitespace-nowrap">
-                    / day
+                    {es ? "/ día" : "/ day"}
                   </span>
                 </label>
               </div>
@@ -201,8 +208,10 @@ export default function RoutingConfigForm({
                   newUrls[index] = e.currentTarget.value;
                   setSequentialUrls(newUrls);
                 }}
-                placeholder={`URL #${index + 1}`}
-                aria-label={`URL step ${index + 1}`}
+                placeholder={es ? `URL n.º ${index + 1}` : `URL #${index + 1}`}
+                aria-label={es
+                  ? `URL del paso ${index + 1}`
+                  : `URL step ${index + 1}`}
                 class={`flex-1 min-w-0 ${INPUT_RECIPE}`}
               />
               {sequentialUrls.length > 2 && (
@@ -215,7 +224,9 @@ export default function RoutingConfigForm({
                     setSequentialUrls(newUrls);
                   }}
                   class="min-w-[44px] min-h-[44px] rounded-full border-2 border-black/15 hover:border-black hover:bg-amber-100 text-black font-black text-sm transition-colors"
-                  aria-label={`Remove step ${index + 1}`}
+                  aria-label={es
+                    ? `Quitar paso ${index + 1}`
+                    : `Remove step ${index + 1}`}
                 >
                   ✕
                 </button>
@@ -228,7 +239,7 @@ export default function RoutingConfigForm({
             onClick={() => setSequentialUrls([...sequentialUrls, ""])}
             class="w-full min-h-[44px] py-2 text-xs font-black text-black bg-qr-cream border-2 border-black rounded-full shadow-chunky hover:bg-amber-200 transition-colors"
           >
-            + Add Step
+            {es ? "+ Agregar paso" : "+ Add Step"}
           </button>
         </div>
       )}
@@ -236,7 +247,9 @@ export default function RoutingConfigForm({
       {routingMode === "device" && (
         <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
           <p class="text-xs font-semibold text-[#4a3f39]">
-            Route visitors based on their device. Leave blank to use fallback.
+            {es
+              ? "Dirige a cada visitante según su dispositivo. Déjalo vacío para usar el respaldo."
+              : "Route visitors based on their device. Leave blank to use fallback."}
           </p>
 
           <div class="space-y-1">
@@ -278,7 +291,7 @@ export default function RoutingConfigForm({
               htmlFor="routing-fallback-url"
               class="block text-xs font-black text-black"
             >
-              Fallback (Desktop/Other)
+              {es ? "Respaldo (escritorio/otros)" : "Fallback (Desktop/Other)"}
             </label>
             <input
               id="routing-fallback-url"
@@ -295,10 +308,9 @@ export default function RoutingConfigForm({
       {routingMode === "time" && (
         <div class="bg-white border-2 border-black rounded-2xl p-4 space-y-3 animate-slide-down">
           <p class="text-xs font-semibold text-[#4a3f39]">
-            Uses the scanner's time zone when available; otherwise uses the time
-            zone from the device that last saved this QR. If the end is earlier
-            than the start, the active window continues overnight. Choose
-            00:00–24:00 for a full-day window.
+            {es
+              ? "Usa la zona horaria de quien escanea cuando está disponible; si no, la del dispositivo que guardó este QR por última vez. Si el fin es anterior al inicio, la ventana activa continúa durante la noche. Elige 00:00–24:00 para cubrir el día completo."
+              : "Uses the scanner's time zone when available; otherwise uses the time zone from the device that last saved this QR. If the end is earlier than the start, the active window continues overnight. Choose 00:00–24:00 for a full-day window."}
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -307,7 +319,7 @@ export default function RoutingConfigForm({
                 htmlFor="routing-start-hour"
                 class="block text-xs font-black text-black"
               >
-                Start Hour
+                {es ? "Hora de inicio" : "Start Hour"}
               </label>
               <select
                 id="routing-start-hour"
@@ -330,7 +342,7 @@ export default function RoutingConfigForm({
                 htmlFor="routing-end-hour"
                 class="block text-xs font-black text-black"
               >
-                End Hour
+                {es ? "Hora de fin" : "End Hour"}
               </label>
               <select
                 id="routing-end-hour"
@@ -343,7 +355,7 @@ export default function RoutingConfigForm({
                   (_, i) => (
                     <option key={i} value={i.toString().padStart(2, "0")}>
                       {i === 24
-                        ? "24:00 (midnight)"
+                        ? (es ? "24:00 (medianoche)" : "24:00 (midnight)")
                         : `${i.toString().padStart(2, "0")}:00`}
                     </option>
                   ),
@@ -357,7 +369,7 @@ export default function RoutingConfigForm({
               htmlFor="routing-active-url"
               class="block text-xs font-black text-black"
             >
-              Active URL (During Hours)
+              {es ? "URL activa (en horario)" : "Active URL (During Hours)"}
             </label>
             <input
               id="routing-active-url"
@@ -374,7 +386,9 @@ export default function RoutingConfigForm({
               htmlFor="routing-inactive-url"
               class="block text-xs font-black text-black"
             >
-              Inactive URL (After Hours)
+              {es
+                ? "URL inactiva (fuera de horario)"
+                : "Inactive URL (After Hours)"}
             </label>
             <input
               id="routing-inactive-url"

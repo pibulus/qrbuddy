@@ -6,9 +6,11 @@ import {
   type SocialPlatform,
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface Props {
   url: Signal<string>;
+  lang?: Locale;
 }
 
 const PLATFORMS: { id: SocialPlatform; label: string; dot: string }[] = [
@@ -26,7 +28,8 @@ function isSupportedSocialPlatform(value?: string): value is SocialPlatform {
   return PLATFORMS.some((p) => p.id === value);
 }
 
-export default function SocialHubForm({ url }: Props) {
+export default function SocialHubForm({ url, lang }: Props) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [initial] = useState(() => parseSocialUrl(url.value));
   const [platform, setPlatform] = useState<SocialPlatform>(() =>
     isSupportedSocialPlatform(initial?.platform)
@@ -58,7 +61,7 @@ export default function SocialHubForm({ url }: Props) {
             style={{ backgroundColor: currentPlatform.dot }}
             aria-hidden="true"
           />
-          <span>Platform</span>
+          <span>{isSpanish ? "Plataforma" : "Platform"}</span>
         </span>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
           {PLATFORMS.map((p) => {
@@ -93,7 +96,11 @@ export default function SocialHubForm({ url }: Props) {
 
       <div class="space-y-1.5 pt-1 border-t border-[#1e1714]/10">
         <label class="qr-field-label" for="social-handle-input">
-          <span>{currentPlatform.label} Handle</span>
+          <span>
+            {isSpanish
+              ? `Usuario de ${currentPlatform.label}`
+              : `${currentPlatform.label} Handle`}
+          </span>
         </label>
         <div class="relative">
           {usesAtPrefix && (
@@ -122,15 +129,20 @@ export default function SocialHubForm({ url }: Props) {
               haptics.light();
             }}
             placeholder={platform === "whatsapp"
-              ? "Phone number (e.g. 61412345678)"
+              ? (isSpanish
+                ? "Número de teléfono (ej. 5215512345678)"
+                : "Phone number (e.g. 61412345678)")
               : platform === "linkedin"
-              ? "Profile ID"
-              : "username"}
+              ? (isSpanish ? "ID de perfil" : "Profile ID")
+              : (isSpanish ? "usuario" : "username")}
             class={`qr-input text-base ${usesAtPrefix ? "pl-8" : ""}`}
           />
         </div>
         <p class="text-[11px] font-mono font-bold text-[#5c4f47] truncate pt-0.5">
-          {formattedPreview || "Paste full profile URL or type handle"}
+          {formattedPreview ||
+            (isSpanish
+              ? "Pegar URL completa del perfil o escribir usuario"
+              : "Paste full profile URL or type handle")}
         </p>
       </div>
     </div>

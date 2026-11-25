@@ -9,6 +9,7 @@ import {
   getAuthHeaders,
 } from "../../utils/api.ts";
 import type { BucketContentMetadata } from "../../types/bucket-types.ts";
+import { type Locale, resolveRequestLocale } from "../../utils/i18n.ts";
 
 interface BucketData {
   bucket_code: string;
@@ -30,12 +31,14 @@ interface BucketPageData {
   bucket: BucketData;
   bucketUrl: string;
   apiUrl: string;
+  lang: Locale;
 }
 
 export const handler: Handlers<BucketPageData> = {
-  async GET(_req, ctx) {
+  async GET(req, ctx) {
     const { code } = ctx.params;
     const apiUrl = getApiUrl();
+    const lang = resolveRequestLocale(req);
 
     // Fetch bucket status
     const ownerToken = ctx.url.searchParams.get("owner_token");
@@ -86,6 +89,7 @@ export const handler: Handlers<BucketPageData> = {
         bucket: statusResult.bucket,
         bucketUrl,
         apiUrl,
+        lang,
       });
     } catch (error) {
       console.error("[ROUTE:bucket] status fetch failed:", error);
@@ -98,31 +102,40 @@ export const handler: Handlers<BucketPageData> = {
 };
 
 export default function BucketPage({ data }: PageProps<BucketPageData>) {
-  const { bucket, bucketUrl, apiUrl } = data;
+  const { bucket, bucketUrl, apiUrl, lang } = data;
+  const isSpanish = lang === "es";
   const stateEmoji = bucket.is_empty ? "🪣" : "💥";
-  const stateText = bucket.is_empty ? "Empty" : "Full";
+  const stateText = isSpanish
+    ? (bucket.is_empty ? "Vacío" : "Lleno")
+    : (bucket.is_empty ? "Empty" : "Full");
+  const lockerName = isSpanish ? "Casillero de archivos" : "File Locker";
 
   return (
     <>
       <Head>
         <title>
-          {stateEmoji} File Locker {bucket.is_empty ? "(Empty)" : "(Full)"}{" "}
-          | QRBuddy
+          {stateEmoji} {lockerName} ({stateText}) | QRBuddy
         </title>
         <meta
           name="description"
-          content={`Your persistent file locker for quick transfers between devices. Currently ${stateText.toLowerCase()}.`}
+          content={isSpanish
+            ? `Casillero de archivos persistente para pasar archivos rápido entre dispositivos. Estado actual: ${stateText.toLowerCase()}.`
+            : `Your persistent file locker for quick transfers between devices. Currently ${stateText.toLowerCase()}.`}
         />
         <meta name="robots" content="noindex, nofollow" />
         <meta
           property="og:title"
-          content={`QRBuddy File Locker - ${stateText}`}
+          content={`QRBuddy ${lockerName} - ${stateText}`}
         />
         <meta
           property="og:description"
-          content={bucket.is_empty
-            ? "Upload a file into this QRBuddy locker."
-            : "Download the file waiting in this QRBuddy locker."}
+          content={isSpanish
+            ? (bucket.is_empty
+              ? "Sube un archivo a este casillero de QRBuddy."
+              : "Descarga el archivo que espera en este casillero de QRBuddy.")
+            : (bucket.is_empty
+              ? "Upload a file into this QRBuddy locker."
+              : "Download the file waiting in this QRBuddy locker.")}
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={bucketUrl} />
@@ -140,7 +153,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           name="apple-mobile-web-app-status-bar-style"
           content={bucket.is_empty ? "default" : "black-translucent"}
         />
-        <meta name="apple-mobile-web-app-title" content="File Locker" />
+        <meta name="apple-mobile-web-app-title" content={lockerName} />
       </Head>
 
       <main class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1">
@@ -149,10 +162,12 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           {/* Header */}
           <header class="text-center space-y-2">
             <h1 class="text-4xl font-black text-black tracking-tight">
-              <span aria-hidden="true">{stateEmoji}</span> File Locker
+              <span aria-hidden="true">{stateEmoji}</span> {lockerName}
             </h1>
             <p class="text-sm text-[#574c44]">
-              {bucket.is_reusable ? "Persistent" : "One-time"} • {stateText}
+              {bucket.is_reusable
+                ? (isSpanish ? "Persistente" : "Persistent")
+                : (isSpanish ? "De un solo uso" : "One-time")} • {stateText}
             </p>
           </header>
 
@@ -174,6 +189,7 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
               isReusable={bucket.is_reusable}
               deleteOnDownload={bucket.delete_on_download}
               apiUrl={apiUrl}
+              lang={lang}
             />
           </ErrorBoundary>
 
@@ -181,14 +197,23 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
           <div class="text-center space-y-2">
             <p class="text-xs text-[#6e6058]">
               {!bucket.is_reusable
-                ? "This locker self-destructs after one download"
+                ? (isSpanish
+                  ? "Este casillero se autodestruye tras una descarga"
+                  : "This locker self-destructs after one download")
                 : bucket.delete_on_download
-                ? "Each download clears the locker — it then waits for a new file"
-                : "Files stay in this locker until the owner replaces them"}
+                ? (isSpanish
+                  ? "Cada descarga vacía el casillero, que queda esperando un archivo nuevo"
+                  : "Each download clears the locker — it then waits for a new file")
+                : (isSpanish
+                  ? "Los archivos se quedan en este casillero hasta que el dueño los reemplace"
+                  : "Files stay in this locker until the owner replaces them")}
             </p>
             {bucket.last_filled_at && (
               <p class="text-xs text-[#8a7d74]">
-                Last filled: {new Date(bucket.last_filled_at).toLocaleString()}
+                {isSpanish ? "Último llenado" : "Last filled"}:{" "}
+                {new Date(bucket.last_filled_at).toLocaleString(
+                  isSpanish ? "es-MX" : undefined,
+                )}
               </p>
             )}
           </div>
@@ -200,7 +225,9 @@ export default function BucketPage({ data }: PageProps<BucketPageData>) {
                 href="/"
                 class="text-sm text-[#6e6058] hover:text-[#1e1714] transition-colors"
               >
-                ← Make your own locker at QRBuddy
+                {isSpanish
+                  ? "← Crea tu propio casillero en QRBuddy"
+                  : "← Make your own locker at QRBuddy"}
               </a>
             </footer>
           )}

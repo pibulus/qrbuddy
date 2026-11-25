@@ -9,9 +9,11 @@ import { formatRelativeVisit } from "./FieldReportCard.tsx";
 import { getHistory } from "../../utils/history.ts";
 import { loadDesignPreferences } from "../../utils/design-preferences.ts";
 import type { QRStyle } from "../../types/qr-types.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 
 interface QRStatusCardProps {
   qrData: QRData;
+  lang?: Locale;
 }
 
 export type QRStatusLabel = "Active ✓" | "Paused" | "Exhausted" | "Expired";
@@ -58,7 +60,15 @@ export function deriveQRStatus(
   };
 }
 
-export default function QRStatusCard({ qrData }: QRStatusCardProps) {
+const STATUS_LABELS_ES: Record<QRStatusLabel, string> = {
+  "Active ✓": "Activo ✓",
+  Paused: "En pausa",
+  Exhausted: "Agotado",
+  Expired: "Vencido",
+};
+
+export default function QRStatusCard({ qrData, lang }: QRStatusCardProps) {
+  const isSpanish = getClientLocale(lang) === "es";
   // Use APP_URL from window location or fallback to production URL
   const baseUrl = typeof globalThis !== "undefined" &&
       globalThis.location
@@ -68,7 +78,12 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
 
   const { status, scansRemaining, isActive, exhausted, expired } =
     deriveQRStatus(qrData);
-  const lastVisit = formatRelativeVisit(qrData.analytics?.last_scan);
+  const lastVisit = formatRelativeVisit(
+    qrData.analytics?.last_scan,
+    Date.now(),
+    isSpanish ? "es" : "en",
+  );
+  const statusText = isSpanish ? STATUS_LABELS_ES[status] : status;
 
   // Mini QRCanvas state for immediate re-download / sticker printing
   const qrUrl = useSignal(redirectUrl);
@@ -121,7 +136,12 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
   const handleDownloadSticker = () => {
     triggerDownload.value = true;
     haptics.medium();
-    addToast("Sticker on the way: print it, stick it", 3000);
+    addToast(
+      isSpanish
+        ? "Sticker en camino: imprímelo y pégalo"
+        : "Sticker on the way: print it, stick it",
+      3000,
+    );
   };
 
   const handleDownloadSvg = () => {
@@ -134,14 +154,16 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
   return (
     <section
       class="bg-qr-cream border-4 border-black rounded-3xl p-4 sm:p-6 space-y-4 shadow-chunky"
-      aria-label="QR Status and Sticker"
+      aria-label={isSpanish
+        ? "Estado del QR y sticker"
+        : "QR Status and Sticker"}
     >
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="text-xl sm:text-2xl font-black text-black tracking-tight">
-          QR Status
+          {isSpanish ? "Estado del QR" : "QR Status"}
         </h2>
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-black bg-white font-mono text-xs font-black text-black">
-          <span>Code:</span>
+          <span>{isSpanish ? "Código:" : "Code:"}</span>
           <span>{qrData.short_code}</span>
         </span>
       </div>
@@ -150,21 +172,23 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <div class="bg-white border-2 border-black rounded-2xl p-3 flex flex-col justify-between min-w-0">
           <span class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
-            Total Visits
+            {isSpanish ? "Visitas totales" : "Total Visits"}
           </span>
           <p class="mt-1 text-xl sm:text-2xl font-black font-mono text-black truncate">
             {qrData.scan_count}
           </p>
           <span class="text-[11px] font-bold text-[#574c44] truncate">
             {qrData.max_scans !== null
-              ? `of ${qrData.max_scans} limit`
-              : "All-time total"}
+              ? (isSpanish
+                ? `de ${qrData.max_scans} de límite`
+                : `of ${qrData.max_scans} limit`)
+              : (isSpanish ? "Total histórico" : "All-time total")}
           </span>
         </div>
 
         <div class="bg-white border-2 border-black rounded-2xl p-3 flex flex-col justify-between min-w-0">
           <span class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
-            Remaining Scans
+            {isSpanish ? "Escaneos restantes" : "Remaining Scans"}
           </span>
           <div class="mt-1 flex items-center gap-1.5">
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border-2 border-black bg-amber-200 text-base sm:text-lg font-black font-mono text-black">
@@ -172,41 +196,50 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
             </span>
           </div>
           <span class="mt-1 text-[11px] font-bold text-[#574c44] truncate">
-            {scansRemaining === "∞" ? "Unlimited scans" : "Countdown active"}
+            {scansRemaining === "∞"
+              ? (isSpanish ? "Escaneos ilimitados" : "Unlimited scans")
+              : (isSpanish ? "Cuenta regresiva activa" : "Countdown active")}
           </span>
         </div>
 
         <div class="bg-white border-2 border-black rounded-2xl p-3 flex flex-col justify-between min-w-0">
           <span class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
-            Status
+            {isSpanish ? "Estado" : "Status"}
           </span>
           <div class="mt-1">
             <span
               class={`inline-flex items-center px-2.5 py-0.5 rounded-full border-2 text-xs sm:text-sm font-black ${statusBadgeClass}`}
             >
-              {status}
+              {statusText}
             </span>
           </div>
           <span class="mt-1 text-[11px] font-bold text-[#574c44] truncate">
             {isActive
-              ? "Redirecting live"
+              ? (isSpanish ? "Redirigiendo en vivo" : "Redirecting live")
               : exhausted
-              ? "Scan cap reached"
+              ? (isSpanish
+                ? "Límite de escaneos alcanzado"
+                : "Scan cap reached")
               : expired
-              ? "Past expiry date"
-              : "Scans paused"}
+              ? (isSpanish
+                ? "Fecha de vencimiento superada"
+                : "Past expiry date")
+              : (isSpanish ? "Escaneos en pausa" : "Scans paused")}
           </span>
         </div>
 
         <div class="bg-white border-2 border-black rounded-2xl p-3 flex flex-col justify-between min-w-0">
           <span class="text-[11px] font-black uppercase tracking-wider text-[#574c44]">
-            Last Visit
+            {isSpanish ? "Última visita" : "Last Visit"}
           </span>
           <p class="mt-1 text-sm sm:text-base font-black text-black leading-tight truncate">
             {lastVisit.relative}
           </p>
           <span class="mt-0.5 text-[11px] font-bold text-[#574c44] truncate">
-            {lastVisit.localDateTime ?? "Waiting for first scan"}
+            {lastVisit.localDateTime ??
+              (isSpanish
+                ? "Esperando el primer escaneo"
+                : "Waiting for first scan")}
           </span>
         </div>
       </div>
@@ -217,7 +250,7 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
           htmlFor="qr-redirect-url"
           class="block text-xs font-black uppercase tracking-wider text-[#4a3f39]"
         >
-          Public Redirect URL
+          {isSpanish ? "URL pública de redirección" : "Public Redirect URL"}
         </label>
         <div class="flex flex-col sm:flex-row gap-2">
           <input
@@ -234,29 +267,34 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
                 try {
                   await navigator.clipboard.writeText(redirectUrl);
                   haptics.success();
-                  addToast("Copied", 2000);
+                  addToast(isSpanish ? "Copiado" : "Copied", 2000);
                 } catch {
                   haptics.error();
-                  addToast("Couldn't reach the clipboard", 3000);
+                  addToast(
+                    isSpanish
+                      ? "No se pudo acceder al portapapeles"
+                      : "Couldn't reach the clipboard",
+                    3000,
+                  );
                 }
               }}
               class="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-white hover:bg-amber-200 text-black rounded-full border-2 border-black font-black text-xs shadow-chunky transition-all active:scale-95"
             >
-              📋 Copy Link
+              {isSpanish ? "📋 Copiar link" : "📋 Copy Link"}
             </button>
             <button
               type="button"
               onClick={handleDownloadSticker}
               class="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-qr-pop hover:bg-qr-popDeep text-white rounded-full border-2 border-black font-black text-xs shadow-chunky transition-all active:scale-95"
             >
-              Download PNG
+              {isSpanish ? "Descargar PNG" : "Download PNG"}
             </button>
             <button
               type="button"
               onClick={handleDownloadSvg}
               class="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-white hover:bg-amber-200 text-black rounded-full border-2 border-black font-black text-xs shadow-chunky transition-all active:scale-95"
             >
-              Download SVG
+              {isSpanish ? "Descargar SVG" : "Download SVG"}
             </button>
           </div>
         </div>

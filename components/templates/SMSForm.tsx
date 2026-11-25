@@ -7,12 +7,29 @@ import {
   validateSMS,
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+
+const ES_ERRORS: Record<string, string> = {
+  "Network name (SSID) is required":
+    "El nombre de la red (SSID) es obligatorio",
+  "Password is required for secured networks":
+    "La contraseña es obligatoria en redes protegidas",
+  "Name is required": "El nombre es obligatorio",
+  "Add phone, email, or website to complete card":
+    "Agrega teléfono, correo o sitio web para completar la tarjeta",
+  "Phone number is required": "El número de teléfono es obligatorio",
+  "Valid phone number required": "Se requiere un número de teléfono válido",
+  "Email address is required": "El correo es obligatorio",
+  "Valid email required": "Se requiere un correo válido",
+};
 
 interface Props {
   url: Signal<string>;
+  lang?: Locale;
 }
 
-export default function SMSForm({ url }: Props) {
+export default function SMSForm({ url, lang }: Props) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [initial] = useState(() => parseSMS(url.value));
   const [phone, setPhone] = useState(() => initial?.phone ?? "");
   const [message, setMessage] = useState(() => initial?.message ?? "");
@@ -46,14 +63,14 @@ export default function SMSForm({ url }: Props) {
           aria-live="polite"
           class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
-          {error}
+          {isSpanish ? (ES_ERRORS[error] ?? error) : error}
         </div>
       )}
 
       <div class="space-y-1.5">
         <label class="qr-field-label" for="sms-phone-input">
           <span class="qr-section-pip" aria-hidden="true" />
-          <span>Phone Number *</span>
+          <span>{isSpanish ? "Número de teléfono *" : "Phone Number *"}</span>
         </label>
         <input
           id="sms-phone-input"
@@ -64,7 +81,7 @@ export default function SMSForm({ url }: Props) {
             setPhone((e.target as HTMLInputElement).value);
             haptics.light();
           }}
-          placeholder="+61 412 345 678"
+          placeholder={isSpanish ? "+52 55 1234 5678" : "+61 412 345 678"}
           class="qr-input text-base"
         />
       </div>
@@ -72,10 +89,10 @@ export default function SMSForm({ url }: Props) {
       <div class="space-y-1.5">
         <div class="flex items-center justify-between">
           <label class="qr-field-label" for="sms-message-input">
-            <span>Pre-filled Text</span>
+            <span>{isSpanish ? "Texto prellenado" : "Pre-filled Text"}</span>
           </label>
           <span class="text-[11px] font-bold text-[#6e6058] tabular-nums">
-            {message.length} chars
+            {message.length} {isSpanish ? "caracteres" : "chars"}
           </span>
         </div>
         <textarea
@@ -86,7 +103,9 @@ export default function SMSForm({ url }: Props) {
             setMessage((e.target as HTMLTextAreaElement).value);
             haptics.light();
           }}
-          placeholder="Optional SMS body..."
+          placeholder={isSpanish
+            ? "Texto del SMS (opcional)..."
+            : "Optional SMS body..."}
           rows={3}
           class="qr-input text-sm resize-none"
         />

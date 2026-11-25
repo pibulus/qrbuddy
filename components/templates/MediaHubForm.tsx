@@ -1,6 +1,7 @@
 import { useRef, useState } from "preact/hooks";
 import type { Signal } from "@preact/signals";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
 import { useKeypad } from "../../hooks/useKeypad.ts";
 import {
   MAX_FILE_SIZE,
@@ -11,10 +12,14 @@ import { getSupporterPass } from "../../utils/supporter-pass.ts";
 
 interface Props {
   url: Signal<string>;
+  lang?: Locale;
   onCreated?: () => void;
 }
 
-export default function MediaHubForm({ url: _url, onCreated }: Props) {
+export default function MediaHubForm(
+  { url: _url, onCreated, lang }: Props,
+) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -40,7 +45,12 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
         getSupporterPass() ? SUPPORTER_MAX_FILE_SIZE : MAX_FILE_SIZE,
       );
       if (!validation.valid) {
-        setError(validation.error ?? "That file can't be shared.");
+        setError(
+          validation.error ??
+            (isSpanish
+              ? "No se puede compartir ese archivo."
+              : "That file can't be shared."),
+        );
         setFile(null);
         haptics.error();
         return;
@@ -84,7 +94,9 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
             haptics.success();
           } else {
             setError(
-              "Couldn't create the file page. Check the file size and try again.",
+              isSpanish
+                ? "No se pudo crear la página del archivo. Revisar el tamaño del archivo e intentar de nuevo."
+                : "Couldn't create the file page. Check the file size and try again.",
             );
             haptics.error();
           }
@@ -122,12 +134,18 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
         />
         <div class="text-3xl mb-1.5">{file ? "📄" : "📂"}</div>
         <p class="font-black text-sm text-[#1e1714] truncate">
-          {file ? file.name : "Select a single file, PDF, or track"}
+          {file
+            ? file.name
+            : (isSpanish
+              ? "Elegir un archivo, PDF o pista"
+              : "Select a single file, PDF, or track")}
         </p>
         <p class="text-xs font-semibold text-[#5c4f47] mt-0.5">
           {file
             ? `${(file.size / 1024 / 1024).toFixed(2)} MB`
-            : "Images, video, audio, PDF · up to 50 MB"}
+            : (isSpanish
+              ? "Imágenes, video, audio, PDF · hasta 50 MB"
+              : "Images, video, audio, PDF · up to 50 MB")}
         </p>
       </div>
 
@@ -144,13 +162,19 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
       <div class="space-y-2">
         <span class="qr-field-label">
           <span class="qr-section-pip" aria-hidden="true" />
-          <span>Card Details (optional)</span>
+          <span>
+            {isSpanish
+              ? "Detalles de la tarjeta (opcional)"
+              : "Card Details (optional)"}
+          </span>
         </span>
         <input
           type="text"
           value={title}
           onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
-          placeholder="Title (e.g. Studio Mix, Dinner Menu)"
+          placeholder={isSpanish
+            ? "Título (ej. Mezcla de estudio, Menú de la cena)"
+            : "Title (e.g. Studio Mix, Dinner Menu)"}
           class="qr-input text-sm"
         />
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -158,7 +182,9 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
             type="text"
             value={creator}
             onInput={(e) => setCreator((e.target as HTMLInputElement).value)}
-            placeholder="Creator / host (optional)"
+            placeholder={isSpanish
+              ? "Creador / anfitrión (opcional)"
+              : "Creator / host (optional)"}
             class="qr-input text-xs"
           />
           <input
@@ -166,7 +192,9 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
             value={description}
             onInput={(e) =>
               setDescription((e.target as HTMLInputElement).value)}
-            placeholder="Short note (optional)"
+            placeholder={isSpanish
+              ? "Nota corta (opcional)"
+              : "Short note (optional)"}
             class="qr-input text-xs"
           />
         </div>
@@ -176,7 +204,9 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
       <div class="flex items-center justify-between gap-3 px-3 py-2 bg-[#fbf1e4] rounded-xl border-2 border-[#1e1714]/20">
         <span class="text-xs font-black text-[#1e1714] flex items-center gap-1.5">
           <span>🔒</span>
-          <span>Require 4-digit PIN</span>
+          <span>
+            {isSpanish ? "Pedir PIN de 4 dígitos" : "Require 4-digit PIN"}
+          </span>
         </span>
         <button
           type="button"
@@ -193,7 +223,9 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
               : "border-[#1e1714]/25 bg-[#fffef7] text-[#4a3f39]"
           }`}
         >
-          {isPasswordProtected ? "On" : "Off"}
+          {isPasswordProtected
+            ? (isSpanish ? "Sí" : "On")
+            : (isSpanish ? "No" : "Off")}
         </button>
       </div>
 
@@ -234,7 +266,11 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
                 }`}
                 onClick={() => handleKeypadPress(String(key))}
               >
-                {key === "clear" ? "Clear" : key === "back" ? "⌫" : key}
+                {key === "clear"
+                  ? (isSpanish ? "Borrar" : "Clear")
+                  : key === "back"
+                  ? "⌫"
+                  : key}
               </button>
             ))}
           </div>
@@ -249,11 +285,17 @@ export default function MediaHubForm({ url: _url, onCreated }: Props) {
           (isPasswordProtected && pinValue.length !== 4)}
         class="qr-pitch-cta"
       >
-        <span>{isCreating ? "Creating..." : "Create file page →"}</span>
+        <span>
+          {isCreating
+            ? (isSpanish ? "Creando..." : "Creating...")
+            : (isSpanish ? "Crear página del archivo →" : "Create file page →")}
+        </span>
       </button>
 
       <p class="text-[11px] font-medium text-center text-[#6e6058]">
-        Files stay live for 30 days after the latest download.
+        {isSpanish
+          ? "Los archivos siguen activos 30 días después de la última descarga."
+          : "Files stay live for 30 days after the latest download."}
       </p>
     </div>
   );

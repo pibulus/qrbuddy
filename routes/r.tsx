@@ -4,6 +4,7 @@ import {
   getAuthHeaders,
   getSupabaseUrl,
 } from "../utils/api.ts";
+import { type Locale, resolveRequestLocale } from "../utils/i18n.ts";
 
 function routingUnavailable() {
   return new Response(
@@ -60,16 +61,42 @@ function escapeHtml(value: string): string {
  * A locked code is a page, not a redirect: the scanner types the PIN on
  * QRBuddy, and only then does the destination open.
  */
-function pinPage(shortCode: string, invalid = false): Response {
+function pinPage(
+  shortCode: string,
+  invalid = false,
+  lang: Locale = "en",
+): Response {
   const code = escapeHtml(shortCode);
+  const es = lang === "es";
+  const copy = es
+    ? {
+      title: "Código bloqueado",
+      heading: "Este código está bloqueado",
+      intro:
+        "Escribe el PIN de quien lo compartió. Se queda abierto el resto del día en este dispositivo.",
+      label: "PIN o contraseña",
+      code: "Código",
+      invalid: "Ese PIN no coincidió. Prueba de nuevo.",
+      unlock: "Desbloquear",
+    }
+    : {
+      title: "Locked code",
+      heading: "This code is locked",
+      intro:
+        "Enter the PIN from whoever shared it. It opens for the rest of the day on this device.",
+      label: "PIN or password",
+      code: "Code",
+      invalid: "That PIN did not match. Try again.",
+      unlock: "Unlock",
+    };
   return new Response(
     `<!doctype html>
-<html lang="en">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Locked code</title>
+<title>${copy.title}</title>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
@@ -95,19 +122,15 @@ function pinPage(shortCode: string, invalid = false): Response {
 </head>
 <body>
 <main>
-  <h1>This code is locked</h1>
-  <p>Enter the PIN from whoever shared it. It opens for the rest of the day on this device.</p>
+  <h1>${copy.heading}</h1>
+  <p>${copy.intro}</p>
   <form method="post" action="/r?code=${encodeURIComponent(shortCode)}">
-    <label for="pin">PIN or password</label>
+    <label for="pin">${copy.label}</label>
     <input id="pin" name="pin" type="password" autocomplete="off"
       inputmode="text" autofocus required aria-describedby="pin-help" />
-    <p id="pin-help" style="font-size:12px">Code <strong>${code}</strong></p>
-    ${
-      invalid
-        ? '<p class="error" role="alert">That PIN did not match. Try again.</p>'
-        : ""
-    }
-    <button type="submit">Unlock</button>
+    <p id="pin-help" style="font-size:12px">${copy.code} <strong>${code}</strong></p>
+    ${invalid ? `<p class="error" role="alert">${copy.invalid}</p>` : ""}
+    <button type="submit">${copy.unlock}</button>
   </form>
 </main>
 </body>
@@ -237,7 +260,7 @@ export const handler: Handlers = {
       // Locked code: ask for the PIN instead of leaking the destination.
       if (response.status === 401) {
         const invalid = response.headers.get("X-QR-Pin-Invalid") === "1";
-        return pinPage(shortCode, invalid);
+        return pinPage(shortCode, invalid, resolveRequestLocale(req));
       }
 
       // Handle redirect responses from edge function (301, 302, 307, 308)
@@ -344,14 +367,16 @@ export const handler: Handlers = {
     } catch {
       pin = "";
     }
-    if (!pin) return pinPage(shortCode, true);
+    if (!pin) return pinPage(shortCode, true, resolveRequestLocale(req));
 
     try {
       const response = await callUpstream(req, supabaseUrl, shortCode, {
         "x-qr-pin": pin.slice(0, 128),
       });
 
-      if (response.status === 401) return pinPage(shortCode, true);
+      if (response.status === 401) {
+        return pinPage(shortCode, true, resolveRequestLocale(req));
+      }
 
       const location = response.headers.get("Location") ??
         response.headers.get("location");

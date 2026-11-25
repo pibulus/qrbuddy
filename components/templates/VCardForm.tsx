@@ -7,12 +7,29 @@ import {
   type VCardData,
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
+import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+
+const ES_ERRORS: Record<string, string> = {
+  "Network name (SSID) is required":
+    "El nombre de la red (SSID) es obligatorio",
+  "Password is required for secured networks":
+    "La contraseña es obligatoria en redes protegidas",
+  "Name is required": "El nombre es obligatorio",
+  "Add phone, email, or website to complete card":
+    "Agrega teléfono, correo o sitio web para completar la tarjeta",
+  "Phone number is required": "El número de teléfono es obligatorio",
+  "Valid phone number required": "Se requiere un número de teléfono válido",
+  "Email address is required": "El correo es obligatorio",
+  "Valid email required": "Se requiere un correo válido",
+};
 
 interface Props {
   url: Signal<string>;
+  lang?: Locale;
 }
 
-export default function VCardForm({ url }: Props) {
+export default function VCardForm({ url, lang }: Props) {
+  const isSpanish = getClientLocale(lang) === "es";
   const [initial] = useState(() => parseVCard(url.value));
   const [firstName, setFirstName] = useState(() => initial?.firstName ?? "");
   const [lastName, setLastName] = useState(() => initial?.lastName ?? "");
@@ -85,7 +102,7 @@ export default function VCardForm({ url }: Props) {
           aria-live="polite"
           class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
-          {error}
+          {isSpanish ? (ES_ERRORS[error] ?? error) : error}
         </div>
       )}
 
@@ -93,13 +110,13 @@ export default function VCardForm({ url }: Props) {
       <div class="qr-menu-pod p-3.5 space-y-3">
         <span class="qr-section-eyebrow">
           <span class="qr-section-pip" aria-hidden="true" />
-          <span>Identity & Role</span>
+          <span>{isSpanish ? "Identidad y Cargo" : "Identity & Role"}</span>
         </span>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div class="space-y-1">
             <label class="qr-field-label" for="vcard-first-name">
-              First Name *
+              {isSpanish ? "Nombre *" : "First Name *"}
             </label>
             <input
               id="vcard-first-name"
@@ -116,7 +133,7 @@ export default function VCardForm({ url }: Props) {
           </div>
           <div class="space-y-1">
             <label class="qr-field-label" for="vcard-last-name">
-              Last Name
+              {isSpanish ? "Apellido" : "Last Name"}
             </label>
             <input
               id="vcard-last-name"
@@ -136,7 +153,7 @@ export default function VCardForm({ url }: Props) {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div class="space-y-1">
             <label class="qr-field-label" for="vcard-org">
-              Organization
+              {isSpanish ? "Organización" : "Organization"}
             </label>
             <input
               id="vcard-org"
@@ -147,13 +164,13 @@ export default function VCardForm({ url }: Props) {
                 setOrganization((e.target as HTMLInputElement).value);
                 haptics.light();
               }}
-              placeholder="Studio Name"
+              placeholder={isSpanish ? "Nombre del Estudio" : "Studio Name"}
               class="qr-input text-sm"
             />
           </div>
           <div class="space-y-1">
             <label class="qr-field-label" for="vcard-title">
-              Role / Title
+              {isSpanish ? "Cargo / Puesto" : "Role / Title"}
             </label>
             <input
               id="vcard-title"
@@ -164,7 +181,7 @@ export default function VCardForm({ url }: Props) {
                 setTitle((e.target as HTMLInputElement).value);
                 haptics.light();
               }}
-              placeholder="Founder"
+              placeholder={isSpanish ? "Fundadora" : "Founder"}
               class="qr-input text-sm"
             />
           </div>
@@ -175,13 +192,13 @@ export default function VCardForm({ url }: Props) {
       <div class="qr-menu-pod p-3.5 space-y-2.5">
         <span class="qr-section-eyebrow">
           <span class="qr-section-pip" aria-hidden="true" />
-          <span>Direct Channels</span>
+          <span>{isSpanish ? "Contacto Directo" : "Direct Channels"}</span>
         </span>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div class="space-y-1">
             <label class="qr-field-label" for="vcard-phone">
-              Phone
+              {isSpanish ? "Teléfono" : "Phone"}
             </label>
             <input
               id="vcard-phone"
@@ -192,13 +209,13 @@ export default function VCardForm({ url }: Props) {
                 setPhone((e.target as HTMLInputElement).value);
                 haptics.light();
               }}
-              placeholder="+61 412 345 678"
+              placeholder={isSpanish ? "+52 55 1234 5678" : "+61 412 345 678"}
               class="qr-input text-sm"
             />
           </div>
           <div class="space-y-1">
             <label class="qr-field-label" for="vcard-email">
-              Email
+              {isSpanish ? "Correo" : "Email"}
             </label>
             <input
               id="vcard-email"
@@ -217,7 +234,7 @@ export default function VCardForm({ url }: Props) {
 
         <div class="space-y-1">
           <label class="qr-field-label" for="vcard-website">
-            Website
+            {isSpanish ? "Sitio web" : "Website"}
           </label>
           <input
             id="vcard-website"
@@ -242,7 +259,11 @@ export default function VCardForm({ url }: Props) {
         <summary class="list-none cursor-pointer min-h-[42px] px-3.5 py-2.5 flex items-center justify-between gap-2 select-none">
           <span class="qr-section-eyebrow">
             <span class="qr-section-pip" aria-hidden="true" />
-            <span>Address & Note (optional)</span>
+            <span>
+              {isSpanish
+                ? "Dirección y Nota (opcional)"
+                : "Address & Note (optional)"}
+            </span>
           </span>
           <span class="text-xs font-black text-[#4a3f39] transition-transform group-open:rotate-180">
             ▾
@@ -251,7 +272,7 @@ export default function VCardForm({ url }: Props) {
         <div class="px-3.5 pb-3.5 pt-2 border-t border-[#1e1714]/10 space-y-2.5">
           <div class="space-y-1">
             <label class="qr-field-label" for="vcard-address">
-              Address
+              {isSpanish ? "Dirección" : "Address"}
             </label>
             <input
               id="vcard-address"
@@ -262,13 +283,15 @@ export default function VCardForm({ url }: Props) {
                 setAddress((e.target as HTMLInputElement).value);
                 haptics.light();
               }}
-              placeholder="Brunswick VIC, Australia"
+              placeholder={isSpanish
+                ? "Ciudad de México, México"
+                : "Brunswick VIC, Australia"}
               class="qr-input text-sm"
             />
           </div>
           <div class="space-y-1">
             <label class="qr-field-label" for="vcard-note">
-              Note
+              {isSpanish ? "Nota" : "Note"}
             </label>
             <textarea
               id="vcard-note"
@@ -278,7 +301,9 @@ export default function VCardForm({ url }: Props) {
                 setNote((e.target as HTMLTextAreaElement).value);
                 haptics.light();
               }}
-              placeholder="Context, studio hours, or handle..."
+              placeholder={isSpanish
+                ? "Contexto, horario del estudio o usuario..."
+                : "Context, studio hours, or handle..."}
               rows={2}
               class="qr-input text-sm resize-none"
             />

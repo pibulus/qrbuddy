@@ -114,3 +114,29 @@ export function detectLocale(req?: Request): Locale {
 
   return "en";
 }
+
+/**
+ * Locale for standalone server routes (/edit, /f, /bucket, /note, /boom, ...):
+ * an explicit value wins, then `?lang=`, then a `/es` path, then the first
+ * en/es tag in Accept-Language.
+ */
+export function resolveRequestLocale(req: Request, explicit?: Locale): Locale {
+  if (explicit === "en" || explicit === "es") return explicit;
+  let url: URL;
+  try {
+    url = new URL(req.url);
+  } catch {
+    return "en";
+  }
+  const param = url.searchParams.get("lang");
+  if (param === "es" || param === "en") return param;
+  if (/^\/es(?:\/|$)/.test(url.pathname)) return "es";
+  const tags = (req.headers.get("accept-language") ?? "")
+    .split(",")
+    .map((part) => part.split(";")[0].trim().toLowerCase().split("-")[0]);
+  for (const tag of tags) {
+    if (tag === "es") return "es";
+    if (tag === "en") return "en";
+  }
+  return "en";
+}

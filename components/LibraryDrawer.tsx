@@ -683,9 +683,14 @@ export default function LibraryDrawer(
     },
   ];
 
+  const withEditLang = (url: string): string =>
+    isSpanish && !/[?&]lang=/.test(url)
+      ? `${url}${url.includes("?") ? "&" : "?"}lang=es`
+      : url;
+
   const resolveItemEditUrl = (item: HistoryItem): string | null => {
     if (typeof item.metadata?.editUrl === "string" && item.metadata.editUrl) {
-      return item.metadata.editUrl;
+      return withEditLang(item.metadata.editUrl);
     }
     const directToken = typeof item.metadata?.ownerToken === "string"
       ? item.metadata.ownerToken
@@ -696,7 +701,7 @@ export default function LibraryDrawer(
     const vaultToken = shortCode ? ownerTokensByCode[shortCode] : undefined;
     const token = directToken || vaultToken;
     if (token) {
-      return `/edit?token=${encodeURIComponent(token)}`;
+      return withEditLang(`/edit?token=${encodeURIComponent(token)}`);
     }
     return null;
   };
@@ -725,7 +730,7 @@ export default function LibraryDrawer(
     }
     const tok = ownerTokensByCode[c.short_code];
     if (tok) {
-      return `/edit?token=${encodeURIComponent(tok)}`;
+      return withEditLang(`/edit?token=${encodeURIComponent(tok)}`);
     }
     return null;
   };
