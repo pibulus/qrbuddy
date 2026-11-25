@@ -32,6 +32,11 @@ import {
   setSupporterPass,
 } from "../utils/supporter-pass.ts";
 import { issueSupporterToken } from "../supabase/functions/_shared/license.ts";
+import { makeAccessiblePassportMarkup } from "../components/MembershipCard.tsx";
+import {
+  renderMembershipCard,
+  selectSkin,
+} from "../utils/softstack-passport/index.js";
 
 Deno.test("passport - identity generation has required sovereign fields", () => {
   const p = generatePassportIdentity();
@@ -336,4 +341,39 @@ Deno.test("passport - 5-miss passkey lockout returns 429 on 6th miss", () => {
   const rateResp = createRateLimitResponse(sixthMiss, {});
   assertEquals(rateResp.status, 429);
   resetPasskeyPhraseMisses(phraseKey);
+});
+
+Deno.test("passport - makeAccessiblePassportMarkup removes nested-interactive roles while keeping keyboard controls", () => {
+  const skin = selectSkin("a".repeat(64));
+  const raw = renderMembershipCard({
+    identity: {
+      name: "Quiet Tapir",
+      phrase: "umbra-scanner-amplify-cosmos",
+      memberId: "SS-FA39-DE19-4608",
+      initials: "QT",
+      isFallback: false,
+    },
+    skin,
+    appName: "QRBuddy",
+    qrUrl: "https://qrbuddy.app/#phrase=umbra-scanner-amplify-cosmos",
+    qrImageUrl: "data:image/png;base64,AAAA",
+  });
+
+  const clean = makeAccessiblePassportMarkup(raw);
+  assert(
+    clean.includes('role="group" aria-label="QRBuddy passport'),
+    "outer passport card must use role=group rather than wrapping buttons in role=button",
+  );
+  assert(
+    !clean.includes('class="passport-id-chip" role="button"'),
+    "passport-id-chip must not wrap passport-reveal-btn inside role=button",
+  );
+  assert(clean.includes("data-passport-cycle"));
+  assert(
+    clean.includes('class="passport-member-id" role="button" tabindex="0"'),
+  );
+  assert(clean.includes('class="avatar-input hidden" tabindex="-1"'));
+  assert(
+    !clean.includes('class="avatar-input" tabindex="-1" aria-hidden="true"'),
+  );
 });

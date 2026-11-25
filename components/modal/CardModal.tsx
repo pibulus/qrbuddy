@@ -138,7 +138,7 @@ export function CardHeading(
         {props.title}
       </h2>
       {props.tagline && (
-        <p class="text-sm sm:text-base font-bold tracking-tight text-[#db2777]">
+        <p class="text-sm sm:text-base font-bold tracking-tight text-[#be185d]">
           {props.tagline}
         </p>
       )}
@@ -190,7 +190,7 @@ export function CardSignature(
         href={props.makerUrl}
         target="_blank"
         rel="noopener noreferrer"
-        class="font-black text-[#1e1714] underline decoration-2 decoration-[#db2777]/50 underline-offset-2 hover:text-[#db2777] transition-colors"
+        class="font-black text-[#1e1714] underline decoration-2 decoration-[#be185d]/50 underline-offset-2 hover:text-[#be185d] transition-colors"
       >
         Pablo
       </a>
@@ -218,7 +218,7 @@ export function CardQuietLink(
   props: { href?: string; onClick?: () => void; children: ComponentChildren },
 ) {
   const cls =
-    "font-bold text-[#1e1714] hover:text-[#db2777] underline underline-offset-2 transition-colors";
+    "font-bold text-[#1e1714] hover:text-[#be185d] underline underline-offset-2 transition-colors";
   if (props.href) {
     return <a href={props.href} class={cls}>{props.children}</a>;
   }

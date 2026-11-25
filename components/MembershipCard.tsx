@@ -72,6 +72,31 @@ function initialsFor(name: string): string {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
 
+/**
+ * Adjusts vendored SoftStack Passport card markup in place so interactive child
+ * controls are never nested inside another `role="button"` container, keeping
+ * `utils/softstack-passport/*` SHA-256 parity intact.
+ */
+export function makeAccessiblePassportMarkup(rawHtml: string): string {
+  return rawHtml
+    .replace(
+      /role="button" tabindex="0" aria-label="([^"]*)" data-passport-card/,
+      'role="group" aria-label="$1" data-passport-card',
+    )
+    .replace(
+      '<div class="passport-edge" aria-hidden="true"></div>',
+      '<div class="passport-edge" aria-hidden="true"></div><button type="button" class="sr-only" data-passport-cycle aria-label="Shuffle Passport card look">Shuffle card look</button>',
+    )
+    .replace(
+      'class="avatar-input" tabindex="-1" aria-hidden="true"',
+      'class="avatar-input hidden" tabindex="-1"',
+    )
+    .replace(
+      /<div class="passport-id-chip" role="button" tabindex="0" title="([^"]*)" aria-label="([^"]*)">([\s\S]*?)<p class="passport-member-id">/,
+      '<div class="passport-id-chip" title="$1">$3<p class="passport-member-id" role="button" tabindex="0" aria-label="$2">',
+    );
+}
+
 export function PassportMembershipCard({
   passport,
   appName = "QRBuddy",
@@ -170,19 +195,21 @@ export function PassportMembershipCard({
 
   const markup = useMemo(
     () =>
-      renderMembershipCard({
-        identity,
-        skin,
-        appName,
-        isPreview,
-        avatarUri,
-        customAvatar: Boolean(customAvatarUri),
-        qrUrl: syncUrl,
-        qrImageUrl,
-        reducedMotion,
-        revealed,
-        showQr,
-      }),
+      makeAccessiblePassportMarkup(
+        renderMembershipCard({
+          identity,
+          skin,
+          appName,
+          isPreview,
+          avatarUri,
+          customAvatar: Boolean(customAvatarUri),
+          qrUrl: syncUrl,
+          qrImageUrl,
+          reducedMotion,
+          revealed,
+          showQr,
+        }),
+      ),
     [
       identity,
       skin,
@@ -394,6 +421,11 @@ export function PassportMembershipCard({
     }
     // The QR stamp is an anchor on active cards; let it navigate.
     if (!isPreview && syncUrl && target.closest(".passport-qr-stamp")) return;
+    if (target.closest("[data-passport-cycle]")) {
+      e.stopPropagation();
+      cycleSkin();
+      return;
+    }
     if (target.closest(".passport-id-chip")) {
       e.stopPropagation();
       copyPasskey();
@@ -422,10 +454,10 @@ export function PassportMembershipCard({
     } else if (target.matches("[data-passport-reveal]")) {
       e.preventDefault();
       toggleReveal();
-    } else if (target.matches(".passport-id-chip")) {
+    } else if (target.matches(".passport-id-chip, .passport-member-id")) {
       e.preventDefault();
       copyPasskey();
-    } else if (target.matches(".passport-card")) {
+    } else if (target.matches(".passport-card, [data-passport-cycle]")) {
       e.preventDefault();
       cycleSkin();
     }
