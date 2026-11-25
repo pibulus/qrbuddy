@@ -63,6 +63,7 @@ export const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   "/vcard": "/for/vcard",
   "/weddings": "/for/weddings",
   "/wifi": "/for/wifi",
+  "/batch": "/?tool=batch",
   "/stats": "/?library=1",
   "/why": "/compare",
   "/for/restaurants": "/for/menus",

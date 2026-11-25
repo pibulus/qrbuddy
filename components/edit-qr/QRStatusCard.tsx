@@ -6,6 +6,9 @@ import { QRData } from "../../hooks/useQRData.ts";
 import type { QR_STYLES } from "../../utils/qr-styles.ts";
 import QRCanvas from "../../islands/QRCanvas.tsx";
 import { formatRelativeVisit } from "./FieldReportCard.tsx";
+import { getHistory } from "../../utils/history.ts";
+import { loadDesignPreferences } from "../../utils/design-preferences.ts";
+import type { QRStyle } from "../../types/qr-types.ts";
 
 interface QRStatusCardProps {
   qrData: QRData;
@@ -71,14 +74,43 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
   const qrUrl = useSignal(redirectUrl);
   const qrStyle = useSignal<keyof typeof QR_STYLES | "custom">("sunset");
   const triggerDownload = useSignal(false);
-  const frameConfig = useSignal<{ enabled: boolean; caption: string } | null>({
-    enabled: true,
-    caption: "SCAN ME",
-  });
+  const customStyle = useSignal<QRStyle | null>(null);
+  const logoUrl = useSignal("");
+  const frameConfig = useSignal<{ enabled: boolean; caption: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     qrUrl.value = redirectUrl;
   }, [redirectUrl]);
+
+  // Re-download the sticker in the design it was made with: the vault entry
+  // for this code first, then the last design used on this device.
+  useEffect(() => {
+    const saved = getHistory().find((item) =>
+      item.metadata?.shortCode === qrData.short_code ||
+      item.content.includes(`code=${qrData.short_code}`)
+    )?.metadata?.design;
+    const prefs = saved ? null : loadDesignPreferences();
+    const design = saved ?? (prefs
+      ? {
+        style: prefs.style,
+        customStyle: prefs.customStyle,
+        logoUrl: prefs.logoUrl,
+        frameConfig: prefs.frameConfig,
+      }
+      : null);
+    if (!design) return;
+    qrStyle.value = design.style as keyof typeof QR_STYLES | "custom";
+    customStyle.value = design.customStyle ?? null;
+    logoUrl.value = design.logoUrl ?? "";
+    frameConfig.value = design.frameConfig?.enabled
+      ? {
+        enabled: true,
+        caption: design.frameConfig.caption ?? "",
+      }
+      : null;
+  }, [qrData.short_code]);
 
   const statusBadgeClass = isActive
     ? "bg-emerald-200 text-black border-black"
@@ -89,7 +121,14 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
   const handleDownloadSticker = () => {
     triggerDownload.value = true;
     haptics.medium();
-    addToast("Sticker on the way — print it, stick it 🖨️", 3000);
+    addToast("Sticker on the way: print it, stick it", 3000);
+  };
+
+  const handleDownloadSvg = () => {
+    globalThis.dispatchEvent(
+      new CustomEvent("qr-export", { detail: { format: "svg" } }),
+    );
+    haptics.medium();
   };
 
   return (
@@ -195,7 +234,7 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
                 try {
                   await navigator.clipboard.writeText(redirectUrl);
                   haptics.success();
-                  addToast("Copied! ✨", 2000);
+                  addToast("Copied", 2000);
                 } catch {
                   haptics.error();
                   addToast("Couldn't reach the clipboard", 3000);
@@ -210,7 +249,14 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
               onClick={handleDownloadSticker}
               class="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-qr-pop hover:bg-qr-popDeep text-white rounded-full border-2 border-black font-black text-xs shadow-chunky transition-all active:scale-95"
             >
-              🖨️ Download / Print QR Sticker
+              Download PNG
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadSvg}
+              class="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-white hover:bg-amber-200 text-black rounded-full border-2 border-black font-black text-xs shadow-chunky transition-all active:scale-95"
+            >
+              Download SVG
             </button>
           </div>
         </div>
@@ -222,8 +268,11 @@ export default function QRStatusCard({ qrData }: QRStatusCardProps) {
           <QRCanvas
             url={qrUrl}
             style={qrStyle}
+            customStyle={customStyle}
+            logoUrl={logoUrl}
             triggerDownload={triggerDownload}
             frameConfig={frameConfig}
+            listenForExportEvents
           />
         </div>
       </div>

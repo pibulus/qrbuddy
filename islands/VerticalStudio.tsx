@@ -11,7 +11,9 @@ import { PricingLink, PricingModal } from "./PricingModal.tsx";
 import FooterDock from "./FooterDock.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
-import { formatVCard, formatWiFi } from "../types/qr-templates.ts";
+import WiFiForm from "../components/templates/WiFiForm.tsx";
+import VCardForm from "../components/templates/VCardForm.tsx";
+import DesignPreferencesSync from "./DesignPreferencesSync.tsx";
 import {
   buildGs1DigitalLink,
   computeGs1CheckDigit,
@@ -165,32 +167,12 @@ export default function VerticalStudio({
   const resolvedFaqTitle = faqTitle ??
     (isSpanish ? "Preguntas Frecuentes" : "Frequently Asked Questions");
 
-  // Quick-builder states for specialized job-to-be-done routes
-  const [wifiSsid, setWifiSsid] = useState(
-    isSpanish ? "Cafe_Brunswick_5G" : "Brunswick_Cafe_Guest",
-  );
-  const [wifiPassword, setWifiPassword] = useState("croissant2026");
-  const [wifiEncryption, setWifiEncryption] = useState<
-    "WPA" | "WEP" | "nopass"
-  >("WPA");
-  const [wifiHidden, setWifiHidden] = useState(false);
-
-  const [vcardFirst, setVcardFirst] = useState("Elena");
-  const [vcardLast, setVcardLast] = useState("Vargas");
-  const [vcardOrg, setVcardOrg] = useState("Studio Mirador");
-  const [vcardTitle, setVcardTitle] = useState(
-    isSpanish ? "Directora de Diseño" : "Creative Director",
-  );
-  const [vcardPhone, setVcardPhone] = useState("+61 400 123 456");
-  const [vcardEmail, setVcardEmail] = useState("elena@studiomirador.co");
-  const [vcardWeb, setVcardWeb] = useState("https://qrbuddy.app/demo/vcard");
-
+  // GS1 quick-builder state (Wi-Fi and vCard reuse the canonical forms)
   const [gs1Domain, setGs1Domain] = useState("https://qrbuddy.app/demo/gs1");
   const [gs1Gtin, setGs1Gtin] = useState("09312345678907");
   const [gs1Lot, setGs1Lot] = useState("BATCH-04");
   const [gs1Expiry, setGs1Expiry] = useState("271231");
   const [gs1Serial, setGs1Serial] = useState("");
-  const [cardFace, setCardFace] = useState<"front" | "back">("front");
 
   // Street-Safe Airlock inline link unmasker state (toolPreset === "inspect")
   const [peekInput, setPeekInput] = useState("https://qrbuddy.app/why");
@@ -246,26 +228,6 @@ export default function VerticalStudio({
   };
 
   const computeInitialPayload = (): string => {
-    if (toolPreset === "wifi") {
-      return formatWiFi({
-        ssid: wifiSsid,
-        password: wifiPassword,
-        encryption: wifiEncryption,
-        hidden: wifiHidden,
-      });
-    }
-    if (toolPreset === "vcard") {
-      return formatVCard({
-        firstName: vcardFirst,
-        lastName: vcardLast,
-        organization: vcardOrg,
-        jobTitle: vcardTitle,
-        phone: vcardPhone,
-        email: vcardEmail,
-        website: vcardWeb,
-        address: "",
-      });
-    }
     if (toolPreset === "gs1") {
       return buildGs1DigitalLink({
         domain: gs1Domain,
@@ -302,41 +264,6 @@ export default function VerticalStudio({
     }
   }, [defaultUrl, toolPreset]);
 
-  // Sync Wi-Fi quick-builder changes into the live QR signal
-  useEffect(() => {
-    if (toolPreset !== "wifi") return;
-    url.value = formatWiFi({
-      ssid: wifiSsid || "Guest_WiFi",
-      password: wifiEncryption === "nopass" ? "" : wifiPassword,
-      encryption: wifiEncryption,
-      hidden: wifiHidden,
-    });
-  }, [toolPreset, wifiSsid, wifiPassword, wifiEncryption, wifiHidden]);
-
-  // Sync vCard quick-builder changes into the live QR signal
-  useEffect(() => {
-    if (toolPreset !== "vcard") return;
-    url.value = formatVCard({
-      firstName: vcardFirst || "Alex",
-      lastName: vcardLast,
-      organization: vcardOrg,
-      jobTitle: vcardTitle,
-      phone: vcardPhone,
-      email: vcardEmail,
-      website: vcardWeb,
-      address: "",
-    });
-  }, [
-    toolPreset,
-    vcardFirst,
-    vcardLast,
-    vcardOrg,
-    vcardTitle,
-    vcardPhone,
-    vcardEmail,
-    vcardWeb,
-  ]);
-
   // Sync GS1 Digital Link builder changes into the live QR signal
   useEffect(() => {
     if (toolPreset !== "gs1") return;
@@ -370,104 +297,115 @@ export default function VerticalStudio({
       <ToastManager />
 
       <EasterEggs url={url} style={style} />
+      <DesignPreferencesSync
+        style={style}
+        customStyle={customStyle}
+        logoUrl={logoUrl}
+        frameConfig={frameConfig}
+        pngSize={pngSize}
+      />
 
       <main id="main-content" class="w-full max-w-2xl space-y-8 sm:space-y-10">
         {/* Brand Navigation Bar + Style Selector (Poster Vibe) */}
         <div class="flex items-center justify-between gap-1.5 sm:gap-2">
-          <a
-            href={homeUrl}
-            class="inline-flex items-center gap-2 px-3 min-h-[38px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-chunky hover:-translate-y-0.5 transition-transform shrink-0"
-            title={homeLabel}
-          >
-            {/* 4-Tile Gradient QRBuddy Mark */}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-              class="shrink-0"
+          <div class="flex items-center gap-1.5 shrink-0">
+            <a
+              href={homeUrl}
+              class="inline-flex items-center gap-2 px-3 min-h-[38px] bg-[#fffef7] border-2 border-[#1e1714] rounded-full text-xs font-black text-[#1e1714] shadow-chunky hover:-translate-y-0.5 transition-transform shrink-0"
+              title={homeLabel}
             >
-              <rect
-                x="2"
-                y="2"
-                width="8.5"
-                height="8.5"
-                rx="2.5"
-                fill="#ff8a7a"
-                stroke="#1e1714"
-                stroke-width="2"
-              />
-              <rect
-                x="4.8"
-                y="4.8"
-                width="2.9"
-                height="2.9"
-                rx="0.8"
-                fill="#fffef7"
-                stroke="#1e1714"
-                stroke-width="1.3"
-              />
-              <rect
-                x="13.5"
-                y="2"
-                width="8.5"
-                height="8.5"
-                rx="2.5"
-                fill="#ff6b9d"
-                stroke="#1e1714"
-                stroke-width="2"
-              />
-              <rect
-                x="16.3"
-                y="4.8"
-                width="2.9"
-                height="2.9"
-                rx="0.8"
-                fill="#fffef7"
-                stroke="#1e1714"
-                stroke-width="1.3"
-              />
-              <rect
-                x="2"
-                y="13.5"
-                width="8.5"
-                height="8.5"
-                rx="2.5"
-                fill="#e066ff"
-                stroke="#1e1714"
-                stroke-width="2"
-              />
-              <rect
-                x="4.8"
-                y="16.3"
-                width="2.9"
-                height="2.9"
-                rx="0.8"
-                fill="#fffef7"
-                stroke="#1e1714"
-                stroke-width="1.3"
-              />
-              <rect
-                x="13.5"
-                y="13.5"
-                width="8.5"
-                height="8.5"
-                rx="2.5"
-                fill="#b86bff"
-                stroke="#1e1714"
-                stroke-width="2"
-              />
-            </svg>
-            <span class="font-black tracking-tight text-sm">QRBuddy</span>
-            <span class="text-[#57524b] font-bold hidden sm:inline">
-              · {isSpanish ? "Estudio" : "Studio"}
-            </span>
-          </a>
+              {/* 4-Tile Gradient QRBuddy Mark */}
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                class="shrink-0"
+              >
+                <rect
+                  x="2"
+                  y="2"
+                  width="8.5"
+                  height="8.5"
+                  rx="2.5"
+                  fill="#ff8a7a"
+                  stroke="#1e1714"
+                  stroke-width="2"
+                />
+                <rect
+                  x="4.8"
+                  y="4.8"
+                  width="2.9"
+                  height="2.9"
+                  rx="0.8"
+                  fill="#fffef7"
+                  stroke="#1e1714"
+                  stroke-width="1.3"
+                />
+                <rect
+                  x="13.5"
+                  y="2"
+                  width="8.5"
+                  height="8.5"
+                  rx="2.5"
+                  fill="#ff6b9d"
+                  stroke="#1e1714"
+                  stroke-width="2"
+                />
+                <rect
+                  x="16.3"
+                  y="4.8"
+                  width="2.9"
+                  height="2.9"
+                  rx="0.8"
+                  fill="#fffef7"
+                  stroke="#1e1714"
+                  stroke-width="1.3"
+                />
+                <rect
+                  x="2"
+                  y="13.5"
+                  width="8.5"
+                  height="8.5"
+                  rx="2.5"
+                  fill="#e066ff"
+                  stroke="#1e1714"
+                  stroke-width="2"
+                />
+                <rect
+                  x="4.8"
+                  y="16.3"
+                  width="2.9"
+                  height="2.9"
+                  rx="0.8"
+                  fill="#fffef7"
+                  stroke="#1e1714"
+                  stroke-width="1.3"
+                />
+                <rect
+                  x="13.5"
+                  y="13.5"
+                  width="8.5"
+                  height="8.5"
+                  rx="2.5"
+                  fill="#b86bff"
+                  stroke="#1e1714"
+                  stroke-width="2"
+                />
+              </svg>
+              <span class="font-black tracking-tight text-sm">QRBuddy</span>
+              <span class="text-[#57524b] font-bold hidden sm:inline">
+                · {isSpanish ? "Estudio" : "Studio"}
+              </span>
+            </a>
+            <StyleSelector
+              variant="saved"
+              isHidden={isModalOpen}
+              lang={locale}
+            />
+          </div>
           <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <span class="inline-flex items-center gap-1 px-3 min-h-[36px] bg-[#9ef0c8] text-[#1e1714] border-2 border-[#1e1714] shadow-chunky rounded-full text-[11px] sm:text-xs font-black tracking-wide uppercase truncate">
-              {badge}
-            </span>
             <div
               class="shrink-0"
               aria-label={isSpanish ? "Selector de estilo" : "Style selector"}
@@ -487,6 +425,9 @@ export default function VerticalStudio({
           const { lead, pill } = splitHeadline(title, titleHighlight);
           return (
             <header class="text-center space-y-3 px-2 animate-fade-in">
+              <span class="inline-flex items-center gap-1 px-3 min-h-[34px] bg-[#9ef0c8] text-[#1e1714] border-2 border-[#1e1714] shadow-chunky rounded-full text-[11px] sm:text-xs font-black tracking-wide uppercase max-w-full">
+                <span class="truncate">{badge}</span>
+              </span>
               <h1 class="text-3xl sm:text-5xl font-black text-[#1e1714] tracking-tight leading-[1.12] text-balance">
                 <span class="block">{lead}</span>
                 {pill && (
@@ -529,494 +470,31 @@ export default function VerticalStudio({
           );
         })()}
 
-        {/* Interactive QR Generator Canvas — with Front (Printed QR) & Back (Live Stats & Routing) flip */}
+        {/* Interactive QR Generator Canvas */}
         <div class="max-w-md mx-auto w-full space-y-5 sm:space-y-6">
-          {(() => {
-            const demoPreviewHref = (() => {
-              if (toolPreset === "vcard") {
-                return isSpanish ? "/demo/vcard?lang=es" : "/demo/vcard";
-              }
-              if (toolPreset === "gs1") {
-                return isSpanish ? "/demo/gs1?lang=es" : "/demo/gs1";
-              }
-              if (url.value.includes("/demo/")) {
-                try {
-                  const u = new URL(url.value, "https://qrbuddy.app");
-                  return `${u.pathname}${u.search}`;
-                } catch {
-                  return "/demo/menu";
-                }
-              }
-              return isSpanish ? "/demo/menu?lang=es" : "/demo/menu";
-            })();
-
-            const backStats = (() => {
-              if (defaultStyle === "matcha") {
-                return {
-                  code: "bistro-07",
-                  scans30d: "1,842",
-                  peak: "7pm–9pm",
-                  cities: isSpanish
-                    ? "CDMX (76%) · GDL (15%) · MTY (9%)"
-                    : "Melbourne (78%) · Fitzroy (14%) · Sydney (8%)",
-                  rule: isSpanish
-                    ? "🕰️ Horario: 7am Desayuno → 5pm Cena (sin reimprimir)"
-                    : "🕰️ Schedule: 7am Breakfast → 5pm Dinner (no reprint)",
-                  bars: [42, 36, 48, 55, 88, 100, 74],
-                };
-              }
-              if (defaultStyle === "blush") {
-                return {
-                  code: "elena-mateo",
-                  scans30d: "418",
-                  peak: "4pm–6pm",
-                  cities: isSpanish
-                    ? "CDMX (64%) · Oaxaca (21%) · Madrid (15%)"
-                    : "Melbourne (62%) · Auckland (19%) · CDMX (19%)",
-                  rule: isSpanish
-                    ? "💌 Portada activa + cambio de RSVP a Galería de 10 fotos"
-                    : "💌 Cover Card + repoints from RSVP to 10-Photo Gallery",
-                  bars: [18, 22, 25, 34, 62, 100, 84],
-                };
-              }
-              if (defaultStyle === "vapor") {
-                return {
-                  code: "tape-04",
-                  scans30d: "964",
-                  peak: "10pm–12am",
-                  cities: isSpanish
-                    ? "CDMX (51%) · Buenos Aires (28%) · Bogotá (21%)"
-                    : "Melbourne (48%) · Berlin (27%) · Tokyo (25%)",
-                  rule: isSpanish
-                    ? "🎧 Mixtape 10 pistas · #1 Lluvia Analógica (318 repr.)"
-                    : "🎧 10-Track Player · #1 Warm Analog Rain (318 plays)",
-                  bars: [28, 31, 40, 52, 79, 100, 68],
-                };
-              }
-              if (toolPreset === "gs1" || defaultStyle === "grape") {
-                return {
-                  code: "gs1-sol04",
-                  scans30d: "3,410",
-                  peak: "12pm–2pm",
-                  cities: isSpanish
-                    ? "CDMX (49%) · GDL (31%) · QRO (20%)"
-                    : "Melbourne (44%) · Sydney (36%) · Brisbane (20%)",
-                  rule: isSpanish
-                    ? "📦 GS1 Digital Link · Lote BATCH-04 + aviso dinámico"
-                    : "📦 GS1 Digital Link · BATCH-04 + live recall/origin page",
-                  bars: [54, 62, 70, 68, 85, 100, 78],
-                };
-              }
-              return {
-                code: "studio-qr",
-                scans30d: "1,290",
-                peak: "6pm–8pm",
-                cities: isSpanish
-                  ? "CDMX (61%) · Guadalajara (22%) · Madrid (17%)"
-                  : "Melbourne (64%) · Sydney (21%) · London (15%)",
-                rule: isSpanish
-                  ? "🔗 Destino editable en vivo + Horario / Ruleta + CSV"
-                  : "🔗 Live editable destination + Schedule / Roulette + CSV",
-                bars: [35, 48, 52, 64, 92, 100, 70],
-              };
-            })();
-
-            const dayInitials = isSpanish
-              ? ["L", "M", "X", "J", "V", "S", "D"]
-              : ["M", "T", "W", "T", "F", "S", "S"];
-
-            return (
-              <div class="space-y-3">
-                {/* Front / Back Card Flip Segmented Pill */}
-                <div class="flex justify-center">
-                  <div
-                    role="group"
-                    aria-label={isSpanish
-                      ? "Alternar entre el código QR impreso y el reverso de estadísticas"
-                      : "Toggle between printed QR front and live stats back"}
-                    class="inline-flex items-center gap-1 p-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] shadow-chunky"
-                  >
-                    <button
-                      type="button"
-                      aria-pressed={cardFace === "front"}
-                      onClick={() => setCardFace("front")}
-                      class={`px-3 min-h-[34px] rounded-full text-xs font-black whitespace-nowrap transition-all ${
-                        cardFace === "front"
-                          ? "bg-[#f8de7e] text-[#1e1714] border border-[#1e1714]"
-                          : "text-[#57524b] hover:text-[#1e1714]"
-                      }`}
-                    >
-                      {isSpanish
-                        ? "🔳 Frente: QR Impreso"
-                        : "🔳 Front: Printed QR"}
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={cardFace === "back"}
-                      onClick={() => setCardFace("back")}
-                      class={`px-3 min-h-[34px] rounded-full text-xs font-black whitespace-nowrap transition-all ${
-                        cardFace === "back"
-                          ? "bg-[#9ef0c8] text-[#1e1714] border border-[#1e1714]"
-                          : "text-[#57524b] hover:text-[#1e1714]"
-                      }`}
-                    >
-                      {isSpanish
-                        ? "📊 Reverso: Estadísticas"
-                        : "📊 Back: Stats & Routing"}
-                    </button>
-                  </div>
-                </div>
-
-                {cardFace === "front"
-                  ? (
-                    <div class="space-y-3">
-                      <div class="flex justify-center animate-slide-up">
-                        <div class="w-full max-w-[300px] sm:max-w-[340px] transition-all duration-300">
-                          <ErrorBoundary>
-                            <QRCanvas
-                              url={url}
-                              style={style}
-                              customStyle={customStyle}
-                              triggerDownload={triggerDownload}
-                              isDestructible={isDestructible}
-                              isDynamic={isDynamic}
-                              logoUrl={logoUrl}
-                              maxDownloads={maxDownloads}
-                              frameConfig={frameConfig}
-                              listenForExportEvents
-                              lang={locale}
-                            />
-                          </ErrorBoundary>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                  : (
-                    /* BACK OF THE CARD: Live Field Report & Smart Routing Preview */
-                    <div class="w-full max-w-[340px] sm:max-w-[380px] mx-auto bg-[#fbf1e4] border-4 border-[#1e1714] rounded-3xl p-4 sm:p-5 shadow-chunky space-y-3.5 animate-pop-in">
-                      <div class="flex items-center justify-between gap-2 border-b-2 border-[#1e1714]/15 pb-2.5">
-                        <div>
-                          <span class="block font-mono text-[10px] font-black uppercase tracking-wider text-[#57524b]">
-                            {isSpanish
-                              ? "REVERSO DEL QR · REPORTE DE CAMPO"
-                              : "BACK OF THE CARD · FIELD REPORT"}
-                          </span>
-                          <h3 class="text-base font-black text-[#1e1714] leading-tight">
-                            /r?code={backStats.code}
-                          </h3>
-                        </div>
-                        <span class="px-2.5 py-0.5 rounded-full border-2 border-[#1e1714] bg-[#9ef0c8] text-[11px] font-black text-[#1e1714] shrink-0 whitespace-nowrap">
-                          Active ✓
-                        </span>
-                      </div>
-
-                      {/* 3 KPI Mini-Tiles */}
-                      <div class="grid grid-cols-3 gap-2">
-                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center">
-                          <span class="block text-[10px] font-black uppercase text-[#57524b]">
-                            {isSpanish ? "30 Días" : "30d Scans"}
-                          </span>
-                          <span class="font-mono text-base font-black text-[#1e1714]">
-                            {backStats.scans30d}
-                          </span>
-                        </div>
-                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center">
-                          <span class="block text-[10px] font-black uppercase text-[#57524b]">
-                            {isSpanish ? "Hora Pico" : "Peak Rush"}
-                          </span>
-                          <span class="font-mono text-xs sm:text-sm font-black text-[#1e1714]">
-                            {backStats.peak}
-                          </span>
-                        </div>
-                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center">
-                          <span class="block text-[10px] font-black uppercase text-[#57524b]">
-                            {isSpanish ? "Límite" : "Remaining"}
-                          </span>
-                          <span class="font-mono text-base font-black text-[#1e1714]">
-                            ∞
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 7-Day Spark Bars */}
-                      <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3 space-y-2">
-                        <div class="flex items-center justify-between text-[11px] font-black text-[#1e1714]">
-                          <span>
-                            {isSpanish
-                              ? "Escaneos por día (7d · 30d · 90d)"
-                              : "Daily Scans (7d · 30d · 90d)"}
-                          </span>
-                          <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[#f8de7e] border border-[#1e1714]">
-                            ↓ CSV
-                          </span>
-                        </div>
-                        <div class="h-16 flex items-end justify-between gap-1.5 pt-1">
-                          {backStats.bars.map((pct, idx) => (
-                            <div
-                              key={idx}
-                              class="flex-1 flex flex-col items-center gap-1"
-                            >
-                              <div
-                                class="w-full rounded-t border-2 border-[#1e1714]"
-                                style={{
-                                  height: `${
-                                    Math.max(8, Math.round(pct * 0.42))
-                                  }px`,
-                                  backgroundColor: pct >= 85
-                                    ? "#ff6b9d"
-                                    : "#9ef0c8",
-                                }}
-                              />
-                              <span class="font-mono text-[9px] font-black text-[#1e1714]">
-                                {dayInitials[idx]}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Cities & Routing Rule */}
-                      <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-2xl p-3 space-y-1.5 text-xs">
-                        <p class="font-black text-[#1e1714] leading-snug">
-                          {backStats.rule}
-                        </p>
-                        <p class="text-[11px] font-bold text-[#57524b]">
-                          📍 {backStats.cities}
-                        </p>
-                      </div>
-
-                      <div class="flex items-center justify-between gap-2 pt-0.5">
-                        <button
-                          type="button"
-                          onClick={() => setCardFace("front")}
-                          class="px-3 min-h-[34px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f8de7e] text-xs font-black text-[#1e1714] transition-colors"
-                        >
-                          {isSpanish ? "↺ Volver al QR" : "↺ Flip to QR"}
-                        </button>
-                        <a
-                          href={`${demoPreviewHref}#back-of-card`}
-                          class="px-3 min-h-[34px] inline-flex items-center rounded-full border-2 border-[#1e1714] bg-[#f8de7e] text-xs font-black text-[#1e1714] shadow-[2px_2px_0_#1e1714] hover:-translate-y-0.5 transition-transform"
-                        >
-                          {isSpanish
-                            ? "Ver demo completo ↗"
-                            : "Full live example ↗"}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-              </div>
-            );
-          })()}
+          <div class="flex justify-center animate-slide-up">
+            <div class="w-full max-w-[300px] sm:max-w-[340px] transition-all duration-300">
+              <ErrorBoundary>
+                <QRCanvas
+                  url={url}
+                  style={style}
+                  customStyle={customStyle}
+                  triggerDownload={triggerDownload}
+                  isDestructible={isDestructible}
+                  isDynamic={isDynamic}
+                  logoUrl={logoUrl}
+                  maxDownloads={maxDownloads}
+                  frameConfig={frameConfig}
+                  listenForExportEvents
+                  lang={locale}
+                />
+              </ErrorBoundary>
+            </div>
+          </div>
 
           {/* Specialized Job-to-be-Done Quick-Builders */}
-          {toolPreset === "wifi" && (
-            <div class="bg-[#fbf1e4] border-3 border-[#1e1714] rounded-2xl p-4 sm:p-5 shadow-chunky space-y-3.5">
-              <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-black uppercase tracking-wider text-[#1e1714]">
-                  {isSpanish ? "📶 Constructor Wi-Fi" : "📶 Wi-Fi Card Builder"}
-                </span>
-                <span class="px-2 py-0.5 rounded-full bg-[#fffef7] border border-[#1e1714] text-[11px] font-bold text-[#343331] shrink-0 whitespace-nowrap">
-                  {isSpanish
-                    ? "100% local · Cero servidor"
-                    : "100% local · Zero server"}
-                </span>
-              </div>
-
-              <div class="grid sm:grid-cols-2 gap-2.5">
-                <label class="block space-y-1">
-                  <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish ? "Nombre de Red (SSID)" : "Network Name (SSID)"}
-                  </span>
-                  <input
-                    type="text"
-                    value={wifiSsid}
-                    onInput={(e) =>
-                      setWifiSsid((e.target as HTMLInputElement).value)}
-                    placeholder={isSpanish ? "Mi_Cafeteria_WiFi" : "Cafe_Guest"}
-                    class={INPUT_CLASS}
-                  />
-                </label>
-
-                <label class="block space-y-1">
-                  <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish ? "Contraseña" : "Password"}
-                  </span>
-                  <input
-                    type="text"
-                    value={wifiEncryption === "nopass" ? "" : wifiPassword}
-                    disabled={wifiEncryption === "nopass"}
-                    onInput={(e) =>
-                      setWifiPassword((e.target as HTMLInputElement).value)}
-                    placeholder={wifiEncryption === "nopass"
-                      ? (isSpanish ? "Red abierta (sin clave)" : "Open network")
-                      : (isSpanish ? "Contraseña del Wi-Fi" : "Wi-Fi password")}
-                    class={`${INPUT_CLASS} disabled:opacity-50`}
-                  />
-                </label>
-              </div>
-
-              <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-                <div
-                  role="group"
-                  aria-label={isSpanish ? "Seguridad Wi-Fi" : "Wi-Fi security"}
-                  class="inline-flex rounded-xl border-2 border-[#1e1714] bg-[#fffef7] p-0.5"
-                >
-                  {(
-                    [
-                      { id: "WPA", label: "WPA / WPA2" },
-                      { id: "WEP", label: "WEP" },
-                      {
-                        id: "nopass",
-                        label: isSpanish ? "Abierta" : "Open",
-                      },
-                    ] as const
-                  ).map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setWifiEncryption(opt.id)}
-                      class={`px-2.5 py-1 rounded-lg text-xs font-black transition-colors ${
-                        wifiEncryption === opt.id
-                          ? "bg-amber-200 text-[#1e1714]"
-                          : "text-[#57524b] hover:text-[#1e1714]"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-
-                <label class="inline-flex items-center gap-2 text-xs font-bold text-[#1e1714] cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={wifiHidden}
-                    onChange={(e) =>
-                      setWifiHidden((e.target as HTMLInputElement).checked)}
-                    class="w-4 h-4 accent-[#1e1714] rounded"
-                  />
-                  <span>{isSpanish ? "Red oculta" : "Hidden network"}</span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {toolPreset === "vcard" && (
-            <div class="bg-[#fbf1e4] border-3 border-[#1e1714] rounded-2xl p-4 sm:p-5 shadow-chunky space-y-3">
-              <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-black uppercase tracking-wider text-[#1e1714]">
-                  {isSpanish
-                    ? "👤 Tarjeta vCard 3.0"
-                    : "👤 vCard 3.0 Contact Builder"}
-                </span>
-                <span class="px-2 py-0.5 rounded-full bg-[#fffef7] border border-[#1e1714] text-[11px] font-bold text-[#343331] shrink-0 whitespace-nowrap">
-                  {isSpanish
-                    ? "Offline · iOS y Android"
-                    : "Offline · iOS & Android"}
-                </span>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2.5">
-                <label class="block space-y-1">
-                  <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish ? "Nombre" : "First Name"}
-                  </span>
-                  <input
-                    type="text"
-                    value={vcardFirst}
-                    onInput={(e) =>
-                      setVcardFirst((e.target as HTMLInputElement).value)}
-                    placeholder="Elena"
-                    class={INPUT_CLASS}
-                  />
-                </label>
-                <label class="block space-y-1">
-                  <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish ? "Apellidos" : "Last Name"}
-                  </span>
-                  <input
-                    type="text"
-                    value={vcardLast}
-                    onInput={(e) =>
-                      setVcardLast((e.target as HTMLInputElement).value)}
-                    placeholder="Vargas"
-                    class={INPUT_CLASS}
-                  />
-                </label>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2.5">
-                <label class="block space-y-1">
-                  <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish ? "Puesto / Rol" : "Role / Title"}
-                  </span>
-                  <input
-                    type="text"
-                    value={vcardTitle}
-                    onInput={(e) =>
-                      setVcardTitle((e.target as HTMLInputElement).value)}
-                    placeholder="Founder"
-                    class={INPUT_CLASS}
-                  />
-                </label>
-                <label class="block space-y-1">
-                  <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish ? "Estudio / Empresa" : "Company / Studio"}
-                  </span>
-                  <input
-                    type="text"
-                    value={vcardOrg}
-                    onInput={(e) =>
-                      setVcardOrg((e.target as HTMLInputElement).value)}
-                    placeholder="Studio Mirador"
-                    class={INPUT_CLASS}
-                  />
-                </label>
-              </div>
-
-              <div class="grid sm:grid-cols-2 gap-2.5">
-                <label class="block space-y-1">
-                  <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish ? "Teléfono" : "Phone"}
-                  </span>
-                  <input
-                    type="tel"
-                    value={vcardPhone}
-                    onInput={(e) =>
-                      setVcardPhone((e.target as HTMLInputElement).value)}
-                    placeholder="+61 400 123 456"
-                    class={INPUT_CLASS}
-                  />
-                </label>
-                <label class="block space-y-1">
-                  <span class="text-xs font-black text-[#1e1714]">
-                    {isSpanish ? "Correo" : "Email"}
-                  </span>
-                  <input
-                    type="email"
-                    value={vcardEmail}
-                    onInput={(e) =>
-                      setVcardEmail((e.target as HTMLInputElement).value)}
-                    placeholder="hello@domain.com"
-                    class={INPUT_CLASS}
-                  />
-                </label>
-              </div>
-
-              <label class="block space-y-1">
-                <span class="text-xs font-black text-[#1e1714]">
-                  {isSpanish ? "Sitio Web / Portafolio" : "Website / Portfolio"}
-                </span>
-                <input
-                  type="url"
-                  value={vcardWeb}
-                  onInput={(e) =>
-                    setVcardWeb((e.target as HTMLInputElement).value)}
-                  placeholder="https://..."
-                  class={INPUT_CLASS}
-                />
-              </label>
-            </div>
-          )}
+          {toolPreset === "wifi" && <WiFiForm url={url} />}
+          {toolPreset === "vcard" && <VCardForm url={url} />}
 
           {toolPreset === "gs1" && (
             <div class="bg-[#fbf1e4] border-3 border-[#1e1714] rounded-2xl p-4 sm:p-5 shadow-chunky space-y-3">
@@ -1434,20 +912,6 @@ export default function VerticalStudio({
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* Dark Espresso Footer Callout Bar (04-comparison-card signature bar) */}
-          <div class="bg-[#1e1714] text-[#fffef7] border-3 border-[#1e1714] rounded-2xl px-4 sm:px-5 py-3 shadow-chunky flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm font-black">
-            <span>
-              {isSpanish
-                ? "Cambio en 30 segundos · Degradados para imprenta · Sin cuentas"
-                : "Switch in 30 seconds · Print-verified gradients · No account walls"}
-            </span>
-            <PricingLink class="text-[#9ef0c8] font-mono font-black hover:underline cursor-pointer">
-              {isSpanish
-                ? "Pasaporte ~$32/año →"
-                : "qrbuddy.app · ~$32/yr Pass →"}
-            </PricingLink>
           </div>
         </section>
 

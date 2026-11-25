@@ -9,7 +9,6 @@ import { AboutModal } from "../islands/AboutModal.tsx";
 import { PricingModal } from "../islands/PricingModal.tsx";
 import FooterDock from "../islands/FooterDock.tsx";
 import DesignPreferencesSync from "../islands/DesignPreferencesSync.tsx";
-import RotatingTitle from "../islands/RotatingTitle.tsx";
 import { QR_STYLES } from "../utils/qr-styles.ts";
 import type { QRStyle } from "../types/qr-types.ts";
 import { UNLIMITED_SCANS } from "../utils/constants.ts";
@@ -108,7 +107,11 @@ export default function HomeStage(
             <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
               QRBuddy
             </h1>
-            <RotatingTitle lang={lang} />
+            <p class="text-base sm:text-lg text-[#574c44] font-bold leading-snug">
+              {isEs
+                ? "Códigos QR listos para imprenta. Gratis siempre, sin registro."
+                : "Print-ready QR codes. Free forever, zero sign-up."}
+            </p>
           </header>
 
           {/* QR Code Display - FIRST */}

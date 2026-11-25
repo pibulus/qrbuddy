@@ -8,7 +8,6 @@ import * as $_app from "./routes/_app.tsx";
 import * as $_middleware from "./routes/_middleware.ts";
 import * as $api_download_file from "./routes/api/download-file.ts";
 import * as $api_peek from "./routes/api/peek.ts";
-import * as $batch from "./routes/batch.tsx";
 import * as $boom from "./routes/boom.tsx";
 import * as $bucket_code_ from "./routes/bucket/[code].tsx";
 import * as $compare from "./routes/compare.tsx";
@@ -54,7 +53,6 @@ import * as $v1_update_dynamic_qr from "./routes/v1/update-dynamic-qr.ts";
 import * as $vs_slug_ from "./routes/vs/[slug].tsx";
 import * as $AboutModal from "./islands/AboutModal.tsx";
 import * as $ApiKeysPanel from "./islands/ApiKeysPanel.tsx";
-import * as $BatchStudio from "./islands/BatchStudio.tsx";
 import * as $BucketQR from "./islands/BucketQR.tsx";
 import * as $DesignPreferencesSync from "./islands/DesignPreferencesSync.tsx";
 import * as $EasterEggs from "./islands/EasterEggs.tsx";
@@ -66,7 +64,6 @@ import * as $NoteCard from "./islands/NoteCard.tsx";
 import * as $PricingModal from "./islands/PricingModal.tsx";
 import * as $QRCanvas from "./islands/QRCanvas.tsx";
 import * as $QrPrintGuideIsland from "./islands/QrPrintGuideIsland.tsx";
-import * as $RotatingTitle from "./islands/RotatingTitle.tsx";
 import * as $ShareActions from "./islands/ShareActions.tsx";
 import * as $SmartInput from "./islands/SmartInput.tsx";
 import * as $StyleSelector from "./islands/StyleSelector.tsx";
@@ -82,7 +79,6 @@ const manifest = {
     "./routes/_middleware.ts": $_middleware,
     "./routes/api/download-file.ts": $api_download_file,
     "./routes/api/peek.ts": $api_peek,
-    "./routes/batch.tsx": $batch,
     "./routes/boom.tsx": $boom,
     "./routes/bucket/[code].tsx": $bucket_code_,
     "./routes/compare.tsx": $compare,
@@ -130,7 +126,6 @@ const manifest = {
   islands: {
     "./islands/AboutModal.tsx": $AboutModal,
     "./islands/ApiKeysPanel.tsx": $ApiKeysPanel,
-    "./islands/BatchStudio.tsx": $BatchStudio,
     "./islands/BucketQR.tsx": $BucketQR,
     "./islands/DesignPreferencesSync.tsx": $DesignPreferencesSync,
     "./islands/EasterEggs.tsx": $EasterEggs,
@@ -142,7 +137,6 @@ const manifest = {
     "./islands/PricingModal.tsx": $PricingModal,
     "./islands/QRCanvas.tsx": $QRCanvas,
     "./islands/QrPrintGuideIsland.tsx": $QrPrintGuideIsland,
-    "./islands/RotatingTitle.tsx": $RotatingTitle,
     "./islands/ShareActions.tsx": $ShareActions,
     "./islands/SmartInput.tsx": $SmartInput,
     "./islands/StyleSelector.tsx": $StyleSelector,

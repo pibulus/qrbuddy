@@ -13,7 +13,7 @@ import {
 import {
   buildDynamicBatchManifestCsv,
   persistMintedBatchRow,
-} from "../islands/BatchStudio.tsx";
+} from "../utils/batch-sheets.ts";
 import { getHistory, MAX_HISTORY_ITEMS } from "../utils/history.ts";
 import { getOwnerToken } from "../utils/token-vault.ts";
 

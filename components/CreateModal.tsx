@@ -903,6 +903,19 @@ export default function CreateModal({
                     : undefined}
                   onClick={handleBulkCreateSelect}
                 />
+
+                {/* 7. Scan / Inspect */}
+                {onInspect && (
+                  <ChoiceRow
+                    icon="🔍"
+                    iconBg="linear-gradient(135deg, #DBEAFE, #BFDBFE)"
+                    title={isSpanish ? "Escanear QR" : "Scan a QR"}
+                    description={isSpanish
+                      ? "Ver a dónde lleva antes de abrirlo."
+                      : "See where it goes before opening."}
+                    onClick={onInspect}
+                  />
+                )}
               </div>
             </div>
           )
@@ -1036,6 +1049,8 @@ export default function CreateModal({
                     isGeneratingBatch={isGeneratingBatch}
                     batchProgress={batchProgress}
                     onGenerateBatch={onGenerateBatch}
+                    qrStyle={qrStyle.value}
+                    customStyle={customStyle?.value ?? null}
                     lang={locale}
                   />
                 )
@@ -1470,7 +1485,7 @@ export default function CreateModal({
           aria-labelledby="create-modal-title"
           tabindex={-1}
           style={themeStyleVars}
-          class={`relative w-full max-w-lg h-auto max-h-[92dvh] sm:max-h-[88dvh] bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover flex flex-col overflow-hidden focus:outline-none focus-visible:outline-none ${
+          class={`relative w-full max-w-lg h-[min(92dvh,760px)] sm:h-[min(88dvh,760px)] bg-[#fbf1e4] border-t-4 sm:border-3 border-[#1e1714] rounded-t-3xl sm:rounded-3xl shadow-chunky-hover flex flex-col overflow-hidden focus:outline-none focus-visible:outline-none ${
             shell.closing
               ? "charm-modal--closing animate-modal-exit"
               : "animate-slide-up sm:animate-pop-in"

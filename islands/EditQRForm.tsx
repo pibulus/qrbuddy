@@ -1,4 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
+import { useSignal } from "@preact/signals";
 import { haptics } from "../utils/haptics.ts";
 import { useQRData } from "../hooks/useQRData.ts";
 import { updateHistoryItem } from "../utils/history.ts";
@@ -10,6 +11,9 @@ import AnalyticsDashboard from "../components/edit-qr/FieldReportCard.tsx";
 import QRStatusCard from "../components/edit-qr/QRStatusCard.tsx";
 import RoutingModeSelector from "../components/edit-qr/RoutingModeSelector.tsx";
 import RoutingConfigForm from "../components/edit-qr/RoutingConfigForm.tsx";
+import SplashSettings, {
+  type SplashConfig,
+} from "../components/extras/SplashSettings.tsx";
 
 function toLocalDateTimeInput(value: string): string {
   const date = new Date(value);
@@ -115,19 +119,8 @@ export default function EditQRForm() {
 
   // Intro (splash) page state
   const [splashEnabled, setSplashEnabled] = useState(false);
-  const [splashTitle, setSplashTitle] = useState("Welcome!");
-  const [splashButtonText, setSplashButtonText] = useState("Continue");
-  const [splashDescription, setSplashDescription] = useState("");
-  const [splashImageUrl, setSplashImageUrl] = useState("");
-  // Passport holders can brand the page their code opens: a name and an accent
-  // colour. Both were already supported by the renderer and the settings
-  // component — the save payload just never carried them.
-  const [splashBrandName, setSplashBrandName] = useState("");
-  const [splashAccentColor, setSplashAccentColor] = useState("");
-  const [splashUnbranded, setSplashUnbranded] = useState(false);
-  const [splashPreviewTab, setSplashPreviewTab] = useState<"edit" | "preview">(
-    "edit",
-  );
+  // The cover card editor is the same SplashSettings used in the create sheet.
+  const splashConfig = useSignal<SplashConfig | null>(null);
 
   // Initialize form when data loads
   useEffect(() => {
@@ -146,14 +139,19 @@ export default function EditQRForm() {
       setRoutingMode(mode);
 
       const splash = qrData.splash_config;
+      splashConfig.value = splash
+        ? {
+          enabled: true,
+          title: splash.title || "Welcome!",
+          buttonText: splash.buttonText || "Continue",
+          description: splash.description ?? "",
+          imageUrl: splash.imageUrl ?? "",
+          brandName: splash.brandName ?? "",
+          accentColor: splash.accentColor || undefined,
+          unbranded: Boolean(splash.unbranded),
+        }
+        : null;
       setSplashEnabled(splash?.enabled ?? false);
-      setSplashTitle(splash?.title || "Welcome!");
-      setSplashButtonText(splash?.buttonText || "Continue");
-      setSplashDescription(splash?.description ?? "");
-      setSplashImageUrl(splash?.imageUrl ?? "");
-      setSplashBrandName(splash?.brandName ?? "");
-      setSplashAccentColor(splash?.accentColor ?? "");
-      setSplashUnbranded(Boolean(splash?.unbranded));
 
       // Start from a valid empty form, then hydrate only fields that match the
       // stored schema so old malformed records cannot break the editor.
@@ -267,24 +265,25 @@ export default function EditQRForm() {
       routing_mode: routingMode,
       routing_config: routingConfig,
       splash_config: splashEnabled
-        ? {
-          enabled: true,
-          title: splashTitle.trim() || "Welcome!",
-          buttonText: splashButtonText.trim() || "Continue",
-          ...(splashDescription.trim()
-            ? { description: splashDescription.trim() }
-            : {}),
-          ...(splashImageUrl.trim()
-            ? { imageUrl: normalizeUrl(splashImageUrl.trim()) }
-            : {}),
-          ...(splashBrandName.trim()
-            ? { brandName: splashBrandName.trim() }
-            : {}),
-          ...(/^#[0-9a-fA-F]{6}$/.test(splashAccentColor.trim())
-            ? { accentColor: splashAccentColor.trim() }
-            : {}),
-          ...(splashUnbranded ? { unbranded: true } : {}),
-        }
+        ? (() => {
+          const cfg = splashConfig.value;
+          const description = cfg?.description?.trim() ?? "";
+          const imageUrl = cfg?.imageUrl?.trim() ?? "";
+          const brandName = cfg?.brandName?.trim() ?? "";
+          const accent = cfg?.accentColor?.trim() ?? "";
+          return {
+            enabled: true,
+            title: cfg?.title?.trim() || "Welcome!",
+            buttonText: cfg?.buttonText?.trim() || "Continue",
+            ...(description ? { description } : {}),
+            ...(imageUrl ? { imageUrl: normalizeUrl(imageUrl) } : {}),
+            ...(brandName ? { brandName } : {}),
+            ...(/^#[0-9a-fA-F]{6}$/.test(accent)
+              ? { accentColor: accent }
+              : {}),
+            ...(cfg?.unbranded ? { unbranded: true } : {}),
+          };
+        })()
         : null,
     });
 
@@ -475,207 +474,7 @@ export default function EditQRForm() {
             Show a short landing page before redirecting
           </p>
           {splashEnabled && (
-            <div class="space-y-3 bg-white border-2 border-black rounded-2xl p-4 animate-slide-down">
-              <div class="flex items-center justify-between border-b border-black/10 pb-2 gap-2">
-                <span class="text-xs font-black uppercase text-qr-pop">
-                  Cover Card
-                </span>
-                <div class="flex bg-amber-50 p-0.5 rounded-full border-2 border-black">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSplashPreviewTab("edit");
-                      haptics.light();
-                    }}
-                    class={`min-h-[36px] px-3 py-1 rounded-full text-xs font-black transition-all ${
-                      splashPreviewTab === "edit"
-                        ? "bg-black text-white"
-                        : "text-neutral-700 hover:bg-amber-100"
-                    }`}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSplashPreviewTab("preview");
-                      haptics.light();
-                    }}
-                    class={`min-h-[36px] px-3 py-1 rounded-full text-xs font-black transition-all ${
-                      splashPreviewTab === "preview"
-                        ? "bg-black text-white"
-                        : "text-neutral-700 hover:bg-amber-100"
-                    }`}
-                  >
-                    👁️ Preview
-                  </button>
-                </div>
-              </div>
-
-              {splashPreviewTab === "edit"
-                ? (
-                  <div class="space-y-3">
-                    <div class="space-y-1">
-                      <label
-                        htmlFor="qr-splash-title"
-                        class="block text-xs font-black text-black"
-                      >
-                        Page Title
-                      </label>
-                      <input
-                        id="qr-splash-title"
-                        type="text"
-                        maxLength={100}
-                        value={splashTitle}
-                        onInput={(e) =>
-                          setSplashTitle((e.target as HTMLInputElement).value)}
-                        placeholder="Page title (e.g. Welcome!)"
-                        class={`${INPUT_RECIPE} font-bold`}
-                      />
-                    </div>
-                    <div class="space-y-1">
-                      <label
-                        htmlFor="qr-splash-button-text"
-                        class="block text-xs font-black text-black"
-                      >
-                        Button Text
-                      </label>
-                      <input
-                        id="qr-splash-button-text"
-                        type="text"
-                        maxLength={50}
-                        value={splashButtonText}
-                        onInput={(e) =>
-                          setSplashButtonText(
-                            (e.target as HTMLInputElement).value,
-                          )}
-                        placeholder="Button text (e.g. Continue)"
-                        class={`${INPUT_RECIPE} font-bold`}
-                      />
-                    </div>
-                    <div class="space-y-1">
-                      <label
-                        htmlFor="qr-splash-description"
-                        class="block text-xs font-black text-black"
-                      >
-                        Description (Optional)
-                      </label>
-                      <textarea
-                        id="qr-splash-description"
-                        maxLength={500}
-                        value={splashDescription}
-                        onInput={(e) =>
-                          setSplashDescription(
-                            (e.target as HTMLTextAreaElement).value,
-                          )}
-                        placeholder="Description (optional greeting or details)"
-                        rows={2}
-                        class={`${INPUT_RECIPE} resize-none`}
-                      />
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                      <div class="space-y-1">
-                        <label
-                          htmlFor="qr-splash-brand"
-                          class="block text-xs font-black text-black"
-                        >
-                          Brand Name (Optional)
-                        </label>
-                        <input
-                          id="qr-splash-brand"
-                          type="text"
-                          maxLength={60}
-                          value={splashBrandName}
-                          onInput={(e) =>
-                            setSplashBrandName(
-                              (e.target as HTMLInputElement).value,
-                            )}
-                          placeholder="Acme Foods"
-                          class={`${INPUT_RECIPE}`}
-                        />
-                      </div>
-                      <div class="space-y-1">
-                        <label
-                          htmlFor="qr-splash-accent"
-                          class="block text-xs font-black text-black"
-                        >
-                          Accent Colour
-                        </label>
-                        <input
-                          id="qr-splash-accent"
-                          type="color"
-                          value={splashAccentColor || "#ff6ac2"}
-                          onInput={(e) =>
-                            setSplashAccentColor(
-                              (e.target as HTMLInputElement).value,
-                            )}
-                          class="h-[46px] w-full cursor-pointer rounded-xl border-2 border-black/15 bg-white px-1"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="space-y-1">
-                      <label
-                        htmlFor="qr-splash-image-url"
-                        class="block text-xs font-black text-black"
-                      >
-                        Header Image URL (Optional)
-                      </label>
-                      <input
-                        id="qr-splash-image-url"
-                        type="url"
-                        value={splashImageUrl}
-                        onInput={(e) =>
-                          setSplashImageUrl(
-                            (e.target as HTMLInputElement).value,
-                          )}
-                        placeholder="https://example.com/banner.jpg"
-                        class={`${INPUT_RECIPE} font-mono text-xs`}
-                      />
-                    </div>
-                  </div>
-                )
-                : (
-                  <div class="py-2 animate-pop-in">
-                    <div class="rounded-2xl border-2 border-black bg-qr-cream p-4 shadow-chunky text-center max-w-xs mx-auto space-y-2.5">
-                      {splashImageUrl && (
-                        <div class="rounded-xl border-2 border-black overflow-hidden bg-pink-50 max-h-36">
-                          <img
-                            src={splashImageUrl}
-                            alt="Cover image"
-                            class="w-full h-28 object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
-                        </div>
-                      )}
-                      <h5 class="text-base font-black text-black leading-tight">
-                        {splashTitle || "Welcome!"}
-                      </h5>
-                      {splashDescription && (
-                        <p class="text-xs text-neutral-700 whitespace-pre-wrap leading-relaxed line-clamp-3">
-                          {splashDescription}
-                        </p>
-                      )}
-                      <div class="pt-1">
-                        <div class="w-full min-h-[38px] rounded-full border-2 border-black bg-black text-white font-black text-xs py-2 px-3 shadow-chunky flex items-center justify-center gap-1 cursor-default">
-                          <span>{splashButtonText || "Continue"}</span>
-                          <span>→</span>
-                        </div>
-                      </div>
-                      <div class="pt-2 border-t border-black/10 flex items-center justify-center">
-                        <div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-black bg-pink-100 text-[9px] font-black text-black">
-                          <span>⚡</span>
-                          <span>
-                            Built with <strong>QRBuddy</strong>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-            </div>
+            <SplashSettings splashConfig={splashConfig} embedded />
           )}
         </div>
 

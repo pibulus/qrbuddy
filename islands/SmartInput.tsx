@@ -218,6 +218,16 @@ export default function SmartInput(
       params.delete("library");
       params.delete("vault");
       mutatedParams = true;
+    } else if (params.get("tool") === "batch") {
+      // Deep link: /?tool=batch lands straight on the Bulk view.
+      setShowReader(false);
+      setShowLibrary(false);
+      setIsBatchMode(true);
+      setCreateModalTab("type");
+      setCreateContentStep("fill");
+      setIsCreateModalOpen(true);
+      params.delete("tool");
+      mutatedParams = true;
     } else if (
       params.has("inspect") || globalThis.location?.hash === "#inspect"
     ) {
