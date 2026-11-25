@@ -306,6 +306,7 @@ serve(async (req) => {
 
     const items: StoredItem[] = Array.isArray(share.files) ? share.files : [];
     const isLimited = (share.max_downloads ?? UNLIMITED) < UNLIMITED;
+    const hasBeenDownloaded = (share.download_count ?? 0) > 0;
 
     // ---- rename -----------------------------------------------------------
     if (action === "rename") {
@@ -332,8 +333,9 @@ serve(async (req) => {
       return json(req, 200, { success: true, theme });
     }
 
-    // Payload edits stop here for self-destructing shares.
-    if (isLimited) {
+    // Payload edits stop here for self-destructing shares once opened, or for
+    // destructive actions; allow chunked multi-file initial append while untouched.
+    if (isLimited && (action !== "append" || hasBeenDownloaded)) {
       return json(req, 409, {
         error:
           "This share self-destructs, so what's inside is frozen. Rename or re-theme it, or make a fresh one.",

@@ -1074,6 +1074,8 @@ export default function LibraryDrawer(
       setCsvSyncing({ done: 0, total: parsed.updates.length });
       let updatedCount = 0;
       let missingKeys = 0;
+      let failedRemote = 0;
+      let lastRemoteError = "";
 
       for (let i = 0; i < parsed.updates.length; i++) {
         const u = parsed.updates[i];
@@ -1085,34 +1087,42 @@ export default function LibraryDrawer(
             missingKeys++;
             continue;
           }
-          await apiRequest(
-            `${getSupabaseUrl()}/functions/v1/update-dynamic-qr`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                owner_token: u.ownerToken,
-                ...(u.destinationChanged && u.nextDestinationUrl
-                  ? { destination_url: u.nextDestinationUrl }
-                  : {}),
-                ...(u.titleChanged ? { title: u.nextTitle || null } : {}),
-              }),
-            },
-            `Failed updating ${u.shortCode}`,
-          );
-          setCodes((prev) =>
-            prev.map((c) =>
-              c.short_code === u.shortCode
-                ? {
-                  ...c,
+          try {
+            await apiRequest(
+              `${getSupabaseUrl()}/functions/v1/update-dynamic-qr`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  owner_token: u.ownerToken,
                   ...(u.destinationChanged && u.nextDestinationUrl
                     ? { destination_url: u.nextDestinationUrl }
                     : {}),
                   ...(u.titleChanged ? { title: u.nextTitle || null } : {}),
-                }
-                : c
-            )
-          );
+                }),
+              },
+              `Failed updating ${u.shortCode}`,
+            );
+            setCodes((prev) =>
+              prev.map((c) =>
+                c.short_code === u.shortCode
+                  ? {
+                    ...c,
+                    ...(u.destinationChanged && u.nextDestinationUrl
+                      ? { destination_url: u.nextDestinationUrl }
+                      : {}),
+                    ...(u.titleChanged ? { title: u.nextTitle || null } : {}),
+                  }
+                  : c
+              )
+            );
+          } catch (rowErr) {
+            failedRemote++;
+            lastRemoteError = rowErr instanceof Error
+              ? rowErr.message
+              : `Failed updating ${u.shortCode}`;
+            continue;
+          }
         }
 
         if (u.titleChanged && u.nextTitle !== undefined) {
@@ -1161,19 +1171,39 @@ export default function LibraryDrawer(
       }
 
       await refreshLocalHistory();
-      haptics.success();
-      const extraErr = missingKeys > 0
-        ? (isSpanish
-          ? ` (${missingKeys} sin llave local)`
-          : ` (${missingKeys} missing local key)`)
+      const totalErrors = parsed.errors.length + failedRemote;
+      if (updatedCount > 0) {
+        haptics.success();
+      } else {
+        haptics.error();
+      }
+      const warnings: string[] = [];
+      if (missingKeys > 0) {
+        warnings.push(
+          isSpanish
+            ? `${missingKeys} sin llave local`
+            : `${missingKeys} missing local key`,
+        );
+      }
+      if (totalErrors > 0) {
+        warnings.push(
+          isSpanish
+            ? `${totalErrors} fila${totalErrors === 1 ? "" : "s"} con error`
+            : `${totalErrors} row error${totalErrors === 1 ? "" : "s"}`,
+        );
+      }
+      const warningSuffix = warnings.length > 0
+        ? ` (${warnings.join(", ")})`
         : "";
       addToast(
-        isSpanish
-          ? `${updatedCount} QR actualizados desde CSV ✓${extraErr}`
+        updatedCount === 0 && lastRemoteError
+          ? lastRemoteError
+          : isSpanish
+          ? `${updatedCount} QR actualizados desde CSV ✓${warningSuffix}`
           : `Updated ${updatedCount} QR code${
             updatedCount === 1 ? "" : "s"
-          } from CSV ✓${extraErr}`,
-        4000,
+          } from CSV ✓${warningSuffix}`,
+        4500,
       );
     } catch (err) {
       haptics.error();
@@ -1395,8 +1425,8 @@ export default function LibraryDrawer(
                   loadLibraryData(q);
                 }}
                 placeholder={isSpanish
-                  ? "Buscar por nombre, link, código o etiqueta…"
-                  : "Search title, link, short code or tag…"}
+                  ? "Buscar título, link o etiqueta…"
+                  : "Search title, link or tag…"}
                 class="qr-input min-h-[44px] !py-2 !pl-10 !pr-9"
               />
               <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#1e1714] pointer-events-none">
@@ -2071,7 +2101,7 @@ export default function LibraryDrawer(
                     <p class="text-[11px] font-medium text-[#57524b] mt-0.5">
                       {isSpanish
                         ? "Abre tus Guardados en otra laptop o iPad del equipo sin crear cuenta."
-                        : "Open your Saved shelf on another laptop or team iPad — zero accounts."}
+                        : "Open your Saved shelf on another laptop or team iPad: zero accounts."}
                     </p>
                   </div>
                   <div class="flex items-center justify-between gap-2 flex-wrap bg-[#fbf1e4] border-2 border-[#1e1714] rounded-xl p-2.5">

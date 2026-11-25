@@ -123,4 +123,14 @@ Deno.test("V3-B: Counter Sign & Proof Sheet HTML stay Soft Neo Toybrut without r
   assert(proofHtml.includes("15 × 15 mm"));
   assert(proofHtml.includes("50 mm (5.0 cm)"));
   assert(!/#(?:fff|ffffff|000|000000)\b/i.test(proofHtml));
+
+  // Dense >2000 byte payloads must fall back to ECL L rather than throwing overflow.
+  const denseHtml = buildCounterCardPrintHtml({
+    data: `https://qrbuddy.app/menu?notes=${"a".repeat(2200)}`,
+    style: resolveQRStyle("sunset"),
+    styleKey: "sunset",
+    lang: "en",
+  });
+  assert(denseHtml.includes("data:image/svg+xml;base64,"));
+  assert(!denseHtml.includes("<title>[^<]*—"));
 });

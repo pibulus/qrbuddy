@@ -175,7 +175,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             error:
-              "Invalid URL format or protocol. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME.",
+              "Invalid URL format or protocol. Allowed: HTTP, HTTPS, WIFI, MAILTO, TEL, SMS, FACETIME, GEO.",
           }),
           {
             headers: {

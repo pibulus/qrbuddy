@@ -542,21 +542,34 @@ export const DEMO_CONFIGS: Record<DemoKey, DemoConfig> = {
 function parseDemoRoute(
   rawSlug: string,
   url: URL,
-): { demoKey: DemoKey; gs1PathInfo?: DemoPageData["gs1PathInfo"] } {
+): {
+  demoKey: DemoKey;
+  matched: boolean;
+  gs1PathInfo?: DemoPageData["gs1PathInfo"];
+} {
   const segments = rawSlug.split("/").filter(Boolean);
-  const first = (segments[0] ?? "menu").toLowerCase();
+  const first = (segments[0] ?? "").toLowerCase();
 
   let demoKey: DemoKey = "menu";
-  if (first === "wedding" || first === "weddings" || first === "bodas") {
+  let matched = segments.length === 0;
+  if (first === "menu" || first === "menus") {
+    demoKey = "menu";
+    matched = true;
+  } else if (first === "wedding" || first === "weddings" || first === "bodas") {
     demoKey = "wedding";
+    matched = true;
   } else if (first === "mixtape" || first === "music" || first === "musica") {
     demoKey = "mixtape";
+    matched = true;
   } else if (first === "drop" || first === "lockers" || first === "archivos") {
     demoKey = "drop";
+    matched = true;
   } else if (first === "vcard") {
     demoKey = "vcard";
+    matched = true;
   } else if (first === "gs1") {
     demoKey = "gs1";
+    matched = true;
   }
 
   if (demoKey === "gs1") {
@@ -565,20 +578,23 @@ function parseDemoRoute(
     const gtin = gtinIdx >= 0 ? segments[gtinIdx + 1] : undefined;
     const lot = lotIdx >= 0 ? segments[lotIdx + 1] : undefined;
     const expiry = url.searchParams.get("17") ?? undefined;
-    return { demoKey, gs1PathInfo: { gtin, lot, expiry } };
+    return { demoKey, matched, gs1PathInfo: { gtin, lot, expiry } };
   }
 
-  return { demoKey };
+  return { demoKey, matched };
 }
 
 export const handler: Handlers<DemoPageData> = {
   GET(req, ctx) {
     const url = new URL(req.url);
     const lang: Locale = url.searchParams.get("lang") === "es" ? "es" : "en";
-    const { demoKey, gs1PathInfo } = parseDemoRoute(
-      ctx.params.slug || "menu",
+    const { demoKey, matched, gs1PathInfo } = parseDemoRoute(
+      ctx.params.slug || "",
       url,
     );
+    if (!matched) {
+      return ctx.renderNotFound();
+    }
     return ctx.render({ demoKey, lang, gs1PathInfo });
   },
 };
@@ -617,6 +633,21 @@ export default function DemoDestinationPage({ data }: PageProps<DemoPageData>) {
           href={`https://qrbuddy.app/demo/${cfg.key}${
             isSpanish ? "?lang=es" : ""
           }`}
+        />
+        <link
+          rel="alternate"
+          hrefLang="en"
+          href={`https://qrbuddy.app/demo/${cfg.key}`}
+        />
+        <link
+          rel="alternate"
+          hrefLang="es"
+          href={`https://qrbuddy.app/demo/${cfg.key}?lang=es`}
+        />
+        <link
+          rel="alternate"
+          hrefLang="x-default"
+          href={`https://qrbuddy.app/demo/${cfg.key}`}
         />
       </Head>
 

@@ -20,6 +20,7 @@ const ALLOWED_PROTOCOLS = new Set([
   "tel:",
   "sms:",
   "facetime:",
+  "geo:",
 ]);
 
 function normalizeUrl(value: string): string {

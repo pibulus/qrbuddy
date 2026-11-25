@@ -42,9 +42,15 @@ export default function DesignPreview(
       style: resolved,
       logoUrl: logoUrl.value,
     });
-    const isTransparent = canExportTransparent(resolved, frameConfig?.value);
+    const hasFrame = Boolean(
+      frameConfig?.value?.enabled && frameConfig.value.caption.trim() !== "",
+    );
+    const isTransparent = canExportTransparent(
+      resolved,
+      hasFrame ? { enabled: true } : null,
+    );
     const omitted = logoUrl.value && svg.includes('data-cutout="none"');
-    if (frameConfig?.value?.enabled) {
+    if (hasFrame && frameConfig?.value) {
       svg = createFramedSvg(svg, frameConfig.value.caption, {
         banner: bannerColors(frameConfig.value.theme, tokens.accent),
       });

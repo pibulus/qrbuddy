@@ -73,6 +73,7 @@ function isValidRedirectUrl(url: string): boolean {
       "tel:",
       "sms:",
       "facetime:",
+      "geo:",
     ].includes(parsed.protocol);
   } catch {
     return false;

@@ -98,6 +98,18 @@ export default function VCardForm({ url, lang }: Props) {
     ? estimatePrintSpecForPayload(url.value)
     : null;
   const hasOptionalDetails = Boolean(address.trim() || note.trim());
+  const canTrimSafely = hasOptionalDetails &&
+    validateVCard({
+        firstName,
+        lastName,
+        organization,
+        jobTitle: title,
+        phone,
+        email,
+        website,
+        address: "",
+        note: "",
+      }) === null;
 
   return (
     <div class="space-y-3 animate-slide-down">
@@ -127,21 +139,31 @@ export default function VCardForm({ url, lang }: Props) {
                 densitySpec.minInches.toFixed(1)
               }″) on business cards`}
           </p>
-          {hasOptionalDetails && (
-            <button
-              type="button"
-              onClick={() => {
-                setAddress("");
-                setNote("");
-                haptics.light();
-              }}
-              class="min-h-[32px] px-3 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#ffbe0b] text-[11px] font-black text-[#1e1714] transition-colors"
-            >
-              {isSpanish
-                ? "Compactar para tarjeta de 20 mm (quitar dirección/nota)"
-                : "Trim optional fields for 20 mm cards"}
-            </button>
-          )}
+          {canTrimSafely
+            ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setAddress("");
+                  setNote("");
+                  haptics.light();
+                }}
+                class="min-h-[32px] px-3 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#ffbe0b] text-[11px] font-black text-[#1e1714] transition-colors"
+              >
+                {isSpanish
+                  ? "Compactar para tarjeta de 20 mm (quitar dirección/nota)"
+                  : "Trim optional fields for 20 mm cards"}
+              </button>
+            )
+            : hasOptionalDetails
+            ? (
+              <p class="text-[11px] font-medium text-[#574c44]">
+                {isSpanish
+                  ? "Acorta la dirección o nota, o agrega teléfono/correo para compactar a 20 mm."
+                  : "Shorten address/note or add phone/email before trimming to 20 mm."}
+              </p>
+            )
+            : null}
         </div>
       )}
 

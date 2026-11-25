@@ -717,8 +717,8 @@ export default function SmartInput(
       isDynamic.value = true;
       addToast(
         isSpanish
-          ? "Un QR editable necesita un link real — prueba con https://…"
-          : "Editable needs a real link — try https://…",
+          ? "Un QR editable necesita un link real: prueba https://…"
+          : "Editable needs a real link: try https://…",
         3000,
       );
     } else if (!targetUrl) {
@@ -1439,10 +1439,10 @@ export default function SmartInput(
                       ? (isSpanish ? "Suelta archivo aquí…" : "Drop file here…")
                       : (isDynamic.value && !editUrl.value
                         ? (isSpanish
-                          ? "Pega el link de destino (https://...)..."
-                          : "Paste destination URL (https://...)...")
+                          ? "Link de destino (https://…)"
+                          : "Destination URL (https://…)")
                         : (isSpanish
-                          ? "Pega un link, escribe algo o suelta un archivo..."
+                          ? "Link, texto o suelta archivo…"
                           : "Enter URL, text, or drop a file..."))}
                     aria-label={isSpanish
                       ? "Link, texto o archivo para codificar en QR"
@@ -1684,8 +1684,8 @@ export default function SmartInput(
                       }
                     }}
                     placeholder={isSpanish
-                      ? "Nombre del QR (opc., ej. Menú, Mesa 4)"
-                      : "QR name (optional, e.g. Lunch Menu, Table 4)"}
+                      ? "Nombre (ej. Menú, Mesa 4)"
+                      : "Name (e.g. Lunch Menu)"}
                     aria-label={isSpanish ? "Nombre del QR" : "QR name"}
                     class="flex-1 min-w-0 min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714]/25 focus:border-[#1e1714] focus:outline-none bg-[#fbf1e4] text-xs font-bold text-[#1e1714] placeholder:text-[#7c7267]"
                   />

@@ -174,6 +174,46 @@ Deno.test("Audit: robots, sitemap and security headers stay wired", async () => 
   ) {
     assert(middleware.includes(header), `middleware missing ${header}`);
   }
+
+  const noindexMatch = middleware.match(/const NOINDEX_PATH_RE =\s*([^;]+);/);
+  assert(noindexMatch, "NOINDEX_PATH_RE missing");
+  const noindexRe = new RegExp(
+    noindexMatch[1].trim().slice(1, -1),
+  );
+  for (
+    const path of [
+      "/f/abc123",
+      "/bucket/abc123",
+      "/note/abc123",
+      "/api/peek",
+      "/v1/health",
+      "/edit",
+      "/boom",
+      "/q",
+      "/r",
+    ]
+  ) {
+    assert(
+      noindexRe.test(path),
+      `NOINDEX_PATH_RE must match ${path}`,
+    );
+  }
+  assertEquals(noindexRe.test("/for/menus"), false);
+
+  for (const noindexRoute of ["routes/note/[code].tsx", "routes/boom.tsx"]) {
+    const src = await read(noindexRoute);
+    assertEquals(
+      src.includes('rel="canonical"'),
+      false,
+      `${noindexRoute} is noindex and should not emit a canonical link`,
+    );
+  }
+  const privacySrc = await read("routes/privacy.tsx");
+  assertEquals(
+    privacySrc.includes("Deno Deploy"),
+    false,
+    "routes/privacy.tsx should not claim Deno Deploy hosting",
+  );
 });
 
 Deno.test("Audit: every edge function that reads or writes has a rate gate", async () => {

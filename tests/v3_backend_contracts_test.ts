@@ -109,3 +109,25 @@ Deno.test("V3-A: buildDynamicQRUpdatePayload forwards sanitized title cleanly", 
   assert(cleared.ok);
   assertEquals(cleared.payload.title, null);
 });
+
+Deno.test("V3-Gate: geo: redirect routing + untouched limited chunked append work cleanly", async () => {
+  const redirectQr = await read("supabase/functions/redirect-qr/index.ts");
+  assert(
+    redirectQr.includes('"geo:"'),
+    "redirect-qr must allow geo: redirects",
+  );
+
+  const routingConfig = await read(
+    "supabase/functions/_shared/routing-config.ts",
+  );
+  assert(
+    routingConfig.includes('"geo:"'),
+    "routing-config must allow geo: in multi-link/time/device rules",
+  );
+
+  const updateFile = await read("supabase/functions/update-file/index.ts");
+  assert(
+    updateFile.includes('action !== "append" || hasBeenDownloaded'),
+    "update-file must allow initial chunked append on 0-download shares",
+  );
+});

@@ -51,8 +51,7 @@ function buildCsp(): string {
   ].join("; ");
 }
 
-const NOINDEX_PATH_RE =
-  /^\/(?:r|q|edit|boom|api(?:\/|$)|f\/|bucket\/|note\/)(?:\/|$)/;
+const NOINDEX_PATH_RE = /^\/(?:r|q|edit|boom|api|f|bucket|note|v1)(?:\/|$)/;
 
 export const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   "/gs1": "/for/gs1",

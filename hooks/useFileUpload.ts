@@ -155,6 +155,35 @@ export function useFileUpload(
           "Upload failed",
         );
 
+        const allAudio = files.every((f) => f.type.startsWith("audio/"));
+        const allImages = files.every((f) => f.type.startsWith("image/"));
+        // Persist share token + history right after file 0 lands so a partial append
+        // failure never orphans an already-live upload on disk/cloud.
+        let chunkOwnerStored = false;
+        let chunkHistoryStored = false;
+        if (data.fileId) {
+          if (data.ownerToken) {
+            chunkOwnerStored = await saveOwnerToken(
+              "file",
+              data.fileId,
+              data.ownerToken,
+            );
+          }
+          chunkHistoryStored = addToHistory({
+            type: "media",
+            content: data.url,
+            metadata: {
+              title: options.title?.trim() ||
+                `${files.length} ${
+                  allAudio ? "tracks" : allImages ? "photos" : "files"
+                }`,
+              ...(chunkOwnerStored ? { ownerScope: "file" } : {}),
+              ownerId: data.fileId,
+              kind: allAudio ? "playlist" : allImages ? "slideshow" : "pack",
+            },
+          });
+        }
+
         if (data.fileId && data.ownerToken) {
           for (let i = 1; i < files.length; i++) {
             const appendForm = new FormData();
@@ -163,17 +192,42 @@ export function useFileUpload(
             appendForm.append("action", "append");
             appendForm.append("file", files[i]);
             const basePct = Math.round(i * sliceShare);
-            await apiRequestFormDataWithProgress<{ success: boolean }>(
-              `${apiUrl}/update-file`,
-              appendForm,
-              (pct) =>
-                setUploadProgress(
-                  Math.min(99, basePct + Math.round((pct / 100) * sliceShare)),
-                ),
-              `Failed uploading ${files[i].name}`,
-            );
+            try {
+              await apiRequestFormDataWithProgress<{ success: boolean }>(
+                `${apiUrl}/update-file`,
+                appendForm,
+                (pct) =>
+                  setUploadProgress(
+                    Math.min(
+                      99,
+                      basePct + Math.round((pct / 100) * sliceShare),
+                    ),
+                  ),
+                `Failed uploading ${files[i].name}`,
+              );
+            } catch (appendErr) {
+              url.value = data.url;
+              setInputType("file");
+              setValidationState("valid");
+              setTouched(true);
+              const detail = appendErr instanceof Error
+                ? appendErr.message
+                : `Failed uploading ${files[i].name}`;
+              setUploadError(
+                `Uploaded ${i} of ${files.length} files (${detail}). Open Saved to finish appending remaining files.`,
+              );
+              throw appendErr;
+            }
           }
         }
+        (data as UploadResponse & {
+          _persistedOwner?: boolean;
+          _persistedHistory?: boolean;
+        })._persistedOwner = chunkOwnerStored;
+        (data as UploadResponse & {
+          _persistedOwner?: boolean;
+          _persistedHistory?: boolean;
+        })._persistedHistory = chunkHistoryStored;
       } else {
         const formData = new FormData();
         files.forEach((file) => {
@@ -201,9 +255,13 @@ export function useFileUpload(
 
       // It's yours: keep the owner token in the vault (this device) and a
       // "my QRs" entry so the share can be found and managed again.
-      let ownerTokenStored = false;
-      let historyStored = false;
-      if (data.fileId) {
+      const persistedFlags = data as UploadResponse & {
+        _persistedOwner?: boolean;
+        _persistedHistory?: boolean;
+      };
+      let ownerTokenStored = persistedFlags._persistedOwner === true;
+      let historyStored = persistedFlags._persistedHistory === true;
+      if (data.fileId && persistedFlags._persistedOwner === undefined) {
         if (data.ownerToken) {
           ownerTokenStored = await saveOwnerToken(
             "file",

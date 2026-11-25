@@ -207,7 +207,7 @@ ssh pibulus@pibulus.local 'set -euo pipefail
   COMMIT=$(git -C /tmp/qrbuddy-stage rev-parse HEAD)
   SHORT=$(git -C /tmp/qrbuddy-stage rev-parse --short HEAD)
   (cd /tmp/qrbuddy-stage && /home/pibulus/.deno/bin/deno task build)
-  rm -rf /tmp/qrbuddy-stage/.git
+  rm -rf /tmp/qrbuddy-stage/.git /tmp/qrbuddy-stage/.claude /tmp/qrbuddy-stage/CLAUDE.md /tmp/qrbuddy-stage/AGENTS.md /tmp/qrbuddy-stage/.github /tmp/qrbuddy-stage/.launch-hints.yaml
   printf "APP=qrbuddy\nDEPLOYED_COMMIT=%s\nDEPLOYED_SHORT=%s\nDEPLOYED_AT=%s\n" "$COMMIT" "$SHORT" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/qrbuddy-stage/.pibulus-meta
   mv /home/pibulus/apps/qrbuddy /tmp/qrbuddy-prev
   mv /tmp/qrbuddy-stage /home/pibulus/apps/qrbuddy

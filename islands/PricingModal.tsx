@@ -84,13 +84,13 @@ type ModalView = "pitch" | "redeem" | "sync";
 
 const PITCH_PERKS = {
   en: [
-    "100 editable QRs — name, tag & repoint inline.",
+    "100 editable QRs: name, tag & repoint inline.",
     "90-day Field Reports, top cities & CSV export.",
     "500 MB drops & 1-yr galleries/mixtapes (25 MB/track).",
     "White-label pages, API & 4-word team sync.",
   ],
   es: [
-    "100 QRs editables — nombra, etiqueta y redirige.",
+    "100 QRs editables: nombra, etiqueta y redirige.",
     "Reporte de 90 días, ciudades top y CSV.",
     "Envíos de 500 MB y galerías/mixtapes de 1 año.",
     "Páginas sin marca, API y sync de 4 palabras.",

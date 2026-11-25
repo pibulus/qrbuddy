@@ -586,6 +586,60 @@ export default function QrPrintGuideIsland(
           </div>
         </section>
 
+        {/* PRINT FAQ (matches structured FAQPage JSON-LD) */}
+        <section class="bg-[#fffef7] border-4 border-[#1e1714] rounded-3xl p-6 sm:p-8 shadow-chunky space-y-4">
+          <h3 class="text-xl sm:text-2xl font-black text-[#1e1714]">
+            {isSpanish ? "Preguntas Frecuentes de Impresión" : "Printing FAQ"}
+          </h3>
+          <div class="space-y-2.5">
+            {(isSpanish
+              ? [
+                {
+                  q: "¿Cuál es la fórmula para calcular el tamaño de impresión de un código QR?",
+                  a: "Dividir la distancia entre 10 da una estimación inicial, no un mínimo garantizado. A 0.5 metros sugiere 5 cm. Usa un código mayor para contenido denso o poca luz y prueba una muestra impresa con los teléfonos previstos.",
+                },
+                {
+                  q: "¿Por qué los códigos QR 'gratuitos' dejan de funcionar después de imprimirlos?",
+                  a: "La imagen de un QR estático no vence por sí sola, pero su destino puede desaparecer. Los QR editables dependen del servicio de redirección y de sus límites o vencimiento. Revisa las condiciones antes de imprimir.",
+                },
+                {
+                  q: "¿Debo imprimir en archivo vectorial SVG o en PNG?",
+                  a: "SVG permite cambiar el tamaño sin pixelación y es útil para diseños impresos. PNG también sirve si tiene suficientes píxeles para el tamaño final. Prueba la impresión antes de una tirada grande.",
+                },
+              ]
+              : [
+                {
+                  q: "What is the formula for calculating minimum QR code print size?",
+                  a: "Distance divided by 10 is a starting estimate, not a guaranteed minimum. At 0.5 meters it suggests 5 cm. Use a larger code for dense content or dim light, then test a printed sample with the intended phones.",
+                },
+                {
+                  q: "Why do 'free' QR codes stop working after printing?",
+                  a: "A static QR image has no expiry of its own, but its destination can disappear. Editable QRs depend on a redirect service and its limits or expiry. Check the provider's terms before printing.",
+                },
+                {
+                  q: "Should I print QR codes from SVG vector files or PNG?",
+                  a: "SVG scales without pixelation and is useful for print layouts. PNG also works when it has enough pixels for the final print size. Test the actual printed output before a large run.",
+                },
+              ]).map((item) => (
+                <details
+                  key={item.q}
+                  open
+                  class="group bg-[#fbf1e4] border-2 border-[#1e1714] rounded-2xl overflow-hidden"
+                >
+                  <summary class="px-4 py-3 text-sm font-black text-[#1e1714] cursor-pointer list-none flex items-center justify-between gap-2 select-none">
+                    <span>{item.q}</span>
+                    <span class="text-xs font-black transition-transform group-open:rotate-180">
+                      ▾
+                    </span>
+                  </summary>
+                  <p class="px-4 pb-3.5 text-xs text-[#4a3f39] leading-relaxed">
+                    {item.a}
+                  </p>
+                </details>
+              ))}
+          </div>
+        </section>
+
         {/* BOTTOM CTA */}
         <section class="bg-[#fbf1e4] border-4 border-[#1e1714] rounded-3xl p-6 sm:p-8 shadow-chunky text-center space-y-4">
           <h3 class="text-2xl sm:text-3xl font-black text-[#1e1714]">

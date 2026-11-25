@@ -212,7 +212,7 @@ export default function DesignTab(
       : { enabled: true, caption: clean, theme };
   };
   const cycleBanner = () => {
-    if (!frameConfig) return;
+    if (!frameConfig || !caption.trim()) return;
     const i = BANNER_THEMES.indexOf(theme);
     frameConfig.value = {
       enabled: true,
@@ -501,14 +501,23 @@ export default function DesignTab(
             <button
               type="button"
               data-banner-cycle
+              disabled={!caption.trim()}
               onClick={cycleBanner}
-              title={es
-                ? `Franja: ${theme} — tocar para cambiar`
-                : `Banner: ${theme} — tap to change`}
+              title={!caption.trim()
+                ? (es
+                  ? "Escribe una etiqueta primero para elegir estilo"
+                  : "Type a label first to style its banner")
+                : (es
+                  ? `Franja: ${theme} · tocar para cambiar`
+                  : `Banner: ${theme} · tap to change`)}
               aria-label={es
                 ? `Franja: ${theme}. Cambiar estilo`
                 : `Banner: ${theme}. Change style`}
-              class="shrink-0 w-9 h-9 flex items-center justify-center rounded-full mr-1 hover:scale-105 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714]"
+              class={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full mr-1 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e1714] ${
+                caption.trim()
+                  ? "hover:scale-105"
+                  : "opacity-45 cursor-not-allowed"
+              }`}
             >
               <span
                 aria-hidden="true"

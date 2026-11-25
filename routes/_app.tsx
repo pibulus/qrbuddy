@@ -4,7 +4,8 @@ import { getSupabaseUrl } from "../utils/api.ts";
 
 export default function App({ Component, url }: PageProps) {
   const isSpanish = /^\/es(?:\/|$)/.test(url.pathname) ||
-    (["/privacy", "/terms"].includes(url.pathname) &&
+    ((["/privacy", "/terms", "/developers"].includes(url.pathname) ||
+      url.pathname.startsWith("/demo/")) &&
       url.searchParams.get("lang") === "es");
   // Injected on every route so islands on /edit, /q, etc. can reach Supabase —
   // not just the home page (see utils/api.ts resolveSupabaseUrl fallback chain).

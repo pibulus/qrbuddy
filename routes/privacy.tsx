@@ -162,8 +162,8 @@ export default function PrivacyPage({ data }: PageProps<PageData>) {
               </li>
               <li>
                 {es
-                  ? "Deno Deploy, Supabase, Cloudflare y otros proveedores pueden procesar datos técnicos de solicitudes en sus sistemas. Sus propios registros operativos siguen sus políticas y plazos."
-                  : "Deno Deploy, Supabase, Cloudflare, and other providers may process technical request data in their systems. Their operational logs follow their own policies and retention periods."}
+                  ? "El servidor de QRBuddy, Supabase, Cloudflare y otros proveedores pueden procesar datos técnicos de solicitudes en sus sistemas. Sus propios registros operativos siguen sus políticas y plazos."
+                  : "QRBuddy's server host, Supabase, Cloudflare, and other providers may process technical request data in their systems. Their operational logs follow their own policies and retention periods."}
               </li>
             </ul>
           </section>
@@ -174,8 +174,8 @@ export default function PrivacyPage({ data }: PageProps<PageData>) {
             </h2>
             <p>
               {es
-                ? "QRBuddy usa Deno Deploy para alojar el sitio; Supabase para la base de datos, funciones y archivos habituales; Cloudflare R2 para algunos archivos grandes; Square para pagos; Umami y el beacon de QRBuddy para medición de uso; y Open-Meteo para el contexto meteorológico aproximado de algunas visitas compartidas."
-                : "QRBuddy uses Deno Deploy to host the site; Supabase for the database, functions, and standard file storage; Cloudflare R2 for some large files; Square for payments; Umami and QRBuddy's beacon for usage measurement; and Open-Meteo for approximate weather context on some shared-page visits."}
+                ? "QRBuddy se aloja en un servidor Linux propio detrás de Cloudflare; usa Supabase para la base de datos, funciones y archivos habituales; Cloudflare R2 para algunos archivos grandes; Square para pagos; Umami y el beacon de QRBuddy para medición de uso; y Open-Meteo para el contexto meteorológico aproximado de algunas visitas compartidas."
+                : "QRBuddy is self-hosted on a bare-metal Linux server behind Cloudflare; uses Supabase for the database, functions, and standard file storage; Cloudflare R2 for some large files; Square for payments; Umami and QRBuddy's beacon for usage measurement; and Open-Meteo for approximate weather context on some shared-page visits."}
             </p>
           </section>
 

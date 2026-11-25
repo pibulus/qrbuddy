@@ -546,17 +546,14 @@ export default function QRCanvas(
     frame?: FrameConfig | null;
   } = {}) => {
     const exportSize = size ?? pngSizeRef.current;
-    const isFramed = frame !== undefined
-      ? (frame?.enabled ?? false)
-      : (frameConfig?.value?.enabled ?? false);
-    const effectiveCaption = frame !== undefined
-      ? (frame?.caption ?? "")
-      : (frameConfig?.value?.caption ?? "");
+    const targetFrame = frame !== undefined ? frame : frameConfig?.value;
+    const effectiveCaption = (targetFrame?.caption ?? "").trim();
+    const isFramed = Boolean(targetFrame?.enabled && effectiveCaption !== "");
 
     if (isFramed) {
       await downloadFramedPng({
         caption: effectiveCaption,
-        theme: frame !== undefined ? frame?.theme : frameConfig?.value?.theme,
+        theme: targetFrame?.theme,
         targetSize: exportSize,
       });
       return;
@@ -565,7 +562,7 @@ export default function QRCanvas(
     const qrOptions = getQrOptions(exportSize);
     const exportQr = new QRRenderer(qrOptions);
     let raw: Blob;
-    if (canExportTransparent(qrOptions.style, frame ?? frameConfig?.value)) {
+    if (canExportTransparent(qrOptions.style, { enabled: false })) {
       const rawSvgBlob = await exportQr.getRawData("svg");
       const rawSvgText = await (rawSvgBlob as Blob).text();
       raw = await rasterizeSvgToPngBlob(
@@ -593,15 +590,10 @@ export default function QRCanvas(
   }: {
     frame?: FrameConfig | null;
   } = {}) => {
-    const isFramed = frame !== undefined
-      ? (frame?.enabled ?? false)
-      : (frameConfig?.value?.enabled ?? false);
-    const effectiveCaption = frame !== undefined
-      ? (frame?.caption ?? "")
-      : (frameConfig?.value?.caption ?? "");
-    const effectiveTheme = frame !== undefined
-      ? frame?.theme
-      : frameConfig?.value?.theme;
+    const targetFrame = frame !== undefined ? frame : frameConfig?.value;
+    const effectiveCaption = (targetFrame?.caption ?? "").trim();
+    const isFramed = Boolean(targetFrame?.enabled && effectiveCaption !== "");
+    const effectiveTheme = targetFrame?.theme;
 
     const qrOptions = getQrOptions(1000);
     const exportQr = new QRRenderer(qrOptions);
@@ -676,17 +668,19 @@ export default function QRCanvas(
     setTimeout(() => setIsClicking(false), 150);
     try {
       const activeFrame = frameConfig?.value;
+      const activeCaption = (activeFrame?.caption ?? "").trim();
+      const isFramed = Boolean(activeFrame?.enabled && activeCaption !== "");
       let pngBlob: Blob;
-      if (activeFrame?.enabled) {
+      if (isFramed && activeFrame) {
         pngBlob = await composeFramedPngBlob({
-          caption: activeFrame.caption,
+          caption: activeCaption,
           theme: activeFrame.theme,
           targetSize: pngSizeRef.current,
         });
       } else {
         const qrOptions = getQrOptions(pngSizeRef.current);
         const exportQr = new QRRenderer(qrOptions);
-        if (canExportTransparent(qrOptions.style, activeFrame)) {
+        if (canExportTransparent(qrOptions.style, { enabled: false })) {
           const svgBlob = await exportQr.getRawData("svg");
           const svgText = await (svgBlob as Blob).text();
           pngBlob = await rasterizeSvgToPngBlob(

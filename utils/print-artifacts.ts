@@ -3,7 +3,7 @@ import type { Locale } from "./i18n.ts";
 import { resolveQRStyle } from "./qr-design.ts";
 import { styledQrSvg } from "./qr-renderer.ts";
 import { getQRThemeTokens } from "./qr-styles.ts";
-import { toSvgDataUrl } from "./qr-vector-svg.ts";
+import { buildQrSvgString, toSvgDataUrl } from "./qr-vector-svg.ts";
 import { stripSvgBackgroundRect } from "./svg-export.ts";
 import { parseVCard, parseWiFi } from "../types/qr-templates.ts";
 import type { QRStyle } from "../types/qr-types.ts";
@@ -45,12 +45,31 @@ function buildSignQrSvgUrl(options: PrintArtifactOptions): string {
     options.style ?? undefined,
   );
   const cleanStyle: QRStyle = { ...resolved };
-  let svg = styledQrSvg({
-    size: 1000,
-    data: options.data || "https://qrbuddy.app",
-    style: cleanStyle,
-    logoUrl: options.logoUrl,
-  });
+  const payload = options.data || "https://qrbuddy.app";
+  let svg: string;
+  try {
+    svg = styledQrSvg({
+      size: 1000,
+      data: payload,
+      style: cleanStyle,
+      logoUrl: options.logoUrl,
+    });
+  } catch {
+    svg = buildQrSvgString({
+      data: payload,
+      size: 1000,
+      palette: options.styleKey || "sunset",
+      c1: cleanStyle.dots.color ??
+        cleanStyle.dots.gradient?.colorStops[0]?.color,
+      c2: cleanStyle.dots.color ??
+        cleanStyle.dots.gradient?.colorStops.at(-1)?.color,
+      bg: cleanStyle.background.color ??
+        cleanStyle.background.gradient?.colorStops[0]?.color,
+      dotShape: "rounded",
+      renderMode: "classic",
+      errorCorrectionLevel: "L",
+    });
+  }
   if (
     cleanStyle.transparentBg &&
     (cleanStyle.renderMode ?? "classic") === "classic" &&
@@ -340,7 +359,7 @@ export function buildCounterCardPrintHtml(
   const signCard = renderCardMarkup(meta, svgUrl, tokens.accent, es, "sign");
   const tentCard = renderCardMarkup(meta, svgUrl, tokens.accent, es, "tent");
 
-  const docTitle = `${meta.title} — ${
+  const docTitle = `${meta.title} · ${
     es ? "Letrero para imprimir" : "Printable Sign"
   }`;
 

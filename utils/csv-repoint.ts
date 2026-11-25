@@ -32,11 +32,16 @@ export interface EditableCsvParseResult {
 }
 
 function escapeCsvCell(value: string | number | boolean): string {
-  const str = String(value ?? "");
-  if (/[",\r\n]/.test(str)) {
-    return `"${str.replaceAll('"', '""')}"`;
+  const raw = String(value ?? "");
+  // Neutralize spreadsheet formula triggers (CWE-1236) on text cells while keeping booleans/numbers intact.
+  const safe = typeof value === "string" &&
+      /^(?:[\t\r\n ]*[=+\-@]|[\t\r])/.test(raw)
+    ? `'${raw}`
+    : raw;
+  if (/[",\r\n]/.test(safe)) {
+    return `"${safe.replaceAll('"', '""')}"`;
   }
-  return str;
+  return safe;
 }
 
 /** Splits one CSV line with delimiter auto-detection and RFC-4180 quote handling. */

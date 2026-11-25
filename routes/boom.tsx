@@ -28,7 +28,6 @@ export default function Boom({ data }: PageProps<PageData>) {
             : "This QR code has already self-destructed"}
         />
         <meta name="robots" content="noindex" />
-        <link rel="canonical" href="https://qrbuddy.app/boom" />
       </Head>
 
       <main

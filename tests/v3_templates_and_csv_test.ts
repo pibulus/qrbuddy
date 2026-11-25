@@ -20,6 +20,7 @@ import {
   type EditableCsvRow,
   parseEditableCsvUpdates,
 } from "../utils/csv-repoint.ts";
+import { looksLikeUrl } from "../utils/url.ts";
 
 Deno.test("V3-C: WhatsApp formatter, validator & parser handle country codes and pre-filled copy", () => {
   assertEquals(
@@ -231,4 +232,34 @@ Deno.test("V3-C: Editable CSV round-trip detects modified destination URLs, titl
   assertEquals(parsed.updates[0].titleChanged, true);
   assertEquals(parsed.updates[0].nextTitle, "Table 1, Courtyard");
   assertEquals(parsed.updates[0].tagsChanged, false);
+});
+
+Deno.test("V3-Security: looksLikeUrl allows geo: while blocking @-userinfo scheme bypasses & CSV escapes formulas", () => {
+  assertEquals(looksLikeUrl("geo:-37.7675,144.9621"), true);
+  assertEquals(looksLikeUrl("geo:"), false);
+  assertEquals(looksLikeUrl("example.com:8080/menu"), true);
+  assertEquals(looksLikeUrl("javascript:alert(1)@evil.com"), false);
+  assertEquals(looksLikeUrl("vbscript:msgbox(1)@evil.com"), false);
+  assertEquals(looksLikeUrl("data:text/html,@evil.com"), false);
+
+  const csv = buildEditableLibraryCsv([
+    {
+      shortCode: "fx1",
+      title: '=HYPERLINK("https://evil.com","Click")',
+      destinationUrl: "https://qrbuddy.app",
+      tags: ["+tag"],
+      redirectUrl: "@SUM(1+1)",
+      scanCount: 5,
+      isActive: true,
+    },
+  ]);
+  assert(
+    csv.includes("'=HYPERLINK"),
+    "Formula-prefixed titles must be neutralized on CSV export",
+  );
+  assert(
+    csv.includes("'@SUM(1+1)"),
+    "Formula-prefixed URLs/cells must be neutralized on CSV export",
+  );
+  assert(!csv.includes('"=HYPERLINK'), "Unescaped leading = must not remain");
 });

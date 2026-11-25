@@ -110,8 +110,8 @@ export default function EventForm({ url, lang }: Props) {
             haptics.light();
           }}
           placeholder={isSpanish
-            ? "ej. Boda de Maya y Leo · Lanzamiento de disco"
-            : "e.g. Maya & Leo Wedding · Album Launch"}
+            ? "ej. Boda de Maya y Leo"
+            : "e.g. Maya & Leo Wedding"}
           class="qr-input text-base"
         />
       </div>

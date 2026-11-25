@@ -5,16 +5,30 @@ export function looksLikeUrl(s: string): boolean {
   const trimmed = s.trim();
   if (!trimmed) return false;
 
-  // Custom known utility schemes
-  if (/^(mailto|tel|sms|wifi|facetime):/i.test(trimmed)) {
-    return true;
+  // Known utility schemes first (e.g. `tel:12345` has digits after `:` so check before host:port).
+  const utilityMatch = /^(mailto|tel|sms|wifi|facetime|geo):/i.exec(trimmed);
+  if (utilityMatch) {
+    return trimmed.slice(utilityMatch[0].length).trim().length > 0;
+  }
+
+  // Distinguish bare host:port (example.com:8080) from explicit disallowed schemes.
+  const looksLikeHostPort = /^[a-zA-Z][a-zA-Z0-9+.-]*:\d+(?:[/?#]|$)/.test(
+    trimmed,
+  );
+  const schemeMatch = !looksLikeHostPort
+    ? /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(trimmed)
+    : null;
+
+  if (schemeMatch) {
+    const scheme = schemeMatch[1].toLowerCase();
+    if (scheme !== "http" && scheme !== "https") {
+      return false;
+    }
   }
 
   try {
     const url = new URL(
-      trimmed.startsWith("http://") || trimmed.startsWith("https://")
-        ? trimmed
-        : `https://${trimmed}`,
+      schemeMatch ? trimmed : `https://${trimmed}`,
     );
     return url.hostname.includes(".");
   } catch {
