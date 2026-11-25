@@ -466,7 +466,7 @@ Deno.test("Storage resilience - simulated localStorage quota and corruption hand
   }
 });
 
-Deno.test("QR_STYLES & STYLE_DISPLAY - public presets satisfy scannability floor (luminance <= 0.40 or high-contrast >= 10:1) and stay synced", () => {
+Deno.test("QR_STYLES & STYLE_DISPLAY - public presets satisfy unified >= 4.5:1 scannability law and stay synced", () => {
   for (const [key, display] of Object.entries(STYLE_DISPLAY)) {
     const preset = QR_STYLES[key as keyof typeof QR_STYLES];
     assert(preset, `Preset ${key} must exist in QR_STYLES`);
@@ -486,18 +486,25 @@ Deno.test("QR_STYLES & STYLE_DISPLAY - public presets satisfy scannability floor
       for (const stopColor of dotStops) {
         const lum = relativeLuminance(stopColor);
         assert(
-          lum <= 0.40,
+          lum <= 0.145,
           `Preset ${key} dot stop ${stopColor} has luminance ${
             lum.toFixed(3)
-          } > 0.40`,
+          } > 0.145`,
+        );
+        const crCream = contrastRatio(stopColor, "#FBF1E4");
+        assert(
+          crCream >= 4.5,
+          `Preset ${key} dot stop ${stopColor} vs cream #FBF1E4 has contrast ${
+            crCream.toFixed(2)
+          } < 4.5`,
         );
         for (const bgColor of bgColors) {
           const cr = contrastRatio(stopColor, bgColor);
           assert(
-            cr >= 2.0,
+            cr >= 4.5,
             `Preset ${key} dot stop ${stopColor} vs bg ${bgColor} has contrast ${
               cr.toFixed(2)
-            } < 2.0`,
+            } < 4.5`,
           );
         }
       }

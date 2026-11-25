@@ -185,11 +185,11 @@ Deno.test("batch sheets render styled palette SVGs and paginated A4/Letter 3x4 &
   const sunsetSvg = buildStyledBatchQrSvg("https://acme.test/menu", "sunset", {
     caption: "Table 01",
   });
-  assert(sunsetSvg.includes("#F97316"));
+  assert(sunsetSvg.includes("#B43E0E"));
   assert(sunsetSvg.includes("TABLE 01"));
 
   const forestSvg = buildStyledBatchQrSvg("https://acme.test/menu", "matcha");
-  assert(forestSvg.includes("#15803D"));
+  assert(forestSvg.includes("#14532D"));
 
   const items = Array.from({ length: 14 }, (_, idx) => ({
     data: `https://acme.test/t/${idx + 1}`,
@@ -231,7 +231,7 @@ Deno.test("batch sheets: Q floor, studio style override, localized title and /ba
   const styled = buildStyledBatchQrSvg("https://acme.test/menu", "sunset", {
     style: custom,
   });
-  assert(styled.includes("#15803D"));
+  assert(styled.includes("#14532D"));
 
   const sheet = buildBatchStickerSheetHtml({
     items: [{ data: "https://acme.test/1", caption: "Mesa 1" }],

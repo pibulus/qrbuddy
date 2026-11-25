@@ -1,6 +1,5 @@
 import type { BannerTheme, QRStyle } from "../types/qr-types.ts";
-import { relativeLuminance } from "./qr-styles.ts";
-import { QR_STYLES } from "./qr-styles.ts";
+import { contrastRatio, QR_STYLES } from "./qr-styles.ts";
 import { toSvgDataUrl } from "./qr-vector-svg.ts";
 
 /** Palette colours and geometry are independent, including restored designs. */
@@ -124,13 +123,15 @@ export function stampUrl(path: string): string {
 /** Three curated banner looks, resolved from the active palette accent. */
 export function bannerColors(
   theme: BannerTheme = "accent",
-  accent = "#ec4899",
+  accent = "#BE185D",
 ): { bg: string; ink: string } {
   if (theme === "ink") return { bg: "#1e1714", ink: "#fffef7" };
   if (theme === "paper") return { bg: "#fffef7", ink: "#1e1714" };
   let ink = "#fffef7";
   try {
-    if (relativeLuminance(accent) > 0.42) ink = "#1e1714";
+    ink = contrastRatio(accent, "#fffef7") >= contrastRatio(accent, "#1e1714")
+      ? "#fffef7"
+      : "#1e1714";
   } catch {
     ink = "#fffef7";
   }

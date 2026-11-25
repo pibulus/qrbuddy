@@ -70,22 +70,22 @@ const STYLE_BADGE_MAP: Record<
   sunset: {
     en: "Sunset",
     es: "Atardecer",
-    colors: ["#F97316", "#FF69B4", "#9370DB"],
+    colors: ["#B43E0E", "#B51763", "#6B21A8"],
   },
   pool: {
     en: "Ocean",
     es: "Océano",
-    colors: ["#0EA5E9", "#0891B2", "#0D9488"],
+    colors: ["#035E8B", "#0B5D6E", "#0B5E55"],
   },
   matcha: {
     en: "Forest",
     es: "Bosque",
-    colors: ["#15803D", "#059669", "#0F766E"],
+    colors: ["#14532D", "#065F46", "#115E59"],
   },
   vapor: {
     en: "Vaporwave",
     es: "Vaporwave",
-    colors: ["#6D28D9", "#9333EA", "#DB2777"],
+    colors: ["#5B21B6", "#6B21A8", "#9D174D"],
   },
   brutalist: {
     en: "Brutal",
@@ -100,17 +100,17 @@ const STYLE_BADGE_MAP: Record<
   blush: {
     en: "Crimson",
     es: "Carmesí",
-    colors: ["#E11D48", "#DB2777", "#9D174D"],
+    colors: ["#9F1239", "#BE185D", "#831843"],
   },
   grape: {
     en: "Cosmic",
     es: "Cósmico",
-    colors: ["#4F46E5", "#7C3AED", "#9333EA"],
+    colors: ["#3730A3", "#5B21B6", "#6B21A8"],
   },
   candy: {
     en: "Candy",
     es: "Dulce",
-    colors: ["#FF2E93", "#7C3AED", "#0891B2"],
+    colors: ["#BE185D", "#6D28D9", "#0E6480"],
   },
   terminal: {
     en: "Matrix",
@@ -120,7 +120,7 @@ const STYLE_BADGE_MAP: Record<
   custom: {
     en: "Custom",
     es: "Propio",
-    colors: ["#EC4899", "#7C3AED"],
+    colors: ["#BE185D", "#6B21A8"],
   },
 };
 

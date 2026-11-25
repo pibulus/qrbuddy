@@ -55,7 +55,7 @@ export default function HomeStage(
         {isEs ? "Saltar al contenido principal" : "Skip to main content"}
       </a>
 
-      <div class="min-h-[100dvh] flex flex-col items-center justify-start px-6 pt-8 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
+      <div class="min-h-[100dvh] flex flex-col items-center justify-start px-6 pt-6 sm:pt-12 bg-gradient-to-br from-qr-cream via-qr-sunsetMid to-qr-sunset1 relative sm:bg-[length:200%_200%] sm:animate-gradient-flow sm:[animation-duration:16s]">
         <ToastManager />
 
         <EasterEggs url={url} style={style} />
@@ -71,7 +71,7 @@ export default function HomeStage(
         {/* Saved Codes - top-left counterweight opposite StyleSelector */}
         <div
           role="region"
-          class="absolute top-7 left-4 sm:top-12 sm:left-6 z-50 animate-fade-in"
+          class="absolute top-5 left-4 sm:top-12 sm:left-6 z-50 animate-fade-in"
           aria-label={isEs ? "Códigos guardados" : "Saved codes"}
         >
           <ErrorBoundary>
@@ -85,10 +85,10 @@ export default function HomeStage(
 
         <main
           id="main-content"
-          class="w-full max-w-md space-y-6 sm:space-y-8 sm:my-auto"
+          class="w-full max-w-md space-y-4 sm:space-y-7 sm:my-auto"
         >
           {/* Hero Text */}
-          <header class="text-center space-y-1.5 px-4 mb-2 animate-fade-in">
+          <header class="text-center space-y-1.5 px-4 mb-1 sm:mb-2 animate-fade-in">
             <h1 class="text-4xl sm:text-5xl font-black text-black tracking-tight">
               QRBuddy
             </h1>
@@ -133,7 +133,7 @@ export default function HomeStage(
           </div>
 
           {/* Smart Input - BELOW QR */}
-          <div class="mx-auto w-full max-w-[336px] sm:max-w-[360px] !mt-6">
+          <div class="mx-auto w-full max-w-[336px] sm:max-w-[360px] !mt-4 sm:!mt-6">
             <SmartInput
               url={url}
               isDestructible={isDestructible}

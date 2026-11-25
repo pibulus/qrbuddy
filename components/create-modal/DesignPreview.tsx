@@ -83,13 +83,12 @@ export default function DesignPreview(
       ? [resolveRiso(stopColors, paper, resolved.risoInk)[0]]
       : stopColors;
     const contrast = evaluateQrContrast(inks, paper);
-    // Built-in presets and monochrome/Game Boy halftone plates are scan-verified;
-    // only flag custom colour-mode ink palettes or inverted foregrounds.
+    // Unified 4.5:1 scan-safety standard across every built-in preset and
+    // custom palette (monochrome halftone plates manage their own ink contrast).
     const isMonochromeHalftone = lookMode === "halftone" &&
       (resolved.halftoneTone ?? "color") !== "color";
     const hasContrastIssue = contrast.inverted ||
-      (qrStyle.value === "custom" && !isMonochromeHalftone &&
-        contrast.lowContrast);
+      (!isMonochromeHalftone && contrast.minRatio < 4.5);
     const paletteName = resolvePaletteDisplayName(qrStyle.value, es);
     const lookBadge = lookMode === "halftone"
       ? (es ? "Semitono" : "Halftone")

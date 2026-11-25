@@ -17,6 +17,7 @@ import * as $edit from "./routes/edit.tsx";
 import * as $es_archivos from "./routes/es/archivos.tsx";
 import * as $es_bodas from "./routes/es/bodas.tsx";
 import * as $es_comparar from "./routes/es/comparar.tsx";
+import * as $es_developers from "./routes/es/developers.tsx";
 import * as $es_escanear from "./routes/es/escanear.tsx";
 import * as $es_gs1 from "./routes/es/gs1.tsx";
 import * as $es_guia_impresion from "./routes/es/guia/impresion.tsx";
@@ -88,6 +89,7 @@ const manifest = {
     "./routes/es/archivos.tsx": $es_archivos,
     "./routes/es/bodas.tsx": $es_bodas,
     "./routes/es/comparar.tsx": $es_comparar,
+    "./routes/es/developers.tsx": $es_developers,
     "./routes/es/escanear.tsx": $es_escanear,
     "./routes/es/gs1.tsx": $es_gs1,
     "./routes/es/guia/impresion.tsx": $es_guia_impresion,

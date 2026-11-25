@@ -202,9 +202,22 @@ export default function SmartInput(
     const g = globalThis as typeof globalThis & {
       __qrbLibraryListener?: boolean;
       __qrbInspectorListener?: boolean;
+      __qrbHydrated?: boolean;
+      __qrbEarlyAction?: { kind: "tab" | "vault"; tab?: string } | null;
     };
     g.__qrbLibraryListener = true;
     g.__qrbInspectorListener = true;
+    g.__qrbHydrated = true;
+    if (g.__qrbEarlyAction?.kind === "tab") {
+      const earlyTab = g.__qrbEarlyAction.tab === "design" ? "design" : "type";
+      g.__qrbEarlyAction = null;
+      setShowReader(false);
+      setShowLibrary(false);
+      setCreateModalTab(earlyTab);
+      setCreateContentStep("pick");
+      setIsCreateModalOpen(true);
+      setCreateHasUpdates(false);
+    }
 
     const handleOpenLibrary = () => {
       setIsCreateModalOpen(false);
@@ -1609,7 +1622,7 @@ export default function SmartInput(
                   }`;
                 const title = "text-[13px] font-black whitespace-nowrap";
                 const badge =
-                  "text-[10px] font-black leading-none px-1.5 py-0.5 rounded-full bg-[var(--qr-theme-accent,#ec4899)] text-[#fffef7] border border-[#1e1714] whitespace-nowrap";
+                  "text-[10px] font-black leading-none px-1.5 py-0.5 rounded-full bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] whitespace-nowrap";
                 return (
                   <>
                     <button

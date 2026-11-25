@@ -74,7 +74,8 @@ export default function App({ Component, url }: PageProps) {
           dangerouslySetInnerHTML={{
             __html:
               `(function(){function outside(e){var t=e.target;return !(t&&t.closest&&t.closest("[data-dropzone]"))}` +
-              `["dragover","drop"].forEach(function(n){addEventListener(n,function(e){if(outside(e))e.preventDefault()},false)})})();`,
+              `["dragover","drop"].forEach(function(n){addEventListener(n,function(e){if(outside(e))e.preventDefault()},false)});` +
+              `document.addEventListener("click",function(e){if(window.__qrbHydrated)return;var t=e.target;if(!t||!t.closest)return;var b=t.closest("[data-qrb-open-tab]");if(b){window.__qrbEarlyAction={kind:"tab",tab:b.getAttribute("data-qrb-open-tab")};return}if(t.closest("[data-qrb-open-vault]")){window.__qrbEarlyAction={kind:"vault"}}},true)})();`,
           }}
         />
       </head>

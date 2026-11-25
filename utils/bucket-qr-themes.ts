@@ -4,38 +4,38 @@ export const TEXT_CARD_THEMES: Record<
   { card: string; bar: string; text?: string }
 > = {
   sunset: {
-    card: "bg-gradient-to-br from-[#FFF8F0] to-[#FFE5B4]",
-    bar: "bg-gradient-to-r from-[#F97316] via-[#FF69B4] to-[#9370DB]",
+    card: "bg-gradient-to-br from-[#FFFDF8] to-[#FFF1DC]",
+    bar: "bg-gradient-to-r from-[#B43E0E] via-[#B51763] to-[#6B21A8]",
     text: "text-black",
   },
   candy: {
     card: "bg-gradient-to-br from-[#FFF0F7] to-[#F0F9FF]",
-    bar: "bg-gradient-to-r from-[#FF2E93] via-[#7C3AED] to-[#0891B2]",
+    bar: "bg-gradient-to-r from-[#BE185D] via-[#6D28D9] to-[#0E6480]",
     text: "text-black",
   },
   blush: {
     card: "bg-gradient-to-br from-[#FFF5F7] to-[#FFE4E9]",
-    bar: "bg-gradient-to-r from-[#F43F5E] via-[#E11D48] to-[#9D174D]",
+    bar: "bg-gradient-to-r from-[#9F1239] via-[#BE185D] to-[#831843]",
     text: "text-black",
   },
   matcha: {
     card: "bg-gradient-to-br from-[#F2FBF7] to-[#DCFCE7]",
-    bar: "bg-gradient-to-r from-[#059669] to-[#0F766E]",
+    bar: "bg-gradient-to-r from-[#14532D] to-[#115E59]",
     text: "text-black",
   },
   pool: {
     card: "bg-gradient-to-br from-[#ECFEFF] to-[#CFFAFE]",
-    bar: "bg-gradient-to-r from-[#0EA5E9] to-[#0D9488]",
+    bar: "bg-gradient-to-r from-[#035E8B] to-[#0B5E55]",
     text: "text-black",
   },
   vapor: {
     card: "bg-gradient-to-br from-[#F5F3FF] to-[#FCE7F3]",
-    bar: "bg-gradient-to-r from-[#8B5CF6] to-[#DB2777]",
+    bar: "bg-gradient-to-r from-[#5B21B6] to-[#9D174D]",
     text: "text-black",
   },
   grape: {
     card: "bg-gradient-to-br from-[#EEF2FF] to-[#EDE9FE]",
-    bar: "bg-gradient-to-r from-[#4F46E5] to-[#9333EA]",
+    bar: "bg-gradient-to-r from-[#3730A3] to-[#6B21A8]",
     text: "text-black",
   },
   noir: {

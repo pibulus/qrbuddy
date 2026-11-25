@@ -1014,7 +1014,7 @@ export function PricingLink({
       type="button"
       onClick={openPricingModal}
       class={cls ??
-        `inline-flex items-center justify-center px-4 min-h-[44px] rounded-full border-2 border-black bg-qr-pop text-white text-sm font-bold shadow-chunky transition-all hover:scale-105 hover:bg-qr-popDeep active:scale-95 ${className}`}
+        `inline-flex items-center justify-center px-4 min-h-[44px] rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] text-[#1e1714] text-sm font-black shadow-chunky transition-all hover:scale-105 hover:bg-[#ffd04a] active:scale-95 ${className}`}
     >
       {children ?? label}
     </button>

@@ -48,6 +48,7 @@ const ROUTE_COUNTERPARTS_EN_TO_ES: Record<string, string> = {
   "/vs/bitly": "/es/vs/bitly",
   "/vs/qr-code-generator": "/es/vs/qr-code-generator",
   "/guide/printing": "/es/guia/impresion",
+  "/developers": "/es/developers",
 };
 
 const ROUTE_COUNTERPARTS_ES_TO_EN: Record<string, string> = Object.fromEntries(

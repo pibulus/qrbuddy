@@ -220,7 +220,7 @@ export default function ShareReady(
         <button
           type="button"
           onClick={handleSticker}
-          class={`${PILL} bg-qr-pop text-[#fffef7] hover:bg-qr-popDeep`}
+          class={`${PILL} bg-[#ffbe0b] text-[#1e1714] hover:bg-[#ffd04a]`}
         >
           {isSpanish ? "Sticker" : "Sticker"}
         </button>

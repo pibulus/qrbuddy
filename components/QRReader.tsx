@@ -588,7 +588,7 @@ export default function QRReader(
                     </>
                   )}
               </h2>
-              <p class="text-xs sm:text-sm font-bold text-[#ec4899] truncate">
+              <p class="text-xs sm:text-sm font-bold text-[#be185d] truncate">
                 {isSpanish
                   ? "Un filtro seguro entre un QR desconocido y el navegador."
                   : "A safe buffer between a mystery QR and the browser."}

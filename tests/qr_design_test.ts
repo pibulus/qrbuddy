@@ -129,16 +129,17 @@ Deno.test("Design: a card label is a banner inside one pass, not a second box", 
 });
 
 Deno.test("Design: three banner looks, auto-contrast, persisted", () => {
-  assertEquals(bannerColors("ink", "#ec4899"), {
+  assertEquals(bannerColors("ink", "#BE185D"), {
     bg: "#1e1714",
     ink: "#fffef7",
   });
-  assertEquals(bannerColors("paper", "#ec4899"), {
+  assertEquals(bannerColors("paper", "#BE185D"), {
     bg: "#fffef7",
     ink: "#1e1714",
   });
-  assertEquals(bannerColors("accent", "#ec4899").bg, "#ec4899");
-  assertEquals(bannerColors("accent", "#ec4899").ink, "#fffef7");
+  assertEquals(bannerColors("accent", "#BE185D").bg, "#BE185D");
+  assertEquals(bannerColors("accent", "#BE185D").ink, "#fffef7");
+  assertEquals(bannerColors("accent", "#ec4899").ink, "#1e1714"); // light pink flips to dark ink (>= 4.5:1)
   assertEquals(bannerColors("accent", "#ffbe0b").ink, "#1e1714"); // bright gold
   const saved = validateDesignPreferences({
     version: 1,

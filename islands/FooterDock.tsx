@@ -82,10 +82,10 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
   }, []);
 
   return (
-    <footer class="w-full mt-auto pt-16 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    <footer class="w-full mt-auto pt-7 sm:pt-14 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-5">
         <nav
-          class="inline-flex items-center gap-1 p-1 rounded-full border-2 border-black bg-white shadow-chunky"
+          class="inline-flex items-center gap-1 p-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] shadow-chunky"
           aria-label="Site"
         >
           <button type="button" onClick={() => openAboutModal()} class={ITEM}>
@@ -127,37 +127,37 @@ export default function FooterDock({ lang }: { lang?: Lang }) {
           <button
             type="button"
             onClick={openPricingModal}
-            class="inline-flex items-center justify-center gap-1.5 px-[clamp(8px,2.4vw,14px)] min-h-[44px] rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-accent,#ec4899)] text-[#fffef7] text-[clamp(12px,3.4vw,14px)] font-black whitespace-nowrap transition-all hover:bg-[var(--qr-theme-accent-deep,#db2777)] active:scale-95"
+            class="inline-flex items-center justify-center gap-1.5 px-[clamp(8px,2.4vw,14px)] min-h-[44px] rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] text-[#1e1714] text-[clamp(12px,3.4vw,14px)] font-black whitespace-nowrap transition-all hover:bg-[#ffd04a] active:scale-95"
           >
             {t.supporter}
           </button>
         </nav>
 
-        <div class="order-2 sm:order-first flex flex-wrap items-center justify-center gap-x-2 text-xs font-bold text-[#574c44]">
+        <div class="order-2 sm:order-first flex flex-wrap items-center justify-center gap-x-2.5 gap-y-0.5 text-[11px] sm:text-xs font-bold text-[#574c44]">
           <span>© {year} QRBuddy ·</span>
           <a
             href={MAKER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center min-h-[44px] underline decoration-2 decoration-qr-pop/40 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
+            class="inline-flex items-center py-1.5 sm:min-h-[44px] underline decoration-2 decoration-qr-pop/40 underline-offset-2 transition-colors hover:text-[#1e1714] hover:decoration-[#1e1714]"
           >
             {t.made} 💖
           </a>
           <a
             href={locale === "es" ? "/privacy?lang=es" : "/privacy"}
-            class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
+            class="inline-flex py-1.5 px-1 sm:min-h-[44px] sm:min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-[#1e1714] hover:decoration-[#1e1714]"
           >
             {t.privacy}
           </a>
           <a
-            href={locale === "es" ? "/developers?lang=es" : "/developers"}
-            class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
+            href={locale === "es" ? "/es/developers" : "/developers"}
+            class="inline-flex py-1.5 px-1 sm:min-h-[44px] sm:min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-[#1e1714] hover:decoration-[#1e1714]"
           >
             {t.developers}
           </a>
           <a
             href={locale === "es" ? "/terms?lang=es" : "/terms"}
-            class="inline-flex min-h-[44px] min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-black hover:decoration-qr-pop"
+            class="inline-flex py-1.5 px-1 sm:min-h-[44px] sm:min-w-[44px] items-center justify-center underline decoration-2 decoration-black/20 underline-offset-2 transition-colors hover:text-[#1e1714] hover:decoration-[#1e1714]"
           >
             {t.terms}
           </a>

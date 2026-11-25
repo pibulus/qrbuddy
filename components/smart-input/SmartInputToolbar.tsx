@@ -180,6 +180,7 @@ export default function SmartInputToolbar({
       {/* What the QR holds — current type, opens Content (and Behavior) */}
       <button
         type="button"
+        data-qrb-open-tab="type"
         onClick={press(() => onOpenCreate("type"))}
         aria-expanded={openPanel === "type" || openPanel === "options"}
         class={`${TILE} ${latch(["type", "options"])} relative min-w-0 px-4`}
@@ -196,13 +197,14 @@ export default function SmartInputToolbar({
           ▾
         </span>
         {createHasUpdates && (
-          <span class="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-[var(--qr-theme-accent,#ec4899)] border-2 border-[#1e1714] animate-pulse" />
+          <span class="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-[var(--qr-theme-accent,#be185d)] border-2 border-[#1e1714] animate-pulse" />
         )}
       </button>
 
       {/* How it looks — palette, logo, frame, shapes */}
       <button
         type="button"
+        data-qrb-open-tab="design"
         onClick={press(() => onOpenCreate("design"))}
         aria-expanded={openPanel === "design"}
         class={`${TILE} ${latch("design")} min-w-0 px-4`}

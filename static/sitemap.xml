@@ -435,8 +435,26 @@
   <!-- Developer API -->
   <url>
     <loc>https://qrbuddy.app/developers</loc>
-    <lastmod>2026-11-02</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/developers" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/developers" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/developers" />
+  </url>
+  <url>
+    <loc>https://qrbuddy.app/es/developers</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="en"
+      href="https://qrbuddy.app/developers" />
+    <xhtml:link rel="alternate" hreflang="es"
+      href="https://qrbuddy.app/es/developers" />
+    <xhtml:link rel="alternate" hreflang="x-default"
+      href="https://qrbuddy.app/developers" />
   </url>
 </urlset>

@@ -319,7 +319,7 @@ export default function QRStatusCard({ qrData, lang }: QRStatusCardProps) {
             <button
               type="button"
               onClick={handleDownloadSticker}
-              class="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-qr-pop hover:bg-qr-popDeep text-white rounded-full border-2 border-black font-black text-xs shadow-chunky transition-all active:scale-95"
+              class="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714] rounded-full border-2 border-[#1e1714] font-black text-xs shadow-chunky transition-all active:scale-95"
             >
               {isSpanish ? "Descargar PNG" : "Download PNG"}
             </button>

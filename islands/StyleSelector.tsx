@@ -19,22 +19,22 @@ export const STYLE_DISPLAY = {
   sunset: {
     name: "Sunset",
     nameEs: "Atardecer",
-    colors: ["#F97316", "#FF69B4", "#9370DB"],
+    colors: ["#B43E0E", "#B51763", "#6B21A8"],
   },
   pool: {
     name: "Ocean",
     nameEs: "Océano",
-    colors: ["#0EA5E9", "#0891B2", "#0D9488"],
+    colors: ["#035E8B", "#0B5D6E", "#0B5E55"],
   },
   matcha: {
     name: "Forest",
     nameEs: "Bosque",
-    colors: ["#15803D", "#059669", "#0F766E"],
+    colors: ["#14532D", "#065F46", "#115E59"],
   },
   vapor: {
     name: "Vaporwave",
     nameEs: "Vaporwave",
-    colors: ["#6D28D9", "#9333EA", "#DB2777"],
+    colors: ["#5B21B6", "#6B21A8", "#9D174D"],
   },
   brutalist: {
     name: "Brutal",
@@ -55,17 +55,17 @@ const LEGACY_STYLE_DISPLAY: Record<
   blush: {
     name: "Crimson",
     nameEs: "Carmesí",
-    colors: ["#E11D48", "#DB2777", "#9D174D"],
+    colors: ["#9F1239", "#BE185D", "#831843"],
   },
   grape: {
     name: "Cosmic",
     nameEs: "Cósmico",
-    colors: ["#4F46E5", "#7C3AED", "#9333EA"],
+    colors: ["#3730A3", "#5B21B6", "#6B21A8"],
   },
   candy: {
     name: "Candy",
     nameEs: "Dulce",
-    colors: ["#FF2E93", "#7C3AED", "#0891B2"],
+    colors: ["#BE185D", "#6D28D9", "#0E6480"],
   },
   terminal: {
     name: "Matrix",
@@ -101,6 +101,16 @@ export default function StyleSelector(
       isVaultOpen.value = open;
     };
     syncCount();
+    const g = globalThis as typeof globalThis & {
+      __qrbHydrated?: boolean;
+      __qrbEarlyAction?: { kind: "tab" | "vault"; tab?: string } | null;
+    };
+    g.__qrbHydrated = true;
+    if (g.__qrbEarlyAction?.kind === "vault") {
+      g.__qrbEarlyAction = null;
+      isVaultOpen.value = true;
+      globalThis.dispatchEvent(new CustomEvent("qrb-open-vault"));
+    }
     globalThis.addEventListener("history-updated", syncCount);
     globalThis.addEventListener("qrb-vault-visibility", syncVisibility);
     return () => {
@@ -145,6 +155,7 @@ export default function StyleSelector(
       <div ref={rootRef} class="relative">
         <button
           type="button"
+          data-qrb-open-vault="1"
           onClick={() => {
             isVaultOpen.value = true;
             haptics.light();

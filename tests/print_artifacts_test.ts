@@ -111,6 +111,8 @@ Deno.test("V3-B: Counter Sign & Proof Sheet HTML stay Soft Neo Toybrut without r
   assert(signHtml.includes("BrunswickGuest"));
   assert(signHtml.includes("espresso123"));
   assert(signHtml.includes("Foldable Table Tent"));
+  assert(signHtml.includes("@page { size: 105mm 148mm; margin: 0; }"));
+  assert(signHtml.includes("@page { size: A4 portrait; margin: 8mm; }"));
   assert(!/#(?:fff|ffffff|000|000000)\b/i.test(signHtml));
 
   const proofHtml = buildPrintProofSheetHtml({

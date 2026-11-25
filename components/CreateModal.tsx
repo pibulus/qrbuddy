@@ -328,6 +328,11 @@ export default function CreateModal({
   const audioInputRef = useRef<HTMLInputElement>(null);
   const bodyScrollRef = useRef<HTMLDivElement>(null);
   const fillStageRef = useRef<HTMLDivElement>(null);
+  const tabButtonRefs = useRef<Record<ActiveTab, HTMLButtonElement | null>>({
+    type: null,
+    options: null,
+    design: null,
+  });
 
   const scrollBodyToTop = () => {
     if (bodyScrollRef.current) {
@@ -1616,11 +1621,25 @@ export default function CreateModal({
 
           {!hasCompletion && (
             <div class="px-4 sm:px-6 pt-1.5 pb-2 bg-[#fbf1e4] border-b-2 border-[#1e1714]/10 z-10">
-              <div class="grid grid-cols-3 gap-1 rounded-full bg-[#efe9dc] p-1 border-2 border-[#1e1714]">
-                {tabs.map((tab) => (
+              <div
+                role="tablist"
+                aria-label={isSpanish
+                  ? "Secciones del estudio QR"
+                  : "QR studio sections"}
+                class="grid grid-cols-3 gap-1 rounded-full bg-[#efe9dc] p-1 border-2 border-[#1e1714]"
+              >
+                {tabs.map((tab, idx) => (
                   <button
+                    ref={(el) => {
+                      tabButtonRefs.current[tab.id] = el;
+                    }}
+                    id={`create-modal-tab-${tab.id}`}
                     type="button"
                     key={tab.id}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`create-modal-panel-${tab.id}`}
+                    tabIndex={activeTab === tab.id ? 0 : -1}
                     onClick={() => {
                       if (tab.id === "type" && activeTab === "type") {
                         setContentStep("pick");
@@ -1630,8 +1649,27 @@ export default function CreateModal({
                       haptics.light();
                       sounds.click();
                     }}
-                    aria-selected={activeTab === tab.id}
-                    role="tab"
+                    onKeyDown={(e: KeyboardEvent) => {
+                      let nextIdx = idx;
+                      if (e.key === "ArrowRight") {
+                        nextIdx = (idx + 1) % tabs.length;
+                      } else if (e.key === "ArrowLeft") {
+                        nextIdx = (idx - 1 + tabs.length) % tabs.length;
+                      } else if (e.key === "Home") {
+                        nextIdx = 0;
+                      } else if (e.key === "End") {
+                        nextIdx = tabs.length - 1;
+                      } else {
+                        return;
+                      }
+                      e.preventDefault();
+                      const nextTab = tabs[nextIdx];
+                      setActiveTab(nextTab.id);
+                      scrollBodyToTop();
+                      haptics.light();
+                      sounds.click();
+                      tabButtonRefs.current[nextTab.id]?.focus();
+                    }}
                     class={`min-h-[38px] px-2 rounded-full text-xs min-[380px]:text-sm font-black whitespace-nowrap transition-all flex items-center justify-center min-w-0 border-2 ${
                       activeTab === tab.id
                         ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-[#1e1714] shadow-[0_2px_0_#1e1714]"
@@ -1660,6 +1698,11 @@ export default function CreateModal({
           )}
           <div
             ref={bodyScrollRef}
+            id={hasCompletion ? undefined : `create-modal-panel-${activeTab}`}
+            role={hasCompletion ? undefined : "tabpanel"}
+            aria-labelledby={hasCompletion
+              ? undefined
+              : `create-modal-tab-${activeTab}`}
             class={`flex-1 min-h-0 overflow-y-auto scrollbar-none px-4 sm:px-6 ${
               activeTab === "design" ? "py-3 sm:py-2.5" : "py-4 sm:py-4 pb-5"
             }`}

@@ -2,7 +2,7 @@ import qrcode from "qrcode-generator";
 import type { Locale } from "./i18n.ts";
 import { resolveQRStyle } from "./qr-design.ts";
 import { styledQrSvg } from "./qr-renderer.ts";
-import { getQRThemeTokens } from "./qr-styles.ts";
+import { contrastRatio, getQRThemeTokens } from "./qr-styles.ts";
 import { buildQrSvgString, toSvgDataUrl } from "./qr-vector-svg.ts";
 import { stripSvgBackgroundRect } from "./svg-export.ts";
 import { parseVCard, parseWiFi } from "../types/qr-templates.ts";
@@ -321,13 +321,21 @@ function renderCardMarkup(
     ? `<p class="subline">${escapeHtml(meta.secondaryLine)}</p>`
     : "";
 
+  const badgeInk = (() => {
+    try {
+      return contrastRatio(accent, "#fffef7") >= 4.5 ? "#fffef7" : "#1e1714";
+    } catch {
+      return "#fffef7";
+    }
+  })();
+
   return `
     <article class="card ${variant === "tent" ? "card-tent" : "card-sign"}">
       <div class="accent-strip" style="background:${escapeHtml(accent)}"></div>
       <div class="card-inner">
-        <span class="badge" style="background:${escapeHtml(accent)}">${
-    escapeHtml(meta.badge)
-  }</span>
+        <span class="badge" style="background:${
+    escapeHtml(accent)
+  };color:${badgeInk}">${escapeHtml(meta.badge)}</span>
         <h1 class="sign-title">${escapeHtml(meta.title)}</h1>
         <div class="qr-frame">
           <img src="${svgUrl}" alt="QR code" />
@@ -339,6 +347,10 @@ function renderCardMarkup(
         </div>
         <p class="instruction">${escapeHtml(meta.instruction)}</p>
       </div>
+      <span class="crop-mark crop-tl" aria-hidden="true"></span>
+      <span class="crop-mark crop-tr" aria-hidden="true"></span>
+      <span class="crop-mark crop-bl" aria-hidden="true"></span>
+      <span class="crop-mark crop-br" aria-hidden="true"></span>
     </article>`;
 }
 
@@ -363,14 +375,18 @@ export function buildCounterCardPrintHtml(
     es ? "Letrero para imprimir" : "Printable Sign"
   }`;
 
+  const initialPageRule = initialLayout === "tent"
+    ? "@page { size: A4 portrait; margin: 8mm; }"
+    : "@page { size: 105mm 148mm; margin: 0; }";
+
   return `<!doctype html>
 <html lang="${es ? "es" : "en"}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(docTitle)}</title>
+  <style id="page-size-rule">${initialPageRule}</style>
   <style>
-    @page { size: auto; margin: 10mm; }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
@@ -596,12 +612,54 @@ export function buildCounterCardPrintHtml(
     body[data-layout="tent"] .sign-only { display: none; }
     body[data-layout="tent"] .tent-sheet { display: flex; }
     body[data-hide-secret="true"] .secret-row { display: none !important; }
+    .crop-mark {
+      display: none;
+      position: absolute;
+      width: 3.5mm;
+      height: 3.5mm;
+      pointer-events: none;
+    }
+    body[data-crop-marks="true"] .card { position: relative; overflow: visible; }
+    body[data-crop-marks="true"] .crop-mark { display: block; }
+    .crop-tl { top: -2.5mm; left: -2.5mm; border-top: 0.35mm solid #1e1714; border-left: 0.35mm solid #1e1714; }
+    .crop-tr { top: -2.5mm; right: -2.5mm; border-top: 0.35mm solid #1e1714; border-right: 0.35mm solid #1e1714; }
+    .crop-bl { bottom: -2.5mm; left: -2.5mm; border-bottom: 0.35mm solid #1e1714; border-left: 0.35mm solid #1e1714; }
+    .crop-br { bottom: -2.5mm; right: -2.5mm; border-bottom: 0.35mm solid #1e1714; border-right: 0.35mm solid #1e1714; }
 
     @media print {
-      body { background: #fffef7 !important; }
+      html, body { background: #fffef7 !important; height: auto; }
       .no-print { display: none !important; }
-      .stage { padding: 0; }
-      .card { box-shadow: none; }
+      .stage { padding: 0; margin: 0; }
+      .card { box-shadow: none; break-inside: avoid; page-break-inside: avoid; }
+      body[data-layout="sign"] .stage {
+        width: 105mm;
+        height: 147mm;
+        padding: 4mm;
+        align-items: center;
+      }
+      body[data-layout="sign"] .sign-only {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      body[data-layout="sign"] .card-sign {
+        width: 97mm;
+        max-height: 138mm;
+      }
+      body[data-layout="sign"] .card-inner {
+        padding: 4.5mm 5mm;
+        gap: 2.5mm;
+      }
+      body[data-layout="sign"] .qr-frame {
+        width: 54mm;
+        height: 54mm;
+        padding: 2mm;
+      }
+      body[data-layout="sign"] .sign-title {
+        font-size: 15pt;
+      }
       .fold-line span { background: #fffef7; }
     }
   </style>
@@ -629,6 +687,10 @@ export function buildCounterCardPrintHtml(
         </label>`
       : ""
   }
+      <label class="toggle-label">
+        <input type="checkbox" onchange="document.body.dataset.cropMarks = this.checked ? 'true' : 'false'" />
+        <span>✂ ${es ? "Marcas de corte" : "Crop marks"}</span>
+      </label>
     </div>
     <button type="button" class="btn btn-primary" onclick="window.print()">
       🖨 ${es ? "Imprimir / Guardar PDF" : "Print / Save PDF"}
@@ -653,6 +715,12 @@ export function buildCounterCardPrintHtml(
   <script>
     function setLayout(mode) {
       document.body.dataset.layout = mode;
+      var rule = document.getElementById('page-size-rule');
+      if (rule) {
+        rule.textContent = mode === 'tent'
+          ? '@page { size: A4 portrait; margin: 8mm; }'
+          : '@page { size: 105mm 148mm; margin: 0; }';
+      }
       document.getElementById('btn-sign').classList.toggle('active', mode === 'sign');
       document.getElementById('btn-tent').classList.toggle('active', mode === 'tent');
     }

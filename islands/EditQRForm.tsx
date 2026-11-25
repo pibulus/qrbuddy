@@ -609,7 +609,7 @@ export default function EditQRForm({ lang }: { lang?: Locale } = {}) {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          class="w-full min-h-[52px] px-6 py-3.5 bg-qr-pop hover:bg-qr-popDeep text-white font-black text-lg rounded-full border-3 border-black shadow-chunky hover:shadow-chunky-hover hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          class="w-full min-h-[52px] px-6 py-3.5 bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714] font-black text-lg rounded-full border-3 border-[#1e1714] shadow-chunky hover:shadow-chunky-hover hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           {isSaving
             ? (isSpanish ? "Guardando..." : "Saving...")

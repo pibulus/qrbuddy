@@ -760,7 +760,7 @@ export default function QRCanvas(
     if (dots?.color) {
       return `radial-gradient(circle at 50% 50%, ${dots.color} 0%, transparent 74%)`;
     }
-    return "radial-gradient(circle at 50% 50%, #F97316 0%, #FF69B4 48%, transparent 76%)";
+    return "radial-gradient(circle at 50% 50%, #B43E0E 0%, #B51763 48%, transparent 76%)";
   };
 
   useEffect(() => {
@@ -1179,7 +1179,7 @@ export default function QRCanvas(
               globalThis.dispatchEvent(new CustomEvent("qrb-open-behavior"));
               haptics.light();
             }}
-            class="absolute -top-3 -right-3 inline-flex items-center gap-1.5 bg-[var(--qr-theme-accent,#ec4899)] text-[#fffef7] px-3 py-1 rounded-full border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] text-xs font-black animate-pop-in z-10 transition-transform hover:-translate-y-px active:translate-y-[1px] cursor-pointer"
+            class="absolute -top-3 -right-3 inline-flex items-center gap-1.5 bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714] px-3 py-1 rounded-full border-2 border-[#1e1714] shadow-[0_2px_0_#1e1714] text-xs font-black animate-pop-in z-10 transition-transform hover:-translate-y-px active:translate-y-[1px] cursor-pointer"
             aria-label={isSpanish
               ? "Editable: abrir ajustes de comportamiento"
               : "Editable: open behavior settings"}
@@ -1189,7 +1189,7 @@ export default function QRCanvas(
           >
             <span
               aria-hidden="true"
-              class="w-2 h-2 rounded-full bg-[#fffef7] animate-pulse"
+              class="w-2 h-2 rounded-full bg-[#1e1714] animate-pulse"
             />
             editable
           </button>

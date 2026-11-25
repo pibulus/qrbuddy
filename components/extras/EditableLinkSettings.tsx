@@ -176,7 +176,7 @@ export default function EditableLinkSettings({
                     : `Keep this safe — it's the only way to edit your QR later.\n\n${editUrl.value}`,
                 )
               }`}
-              class="text-[11px] font-bold text-[#ec4899] underline underline-offset-2 hover:text-[#1e1714]"
+              class="text-[11px] font-bold text-[#be185d] underline underline-offset-2 hover:text-[#1e1714]"
               onClick={() => haptics.light()}
             >
               {isSpanish ? "📧 Enviar por correo" : "📧 Email key"}
