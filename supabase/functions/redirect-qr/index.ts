@@ -8,8 +8,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   checkRateLimit,
   createRateLimitResponse,
-  getClientIP,
 } from "../_shared/rate-limit.ts";
+import { resolveScannerContext } from "../_shared/proxy-trust.ts";
 import {
   createNeutralFiniteQrPreviewResponse,
   isLinkPreviewBot,
@@ -87,9 +87,9 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting: 100 redirects per minute per IP
-    const clientIP = getClientIP(req);
-    const rateLimitResult = await checkRateLimit(clientIP, {
+    // Rate limiting: 100 redirects per minute per resolved client IP
+    const scannerCtx = await resolveScannerContext(req);
+    const rateLimitResult = await checkRateLimit(scannerCtx.ip, {
       scope: "redirect-qr",
       windowMs: 60 * 1000, // 1 minute
       maxRequests: 100,
@@ -275,8 +275,8 @@ serve(async (req) => {
     // --------------------------------------------------------------------------
     // 1. ANALYTICS LOGGING (Fire and Forget)
     // --------------------------------------------------------------------------
-    const country = req.headers.get("cf-ipcountry") || "Unknown"; // Cloudflare header
-    const city = req.headers.get("cf-ipcity") || "Unknown";
+    const country = scannerCtx.country;
+    const city = scannerCtx.city;
 
     // Simple UA Parsing
     let deviceType = "desktop";
@@ -390,7 +390,7 @@ serve(async (req) => {
           : qr.routing_config;
 
         const now = new Date();
-        const scannerTimezone = req.headers.get("cf-timezone");
+        const scannerTimezone = scannerCtx.timezone;
         const configuredTimezone = typeof config.timezone === "string"
           ? config.timezone
           : "UTC";

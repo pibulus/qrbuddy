@@ -7,6 +7,8 @@
 // uniques and returns, and tomorrow it is a different hash. The IP is never
 // stored and cannot be recovered from the hash without the secret.
 
+import { sanitizeCityHeader, sanitizeCountryHeader } from "./proxy-trust.ts";
+
 export interface Visitor {
   country: string | null;
   city: string | null;
@@ -77,8 +79,8 @@ export function describeVisitor(req: Request): Visitor {
     device = "bot";
   }
 
-  const country = req.headers.get("cf-ipcountry");
-  const city = req.headers.get("cf-ipcity");
+  const country = sanitizeCountryHeader(req.headers.get("cf-ipcountry"));
+  const city = sanitizeCityHeader(req.headers.get("cf-ipcity"));
   // A QR scan opens the page with no referrer; a pasted/forwarded link
   // usually carries one. Free and honest "scan vs share" signal.
   const referer = req.headers.get("referer");
@@ -87,8 +89,8 @@ export function describeVisitor(req: Request): Visitor {
     .split(",")[0].trim().split("-")[0].toLowerCase() || null;
 
   return {
-    country: country && country !== "XX" ? country : null,
-    city: city ? decodeURIComponent(city) : null,
+    country,
+    city,
     device,
     os,
     referred,

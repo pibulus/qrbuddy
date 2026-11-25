@@ -5,6 +5,7 @@ import {
   getSupabaseUrl,
 } from "../utils/api.ts";
 import { type Locale, resolveRequestLocale } from "../utils/i18n.ts";
+import { buildRedirectUpstreamHeaders } from "../utils/proxy-context.ts";
 
 function routingUnavailable() {
   return new Response(
@@ -146,44 +147,122 @@ function pinPage(
   );
 }
 
-/** Shared upstream call so GET and POST forward identical client context. */
+/** Shared upstream call so GET and POST forward identical sanitized client context. */
 async function callUpstream(
   req: Request,
   supabaseUrl: string,
   shortCode: string,
-  extraHeaders: Record<string, string>,
+  extraHeaders: Record<string, string> = {},
 ): Promise<Response> {
-  const forwardHeaders: Record<string, string> = {
-    ...getAuthHeaders(),
-    ...extraHeaders,
-  };
-  const clientHeaders = [
-    "user-agent",
-    "cf-connecting-ip",
-    "x-forwarded-for",
-    "x-real-ip",
-    "cf-ipcountry",
-    "cf-ipcity",
-    "cf-timezone",
-    "accept-language",
-  ];
-  const MAX_FORWARDED_HEADER_LENGTH = 500;
-  for (const headerName of clientHeaders) {
-    const headerValue = req.headers.get(headerName);
-    if (headerValue) {
-      forwardHeaders[headerName] = headerValue.slice(
-        0,
-        MAX_FORWARDED_HEADER_LENGTH,
-      );
-    }
-  }
+  const forwardHeaders = await buildRedirectUpstreamHeaders(
+    req,
+    getAuthHeaders(),
+    extraHeaders,
+    Deno.env.get("SOFTSTACK_PASSPORT_SECRET"),
+  );
 
+  // Fetch with redirect: "manual" so the Fresh server doesn't proxy the third-party
+  // destination website or crash on non-HTTP schemes (mailto:, tel:, sms:, wifi:, geo:, etc.).
   return await fetchWithTimeout(
     `${supabaseUrl}/functions/v1/redirect-qr?code=${
       encodeURIComponent(shortCode)
     }`,
     { headers: forwardHeaders, redirect: "manual" },
   );
+}
+
+async function handleUpstreamResponse(
+  req: Request,
+  shortCode: string,
+  response: Response,
+  invalidPinFallback = false,
+): Promise<Response> {
+  // Locked code: ask for the PIN instead of leaking the destination.
+  if (response.status === 401) {
+    const invalid = invalidPinFallback ||
+      response.headers.get("X-QR-Pin-Invalid") === "1";
+    return pinPage(shortCode, invalid, resolveRequestLocale(req));
+  }
+
+  // Handle redirect responses from edge function (301, 302, 307, 308)
+  if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get("Location") ||
+      response.headers.get("location");
+    if (location) {
+      const headers: Record<string, string> = {
+        Location: location,
+        "Cache-Control": "no-store, max-age=0",
+      };
+      const unlockToken = response.headers.get("X-QR-Unlock");
+      if (unlockToken) {
+        headers["Set-Cookie"] = unlockCookieHeader(
+          req,
+          shortCode,
+          unlockToken,
+        );
+      }
+      return new Response(null, { status: 302, headers });
+    }
+  }
+
+  // Handle HTML responses (e.g. Intro / Splash Page & Roulette Spin Card).
+  // Supabase Edge Runtime's gateway rewrites Content-Type to text/plain on
+  // *.supabase.co/functions/v1/*, so detect HTML payloads and serve them as
+  // text/html; charset=utf-8 so browsers render the card instead of raw text.
+  if (response.status === 200) {
+    const body = await response.text();
+    const trimmed = body.trimStart();
+    const isHtml = /^<!doctype\s+html/i.test(trimmed) ||
+      /^<html[\s>]/i.test(trimmed);
+    const contentType = isHtml
+      ? "text/html; charset=utf-8"
+      : (response.headers.get("Content-Type") ||
+        "text/html; charset=utf-8");
+    const headers: Record<string, string> = {
+      "Content-Type": contentType,
+      "Cache-Control": response.headers.get("Cache-Control") ??
+        "no-store, max-age=0",
+    };
+    const unlockToken = response.headers.get("X-QR-Unlock");
+    if (unlockToken) {
+      headers["Set-Cookie"] = unlockCookieHeader(
+        req,
+        shortCode,
+        unlockToken,
+      );
+    }
+    return new Response(body, { status: 200, headers });
+  }
+
+  // Expired / Limit reached / Inactive / Boom
+  if (response.status === 410 || response.status === 404) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: "/boom",
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
+  }
+
+  if (response.status === 429) {
+    return new Response(
+      "QRBuddy couldn't route this code right now. Please try again shortly.",
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Retry-After": response.headers.get("Retry-After") ?? "5",
+          "Cache-Control": "no-store, max-age=0",
+        },
+      },
+    );
+  }
+
+  // 403 gateway rejection (e.g. forbidden proxy header), 5xx, or unexpected status:
+  // fail explicitly as 503 rather than silently dumping a printed scan onto "/".
+  console.error("[ROUTE:r] Upstream unexpected status:", response.status);
+  return routingUnavailable();
 }
 
 export const handler: Handlers = {
@@ -199,7 +278,6 @@ export const handler: Handlers = {
       });
     }
 
-    // Forward to Supabase edge function for redirect logic
     const supabaseUrl = getSupabaseUrl();
 
     if (!supabaseUrl) {
@@ -207,136 +285,18 @@ export const handler: Handlers = {
       return routingUnavailable();
     }
 
-    const redirectUrl = `${supabaseUrl}/functions/v1/redirect-qr?code=${
-      encodeURIComponent(shortCode)
-    }`;
-
-    // Forward scanner client headers to edge function so Device Routing (iOS/Android),
-    // Time Routing (local scanner timezone), and IP-based analytics/rate-limiting work accurately.
-    const forwardHeaders: Record<string, string> = {
-      ...getAuthHeaders(),
-    };
-
-    const clientHeaders = [
-      "user-agent",
-      "cf-connecting-ip",
-      "x-forwarded-for",
-      "x-real-ip",
-      "cf-ipcountry",
-      "cf-ipcity",
-      "cf-timezone",
-      "accept-language",
-    ];
-
-    // Cap at a length no legitimate value of any of these headers approaches
-    // (UAs run ~100-300 chars; country/city/timezone are single words) — a
-    // scanner can put anything it wants in a request header, and cf-ipcountry/
-    // cf-ipcity land straight in the scan_logs TEXT columns with no column
-    // limit downstream. Bound here, at the one place these values cross from
-    // "client-supplied" to "forwarded for storage."
-    const MAX_FORWARDED_HEADER_LENGTH = 500;
-
-    for (const headerName of clientHeaders) {
-      const headerValue = req.headers.get(headerName);
-      if (headerValue) {
-        forwardHeaders[headerName] = headerValue.slice(
-          0,
-          MAX_FORWARDED_HEADER_LENGTH,
-        );
-      }
-    }
-
     try {
-      // Fetch with redirect: "manual" so the Fresh server doesn't proxy the third-party
-      // destination website or crash on non-HTTP schemes (mailto:, tel:, sms:, wifi:, etc.)
       const unlock = readCookie(req, unlockCookieName(shortCode));
-      if (unlock) forwardHeaders["x-qr-unlock"] = unlock;
+      const extraHeaders: Record<string, string> = {};
+      if (unlock) extraHeaders["x-qr-unlock"] = unlock;
 
-      const response = await fetchWithTimeout(redirectUrl, {
-        headers: forwardHeaders,
-        redirect: "manual",
-      });
-
-      // Locked code: ask for the PIN instead of leaking the destination.
-      if (response.status === 401) {
-        const invalid = response.headers.get("X-QR-Pin-Invalid") === "1";
-        return pinPage(shortCode, invalid, resolveRequestLocale(req));
-      }
-
-      // Handle redirect responses from edge function (301, 302, 307, 308)
-      if (response.status >= 300 && response.status < 400) {
-        const location = response.headers.get("Location") ||
-          response.headers.get("location");
-        if (location) {
-          const headers: Record<string, string> = {
-            Location: location,
-            "Cache-Control": "no-store, max-age=0",
-          };
-          const unlockToken = response.headers.get("X-QR-Unlock");
-          if (unlockToken) {
-            headers["Set-Cookie"] = unlockCookieHeader(
-              req,
-              shortCode,
-              unlockToken,
-            );
-          }
-          return new Response(null, { status: 302, headers });
-        }
-      }
-
-      // Handle HTML responses (e.g. Intro / Splash Page & Roulette Spin Card).
-      // Supabase Edge Runtime's gateway rewrites Content-Type to text/plain on
-      // *.supabase.co/functions/v1/*, so detect HTML payloads and serve them as
-      // text/html; charset=utf-8 so browsers render the card instead of raw text.
-      if (response.status === 200) {
-        const body = await response.text();
-        const trimmed = body.trimStart();
-        const isHtml = /^<!doctype\s+html/i.test(trimmed) ||
-          /^<html[\s>]/i.test(trimmed);
-        const contentType = isHtml
-          ? "text/html; charset=utf-8"
-          : (response.headers.get("Content-Type") ||
-            "text/html; charset=utf-8");
-        return new Response(body, {
-          status: 200,
-          headers: {
-            "Content-Type": contentType,
-            "Cache-Control": response.headers.get("Cache-Control") ??
-              "no-store, max-age=0",
-          },
-        });
-      }
-
-      // Expired / Limit reached / Inactive / Boom
-      if (response.status === 410 || response.status === 404) {
-        return new Response(null, {
-          status: 302,
-          headers: {
-            Location: "/boom",
-            "Cache-Control": "no-store, max-age=0",
-          },
-        });
-      }
-
-      if (response.status === 429 || response.status >= 500) {
-        return new Response(
-          "QRBuddy couldn't route this code right now. Please try again shortly.",
-          {
-            status: response.status,
-            headers: {
-              "Content-Type": "text/plain; charset=utf-8",
-              "Retry-After": response.headers.get("Retry-After") ?? "5",
-              "Cache-Control": "no-store, max-age=0",
-            },
-          },
-        );
-      }
-
-      // If we got here with any other status, redirect to home
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/" },
-      });
+      const response = await callUpstream(
+        req,
+        supabaseUrl,
+        shortCode,
+        extraHeaders,
+      );
+      return await handleUpstreamResponse(req, shortCode, response, false);
     } catch (error) {
       console.error("[ROUTE:r] Redirect error:", error);
       return routingUnavailable();
@@ -373,45 +333,7 @@ export const handler: Handlers = {
       const response = await callUpstream(req, supabaseUrl, shortCode, {
         "x-qr-pin": pin.slice(0, 128),
       });
-
-      if (response.status === 401) {
-        return pinPage(shortCode, true, resolveRequestLocale(req));
-      }
-
-      const location = response.headers.get("Location") ??
-        response.headers.get("location");
-      if (response.status >= 300 && response.status < 400 && location) {
-        const headers: Record<string, string> = {
-          Location: location,
-          "Cache-Control": "no-store, max-age=0",
-        };
-        const unlockToken = response.headers.get("X-QR-Unlock");
-        if (unlockToken) {
-          headers["Set-Cookie"] = unlockCookieHeader(
-            req,
-            shortCode,
-            unlockToken,
-          );
-        }
-        return new Response(null, { status: 302, headers });
-      }
-
-      // A splash page behind the PIN is still a valid destination.
-      if (response.status === 200) {
-        const body = await response.text();
-        return new Response(body, {
-          status: 200,
-          headers: {
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-store, max-age=0",
-          },
-        });
-      }
-
-      return new Response(null, {
-        status: 302,
-        headers: { Location: "/boom" },
-      });
+      return await handleUpstreamResponse(req, shortCode, response, true);
     } catch (error) {
       console.error("[ROUTE:r] PIN submission failed:", error);
       return routingUnavailable();
