@@ -247,7 +247,7 @@ export default function CreateModal({
   initialContentStep = "pick",
   onTabChange,
   onInspect,
-  onShowHistory,
+  onShowHistory: _onShowHistory,
   selectedTemplate,
   onSelectTemplate,
   url,
@@ -861,15 +861,17 @@ export default function CreateModal({
                     )}
                 />
 
-                {/* 4. Drop Files, Audio or Photos */}
+                {/* 4. Single File Card (distinct from multi-file Slideshow/Mixtape on main stage) */}
                 <ChoiceRow
                   icon="📦"
                   iconBg="linear-gradient(135deg, #E0F2FE, #BAE6FD)"
                   shimmer
-                  title={isSpanish ? "Archivo o Audio" : "File or Audio"}
+                  title={isSpanish
+                    ? "Tarjeta de archivo (PIN opc.)"
+                    : "File Card (PIN optional)"}
                   description={isSpanish
-                    ? "Un archivo, PDF o canción."
-                    : "Share a file, PDF, or track."}
+                    ? "Un PDF, pista o archivo con PIN opcional."
+                    : "Single PDF, track, or PIN-locked file."}
                   active={typeIntent === "share-file"}
                   onClick={handleShareFileSelect}
                 />
@@ -1493,7 +1495,7 @@ export default function CreateModal({
               : "animate-slide-up sm:animate-pop-in"
           }`}
         >
-          <div class="flex items-start justify-between gap-3 px-4 pt-4 pb-2 sm:px-6 sm:pt-5">
+          <div class="flex items-start justify-between gap-3 px-4 pt-3.5 pb-1.5 sm:px-6 sm:pt-4">
             <div class="min-w-0">
               <h2
                 id="create-modal-title"
@@ -1511,53 +1513,6 @@ export default function CreateModal({
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-              {onShowHistory && !hasCompletion && (
-                <button
-                  type="button"
-                  onClick={onShowHistory}
-                  class="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] active:translate-y-[2px] active:shadow-none"
-                  aria-label={isSpanish ? "Abrir historial" : "Open QR history"}
-                  title={isSpanish ? "Historial" : "History"}
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M12 3a9 9 0 1 1-6.36 2.64M3 3v5h5M12 7v5l3 2" />
-                  </svg>
-                </button>
-              )}
-              {onInspect && !hasCompletion && (
-                <button
-                  type="button"
-                  onClick={onInspect}
-                  class="shrink-0 w-10 h-10 inline-flex items-center justify-center rounded-full border-2 border-[#1e1714] bg-[#fffef7] text-[#1e1714] shadow-[0_2px_0_#1e1714] transition-[transform,box-shadow] duration-[70ms] active:translate-y-[2px] active:shadow-none"
-                  aria-label={isSpanish ? "Revisar un QR" : "Inspect a QR code"}
-                  title={isSpanish
-                    ? "Ver a dónde lleva un QR antes de abrirlo"
-                    : "See where a QR goes before opening it"}
-                >
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.6"
-                    stroke-linecap="round"
-                  >
-                    <path d="M10.5 18a7.5 7.5 0 1 0 0-15 7.5 7.5 0 0 0 0 15zM21 21l-5.2-5.2" />
-                  </svg>
-                </button>
-              )}
               <ModalCloseButton
                 onClick={shell.requestClose}
                 aria-label={isSpanish ? "Cerrar" : "Close"}
@@ -1642,7 +1597,6 @@ export default function CreateModal({
               typeIntent === "collect-files")
           ) && (
             <div class="p-4 sm:px-6 pt-2.5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 bg-[#fbf1e4] border-t-2 border-[#1e1714]/10 z-10">
-              {false && onShowHistory}
               {saveError && (
                 <div
                   role="alert"

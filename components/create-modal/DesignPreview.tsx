@@ -16,8 +16,8 @@ export default function DesignPreview(
     logoUrl,
     frameConfig,
     es,
-    onOpenCustomGradient,
-    onReset,
+    onOpenCustomGradient: _onOpenCustomGradient,
+    onReset: _onReset,
   }: {
     url: Signal<string>;
     qrStyle: Signal<string>;
@@ -66,7 +66,13 @@ export default function DesignPreview(
       ? [resolveRiso(stopColors, paper, resolved.risoInk)[0]]
       : stopColors;
     const contrast = evaluateQrContrast(inks, paper);
-    const hasContrastIssue = contrast.inverted || contrast.lowContrast;
+    // Built-in presets and monochrome/Game Boy halftone plates are scan-verified;
+    // only flag custom colour-mode ink palettes or inverted foregrounds.
+    const isMonochromeHalftone = lookMode === "halftone" &&
+      (resolved.halftoneTone ?? "color") !== "color";
+    const hasContrastIssue = contrast.inverted ||
+      (qrStyle.value === "custom" && !isMonochromeHalftone &&
+        contrast.lowContrast);
     const paletteName = resolvePaletteDisplayName(qrStyle.value, es);
     const lookBadge = lookMode === "halftone"
       ? (es ? "Semitono" : "Halftone")
@@ -79,23 +85,23 @@ export default function DesignPreview(
 
     return (
       <div
-        class="shrink-0 px-4 sm:px-6 py-2.5 border-b-2 border-[#1e1714]/15 bg-[#f7ecdc]/75"
+        class="shrink-0 px-4 sm:px-6 py-2 border-b-2 border-[#1e1714]/15 bg-[#f7ecdc]/75"
         data-design-preview
       >
-        <div class="flex items-center gap-3.5">
-          <div class="w-[112px] h-[112px] sm:w-[128px] sm:h-[128px] shrink-0 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] p-1.5 flex items-center justify-center shadow-[2px_2px_0_#1e1714]">
+        <div class="flex items-center gap-3">
+          <div class="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] shrink-0 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] p-1 flex items-center justify-center shadow-[2px_2px_0_#1e1714]">
             <img
               src={toSvgDataUrl(svg)}
               alt={es
                 ? "Vista previa del QR en vivo"
                 : "Live QR design preview"}
               class="w-full h-full object-contain"
-              width="120"
-              height="120"
+              width="88"
+              height="88"
             />
           </div>
 
-          <div class="min-w-0 flex-1 space-y-2">
+          <div class="min-w-0 flex-1 space-y-1">
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="inline-flex items-center gap-1.5 rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-2.5 py-0.5 text-xs font-black text-[#1e1714]">
                 <span
@@ -143,37 +149,12 @@ export default function DesignPreview(
                 </p>
               )
               : (
-                <p class="text-xs font-semibold text-[#574c44] leading-snug">
+                <p class="text-xs font-semibold text-[#574c44] leading-snug truncate">
                   {es
-                    ? "Exportación vectorial lista para pantalla e imprenta."
-                    : "Vector crisp for screen & print export."}
+                    ? "Vector nítido para pantalla e imprenta."
+                    : "Vector crisp for screen & print."}
                 </p>
               )}
-
-            {(onOpenCustomGradient || onReset) && (
-              <div class="flex items-center gap-2 pt-0.5 flex-wrap">
-                {onOpenCustomGradient && (
-                  <button
-                    type="button"
-                    onClick={onOpenCustomGradient}
-                    class="min-h-[32px] inline-flex items-center gap-1.5 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] px-3 py-1 text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] active:translate-y-[1px] transition-all"
-                  >
-                    <span>✦</span>
-                    <span>{es ? "Estudio de color" : "Color studio"}</span>
-                  </button>
-                )}
-                {onReset && (
-                  <button
-                    type="button"
-                    onClick={onReset}
-                    class="min-h-[32px] inline-flex items-center gap-1 rounded-xl border-2 border-[#1e1714]/25 hover:border-[#1e1714] bg-[#fffef7] px-2.5 py-1 text-xs font-black text-[#1e1714] transition-colors"
-                  >
-                    <span>↺</span>
-                    <span>{es ? "Restablecer" : "Reset"}</span>
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -545,17 +545,35 @@ export default function LookGallery(
               type="button"
               disabled={busy}
               onClick={() => artRef.current?.click()}
-              class={`min-h-[40px] flex-1 min-w-0 rounded-xl border-2 border-[#1e1714] px-3 text-xs font-black shadow-[0_1.5px_0_#1e1714] transition-all active:translate-y-px ${
+              class={`min-h-[40px] flex-1 min-w-0 inline-flex items-center justify-center gap-2 rounded-xl border-2 border-[#1e1714] px-3 text-xs font-black shadow-[0_1.5px_0_#1e1714] transition-all active:translate-y-px ${
                 hasArt
                   ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714]"
                   : "bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714]"
               }`}
             >
-              {busy
-                ? (es ? "Procesando…" : "Processing…")
-                : hasArt
-                ? (es ? "🖼 Cambiar imagen" : "🖼 Replace image")
-                : (es ? "🖼 Subir imagen para semitono" : "🖼 Upload artwork")}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="shrink-0"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="3" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="M21 15l-5-5L5 21" />
+              </svg>
+              <span class="truncate">
+                {busy
+                  ? (es ? "Procesando…" : "Processing…")
+                  : hasArt
+                  ? (es ? "Cambiar imagen" : "Replace artwork")
+                  : (es ? "Subir imagen para semitono" : "Upload artwork")}
+              </span>
             </button>
             {hasArt && (
               <button
@@ -605,7 +623,7 @@ export default function LookGallery(
               </div>
             </div>
           )}
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-[2fr_3fr] gap-2">
             <div class="space-y-1">
               <span class="block text-[10px] font-black uppercase tracking-wider text-[#574c44]">
                 {es ? "Detalle" : "Detail"}
@@ -633,16 +651,18 @@ export default function LookGallery(
               </span>
               <div class="grid grid-cols-3 gap-1">
                 {([
-                  ["square", es ? "Recta" : "Sq"],
-                  ["rounded", es ? "Curva" : "Rnd"],
-                  ["circle", es ? "Círculo" : "Circ"],
+                  ["square", es ? "Recta" : "Square"],
+                  ["rounded", es ? "Curva" : "Rounded"],
+                  ["circle", es ? "Círculo" : "Circle"],
                 ] as const).map(([id, label]) => (
                   <button
                     key={id}
                     type="button"
                     aria-pressed={shape === id}
                     onClick={() => write({ halftoneShape: id })}
-                    class={`${PILL} px-1 ${pillState(shape === id)}`}
+                    class={`${PILL} !px-1 !text-[10.5px] sm:!text-[11px] ${
+                      pillState(shape === id)
+                    }`}
                   >
                     {label}
                   </button>
