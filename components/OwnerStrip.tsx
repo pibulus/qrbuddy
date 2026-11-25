@@ -174,6 +174,7 @@ export default function OwnerStrip(
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsRevision, setStatsRevision] = useState(0);
   const [range, setRange] = useState<StatsRange>("week");
+  const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
   const [busy, setBusy] = useState<string | null>(null);
@@ -593,498 +594,773 @@ export default function OwnerStrip(
   return (
     <section
       style={getQRThemeStyleVars(theme)}
-      class="w-full max-w-md bg-[#fbf1e4] text-[#1e1714] border-4 border-[#1e1714] rounded-3xl shadow-chunky-hover p-4 sm:p-5 space-y-3.5 animate-slide-up"
+      data-owner-strip
+      class={`w-full max-w-md bg-[#fbf1e4] text-[#1e1714] border-[#1e1714] animate-slide-up ${
+        expanded
+          ? "border-4 rounded-3xl shadow-chunky-hover p-4 sm:p-5 space-y-3.5"
+          : "border-3 rounded-2xl shadow-chunky px-3.5 py-2.5"
+      }`}
       aria-label={t("Owner controls", "Controles del propietario")}
     >
-      {/* Header: it's yours + the name, editable */}
-      <div class="flex items-start gap-3">
-        <span class="w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] flex items-center justify-center text-lg shadow-[0_2px_0_#1e1714] shrink-0">
-          👑
-        </span>
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-2 flex-wrap">
-            <p class="qr-section-eyebrow">
-              <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
-              {t("It's yours", "Es tuyo")}
-            </p>
-            {(unbranded || meta.unbranded || hasSupporterPass) && (
-              <button
-                type="button"
-                disabled={mutationBusy}
-                onClick={() => void activateWhiteLabel()}
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-[#1e1714] bg-[#fef3c7] text-[#1e1714] text-[10px] font-black shadow-sm hover:bg-[#ffbe0b] transition-colors disabled:opacity-50"
-                title={t(
-                  "QRBuddy Passport perk: QRBuddy footer badge is hidden on this share",
-                  "Beneficio del Pasaporte QRBuddy: la insignia de QRBuddy está oculta en este enlace",
-                )}
-              >
-                🛂 {t("Clean White-Label Active", "Marca blanca activa")}
-              </button>
-            )}
-          </div>
-          {editing
-            ? (
-              <input
-                type="text"
-                value={draft}
-                maxLength={80}
-                // deno-lint-ignore jsx-boolean-value
-                autoFocus={true}
-                onInput={(e) => setDraft((e.target as HTMLInputElement).value)}
-                onBlur={() => {
-                  if (cancelRenameOnBlur.current) {
-                    cancelRenameOnBlur.current = false;
-                    return;
-                  }
-                  void saveTitle();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                  if (e.key === "Escape") {
-                    e.preventDefault();
-                    cancelRenameOnBlur.current = true;
-                    (e.currentTarget as HTMLInputElement).blur();
-                    setDraft(title);
-                    setEditing(false);
-                  }
-                }}
-                aria-label={t("Share name", "Nombre del enlace")}
-                class="qr-input min-h-[42px] mt-1 font-black text-base"
-              />
-            )
-            : (
-              <button
-                type="button"
-                disabled={mutationBusy}
-                onClick={() => {
-                  setDraft(title);
-                  setEditing(true);
-                }}
-                class="min-h-[40px] text-left font-black text-lg leading-tight text-[#1e1714] hover:opacity-80 transition-opacity truncate max-w-full disabled:opacity-50"
-                title={t("Rename", "Renombrar")}
-              >
-                {title}{" "}
-                <span class="text-xs opacity-60" aria-hidden="true">✎</span>
-              </button>
-            )}
-        </div>
-      </div>
-
-      {/* Stats card: compact 1-row banner when 0 opens, full KPI card once opens > 0 */}
-      {cards.all.views === 0 && !statsError && !statsLoading
+      {!expanded
         ? (
-          <div class="qr-menu-pod p-3 space-y-2.5">
-            <div class="flex items-center justify-between gap-2">
-              <p class="text-xs sm:text-sm font-black text-[#1e1714]">
-                🌸 {isSpanish
-                  ? "Aún sin visitas — ¡pega el QR en algún lugar!"
-                  : "No opens yet — stick the QR somewhere!"}
-              </p>
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-8 h-8 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] flex items-center justify-center text-sm shadow-[0_1.5px_0_#1e1714] shrink-0">
+                👑
+              </span>
+              <div class="min-w-0">
+                <p class="font-black text-xs text-[#1e1714] leading-tight truncate">
+                  {t("Yours", "Tuyo")}
+                  {cards.all.views > 0 && (
+                    <span class="ml-1.5 font-bold text-[#57524b]">
+                      · {cards.all.views} {cards.all.views === 1
+                        ? t("open", "visita")
+                        : t("opens", "visitas")}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 shrink-0">
+              {canEditPayload && (
+                <button
+                  type="button"
+                  onClick={() => fileInput.current?.click()}
+                  disabled={mutationBusy || files.length >= 10}
+                  class="min-h-[36px] px-2.5 py-1 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] disabled:opacity-50"
+                >
+                  {busy === "append"
+                    ? t("Adding…", "…")
+                    : t("+ Add", "+ Agregar")}
+                </button>
+              )}
               <button
                 type="button"
-                class="min-h-[34px] px-3 rounded-full border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] shrink-0 transition-all active:scale-95"
-                disabled={statsLoading}
-                onClick={() => setStatsRevision((n) => n + 1)}
+                aria-expanded={false}
+                onClick={() => {
+                  setExpanded(true);
+                  haptics.light();
+                }}
+                class="min-h-[36px] px-3 py-1 rounded-xl border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[var(--qr-theme-tint,#fce7f3)] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
               >
-                {isSpanish ? "Actualizar" : "Refresh"}
+                {t("Manage ▾", "Gestionar ▾")}
               </button>
             </div>
-            {!hasPass && (
-              <button
-                type="button"
-                onClick={() => {
-                  haptics.light();
-                  openPricingModal();
-                }}
-                class="w-full min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fef3c7] hover:bg-[#ffbe0b] text-[#1e1714] text-xs font-black text-center leading-snug transition-all hover:-translate-y-0.5"
-              >
-                {isSpanish
-                  ? "🛂 Desbloquea ranking, ciudades y CSV con el Pasaporte QRBuddy →"
-                  : "🛂 Unlock leaderboard, top cities & CSV with QRBuddy Passport →"}
-              </button>
-            )}
           </div>
         )
         : (
-          <div class="qr-menu-pod p-3 space-y-3">
-            <div
-              class="grid grid-cols-3 gap-1 rounded-2xl bg-[#efe9dc] p-1 border-2 border-[#1e1714]"
-              role="tablist"
-              aria-label={t(
-                "Stats time range",
-                "Rango de tiempo de las estadísticas",
-              )}
-            >
-              {RANGES.map((r, idx) => (
-                <button
-                  key={r.id}
-                  ref={(el) => {
-                    tabRefs.current[idx] = el;
-                  }}
-                  id={`owner-stats-tab-${r.id}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={range === r.id}
-                  aria-controls={`owner-stats-panel-${r.id}`}
-                  tabIndex={range === r.id ? 0 : -1}
-                  onClick={() => setRange(r.id)}
-                  onKeyDown={handleTabKeyDown}
-                  class={`min-h-[36px] rounded-xl text-xs font-black transition-all ${
-                    range === r.id
-                      ? "bg-[#ffbe0b] text-[#1e1714] border-2 border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
-                      : "border-2 border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/70"
-                  }`}
-                >
-                  {isSpanish ? r.es : r.label}
-                </button>
-              ))}
-            </div>
-
-            <div
-              id={`owner-stats-panel-${range}`}
-              role="tabpanel"
-              aria-labelledby={`owner-stats-tab-${range}`}
-              class="space-y-3"
-            >
-              {statsError || statsLoading
-                ? (
-                  <p
-                    class="text-sm font-bold text-[#57524b] text-center py-2"
-                    role="status"
+          <>
+            {/* Header: it's yours + the name, editable */}
+            <div class="flex items-start gap-3">
+              <span class="w-10 h-10 rounded-xl border-2 border-[#1e1714] bg-[#ffbe0b] flex items-center justify-center text-lg shadow-[0_2px_0_#1e1714] shrink-0">
+                👑
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-2 flex-wrap min-w-0">
+                    <p class="qr-section-eyebrow">
+                      <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
+                      {t("It's yours", "Es tuyo")}
+                    </p>
+                    {(unbranded || meta.unbranded || hasSupporterPass) && (
+                      <button
+                        type="button"
+                        disabled={mutationBusy}
+                        onClick={() => void activateWhiteLabel()}
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-[#1e1714] bg-[#fef3c7] text-[#1e1714] text-[10px] font-black shadow-sm hover:bg-[#ffbe0b] transition-colors disabled:opacity-50"
+                        title={t(
+                          "QRBuddy Passport perk: QRBuddy footer badge is hidden on this share",
+                          "Beneficio del Pasaporte QRBuddy: la insignia de QRBuddy está oculta en este enlace",
+                        )}
+                      >
+                        🛂{" "}
+                        {t("Clean White-Label Active", "Marca blanca activa")}
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    aria-expanded={expanded}
+                    onClick={() => {
+                      setExpanded(false);
+                      haptics.light();
+                    }}
+                    class="shrink-0 min-h-[30px] px-2.5 py-0.5 rounded-lg border-2 border-[#1e1714]/35 hover:border-[#1e1714] bg-[#fffef7] text-[11px] font-black text-[#1e1714] transition-colors"
                   >
-                    {statsLoading
-                      ? t("Loading stats…", "Cargando estadísticas…")
-                      : t(
-                        "Stats are unavailable right now.",
-                        "Estadísticas no disponibles por ahora.",
-                      )}
-                  </p>
-                )
-                : (
-                  <>
-                    {/* 3-Tile Visual KPI Header */}
-                    <div class="grid grid-cols-3 gap-1.5">
-                      {kpis.map((tile) => {
-                        const isNumericCount = /^\d+$/.test(tile.value);
-                        return (
-                          <div
-                            key={tile.label}
-                            class="bg-[#fbf1e4] border-2 border-[#1e1714] rounded-xl px-1.5 py-2 text-center flex flex-col justify-between min-w-0"
-                          >
-                            <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
-                              {isSpanish ? kpiEs(tile.label) : tile.label}
-                            </span>
-                            <span
-                              class={`mt-1 font-black text-[#1e1714] leading-tight ${
-                                isNumericCount
-                                  ? "text-base sm:text-lg"
-                                  : "text-[11px] sm:text-xs whitespace-nowrap"
-                              }`}
-                            >
-                              {isSpanish ? kpiEs(tile.value) : tile.value}
-                            </span>
-                            {tile.badge
-                              ? (
-                                <span class="mt-1 inline-block mx-auto px-1.5 py-0.5 rounded-full bg-[#ffbe0b] border border-[#1e1714] text-[10px] font-black text-[#1e1714] leading-tight truncate max-w-full">
-                                  {isSpanish ? kpiEs(tile.badge) : tile.badge}
-                                </span>
-                              )
-                              : (
-                                <span class="mt-1 text-[10px] font-bold text-[#57524b] truncate">
-                                  {range === "today"
-                                    ? t("Today", "Hoy")
-                                    : range === "week"
-                                    ? t("7 days", "7 días")
-                                    : t("All time", "Todo el tiempo")}
-                                </span>
-                              )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Narrative Story Chips / Bullets */}
-                    {lines.length === 0
-                      ? (
-                        <p class="text-sm font-bold text-[#57524b] text-center py-1">
-                          {range === "today"
-                            ? t(
-                              "No page opens yet today.",
-                              "Aún sin visitas hoy.",
-                            )
-                            : t(
-                              "No page opens yet — stick it somewhere 🌸",
-                              "Aún sin visitas — ¡pega el QR en algún lugar! 🌸",
-                            )}
-                        </p>
-                      )
-                      : (
-                        <ul class="flex flex-wrap gap-1.5">
-                          {lines.map((line, i) => (
-                            <li
-                              key={i}
-                              class={`rounded-xl border-2 px-2.5 py-1.5 text-xs leading-snug ${
-                                i === 0
-                                  ? "w-full bg-[#fef3c7] border-[#1e1714] font-black text-[#1e1714]"
-                                  : "bg-[#fbf1e4] border-[#1e1714]/25 font-bold text-[#1e1714]"
-                              }`}
-                            >
-                              {line}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                  </>
-                )}
-
-              {!statsError && !statsLoading && range !== "today" &&
-                card.spark.some((v) => v > 0) && <Spark values={card.spark} />}
-
-              {/* Passport Field Report 🛂 */}
-              {!statsError && !statsLoading && (
-                hasPass
+                    {t("Hide ▴", "Ocultar ▴")}
+                  </button>
+                </div>
+                {editing
                   ? (
-                    <div class="bg-[#fbf1e4] border-2 border-[#1e1714] rounded-2xl p-3 space-y-3">
-                      <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] text-[10px] font-black uppercase tracking-wide text-[#1e1714] shadow-sm">
-                          🛂 {t(
-                            "PASSPORT FIELD REPORT",
-                            "INFORME DE CAMPO DEL PASAPORTE",
-                          )}
-                        </span>
-                      </div>
-
-                      {/* 1. 🏆 Full Track / Photo Leaderboard */}
-                      {files.length > 1 && card.itemLeaderboard.length > 0 && (
-                        <div class="space-y-1.5">
-                          <p class="qr-section-eyebrow">
-                            <span class="qr-section-pip bg-[#ffbe0b]" />
-                            🏆 {kind === "playlist"
-                              ? t("Track Leaderboard", "Ranking de canciones")
-                              : t("Photo Leaderboard", "Ranking de fotos")}
-                          </p>
-                          <ol class="space-y-1.5">
-                            {card.itemLeaderboard.map((entry, idx) => {
-                              const label = resolveLeaderboardItemName(
-                                entry.id,
-                              );
-                              const unit = kind === "playlist"
-                                ? entry.plays === 1
-                                  ? t("play", "reproducción")
-                                  : t("plays", "reproducciones")
-                                : entry.plays === 1
-                                ? t("view", "vista")
-                                : t("views", "vistas");
-                              const widthPct = Math.max(
-                                8,
-                                Math.round(entry.share * 100),
-                              );
-                              return (
-                                <li
-                                  key={entry.id}
-                                  class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 space-y-1"
-                                >
-                                  <div class="flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] min-w-0">
-                                    <span class="truncate min-w-0">
-                                      <span class="text-[#c4607a] mr-1.5">
-                                        #{idx + 1}
-                                      </span>
-                                      {label}
-                                    </span>
-                                    <span class="shrink-0 font-mono text-[11px] text-[#57524b]">
-                                      {entry.plays} {unit}
-                                    </span>
-                                  </div>
-                                  <div class="w-full h-2 rounded-full bg-[#efe9dc] overflow-hidden border border-[#1e1714]/40">
-                                    <div
-                                      class="h-full rounded-full bg-[#ffbe0b] transition-all"
-                                      style={{ width: `${widthPct}%` }}
-                                    />
-                                  </div>
-                                </li>
-                              );
-                            })}
-                          </ol>
-                        </div>
-                      )}
-
-                      {/* 2. ⏱️ Hang Time & Completion + 🧭 Farthest Stamp */}
-                      <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                          <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
-                            {t("Avg. Hang Time", "Tiempo promedio")}
-                          </span>
-                          <span class="mt-0.5 text-xs sm:text-sm font-black text-[#1e1714] leading-tight truncate">
-                            {formatDwellSeconds(card.avgDwellSeconds)}
-                          </span>
-                        </div>
-                        <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                          <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
-                            {t("Completion Rate", "Tasa de finalización")}
-                          </span>
-                          <span class="mt-0.5 text-xs sm:text-sm font-black text-[#1e1714] leading-tight truncate">
-                            {card.completionRate !== null
-                              ? `${Math.round(card.completionRate * 100)}%`
-                              : "—"}
-                          </span>
-                        </div>
-                        <div class="col-span-2 sm:col-span-1 bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
-                          <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
-                            {t("Farthest Scan", "Escaneo más lejano")}
-                          </span>
-                          <span
-                            class="mt-0.5 text-[11px] font-black text-[#1e1714] leading-tight truncate"
-                            title={card.farthest
-                              ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
-                              : undefined}
-                          >
-                            {card.farthest
-                              ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
-                              : card.topPlaces[0]
-                              ? `📍 ${card.topPlaces[0].name}`
-                              : "—"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {card.topPlaces.length > 0 && (
-                        <div class="flex flex-wrap gap-1.5">
-                          {card.topPlaces.map((place) => (
-                            <span
-                              key={place.name}
-                              class="bg-[#fffef7] border-2 border-[#1e1714] px-2.5 py-1 rounded-full text-[11px] font-black text-[#1e1714]"
-                            >
-                              📍 {place.name} · {place.views}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* 3. 📲 Source Apps & 📥 Export CSV */}
-                      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-                        <div class="flex flex-wrap gap-1.5 min-w-0">
-                          {card.appBreakdown.map((app) => (
-                            <span
-                              key={app.name}
-                              class="bg-[#fef3c7] border-2 border-[#1e1714] px-2.5 py-1 rounded-full text-[11px] font-black text-[#1e1714]"
-                            >
-                              📲 {app.name} · {app.views}
-                            </span>
-                          ))}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleExportCsv}
-                          class="min-h-[38px] inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] transition-all active:scale-95 ml-auto"
-                        >
-                          📥 {t("Export CSV", "Exportar CSV")}
-                        </button>
-                      </div>
-                    </div>
+                    <input
+                      type="text"
+                      value={draft}
+                      maxLength={80}
+                      // deno-lint-ignore jsx-boolean-value
+                      autoFocus={true}
+                      onInput={(e) =>
+                        setDraft((e.target as HTMLInputElement).value)}
+                      onBlur={() => {
+                        if (cancelRenameOnBlur.current) {
+                          cancelRenameOnBlur.current = false;
+                          return;
+                        }
+                        void saveTitle();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          (e.target as HTMLInputElement)
+                            .blur();
+                        }
+                        if (e.key === "Escape") {
+                          e.preventDefault();
+                          cancelRenameOnBlur.current = true;
+                          (e.currentTarget as HTMLInputElement).blur();
+                          setDraft(title);
+                          setEditing(false);
+                        }
+                      }}
+                      aria-label={t("Share name", "Nombre del enlace")}
+                      class="qr-input min-h-[42px] mt-1 font-black text-base"
+                    />
                   )
                   : (
+                    <button
+                      type="button"
+                      disabled={mutationBusy}
+                      onClick={() => {
+                        setDraft(title);
+                        setEditing(true);
+                      }}
+                      class="min-h-[40px] text-left font-black text-lg leading-tight text-[#1e1714] hover:opacity-80 transition-opacity truncate max-w-full disabled:opacity-50"
+                      title={t("Rename", "Renombrar")}
+                    >
+                      {title}{" "}
+                      <span class="text-xs opacity-60" aria-hidden="true">
+                        ✎
+                      </span>
+                    </button>
+                  )}
+              </div>
+            </div>
+
+            {/* Stats card: compact 1-row banner when 0 opens, full KPI card once opens > 0 */}
+            {cards.all.views === 0 && !statsError && !statsLoading
+              ? (
+                <div class="qr-menu-pod p-3 space-y-2.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="text-xs sm:text-sm font-black text-[#1e1714]">
+                      🌸 {isSpanish
+                        ? "Aún sin visitas — ¡pega el QR en algún lugar!"
+                        : "No opens yet — stick the QR somewhere!"}
+                    </p>
+                    <button
+                      type="button"
+                      class="min-h-[34px] px-3 rounded-full border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] shrink-0 transition-all active:scale-95"
+                      disabled={statsLoading}
+                      onClick={() => setStatsRevision((n) => n + 1)}
+                    >
+                      {isSpanish ? "Actualizar" : "Refresh"}
+                    </button>
+                  </div>
+                  {!hasPass && (
                     <button
                       type="button"
                       onClick={() => {
                         haptics.light();
                         openPricingModal();
                       }}
-                      class="w-full min-h-[40px] px-3 py-2 rounded-2xl border-2 border-[#1e1714] bg-[#fef3c7] hover:bg-[#ffbe0b] text-[#1e1714] text-xs font-black text-center leading-snug shadow-[0_2px_0_#1e1714] transition-all hover:-translate-y-0.5 active:translate-y-0"
+                      class="w-full min-h-[38px] px-3 py-1.5 rounded-xl border-2 border-[#1e1714] bg-[#fef3c7] hover:bg-[#ffbe0b] text-[#1e1714] text-xs font-black text-center leading-snug transition-all hover:-translate-y-0.5"
                     >
                       {isSpanish
                         ? "🛂 Desbloquea ranking, ciudades y CSV con el Pasaporte QRBuddy →"
                         : "🛂 Unlock leaderboard, top cities & CSV with QRBuddy Passport →"}
                     </button>
-                  )
-              )}
-            </div>
+                  )}
+                </div>
+              )
+              : (
+                <div class="qr-menu-pod p-3 space-y-3">
+                  <div
+                    class="grid grid-cols-3 gap-1 rounded-2xl bg-[#efe9dc] p-1 border-2 border-[#1e1714]"
+                    role="tablist"
+                    aria-label={t(
+                      "Stats time range",
+                      "Rango de tiempo de las estadísticas",
+                    )}
+                  >
+                    {RANGES.map((r, idx) => (
+                      <button
+                        key={r.id}
+                        ref={(el) => {
+                          tabRefs.current[idx] = el;
+                        }}
+                        id={`owner-stats-tab-${r.id}`}
+                        type="button"
+                        role="tab"
+                        aria-selected={range === r.id}
+                        aria-controls={`owner-stats-panel-${r.id}`}
+                        tabIndex={range === r.id ? 0 : -1}
+                        onClick={() => setRange(r.id)}
+                        onKeyDown={handleTabKeyDown}
+                        class={`min-h-[36px] rounded-xl text-xs font-black transition-all ${
+                          range === r.id
+                            ? "bg-[#ffbe0b] text-[#1e1714] border-2 border-[#1e1714] shadow-[0_1.5px_0_#1e1714]"
+                            : "border-2 border-transparent text-[#4a3f39] hover:text-[#1e1714] hover:bg-[#fffef7]/70"
+                        }`}
+                      >
+                        {isSpanish ? r.es : r.label}
+                      </button>
+                    ))}
+                  </div>
 
-            <div class="flex items-center justify-between gap-2 pt-1 border-t border-[#1e1714]/15">
-              <p class="text-[11px] font-medium text-[#57524b] truncate">
-                {t(
-                  "Coarse UTC estimates · includes your opens",
-                  "Estimaciones UTC aproximadas · incluye visitas propias",
+                  <div
+                    id={`owner-stats-panel-${range}`}
+                    role="tabpanel"
+                    aria-labelledby={`owner-stats-tab-${range}`}
+                    class="space-y-3"
+                  >
+                    {statsError || statsLoading
+                      ? (
+                        <p
+                          class="text-sm font-bold text-[#57524b] text-center py-2"
+                          role="status"
+                        >
+                          {statsLoading
+                            ? t("Loading stats…", "Cargando estadísticas…")
+                            : t(
+                              "Stats are unavailable right now.",
+                              "Estadísticas no disponibles por ahora.",
+                            )}
+                        </p>
+                      )
+                      : (
+                        <>
+                          {/* 3-Tile Visual KPI Header */}
+                          <div class="grid grid-cols-3 gap-1.5">
+                            {kpis.map((tile) => {
+                              const isNumericCount = /^\d+$/.test(tile.value);
+                              return (
+                                <div
+                                  key={tile.label}
+                                  class="bg-[#fbf1e4] border-2 border-[#1e1714] rounded-xl px-1.5 py-2 text-center flex flex-col justify-between min-w-0"
+                                >
+                                  <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
+                                    {isSpanish ? kpiEs(tile.label) : tile.label}
+                                  </span>
+                                  <span
+                                    class={`mt-1 font-black text-[#1e1714] leading-tight ${
+                                      isNumericCount
+                                        ? "text-base sm:text-lg"
+                                        : "text-[11px] sm:text-xs whitespace-nowrap"
+                                    }`}
+                                  >
+                                    {isSpanish ? kpiEs(tile.value) : tile.value}
+                                  </span>
+                                  {tile.badge
+                                    ? (
+                                      <span class="mt-1 inline-block mx-auto px-1.5 py-0.5 rounded-full bg-[#ffbe0b] border border-[#1e1714] text-[10px] font-black text-[#1e1714] leading-tight truncate max-w-full">
+                                        {isSpanish
+                                          ? kpiEs(tile.badge)
+                                          : tile.badge}
+                                      </span>
+                                    )
+                                    : (
+                                      <span class="mt-1 text-[10px] font-bold text-[#57524b] truncate">
+                                        {range === "today"
+                                          ? t("Today", "Hoy")
+                                          : range === "week"
+                                          ? t("7 days", "7 días")
+                                          : t("All time", "Todo el tiempo")}
+                                      </span>
+                                    )}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Narrative Story Chips / Bullets */}
+                          {lines.length === 0
+                            ? (
+                              <p class="text-sm font-bold text-[#57524b] text-center py-1">
+                                {range === "today"
+                                  ? t(
+                                    "No page opens yet today.",
+                                    "Aún sin visitas hoy.",
+                                  )
+                                  : t(
+                                    "No page opens yet — stick it somewhere 🌸",
+                                    "Aún sin visitas — ¡pega el QR en algún lugar! 🌸",
+                                  )}
+                              </p>
+                            )
+                            : (
+                              <ul class="flex flex-wrap gap-1.5">
+                                {lines.map((line, i) => (
+                                  <li
+                                    key={i}
+                                    class={`rounded-xl border-2 px-2.5 py-1.5 text-xs leading-snug ${
+                                      i === 0
+                                        ? "w-full bg-[#fef3c7] border-[#1e1714] font-black text-[#1e1714]"
+                                        : "bg-[#fbf1e4] border-[#1e1714]/25 font-bold text-[#1e1714]"
+                                    }`}
+                                  >
+                                    {line}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                        </>
+                      )}
+
+                    {!statsError && !statsLoading && range !== "today" &&
+                      card.spark.some((v) => v > 0) && (
+                      <Spark values={card.spark} />
+                    )}
+
+                    {/* Passport Field Report 🛂 */}
+                    {!statsError && !statsLoading && (
+                      hasPass
+                        ? (
+                          <div class="bg-[#fbf1e4] border-2 border-[#1e1714] rounded-2xl p-3 space-y-3">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] text-[10px] font-black uppercase tracking-wide text-[#1e1714] shadow-sm">
+                                🛂 {t(
+                                  "PASSPORT FIELD REPORT",
+                                  "INFORME DE CAMPO DEL PASAPORTE",
+                                )}
+                              </span>
+                            </div>
+
+                            {/* 1. 🏆 Full Track / Photo Leaderboard */}
+                            {files.length > 1 &&
+                              card.itemLeaderboard.length > 0 && (
+                              <div class="space-y-1.5">
+                                <p class="qr-section-eyebrow">
+                                  <span class="qr-section-pip bg-[#ffbe0b]" />
+                                  🏆 {kind === "playlist"
+                                    ? t(
+                                      "Track Leaderboard",
+                                      "Ranking de canciones",
+                                    )
+                                    : t(
+                                      "Photo Leaderboard",
+                                      "Ranking de fotos",
+                                    )}
+                                </p>
+                                <ol class="space-y-1.5">
+                                  {card.itemLeaderboard.map((entry, idx) => {
+                                    const label = resolveLeaderboardItemName(
+                                      entry.id,
+                                    );
+                                    const unit = kind === "playlist"
+                                      ? entry.plays === 1
+                                        ? t("play", "reproducción")
+                                        : t("plays", "reproducciones")
+                                      : entry.plays === 1
+                                      ? t("view", "vista")
+                                      : t("views", "vistas");
+                                    const widthPct = Math.max(
+                                      8,
+                                      Math.round(entry.share * 100),
+                                    );
+                                    return (
+                                      <li
+                                        key={entry.id}
+                                        class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 space-y-1"
+                                      >
+                                        <div class="flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] min-w-0">
+                                          <span class="truncate min-w-0">
+                                            <span class="text-[#c4607a] mr-1.5">
+                                              #{idx + 1}
+                                            </span>
+                                            {label}
+                                          </span>
+                                          <span class="shrink-0 font-mono text-[11px] text-[#57524b]">
+                                            {entry.plays} {unit}
+                                          </span>
+                                        </div>
+                                        <div class="w-full h-2 rounded-full bg-[#efe9dc] overflow-hidden border border-[#1e1714]/40">
+                                          <div
+                                            class="h-full rounded-full bg-[#ffbe0b] transition-all"
+                                            style={{ width: `${widthPct}%` }}
+                                          />
+                                        </div>
+                                      </li>
+                                    );
+                                  })}
+                                </ol>
+                              </div>
+                            )}
+
+                            {/* 2. ⏱️ Hang Time & Completion + 🧭 Farthest Stamp */}
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                              <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
+                                  {t("Avg. Hang Time", "Tiempo promedio")}
+                                </span>
+                                <span class="mt-0.5 text-xs sm:text-sm font-black text-[#1e1714] leading-tight truncate">
+                                  {formatDwellSeconds(card.avgDwellSeconds)}
+                                </span>
+                              </div>
+                              <div class="bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
+                                  {t("Completion Rate", "Tasa de finalización")}
+                                </span>
+                                <span class="mt-0.5 text-xs sm:text-sm font-black text-[#1e1714] leading-tight truncate">
+                                  {card.completionRate !== null
+                                    ? `${
+                                      Math.round(card.completionRate * 100)
+                                    }%`
+                                    : "—"}
+                                </span>
+                              </div>
+                              <div class="col-span-2 sm:col-span-1 bg-[#fffef7] border-2 border-[#1e1714] rounded-xl p-2 text-center flex flex-col justify-between min-w-0">
+                                <span class="text-[10px] font-black uppercase tracking-wider text-[#57524b] truncate">
+                                  {t("Farthest Scan", "Escaneo más lejano")}
+                                </span>
+                                <span
+                                  class="mt-0.5 text-[11px] font-black text-[#1e1714] leading-tight truncate"
+                                  title={card.farthest
+                                    ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
+                                    : undefined}
+                                >
+                                  {card.farthest
+                                    ? `✈️ ${card.farthest.km.toLocaleString()} km · ${card.farthest.place}`
+                                    : card.topPlaces[0]
+                                    ? `📍 ${card.topPlaces[0].name}`
+                                    : "—"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {card.topPlaces.length > 0 && (
+                              <div class="flex flex-wrap gap-1.5">
+                                {card.topPlaces.map((place) => (
+                                  <span
+                                    key={place.name}
+                                    class="bg-[#fffef7] border-2 border-[#1e1714] px-2.5 py-1 rounded-full text-[11px] font-black text-[#1e1714]"
+                                  >
+                                    📍 {place.name} · {place.views}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* 3. 📲 Source Apps & 📥 Export CSV */}
+                            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                              <div class="flex flex-wrap gap-1.5 min-w-0">
+                                {card.appBreakdown.map((app) => (
+                                  <span
+                                    key={app.name}
+                                    class="bg-[#fef3c7] border-2 border-[#1e1714] px-2.5 py-1 rounded-full text-[11px] font-black text-[#1e1714]"
+                                  >
+                                    📲 {app.name} · {app.views}
+                                  </span>
+                                ))}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleExportCsv}
+                                class="min-h-[38px] inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] transition-all active:scale-95 ml-auto"
+                              >
+                                📥 {t("Export CSV", "Exportar CSV")}
+                              </button>
+                            </div>
+                          </div>
+                        )
+                        : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              haptics.light();
+                              openPricingModal();
+                            }}
+                            class="w-full min-h-[40px] px-3 py-2 rounded-2xl border-2 border-[#1e1714] bg-[#fef3c7] hover:bg-[#ffbe0b] text-[#1e1714] text-xs font-black text-center leading-snug shadow-[0_2px_0_#1e1714] transition-all hover:-translate-y-0.5 active:translate-y-0"
+                          >
+                            {isSpanish
+                              ? "🛂 Desbloquea ranking, ciudades y CSV con el Pasaporte QRBuddy →"
+                              : "🛂 Unlock leaderboard, top cities & CSV with QRBuddy Passport →"}
+                          </button>
+                        )
+                    )}
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2 pt-1 border-t border-[#1e1714]/15">
+                    <p class="text-[11px] font-medium text-[#57524b] truncate">
+                      {t(
+                        "Coarse UTC estimates · includes your opens",
+                        "Estimaciones UTC aproximadas · incluye visitas propias",
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      class="min-h-[32px] px-3 rounded-full border-2 border-[#1e1714] bg-[#fbf1e4] text-xs font-black text-[#1e1714] hover:bg-[#ffbe0b] shrink-0 transition-colors"
+                      disabled={statsLoading}
+                      onClick={() => setStatsRevision((n) => n + 1)}
+                    >
+                      {statsError
+                        ? t("Retry", "Reintentar")
+                        : t("Refresh", "Actualizar")}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            {/* Verbs */}
+            <div class="grid grid-cols-3 gap-2">
+              {canEditPayload
+                ? (
+                  <button
+                    type="button"
+                    onClick={() => fileInput.current?.click()}
+                    disabled={mutationBusy || files.length >= 10}
+                    class={`${PILL} bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714]`}
+                    title={files.length >= 10
+                      ? t(
+                        "A share holds up to 10 items",
+                        "Un enlace admite hasta 10 elementos",
+                      )
+                      : ""}
+                  >
+                    {busy === "append"
+                      ? t("Adding…", "Agregando…")
+                      : isSpanish
+                      ? `+ Agregar ${
+                        kind === "playlist" ? "canciones" : "fotos"
+                      }`
+                      : `+ Add ${kind === "playlist" ? "tracks" : "photos"}`}
+                  </button>
+                )
+                : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      addToast(
+                        isLimited
+                          ? t(
+                            "This one self-destructs, so what's inside is frozen.",
+                            "Este se autodestruye, así que su contenido queda congelado.",
+                          )
+                          : t(
+                            "Single files can't grow — make a slideshow or mixtape.",
+                            "Un archivo suelto no puede crecer: hacer una presentación o mixtape.",
+                          ),
+                        4000,
+                      )}
+                    class={`${PILL} bg-[#fffef7] text-[#1e1714] opacity-60`}
+                  >
+                    {t("+ Add", "+ Agregar")}
+                  </button>
                 )}
-              </p>
               <button
                 type="button"
-                class="min-h-[32px] px-3 rounded-full border-2 border-[#1e1714] bg-[#fbf1e4] text-xs font-black text-[#1e1714] hover:bg-[#ffbe0b] shrink-0 transition-colors"
-                disabled={statsLoading}
-                onClick={() => setStatsRevision((n) => n + 1)}
+                onClick={() => setShowVibe((v) => !v)}
+                aria-expanded={showVibe}
+                disabled={mutationBusy}
+                class={`${PILL} ${
+                  showVibe
+                    ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714]"
+                    : "bg-[#fffef7] hover:bg-[var(--qr-theme-tint,#fce7f3)] text-[#1e1714]"
+                }`}
               >
-                {statsError
-                  ? t("Retry", "Reintentar")
-                  : t("Refresh", "Actualizar")}
+                {t("Vibe ▾", "Estilo ▾")}
+              </button>
+              <button
+                type="button"
+                onClick={sticker}
+                class={`${PILL} bg-[#fffef7] hover:bg-[#f7ecdc] text-[#1e1714]`}
+              >
+                {t("Sticker", "Sticker")}
               </button>
             </div>
-          </div>
+
+            {showVibe && (
+              <div class="qr-menu-pod p-3 space-y-2 animate-slide-down">
+                <span class="qr-section-eyebrow">
+                  <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
+                  {isSpanish ? "Paleta de la página" : "Share palette"}
+                </span>
+                <PalettePills
+                  value={theme}
+                  onChange={(k) => void retheme(k)}
+                  disabled={mutationBusy}
+                />
+              </div>
+            )}
+
+            {files.length > 1 && (
+              <div class="qr-menu-pod px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
+                <span class="qr-section-eyebrow whitespace-nowrap">
+                  <span class="qr-section-pip bg-[#ffbe0b]" />
+                  🎲 {isSpanish ? "Ruleta (QR / Link)" : "Roulette draw"}
+                </span>
+                <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-[#efe9dc] p-0.5 gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => applyRouletteSetting(false, null)}
+                    class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
+                      !rouletteEnabled
+                        ? "bg-[#fffef7] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                        : "text-[#4a3f39] hover:text-[#1e1714]"
+                    }`}
+                  >
+                    {isSpanish ? "No" : "Off"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyRouletteSetting(true, null)}
+                    class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
+                      rouletteEnabled && rouletteSpins === null
+                        ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                        : "text-[#4a3f39] hover:text-[#1e1714]"
+                    }`}
+                  >
+                    {isSpanish ? "∞ Libre" : "∞ Open"}
+                  </button>
+                  <label
+                    onClick={() => {
+                      if (!rouletteEnabled || rouletteSpins === null) {
+                        applyRouletteSetting(true, 1);
+                      }
+                    }}
+                    class={`min-h-[30px] inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[11px] font-black cursor-pointer whitespace-nowrap transition-all ${
+                      rouletteEnabled && rouletteSpins !== null
+                        ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                        : "text-[#4a3f39] hover:text-[#1e1714]"
+                    }`}
+                  >
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      inputMode="numeric"
+                      aria-label={isSpanish ? "Giros por día" : "Spins per day"}
+                      value={rouletteEnabled && rouletteSpins !== null
+                        ? String(rouletteSpins)
+                        : ""}
+                      placeholder="1"
+                      onInput={(e) => {
+                        const raw = (e.target as HTMLInputElement).value.trim();
+                        if (!raw) {
+                          applyRouletteSetting(true, null);
+                          return;
+                        }
+                        const n = Number.parseInt(raw, 10);
+                        if (Number.isFinite(n)) {
+                          applyRouletteSetting(
+                            true,
+                            Math.min(99, Math.max(1, n)),
+                          );
+                        }
+                      }}
+                      class="w-7 bg-transparent text-[11px] font-black text-[#1e1714] placeholder:text-[#6e6058] focus:outline-none text-center"
+                    />
+                    <span class="text-[10px] font-black">
+                      /{isSpanish ? "día" : "day"}
+                    </span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Items with reorder ↑/↓ and remove ✕ — tucked in a compact drawer so OwnerStrip stays short */}
+            {canEditPayload && files.length > 1 && (
+              <details class="group qr-menu-pod px-3 py-2">
+                <summary class="list-none cursor-pointer min-h-[36px] flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] select-none">
+                  <span class="inline-flex items-center gap-2">
+                    <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
+                    <span>
+                      {isSpanish
+                        ? `Administrar ${files.length} ${
+                          kind === "playlist" ? "canciones" : "fotos"
+                        }`
+                        : `Manage ${files.length} ${
+                          kind === "playlist" ? "tracks" : "photos"
+                        }`}
+                    </span>
+                  </span>
+                  <span class="w-6 h-6 rounded-full border border-[#1e1714]/35 bg-[#fbf1e4] inline-flex items-center justify-center shrink-0 transition-transform group-open:rotate-180 text-[10px]">
+                    ▾
+                  </span>
+                </summary>
+                <ul
+                  class="space-y-1.5 pt-2.5 border-t border-[#1e1714]/10 mt-1"
+                  aria-label={t("Share items", "Elementos del enlace")}
+                >
+                  {files.map((f, i) => {
+                    const label = kind === "playlist"
+                      ? prettyName(f.name)
+                      : `${t("Photo", "Foto")} ${i + 1} · ${
+                        prettyName(f.name)
+                      }`;
+                    return (
+                      <li
+                        key={f.id}
+                        class="flex items-center gap-2 min-h-[40px] text-xs sm:text-sm font-bold bg-[#fbf1e4] border-2 border-[#1e1714]/30 rounded-xl px-2.5 py-1"
+                      >
+                        <span class="w-5 h-5 rounded-md bg-[#fffef7] border border-[#1e1714]/40 text-[11px] font-black text-[#1e1714] inline-flex items-center justify-center shrink-0">
+                          {i + 1}
+                        </span>
+                        <span
+                          class="truncate flex-1 min-w-0 text-[#1e1714]"
+                          title={label}
+                        >
+                          {label}
+                        </span>
+                        <div class="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => void moveItem(i, -1)}
+                            disabled={i === 0 || mutationBusy}
+                            aria-label={isSpanish
+                              ? `Subir ${prettyName(f.name)}`
+                              : `Move ${prettyName(f.name)} up`}
+                            class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void moveItem(i, 1)}
+                            disabled={i === files.length - 1 || mutationBusy}
+                            aria-label={isSpanish
+                              ? `Bajar ${prettyName(f.name)}`
+                              : `Move ${prettyName(f.name)} down`}
+                            class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void removeItem(f)}
+                            disabled={mutationBusy}
+                            aria-label={isSpanish
+                              ? `Quitar ${prettyName(f.name)}`
+                              : `Remove ${prettyName(f.name)}`}
+                            class={`h-8 rounded-full border-2 text-xs font-black text-[#c4607a] transition-colors disabled:opacity-50 ${
+                              armedRemoveId === f.id
+                                ? "px-3 border-[#c4607a] bg-[#fde8ee]"
+                                : "w-8 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#fde8ee]"
+                            }`}
+                          >
+                            {armedRemoveId === f.id
+                              ? t("Remove?", "¿Quitar?")
+                              : "✕"}
+                          </button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            )}
+          </>
         )}
 
-      {/* Verbs */}
-      <div class="grid grid-cols-3 gap-2">
-        {canEditPayload
-          ? (
-            <button
-              type="button"
-              onClick={() => fileInput.current?.click()}
-              disabled={mutationBusy || files.length >= 10}
-              class={`${PILL} bg-[#ffbe0b] hover:bg-[#ffd04a] text-[#1e1714]`}
-              title={files.length >= 10
-                ? t(
-                  "A share holds up to 10 items",
-                  "Un enlace admite hasta 10 elementos",
-                )
-                : ""}
-            >
-              {busy === "append"
-                ? t("Adding…", "Agregando…")
-                : isSpanish
-                ? `+ Agregar ${kind === "playlist" ? "canciones" : "fotos"}`
-                : `+ Add ${kind === "playlist" ? "tracks" : "photos"}`}
-            </button>
-          )
-          : (
-            <button
-              type="button"
-              onClick={() =>
-                addToast(
-                  isLimited
-                    ? t(
-                      "This one self-destructs, so what's inside is frozen.",
-                      "Este se autodestruye, así que su contenido queda congelado.",
-                    )
-                    : t(
-                      "Single files can't grow — make a slideshow or mixtape.",
-                      "Un archivo suelto no puede crecer: hacer una presentación o mixtape.",
-                    ),
-                  4000,
-                )}
-              class={`${PILL} bg-[#fffef7] text-[#1e1714] opacity-60`}
-            >
-              {t("+ Add", "+ Agregar")}
-            </button>
-          )}
-        <button
-          type="button"
-          onClick={() => setShowVibe((v) => !v)}
-          aria-expanded={showVibe}
-          disabled={mutationBusy}
-          class={`${PILL} ${
-            showVibe
-              ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714]"
-              : "bg-[#fffef7] hover:bg-[var(--qr-theme-tint,#fce7f3)] text-[#1e1714]"
-          }`}
-        >
-          {t("Vibe ▾", "Estilo ▾")}
-        </button>
-        <button
-          type="button"
-          onClick={sticker}
-          class={`${PILL} bg-[#fffef7] hover:bg-[#f7ecdc] text-[#1e1714]`}
-        >
-          {t("Sticker", "Sticker")}
-        </button>
-      </div>
+      {/* Shared hidden file input & off-screen sticker exporter */}
       <input
         ref={fileInput}
         type="file"
@@ -1097,185 +1373,6 @@ export default function OwnerStrip(
           if (list) void appendFiles(Array.from(list));
         }}
       />
-
-      {showVibe && (
-        <div class="qr-menu-pod p-3 space-y-2 animate-slide-down">
-          <span class="qr-section-eyebrow">
-            <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
-            {isSpanish ? "Paleta de la página" : "Share palette"}
-          </span>
-          <PalettePills
-            value={theme}
-            onChange={(k) => void retheme(k)}
-            disabled={mutationBusy}
-          />
-        </div>
-      )}
-
-      {files.length > 1 && (
-        <div class="qr-menu-pod px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
-          <span class="qr-section-eyebrow whitespace-nowrap">
-            <span class="qr-section-pip bg-[#ffbe0b]" />
-            🎲 {isSpanish ? "Ruleta (QR / Link)" : "Roulette draw"}
-          </span>
-          <div class="inline-flex items-center rounded-xl border-2 border-[#1e1714] bg-[#efe9dc] p-0.5 gap-0.5">
-            <button
-              type="button"
-              onClick={() => applyRouletteSetting(false, null)}
-              class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
-                !rouletteEnabled
-                  ? "bg-[#fffef7] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
-                  : "text-[#4a3f39] hover:text-[#1e1714]"
-              }`}
-            >
-              {isSpanish ? "No" : "Off"}
-            </button>
-            <button
-              type="button"
-              onClick={() => applyRouletteSetting(true, null)}
-              class={`min-h-[30px] px-2.5 py-0.5 rounded-lg text-[11px] font-black whitespace-nowrap transition-all ${
-                rouletteEnabled && rouletteSpins === null
-                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
-                  : "text-[#4a3f39] hover:text-[#1e1714]"
-              }`}
-            >
-              {isSpanish ? "∞ Libre" : "∞ Open"}
-            </button>
-            <label
-              onClick={() => {
-                if (!rouletteEnabled || rouletteSpins === null) {
-                  applyRouletteSetting(true, 1);
-                }
-              }}
-              class={`min-h-[30px] inline-flex items-center gap-0.5 px-2 py-0.5 rounded-lg text-[11px] font-black cursor-pointer whitespace-nowrap transition-all ${
-                rouletteEnabled && rouletteSpins !== null
-                  ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
-                  : "text-[#4a3f39] hover:text-[#1e1714]"
-              }`}
-            >
-              <input
-                type="number"
-                min={1}
-                max={99}
-                inputMode="numeric"
-                aria-label={isSpanish ? "Giros por día" : "Spins per day"}
-                value={rouletteEnabled && rouletteSpins !== null
-                  ? String(rouletteSpins)
-                  : ""}
-                placeholder="1"
-                onInput={(e) => {
-                  const raw = (e.target as HTMLInputElement).value.trim();
-                  if (!raw) {
-                    applyRouletteSetting(true, null);
-                    return;
-                  }
-                  const n = Number.parseInt(raw, 10);
-                  if (Number.isFinite(n)) {
-                    applyRouletteSetting(
-                      true,
-                      Math.min(99, Math.max(1, n)),
-                    );
-                  }
-                }}
-                class="w-7 bg-transparent text-[11px] font-black text-[#1e1714] placeholder:text-[#6e6058] focus:outline-none text-center"
-              />
-              <span class="text-[10px] font-black">
-                /{isSpanish ? "día" : "day"}
-              </span>
-            </label>
-          </div>
-        </div>
-      )}
-
-      {/* Items with reorder ↑/↓ and remove ✕ — tucked in a compact drawer so OwnerStrip stays short */}
-      {canEditPayload && files.length > 1 && (
-        <details class="group qr-menu-pod px-3 py-2">
-          <summary class="list-none cursor-pointer min-h-[36px] flex items-center justify-between gap-2 text-xs font-black text-[#1e1714] select-none">
-            <span class="inline-flex items-center gap-2">
-              <span class="qr-section-pip bg-[var(--qr-theme-tint-strong,#fbcfe8)]" />
-              <span>
-                {isSpanish
-                  ? `Administrar ${files.length} ${
-                    kind === "playlist" ? "canciones" : "fotos"
-                  }`
-                  : `Manage ${files.length} ${
-                    kind === "playlist" ? "tracks" : "photos"
-                  }`}
-              </span>
-            </span>
-            <span class="w-6 h-6 rounded-full border border-[#1e1714]/35 bg-[#fbf1e4] inline-flex items-center justify-center shrink-0 transition-transform group-open:rotate-180 text-[10px]">
-              ▾
-            </span>
-          </summary>
-          <ul
-            class="space-y-1.5 pt-2.5 border-t border-[#1e1714]/10 mt-1"
-            aria-label={t("Share items", "Elementos del enlace")}
-          >
-            {files.map((f, i) => {
-              const label = kind === "playlist"
-                ? prettyName(f.name)
-                : `${t("Photo", "Foto")} ${i + 1} · ${prettyName(f.name)}`;
-              return (
-                <li
-                  key={f.id}
-                  class="flex items-center gap-2 min-h-[40px] text-xs sm:text-sm font-bold bg-[#fbf1e4] border-2 border-[#1e1714]/30 rounded-xl px-2.5 py-1"
-                >
-                  <span class="w-5 h-5 rounded-md bg-[#fffef7] border border-[#1e1714]/40 text-[11px] font-black text-[#1e1714] inline-flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </span>
-                  <span
-                    class="truncate flex-1 min-w-0 text-[#1e1714]"
-                    title={label}
-                  >
-                    {label}
-                  </span>
-                  <div class="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => void moveItem(i, -1)}
-                      disabled={i === 0 || mutationBusy}
-                      aria-label={isSpanish
-                        ? `Subir ${prettyName(f.name)}`
-                        : `Move ${prettyName(f.name)} up`}
-                      class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] transition-colors disabled:opacity-30 disabled:pointer-events-none"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void moveItem(i, 1)}
-                      disabled={i === files.length - 1 || mutationBusy}
-                      aria-label={isSpanish
-                        ? `Bajar ${prettyName(f.name)}`
-                        : `Move ${prettyName(f.name)} down`}
-                      class="w-8 h-8 rounded-full border-2 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#ffbe0b] text-xs font-black text-[#1e1714] transition-colors disabled:opacity-30 disabled:pointer-events-none"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void removeItem(f)}
-                      disabled={mutationBusy}
-                      aria-label={isSpanish
-                        ? `Quitar ${prettyName(f.name)}`
-                        : `Remove ${prettyName(f.name)}`}
-                      class={`h-8 rounded-full border-2 text-xs font-black text-[#c4607a] transition-colors disabled:opacity-50 ${
-                        armedRemoveId === f.id
-                          ? "px-3 border-[#c4607a] bg-[#fde8ee]"
-                          : "w-8 border-[#1e1714]/30 bg-[#fffef7] hover:border-[#1e1714] hover:bg-[#fde8ee]"
-                      }`}
-                    >
-                      {armedRemoveId === f.id ? t("Remove?", "¿Quitar?") : "✕"}
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </details>
-      )}
-
-      {/* Off-screen sticker exporter: powers the "Sticker" button above without hanging a 200px QR off the bottom */}
       <div
         class="sr-only pointer-events-none h-0 overflow-hidden"
         aria-hidden="true"
@@ -1285,6 +1382,7 @@ export default function OwnerStrip(
           style={qrStyle}
           triggerDownload={triggerDownload}
           frameConfig={frame}
+          hideExportPill
         />
       </div>
     </section>

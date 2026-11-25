@@ -153,6 +153,7 @@ export default function FileSlideshow({
   // Slideshow State
   const [currentIndex, setCurrentIndex] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const activeImgRef = useRef<HTMLImageElement | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isZipping, setIsZipping] = useState(false);
@@ -197,16 +198,17 @@ export default function FileSlideshow({
     wasAllImages.current = isAllImages;
   }, [isAllImages, isUnlimited]);
 
-  // The share's own name. Legacy multi-shares were named "IMG_1.jpg + 7 more"
-  // by the server — read those as what they are.
+  // The share's own name. Legacy or untitled multi-shares get a clean noun instead
+  // of repeating raw counts or filenames three times down the page.
   const legacyMulti = /^(.*) \+ (\d+) more$/.exec(fileName);
-  const shareTitle = hasMultipleFiles && legacyMulti
-    ? `${files!.length} ${
-      isSpanish
-        ? (isAllAudio ? "canciones" : isAllImages ? "fotos" : "archivos")
-        : (isAllAudio ? "tracks" : isAllImages ? "photos" : "files")
-    }`
-    : fileName;
+  const hasCustomTitle = Boolean(!legacyMulti && fileName.trim() !== "");
+  const shareTitle = hasCustomTitle
+    ? fileName
+    : isAllAudio
+    ? "Mixtape"
+    : isAllImages
+    ? (isSpanish ? "Galería de Fotos" : "Photo Gallery")
+    : `${files?.length ?? 1} ${isSpanish ? "archivos" : "files"}`;
 
   // Determine what to show
   const displayFileName = currentFile ? currentFile.name : fileName;
@@ -295,6 +297,18 @@ export default function FileSlideshow({
   const isTerminal = theme === "terminal";
   const getThemeStyles = () => getThemeStylesFor(theme);
   const getCardStyles = () => getCardStylesFor(theme);
+
+  useEffect(() => {
+    const el = activeImgRef.current;
+    if (
+      el &&
+      el.complete &&
+      el.naturalWidth > 0 &&
+      imageLoadedUrl !== currentDownloadUrl
+    ) {
+      setImageLoadedUrl(currentDownloadUrl);
+    }
+  }, [currentDownloadUrl]);
 
   // Navigation Handlers
   const nextSlide = () => {
@@ -691,10 +705,13 @@ export default function FileSlideshow({
           </h1>
           <p class="text-sm font-bold opacity-80">
             {hasMultipleFiles
-              ? prettyName(displayFileName)
+              ? (isAudio
+                ? `${files!.length} ${isSpanish ? "canciones" : "tracks"}`
+                : prettyName(displayFileName))
               : `${fileKindLabel} • ${fileSizeLabel}`}
           </p>
-          {hasMultipleFiles && showPreview && (
+          {hasMultipleFiles && showPreview &&
+            (rouletteMode || isDailySpinLocked) && (
             <div class="pt-1 flex flex-wrap items-center justify-center gap-2">
               {isDailySpinLocked
                 ? (
@@ -820,23 +837,18 @@ export default function FileSlideshow({
                           {imageLoadedUrl !== currentDownloadUrl && (
                             <div
                               role="status"
-                              class={`flex flex-col items-center justify-center gap-2 px-5 py-4 rounded-2xl border-2 animate-pulse ${
+                              aria-label={prettyName(displayFileName)}
+                              class={`w-full h-full rounded-2xl animate-pulse ${
                                 isDarkTheme
-                                  ? "bg-[#1e1714]/80 border-white/30 text-white"
-                                  : "bg-[#fffef7] border-[#1e1714]/30 text-[#1e1714]"
+                                  ? "bg-[#fffef7]/10"
+                                  : "bg-[#1e1714]/[0.05]"
                               }`}
-                            >
-                              <span class="text-2xl" aria-hidden="true">
-                                🖼️
-                              </span>
-                              <span class="text-xs font-black">
-                                {prettyName(displayFileName)}
-                              </span>
-                            </div>
+                            />
                           )}
                           <img
                             key={currentDownloadUrl}
                             ref={(el) => {
+                              activeImgRef.current = el;
                               if (
                                 el && el.complete && el.naturalWidth > 0 &&
                                 imageLoadedUrl !== currentDownloadUrl
@@ -846,13 +858,15 @@ export default function FileSlideshow({
                             }}
                             src={currentDownloadUrl}
                             alt={imageLoadedUrl === currentDownloadUrl
-                              ? displayFileName
+                              ? prettyName(displayFileName)
                               : ""}
                             onLoad={() => setImageLoadedUrl(currentDownloadUrl)}
                             onError={() => setMediaErrorKey(currentDownloadUrl)}
-                            class={imageLoadedUrl === currentDownloadUrl
-                              ? "w-full h-full object-contain animate-scale-in"
-                              : "opacity-0 pointer-events-none absolute inset-0 w-full h-full object-contain"}
+                            class={`transition-opacity duration-200 w-full h-full object-contain ${
+                              imageLoadedUrl === currentDownloadUrl
+                                ? "opacity-100"
+                                : "opacity-0 pointer-events-none absolute inset-0"
+                            }`}
                           />
                         </div>
                       )
@@ -870,7 +884,7 @@ export default function FileSlideshow({
                       <div class="text-5xl sm:text-6xl animate-float">🎵</div>
                       <div>
                         <p class="font-black text-lg truncate mb-1">
-                          {displayFileName}
+                          {prettyName(displayFileName)}
                         </p>
                         {hasMultipleFiles && (
                           <p class="text-xs font-bold opacity-75">
@@ -927,7 +941,7 @@ export default function FileSlideshow({
 
                       {/* Tracklist — names, not numbers */}
                       {hasMultipleFiles && (
-                        <ol class="text-left space-y-1 pt-2 max-h-44 overflow-y-auto scrollbar-none">
+                        <ol class="text-left space-y-1 pt-2 max-h-72 pb-1 overflow-y-auto scrollbar-none">
                           {files!.map((file, idx) => {
                             const active = currentIndex === idx;
                             return (
@@ -1055,34 +1069,16 @@ export default function FileSlideshow({
         )}
 
         {/* File Details & Actions (Compressed Neo-Toybrut action dock) */}
-        <div class="w-full max-w-md space-y-4">
+        <div class="w-full max-w-md space-y-3.5">
           <div
-            class={`rounded-3xl p-4 sm:p-5 space-y-3 ${getCardStyles()}`}
+            class={`rounded-3xl p-3.5 sm:p-4 space-y-2.5 ${getCardStyles()}`}
           >
-            <div class="flex items-center justify-between gap-2 text-xs font-black opacity-80">
-              <span class="truncate">
-                {hasMultipleFiles
-                  ? `${prettyName(displayFileName)} (${currentIndex + 1}/${
-                    files!.length
-                  })`
-                  : displayFileName}
-              </span>
-              <span class="shrink-0">
-                {fileSizeLabel}
-                {formattedExpiry
-                  ? ` · ${isSpanish ? "Vence" : "Exp"} ${
-                    formattedExpiry.slice(0, 10)
-                  }`
-                  : ""}
-              </span>
-            </div>
-
-            {/* Primary Download + Secondary Zip Row */}
+            {/* Primary Download + Compact Zip Row */}
             {lastDownloadStarted
               ? (
                 <p
                   role="status"
-                  class="min-h-[48px] flex items-center justify-center w-full px-4 py-3 rounded-2xl bg-amber-100 border-2 border-black text-amber-900 font-black text-center text-sm"
+                  class="min-h-[46px] flex items-center justify-center w-full px-4 py-2.5 rounded-2xl bg-amber-100 border-2 border-black text-amber-900 font-black text-center text-sm"
                 >
                   {isSpanish
                     ? "Enlace de un solo uso utilizado. La descarga puede tardar un momento."
@@ -1092,14 +1088,14 @@ export default function FileSlideshow({
               : (
                 <div
                   class={hasMultipleFiles && isUnlimited
-                    ? "grid grid-cols-1 sm:grid-cols-2 gap-2"
+                    ? "flex items-center gap-2"
                     : ""}
                 >
                   <a
                     href={primaryDownloadUrl}
                     download={primaryDownloadName}
                     onClick={handleDownloadClick}
-                    class={`min-h-[48px] flex items-center justify-center w-full px-4 py-2.5 rounded-2xl font-black text-center text-base transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-chunky ${
+                    class={`min-h-[46px] flex-1 min-w-0 flex items-center justify-center px-4 py-2 rounded-2xl font-black text-center text-sm sm:text-base transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-chunky ${
                       isUnlimited
                         ? isTerminal
                           ? "bg-[#00FF41] text-black border-2 border-[#00FF41]"
@@ -1127,7 +1123,7 @@ export default function FileSlideshow({
                       type="button"
                       onClick={handleDownloadAll}
                       disabled={isZipping}
-                      class={`min-h-[48px] px-4 py-2.5 rounded-2xl font-black text-center text-sm transition-all border-2 disabled:opacity-60 ${
+                      class={`min-h-[46px] shrink-0 px-3.5 py-2 rounded-2xl font-black text-center text-xs sm:text-sm transition-all border-2 disabled:opacity-60 whitespace-nowrap ${
                         isTerminal
                           ? "border-[#00FF41] text-[#00FF41] hover:bg-[#00FF41]/10"
                           : isDarkTheme
@@ -1136,10 +1132,8 @@ export default function FileSlideshow({
                       }`}
                     >
                       {isZipping
-                        ? (isSpanish ? "Comprimiendo..." : "Zipping...")
-                        : (isSpanish
-                          ? "Descargar todo (.zip)"
-                          : "Download All (.zip)")}
+                        ? (isSpanish ? "ZIP…" : "Zipping…")
+                        : (isSpanish ? "Todo (.zip)" : "All (.zip)")}
                     </button>
                   )}
                 </div>
@@ -1173,6 +1167,7 @@ export default function FileSlideshow({
             )}
 
             <ShareActions
+              compact
               shareUrl={globalThis.location?.href ?? ""}
               lang={lang}
               shareText={isSpanish
@@ -1181,24 +1176,25 @@ export default function FileSlideshow({
               onShared={() => beacon({ kind: "engagement", shares: 1 })}
             />
 
-            {/* Limits Info */}
+            {/* Single compact metadata footer */}
             <div
-              class={`flex justify-between text-xs font-bold opacity-75 pt-2 border-t-2 ${
+              class={`flex items-center justify-between gap-2 text-[11px] font-bold opacity-75 pt-2 border-t-2 ${
                 isDarkTheme ? "border-white/20" : "border-black/15"
               }`}
             >
-              <span>
+              <span class="truncate">
+                {fileSizeLabel}
+                {formattedExpiry ? ` · ${formattedExpiry.slice(0, 10)}` : ""}
+                {" · "}
                 {isUnlimited
-                  ? (isSpanish
-                    ? "∞ Descargas ilimitadas"
-                    : "∞ Unlimited Downloads")
+                  ? (isSpanish ? "∞ libre" : "∞ unlimited")
                   : (isSpanish
-                    ? `${remainingDownloads}/${maxDownloads} usos restantes`
+                    ? `${remainingDownloads}/${maxDownloads} usos`
                     : `${remainingDownloads}/${maxDownloads} uses left`)}
               </span>
               {!unbranded && (
-                <span>
-                  {isSpanish ? "Impulsado por QRBuddy" : "Powered by QRBuddy"}
+                <span class="shrink-0">
+                  {isSpanish ? "Con QRBuddy" : "QRBuddy"}
                 </span>
               )}
             </div>

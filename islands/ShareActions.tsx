@@ -7,11 +7,19 @@ interface ShareActionsProps {
   sharedTarget?: string;
   shareText?: string;
   onShared?: () => void;
+  compact?: boolean;
   lang?: Locale;
 }
 
 export default function ShareActions(
-  { shareUrl, sharedTarget, shareText, onShared, lang }: ShareActionsProps,
+  {
+    shareUrl,
+    sharedTarget,
+    shareText,
+    onShared,
+    compact = false,
+    lang,
+  }: ShareActionsProps,
 ) {
   const isSpanish = getClientLocale(lang) === "es";
   const handleCopyLink = async () => {
@@ -59,6 +67,32 @@ export default function ShareActions(
   };
 
   const canWebShare = typeof navigator !== "undefined" && !!navigator.share;
+
+  if (compact) {
+    return (
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          aria-label={isSpanish ? "Copiar enlace" : "Copy share link"}
+          class="flex-1 min-h-[44px] px-3.5 py-2 bg-[#fffef7] text-[#1e1714] border-2 border-[#1e1714] rounded-2xl text-xs sm:text-sm font-black flex items-center justify-center gap-1.5 shadow-chunky hover:bg-amber-100 active:translate-y-px transition"
+        >
+          {isSpanish ? "Copiar enlace" : "Copy link"}
+        </button>
+
+        {canWebShare && (
+          <button
+            type="button"
+            onClick={handleNativeShare}
+            aria-label={isSpanish ? "Compartir enlace del QR" : "Share QR link"}
+            class="min-h-[44px] px-4 py-2 bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border-2 border-[#1e1714] rounded-2xl text-xs sm:text-sm font-black shadow-chunky hover:opacity-90 active:translate-y-px transition shrink-0"
+          >
+            {isSpanish ? "Compartir" : "Share"}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div class="space-y-3">

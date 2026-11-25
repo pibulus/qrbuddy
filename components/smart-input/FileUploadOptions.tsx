@@ -52,37 +52,37 @@ const KIND: Record<
     glyph: "🖼️",
     noun: "Slideshow",
     nounEs: "Galería de Fotos",
-    cta: "Make the slideshow ✨",
-    ctaEs: "Crear galería ✨",
-    placeholder: "Name it — Summer '26, Nan's 80th…",
-    placeholderEs: "Ponle nombre — Verano '26, Boda de Ana…",
+    cta: "Make slideshow →",
+    ctaEs: "Crear galería →",
+    placeholder: "Title (optional, e.g. Summer '26, Maya & Leo)",
+    placeholderEs: "Título (opcional, ej. Verano '26, Maya y Leo)",
   },
   playlist: {
     glyph: "🎵",
     noun: "Mixtape",
     nounEs: "Mixtape de Audio",
-    cta: "Make the mixtape 🎵",
-    ctaEs: "Crear mixtape 🎵",
-    placeholder: "Name it — Mixtape vol. 3, road trip…",
-    placeholderEs: "Ponle nombre — Mixtape vol. 3, carretera…",
+    cta: "Make mixtape →",
+    ctaEs: "Crear mixtape →",
+    placeholder: "Title (optional, e.g. Late Night Tape Vol. 3)",
+    placeholderEs: "Título (opcional, ej. Mixtape Vol. 3)",
   },
   pack: {
     glyph: "📦",
     noun: "Pack",
     nounEs: "Paquete",
-    cta: "Create QR",
-    ctaEs: "Crear QR",
-    placeholder: "Name it (optional)",
-    placeholderEs: "Nombre (opcional)",
+    cta: "Create QR →",
+    ctaEs: "Crear QR →",
+    placeholder: "Title (optional)",
+    placeholderEs: "Título (opcional)",
   },
   file: {
     glyph: "📄",
     noun: "File",
     nounEs: "Archivo",
-    cta: "Create QR",
-    ctaEs: "Crear QR",
-    placeholder: "Name it (optional)",
-    placeholderEs: "Nombre (opcional)",
+    cta: "Create QR →",
+    ctaEs: "Crear QR →",
+    placeholder: "Title (optional)",
+    placeholderEs: "Título (opcional)",
   },
 };
 
@@ -172,7 +172,7 @@ export default function FileUploadOptions(
         />
       </div>
 
-      {/* Polaroid thumbnail preview strip for slideshows (with inline ← / → reorder pills, no duplicate 5-row vertical list!) */}
+      {/* Unobstructed Polaroid thumbnail strip with reorder controls tucked neatly underneath */}
       {kind === "slideshow" && (
         <div
           class="flex gap-2.5 overflow-x-auto scrollbar-none -mx-1 px-1 py-1"
@@ -181,25 +181,29 @@ export default function FileUploadOptions(
           {thumbs.map((src, i) => (
             <div
               key={`${files[i]?.name ?? i}-${i}`}
-              class="relative shrink-0 group/tile"
-              style={{ transform: `rotate(${(i % 3) - 1}deg)` }}
+              class="shrink-0 flex flex-col items-center gap-1"
             >
-              <img
-                src={src}
-                alt={prettyName(files[i]?.name ?? `Photo ${i + 1}`)}
-                class="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border-2 border-[#1e1714] bg-[#fffef7] shadow-[2px_2px_0_#1e1714]"
-              />
-              <span class="absolute top-1 left-1 px-1.5 py-0.2 rounded-md border border-[#1e1714] bg-[#fffef7]/95 text-[10px] font-black text-[#1e1714] leading-tight">
-                {i + 1}
-              </span>
+              <div
+                class="relative"
+                style={{ transform: `rotate(${(i % 3) - 1}deg)` }}
+              >
+                <img
+                  src={src}
+                  alt={prettyName(files[i]?.name ?? `Photo ${i + 1}`)}
+                  class="w-[72px] h-[72px] sm:w-20 sm:h-20 object-cover rounded-xl border-2 border-[#1e1714] bg-[#fffef7] shadow-[2px_2px_0_#1e1714]"
+                />
+                <span class="absolute top-1 left-1 w-4 h-4 rounded-md border border-[#1e1714] bg-[#fffef7]/95 text-[10px] font-black text-[#1e1714] flex items-center justify-center leading-none">
+                  {i + 1}
+                </span>
+              </div>
               {onReorderFiles && files.length > 1 && (
-                <div class="absolute inset-x-1 bottom-1 flex items-center justify-between gap-1">
+                <div class="flex items-center justify-center gap-1">
                   <button
                     type="button"
                     onClick={() => moveFile(i, -1)}
                     disabled={i === 0 || busy}
-                    aria-label={`Move ${itemNoun} ${i + 1} up`}
-                    class="w-6 h-6 rounded-md border border-[#1e1714] bg-[#fffef7]/95 hover:bg-amber-200 text-[11px] font-black text-[#1e1714] flex items-center justify-center disabled:opacity-0 disabled:pointer-events-none transition-colors"
+                    aria-label={`Move ${itemNoun} ${i + 1} left`}
+                    class="w-6 h-6 rounded-md border border-[#1e1714]/40 bg-[#fffef7] hover:border-[#1e1714] hover:bg-amber-200 text-[11px] font-black text-[#1e1714] flex items-center justify-center disabled:opacity-25 disabled:pointer-events-none transition-colors"
                   >
                     ←
                   </button>
@@ -207,8 +211,8 @@ export default function FileUploadOptions(
                     type="button"
                     onClick={() => moveFile(i, 1)}
                     disabled={i === thumbs.length - 1 || busy}
-                    aria-label={`Move ${itemNoun} ${i + 1} down`}
-                    class="w-6 h-6 rounded-md border border-[#1e1714] bg-[#fffef7]/95 hover:bg-amber-200 text-[11px] font-black text-[#1e1714] flex items-center justify-center disabled:opacity-0 disabled:pointer-events-none transition-colors"
+                    aria-label={`Move ${itemNoun} ${i + 1} right`}
+                    class="w-6 h-6 rounded-md border border-[#1e1714]/40 bg-[#fffef7] hover:border-[#1e1714] hover:bg-amber-200 text-[11px] font-black text-[#1e1714] flex items-center justify-center disabled:opacity-25 disabled:pointer-events-none transition-colors"
                   >
                     →
                   </button>
