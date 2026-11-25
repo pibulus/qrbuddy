@@ -223,50 +223,56 @@ if (maxDownloads === 999999) {
 
 ### Launch gates
 
-`deno task check && deno task test:unit && deno task build` plus the five audit
-tests are the local gate. Edge-function changes ship separately:
-`supabase functions deploy …` per `supabase/README.md`; a site push does not
-deploy them. The five rate-gated functions were deployed 2026-11-02; re-deploy
-them whenever their code changes.
+`deno task check && deno task test:unit && deno task build` plus the audit suite
+in `tests/audit_test.ts` are the local gate. Edge-function changes ship
+separately:
+`supabase functions deploy <name> --project-ref aqydpibnvlhcjcwosrti` per
+`supabase/README.md`; pushing or deploying the Fresh app does not deploy
+Supabase Edge Functions.
 
 ### Deployment
 
-- **Deploy budget**: Deno Deploy allows **15 deployments per hour** on this
-  plan. Rapid pushes past that are silently not built (the site keeps serving
-  the last good revision). Check with
-  `deno deploy deployments list --org pibulus --app qrbuddy --token "$DENO_DEPLOY_TOKEN_NEW" --non-interactive --json`
-  before assuming a push is live, and space out release passes.
 - **Production app**: https://qrbuddy.app
-- **Deno Deploy alias**: https://qrbuddy.pibulus.deno.net
-- **Supabase project ref**: `aqydpibnvlhcjcwosrti`
+- **Host / runtime**: CHONK (`pibulus.local` / `192.168.0.136`, systemd
+  `qrbuddy.service` on port `8004`, proxied via Cloudflare Tunnel).
+- **Supabase project ref**: `aqydpibnvlhcjcwosrti` (15 public Edge Functions
+  with `verify_jwt = false` in `supabase/config.toml`).
 
-Fresh production uses the Git-connected Deno Deploy build. An authorized push to
-`main` runs checks, the offline unit suite, then `deno task build`, which stamps
-the source and generates the Fresh AOT manifest before routing. The deployment
-build stops if any of those steps fail. CI also runs `deno task check`, the
-explicit offline `deno task test:unit` suite, and the build; it does not deploy.
-`/version.json` includes `commit`, `buildId`, and a deterministic `sourceHash`;
-the source hash identifies the built source even when Git metadata is missing.
+Push `main` to origin, then deploy on CHONK via SSH:
 
-Do not upload a local checkout with `deployctl` or `deno deploy`: `_fresh/` is
-generated and ignored by Git, and the Fresh Tailwind plugin requires its AOT
-manifest. Keep `APP_URL`, `SUPABASE_URL`, and `SUPABASE_ANON_KEY` in the Deno
-Deploy app configuration. `SUPABASE_SERVICE_ROLE_KEY` belongs only in Supabase
-function secrets.
+```bash
+ssh pibulus@pibulus.local '/home/pibulus/pibulus-os/scripts/deploy_app.sh qrbuddy'
+```
+
+`deploy_app.sh` checks out `main`, runs `deno task build` (stamping
+`/version.json` with `commit`, `buildId`, and `sourceHash` plus generating
+Fresh's AOT manifest in `_fresh/`), and restarts `qrbuddy.service`. Keep runtime
+`APP_URL`, `SUPABASE_URL`, and `SUPABASE_ANON_KEY` in CHONK's app environment,
+and keep `SUPABASE_SERVICE_ROLE_KEY` exclusively in Supabase function secrets.
 
 Supabase schema and function operations are separate from the Fresh app. Use the
 migration preflight and function deployment commands in
 [`supabase/README.md`](./supabase/README.md); skip the `_shared` helper folder
 when deploying functions.
 
-**Current Release Status (`v2.0.0 SEALED` — 2026-10-27)**:
+**Current Release Status (`V3 Studio` — 2026-11-25)**:
 
 - **The QRBuddy Passport 🛂✨** (`~$32 USD / A$49` for 365 days, no
-  auto-renewal, `SQUARE_CHECKOUT_ENABLED=true`) is live on production, unified
-  with local/server Library and `#passport=...` fragment QR pairing.
+  auto-renewal, `SQUARE_CHECKOUT_ENABLED=true`): 365-day link & reusable locker
+  retention, 25 MB mixtape/slideshow uploads, lifted rate limits (300/hr),
+  `#passport=` fragment QR pairing, and Postgres-synced QR `title` across local
+  & server libraries.
+- **Transparent Ground & Print Artifacts**: `transparentBg` export mode
+  (classic + clean + unframed) with true alpha-0 SVG/PNG and Batch ZIP output,
+  plus standalone printable **A6 Counter Sign**, **Foldable 2-Sided Table
+  Tent**, and **15–50 mm Size Proof Sheet** with 50 mm ruler.
+- **Street & Print Templates + CSV Bulk Repoint**: Native **WhatsApp**,
+  **Calendar (`VEVENT`)**, and **Location / GPS Pin (`geo:` + Google Maps)**
+  templates, live vCard 20 mm density guard with 1-tap trim, and Editable
+  Library RFC-4180 CSV export + bulk repoint (`↓ Export CSV` / `↑ Update CSV`).
 - **Passport Field Report 🛂** (7d/30d/90d scan analytics, Top Cities &
   Countries, 24h Peak Rush Hour, Browser split, Track/Photo Leaderboard, and
-  RFC-4180 CSV export) is live on `/edit` and `/f/[code]`.
+  RFC-4180 CSV export) on `/edit` and `/f/[code]`.
 - **1080p Camera QR Scanner & Street-Safe Inspector** (`BarcodeDetector` →
   `zxing-wasm` → `jsQR` with 50% macro crop + `📸 Snap HD Photo` fallback) is
   live.

@@ -1026,7 +1026,7 @@ export default function QRCanvas(
           w-full flex justify-center items-center
           ${
             isTransparentStage && transparentStageSvgUrl
-              ? "[&>canvas]:opacity-0 [&>canvas]:absolute [&>canvas]:inset-0 [&>canvas]:pointer-events-none"
+              ? "[&>canvas]:opacity-0 [&>canvas]:absolute [&>canvas]:inset-0 [&>canvas]:w-full [&>canvas]:h-full [&>canvas]:pointer-events-none"
               : "[&>canvas]:w-full [&>canvas]:h-auto"
           }
           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--qr-theme-accent,#ec4899)]
