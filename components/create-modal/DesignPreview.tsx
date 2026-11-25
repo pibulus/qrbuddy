@@ -4,7 +4,11 @@ import { bannerColors, resolveQRStyle } from "../../utils/qr-design.ts";
 import { styledQrSvg } from "../../utils/qr-renderer.ts";
 import { evaluateQrContrast, toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
 import { resolveRiso, risoPaper } from "../../utils/qr-print.ts";
-import { createFramedSvg } from "../../utils/svg-export.ts";
+import {
+  canExportTransparent,
+  createFramedSvg,
+  stripSvgBackgroundRect,
+} from "../../utils/svg-export.ts";
 import { getQRThemeTokens } from "../../utils/qr-styles.ts";
 import { resolvePaletteDisplayName } from "./DesignTab.tsx";
 
@@ -38,11 +42,14 @@ export default function DesignPreview(
       style: resolved,
       logoUrl: logoUrl.value,
     });
+    const isTransparent = canExportTransparent(resolved, frameConfig?.value);
     const omitted = logoUrl.value && svg.includes('data-cutout="none"');
     if (frameConfig?.value?.enabled) {
       svg = createFramedSvg(svg, frameConfig.value.caption, {
         banner: bannerColors(frameConfig.value.theme, tokens.accent),
       });
+    } else if (isTransparent) {
+      svg = stripSvgBackgroundRect(svg);
     }
 
     const stopColors = resolved.dots.gradient?.colorStops?.map((s) =>
@@ -59,7 +66,11 @@ export default function DesignPreview(
     const risoPaperHex = printMode === "riso"
       ? risoPaper(resolved.risoStock)
       : null;
-    const paper = risoPaperHex ?? bgHex;
+    const transparentLightInk = isTransparent &&
+      stopColors.some((c) => evaluateQrContrast([c], "#FFFEF7").inverted);
+    const paper = isTransparent
+      ? (transparentLightInk ? "#1E1714" : "#FFFEF7")
+      : (risoPaperHex ?? bgHex);
     // Only the data drum carries information; the spot is a design choice and
     // is allowed a lower floor, so it is not what the warning is about.
     const inks = printMode === "riso"
@@ -89,7 +100,15 @@ export default function DesignPreview(
         data-design-preview
       >
         <div class="flex items-center gap-3">
-          <div class="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] shrink-0 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] p-1 flex items-center justify-center shadow-[2px_2px_0_#1e1714]">
+          <div
+            class="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] shrink-0 rounded-2xl border-2 border-[#1e1714] bg-[#fffef7] p-1 flex items-center justify-center shadow-[2px_2px_0_#1e1714]"
+            style={isTransparent
+              ? {
+                background:
+                  "repeating-conic-gradient(#efe6d5 0% 25%, #fffef7 0% 50%) 50% / 12px 12px",
+              }
+              : undefined}
+          >
             <img
               src={toSvgDataUrl(svg)}
               alt={es
@@ -111,6 +130,12 @@ export default function DesignPreview(
                 />
                 <span>{paletteName}</span>
               </span>
+
+              {isTransparent && (
+                <span class="inline-flex items-center rounded-full border border-[#1e1714]/50 bg-[#fffef7] px-2 py-0.5 text-[11px] font-black text-[#1e1714]">
+                  {es ? "Sin fondo" : "Transparent"}
+                </span>
+              )}
 
               {lookBadge && (
                 <span class="inline-flex items-center rounded-full border-2 border-[#1e1714] bg-[var(--qr-theme-tint-strong,#fbcfe8)] px-2 py-0.5 text-[11px] font-black text-[#1e1714]">

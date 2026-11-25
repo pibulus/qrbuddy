@@ -196,6 +196,9 @@ export function isValidCustomStyle(cs: unknown): cs is QRStyle {
   if (s.risoRegister !== undefined && typeof s.risoRegister !== "string") {
     return false;
   }
+  if (s.transparentBg !== undefined && typeof s.transparentBg !== "boolean") {
+    return false;
+  }
   if (s.foilDepth !== undefined) {
     if (
       typeof s.foilDepth !== "string" ||

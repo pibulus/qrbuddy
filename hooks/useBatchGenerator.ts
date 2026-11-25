@@ -1,5 +1,10 @@
 import { useState } from "preact/hooks";
-import QRRenderer from "../utils/qr-renderer.ts";
+import QRRenderer, { styledQrSvg } from "../utils/qr-renderer.ts";
+import {
+  canExportTransparent,
+  rasterizeSvgToPngBlob,
+  stripSvgBackgroundRect,
+} from "../utils/svg-export.ts";
 import { resolveQRStyle } from "../utils/qr-design.ts";
 import { haptics } from "../utils/haptics.ts";
 import { Signal } from "@preact/signals";
@@ -266,28 +271,49 @@ export function useBatchGenerator(
       };
       const zip = new JSZip();
 
+      const transparentZip = canExportTransparent(styleConfig);
+
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const num = String(row.index).padStart(2, "0");
         const baseName = `qr_${num}_${row.safeSlug}`;
-        const qr = new QRRenderer({
-          size: 1000,
-          data: row.url,
-          style: styleConfig,
-          logoUrl: logoUrl.value,
-        });
-
-        if (includePng) {
-          const pngBlob = await qr.getRawData("png");
-          if (pngBlob) {
+        if (transparentZip) {
+          const cleanSvg = stripSvgBackgroundRect(styledQrSvg({
+            size: 1000,
+            data: row.url,
+            style: styleConfig,
+            logoUrl: logoUrl.value,
+          }));
+          if (includePng) {
+            const pngBlob = await rasterizeSvgToPngBlob(cleanSvg, 1000);
             zip.file(`${baseName}.png`, pngBlob);
           }
-        }
+          if (includeSvg) {
+            zip.file(
+              `${baseName}.svg`,
+              new Blob([cleanSvg], { type: "image/svg+xml;charset=utf-8" }),
+            );
+          }
+        } else {
+          const qr = new QRRenderer({
+            size: 1000,
+            data: row.url,
+            style: styleConfig,
+            logoUrl: logoUrl.value,
+          });
 
-        if (includeSvg) {
-          const svgBlob = await qr.getRawData("svg");
-          if (svgBlob) {
-            zip.file(`${baseName}.svg`, svgBlob);
+          if (includePng) {
+            const pngBlob = await qr.getRawData("png");
+            if (pngBlob) {
+              zip.file(`${baseName}.png`, pngBlob);
+            }
+          }
+
+          if (includeSvg) {
+            const svgBlob = await qr.getRawData("svg");
+            if (svgBlob) {
+              zip.file(`${baseName}.svg`, svgBlob);
+            }
           }
         }
 

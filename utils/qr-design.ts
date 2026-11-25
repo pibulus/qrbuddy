@@ -24,6 +24,9 @@ export function resolveQRStyle(
   if (override?.risoInk) look.risoInk = override.risoInk;
   if (override?.risoStock) look.risoStock = override.risoStock;
   if (override?.risoRegister) look.risoRegister = override.risoRegister;
+  if (override?.transparentBg !== undefined) {
+    look.transparentBg = override.transparentBg;
+  }
   return {
     ...base,
     ...look,

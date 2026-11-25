@@ -79,6 +79,8 @@ export interface QRStyle {
   risoInk?: string;
   risoStock?: string;
   risoRegister?: string;
+  /** True when classic clean exports strip the outer paper fill for transparent placement. */
+  transparentBg?: boolean;
 }
 
 /** Card label (banner) treatment. Auto-themed; never a font/colour picker. */

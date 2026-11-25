@@ -286,6 +286,9 @@ export function preserveStyleLook(
   if (initialStyle.risoInk) look.risoInk = initialStyle.risoInk;
   if (initialStyle.risoStock) look.risoStock = initialStyle.risoStock;
   if (initialStyle.risoRegister) look.risoRegister = initialStyle.risoRegister;
+  if (initialStyle.transparentBg !== undefined) {
+    look.transparentBg = initialStyle.transparentBg;
+  }
   return look;
 }
 

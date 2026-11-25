@@ -1,3 +1,5 @@
+import type { FrameConfig, QRStyle } from "../types/qr-types.ts";
+
 export function escapeXml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -229,6 +231,61 @@ function extractPayloadSlug(payload: string): string {
  * Builds a deterministic, filesystem-safe semantic filename for QR exports
  * (e.g. `qrbuddy-guest-pass-sunset.png` or `qrbuddy-pibulus-com-sunset.svg`).
  */
+export function canExportTransparent(
+  style?: Pick<QRStyle, "transparentBg" | "renderMode" | "print"> | null,
+  frame?: Pick<FrameConfig, "enabled"> | null,
+): boolean {
+  return Boolean(
+    style?.transparentBg &&
+      (style.renderMode ?? "classic") === "classic" &&
+      (style.print ?? "clean") === "clean" &&
+      !frame?.enabled,
+  );
+}
+
+/**
+ * Strips ONLY the outer root paper background `<rect x="0" y="0" .../>` from a
+ * Classic Clean QR SVG so graphic designers can drop transparent ink directly
+ * onto colored wine labels, kraft paper, apparel, or Canva/Illustrator artboards.
+ * Preserves center-mark moat rects (`x > 0`) and module/finder paths intact.
+ */
+export function stripSvgBackgroundRect(svgMarkup: string): string {
+  return svgMarkup.replace(
+    /[ \t]*<rect\s+x="0"\s+y="0"\s+width="[^"]+"\s+height="[^"]+"(?:\s+rx="[^"]+"\s+ry="[^"]+")?\s+fill="[^"]+"\s*\/>\n?/i,
+    "",
+  );
+}
+
+/** Rasterizes standalone SVG markup cleanly onto a transparent PNG canvas. */
+export async function rasterizeSvgToPngBlob(
+  svgMarkup: string,
+  size: number,
+): Promise<Blob> {
+  const url = URL.createObjectURL(
+    new Blob([svgMarkup], { type: "image/svg+xml;charset=utf-8" }),
+  );
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas is unavailable");
+    ctx.clearRect(0, 0, size, size);
+    ctx.drawImage(img, 0, 0, size, size);
+    return await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("PNG unavailable"))),
+        "image/png",
+      )
+    );
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export function buildQrFilename(
   payload: string,
   style: string,

@@ -19,6 +19,14 @@ import {
   stampUrl,
 } from "../../utils/qr-design.ts";
 import { toSvgDataUrl } from "../../utils/qr-vector-svg.ts";
+import { canExportTransparent } from "../../utils/svg-export.ts";
+import {
+  buildCounterCardPrintHtml,
+  buildPrintProofSheetHtml,
+  openPrintArtifactWindow,
+} from "../../utils/print-artifacts.ts";
+import { addToast } from "../../islands/ToastManager.tsx";
+import { evaluateQrContrast } from "../../utils/qr-vector-svg.ts";
 import { resetDesignPreferences } from "../../utils/design-preferences.ts";
 import { getQRThemeTokens } from "../../utils/qr-styles.ts";
 import {
@@ -143,6 +151,59 @@ export default function DesignTab(
   const theme: BannerTheme = frameConfig?.value?.theme ?? "accent";
   const banner = bannerColors(theme, accent);
 
+  const renderMode = current.renderMode ?? "classic";
+  const printMode = current.print ?? "clean";
+  const transparentSupported = renderMode === "classic" &&
+    printMode === "clean" &&
+    !caption;
+  const transparentActive = canExportTransparent(current, frameConfig?.value);
+  const dotStops = current.dots.gradient?.colorStops?.map((s) => s.color) ??
+    (current.dots.color ? [current.dots.color] : [accent]);
+  const transparentNeedsDarkStock = transparentActive &&
+    dotStops.some((c) => evaluateQrContrast([c], "#FFFEF7").inverted);
+
+  const toggleTransparentGround = () => {
+    if (!customStyle || !transparentSupported) return;
+    customStyle.value = { ...current, transparentBg: !transparentActive };
+    tap();
+  };
+
+  const launchPrintArtifact = (kind: "sign" | "proof") => {
+    tap();
+    const payload = url.value || "https://qrbuddy.app";
+    const html = kind === "proof"
+      ? buildPrintProofSheetHtml({
+        data: payload,
+        style: current,
+        styleKey: qrStyle.value,
+        logoUrl: logoUrl.value,
+        caption: caption || undefined,
+        lang: locale,
+      })
+      : buildCounterCardPrintHtml({
+        data: payload,
+        style: current,
+        styleKey: qrStyle.value,
+        logoUrl: logoUrl.value,
+        caption: caption || undefined,
+        lang: locale,
+      });
+    const outcome = openPrintArtifactWindow(
+      html,
+      kind === "proof"
+        ? "qrbuddy-proof-sheet.html"
+        : "qrbuddy-counter-sign.html",
+    );
+    if (outcome === "downloaded") {
+      addToast(
+        es
+          ? "Archivo de impresión descargado (abre y presiona Imprimir)"
+          : "Print sheet downloaded (open & Print / Save PDF)",
+        3000,
+      );
+    }
+  };
+
   const writeCaption = (next: string) => {
     if (!frameConfig) return;
     const clean = next.slice(0, 24);
@@ -263,6 +324,47 @@ export default function DesignTab(
             </button>
           }
         />
+
+        {customStyle && (
+          <div class="pt-1 border-t border-[#1e1714]/10 flex items-center justify-between gap-2 flex-wrap">
+            <button
+              type="button"
+              aria-pressed={transparentActive}
+              disabled={!transparentSupported}
+              onClick={toggleTransparentGround}
+              class={`min-h-[34px] inline-flex items-center gap-2 rounded-xl px-2.5 py-1 text-xs font-black transition-[transform,box-shadow,border-color,background-color] duration-[70ms] active:translate-y-[1.5px] disabled:opacity-45 disabled:pointer-events-none ${
+                pillState(transparentActive)
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                class="w-4 h-4 rounded-md border border-[#1e1714] shrink-0"
+                style={{
+                  background:
+                    "repeating-conic-gradient(#d6cbb8 0% 25%, #fffef7 0% 50%) 50% / 8px 8px",
+                }}
+              />
+              <span>
+                {es ? "Fondo transparente" : "Transparent ground"}
+              </span>
+            </button>
+            <span class="text-[11px] font-semibold text-[#574c44] truncate">
+              {!transparentSupported
+                ? (caption
+                  ? (es ? "Disponible sin etiqueta" : "Requires no card label")
+                  : (es
+                    ? "Solo Clásico + Limpio"
+                    : "Classic + Clean press only"))
+                : transparentActive
+                ? (transparentNeedsDarkStock
+                  ? (es ? "Imprimir sobre fondo oscuro" : "Place on dark stock")
+                  : (es ? "PNG/SVG sin fondo claro" : "Place on light stock"))
+                : (es
+                  ? "Para botellas, kraft y Canva"
+                  : "For labels, merch & Canva")}
+            </span>
+          </div>
+        )}
       </section>
 
       {/* 2. Center Mark Pod */}
@@ -519,6 +621,24 @@ export default function DesignTab(
                 </button>
               );
             })}
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1.5 border-t border-[#1e1714]/10">
+            <button
+              type="button"
+              onClick={() => launchPrintArtifact("sign")}
+              class={`${KEY} min-h-[38px] border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[#ffbe0b] text-[#1e1714] shadow-[0_1.5px_0_#1e1714] flex items-center justify-center gap-1.5`}
+            >
+              <span aria-hidden="true">🪧</span>
+              <span>{es ? "Letrero / Caballete" : "Counter Sign / Tent"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => launchPrintArtifact("proof")}
+              class={`${KEY} min-h-[38px] border-2 border-[#1e1714]/35 hover:border-[#1e1714] bg-[#fffef7] hover:bg-[#f7ecdc] text-[#1e1714] flex items-center justify-center gap-1.5`}
+            >
+              <span aria-hidden="true">📏</span>
+              <span>{es ? "Hoja de prueba mm" : "Size Proof Sheet"}</span>
+            </button>
           </div>
         </section>
       )}

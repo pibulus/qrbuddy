@@ -64,6 +64,11 @@ import FileUploadOptions, {
 import ShareReady, {
   type LastShare,
 } from "../components/smart-input/ShareReady.tsx";
+import {
+  buildCounterCardPrintHtml,
+  buildPrintProofSheetHtml,
+  openPrintArtifactWindow,
+} from "../utils/print-artifacts.ts";
 import { prepImages } from "../utils/image-prep.ts";
 import {
   getQRThemeStyleVars,
@@ -223,11 +228,59 @@ export default function SmartInput(
       setCreateModalTab("options");
       setIsCreateModalOpen(true);
     };
+    const handlePrintArtifact = (event: Event) => {
+      const detail =
+        (event as CustomEvent<{ kind?: "sign" | "tent" | "proof" }>)
+          .detail;
+      const kind = detail?.kind ?? "sign";
+      event.preventDefault();
+      const payload = url.value || "https://qrbuddy.app";
+      const html = kind === "proof"
+        ? buildPrintProofSheetHtml({
+          data: payload,
+          style: customStyle?.value,
+          styleKey: qrStyle.value,
+          logoUrl: logoUrl.value,
+          caption: frameConfig?.value?.enabled
+            ? frameConfig.value.caption
+            : undefined,
+          lang: locale,
+        })
+        : buildCounterCardPrintHtml({
+          data: payload,
+          style: customStyle?.value,
+          styleKey: qrStyle.value,
+          logoUrl: logoUrl.value,
+          caption: frameConfig?.value?.enabled
+            ? frameConfig.value.caption
+            : undefined,
+          lang: locale,
+          defaultLayout: kind === "tent" ? "tent" : "sign",
+        });
+      const outcome = openPrintArtifactWindow(
+        html,
+        kind === "proof"
+          ? "qrbuddy-proof-sheet.html"
+          : "qrbuddy-counter-sign.html",
+      );
+      if (outcome === "downloaded") {
+        addToast(
+          isSpanish
+            ? "Archivo de impresión descargado"
+            : "Print sheet downloaded",
+          2500,
+        );
+      }
+    };
     globalThis.addEventListener("qrb-open-library", handleOpenLibrary);
     globalThis.addEventListener("qrb-open-vault", handleOpenLibrary);
     globalThis.addEventListener("qrb-open-inspector", handleOpenInspector);
     globalThis.addEventListener("qr-edit-label", handleEditLabel);
     globalThis.addEventListener("qrb-open-behavior", handleOpenBehavior);
+    globalThis.addEventListener(
+      "qrb-print-artifact",
+      handlePrintArtifact as EventListener,
+    );
 
     const params = new URLSearchParams(globalThis.location?.search ?? "");
     let mutatedParams = false;
@@ -272,6 +325,10 @@ export default function SmartInput(
       globalThis.removeEventListener("qrb-open-inspector", handleOpenInspector);
       globalThis.removeEventListener("qr-edit-label", handleEditLabel);
       globalThis.removeEventListener("qrb-open-behavior", handleOpenBehavior);
+      globalThis.removeEventListener(
+        "qrb-print-artifact",
+        handlePrintArtifact as EventListener,
+      );
     };
   }, []);
 

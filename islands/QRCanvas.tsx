@@ -16,8 +16,11 @@ import { haptics } from "../utils/haptics.ts";
 import { checkQRScannability } from "../utils/qr-decode.ts";
 import {
   buildQrFilename,
+  canExportTransparent,
   createFramedSvg,
   measureCaptionWidth,
+  rasterizeSvgToPngBlob,
+  stripSvgBackgroundRect,
 } from "../utils/svg-export.ts";
 import { buildQrSvgString, toSvgDataUrl } from "../utils/qr-vector-svg.ts";
 import { bannerColors } from "../utils/qr-design.ts";
@@ -558,7 +561,17 @@ export default function QRCanvas(
 
     const qrOptions = getQrOptions(exportSize);
     const exportQr = new QRRenderer(qrOptions);
-    const raw = await exportQr.getRawData("png");
+    let raw: Blob;
+    if (canExportTransparent(qrOptions.style, frame ?? frameConfig?.value)) {
+      const rawSvgBlob = await exportQr.getRawData("svg");
+      const rawSvgText = await (rawSvgBlob as Blob).text();
+      raw = await rasterizeSvgToPngBlob(
+        stripSvgBackgroundRect(rawSvgText),
+        exportSize,
+      );
+    } else {
+      raw = await exportQr.getRawData("png");
+    }
     if (!raw) throw new Error("QR image could not be created");
 
     triggerBlobDownload(
@@ -602,6 +615,10 @@ export default function QRCanvas(
           getQRThemeTokens(style.value, customStyle?.value).accent,
         ),
       });
+    } else if (
+      canExportTransparent(qrOptions.style, { enabled: isFramed })
+    ) {
+      finalSvgText = stripSvgBackgroundRect(rawText);
     }
     const fileName = buildQrFilename(
       url.value || "https://qrbuddy.app",
@@ -664,10 +681,20 @@ export default function QRCanvas(
           targetSize: pngSizeRef.current,
         });
       } else {
-        const exportQr = new QRRenderer(getQrOptions(pngSizeRef.current));
-        const raw = await exportQr.getRawData("png");
-        if (!raw) throw new Error("QR image could not be created");
-        pngBlob = raw as Blob;
+        const qrOptions = getQrOptions(pngSizeRef.current);
+        const exportQr = new QRRenderer(qrOptions);
+        if (canExportTransparent(qrOptions.style, activeFrame)) {
+          const svgBlob = await exportQr.getRawData("svg");
+          const svgText = await (svgBlob as Blob).text();
+          pngBlob = await rasterizeSvgToPngBlob(
+            stripSvgBackgroundRect(svgText),
+            pngSizeRef.current,
+          );
+        } else {
+          const raw = await exportQr.getRawData("png");
+          if (!raw) throw new Error("QR image could not be created");
+          pngBlob = raw as Blob;
+        }
       }
       await navigator.clipboard.write([
         new ClipboardItem({ "image/png": pngBlob }),
@@ -893,6 +920,27 @@ export default function QRCanvas(
   }, [url.value, logoUrl?.value, style.value, customStyle?.value]);
 
   const isStagedOverlay = Boolean(isStagingUpload?.value);
+  const currentResolvedStyle = getCurrentStyle();
+  const isTransparentStage = canExportTransparent(
+    currentResolvedStyle,
+    frameConfig?.value,
+  );
+  const transparentStageSvgUrl = useMemo(() => {
+    if (!isTransparentStage) return "";
+    try {
+      return toSvgDataUrl(
+        stripSvgBackgroundRect(styledQrSvg(getQrOptions(1000))),
+      );
+    } catch {
+      return "";
+    }
+  }, [
+    isTransparentStage,
+    url.value,
+    style.value,
+    customStyle?.value,
+    logoUrl?.value,
+  ]);
   const stageGuardrail = resolveStagePrintGuardrail({
     moduleCount,
     printSpec,
@@ -945,13 +993,20 @@ export default function QRCanvas(
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           data-dropzone="true"
+          data-transparent={isTransparentStage ? "true" : undefined}
           role="button"
           tabIndex={0}
           aria-label={isSpanish
             ? "Copiar código QR como PNG"
             : "Copy QR code as PNG"}
+          style={isTransparentStage
+            ? {
+              background:
+                "repeating-conic-gradient(#efe6d5 0% 25%, #fffef7 0% 50%) 50% / 18px 18px",
+            }
+            : undefined}
           class={`
-          bg-[#fffef7] rounded-chunky border-4
+          ${isTransparentStage ? "" : "bg-[#fffef7]"} rounded-chunky border-4
           ${hasCaption ? "border-t-0 rounded-t-none" : ""}
           ${
             showSuccessFlash
@@ -966,7 +1021,11 @@ export default function QRCanvas(
           }
           relative aspect-square
           w-full flex justify-center items-center
-          [&>canvas]:w-full [&>canvas]:h-auto
+          ${
+            isTransparentStage && transparentStageSvgUrl
+              ? "[&>canvas]:opacity-0 [&>canvas]:absolute [&>canvas]:inset-0 [&>canvas]:pointer-events-none"
+              : "[&>canvas]:w-full [&>canvas]:h-auto"
+          }
           focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--qr-theme-accent,#ec4899)]
           ${
             isClicking || pulse
@@ -986,6 +1045,15 @@ export default function QRCanvas(
         `}
           title={isSpanish ? "Tocar para copiar el PNG" : "Tap to copy the PNG"}
         >
+          {isTransparentStage && transparentStageSvgUrl && (
+            <img
+              src={transparentStageSvgUrl}
+              alt={isSpanish
+                ? "Código QR sin fondo"
+                : "Transparent QR code preview"}
+              class="relative z-[1] w-full h-full object-contain pointer-events-none"
+            />
+          )}
           {
             /* SSR'd first-paint QR — uses /qr-default.png on the blank home sunset
           state, and a live inline vector SVG on pre-populated vertical/tool

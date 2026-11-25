@@ -8,6 +8,11 @@ import {
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+import {
+  buildCounterCardPrintHtml,
+  openPrintArtifactWindow,
+} from "../../utils/print-artifacts.ts";
+import { addToast } from "../../islands/ToastManager.tsx";
 
 const ES_ERRORS: Record<string, string> = {
   "Network name (SSID) is required":
@@ -193,6 +198,48 @@ export default function WiFiForm({ url, lang }: Props) {
           {isSpanish ? "Red con SSID oculto" : "Hidden SSID network"}
         </span>
       </label>
+
+      {!error && ssid.trim() && (
+        <div class="pt-1 border-t border-[#1e1714]/10">
+          <button
+            type="button"
+            onClick={() => {
+              haptics.medium();
+              const ev = new CustomEvent("qrb-print-artifact", {
+                detail: { kind: "sign" },
+                cancelable: true,
+              });
+              globalThis.dispatchEvent(ev);
+              if (!ev.defaultPrevented) {
+                const html = buildCounterCardPrintHtml({
+                  data: url.value,
+                  lang: isSpanish ? "es" : "en",
+                });
+                const outcome = openPrintArtifactWindow(
+                  html,
+                  "qrbuddy-wifi-sign.html",
+                );
+                if (outcome === "downloaded") {
+                  addToast(
+                    isSpanish
+                      ? "Cartel Wi-Fi descargado para imprimir"
+                      : "Wi-Fi sign downloaded for print",
+                    2500,
+                  );
+                }
+              }
+            }}
+            class="w-full min-h-[42px] rounded-xl border-2 border-[#1e1714] bg-[#fbf1e4] hover:bg-[#ffbe0b] px-3.5 text-xs font-black text-[#1e1714] shadow-[0_2px_0_#1e1714] active:translate-y-[1px] transition-all flex items-center justify-center gap-1.5"
+          >
+            <span aria-hidden="true">🪧</span>
+            <span>
+              {isSpanish
+                ? "Imprimir cartel o caballete Wi-Fi"
+                : "Print Wi-Fi Sign / Table Tent"}
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
