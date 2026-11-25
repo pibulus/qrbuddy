@@ -7,6 +7,9 @@ export type QRTemplateType =
   | "media"
   | "wifi"
   | "vcard"
+  | "whatsapp"
+  | "event"
+  | "location"
   | "sms"
   | "email"
   | "phone"
@@ -67,6 +70,24 @@ export const QR_TEMPLATES: Record<QRTemplateType, QRTemplate> = {
     label: "Phone call",
     icon: "📞",
     description: "Dial a number on scan",
+  },
+  whatsapp: {
+    type: "whatsapp",
+    label: "WhatsApp",
+    icon: "💬",
+    description: "Open a pre-filled WhatsApp chat",
+  },
+  event: {
+    type: "event",
+    label: "Event",
+    icon: "📅",
+    description: "Add event straight to calendar",
+  },
+  location: {
+    type: "location",
+    label: "Map Pin",
+    icon: "📍",
+    description: "Open venue or coordinates in maps",
   },
   text: {
     type: "text",
@@ -129,6 +150,29 @@ export type SocialPlatform =
 export interface SocialData {
   platform: string;
   username: string;
+}
+
+export interface WhatsAppData {
+  phone: string;
+  message: string;
+}
+
+export interface CalendarEventData {
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  location: string;
+  description: string;
+  url: string;
+}
+
+export interface LocationData {
+  mode: "place" | "coords";
+  query: string;
+  latitude: string;
+  longitude: string;
+  useGeoUri?: boolean;
 }
 
 // Format functions for each QR type
@@ -769,4 +813,343 @@ function safeDecodeURIComponent(str: string): string {
   } catch {
     return str;
   }
+}
+
+export function formatWhatsApp(data: WhatsAppData): string {
+  const digits = data.phone.replace(/[^\d]/g, "");
+  if (!digits) return "";
+  const msg = data.message.trim();
+  return msg
+    ? `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/${digits}`;
+}
+
+export function validateWhatsApp(data: WhatsAppData): string | null {
+  const raw = data.phone.trim();
+  if (!raw) return "Phone number is required";
+  const digits = raw.replace(/[^\d]/g, "");
+  if (digits.length < 7) return "Valid WhatsApp number required";
+  return null;
+}
+
+export function parseWhatsApp(payload: string): WhatsAppData | null {
+  if (!payload) return null;
+  const trimmed = payload.trim();
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  let phone = "";
+  if (host === "wa.me") {
+    phone = (parsed.pathname.split("/").filter(Boolean)[0] ?? "").replace(
+      /[^\d]/g,
+      "",
+    );
+  } else if (host === "api.whatsapp.com" || host === "whatsapp.com") {
+    phone = (parsed.searchParams.get("phone") ?? "").replace(/[^\d]/g, "");
+  } else {
+    return null;
+  }
+  if (!phone) return null;
+  const message = parsed.searchParams.get("text") ?? "";
+  return { phone: `+${phone}`, message };
+}
+
+function escapeIcsText(raw: string): string {
+  return raw
+    .replace(/\\/g, "\\\\")
+    .replace(/\r\n|\r|\n/g, "\\n")
+    .replace(/([,;])/g, "\\$1");
+}
+
+function unescapeIcsText(raw: string): string {
+  return raw.replace(
+    /\\(.)/g,
+    (_, ch: string) => (ch === "n" || ch === "N" ? "\n" : ch),
+  );
+}
+
+function addDaysToYmd(ymd: string, days: number): string {
+  const m = /^(\d{4})-?(\d{2})-?(\d{2})$/.exec(ymd.trim());
+  if (!m) return ymd.replace(/-/g, "");
+  const dt = new Date(
+    Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + days),
+  );
+  const y = dt.getUTCFullYear();
+  const mo = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(dt.getUTCDate()).padStart(2, "0");
+  return `${y}${mo}${d}`;
+}
+
+function toIcsLocalDateTime(value: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(
+    value.trim(),
+  );
+  if (!m) return null;
+  return `${m[1]}${m[2]}${m[3]}T${m[4]}${m[5]}${m[6] ?? "00"}`;
+}
+
+function addOneHourToLocalInput(value: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(value.trim());
+  if (!m) return null;
+  const dt = new Date(
+    Date.UTC(
+      Number(m[1]),
+      Number(m[2]) - 1,
+      Number(m[3]),
+      Number(m[4]),
+      Number(m[5]) + 60,
+      0,
+    ),
+  );
+  const y = dt.getUTCFullYear();
+  const mo = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(dt.getUTCDate()).padStart(2, "0");
+  const hh = String(dt.getUTCHours()).padStart(2, "0");
+  const mm = String(dt.getUTCMinutes()).padStart(2, "0");
+  return `${y}${mo}${d}T${hh}${mm}00`;
+}
+
+export function formatCalendarEvent(data: CalendarEventData): string {
+  const title = data.title.trim();
+  if (!title || !data.start.trim()) return "";
+
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//QRBuddy//EN",
+    "BEGIN:VEVENT",
+    `SUMMARY:${escapeIcsText(title)}`,
+  ];
+
+  if (data.allDay) {
+    const startYmd = data.start.slice(0, 10);
+    const endRaw = data.end.trim().slice(0, 10) || startYmd;
+    const exclusiveEnd = addDaysToYmd(
+      endRaw >= startYmd ? endRaw : startYmd,
+      1,
+    );
+    lines.push(`DTSTART;VALUE=DATE:${startYmd.replace(/-/g, "")}`);
+    lines.push(`DTEND;VALUE=DATE:${exclusiveEnd}`);
+  } else {
+    const dtStart = toIcsLocalDateTime(data.start);
+    if (!dtStart) return "";
+    const dtEnd = data.end.trim()
+      ? toIcsLocalDateTime(data.end)
+      : addOneHourToLocalInput(data.start);
+    lines.push(`DTSTART:${dtStart}`);
+    if (dtEnd) lines.push(`DTEND:${dtEnd}`);
+  }
+
+  if (data.location.trim()) {
+    lines.push(`LOCATION:${escapeIcsText(data.location.trim())}`);
+  }
+  if (data.description.trim()) {
+    lines.push(`DESCRIPTION:${escapeIcsText(data.description.trim())}`);
+  }
+  if (data.url.trim()) {
+    lines.push(`URL:${data.url.trim()}`);
+  }
+
+  lines.push("END:VEVENT", "END:VCALENDAR");
+  return lines.join("\n");
+}
+
+export function validateCalendarEvent(data: CalendarEventData): string | null {
+  if (!data.title.trim()) return "Event title is required";
+  if (!data.start.trim()) return "Start date is required";
+  if (data.allDay) {
+    if (!/^\d{4}-\d{2}-\d{2}/.test(data.start.trim())) {
+      return "Valid start date required";
+    }
+    if (
+      data.end.trim() &&
+      data.end.trim().slice(0, 10) < data.start.trim().slice(0, 10)
+    ) {
+      return "End date must follow start date";
+    }
+    return null;
+  }
+  if (!toIcsLocalDateTime(data.start)) {
+    return "Valid start date and time required";
+  }
+  if (data.end.trim()) {
+    const endIcs = toIcsLocalDateTime(data.end);
+    const startIcs = toIcsLocalDateTime(data.start);
+    if (!endIcs) return "Valid end time required";
+    if (startIcs && endIcs < startIcs) return "End time must follow start time";
+  }
+  return null;
+}
+
+export function parseCalendarEvent(payload: string): CalendarEventData | null {
+  if (!payload || !/BEGIN:VEVENT/i.test(payload)) return null;
+  const unfolded = payload.trim().replace(/\r?\n[ \t]/g, "");
+  const lines = unfolded.split(/\r?\n/);
+
+  let title = "";
+  let start = "";
+  let end = "";
+  let allDay = false;
+  let location = "";
+  let description = "";
+  let url = "";
+
+  const parseIcsDt = (val: string, forceDate: boolean): string => {
+    const clean = val.trim();
+    const d = /^(\d{4})(\d{2})(\d{2})$/.exec(clean);
+    if (d) {
+      return `${d[1]}-${d[2]}-${d[3]}`;
+    }
+    const dt = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/.exec(clean);
+    if (dt) {
+      return forceDate
+        ? `${dt[1]}-${dt[2]}-${dt[3]}`
+        : `${dt[1]}-${dt[2]}-${dt[3]}T${dt[4]}:${dt[5]}`;
+    }
+    return "";
+  };
+
+  for (const line of lines) {
+    const match = line.match(/^([A-Za-z0-9-]+)(;[^:]*)?:(.*)$/);
+    if (!match) continue;
+    const prop = match[1].toUpperCase();
+    const params = (match[2] ?? "").toUpperCase();
+    const val = match[3] ?? "";
+
+    switch (prop) {
+      case "SUMMARY":
+        title = unescapeIcsText(val);
+        break;
+      case "DTSTART":
+        if (params.includes("VALUE=DATE") || /^\d{8}$/.test(val.trim())) {
+          allDay = true;
+        }
+        start = parseIcsDt(val, allDay);
+        break;
+      case "DTEND":
+        end = parseIcsDt(val, allDay);
+        break;
+      case "LOCATION":
+        location = unescapeIcsText(val);
+        break;
+      case "DESCRIPTION":
+        description = unescapeIcsText(val);
+        break;
+      case "URL":
+        url = val.trim();
+        break;
+    }
+  }
+
+  if (!title && !start) return null;
+  if (allDay && start && end) {
+    const inclusiveEndYmd = addDaysToYmd(end, -1);
+    const formattedEnd = `${inclusiveEndYmd.slice(0, 4)}-${
+      inclusiveEndYmd.slice(4, 6)
+    }-${inclusiveEndYmd.slice(6, 8)}`;
+    end = formattedEnd >= start ? formattedEnd : start;
+  }
+
+  return { title, start, end, allDay, location, description, url };
+}
+
+export function formatLocation(data: LocationData): string {
+  if (data.mode === "coords") {
+    const lat = Number(data.latitude.trim());
+    const lng = Number(data.longitude.trim());
+    if (
+      !Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 ||
+      lat > 90 || lng < -180 || lng > 180
+    ) {
+      return "";
+    }
+    const cleanLat = Number(lat.toFixed(6));
+    const cleanLng = Number(lng.toFixed(6));
+    return data.useGeoUri
+      ? `geo:${cleanLat},${cleanLng}`
+      : `https://maps.google.com/?q=${cleanLat},${cleanLng}`;
+  }
+  const query = data.query.trim();
+  if (!query) return "";
+  return `https://maps.google.com/?q=${encodeURIComponent(query)}`;
+}
+
+export function validateLocation(data: LocationData): string | null {
+  if (data.mode === "coords") {
+    if (!data.latitude.trim() || !data.longitude.trim()) {
+      return "Latitude and longitude are required";
+    }
+    const lat = Number(data.latitude.trim());
+    const lng = Number(data.longitude.trim());
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+      return "Latitude must be between -90 and 90";
+    }
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
+      return "Longitude must be between -180 and 180";
+    }
+    return null;
+  }
+  if (!data.query.trim()) return "Address or place name is required";
+  return null;
+}
+
+export function parseLocation(payload: string): LocationData | null {
+  if (!payload) return null;
+  const trimmed = payload.trim();
+
+  const geoMatch = /^geo:([-+]?\d+(?:\.\d+)?),\s*([-+]?\d+(?:\.\d+)?)/i.exec(
+    trimmed,
+  );
+  if (geoMatch) {
+    return {
+      mode: "coords",
+      query: "",
+      latitude: geoMatch[1],
+      longitude: geoMatch[2],
+      useGeoUri: true,
+    };
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  if (
+    host === "maps.google.com" ||
+    (host.startsWith("google.") && parsed.pathname.startsWith("/maps")) ||
+    host === "maps.apple.com"
+  ) {
+    const q =
+      (parsed.searchParams.get("q") || parsed.searchParams.get("query") || "")
+        .trim();
+    const coordMatch = /^([-+]?\d+(?:\.\d+)?),\s*([-+]?\d+(?:\.\d+)?)$/.exec(
+      q,
+    );
+    if (coordMatch) {
+      return {
+        mode: "coords",
+        query: "",
+        latitude: coordMatch[1],
+        longitude: coordMatch[2],
+        useGeoUri: false,
+      };
+    }
+    if (q) {
+      return {
+        mode: "place",
+        query: q,
+        latitude: "",
+        longitude: "",
+        useGeoUri: false,
+      };
+    }
+  }
+  return null;
 }

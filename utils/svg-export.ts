@@ -213,6 +213,45 @@ function extractPayloadSlug(payload: string): string {
     return recipient ? `sms-${recipient.slice(0, 20)}` : "sms";
   }
 
+  if (/BEGIN:VEVENT/i.test(raw)) {
+    const summary = raw.match(/^SUMMARY:(.+)$/im)?.[1]?.replace(/\\(.)/g, "$1")
+      .trim() ?? "";
+    const slug = slugifySegment(summary, 28);
+    return slug ? `event-${slug}` : "event";
+  }
+
+  if (
+    /^https?:\/\/(?:www\.)?(?:wa\.me|api\.whatsapp\.com|whatsapp\.com)/i.test(
+      raw,
+    )
+  ) {
+    const digits = (raw.match(/wa\.me\/(\d+)/i)?.[1] ??
+      raw.match(/[?&]phone=(\d+)/i)?.[1] ?? "").slice(0, 20);
+    return digits ? `whatsapp-${digits}` : "whatsapp";
+  }
+
+  if (
+    /^geo:/i.test(raw) ||
+    /^https?:\/\/(?:www\.)?(?:maps\.google\.|google\.[^/]+\/maps|maps\.apple\.com)/i
+      .test(raw)
+  ) {
+    let place = "";
+    if (/^geo:/i.test(raw)) {
+      place = raw.slice(4).split("?")[0];
+    } else {
+      try {
+        const parsed = new URL(raw);
+        place = parsed.searchParams.get("q") ||
+          parsed.searchParams.get("query") ||
+          "";
+      } catch {
+        place = "";
+      }
+    }
+    const slug = slugifySegment(place, 28);
+    return slug ? `map-${slug}` : "map";
+  }
+
   if (/^https?:\/\//i.test(raw)) {
     try {
       const parsed = new URL(raw);

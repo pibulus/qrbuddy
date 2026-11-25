@@ -1,9 +1,12 @@
 import { IS_BROWSER } from "$fresh/runtime.ts";
 import {
+  parseCalendarEvent,
   parseEmail,
+  parseLocation,
   parsePhone,
   parseSMS,
   parseVCard,
+  parseWhatsApp,
   parseWiFi,
 } from "../types/qr-templates.ts";
 import type { QRStyle } from "../types/qr-types.ts";
@@ -29,6 +32,9 @@ export interface HistoryItem {
     | "email"
     | "phone"
     | "vcard"
+    | "whatsapp"
+    | "event"
+    | "location"
     | "file"
     | "dynamic"
     | "sms"
@@ -66,6 +72,8 @@ export interface VaultBackup {
 export type StructuredQrTemplate =
   | "wifi"
   | "vcard"
+  | "event"
+  | "location"
   | "email"
   | "sms"
   | "phone";
@@ -87,6 +95,9 @@ const HISTORY_TYPES: HistoryItem["type"][] = [
   "email",
   "phone",
   "vcard",
+  "whatsapp",
+  "event",
+  "location",
   "file",
   "dynamic",
   "sms",
@@ -579,6 +590,39 @@ export function detectStructuredStagePayload(
     return null;
   }
 
+  if (/^BEGIN:(?:VCALENDAR|VEVENT)/i.test(raw) || /BEGIN:VEVENT/i.test(raw)) {
+    const ev = parseCalendarEvent(raw);
+    const typeLabel = isEs ? "Evento" : "Event";
+    if (ev) {
+      return {
+        template: "event",
+        typeLabel,
+        label: shorten(ev.title || typeLabel),
+        detail: ev.location.trim()
+          ? shorten(ev.location.trim(), 28)
+          : ev.start
+          ? shorten(ev.start.replace("T", " "), 28)
+          : undefined,
+      };
+    }
+    return null;
+  }
+
+  // Only match explicit offline geo: coordinates here so HTTP map & wa.me URLs
+  // stay compatible with Editable mode on the home stage.
+  if (/^geo:[-+]?\d/i.test(raw)) {
+    const loc = parseLocation(raw);
+    const typeLabel = isEs ? "Ubicación" : "Map Pin";
+    if (loc) {
+      return {
+        template: "location",
+        typeLabel,
+        label: `${loc.latitude}, ${loc.longitude}`,
+      };
+    }
+    return null;
+  }
+
   return null;
 }
 
@@ -685,6 +729,51 @@ export function summarizeQrPayload(content: string): {
       type: "sms",
       title: number ? `Text: ${shorten(number)}` : "Text message",
       subtitle: shorten(message.join(":").trim() || "Text message", 60),
+    };
+  }
+
+  if (/BEGIN:VEVENT/i.test(raw)) {
+    const ev = parseCalendarEvent(raw);
+    return {
+      type: "event",
+      title: ev?.title ? `Event: ${shorten(ev.title)}` : "Calendar event",
+      subtitle: ev?.location?.trim() || ev?.start?.replace("T", " ") ||
+        "Calendar event",
+    };
+  }
+
+  if (
+    /^https?:\/\/(?:www\.)?(?:wa\.me|api\.whatsapp\.com|whatsapp\.com)/i.test(
+      raw,
+    )
+  ) {
+    const wa = parseWhatsApp(raw);
+    if (wa) {
+      return {
+        type: "whatsapp",
+        title: `WhatsApp: ${shorten(wa.phone)}`,
+        subtitle: wa.message.trim()
+          ? shorten(wa.message.trim(), 60)
+          : "WhatsApp chat",
+      };
+    }
+  }
+
+  if (
+    /^geo:[-+]?\d/i.test(raw) ||
+    /^https?:\/\/(?:www\.)?(?:maps\.google\.|google\.[^/]+\/maps|maps\.apple\.com)/i
+      .test(raw)
+  ) {
+    const loc = parseLocation(raw);
+    const placeText = loc
+      ? (loc.mode === "coords"
+        ? `${loc.latitude}, ${loc.longitude}`
+        : loc.query)
+      : raw;
+    return {
+      type: "location",
+      title: `Map: ${shorten(placeText)}`,
+      subtitle: loc?.mode === "coords" ? "GPS coordinates" : "Map pin",
     };
   }
 

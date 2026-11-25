@@ -8,6 +8,7 @@ import {
 } from "../../types/qr-templates.ts";
 import { haptics } from "../../utils/haptics.ts";
 import { getClientLocale, type Locale } from "../../utils/i18n.ts";
+import { estimatePrintSpecForPayload } from "../../utils/print-artifacts.ts";
 
 const ES_ERRORS: Record<string, string> = {
   "Network name (SSID) is required":
@@ -93,6 +94,10 @@ export default function VCardForm({ url, lang }: Props) {
       note.trim(),
   );
   const showHint = (touched || hasAnyInput) && Boolean(error);
+  const densitySpec = !error && hasAnyInput && url.value.trim()
+    ? estimatePrintSpecForPayload(url.value)
+    : null;
+  const hasOptionalDetails = Boolean(address.trim() || note.trim());
 
   return (
     <div class="space-y-3 animate-slide-down">
@@ -103,6 +108,40 @@ export default function VCardForm({ url, lang }: Props) {
           class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2 text-xs font-bold text-amber-950"
         >
           {isSpanish ? (ES_ERRORS[error] ?? error) : error}
+        </div>
+      )}
+
+      {densitySpec && densitySpec.moduleCount >= 53 && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-vcard-density-guard
+          class="rounded-xl bg-amber-50 border-2 border-amber-400 px-3.5 py-2.5 space-y-2 text-xs text-amber-950"
+        >
+          <p class="font-bold leading-snug">
+            {isSpanish
+              ? `Cuadrícula densa (${densitySpec.moduleCount}×${densitySpec.moduleCount}) · Imprimir ≥ ${densitySpec.minMm} mm (${
+                densitySpec.minInches.toFixed(1)
+              }″) en tarjetas`
+              : `Dense ${densitySpec.moduleCount}×${densitySpec.moduleCount} grid · Print ≥ ${densitySpec.minMm} mm (${
+                densitySpec.minInches.toFixed(1)
+              }″) on business cards`}
+          </p>
+          {hasOptionalDetails && (
+            <button
+              type="button"
+              onClick={() => {
+                setAddress("");
+                setNote("");
+                haptics.light();
+              }}
+              class="min-h-[32px] px-3 py-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#ffbe0b] text-[11px] font-black text-[#1e1714] transition-colors"
+            >
+              {isSpanish
+                ? "Compactar para tarjeta de 20 mm (quitar dirección/nota)"
+                : "Trim optional fields for 20 mm cards"}
+            </button>
+          )}
         </div>
       )}
 

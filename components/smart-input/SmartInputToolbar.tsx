@@ -9,6 +9,9 @@ const TEMPLATE_LABELS_ES: Record<QRTemplateType, string> = {
   text: "Texto",
   wifi: "Wi-Fi",
   vcard: "Contacto",
+  whatsapp: "WhatsApp",
+  event: "Evento",
+  location: "Mapa",
   sms: "SMS",
   email: "Correo",
   phone: "Llamada",
@@ -83,6 +86,11 @@ export function StageGlyph(
     email: "M3 6h18v12H3zM3 7l9 6 9-6",
     phone:
       "M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2z",
+    whatsapp:
+      "M12 3a9 9 0 0 0-7.7 13.7L3 21l4.4-1.2A9 9 0 1 0 12 3zM9 9.5c.3 2 2.5 4.2 4.5 4.5l1.2-1.2 1.8.8v1.4a1.5 1.5 0 0 1-1.6 1.5A7.5 7.5 0 0 1 7.5 9a1.5 1.5 0 0 1 1.5-1.5h1.2l.8 1.8z",
+    event: "M4 5h16v16H4zM8 3v4M16 3v4M4 10h16M8 14h.01M12 14h.01M16 14h.01",
+    location:
+      "M12 21s-6-5.7-6-11a6 6 0 1 1 12 0c0 5.3-6 11-6 11zM12 10a2 2 0 1 0 0-.01",
     social:
       "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18",
     media:

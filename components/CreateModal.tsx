@@ -30,12 +30,15 @@ import SplashSettings from "./extras/SplashSettings.tsx";
 import TimeBombSettings from "./extras/TimeBombSettings.tsx";
 import { useModalShell } from "./modal/useModalShell.ts";
 import EmailForm from "./templates/EmailForm.tsx";
+import EventForm from "./templates/EventForm.tsx";
+import LocationForm from "./templates/LocationForm.tsx";
 import MediaHubForm from "./templates/MediaHubForm.tsx";
 import PhoneForm from "./templates/PhoneForm.tsx";
 import SMSForm from "./templates/SMSForm.tsx";
 import SocialHubForm from "./templates/SocialHubForm.tsx";
 import VCardForm from "./templates/VCardForm.tsx";
 import WebsiteForm from "./templates/WebsiteForm.tsx";
+import WhatsAppForm from "./templates/WhatsAppForm.tsx";
 import WiFiForm from "./templates/WiFiForm.tsx";
 import { addToast } from "../islands/ToastManager.tsx";
 
@@ -158,15 +161,17 @@ interface CreateModalProps {
   lang?: Locale;
 }
 
-const CONTACT_TYPES: QRTemplateType[] = ["phone", "sms", "email"];
+const CONTACT_TYPES: QRTemplateType[] = ["whatsapp", "phone", "sms", "email"];
 const CONTACT_HUB_TYPES: QRTemplateType[] = [
   "vcard",
+  "whatsapp",
   "social",
   "phone",
   "sms",
   "email",
 ];
 const WEB_NOTE_TYPES: QRTemplateType[] = ["url", "text"];
+const EVENT_PLACE_TYPES: QRTemplateType[] = ["event", "location"];
 
 const CONTACT_SEGMENTS: {
   key: QRTemplateType;
@@ -174,9 +179,10 @@ const CONTACT_SEGMENTS: {
   labelEs: string;
   icon: string;
 }[] = [
+  { key: "whatsapp", label: "WhatsApp", labelEs: "WhatsApp", icon: "💬" },
   { key: "phone", label: "Call", labelEs: "Llamar", icon: "📞" },
-  { key: "sms", label: "Text", labelEs: "SMS", icon: "💬" },
-  { key: "email", label: "Email", labelEs: "Correo", icon: "✉️" },
+  { key: "sms", label: "SMS", labelEs: "SMS", icon: "✉️" },
+  { key: "email", label: "Email", labelEs: "Correo", icon: "📧" },
 ];
 
 const QR_TYPE_COPY: Partial<
@@ -213,6 +219,24 @@ const QR_TYPE_COPY: Partial<
     labelEs: "Tarjeta de Contacto",
     description: "One scan saves straight to contacts.",
     descriptionEs: "Un escaneo guarda el contacto directo.",
+  },
+  whatsapp: {
+    label: "WhatsApp",
+    labelEs: "WhatsApp",
+    description: "Start a WhatsApp chat with a draft message.",
+    descriptionEs: "Abre chat de WhatsApp con mensaje listo.",
+  },
+  event: {
+    label: "Event",
+    labelEs: "Evento",
+    description: "Add event straight to calendar.",
+    descriptionEs: "Guarda el evento en el calendario.",
+  },
+  location: {
+    label: "Map pin",
+    labelEs: "Mapa",
+    description: "Venue address or GPS coordinates.",
+    descriptionEs: "Dirección del lugar o coordenadas GPS.",
   },
   social: {
     label: "Social profile",
@@ -635,6 +659,12 @@ export default function CreateModal({
         return <WiFiForm url={url} lang={locale} />;
       case "vcard":
         return <VCardForm url={url} lang={locale} />;
+      case "whatsapp":
+        return <WhatsAppForm url={url} lang={locale} />;
+      case "event":
+        return <EventForm url={url} lang={locale} />;
+      case "location":
+        return <LocationForm url={url} lang={locale} />;
       case "sms":
         return <SMSForm url={url} lang={locale} />;
       case "email":
@@ -842,8 +872,8 @@ export default function CreateModal({
                   iconBg="linear-gradient(135deg, #FCE7F3, #FBCFE8)"
                   title={isSpanish ? "Contacto" : "Contact Card"}
                   description={isSpanish
-                    ? "vCard, teléfono, correo y redes."
-                    : "vCard, phone, email, socials."}
+                    ? "vCard, WhatsApp, teléfono y redes."
+                    : "vCard, WhatsApp, phone, email, socials."}
                   active={typeIntent === "qr" && !isBatchMode &&
                     !lockerActive &&
                     CONTACT_HUB_TYPES.includes(selectedTemplate)}
@@ -858,6 +888,31 @@ export default function CreateModal({
                       CONTACT_HUB_TYPES.includes(selectedTemplate)
                         ? selectedTemplate
                         : "vcard",
+                    )}
+                />
+
+                {/* 4. Event & Venue */}
+                <ChoiceRow
+                  icon="📅"
+                  iconBg="linear-gradient(135deg, #FEF9C3, #FDE047)"
+                  title={isSpanish ? "Evento y Lugar" : "Event & Venue"}
+                  description={isSpanish
+                    ? "Invitación al calendario o pin en mapa."
+                    : "Calendar invite or map location pin."}
+                  active={typeIntent === "qr" && !isBatchMode &&
+                    !lockerActive &&
+                    EVENT_PLACE_TYPES.includes(selectedTemplate)}
+                  badge={typeIntent === "qr" && !isBatchMode &&
+                      !lockerActive &&
+                      EVENT_PLACE_TYPES.includes(selectedTemplate) &&
+                      url.value.trim() !== ""
+                    ? (isSpanish ? "Listo" : "Ready")
+                    : undefined}
+                  onClick={() =>
+                    handleTemplateSelect(
+                      EVENT_PLACE_TYPES.includes(selectedTemplate)
+                        ? selectedTemplate
+                        : "event",
                     )}
                 />
 
@@ -1019,7 +1074,7 @@ export default function CreateModal({
                           onSelectTemplate(
                             CONTACT_TYPES.includes(selectedTemplate)
                               ? selectedTemplate
-                              : "phone",
+                              : "whatsapp",
                           );
                           haptics.light();
                           sounds.click();
@@ -1031,7 +1086,45 @@ export default function CreateModal({
                             : "text-[#4a3f39] hover:text-[#1e1714]"
                         }`}
                       >
-                        {isSpanish ? "Directo" : "Call / Text"}
+                        {isSpanish ? "Directo" : "Call / Chat"}
+                      </button>
+                    </div>
+                  )
+                  : typeIntent === "qr" && !isBatchMode &&
+                      EVENT_PLACE_TYPES.includes(selectedTemplate)
+                  ? (
+                    <div class="inline-grid grid-cols-2 gap-1 p-0.5 rounded-xl border-2 border-[#1e1714] bg-[#efe9dc]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectTemplate("event");
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        aria-pressed={selectedTemplate === "event"}
+                        class={`min-h-[30px] rounded-lg px-2.5 text-xs font-black whitespace-nowrap transition-all ${
+                          selectedTemplate === "event"
+                            ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                            : "text-[#4a3f39] hover:text-[#1e1714]"
+                        }`}
+                      >
+                        {isSpanish ? "Calendario" : "Calendar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectTemplate("location");
+                          haptics.light();
+                          sounds.click();
+                        }}
+                        aria-pressed={selectedTemplate === "location"}
+                        class={`min-h-[30px] rounded-lg px-2.5 text-xs font-black whitespace-nowrap transition-all ${
+                          selectedTemplate === "location"
+                            ? "bg-[var(--qr-theme-tint-strong,#fbcfe8)] text-[#1e1714] border border-[#1e1714] shadow-[0_1px_0_#1e1714]"
+                            : "text-[#4a3f39] hover:text-[#1e1714]"
+                        }`}
+                      >
+                        {isSpanish ? "Mapa" : "Map Pin"}
                       </button>
                     </div>
                   )
@@ -1118,7 +1211,7 @@ export default function CreateModal({
                 : (
                   <div class="space-y-3">
                     {CONTACT_TYPES.includes(selectedTemplate) && (
-                      <div class="grid grid-cols-3 gap-1.5">
+                      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                         {CONTACT_SEGMENTS.map((seg) => (
                           <button
                             key={seg.key}

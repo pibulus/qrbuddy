@@ -245,8 +245,11 @@ export default function QRCanvas(
         let qrType = "url";
         if (url.value.startsWith("WIFI:")) qrType = "wifi";
         else if (url.value.startsWith("BEGIN:VCARD")) qrType = "vcard";
+        else if (url.value.includes("BEGIN:VEVENT")) qrType = "event";
         else if (url.value.startsWith("SMSTO:")) qrType = "sms";
         else if (url.value.startsWith("mailto:")) qrType = "email";
+        else if (url.value.startsWith("geo:")) qrType = "location";
+        else if (url.value.startsWith("https://wa.me/")) qrType = "whatsapp";
         else if (url.value.startsWith("http")) qrType = "url";
         else qrType = "text";
 

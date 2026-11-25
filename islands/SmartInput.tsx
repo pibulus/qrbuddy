@@ -1057,6 +1057,9 @@ export default function SmartInput(
     if (
       type === "wifi" ||
       type === "vcard" ||
+      type === "whatsapp" ||
+      type === "event" ||
+      type === "location" ||
       type === "email" ||
       type === "sms" ||
       type === "phone" ||
@@ -1070,6 +1073,9 @@ export default function SmartInput(
       if (
         detected === "wifi" ||
         detected === "vcard" ||
+        detected === "whatsapp" ||
+        detected === "event" ||
+        detected === "location" ||
         detected === "email" ||
         detected === "sms" ||
         detected === "phone" ||

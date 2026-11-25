@@ -36,6 +36,12 @@ import {
   updateHistoryItem,
   type VaultFilter,
 } from "../utils/history.ts";
+import {
+  buildEditableLibraryCsv,
+  type EditableCsvRow,
+  parseEditableCsvUpdates,
+} from "../utils/csv-repoint.ts";
+import { extractShortCodeFromRedirectUrl } from "../hooks/useDynamicQR.ts";
 import { looksLikeUrl, normalizeUrl } from "../utils/url.ts";
 import { exportSyncBundle, importSyncBundle } from "../utils/sync-phrase.ts";
 import { getOwnerToken, saveOwnerToken } from "../utils/token-vault.ts";
@@ -179,6 +185,12 @@ function glyphForItemType(type: HistoryItem["type"]): Glyph {
       return "wifi";
     case "vcard":
       return "vcard";
+    case "whatsapp":
+      return "whatsapp";
+    case "event":
+      return "event";
+    case "location":
+      return "location";
     case "email":
       return "email";
     case "phone":
@@ -236,7 +248,11 @@ export default function LibraryDrawer(
   const [backupInput, setBackupInput] = useState("");
   const [backupPhraseInput, setBackupPhraseInput] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
+  const [csvSyncing, setCsvSyncing] = useState<
+    { done: number; total: number } | null
+  >(null);
   const jsonFileInputRef = useRef<HTMLInputElement>(null);
+  const csvFileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshLocalHistory = async (
     serverCodes: LibraryCodeItem[] = codes,
@@ -936,53 +952,244 @@ export default function LibraryDrawer(
     }
   };
 
-  function exportLibraryCsv() {
-    const header = [
-      "short_code",
-      "title",
-      "destination_url",
-      "redirect_url",
-      "created_at",
-      "expires_at",
-      "scan_count",
-      "max_scans",
-      "is_active",
-      "routing_mode",
-    ].join(",");
-
-    const escape = (value: unknown) => {
-      const text = value === null || value === undefined ? "" : String(value);
-      return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-    };
-
-    const body = codes
-      .map((code) =>
-        [
-          code.short_code,
-          escape(code.title ?? ""),
-          escape(code.destination_url),
-          escape(code.redirect_url),
-          code.created_at,
-          code.expires_at ?? "",
-          code.scan_count,
-          code.max_scans ?? "",
-          code.is_active,
-          code.routing_mode ?? "static",
-        ].join(",")
+  const editableCsvRows: EditableCsvRow[] = [];
+  const seenCsvCodes = new Set<string>();
+  for (const c of codes) {
+    if (!c.short_code || seenCsvCodes.has(c.short_code)) continue;
+    seenCsvCodes.add(c.short_code);
+    const matchingLocal = localByShortCode.get(c.short_code);
+    const title = (typeof matchingLocal?.metadata?.label === "string" &&
+      matchingLocal.metadata.label.trim()) ||
+      (c.title && c.title !== c.destination_url ? c.title.trim() : "") ||
+      "";
+    const tags = Array.isArray(matchingLocal?.metadata?.tags)
+      ? matchingLocal.metadata.tags.filter((t): t is string =>
+        typeof t === "string"
       )
-      .join("\n");
+      : [];
+    const ownerTok = ownerTokensByCode[c.short_code] ||
+      extractTokenFromEditHref(resolveServerCodeEditUrl(c)) ||
+      undefined;
+    editableCsvRows.push({
+      shortCode: c.short_code,
+      title,
+      destinationUrl: c.destination_url,
+      tags,
+      redirectUrl: c.redirect_url ||
+        `${
+          typeof globalThis.location !== "undefined"
+            ? globalThis.location.origin
+            : "https://qrbuddy.app"
+        }/r?code=${c.short_code}`,
+      scanCount: c.scan_count ?? 0,
+      isActive: c.is_active !== false,
+      ownerToken: ownerTok,
+    });
+  }
+  for (const item of dedupedLocalHistory) {
+    if (!isEditableHistoryItem(item)) continue;
+    const sc = (typeof item.metadata?.shortCode === "string" &&
+      item.metadata.shortCode.trim()) ||
+      extractShortCodeFromRedirectUrl(item.content) ||
+      "";
+    if (!sc || seenCsvCodes.has(sc)) continue;
+    seenCsvCodes.add(sc);
+    const destUrl = typeof item.metadata?.destinationUrl === "string"
+      ? item.metadata.destinationUrl
+      : (typeof item.metadata?.url === "string" ? item.metadata.url : "");
+    if (!destUrl) continue;
+    const label = (typeof item.metadata?.label === "string" &&
+      item.metadata.label.trim()) ||
+      (typeof item.metadata?.title === "string" &&
+          item.metadata.title.trim() !== destUrl.trim() &&
+          item.metadata.title.trim() !== item.content.trim()
+        ? item.metadata.title.trim()
+        : "");
+    const tags = Array.isArray(item.metadata?.tags)
+      ? item.metadata.tags.filter((t): t is string => typeof t === "string")
+      : [];
+    const ownerTok = ownerTokensByCode[sc] ||
+      (typeof item.metadata?.ownerToken === "string"
+        ? item.metadata.ownerToken
+        : undefined) ||
+      extractTokenFromEditHref(resolveItemEditUrl(item)) ||
+      undefined;
+    const scanCount = typeof item.metadata?.scanCount === "number"
+      ? item.metadata.scanCount
+      : 0;
+    editableCsvRows.push({
+      shortCode: sc,
+      title: label,
+      destinationUrl: destUrl,
+      tags,
+      redirectUrl: item.content,
+      scanCount,
+      isActive: true,
+      ownerToken: ownerTok,
+    });
+  }
 
-    const blob = new Blob([`${header}\n${body}`], {
+  function exportLibraryCsv() {
+    if (editableCsvRows.length === 0) return;
+    const csv = buildEditableLibraryCsv(editableCsvRows);
+    const blob = new Blob([csv], {
       type: "text/csv;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "qrbuddy-library.csv";
+    anchor.download = "qrbuddy-editable-codes.csv";
     anchor.click();
     URL.revokeObjectURL(url);
     haptics.light();
+    addToast(
+      isSpanish
+        ? `Exportados ${editableCsvRows.length} códigos a CSV`
+        : `Exported ${editableCsvRows.length} editable QRs to CSV`,
+      2500,
+    );
   }
+
+  const handleImportEditableCsv = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const map = new Map(editableCsvRows.map((row) => [row.shortCode, row]));
+      const parsed = parseEditableCsvUpdates(text, map);
+
+      if (parsed.updates.length === 0) {
+        haptics.error();
+        addToast(
+          parsed.errors[0] ||
+            (isSpanish
+              ? "No hay cambios nuevos que aplicar en ese CSV"
+              : "No changes found in that CSV"),
+          3500,
+        );
+        return;
+      }
+
+      setCsvSyncing({ done: 0, total: parsed.updates.length });
+      let updatedCount = 0;
+      let missingKeys = 0;
+
+      for (let i = 0; i < parsed.updates.length; i++) {
+        const u = parsed.updates[i];
+        setCsvSyncing({ done: i, total: parsed.updates.length });
+
+        const needsRemote = u.destinationChanged || u.titleChanged;
+        if (needsRemote) {
+          if (!u.ownerToken) {
+            missingKeys++;
+            continue;
+          }
+          await apiRequest(
+            `${getSupabaseUrl()}/functions/v1/update-dynamic-qr`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                owner_token: u.ownerToken,
+                ...(u.destinationChanged && u.nextDestinationUrl
+                  ? { destination_url: u.nextDestinationUrl }
+                  : {}),
+                ...(u.titleChanged ? { title: u.nextTitle || null } : {}),
+              }),
+            },
+            `Failed updating ${u.shortCode}`,
+          );
+          setCodes((prev) =>
+            prev.map((c) =>
+              c.short_code === u.shortCode
+                ? {
+                  ...c,
+                  ...(u.destinationChanged && u.nextDestinationUrl
+                    ? { destination_url: u.nextDestinationUrl }
+                    : {}),
+                  ...(u.titleChanged ? { title: u.nextTitle || null } : {}),
+                }
+                : c
+            )
+          );
+        }
+
+        if (u.titleChanged && u.nextTitle !== undefined) {
+          const renamed = renameHistoryItem(u.shortCode, u.nextTitle);
+          if (!renamed && u.nextTitle) {
+            const existingRow = map.get(u.shortCode);
+            if (existingRow) {
+              addDynamicToHistory({
+                url: u.nextDestinationUrl ?? existingRow.destinationUrl,
+                redirectUrl: existingRow.redirectUrl,
+                shortCode: u.shortCode,
+                label: u.nextTitle,
+                tags: u.tagsChanged ? u.nextTags : existingRow.tags,
+                ownerScope: "qr",
+              });
+            }
+          }
+        }
+        if (u.tagsChanged && u.nextTags !== undefined) {
+          setHistoryItemTags(u.shortCode, u.nextTags);
+        }
+        if (u.destinationChanged && u.nextDestinationUrl) {
+          const nextDest = u.nextDestinationUrl;
+          updateHistoryItem(
+            (item) =>
+              item.metadata?.shortCode === u.shortCode ||
+              item.content.includes(`code=${u.shortCode}`),
+            (item) => {
+              const keptLabel = typeof item.metadata?.label === "string"
+                ? item.metadata.label.trim()
+                : "";
+              return {
+                ...item,
+                metadata: {
+                  ...item.metadata,
+                  url: nextDest,
+                  destinationUrl: nextDest,
+                  title: keptLabel || nextDest,
+                  ...(keptLabel ? { label: keptLabel } : {}),
+                },
+              };
+            },
+          );
+        }
+        updatedCount++;
+      }
+
+      await refreshLocalHistory();
+      haptics.success();
+      const extraErr = missingKeys > 0
+        ? (isSpanish
+          ? ` (${missingKeys} sin llave local)`
+          : ` (${missingKeys} missing local key)`)
+        : "";
+      addToast(
+        isSpanish
+          ? `${updatedCount} QR actualizados desde CSV ✓${extraErr}`
+          : `Updated ${updatedCount} QR code${
+            updatedCount === 1 ? "" : "s"
+          } from CSV ✓${extraErr}`,
+        4000,
+      );
+    } catch (err) {
+      haptics.error();
+      addToast(
+        err instanceof Error
+          ? err.message
+          : (isSpanish
+            ? "No se pudo aplicar el CSV"
+            : "Failed to apply CSV updates"),
+        4000,
+      );
+    } finally {
+      setCsvSyncing(null);
+      input.value = "";
+    }
+  };
 
   const renderQuickEditPanel = (opts: {
     rowKey: string;
@@ -1132,6 +1339,13 @@ export default function LibraryDrawer(
           accept=".json,application/json"
           class="hidden"
           onChange={handleImportVaultJsonFile}
+        />
+        <input
+          ref={csvFileInputRef}
+          type="file"
+          accept=".csv,text/csv"
+          class="hidden"
+          onChange={handleImportEditableCsv}
         />
 
         {/* Header */}
@@ -1288,6 +1502,41 @@ export default function LibraryDrawer(
                 })}
               </div>
             )}
+
+            {/* CSV Round-Trip Bulk Repoint Bar */}
+            {editableCsvRows.length > 0 &&
+              (activeFilter === "all" || activeFilter === "editable") && (
+              <div class="flex items-center justify-between gap-2 flex-wrap pt-0.5">
+                <span class="text-[11px] font-bold text-[#57524b]">
+                  {isSpanish
+                    ? `Edición masiva (${editableCsvRows.length} editables)`
+                    : `Bulk CSV edit (${editableCsvRows.length} editable)`}
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={exportLibraryCsv}
+                    class={`${STAGE_PRESS} min-h-[30px] inline-flex items-center gap-1 rounded-full border-2 border-[#1e1714] bg-[#fffef7] hover:bg-[#f7ecdc] px-2.5 py-0.5 text-[11px] font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714]`}
+                  >
+                    <span>↓</span>
+                    <span>{isSpanish ? "Exportar CSV" : "Export CSV"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={Boolean(csvSyncing)}
+                    onClick={() => csvFileInputRef.current?.click()}
+                    class={`${STAGE_PRESS} min-h-[30px] inline-flex items-center gap-1 rounded-full border-2 border-[#1e1714] bg-[#ffbe0b] hover:bg-[#ffd04a] px-2.5 py-0.5 text-[11px] font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] disabled:opacity-50`}
+                  >
+                    <span>↑</span>
+                    <span>
+                      {csvSyncing
+                        ? `${csvSyncing.done}/${csvSyncing.total}…`
+                        : (isSpanish ? "Actualizar vía CSV" : "Update CSV")}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quota Progress Bar (when server library quota present) */}
@@ -1300,25 +1549,11 @@ export default function LibraryDrawer(
                     ? "Cupo de códigos dinámicos"
                     : "Editable Allowance"}
                 </span>
-                <div class="flex items-center gap-2">
-                  {codes.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={exportLibraryCsv}
-                      title={isSpanish
-                        ? "Descargar códigos dinámicos como CSV"
-                        : "Download dynamic codes as CSV"}
-                      class="min-h-[30px] rounded-full border-2 border-[#1e1714] bg-[#fffef7] px-2.5 py-0.5 text-[11px] font-black text-[#1e1714] shadow-[0_1.5px_0_#1e1714] transition hover:bg-[#f7ecdc] active:scale-95"
-                    >
-                      {isSpanish ? "Exportar CSV" : "Export CSV"}
-                    </button>
-                  )}
-                  <span class="font-black text-[#1e1714]">
-                    {isSpanish
-                      ? `${quota.used_count} / ${quota.total_allowed} activos`
-                      : `${quota.used_count} / ${quota.total_allowed} active`}
-                  </span>
-                </div>
+                <span class="font-black text-[#1e1714]">
+                  {isSpanish
+                    ? `${quota.used_count} / ${quota.total_allowed} activos`
+                    : `${quota.used_count} / ${quota.total_allowed} active`}
+                </span>
               </div>
               <div
                 role="progressbar"
